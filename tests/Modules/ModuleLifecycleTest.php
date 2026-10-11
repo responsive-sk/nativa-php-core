@@ -34,9 +34,9 @@ use RuntimeException;
  */
 final class ModuleLifecycleTest extends TestCase
 {
-    private const LEAF = 'Scratch';
+    private const string LEAF = 'Scratch';
 
-    private const HOLDER = 'TempHolder';
+    private const string HOLDER = 'TempHolder';
 
     #[Test]
     public function roundTripLeavesAByteIdenticalTree(): void

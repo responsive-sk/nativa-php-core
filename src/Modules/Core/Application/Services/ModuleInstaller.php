@@ -20,10 +20,10 @@ use RuntimeException;
  * Every refusal throws RuntimeException with the exact message bin/cms
  * prints — one source of truth for the wording, two front-ends (CLI, tests).
  */
-final class ModuleInstaller
+final readonly class ModuleInstaller
 {
     public function __construct(
-        private readonly ModuleCatalog $catalog,
+        private ModuleCatalog $catalog,
     ) {
     }
 
@@ -37,9 +37,10 @@ final class ModuleInstaller
      * copying anything (a half-installed module answers for dependencies
      * that never arrived), then copy the slice verbatim and flush.
      *
-     * @return array{copied: int, flushed: int}
      *
      * @throws RuntimeException on refusal (unknown / invalid / installed / closure)
+     *
+     * @return array{copied: int, flushed: int}
      */
     public function add(string $name): array
     {
@@ -78,9 +79,10 @@ final class ModuleInstaller
      * imports it (unless forced), and never touches module data: the code
      * is not the data, so leftovers are reported, not deleted.
      *
-     * @return array{flushed: int, leftovers: list<string>, holders: list<string>}
      *
      * @throws RuntimeException on refusal (invalid / kernel / missing / imported)
+     *
+     * @return array{flushed: int, leftovers: list<string>, holders: list<string>}
      */
     public function remove(string $name, bool $force = false): array
     {

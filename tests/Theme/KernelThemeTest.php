@@ -22,7 +22,7 @@ use Themes\kernel\KernelTheme;
  */
 final class KernelThemeTest extends TestCase
 {
-    private const CSS = 'Themes/kernel/assets/critical/kernel.css';
+    private const string CSS = 'Themes/kernel/assets/critical/kernel.css';
 
     #[Test]
     public function criticalCssResolvesToShippedFile(): void

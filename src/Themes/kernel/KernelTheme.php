@@ -135,7 +135,7 @@ final class KernelTheme implements ThemeModule
 
     public function blogCategories(PageContext $context): string
     {
-        $title = null !== $context->category ? $context->category : 'Categories';
+        $title = $context->category ?? 'Categories';
 
         return $this->pageWrap($this->section($title, $this->links($context->articles)));
     }

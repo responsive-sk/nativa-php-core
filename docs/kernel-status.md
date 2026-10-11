@@ -839,6 +839,88 @@ read as "the fix did nothing". The files were correct the whole time; the
 server needed a restart. Same class of trap as the Boot 1 opcache incident,
 same lesson: restart before believing a null result.
 
+# Boot 19 — CI, and the zero-dependency claim it falsified
+
+`.github/workflows/ci.yml` — six jobs, each mirroring what the showcase's CI
+does for its own tree, on the shape a fresh clone actually has (kernel-only:
+`src/Modules/*` is gitignored operator state).
+
+| job | what it asserts |
+|---|---|
+| Lint + PHPStan | `make lint` over every shipped `.php`, then `composer phpstan` |
+| Code style | `composer cs-fix-dry` + `composer rector-dry` |
+| PHPUnit | `composer test` in the kernel-only shape |
+| Assets (pnpm) | the committed workspace builds; the admin manifest keeps its entry keys; no `@layer` survived (Chrome 70 drops the block) |
+| Boot (no vendor) | no `vendor/`; `bin/cms migrate` + `module:list`; six surfaces over HTTP; a module installed → 200 → removed → 404; an empty error log |
+| Extract-check | **not run** — needs `../nativa-minimal`; the job records that rather than reporting a pass |
+
+## What the no-vendor job caught
+
+**The kernel's headline claim was false.** A vendor-less checkout answered
+**500 to every request** — `/` included, kernel-only included:
+
+```
+[FATAL] Error: Class "Symfony\Component\Console\Command\Command" not found
+  in src/Modules/Core/Interfaces/CLI/Command/ServeCommand.php:24
+  #2 Router.php(214): class_exists()
+  #4 Router.php(40): Router->discover()
+```
+
+`Router` discovery read every file under the action dirs and
+`class_exists()`-ed it, which makes each class's **parent** a load-time
+dependency of *routing* — and the kernel core itself ships three such
+classes (`MigrateCommand`, `ServeCommand`, the rest of
+`Interfaces/CLI/Command/`), all extending `symfony/console`, a **dev-only**
+dependency. The divergence record named it as the kernel's one inherited
+defect (`Router.php # upstream task 0.3 loader guard not adopted here; Boot 1
+ defect still inherited`).
+
+**Fixed by porting upstream's guard**: `Router::mayDeclareRoute()` reads the
+file as TEXT and skips anything without a `#[Route(` token before any class is
+loaded — permissive in the miss direction, because a file that cannot declare
+a route cannot be a route. Our `Router` now differs from upstream in two
+comment blocks and nothing else.
+
+**Measured after the fix**, in copies of this tree with no `vendor/`:
+
+| tree | before | after |
+|---|---|---|
+| kernel-only: `/`, `/sitemap.xml`, `/robots.txt`, `/docs` | 500 | 200 |
+| kernel-only: `/nope`, `/mark` | 500 | 404 (never 403) |
+| kernel-only: `module:add Scratch` → `/scratch` → `module:remove` | 500 | 200 → 404 |
+| **14 modules installed**, no vendor: `/mark`, `/mark/categories` | 500 | 200 |
+| `PHP Fatal error` / `[KERNEL] Error` lines in `storage/logs/php-error.log` | not counted before | 0 |
+
+## Two gates that could not fail
+
+`make lint` ended in `grep -v 'No syntax errors' || true`: it printed every
+parse error and exited **0**. It now sends `php -l`'s chatter to `/dev/null`,
+lets parse errors reach stderr, and lets `xargs`'s status through — verified by
+planting `<?php function broken( {` in `src/`: exit **2** before the fix read
+`0`.
+
+`composer cs-fix-dry` and `composer rector-dry` had **no config files** in the
+slice, which is worse than a weak gate: the cs-fixer dry run *created* a
+config and appended two lines to `.gitignore` — a check that mutates the tree
+it checks — and Rector printed `No rector.php config found` and exited 0.
+
+Both configs now exist, taken from the showcase (measured green there: 0 of
+385 files) and scoped to the code this repo owns and may restyle:
+`src/Modules/{Core,Database}`, `src/Themes`, `bin`, `public`, `tests` — the
+same scope `phpstan.neon` analyses. Excluded, deliberately: `src/Modules/*`
+elsewhere (installed slices — operator state, so the verdict would depend on
+what is installed) and `modules/` (the verbatim catalogue — restyling it turns
+the next re-import into a hand-merge).
+
+Rector is **pinned to 2.6.1**, the version the showcase resolves. 2.7.0 adds
+`StringClassNameToClassConstantRector`, which rewrote four files that are
+byte-identical to the upstream slice — a dev-tool bump that would have bought
+four recorded divergences for no behavioural gain. Bump it in a commit that
+also restyles the slice and records what changed. The eight files the
+gate *did* flag are all mine or the tree's (every one an `OWNED` or already
+`DIVERGED` path), and they are fixed; `extract-kernel --check` stayed at
+**250 identical / 38 recorded divergences** through all of it.
+
 ## Bootstrapper
 
 ```

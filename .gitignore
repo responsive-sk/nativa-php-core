@@ -61,6 +61,10 @@ src/Modules/*
 # PHPUnit result cache (written on every run, never committed)
 .phpunit.result.cache
 
+# Tool caches (php-cs-fixer + Rector write one per run)
+.php-cs-fixer.cache
+.rector.cache/
+
 # Editor / OS noise
 .idea/
 .vscode/

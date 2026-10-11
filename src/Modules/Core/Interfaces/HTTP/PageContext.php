@@ -89,7 +89,7 @@ final class PageContext
      * @param array<string, string>       $copy           translation key → resolved copy
      * @param array<string, string>       $links          feature-card key → article href
      * @param array<string, list<string>> $cards          section key → card keys
-     * @param list<object>               $latestArticles pre-fetched articles for the theme's latest section
+     * @param list<object>                $latestArticles pre-fetched articles for the theme's latest section
      */
     public static function forHomepage(
         Request $request,
@@ -118,7 +118,7 @@ final class PageContext
     }
 
     /**
-     * @param list<object>      $articles   full article list (pagination slice happens in the theme)
+     * @param list<object>       $articles   full article list (pagination slice happens in the theme)
      * @param array<string, int> $viewCounts slug → view count
      */
     public static function forBlogIndex(
@@ -207,13 +207,13 @@ final class PageContext
     /**
      * @param list<string>       $tags
      * @param array<string, int> $counts
-     * @param list<object>      $articles
+     * @param list<object>       $articles
      */
     /**
      * @param list<string>       $tags     tag cloud terms (index page)
      * @param array<string, int> $counts   term → article count
      * @param string|null        $tag      active tag slug (filtered page)
-     * @param list<object>      $articles filtered article list
+     * @param list<object>       $articles filtered article list
      */
     public static function forBlogTags(
         Request $request,
@@ -246,13 +246,13 @@ final class PageContext
     /**
      * @param list<string>       $categories
      * @param array<string, int> $counts
-     * @param list<object>      $articles
+     * @param list<object>       $articles
      */
     /**
      * @param list<string>       $categories category cloud terms (index page)
      * @param array<string, int> $counts     term → article count
      * @param string|null        $category   active category slug (filtered page)
-     * @param list<object>      $articles   filtered article list
+     * @param list<object>       $articles   filtered article list
      */
     public static function forBlogCategories(
         Request $request,
@@ -284,11 +284,11 @@ final class PageContext
 
     /**
      * @param array{id: string, name: string, avatar: ?string} $author   resolved author profile
-     * @param list<object>                                    $articles
+     * @param list<object>                                     $articles
      */
     /**
      * @param array{id: string, name: string, avatar: ?string} $author   resolved profile
-     * @param list<object>                                    $articles every article by this author
+     * @param list<object>                                     $articles every article by this author
      */
     public static function forAuthorProfile(
         Request $request,

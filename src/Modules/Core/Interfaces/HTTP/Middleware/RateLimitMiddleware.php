@@ -9,6 +9,8 @@ use Modules\Core\Domain\Contracts\RateLimiter;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\Outbox\Domain\SecurityEvents;
+use Modules\Outbox\Interfaces\HTTP\OutboxServices;
 
 /**
  * RateLimitMiddleware — general per-IP request throttling.
@@ -47,11 +49,11 @@ final readonly class RateLimitMiddleware implements MiddlewareInterface
     private const int GENERAL_WINDOW = 60;
 
     /**
-     * @param \Closure(): object $rateLimiterFactory Yields the limiter candidate.
-     *        The product is unchecked until isLimiter() verifies the RateLimiter
-     *        shape, so the closure stays `object` — typing it narrower would
-     *        turn a junk product (pass-through by contract) into a TypeError.
-     * @param PageCacheService|null $cache Optional page cache for rate-limit fallback
+     * @param \Closure(): object    $rateLimiterFactory Yields the limiter candidate.
+     *                                                  The product is unchecked until isLimiter() verifies the RateLimiter
+     *                                                  shape, so the closure stays `object` — typing it narrower would
+     *                                                  turn a junk product (pass-through by contract) into a TypeError.
+     * @param PageCacheService|null $cache              Optional page cache for rate-limit fallback
      */
     public function __construct(
         private \Closure $rateLimiterFactory,
@@ -102,14 +104,14 @@ final readonly class RateLimitMiddleware implements MiddlewareInterface
      */
     private function recordTrip(string $key, Request $request): void
     {
-        if (!class_exists('Modules\Outbox\Interfaces\HTTP\OutboxServices')
-            || !class_exists('Modules\Outbox\Domain\SecurityEvents')
+        if (!class_exists(OutboxServices::class)
+            || !class_exists(SecurityEvents::class)
         ) {
             return;
         }
 
-        \Modules\Outbox\Interfaces\HTTP\OutboxServices::securityEvent(
-            \Modules\Outbox\Domain\SecurityEvents::RATELIMIT_TRIPPED,
+        OutboxServices::securityEvent(
+            SecurityEvents::RATELIMIT_TRIPPED,
             ['key' => $key, 'scope' => $request->getPathInfo(), 'ip' => $request->getClientIp()],
         );
     }

@@ -39,11 +39,14 @@ unset($_earlyLogDir);
  * tree without either of them boots exactly as before.
  */
 
+use Modules\Audit\Application\Services\SecurityEventHandler;
+use Modules\Audit\Interfaces\HTTP\AuditServices;
 use Modules\Core\Application\Services\DisposalRegistry;
 use Modules\Core\Infrastructure\Bootstrap\Bootstrapper;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Interfaces\HTTP\Kernel;
 use Modules\Core\Interfaces\HTTP\Router;
+use Modules\Outbox\Interfaces\HTTP\OutboxServices;
 
 // ============================================================================
 // BOOTSTRAP — autoloaders (Composer + PSR-4 fallback), environment,
@@ -77,13 +80,13 @@ require_once __DIR__ . '/../src/init.php';
 // fatal on the other.
 // ============================================================================
 
-if (class_exists('Modules\\Audit\\Application\\Services\\SecurityEventHandler')
-    && class_exists('Modules\\Outbox\\Interfaces\\HTTP\\OutboxServices')
-    && class_exists('Modules\\Audit\\Interfaces\\HTTP\\AuditServices')
+if (class_exists(SecurityEventHandler::class)
+    && class_exists(OutboxServices::class)
+    && class_exists(AuditServices::class)
 ) {
-    \Modules\Audit\Application\Services\SecurityEventHandler::register(
-        \Modules\Outbox\Interfaces\HTTP\OutboxServices::processor(),
-        \Modules\Audit\Interfaces\HTTP\AuditServices::audit(),
+    SecurityEventHandler::register(
+        OutboxServices::processor(),
+        AuditServices::audit(),
     );
 }
 

@@ -38,7 +38,7 @@ DIVERGED src/Modules/Core/Interfaces/HTTP/Actions/LlmsTxtAction.php # Boot 13: k
 DIVERGED src/Modules/Core/Infrastructure/Bootstrap/Bootstrapper.php # Boot 16: invalidateMigrations() — an install drops the first-request marker
 #
 # --- Rewritten surfaces: upstream moved after our import ----------------------
-DIVERGED src/Modules/Core/Interfaces/HTTP/Router.php # upstream task 0.3 loader guard (mayDeclareRoute) not adopted here; Boot 1 defect still inherited
+DIVERGED src/Modules/Core/Interfaces/HTTP/Router.php # Boot 19: upstream's mayDeclareRoute guard adopted (only the two comments differ); the Boot 1 defect is no longer inherited
 #
 # --- Rewritten roots ----------------------------------------------------------
 DIVERGED public/index.php # kernel-only composition root: nothing to wire, wiring is discovery

@@ -18,14 +18,14 @@ use Modules\Core\Infrastructure\Paths\AppPaths;
  * The kernel's own modules (`Core`, `Database`) are never catalogue entries
  * and never install targets: they are the tree, not something in it.
  */
-final class ModuleCatalog
+final readonly class ModuleCatalog
 {
     /** Modules that are the tree itself — never a dependency, never removable. */
     public const array KERNEL_MODULES = ['Core', 'Database'];
 
     public function __construct(
-        private readonly string $catalogDir,
-        private readonly string $modulesDir,
+        private string $catalogDir,
+        private string $modulesDir,
     ) {
     }
 

@@ -27,7 +27,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class KernelOnlyBootTest extends TestCase
 {
-    private const ADMIN_MODULE = 'Cardboard';
+    private const string ADMIN_MODULE = 'Cardboard';
 
     /**
      * @return iterable<string, array{string, string, int}>
@@ -37,10 +37,15 @@ final class KernelOnlyBootTest extends TestCase
         $adminInstalled = is_dir(APP_BASE_PATH . '/src/Modules/' . self::ADMIN_MODULE);
 
         yield 'homepage'   => ['GET', '/',            200];
+
         yield 'sitemap'    => ['GET', '/sitemap.xml', 200];
+
         yield 'robots'     => ['GET', '/robots.txt',  200];
+
         yield 'docs index' => ['GET', '/docs',        200];
+
         yield 'unknown'    => ['GET', '/nope',        404];
+
         yield 'admin'      => ['GET', '/mark',        $adminInstalled ? 200 : 404];
     }
 

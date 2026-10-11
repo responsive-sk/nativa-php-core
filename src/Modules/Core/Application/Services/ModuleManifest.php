@@ -25,16 +25,16 @@ namespace Modules\Core\Application\Services;
 final readonly class ModuleManifest
 {
     /**
-     * @param list<array{file: string, path: string, method: string, name: string|null}> $routes files are relative to the module root
-     * @param list<string> $migrators relative file paths carrying #[AsMigrator]
-     * @param list<string> $middleware relative file paths carrying #[AsMiddleware]
-     * @param list<string> $navBadges relative file paths carrying #[AsNavBadge]
-     * @param list<string> $markdownBlocks relative file paths carrying #[AsMarkdownBlock]
-     * @param list<string> $shellProviders relative file paths carrying #[AsShellContextProvider]
-     * @param list<string> $themeModules relative file paths implementing ThemeModule
-     * @param list<string> $assets relative file paths under any assets/ directory
-     * @param list<string> $dependencies other module names this module imports (never self, Core or Database)
-     * @param array<string, mixed>|null $extra the decoded module.json, or null when the module ships none
+     * @param list<array{file: string, path: string, method: string, name: string|null}> $routes         files are relative to the module root
+     * @param list<string>                                                               $migrators      relative file paths carrying #[AsMigrator]
+     * @param list<string>                                                               $middleware     relative file paths carrying #[AsMiddleware]
+     * @param list<string>                                                               $navBadges      relative file paths carrying #[AsNavBadge]
+     * @param list<string>                                                               $markdownBlocks relative file paths carrying #[AsMarkdownBlock]
+     * @param list<string>                                                               $shellProviders relative file paths carrying #[AsShellContextProvider]
+     * @param list<string>                                                               $themeModules   relative file paths implementing ThemeModule
+     * @param list<string>                                                               $assets         relative file paths under any assets/ directory
+     * @param list<string>                                                               $dependencies   other module names this module imports (never self, Core or Database)
+     * @param array<string, mixed>|null                                                  $extra          the decoded module.json, or null when the module ships none
      */
     public function __construct(
         public string $name,

@@ -31,7 +31,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class TaxonomyRegistryTest extends TestCase
 {
-    private const MODULE = 'Blog';
+    private const string MODULE = 'Blog';
 
     /** Absolute path of the registry file the service reads and writes. */
     private string $registry;

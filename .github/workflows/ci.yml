@@ -1,0 +1,385 @@
+# =============================================================================
+# Nativa PHP Core — CI
+# =============================================================================
+# The gates this tree actually has, run on a FRESH checkout — which is a
+# KERNEL-ONLY tree: `src/Modules/*` is gitignored operator state, so a clone
+# carries `Modules\Core` + `Modules\Database` and nothing else. That fact
+# decides what each job may assert:
+#
+#   1. lint + PHPStan   — the code this repo owns (the same scope the two
+#                         tool configs use).
+#   2. Code style       — php-cs-fixer + Rector dry-runs. Both were
+#                         non-gates before this workflow: neither config file
+#                         existed in the slice, so `cs-fix-dry` CREATED a
+#                         config and appended to .gitignore (a "dry run" that
+#                         mutates the tree) and `rector-dry` printed "No
+#                         rector.php config found" and exited 0.
+#   3. PHPUnit          — Boot 18 tests / 45 assertions in the kernel-only
+#                         shape, plus the module lifecycle round trip.
+#   4. Assets           — the pnpm workspace is committed, so the bundles that
+#                         /mark's stylesheet comes from are built HERE and the
+#                         manifest the PHP reader probes is asserted, not
+#                         assumed.
+#   5. Boot             — the six kernel surfaces over real HTTP, a module
+#                         installed → served → removed → 404, and `bin/cms
+#                         migrate`. No `composer install` in this job,
+#                         deliberately: the kernel runtime has zero Composer
+#                         dependencies, and this is where that claim is either
+#                         true or not.
+#
+# NOT run here, on purpose: `bin/build/extract-kernel.sh --check`. It diffs
+# this tree against `../nativa-minimal`, which CI has no checkout of. The step
+# says so and exits 0 rather than reporting a pass it did not earn; run it
+# locally (`make extract-check`).
+# =============================================================================
+
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PHP_VERSION: "8.5"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # LINT + PHPSTAN — syntax and static analysis
+  # ---------------------------------------------------------------------------
+  analysis:
+    name: Lint + PHPStan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: json, mbstring, pdo, pdo_sqlite, sqlite3
+          tools: composer:v2
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v5
+        with:
+          path: vendor/
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+            composer-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      # Every .php file the tree ships, `php -l` per file. The Makefile target
+      # used to end in `|| true`, so it printed real parse errors and exited 0
+      # — a gate that could not fail. It now lets the status through and keeps
+      # only stderr, so this step is the one that fails on a broken file.
+      - name: Lint every PHP file
+        run: make lint
+
+      - name: Run PHPStan
+        run: composer phpstan
+
+  # ---------------------------------------------------------------------------
+  # CODE STYLE — php-cs-fixer + Rector dry-runs
+  # ---------------------------------------------------------------------------
+  code-style:
+    name: Code style
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: json, mbstring, pdo, pdo_sqlite, sqlite3
+          tools: composer:v2
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v5
+        with:
+          path: vendor/
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+            composer-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Check code style
+        run: composer cs-fix-dry
+
+      # Rector is pinned to the version the showcase resolves (2.6.1, see
+      # composer.json) because 2.7.0 adds StringClassNameToClassConstantRector,
+      # which rewrites code byte-identical to the upstream slice — a dev-tool
+      # bump that would force four recorded divergences for no behavioural
+      # gain. Both dry-runs must report nothing; the tools do not agree on
+      # every formatting detail, so a change here is a change to ONE of them.
+      - name: Run Rector dry-run
+        run: composer rector-dry
+
+  # ---------------------------------------------------------------------------
+  # PHPUNIT — the test suite in the kernel-only shape
+  # ---------------------------------------------------------------------------
+  tests:
+    name: PHPUnit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: json, mbstring, pdo, pdo_sqlite, sqlite3
+          tools: composer:v2
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v5
+        with:
+          path: vendor/
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+            composer-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      # No pnpm, no build: nothing the kernel-only suite renders reads a bundle
+      # (the kernel theme ships no CSS — see docs/kernel-status.md). The suite
+      # asserts that `/mark` answers 404 here, which is the admin-is-a-module
+      # contract, and skips the Blog test it cannot run.
+      - name: Run PHPUnit
+        run: composer test
+
+  # ---------------------------------------------------------------------------
+  # ASSETS — the committed pnpm workspace builds here
+  # ---------------------------------------------------------------------------
+  assets:
+    name: Assets (pnpm)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6.0.10
+        with:
+          version: 12
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: Frontend/packages/pnpm-lock.yaml
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: Frontend/packages
+
+      - name: Build every theme bundle
+        run: pnpm build
+        working-directory: Frontend/packages
+
+      # The build output is gitignored, so nothing below can pass by finding a
+      # committed artifact. `mark`, `mark-switch` and `moonshine` are the entry
+      # keys `AssetManager` resolves out of this manifest and `AdminLayout`
+      # links on /mark; the keys are load-bearing and a rename breaks the admin
+      # chrome silently (a page with no stylesheet still answers 200).
+      - name: Assert the admin manifest still carries its entry keys
+        run: |
+          set -euo pipefail
+          jq -e 'has("mark") and has("mark-switch") and has("moonshine")' \
+            public/dist/moonshine/manifest.json > /dev/null
+          ls -l public/dist/moonshine/assets/
+
+      # Chrome 70 (< 99) drops @layer blocks entirely, which is why the build
+      # strips them (build/strip-at-layer.ts). A reintroduced one parses,
+      # matches nothing, and unstyled is indistinguishable from a design.
+      - name: Assert no @layer survived the build
+        run: |
+          set -euo pipefail
+          if grep -l '@layer' public/dist/*/assets/*.css; then
+            echo "::error::@layer found in a built stylesheet — Chrome 70 drops the whole block."
+            exit 1
+          fi
+          echo "no @layer in any built stylesheet"
+
+  # ---------------------------------------------------------------------------
+  # BOOT — the kernel-only tree over real HTTP, with no vendor/
+  # ---------------------------------------------------------------------------
+  boot:
+    name: Boot (kernel-only, no vendor)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: json, mbstring, pdo, pdo_sqlite, sqlite3
+          coverage: none
+
+      # NO `composer install` on purpose. The kernel runtime has zero Composer
+      # dependencies and `src/init.php` installs a PSR-4 fallback loader for the
+      # tree that has no vendor/ — that is the claim, and a job that installs
+      # first would never test it.
+      #
+      # This job is what found the claim false (Boot 19): Router discovery
+      # class_exists()'d every file under the action dirs, so the kernel's own
+      # ServeCommand/MigrateCommand — they extend symfony/console's Command, a
+      # DEV dependency — made `/` answer 500 in a vendor-less checkout. The fix
+      # is upstream's mayDeclareRoute() text guard, adopted in
+      # src/Modules/Core/Interfaces/HTTP/Router.php; without it every step below
+      # fails on a 500.
+      - name: Prove there is no vendor directory
+        run: |
+          set -euo pipefail
+          test ! -d vendor || { echo "::error::vendor/ exists in this job — the check is meaningless"; exit 1; }
+          echo "no vendor/ in the tree"
+
+      # bin/cms is plain PHP by design (what manages modules must run where
+      # vendor/ may not exist). In a kernel-only tree there are no migrators:
+      # that message is the documented state, so assert it instead of assuming
+      # a silent no-op.
+      - name: Migrate a kernel-only tree
+        run: |
+          set -euo pipefail
+          php bin/cms migrate | tee /tmp/migrate.log
+          grep -q "No migrators found" /tmp/migrate.log
+
+      # Measured in a kernel-only checkout: `Installed (0): (none — kernel
+      # only)`. The catalogue is the other half and IS present — the modules
+      # are committed, the installed slices are not.
+      - name: Module catalogue is visible
+        run: |
+          set -euo pipefail
+          php bin/cms module:list | tee /tmp/modules.log
+          grep -q "Installed (0)" /tmp/modules.log
+          grep -q "Scratch" /tmp/modules.log
+
+      # opcache is ON for the CLI SAPI on the runner image and its default
+      # revalidate window is minutes, so a long-lived `php -S` can serve code
+      # that no longer exists — measured on a workstation dev server in Boot 18,
+      # where a fix looked like a no-op until the server was restarted. The
+      # server below also has to observe a module being ADDED and REMOVED, so
+      # it runs with the cache off.
+      - name: Start the dev server
+        run: |
+          set -euo pipefail
+          php -d opcache.enable_cli=0 -S 127.0.0.1:8000 -t public > /tmp/server.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -fsS -o /dev/null http://127.0.0.1:8000/ 2>/dev/null; then
+              echo "server up after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "server never came up:"
+          cat /tmp/server.log
+          exit 1
+
+      # `check <path> <status>`; a page cache or an error page would change the
+      # code, so the status IS the assertion.
+      - name: The six kernel surfaces answer over HTTP
+        run: |
+          set -euo pipefail
+          check() {
+            local got
+            got="$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8000$1")"
+            if [ "$got" != "$2" ]; then
+              echo "::error::GET $1 expected $2, got $got"
+              return 1
+            fi
+            echo "ok  $1 → $got"
+          }
+          check /            200
+          check /sitemap.xml 200
+          check /robots.txt  200
+          check /docs        200
+          check /nope        404
+          # The interesting one: not 403 and not 500. The admin is a module, and
+          # a path the kernel has no route for is NOT FOUND — never Forbidden.
+          check /mark        404
+
+      # Task 4.1's live proof: install a module, serve its route, remove it,
+      # and watch the route disappear — through HTTP, not through the service.
+      - name: A module installs, serves and uninstalls
+        run: |
+          set -euo pipefail
+          php bin/cms module:add Scratch
+          before="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/scratch)"
+          [ "$before" = "200" ] || { echo "::error::/scratch after add expected 200, got $before"; exit 1; }
+          echo "ok  /scratch → 200 after module:add"
+          php bin/cms module:remove Scratch
+          after="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/scratch)"
+          [ "$after" = "404" ] || { echo "::error::/scratch after remove expected 404, got $after"; exit 1; }
+          echo "ok  /scratch → 404 after module:remove"
+
+      - name: No fatal errors were logged
+        run: |
+          set -euo pipefail
+          if grep -qE "PHP Fatal error|\[KERNEL\] Error" storage/logs/php-error.log; then
+            cat storage/logs/php-error.log
+            echo "::error::the boot wrote a fatal error to storage/logs/php-error.log"
+            exit 1
+          fi
+          echo "error log is clean"
+
+      - name: Show the server log
+        if: always()
+        run: tail -50 /tmp/server.log || true
+
+  # ---------------------------------------------------------------------------
+  # EXTRACT-CHECK — runs only where the upstream checkout exists
+  # ---------------------------------------------------------------------------
+  extract-check:
+    name: Extract-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      # The guard compares this tree against ../nativa-minimal, which does not
+      # exist here. Recorded as not-run rather than reported as green: a gate
+      # that cannot run must say so.
+      - name: Extract-check needs the upstream checkout
+        run: |
+          echo "NOT RUN: bin/build/extract-kernel.sh --check diffs this tree against ../nativa-minimal."
+          echo "This runner has no checkout of it. The guard is a local gate: make extract-check"

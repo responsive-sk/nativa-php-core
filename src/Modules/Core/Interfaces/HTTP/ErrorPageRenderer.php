@@ -26,7 +26,7 @@ final class ErrorPageRenderer
      * helpers all delegate here, so every error page in the app is identical).
      *
      * @param string|null $path request path for theme resolution (active theme
-     *        wears the error); null renders kernel-default without resolving.
+     *                          wears the error); null renders kernel-default without resolving.
      * @param string|null $lang explicit content language for the document.
      */
     public static function response(int $status, string $title, string $detail, ?string $path = null, ?string $lang = null): Response

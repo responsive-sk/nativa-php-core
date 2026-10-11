@@ -19,8 +19,13 @@ install: ## Install PHP dev dependencies (the kernel runtime itself has none)
 	$(COMPOSER) install
 
 ##@ Quality
-lint: ## Lint all PHP files (php -l)
-	@find src public tests bin -name '*.php' -not -path '*/vendor/*' -print0 | xargs -0 -n1 $(PHP) -l | grep -v 'No syntax errors' || true
+lint: ## Lint all PHP files (php -l) — non-zero on a real syntax error
+	@find src public tests bin -name '*.php' -not -path '*/vendor/*' -print0 | xargs -0 -n1 $(PHP) -l >/dev/null
+# The `>/dev/null` drops php -l's "No syntax errors detected in ..." chatter
+# while a real parse error still reaches stderr and still sets the exit status.
+# The old shape piped through `grep -v 'No syntax errors' || true`, which meant
+# the target printed every syntax error and exited 0 — a gate that could not
+# fail, and the reason `make lint` was wired into CI as a real step.
 
 test: ## Run PHPUnit tests
 	$(COMPOSER) test

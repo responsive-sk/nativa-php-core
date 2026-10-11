@@ -210,6 +210,22 @@ final class Router
                 continue;
             }
 
+            // A file that cannot declare a route is never loaded. This scan
+            // used to class_exists() every class under the action dirs, which
+            // made every class's PARENT a load-time dependency of ROUTING — and
+            // the kernel CORE itself ships three such classes:
+            // `MigrateCommand`, `ServeCommand` and the rest of
+            // `Interfaces/CLI/Command/` extend symfony/console's Command, which
+            // is a DEV-only dependency (see composer.json). Measured on Boot 19
+            // in a vendor-less checkout of this very tree: `/` answered **500**
+            // with `Class "Symfony\Component\Console\Command\Command" not found
+            // in .../ServeCommand.php:24` — every request, kernel-only or not,
+            // which is the opposite of the zero-dependency bootstrap this tree
+            // documents.
+            if (!$this->mayDeclareRoute($file->getPathname())) {
+                continue;
+            }
+
             $class = $this->pathToClass($file->getPathname());
             if (null === $class || !class_exists($class)) {
                 continue;
@@ -224,6 +240,27 @@ final class Router
                 $this->register($route, $class);
             }
         }
+    }
+
+    /**
+     * Could this file declare a #[Route]? Read as TEXT, before the class is
+     * loaded — loading it is exactly what makes the class's parent a load-time
+     * dependency of routing.
+     *
+     * Deliberately permissive in the miss direction: a docblock that merely
+     * mentions #[Route] costs one reflection over a file that declares nothing,
+     * while a filter that were too strict would silently drop a real route. The
+     * attribute cannot be written without its token appearing in the source,
+     * which is what makes the permissive reading safe. Same shape as
+     * `MiddlewareRegistry`'s `str_contains($content, 'AsMiddleware')` and
+     * `MarkdownBlockRegistry`'s `AsMarkdownBlock` — the two other discovery
+     * scans in the kernel.
+     */
+    private function mayDeclareRoute(string $path): bool
+    {
+        $content = file_get_contents($path);
+
+        return is_string($content) && 1 === preg_match('/#\[\s*\\\\?[A-Za-z\\\\]*Route\s*\(/', $content);
     }
 
     private function pathToClass(string $filePath): ?string

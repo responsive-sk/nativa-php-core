@@ -44,8 +44,8 @@ final class LlmsTxtAction
 
     /**
      * @var list<string> paths linked from TEMPLATE (Markdown placeholder form).
-     *        Only routes the kernel serves: advertising a module's route here
-     *        would teach a crawler to find a 404 (same rule as the sitemap).
+     *                   Only routes the kernel serves: advertising a module's route here
+     *                   would teach a crawler to find a 404 (same rule as the sitemap).
      */
     private const array LINKED_PATHS = [
         '/',
