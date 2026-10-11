@@ -1,6 +1,7 @@
 /* Erik critical CSS — the dark-first shell in one file, no build.
    Inlined into <head> when no Vite manifest resolves (the honest answer for
-   a tree with no stylesheet build in it). No @charset/@import/@layer: the
+   a tree with no stylesheet build in it). The source ships none of the at-rules the inline loader strips
+   (see InlineCss) — not even named inside this comment, because the stripper used to be comment-blind. The
    bytes are inlined into every document response. */
 .er-shell {
     background: #0b0f1a;

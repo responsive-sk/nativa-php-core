@@ -67,9 +67,17 @@ final class InlineCss
      * Strip at-rules that must never reach the inline <style> block.
      * Single-line tolerant: removes the directive up to the terminating
      * semicolon (@charset, @import) or the balanced block (@layer).
+     *
+     * Comments go first: the patterns above cannot tell an at-rule from its
+     * NAME inside a comment, so `No @charset/@import/@layer.` in a header
+     * comment ate the comment tail AND the `:root{...}` opener behind it —
+     * every var() went undefined and the page rendered white (measured on
+     * the Mono theme, 2026-10-11). A safety net that corrupts what it guards
+     * is not one.
      */
     private static function stripForbiddenAtRules(string $css): string
     {
+        $css = preg_replace('!/\*.*?\*/!s', '', $css) ?? $css;
         $css = preg_replace('/@charset[^;]*;/', '', $css) ?? $css;
         $css = preg_replace('/@import[^;]*;/', '', $css) ?? $css;
 

@@ -156,3 +156,20 @@ catalog fixes (an unprefixed `btn--sm` in the markup, the missing
 `mo-is-visible`) landed between H0 and H1, so the hashes compared different
 trees. The lifecycle was clean; the protocol was not. Re-run on the frozen
 tree: identical.
+
+### The white page (measured 2026-10-11, fixed)
+
+Mono rendered a white page in a real browser while every curl check was
+green: the vendored header comment said `No @charset/@import/@layer`, and
+`InlineCss::stripForbiddenAtRules()` — which cannot tell an at-rule from its
+name inside a comment — ate from `@charset` to the next semicolon, which lay
+past `*/` inside `:root{--brand-gold:#d4af37;`. The `:root` opener died, every
+`var(--…)` went undefined, `body` lost its background. Curl saw a 200 with a
+`<style>` block; only a browser saw the white.
+
+Two fixes, both committed: the stripper removes `/*…*/` comments BEFORE
+at-rules (a safety net that corrupts what it guards is not one), and both
+theme headers no longer name the at-rules even in prose. Re-measured:
+`:root{--brand-gold:#d4af37;` and the `body` rule present in the served
+`<style>`, zero comment residue. Erik's header had the same trap and survived
+by luck — its first semicolon fell inside the comment.
