@@ -256,6 +256,32 @@ still lists `/en/` from `ContentLocaleMapper::LANGUAGES` while no `/en/`
 route exists — the port has `languages()`, nothing in the mapper reads it
 yet.
 
+## Boot 7 — serving uploads leaves the kernel (2026-10-11)
+
+`ServeUploadedFileAction` is deleted. The upload allowlist is Media's policy
+and serving uploads is Media's route — the `M` row said so, and with no Media
+module installed the file was a guarded 404 looking for a database it will
+never find. A kernel with no uploads module serves no uploads:
+`/storage/uploads/*` answers the generic page 404 (modulo nonces, the only
+content delta is one sentence: "the requested file" → "the requested
+page"). The content lives in git history and in `../nativa-minimal`, where
+the Media slice will carry it.
+
+The ledger: **9 → 8 edges (7 → 6 files)**. Remaining: `SeedCommand`
+(Security + Users ×3), `PageContext` (Blog ×2, `C`), `MetricContract` +
+`CardboardRegistry` (Cardboard ×2).
+
+| Surface | Boot 6 | **Boot 7** | Note |
+|---|---|---|---|
+| `/storage/uploads/abc123.webp` | 404 (3765 B) | **404** (3765 B) | same status and size, generic renderer |
+| `/` | 200 | **200** (22936 B) | unchanged |
+| `/robots.txt` | 200 | **200** (229 B) | unchanged |
+| `/sitemap.xml` | 200 | **200** (398 B) | unchanged |
+| `/docs` | 200 | **200** (22535 B) | unchanged |
+| `/nope`, `/mark` | 404 | **404** | unchanged |
+
+No new `[KERNEL] Error` (35 = 35).
+
 ## Bootstrapper
 
 ```

@@ -29,6 +29,18 @@
 !/storage/sessions/.gitkeep
 !/storage/uploads/.gitkeep
 
+# Installed module slices (src/Modules/<Name> for <Name> outside Core/Database).
+# An installed module is operator state, like a database file: the CATALOGUE
+# (modules/<Name>/) is committed, the installed copy is not. Without this
+# rule every module:add would stage runtime state into the kernel's own
+# history, and the kernel-only claim would rot one committed slice at a time.
+# (Gitignore nuance that matters here: `src/Modules/*` ignores the children
+# while the re-includes rescue the kernel's own — the inverse, ignoring the
+# parent, would make the rescues unreachable.)
+src/Modules/*
+!src/Modules/Core
+!src/Modules/Database
+
 # Lekalo runtime cache (regenerated, never committed) — same convention as nativa-minimal.
 .lekalo/cache/
 
