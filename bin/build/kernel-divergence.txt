@@ -36,6 +36,8 @@ DIVERGED config/session.php # Boot 13: session default is nativa_core (matches .
 DIVERGED src/Modules/Core/Application/Services/AssetManager.php # Boot 13: unknown bundles fall back to kernel, not starter; Boot 22: module-carried theme bundles are discovered too (ThemeRegistry::bundles()) — before that the `erik` theme resolved as bundle `kernel` and inlined 706 chars of critical CSS instead of its 35 258-char build
 DIVERGED src/Modules/Core/Interfaces/HTTP/Actions/LlmsTxtAction.php # Boot 13: kernel-neutral copy, only routes the kernel serves
 DIVERGED src/Modules/Core/Infrastructure/Bootstrap/Bootstrapper.php # Boot 16: invalidateMigrations() — an install drops the first-request marker
+DIVERGED src/Modules/Core/Interfaces/HTTP/Middleware/MiddlewareRegistry.php # Boot 24: FQCN resolver anchors to a declaration line — first-mention matching let prose shadow the class (upstream still resolves the docblock)
+DIVERGED src/Modules/Core/Interfaces/HTTP/Markdown/MarkdownBlockRegistry.php # Boot 24: same FQCN resolver fix as MiddlewareRegistry — four copies existed, one left broken is one silent skip
 #
 # --- Rewritten surfaces: upstream moved after our import ----------------------
 DIVERGED src/Modules/Core/Interfaces/HTTP/Router.php # Boot 19: upstream's mayDeclareRoute guard adopted (only the two comments differ); the Boot 1 defect is no longer inherited

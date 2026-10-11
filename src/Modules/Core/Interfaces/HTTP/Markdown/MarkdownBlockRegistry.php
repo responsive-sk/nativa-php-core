@@ -106,18 +106,36 @@ final class MarkdownBlockRegistry
     }
 
     /**
-     * Extract the FQCN from a file body (namespace + class declaration).
+     * Extract the FQCN from a file body: its namespace declaration and its type
+     * declaration, and nothing else.
+     *
+     * A declaration starts a LINE (after optional whitespace and the modifiers
+     * PHP allows on a type) or a STATEMENT (after a `;`), so a compact
+     * `namespace Demo; class Thing {}` file still resolves — the failure mode
+     * here is silence, not an error, and a heuristic that is too strict trades
+     * one silent skip for another.
+     *
+     * What cannot be a declaration is PROSE. This used to take the FIRST mention
+     * of the keyword anywhere in the file, so a docblock sentence like "This
+     * class says the one thing..." resolved a type named `says`: the class did
+     * not exist, the file was skipped with no log line, and the markdown block silently
+     * disappeared — measured on the Settings shell provider, whose nav menu
+     * vanished exactly that way (docs/kernel-status.md, Boot 23).
+     *
+     * tests/Discovery/TextFirstFqcnTest.php pins both halves, for all four
+     * registries that share this shape.
      */
     private static function resolveFqcn(string $content): ?string
     {
         $namespace = '';
         $className = '';
 
-        if (preg_match('/namespace\s+([\w\\\\]+)/', $content, $nsMatch)) {
-            $namespace = $nsMatch[1];
+        if (preg_match('/(?:^|;)\s*namespace\s+([\w\\\\]+)\s*;/m', $content, $namespaceMatch)) {
+            $namespace = $namespaceMatch[1];
         }
-        if (preg_match('/class\s+(\w+)/', $content, $cnMatch)) {
-            $className = $cnMatch[1];
+
+        if (preg_match('/(?:^|;)\s*(?:(?:final|abstract|readonly)\s+)*class\s+(\w+)/m', $content, $classNameMatch)) {
+            $className = $classNameMatch[1];
         }
 
         if ('' === $namespace || '' === $className) {
