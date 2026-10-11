@@ -119,3 +119,40 @@ the vote.
 
 A theme that cannot be constructed is skipped and logged, never fatal — the
 answer to a broken theme is the kernel theme, not a 500 on every surface.
+
+## A second theme: Mono (measured 2026-10-11)
+
+`modules/Mono/` carries the evan70.github.io/mono vocabulary (navbar, hero,
+feature cards, footer) as `MonoTheme`. The CSS is a vendored, prefixed
+snapshot of the live site's two stylesheets (2026-10-11, ~19 kB → `mo-`):
+the source classes are unprefixed and would collide, the `@font-face` webfonts
+are dropped (their files are not vendored — system stacks instead), and the
+hero photo is dropped (an external webp the kernel must never fetch at
+runtime; the gradient stays). The adaptation script caught its own blind spot
+on the first run: compound selectors (`.a.b`) skip the regex lookbehind, so
+four second-classes shipped unprefixed until a second pass closed them —
+verified by grepping the vendored file for unprefixed selectors (zero left).
+
+What the preview page never had is designed in its idiom, not ported: the
+locale switcher (navbar links), the data-driven nav, the blog views (card
+grids). Every `mo-` class the markup emits has a CSS rule (checked
+mechanically). The hero title renders `mo-is-visible` server-side — on the
+live site scroll-JS adds it, but this tree ships no such JS and without the
+class the H1 keeps `opacity:0` (a homepage that renders its own title
+invisible; caught over HTTP, fixed, re-measured).
+
+The slice carries the same one-question fixture provider (`theme()` → `mono`).
+Never install Erik and Mono together: both vote, the merge rule takes the
+first, and a theme decided by glob order is a theme nobody chose.
+
+- hash identical before and after the round trip;
+- `module:add Mono` → `/` answers **200** in `mono-shell`, hero H1 visible,
+  the full CSS inlined, zero runtime fetches (no `url(`, no `@import`, the
+  single `http` href is the page's own canonical);
+- `module:remove Mono` → `/` answers **200** back in `kernel-shell`.
+
+The first hash pair of this round trip mismatched — honestly recorded: two
+catalog fixes (an unprefixed `btn--sm` in the markup, the missing
+`mo-is-visible`) landed between H0 and H1, so the hashes compared different
+trees. The lifecycle was clean; the protocol was not. Re-run on the frozen
+tree: identical.
