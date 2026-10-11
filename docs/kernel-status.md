@@ -1212,3 +1212,52 @@ The last row is the interesting one: the admin theme's stylesheet comes from
 `public/dist/moonshine/manifest.json`, so that page is the artifact's own proof
 that `make assets` output, the module catalogue, the migrator runner and the
 zero-dependency runtime all work in the same tree.
+
+## Two `Modules` trees — and why the artifact ships one of them
+
+The first version of this script shipped both, and the first person to open
+`dist/` asked the obvious question: *"modules twice?"*. They are not copies of
+each other — but the artifact does not need both, and the default now ships
+one:
+
+| path in the repo | what it is | size | shipped by default |
+|---|---|---|---|
+| `modules/<Name>/` | the **catalogue**: slices waiting to be installed | 1.8 MB, 16 | **no** (`--with-catalogue`) |
+| `src/Modules/<Name>/` | the **installed copies**: what actually runs | 2.3 MB, 14 | yes |
+
+Measured overlap, in the build that does ship both: **12 of the 14 installed slices are byte-identical to their
+catalogue counterpart** (815 KiB of payload exists twice). Two differ, each for
+a reason that is state, not a bug:
+
+- `Blog` — the catalogue gained `tests/` this session; the installed copy
+  predates it. (`diff -rq`: *Only in modules/Blog: tests*.)
+- `Cardboard` — the installed copy still carries six JS files under
+  `Interfaces/HTTP/assets/scripts/` that the catalogue deliberately dropped in
+  `bbac4ee` ("kit assets un-coupled"), and **nothing references them**: a grep
+  for `admin-shell.js`, `admin-theme-init.js`, `bulk-actions.js`,
+  `compact-shell.js` across the module's PHP and templates finds no call site.
+  They are stale leftovers in the working tree, not a missing file in the
+  catalogue — a fresh `module:add Cardboard` produces the leaner, intended
+  slice.
+
+**Default: `modules/` is not shipped.** A deployment runs what is installed;
+installing happens in the repo, which is where the catalogue belongs (it is
+source, not runtime). Measured: **3.6 MB / 384 files**, and `dist/` carries the
+word Modules once — `src/Modules/`. The capability is gone *cleanly* rather than
+half-broken: `module:list` reports `Catalogued (0): (empty catalog)`,
+`module:add Scratch` exits **1** with `cms: Module 'Scratch' is not in the
+catalog (modules/Scratch/).`, and `module:remove` — which only deletes — still
+works (verified by removing `Mono` from the artifact; two assertions, not one:
+the command exits 0 and the directory is gone).
+
+**`--with-catalogue` is the opt-in**, for a deployment that must install
+modules on the target: **5.3 MB / 630 files**, and it reports the duplication it
+brings instead of leaving it to be discovered inside the artifact:
+
+```
+==> Catalogue in the artifact (module:add works here)
+    note: Blog — installed copy DIFFERS from the catalogue
+    note: Cardboard — installed copy DIFFERS from the catalogue
+    12 slice(s) byte-identical to the installed copy (a second copy of what runs)
+    2 drifted, 2 not installed
+```

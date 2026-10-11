@@ -74,8 +74,10 @@ make assets                    # theme bundles → public/dist/ (gitignored)
 bin/build/build-dist.sh        # → dist/ : assets, migrated databases, smoke-tested
 ```
 
-`dist/` carries no `vendor/`, no `Frontend/` sources and no dev configs, and it
-keeps `bin/cms` — that is the production tool for `module:add` / `module:remove`
-/ `migrate`, and it is plain PHP by design. The script migrates the artifact in
-place and then boots it over HTTP, so a broken build fails where it is built
+`dist/` carries no `vendor/`, no `Frontend/` sources, no dev configs and **one**
+`Modules` tree — the installed copies, not a second copy of the catalogue
+(`--with-catalogue` ships that too, for a target that must install modules
+itself). It keeps `bin/cms`: that is the production tool for `migrate` and
+`module:remove`, and it is plain PHP by design. The script migrates the artifact
+in place and then boots it over HTTP, so a broken build fails where it is built
 rather than on the server.

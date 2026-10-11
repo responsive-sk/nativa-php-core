@@ -27,7 +27,23 @@
 #   bin/build/build-dist.sh --skip-migrate     # ship the storage skeleton, no databases
 #   bin/build/build-dist.sh --skip-smoke       # skip the HTTP smoke test
 #   bin/build/build-dist.sh --with-env         # copy .env.example to dist/.env
+#   bin/build/build-dist.sh --with-catalogue  # also ship modules/ (module:add works in the artifact)
 #   bin/build/build-dist.sh --to <dir>         # write somewhere else (default: dist/)
+#
+# On `modules/` — and why the artifact carries the name "Modules" ONCE.
+#
+#   modules/<Name>/         the CATALOGUE: slices waiting to be installed
+#   src/Modules/<Name>/     the INSTALLED copies: what actually runs
+#
+# Both live in the repo; a deployment needs only the second one. Measured in
+# this tree: 12 of the 14 installed slices are BYTE-IDENTICAL to their catalogue
+# counterpart — 815 KiB, shipped twice, in a 5.3 MB artifact. The first look at
+# a dist built that way asks the same question it asked here ("modules twice?"),
+# and the honest answer was "yes, on purpose" the moment the catalogue was
+# wanted for `module:add` on the target. It is not wanted by default: a
+# deployment runs what is installed, and installing happens in the repo (or
+# through `--with-catalogue`, which restores the ability and reports the
+# duplication it brings — identical / drifted / not installed, per slice).
 #
 # No dependencies beyond bash + coreutils + tar: like `bin/cms` and
 # `extract-kernel.sh`, what builds the kernel must run where the kernel's own
@@ -48,6 +64,7 @@ SKIP_ASSETS=false
 SKIP_MIGRATE=false
 SKIP_SMOKE=false
 WITH_ENV=false
+WITH_CATALOGUE=false
 
 # Paths tar must not carry. Deliberately a deny-list with a reason per line,
 # because each of these would be a bug in the artifact rather than clutter:
@@ -145,6 +162,7 @@ while [ $# -gt 0 ]; do
         --skip-migrate) SKIP_MIGRATE=true ;;
         --skip-smoke)   SKIP_SMOKE=true ;;
         --with-env)     WITH_ENV=true ;;
+        --with-catalogue) WITH_CATALOGUE=true ;;
         --to)           DIST_DIR="${2:-}"; [ -n "$DIST_DIR" ] || fail "--to needs a directory"; shift ;;
         --help|-h)      usage; exit 0 ;;
         *) fail "unknown argument: $1 (see --help)" ;;
@@ -188,8 +206,36 @@ tar_args=( -C "$ROOT" )
 for path in "${EXCLUDES[@]}"; do
     tar_args+=( --exclude="$path" )
 done
+[ "$WITH_CATALOGUE" = false ] && tar_args+=( --exclude="./modules" )
 
 ( cd "$ROOT" && tar "${tar_args[@]}" -cf - . ) | ( cd "$DIST_DIR" && tar -xf - )
+
+# --- The two Modules trees ---------------------------------------------------
+# Reported, not assumed: how much of the catalogue is a second copy of what is
+# already running, and how many slices are installed but no longer match it.
+if [ "$WITH_CATALOGUE" = true ]; then
+    step "Catalogue in the artifact (module:add works here)"
+    identical=0
+    drifted=0
+    uninstalled=0
+    for slice in "$DIST_DIR/modules"/*/; do
+        name="$(basename "$slice")"
+        installed="$DIST_DIR/src/Modules/$name"
+        if [ ! -d "$installed" ]; then
+            uninstalled=$((uninstalled + 1))
+        elif diff -rq "$slice" "$installed" >/dev/null 2>&1; then
+            identical=$((identical + 1))
+        else
+            drifted=$((drifted + 1))
+            echo "    note: $name — installed copy DIFFERS from the catalogue"
+        fi
+    done
+    echo "    $identical slice(s) byte-identical to the installed copy (a second copy of what runs)"
+    echo "    $drifted drifted, $uninstalled not installed"
+else
+    step "Catalogue left out (the default): the artifact carries Modules once — src/Modules/"
+    echo "    module:add is unavailable here by design; rebuild --with-catalogue to ship it"
+fi
 
 # --- Storage skeleton + content ---------------------------------------------
 step "Creating the storage skeleton"
@@ -323,6 +369,11 @@ echo "  Version:    $VERSION ($COMMIT)"
 echo "  Build time: $BUILD_TIME"
 echo "  Output:     $DIST_DIR  ($size, $files files)"
 echo "  vendor/:    absent — the runtime has zero Composer packages"
+if [ "$WITH_CATALOGUE" = true ]; then
+    echo "  modules/:   catalogue INCLUDED (--with-catalogue) — slices exist twice, see above"
+else
+    echo "  modules/:   not shipped — the artifact runs what is installed; no second copy"
+fi
 echo ""
 echo "  Deploy with:"
 echo "    rsync -az --delete $DIST_DIR/ user@host:/var/www/nativa-php-core/"
