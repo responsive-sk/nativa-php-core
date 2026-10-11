@@ -143,6 +143,22 @@ final readonly class ModuleInstaller
      */
     public static function copyTree(string $from, string $to): int
     {
+        // The destination root first, and it is not a detail: the iterator
+        // below yields the source's CONTENTS in readdir order, so a slice whose
+        // root holds a file before any directory hands us that file while `$to`
+        // does not exist yet, and `copy()` fails. Measured on Boot 19 in a fresh
+        // checkout: `module:add` died with
+        // `Cannot copy .../TempHolder/module.json` — the lifecycle fixture, whose
+        // slice root holds `module.json` beside `src/`. It is intermittent by
+        // construction (the outcome depends on the filesystem's ordering, so the
+        // same test passed on the workstation and failed in CI), and no shipped
+        // catalogue entry triggers it today: all sixteen hold directories only.
+        // The contract is what is fixed here — `copyTree` must not depend on
+        // readdir order for a slice that carries a root file.
+        if (!is_dir($to) && !@mkdir($to, 0o775, true) && !is_dir($to)) {
+            throw new RuntimeException(sprintf('Cannot create directory: %s', $to));
+        }
+
         $count = 0;
         $iterator = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($from, \FilesystemIterator::SKIP_DOTS),

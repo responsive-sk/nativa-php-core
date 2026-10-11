@@ -14,8 +14,16 @@
 #                         config and appended to .gitignore (a "dry run" that
 #                         mutates the tree) and `rector-dry` printed "No
 #                         rector.php config found" and exited 0.
-#   3. PHPUnit          — Boot 18 tests / 45 assertions in the kernel-only
-#                         shape, plus the module lifecycle round trip.
+#   3. PHPUnit          — the harness suite AND the committed catalogue's own
+#                         tests (`modules/Blog/tests/`, a second PHPUnit
+#                         suite). Measured on this workflow's first run: the
+#                         kernel-only tree reports 18 tests / 32 assertions /
+#                         5 skipped, the workstation (Blog installed) 18 / 45
+#                         / 1. The split is not cosmetic — `tests/` is inside
+#                         phpstan's scope and `modules/` is not, so a test that
+#                         names an optional module's class cannot fail the
+#                         analyser of a tree where that module is absent. That
+#                         is exactly how run #1 went red here.
 #   4. Assets           — the pnpm workspace is committed, so the bundles that
 #                         /mark's stylesheet comes from are built HERE and the
 #                         manifest the PHP reader probes is asserted, not
@@ -175,7 +183,7 @@ jobs:
       # No pnpm, no build: nothing the kernel-only suite renders reads a bundle
       # (the kernel theme ships no CSS — see docs/kernel-status.md). The suite
       # asserts that `/mark` answers 404 here, which is the admin-is-a-module
-      # contract, and skips the Blog test it cannot run.
+      # contract, and skips the catalogue tests it cannot run (Blog's).
       - name: Run PHPUnit
         run: composer test
 
@@ -212,15 +220,26 @@ jobs:
         working-directory: Frontend/packages
 
       # The build output is gitignored, so nothing below can pass by finding a
-      # committed artifact. `mark`, `mark-switch` and `moonshine` are the entry
-      # keys `AssetManager` resolves out of this manifest and `AdminLayout`
-      # links on /mark; the keys are load-bearing and a rename breaks the admin
-      # chrome silently (a page with no stylesheet still answers 200).
-      - name: Assert the admin manifest still carries its entry keys
+      # committed artifact. `mark`, `mark-switch` and `moonshine` are the entries
+      # `AdminLayout::markCssLinks()` resolves out of this manifest for /mark;
+      # the names are load-bearing and a rename breaks the admin chrome
+      # silently (a page with no stylesheet still answers 200).
+      #
+      # Matched on the entries' `name` field, NOT on the manifest's top-level
+      # keys: Vite keys the manifest by RESOLVED SOURCE PATH
+      # (`src/mark/index.css`), a detail this step got wrong on its first run
+      # and a control (`any(... "nope")`) caught — a `has("mark")` assertion
+      # would have been red on every push, for the wrong reason.
+      - name: Assert the admin manifest still carries its entries
         run: |
           set -euo pipefail
-          jq -e 'has("mark") and has("mark-switch") and has("moonshine")' \
-            public/dist/moonshine/manifest.json > /dev/null
+          manifest=public/dist/moonshine/manifest.json
+          jq -e 'any(.[]; .name == "mark")
+                 and any(.[]; .name == "mark-switch")
+                 and any(.[]; .name == "moonshine")' "$manifest"
+          mark_css="public/dist/moonshine/$(jq -r '.[] | select(.name == "mark") | .file' "$manifest")"
+          test -f "$mark_css"
+          echo "ok  the manifest names its three entries and $mark_css exists"
           ls -l public/dist/moonshine/assets/
 
       # Chrome 70 (< 99) drops @layer blocks entirely, which is why the build

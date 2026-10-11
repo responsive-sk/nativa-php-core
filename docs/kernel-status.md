@@ -891,6 +891,48 @@ comment blocks and nothing else.
 | **14 modules installed**, no vendor: `/mark`, `/mark/categories` | 500 | 200 |
 | `PHP Fatal error` / `[KERNEL] Error` lines in `storage/logs/php-error.log` | not counted before | 0 |
 
+## What the kernel-only run of the suite found
+
+The workstation and CI run the same tests over **different trees**: here
+`src/Modules/` holds fourteen installed modules, there it holds `Core` +
+`Database`. Three things only the second shape shows — each reproduced in a
+copy of this tree with no `vendor/` and no installed slices:
+
+1. **`module:add` failed intermittently** — `Cannot copy
+   .../TempHolder/module.json`. `ModuleInstaller::copyTree()` never created
+   its destination root, and the iterator yields a slice's contents in
+   **readdir order**: a slice whose root holds a file before any directory
+   handed that file over while the target did not exist yet. The lifecycle
+   fixture is that shape (`module.json` beside `src/`), which is why the same
+   test passed on one filesystem and failed on another. Fixed at the contract
+   (`copyTree` creates `$to` first); no shipped catalogue entry triggers it
+   today — all sixteen hold directories only — so this was a trap waiting for
+   the first module that ships a README or a manifest.
+2. **`phpstan` failed on the registry test** — five `class.notFound` errors
+   for `Modules\Blog\Application\BlogServices`, in exactly the tree the test
+   skips in. Solely a *static* problem: the runtime reaches an optional module
+   through a class-name string (`LoginAction`'s idiom), but an analyser cannot
+   be told "this file is not analysed when the class is absent". The test moved
+   **to the module's own directory** (`modules/Blog/tests/`, a second PHPUnit
+   suite) — `tests/` is analysed and `modules/` is not, so a test that names an
+   optional module's class cannot break the analyser of a tree without that
+   module. That is also where such a test belongs: beside the code it covers,
+   in the committed catalogue.
+3. **`composer test` reported 1 error, not a skip** — the copyTree failure
+   above, surfacing through `ModuleLifecycleTest`'s round trip.
+
+After the three: the same copy runs **18 tests / 32 assertions / 5 skipped**
+(the Blog registry tests skip without Blog) and `phpstan` reports **no
+errors** — against 18 / 45 / 1 and clean on the workstation. `cs-fix-dry`,
+`rector-dry` and `make lint` are green in both.
+
+The assets job needed its own correction, and the assertion caught it: the
+Vite manifest is keyed by RESOLVED SOURCE PATH (`src/mark/index.css`), not by
+the entry name, so the `has("mark")` assertion this workflow shipped with was
+false on the first run — a red job for the wrong reason. It now matches the
+entries' `name` field (with a negative control proving the query can fail) and
+also asserts that the file the `mark` entry names exists.
+
 ## Two gates that could not fail
 
 `make lint` ended in `grep -v 'No syntax errors' || true`: it printed every

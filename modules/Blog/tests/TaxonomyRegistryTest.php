@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Tests\Modules;
+namespace Modules\Blog\Tests;
 
 use Modules\Blog\Application\BlogServices;
 use PHPUnit\Framework\Attributes\Test;
@@ -25,13 +25,16 @@ use PHPUnit\Framework\TestCase;
  *   restored in tearDown(), including "it did not exist".
  * - **Blog is a module.** A kernel-only tree has no registry to test, so the
  *   suite skips rather than fails — the same contract KernelOnlyBootTest uses
- *   for Cardboard, and the reason this file lives under tests/Modules.
+ *   for Cardboard. This is why the file lives HERE, beside the code it covers,
+ *   and not under `tests/`: `tests/` is inside PHPStan's scope and `modules/`
+ *   is not, so a test naming an optional module's class cannot make the
+ *   analyser of a tree without that module fail (CI run #1 did exactly that).
  * - **It drives the service, not the HTTP action.** The action's article half
  *   needs `storage/blog/`; the registry half is what regressed.
  */
 final class TaxonomyRegistryTest extends TestCase
 {
-    private const string MODULE = 'Blog';
+    private const MODULE = 'Blog';
 
     /** Absolute path of the registry file the service reads and writes. */
     private string $registry;
