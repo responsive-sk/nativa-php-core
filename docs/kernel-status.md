@@ -228,6 +228,34 @@ bypass, GET cached, POST skipped). ALL GREEN. The harness lives in `/tmp`,
 not in the tree: without the PHPUnit harness (task 2.1) a committed test
 could not run anywhere.
 
+## Boot 6 — the sitemap lists what the kernel serves (2026-10-11)
+
+`SitemapAction` no longer imports `Blog` (×3) or `Pages`. The article
+enumeration was Blog's half, the page enumeration Pages', the author profiles
+Blog's URL shape, the blog index and feeds the serving module's — four `M`
+ledger rows, deleted with the code they classified. The kernel lists home +
+locale roots and nothing else: a sitemap that advertises a 404 teaches a
+crawler to find one. When those modules arrive they extend the sitemap
+through their own contribution (a port, like every other kernel surface).
+
+The ledger: **13 → 9 edges (8 → 7 files)**. Remaining: `ServeUploadedFile`
+(Media), `SeedCommand` (Security + Users ×3), `PageContext` (Blog ×2, `C`),
+`MetricContract` + `CardboardRegistry` (Cardboard ×2).
+
+| Surface | Boot 5 | **Boot 6** | Note |
+|---|---|---|---|
+| `/sitemap.xml` | 200 (398 B) | **200** (398 B) | byte-identical body (modulo host port) — the guards already skipped everything the trim deleted |
+| `/` | 200 | **200** (22936 B) | unchanged |
+| `/robots.txt` | 200 | **200** (229 B) | unchanged — the Allow-list is permission, not advertisement; no fetch follows it |
+| `/docs` | 200 | **200** (22535 B) | unchanged |
+| `/nope` | 404 | **404** (3765 B) | unchanged |
+| `/mark` | 404 | **404** (3765 B) | unchanged |
+
+No new `[KERNEL] Error` (35 = 35). Gap #2 survives the trim: the sitemap
+still lists `/en/` from `ContentLocaleMapper::LANGUAGES` while no `/en/`
+route exists — the port has `languages()`, nothing in the mapper reads it
+yet.
+
 ## Bootstrapper
 
 ```
