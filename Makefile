@@ -33,6 +33,16 @@ analyze: ## Run phpstan + rector dry + cs-fixer dry
 extract-check: ## Verify this tree against the upstream kernel slice
 	bin/build/extract-kernel.sh --check --minimal-root $(MINIMAL_ROOT)
 
+##@ Assets
+assets: ## Copy built frontend bundles from the showcase's workspace (needs a build there)
+	@if [ ! -d "$(MINIMAL_ROOT)/public/dist" ]; then \
+		echo "No $(MINIMAL_ROOT)/public/dist — build it there first: cd $(MINIMAL_ROOT) && pnpm install && pnpm build", >&2; \
+		exit 1; \
+	fi
+	mkdir -p public/dist
+	cp -r "$(MINIMAL_ROOT)/public/dist/." public/dist/
+	@echo "Copied public/dist from $(MINIMAL_ROOT) (gitignored — a build artifact, not source)."
+
 ##@ Development
 dev: ## Start the local dev server (localhost:8000)
 	$(PHP) -S 127.0.0.1:8000 -t public/

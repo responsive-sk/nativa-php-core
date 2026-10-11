@@ -585,6 +585,56 @@ are **unverified beyond install + route**: their own acceptance suites (if
 any) were not run — this boot proves the graph installs and serves, not that
 the admin CRUD flows are correct.
 
+## Boot 15 — the admin gets its stylesheet (2026-10-11)
+
+The report was "`/mark` works but has no pnpm assets". Measured, it was
+worse and more specific than that:
+
+| | before | after |
+|---|---|---|
+| `rel="stylesheet"` links on `/mark` | 0 | 2 (mark, mark-switch) |
+| classes used vs defined | 67 used / **0 defined** | 67 / 64 |
+| inline shell JS | 21 344 B (works) | unchanged |
+
+The admin chrome's CSS comes from the Vite manifest
+(`AssetManager('moonshine')` → `public/dist/moonshine/manifest.json`), and
+this tree had no `public/dist` at all — no `Frontend/` workspace either, so
+there was nothing here to build. `markCssLinks()` degraded to an empty
+string exactly as designed; the page was simply unstyled.
+
+**Fixed by importing the build**, not by hand-writing admin CSS:
+`make assets` copies `public/dist` from the showcase workspace (which is
+where a build can actually happen), and the result is **gitignored** —
+`/public/dist/` is a build artifact, precisely as in `nativa-minimal`. The
+**fonts are tracked** instead (`public/fonts/mark/*.woff2`, 5 files, 140 K):
+the admin stylesheet `@font-face`s them, so they are source, not output,
+and a checkout that has them renders in the designed face rather than a
+fallback. All five answer 200.
+
+**A real coupling bug came out of it.** The kit's templates loaded their
+shell scripts through Cardboard's path
+(`Modules/Cardboard/Interfaces/HTTP/assets/scripts/…`), so a tree with Blog
+installed but **not** Cardboard — a configuration Blog's own closure
+allows — rendered admin pages with silently dead JS. Six scripts
+(`admin-shell`, `admin-shell-commands`, `admin-theme-init`, `bulk-actions`,
+`compact-shell`, `compact-shell-commands`) moved into the kit that loads
+them; Cardboard keeps the three its own templates use (`avatar-b64`,
+`settings-table`, `settings-tabs`). Verified with Cardboard *removed*:
+`/mark/articles` 200 (33 628 B) with the shell JS intact (304 + 21 344 B)
+and both stylesheets — the exact case that used to lose its scripts — plus
+`/mark` correctly 404 and a graceful `Guest` header (no provider).
+
+Three classes remain undefined and are recorded rather than papered over:
+`m-mono` (used as a class in the dashboard's system table; upstream defines
+only the `--m-mono` custom property), `m-btn--active` (period selector) and
+`m-trend--flat` (a docblock example). All three are cosmetic — the base
+rules style them — and all three are upstream's, so fixing them here would
+be a fork of a module we import verbatim.
+
+Gates after the change: `phpstan` clean, `composer test` 12/32, `--check`
+green, `/` 200 (22 934 B, unchanged), `/mark` 200 (35 545 B), no new
+`[KERNEL] Error` across the run.
+
 ## Bootstrapper
 
 ```

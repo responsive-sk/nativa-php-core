@@ -44,6 +44,15 @@ src/Modules/*
 # Lekalo runtime cache (regenerated, never committed) — same convention as nativa-minimal.
 .lekalo/cache/
 
+# Built frontend bundles (public/dist/<bundle>/ — Vite manifest + hashed
+# assets). A build artifact, exactly as in nativa-minimal: the kernel tree
+# ships no Frontend/ workspace, so a dist is produced elsewhere and copied
+# in (`make assets`), never committed. Without it the admin chrome renders
+# unstyled (its CSS comes from the manifest) while every PHP surface still
+# answers — see docs/kernel-status.md, Boot 15. The fonts the admin
+# stylesheet needs ARE tracked (public/fonts/): they are source, not output.
+/public/dist/
+
 # PHPUnit result cache (written on every run, never committed)
 .phpunit.result.cache
 

@@ -11,5 +11,5 @@ if (!isset($viewRendererGuard)) {
     throw new \RuntimeException('Template must be rendered via ViewRenderer.');
 }
 
-$bulkScript = Modules\Core\Application\Services\View\InlineJs::file('Modules/Cardboard/Interfaces/HTTP/assets/scripts/bulk-actions.js');
+$bulkScript = Modules\Core\Application\Services\View\InlineJs::file('Modules/CardboardKit/Interfaces/HTTP/assets/scripts/bulk-actions.js');
 ?>    <script nonce="__CSP_NONCE_PLACEHOLDER__"><?php echo $bulkScript; ?></script>
