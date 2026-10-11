@@ -282,6 +282,31 @@ The ledger: **9 → 8 edges (7 → 6 files)**. Remaining: `SeedCommand`
 
 No new `[KERNEL] Error` (35 = 35).
 
+## Boot 8 — the seed command leaves the kernel (2026-10-11)
+
+`SeedCommand` is deleted. Seeding writes hashed credentials, roles and
+permissions — a kernel with no auth has nothing to seed, and the permission
+vocabulary belongs to the module that enforces it. Four `M` rows
+(Security ×1, Users ×3) gone with the file; the content lives in git history
+and in `../nativa-minimal`, where the Users+Security slices will carry it.
+The kernel's own `bin/cms` never had a seed command (only `module:*`), so
+nothing references the deletion.
+
+The ledger: **8 → 4 edges (6 → 3 files)**. Remaining: `PageContext`
+(Blog ×2, `C`), `MetricContract` + `CardboardRegistry` (Cardboard ×2).
+
+All six surfaces unchanged (`/` 200 Mono 22936 B through `/mark` 404), log
+35 = 35 — a CLI deletion with no route to remove, verified anyway.
+
+### Mono stays installed here
+
+This checkout keeps `Mono` installed as its default presentation (operator
+state, gitignored — `src/Modules/Mono/` never enters history). The kernel's
+own defaults stay `kernel` deliberately: a kernel defaulting to a module
+theme it may not have is the same bug class this tree exists to kill
+(a page rendering another theme's answer). `ThemeKernel` falls back, the
+provider votes, the merge rule keeps every other kernel default.
+
 ## Bootstrapper
 
 ```
