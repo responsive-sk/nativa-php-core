@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "database",
+      "kind": "module",
+      "version": 1,
+      "description": "Database — the SQLite connection manager and the migrator runner. Owns no tables: a tree that created tables here would be creating a module's schema."
+    }
+  ]
+}

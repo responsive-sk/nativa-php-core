@@ -1,0 +1,4 @@
+{
+  "target": "php-nativa",
+  "note": "Nativa PHP 8.5 runtime — zero-dependency, SQLite per-module DBs, strict typing. Opaque target configuration. The kernel tree and the showcase name the same target deliberately: the runtime is one, the installed modules differ."
+}

@@ -29,6 +29,9 @@
 !/storage/sessions/.gitkeep
 !/storage/uploads/.gitkeep
 
+# Lekalo runtime cache (regenerated, never committed) — same convention as nativa-minimal.
+.lekalo/cache/
+
 # Editor / OS noise
 .idea/
 .vscode/

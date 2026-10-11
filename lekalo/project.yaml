@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "nativa_core",
+      "kind": "project",
+      "version": 1,
+      "description": "Nativa PHP Core — the kernel-only tree: Modules\\Core + Modules\\Database, one theme that needs no build, and a module catalog you can add to and remove from. Reference Lekalo semantic model, starting with the two kernel modules."
+    }
+  ]
+}

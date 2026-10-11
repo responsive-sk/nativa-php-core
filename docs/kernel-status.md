@@ -193,8 +193,11 @@ own. A tree that created tables here would be creating a module's schema.
 
 Present and verified: the kernel slice, the shell port, the kernel theme,
 `src/init.php`, the composition root, `config/session.php`, the storage skeleton,
-`composer.json` (zero production dependencies, dev-only tooling) and the
-`.env.example` for the keys the kernel reads.
+`composer.json` (zero production dependencies, dev-only tooling), the
+`.env.example` for the keys the kernel reads, and the Lekalo skeleton
+(`lekalo/project.yaml` + `modules/core` + `modules/database` + `targets/`, id
+`nativa_core` — the IR grammar takes no hyphens — `lekalo.lock` committed,
+`validate` + `validate --strict` green on CLI 0.6.5, 23 rules, 0 findings).
 
 Absent, deliberately: the module catalogue and `bin/cms module:add` /
 `module:remove` (tasks 3.1–3.2), `KernelOnlyBootTest` as a real test (2.3), and
