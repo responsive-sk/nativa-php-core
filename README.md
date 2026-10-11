@@ -37,11 +37,18 @@ installed.
 ## What it does today
 
 `docs/kernel-status.md` records the measured state, with the status codes read
-back off this tree rather than paraphrased from a plan. Measured 2026-10-11 on a
-freshly started server: `/robots.txt`, `/sitemap.xml` and `/docs` answer **200**,
-`/nope` and `/mark` answer **404** (not 500 — there is no admin route to protect
-with no `Users` module), and `/` is the single remaining 500, because
-`HomepageAction` still reaches for the module that owns the copy it renders.
+back off this tree rather than paraphrased from a plan. Measured on a freshly
+started server: `/`, `/robots.txt`, `/sitemap.xml` and `/docs` answer **200**,
+`/nope` answers **404**, and a module installed over HTTP answers `200` →
+`404` across `module:add` / `module:remove`.
+
+`/` was a 500 for most of this kernel's life — `HomepageAction` reached for a
+module that is not part of it. Boot 19 closed that, and the same boot found the
+worst defect the tree had: `Router` discovery made each class's **parent** a
+load-time dependency of routing, so a checkout with no `vendor/` answered 500 to
+every request because three of Core's own classes extend `symfony/console`. The
+repo's own [`docs/kernel-status.md`](docs/kernel-status.md) has the measurement
+and the fix.
 
 The shell port (`ShellContextProvider`, discovered by `#[AsShellContextProvider]`)
 is the first of the 34 edges cut: the site name, the active theme, the default
@@ -51,13 +58,24 @@ renders with no provider installed at all.
 
 ## Run it
 
-`composer install` first: measured, a tree with no `vendor/` cannot serve a single
-request, because `Router::scanDirectory()` lets the autoloader touch Core's own
-`Interfaces/CLI/Command/*` classes and three of them extend `symfony/console` — a
-dev-only dependency. See "Boot 1" in `docs/kernel-status.md`; the guard that would
-close it lives in `../nativa-minimal`'s architecture suite.
+```sh
+php -S 127.0.0.1:8000 -t public    # no vendor/ needed — the runtime is the point
+```
+
+`composer install` is for development only (phpstan, rector, php-cs-fixer,
+PHPUnit). It is not a prerequisite: `src/init.php` installs a PSR-4 fallback
+loader for the tree that has none, and the CI job called "Boot (kernel-only, no
+vendor)" exists precisely to keep that claim honest.
+
+## Build a deployable tree
 
 ```sh
-composer install          # dev tooling only — the runtime has zero Composer packages
-php -S 127.0.0.1:8000 -t public
+make assets                    # theme bundles → public/dist/ (gitignored)
+bin/build/build-dist.sh        # → dist/ : assets, migrated databases, smoke-tested
 ```
+
+`dist/` carries no `vendor/`, no `Frontend/` sources and no dev configs, and it
+keeps `bin/cms` — that is the production tool for `module:add` / `module:remove`
+/ `migrate`, and it is plain PHP by design. The script migrates the artifact in
+place and then boots it over HTTP, so a broken build fails where it is built
+rather than on the server.

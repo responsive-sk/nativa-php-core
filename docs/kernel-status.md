@@ -1123,3 +1123,92 @@ identical / 42 recorded** (was 250/38).
 The planted-edit negative control from the previous version of this section no
 longer applies to CI (there is no guard step there any more); it still holds for
 the clone-based run above.
+
+# Boot 21 — an article written by the module, and a dist you can deploy
+
+Two deliverables, one artifact each: content created through the Blog module's
+own write path, and a deployable tree produced by a packaging script.
+
+## The article
+
+`storage/blog/nativa-php-core.md` — a Slovak article about this kernel,
+discovered at `/blog` and served at `/blog/nativa-php-core` (200; ten `##`
+sections; the feed carries it).
+
+Three decisions worth recording, because each one could have been wrong quietly:
+
+- **It was written by `BlogCrudService::save()`**, not by hand-editing a file.
+  The module owns the front-matter serialization, and a hand-written header
+  would be a second implementation of it that only *looks* the same until a key
+  changes.
+- **The category was registered first**, through `BlogServices::taxonomy()`
+  (`storage/data/blog-taxonomy.json` now holds `Architektúra`), which is the
+  order the `/mark/categories` surface assumes.
+- **`author` is the display name and `author_email` is the login.** The admin
+  create action writes the *login* into `author` (`ArticlesCreateAction::buildMeta()`),
+  and the article page passes `author` straight into the JSON-LD — so an
+  article created by that form publishes its author's e-mail address in
+  structured data. Measured in the showcase's own content: 210 articles carry
+  `author: "Nativa Dev"` against 4 carrying an address. The article follows the
+  content convention, and the first draft here demonstrated the failure mode
+  before it was fixed (`"author":{"@type":"Person","name":"nativa.dev@example.test"}`).
+
+That last one is a real defect in the admin form, not a content problem. It is
+recorded here rather than fixed: the fix belongs to the action (stamp the
+resolved user's name next to the address it already stamps), and it is an
+upstream file — changing it here would add a divergence entry for a bug that
+should be fixed once, where it lives.
+
+## The dist
+
+`bin/build/build-dist.sh` — ported from upstream's script of the same name,
+which produces exactly this kind of artifact (all real file copies, no symlinks,
+so a plain FTP upload works), with three differences that are the kernel's:
+
+1. **`bin/cms` stays.** Upstream deletes its console from the dist because that
+   console extends `symfony/console`, a dev dependency. Here the console *is*
+   the production tool (`module:add/remove`, `migrate`) and it is plain PHP by
+   design — a dist that dropped it could not manage its own modules.
+2. **Assets are not rebuilt inside the script.** The pnpm workspace is committed
+   and `make assets` is the one build path, so the script delegates instead of
+   keeping a second copy of the pnpm invocation. `--skip-assets` uses the
+   existing `public/dist` and *fails* when there is none, rather than shipping a
+   dist with no stylesheet.
+3. **Databases are migrated, never seeded or copied.** The kernel has no
+   seeders, and the developer's `storage/data/` is local state. `php bin/cms
+   migrate` runs inside the artifact: nine databases, real schemas, fresh
+   `config.db` defaults, 168 locale rows — and it doubles as the proof that the
+   artifact boots with no `vendor/` at all.
+
+What it ships: `src/` (the installed slices travel with the tree), `config/`,
+`public/` (including the built `dist/`), `bin/cms`, `modules/` (the catalogue,
+so the deployed tree can still manage modules), `docs/`, `README.md`,
+`.env.example`, a fresh storage skeleton, content from `storage/{blog,pages,blog-images}`,
+and `.build-info`. What it excludes, with a reason per line in the script:
+history, CI, `tests/`, `Frontend/` sources, `vendor/`, `bin/build/`, the dev
+tool configs, `.env*`, runtime storage state, the Lekalo model and the repo's
+own ignore rules.
+
+## Measured, end to end
+
+```
+bin/build/build-dist.sh          # 3.0 s including the asset build
+  → dist/  5.3 MB, 630 files, vendor/: absent
+  ok  /  200   /sitemap.xml  200   /robots.txt  200   /docs  200   /nope  404
+  --  /mark  200   (the admin IS installed in this tree; not asserted)
+  error log is clean
+```
+
+Then, against the artifact itself rather than the source tree:
+
+| check | result |
+|---|---|
+| `GET /blog/nativa-php-core` from `dist/public` | 200, H1 + 10 sections |
+| `php dist/bin/cms module:add Scratch` → `GET /scratch` | 200 |
+| `php dist/bin/cms module:remove Scratch` → `GET /scratch` | 404 |
+| `dist/vendor` | does not exist — and the `/mark` 200 above is the admin module serving with no Composer packages at all |
+
+The last row is the interesting one: the admin theme's stylesheet comes from
+`public/dist/moonshine/manifest.json`, so that page is the artifact's own proof
+that `make assets` output, the module catalogue, the migrator runner and the
+zero-dependency runtime all work in the same tree.

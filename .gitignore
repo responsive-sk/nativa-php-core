@@ -19,6 +19,11 @@
 /storage/data/*.db-journal
 /storage/data/*.db-wal
 /storage/data/*.db-shm
+# The Blog taxonomy registry is the same kind of thing: a running site writes
+# it (BlogServices::taxonomy()->createCategory()), CategoriesManageAction reads
+# it back, and TaxonomyRegistryTest snapshots and restores it as SHARED runtime
+# state. Upstream does not track its own copy either.
+/storage/data/blog-taxonomy.json
 /storage/logs/*.log
 /storage/cache/*
 /storage/sessions/*
@@ -70,3 +75,9 @@ src/Modules/*
 .vscode/
 .DS_Store
 *.swp
+# Deployable build output (bin/build/build-dist.sh). An artifact, exactly like
+# /public/dist/ above: produced by a script, never committed. A trailing
+# comment on the pattern line does NOT work here — gitignore has no comment
+# syntax after a pattern, so the parentheses became part of it and the rule
+# silently matched nothing.
+/dist/
