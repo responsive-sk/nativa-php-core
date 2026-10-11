@@ -87,6 +87,42 @@ final class ModuleLifecycleTest extends TestCase
     }
 
     /**
+     * Installing a slice must drop the first-request migration marker.
+     *
+     * The marker says "the migrators of this module set have run"; a new
+     * module is a new set. Left standing, it suppressed the new module's
+     * migration and the first admin write died on a missing table
+     * (`audit_log`, Boot 16) — no table, no audit row, 500 on a create.
+     */
+    #[Test]
+    public function installingAModuleInvalidatesTheMigrationMarker(): void
+    {
+        $marker = APP_BASE_PATH . '/storage/cache/.migrations-applied';
+
+        if (!is_dir(dirname($marker)) && !mkdir(dirname($marker), 0o775, true) && !is_dir(dirname($marker))) {
+            throw new RuntimeException('Cannot create storage/cache: ' . dirname($marker));
+        }
+
+        file_put_contents($marker, "config\n");
+
+        try {
+            $installer = ModuleInstaller::fromAppPaths();
+            $installer->add(self::LEAF);
+
+            $this->assertFileDoesNotExist(
+                $marker,
+                'Installing a module must invalidate the first-request migration marker.',
+            );
+        } finally {
+            self::removeLeaf();
+
+            if (is_file($marker)) {
+                unlink($marker);
+            }
+        }
+    }
+
+    /**
      * Dispatch one path through a fresh interpreter and return the status.
      */
     private function dispatchInSubprocess(string $path): string
@@ -267,6 +303,12 @@ final class ModuleLifecycleTest extends TestCase
             || str_starts_with($rel, 'storage/cache/')
             || str_starts_with($rel, 'storage/sessions/')
         ) {
+            return true;
+        }
+
+        // pnpm's dependency store: gitignored state, and full of symlinks the
+        // hash walk would try to read as files. Not part of the tree.
+        if (str_starts_with($rel, 'Frontend/packages/node_modules/')) {
             return true;
         }
 

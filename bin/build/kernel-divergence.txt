@@ -35,13 +35,14 @@ DIVERGED src/Modules/Core/Interfaces/HTTP/Actions/DocsPageAction.php # Boot 12: 
 DIVERGED config/session.php # Boot 13: session default is nativa_core (matches .env.example)
 DIVERGED src/Modules/Core/Application/Services/AssetManager.php # Boot 13: unknown bundles fall back to kernel, not starter
 DIVERGED src/Modules/Core/Interfaces/HTTP/Actions/LlmsTxtAction.php # Boot 13: kernel-neutral copy, only routes the kernel serves
+DIVERGED src/Modules/Core/Infrastructure/Bootstrap/Bootstrapper.php # Boot 16: invalidateMigrations() — an install drops the first-request marker
 #
 # --- Rewritten surfaces: upstream moved after our import ----------------------
 DIVERGED src/Modules/Core/Interfaces/HTTP/Router.php # upstream task 0.3 loader guard (mayDeclareRoute) not adopted here; Boot 1 defect still inherited
 #
 # --- Rewritten roots ----------------------------------------------------------
 DIVERGED public/index.php # kernel-only composition root: nothing to wire, wiring is discovery
-DIVERGED bin/cms # kernel module tool (module:*), not the showcase console
+DIVERGED bin/cms # kernel module tool (module:* + migrate), not the showcase console
 DIVERGED composer.json # repo identity nativa/nativa-php-core, kernel dev deps
 DIVERGED composer.lock # resolved for the kernel composer.json
 DIVERGED phpunit.xml # kernel suites (Boot 10 harness)

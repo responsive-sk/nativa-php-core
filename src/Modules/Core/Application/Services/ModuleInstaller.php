@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Core\Application\Services;
 
+use Modules\Core\Infrastructure\Bootstrap\Bootstrapper;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use RuntimeException;
 
@@ -65,6 +66,10 @@ final class ModuleInstaller
         $target = AppPaths::instance()->src('Modules') . DIRECTORY_SEPARATOR . $name;
         $copied = self::copyTree($manifest->sourceDir, $target);
 
+        // The new slice may carry #[AsMigrator] classes, so the first-request
+        // marker must not outlive the module set it was written for.
+        Bootstrapper::invalidateMigrations();
+
         return ['copied' => $copied, 'flushed' => $this->flushPageCache()];
     }
 
@@ -103,6 +108,10 @@ final class ModuleInstaller
         }
 
         self::deleteTree(AppPaths::instance()->src('Modules') . DIRECTORY_SEPARATOR . $name);
+
+        // The remaining module set may differ from the one the marker was
+        // written for — let the next request re-derive it.
+        Bootstrapper::invalidateMigrations();
 
         $flushed = $this->flushPageCache();
 

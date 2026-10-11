@@ -8,13 +8,14 @@ declare(strict_types = 1);
  *
  * The kernel runtime has no Composer packages, so this tool cannot be a
  * symfony/console application the way the showcase's bin/cms is: what manages
- * modules must run in a tree whose vendor/ directory may not exist. Four
+ * modules must run in a tree whose vendor/ directory may not exist. Five
  * commands, argv-parsed, exit 0 on success and 1 on refusal or error:
  *
  *   module:list              installed + catalogued modules
  *   module:show <Name>       the manifest — what WOULD be installed, before anything is copied
  *   module:add <Name>        copy the slice in (refuses an incomplete closure by name)
  *   module:remove <Name>     delete the slice (refuses while another module imports it)
+ *   migrate                  run every module migrator (the first-request run, forced)
  *
  * The lifecycle itself lives in ModuleInstaller (a service the test harness
  * drives in-process); this script only prints results and maps refusals to
@@ -25,6 +26,8 @@ declare(strict_types = 1);
 use Modules\Core\Application\Services\ModuleCatalog;
 use Modules\Core\Application\Services\ModuleInstaller;
 use Modules\Core\Application\Services\ModuleManifest;
+use Modules\Core\Interfaces\CLI\CliOutput;
+use Modules\Core\Interfaces\CLI\Support\DatabaseMigrator;
 
 require_once __DIR__ . '/../src/init.php';
 
@@ -160,6 +163,28 @@ function usage(): void
     out('  module:show <Name>       the manifest before anything is copied');
     out('  module:add <Name>        install a module (refuses an incomplete closure)');
     out('  module:remove <Name> [--force]  remove a module (refuses while imported)');
+    out('  migrate                  run every module migrator (the first-request run, forced)');
+}
+
+/**
+ * Run every module migrator — the same idempotent run the HTTP bootstrap does
+ * on its first request, without the marker in the way.
+ *
+ * The marker is invalidated when a module is installed or removed, so this is
+ * not the everyday path; it is the lever for the two cases the marker cannot
+ * cover: a marker left stale by an older tree, and a table dropped by hand
+ * (measured on Boot 16 — `audit_log` gone, every admin write 500ing on it).
+ */
+function cmdMigrate(): void
+{
+    $output = new class () implements CliOutput {
+        public function writeln(string $message): void
+        {
+            out(strip_tags($message));
+        }
+    };
+
+    (new DatabaseMigrator())->run($output);
 }
 
 /** @param list<string> $argv */
@@ -200,6 +225,11 @@ function main(array $argv): void
             }
 
             cmdRemove($installer, $argv[2], in_array('--force', $argv, true));
+
+            break;
+
+        case 'migrate':
+            cmdMigrate();
 
             break;
 

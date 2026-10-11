@@ -48,6 +48,15 @@ SLICE_DIRS=(
     "src/Modules/Core"
     "src/Modules/Database"
     "config"
+    "Frontend/packages"
+)
+# Paths inside a slice dir that are NOT part of the slice: pnpm's dependency
+# store. It exists upstream (a built checkout) and here (after `make assets`),
+# it is 59 MB of third-party files, and comparing it would say nothing about
+# our code. Pruned from the stage in materialize_slice() and from the walk in
+# cmd_check().
+SLICE_SKIP=(
+    "Frontend/packages/node_modules"
 )
 SLICE_FILES=(
     "src/init.php"
@@ -131,6 +140,10 @@ materialize_slice() {
         mkdir -p "$dest/$p"
         cp -r "$src/$p/." "$dest/$p/"
     done
+    local skip
+    for skip in "${SLICE_SKIP[@]}"; do
+        rm -rf "${dest:?}/$skip"
+    done
     for p in "${SLICE_FILES[@]}"; do
         # phpstan.neon / Makefile may postdate the upstream checkout on old
         # clones; the slice tolerates their absence upstream but never here
@@ -199,6 +212,15 @@ cmd_check() {
     # and undercount); the count is reconciled after the loop.
     local drift="$stage/drift.log"
     : > "$drift"
+
+    # SLICE_SKIP paths are pruned from the walk too — otherwise this tree's
+    # own node_modules reports every dependency file as "exists only here".
+    local prune=()
+    local skip
+    for skip in "${SLICE_SKIP[@]}"; do
+        prune+=(-path "$ROOT/$skip" -prune -o)
+    done
+
     {
         for p in "${SLICE_DIRS[@]}" "${SLICE_FILES[@]}"; do
             [ -e "$ROOT/$p" ] && echo "$p"
@@ -215,7 +237,7 @@ cmd_check() {
                 if [ ! -e "$stage/$rel" ] && ! is_owned "$rel"; then
                     echo "DRIFT: $rel exists only here (not OWNED)" >> "$drift"
                 fi
-            done < <(find "$ROOT/$p" -type f -print0)
+            done < <(find "$ROOT/$p" "${prune[@]}" -type f -print0)
         fi
     done
     if [ -s "$drift" ]; then

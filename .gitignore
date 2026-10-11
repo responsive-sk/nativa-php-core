@@ -53,6 +53,11 @@ src/Modules/*
 # stylesheet needs ARE tracked (public/fonts/): they are source, not output.
 /public/dist/
 
+# pnpm workspace dependencies (Frontend/packages). The theme SOURCES are
+# tracked — they are what `make assets` builds; node_modules and pnpm's
+# virtual store are not.
+/Frontend/packages/node_modules/
+
 # PHPUnit result cache (written on every run, never committed)
 .phpunit.result.cache
 

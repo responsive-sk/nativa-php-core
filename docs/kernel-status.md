@@ -635,6 +635,145 @@ Gates after the change: `phpstan` clean, `composer test` 12/32, `--check`
 green, `/` 200 (22 934 B, unchanged), `/mark` 200 (35 545 B), no new
 `[KERNEL] Error` across the run.
 
+# Boot 16 — the admin CRUD flow, and the marker that ate its tables
+
+Verifying the admin flow end to end (the last item Boot 15 left open) found
+the write path broken — and not by the admin code.
+
+**What was measured.** `POST /mark/categories/create` with a valid CSRF
+token and `category=Verify-CRUD-…` → **500**, while the category *did*
+persist (Blog's taxonomy registry is
+`storage/data/blog-taxonomy.json`, not SQLite). The log named it:
+
+```
+[KERNEL] PDOException: no such table: audit_log
+  (Audit/Infrastructure/Persistence/Repositories/AuditLogRepository.php:29)
+```
+
+Every admin write records an audit event, so the write was landing and then
+dying on its own trail. `audit.db` was empty, and so were `blog`, `comments`,
+`outbox`, `core` and `media` — the tree answered 200 everywhere it did not
+write, which is why the flow had looked fine.
+
+**Root cause: a stale migration marker.** Migrations auto-run on the first
+request and then leave `storage/cache/.migrations-applied`, whose content was
+— measured — a single word: `config`. It was written on 2026-10-11 21:48,
+when Settings was the only installed module. Boot 14's `module:add` then
+installed thirteen more slices **without touching that file**, so the
+Bootstrapper kept skipping the run and none of their tables were ever
+created. Deleting the marker and hitting `/` re-ran all nine migrators
+(`audit, blog, comments, config, locales, media, outbox, questions, users`)
+and created `audit_log`, `article_views`, `outbox_messages`; the same POST
+then answered **302**, the category persisted, and `audit_log` held its
+`categories.create` row.
+
+**The full CRUD cycle, measured through HTTP** (Browser: `curl` with a
+session cookie and the form's CSRF token): `create` 302 → present in
+`blog-taxonomy.json`; `rename` 302 and `delete` 302, both audit-logged;
+a `POST` with no token → **403** (the CSRF guard fires); `login` 302 →
+`/mark`; no `[KERNEL] Error` anywhere in the run.
+
+**One caveat, upstream — not fixed here.** `rename` and `delete` rewrite
+**article front matter** (`replaceCategoryInAllArticles` /
+`removeCategoryFromAllArticles`); they never touch the registry. This tree
+has no `storage/blog/` at all, so *every* listed category is registry-only
+and both buttons are no-ops — they answer 302, write an audit row reading
+`(0 articles)`, and change nothing. `create` is the only button that
+persists here. The actions are `Modules\Blog`, imported verbatim, so this is
+recorded rather than forked (the same call as the three undefined CSS
+classes in Boot 15).
+
+**Gates after the change:** `phpstan` clean (82/82 files), `composer test`
+13 tests / 30 assertions / 1 skipped, `extract-kernel.sh --check` OK (57
+identical, 38 recorded divergences — the new Bootstrapper rewrite is the
+38th).
+
+**Fixed at the cause**, not by pre-creating tables: the marker records "the
+migrators of *this* module set have run", so `ModuleInstaller::add()` and
+`remove()` now call `Bootstrapper::invalidateMigrations()`. The next request
+re-runs the (idempotent) migrators against the new set. A regression test in
+`ModuleLifecycleTest` writes the marker, installs the fixture slice, and
+asserts it is gone.
+
+**No `migrate` command exists in this tree** — `bin/cms` ships `module:*`
+only, so until now the marker was a trap with no way out. The invalidation
+makes that a non-issue for the CLI path; `rm storage/cache/.migrations-applied`
+is the remaining manual lever, and it is now written down in the
+Bootstrapper's own docblock rather than left to be rediscovered.
+
+**Also confirmed on the way:** the login POST records its
+`security.auth.attempt` into the *Outbox*, so the same stale marker was
+logging `no such table: outbox_messages` on every sign-in — silent in the
+response, loud in the log. With the table now in place that line changed to
+`[OUTBOX] Failed to process security.auth.attempt (attempt 0/5): No handler
+registered for event type: security.auth.attempt` — a second, separate gap
+(the Outbox has no handler for the event the login emits) that the missing
+table had been hiding. Recorded, not fixed here: the login itself answers
+302 → `/mark` and holds the session regardless.
+
+# Boot 17 — the pnpm workspace comes home
+
+Boot 15 answered "`/mark` works but has no pnpm assets" by importing a
+**build** and keeping the tree Node-free. That left the honest objection
+standing: the imported bundle was production output, and nothing here could
+reproduce it. This boot imports the workspace instead.
+
+**What came in:** `Frontend/packages` — 193 files, 1.5 MB, copied verbatim
+from the showcase: the pnpm workspace root (`package.json`,
+`pnpm-workspace.yaml`, `pnpm-lock.yaml`, `tsconfig.base.json`,
+`tsconfig.build.json`), the shared `build/vite-theme-factory.ts` +
+`build/strip-at-layer.ts`, and one package per theme (`starter`, `erik`,
+`moonshine`, `magazine`, `minimal`, `basic`, `jednotka`). `node_modules`
+(59 MB of third-party files in the checkout it came from) is **not** part of
+the import and is gitignored, alongside the built `public/dist`.
+
+The factory needs no edit: it derives the repo root as
+`<root>/Frontend/packages/../..`, which is `<root>` in this tree exactly as
+it is upstream, so `outDir` lands on this `public/dist/<theme>/`.
+
+**Proven end to end, in this tree:**
+
+| | result |
+|---|---|
+| `pnpm install --frozen-lockfile` | 18 packages, all reused from the local store (offline) |
+| `pnpm build` | 7 theme bundles into `public/dist/<theme>/` |
+| `diff -rq public/dist ../nativa-minimal/public/dist` | **silent** — byte-identical build |
+| hashed names vs the Boot 15 import | identical (`mark-BlzW9kQ5.css`, `moonshine-DtY8mHQK.js`) |
+| `/mark` stylesheets, shell JS, 5 fonts | 200, unchanged |
+
+The build logs "…/fonts/mark/Gilroy-*.woff2 — didn't resolve at build time, it
+will remain unchanged to be resolved at runtime" for the five Gilroy faces —
+correct and expected: those URLs are absolute (`/fonts/mark/…`),
+the fonts are tracked in `public/fonts/`, and Boot 15 already verified all
+five answer 200.
+
+**`make assets` now builds here** (`cd Frontend/packages && pnpm install
+--frozen-lockfile && pnpm build`); the old copy-from-the-showcase target
+survives as `make assets-import` for a machine without pnpm. The
+`extract-kernel.sh` slice grew `Frontend/packages`, so the import is guarded
+rather than merely present: **250 identical / 38 recorded divergences** (was
+57/38). A new `SLICE_SKIP` list prunes `Frontend/packages/node_modules` from
+both the stage and the walk — without it the check compared a dependency
+store and reported every file as "exists only here".
+
+# Boot 17b — `bin/cms migrate`
+
+Boot 16 gave the tree a way to *recover* from a stale migration marker and no
+way to *force* one. `bin/cms` was four `module:*` commands by design, and the
+Bootstrapper's docblock pointed at a `migrate` command that this tree does
+not have. It has one now — a fifth argv-parsed command, zero dependencies
+like the rest, built directly on `DatabaseMigrator` and a three-line
+`CliOutput`:
+
+```
+php bin/cms migrate
+  → Migrating audit.db … ✓ Migrated: audit, blog, comments, config, locales,
+    media, outbox, questions, users
+```
+
+Verified against the Boot 16 failure state: `audit_log` dropped by hand,
+`migrate` recreated it, exit 0; an unknown command still exits 1.
+
 ## Bootstrapper
 
 ```

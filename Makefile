@@ -1,8 +1,9 @@
 # Nativa PHP Core — the kernel-only tree.
 #
 # Small subset of the showcase's Makefile: what can run here runs here, what
-# needs a module (migrate, seed, acceptance, frontend build, dist) lives where
-# the module lives. Every target delegates to composer scripts or to a plain
+# needs a module (seed, acceptance, dist) lives where the module lives. The
+# frontend build runs here too — the pnpm workspace under Frontend/packages is
+# part of this tree. Every target delegates to composer scripts or to a plain
 # command; make adds nothing but names.
 
 PHP ?= php
@@ -34,9 +35,17 @@ extract-check: ## Verify this tree against the upstream kernel slice
 	bin/build/extract-kernel.sh --check --minimal-root $(MINIMAL_ROOT)
 
 ##@ Assets
-assets: ## Copy built frontend bundles from the showcase's workspace (needs a build there)
+assets: ## Build the theme bundles in-tree (pnpm workspace under Frontend/packages)
+	@command -v pnpm >/dev/null 2>&1 || { \
+		echo "pnpm not found — install it, or use 'make assets-import' to copy a built dist." >&2; \
+		exit 1; \
+	}
+	cd Frontend/packages && pnpm install --frozen-lockfile && pnpm build
+	@echo "Built public/dist/<theme> from Frontend/packages (gitignored — a build artifact, not source)."
+
+assets-import: ## Fallback: copy the showcase's built bundles when pnpm is not available
 	@if [ ! -d "$(MINIMAL_ROOT)/public/dist" ]; then \
-		echo "No $(MINIMAL_ROOT)/public/dist — build it there first: cd $(MINIMAL_ROOT) && pnpm install && pnpm build", >&2; \
+		echo "No $(MINIMAL_ROOT)/public/dist — build it there first: cd $(MINIMAL_ROOT)/Frontend/packages && pnpm install && pnpm build", >&2; \
 		exit 1; \
 	fi
 	mkdir -p public/dist
