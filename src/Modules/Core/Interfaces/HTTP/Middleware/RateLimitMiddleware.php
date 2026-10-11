@@ -7,20 +7,30 @@ namespace Modules\Core\Interfaces\HTTP\Middleware;
 use Modules\Core\Application\Services\PageCacheService;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
-use Modules\Locales\Interfaces\HTTP\LocalesServices;
-use Modules\Outbox\Domain\SecurityEvents;
-use Modules\Outbox\Interfaces\HTTP\OutboxServices;
-use Modules\Security\Application\Services\RateLimiter;
+use Modules\Core\Interfaces\HTTP\ContentServices;
 
 /**
  * RateLimitMiddleware — general per-IP request throttling.
  *
  * Applies a 60 requests/minute limit per client IP, returning 429 when
  * exceeded. Loopback addresses (127.0.0.1, ::1, localhost) are exempt so
- * local development and testing are not throttled. The RateLimiter (and its
- * database connection) is constructed lazily only for non-loopback traffic.
- * Login-specific limits (5/min per IP + per-email) are enforced by the login
- * action via RateLimiter.
+ * local development and testing are not throttled.
+ *
+ * Three guards keep this file kernel-owned, one per edge it used to carry:
+ *
+ * - LOCALE. The cache key is per locale; without Locales it falls back to
+ *   the mapper's default (itself the shell provider's answer with a kernel
+ *   fallback) instead of loading a missing translation store.
+ * - OUTBOX. A throttled request is a security event, recorded only when the
+ *   outbox is installed: the `class_exists` guard emits through the module's
+ *   services when they are here and drops the event when they are not — the
+ *   request is answered either way, never fataled. No `use` statement names
+ *   the module, so the ledger stays clean while the behaviour survives.
+ * - LIMITER. The factory product is duck-typed, not type-hinted: the limiter
+ *   itself is a kernel obligation, so the middleware degrades (passes the
+ *   request through un-limited) rather than disappearing when the factory
+ *   yields nothing usable. The expected shape is `isAllowed(string, int,
+ *   int): bool` + `getRetryAfter(string): int`.
  *
  * When a PageCacheService is provided, blocked requests check the cache
  * for a cached HTML response. Cache hits are served with HTTP 429,
@@ -36,8 +46,8 @@ final readonly class RateLimitMiddleware implements MiddlewareInterface
     private const int GENERAL_WINDOW = 60;
 
     /**
-     * @param \Closure(): RateLimiter $rateLimiterFactory
-     * @param PageCacheService|null   $cache              Optional page cache for rate-limit fallback
+     * @param \Closure(): object $rateLimiterFactory Yields the limiter (isAllowed + getRetryAfter, see above)
+     * @param PageCacheService|null $cache Optional page cache for rate-limit fallback
      */
     public function __construct(
         private \Closure $rateLimiterFactory,
@@ -52,6 +62,11 @@ final readonly class RateLimitMiddleware implements MiddlewareInterface
         }
 
         $rateLimiter = ($this->rateLimiterFactory)();
+
+        if (!$this->isLimiter($rateLimiter)) {
+            return $next($request);
+        }
+
         $key = 'rate_limit:' . $request->getClientIp();
 
         if (!$rateLimiter->isAllowed($key, self::GENERAL_LIMIT, self::GENERAL_WINDOW)) {
@@ -62,17 +77,34 @@ final readonly class RateLimitMiddleware implements MiddlewareInterface
     }
 
     /**
-     * Record the trip as a durable security event.
+     * The factory crossed a module boundary, so its product is verified, not
+     * trusted: anything without the two limiter methods degrades to
+     * pass-through rather than fataling on the call.
+     */
+    private function isLimiter(mixed $rateLimiter): bool
+    {
+        return is_object($rateLimiter)
+            && method_exists($rateLimiter, 'isAllowed')
+            && method_exists($rateLimiter, 'getRetryAfter');
+    }
+
+    /**
+     * Record the trip as a security event — only when the outbox is installed.
      *
-     * A 429 is a caller being refused, which is the same category of fact as an
-     * authorization denial: something was refused, and reconstructing that
-     * afterwards is the whole point. The IP rides along because the audit row
-     * has a dedicated column for it and an investigation starts there.
+     * A 429 is a caller being refused, the same category of fact as an
+     * authorization denial, and the IP rides along because an investigation
+     * starts there. Without the outbox the event is dropped, not the request.
      */
     private function recordTrip(string $key, Request $request): void
     {
-        OutboxServices::securityEvent(
-            SecurityEvents::RATELIMIT_TRIPPED,
+        if (!class_exists('Modules\Outbox\Interfaces\HTTP\OutboxServices')
+            || !class_exists('Modules\Outbox\Domain\SecurityEvents')
+        ) {
+            return;
+        }
+
+        \Modules\Outbox\Interfaces\HTTP\OutboxServices::securityEvent(
+            \Modules\Outbox\Domain\SecurityEvents::RATELIMIT_TRIPPED,
             ['key' => $key, 'scope' => $request->getPathInfo(), 'ip' => $request->getClientIp()],
         );
     }
@@ -81,12 +113,12 @@ final readonly class RateLimitMiddleware implements MiddlewareInterface
      * Build the 429 response — serve cached HTML when available, bare
      * error string otherwise.
      */
-    private function blockedResponse(RateLimiter $rateLimiter, string $key, Request $request): Response
+    private function blockedResponse(object $rateLimiter, string $key, Request $request): Response
     {
         $this->recordTrip($key, $request);
 
         if (null !== $this->cache) {
-            $cacheKey = $this->cache->cacheKey($request, LocalesServices::locale()->current()->code());
+            $cacheKey = $this->cache->cacheKey($request, ContentServices::mapper()->defaultLocale());
             $cached = $this->cache->get($cacheKey);
 
             if (null !== $cached) {

@@ -371,7 +371,7 @@ final class ModuleCatalog
     /**
      * Module names this file imports — `use Modules\<X>\…` at line start (a
      * closure `use (` never matches: it has no `Modules\` segment after the
-     * keyword). Group-use (`use Modules\Blog\{A, B}`) reports the group owner.
+     * keyword). A group-use reports its group owner.
      *
      * @return list<string>
      */

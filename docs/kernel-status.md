@@ -178,6 +178,56 @@ lines from before the cut.
 home title is kernel-named since this step, the error pages are not — gap #4
 narrowed, not closed.
 
+## Boot 5 — the middleware lose their module imports (2026-10-11)
+
+`AuthMiddleware` (6 edges), `RateLimitMiddleware` (4) and
+`PageCacheMiddleware` (1) no longer import `Users`, `Outbox`, `Security` or
+`Locales`. The ledger moved with it: **24 → 13 edges (9 → 8 files)** — every
+`G` row is gone, and what remains is all `M` (the surfaces that move out) and
+`C` (the `PageContext` payload trim).
+
+**Added** — the auth port, mirroring the shell port's shape:
+
+| File | What it is |
+|---|---|
+| `Core/Domain/Contracts/AuthProvider.php` | the port: identity, protected paths, required permission, guest-only paths, event sink |
+| `Core/Domain/AuthIdentity.php` | kernel-owned identity (id, active, permissions) — the User entity never crosses |
+| `Core/Infrastructure/Attributes/AsAuthProvider.php` | the discovery attribute |
+| `Core/Application/Services/AuthProviderRegistry.php` | directory-scan discovery, first provider wins |
+
+**Rewired** — `AuthMiddleware` asks the port (session handling, remember-me
+and the permission table stay the module's; uncovered admin paths still cost
+access, never leak it); both cache middlewares key on the mapper's default
+locale instead of the translation store; the outbox emission in `RateLimit`
+is a `class_exists` guard (recorded only when installed, dropped otherwise —
+no `use`, so the ledger stays clean); the limiter factory product is
+duck-typed and degrades to pass-through when unusable.
+
+`index.php` is deliberately untouched: with no provider installed there is
+nothing to wire, and an `if` that can never be true here is untestable here.
+The registry IS the mechanism — the composition root wires the middleware
+around `AuthProviderRegistry::first()` when a module arrives.
+
+| Surface | Boot 4 | **Boot 5** | Note |
+|---|---|---|---|
+| `/` | 200 | **200** (22936 B) | still Mono (installed); ~400 B lighter — the white-page fix strips comments from the inlined CSS |
+| `/robots.txt` | 200 | **200** (229 B) | unchanged |
+| `/sitemap.xml` | 200 | **200** (398 B) | unchanged |
+| `/docs` | 200 | **200** (22535 B) | same comment-strip delta, Mono chrome |
+| `/nope` | 404 | **404** (3765 B) | unchanged |
+| `/mark` | 404 | **404** (3765 B) | still not found rather than forbidden — no provider, no middleware, no route |
+
+No new `[KERNEL] Error` (log count 35 = 35). The three middleware are not in
+the pipeline here (no `#[AsMiddleware]`, never were), so the statuses prove
+the rewrite broke nothing reachable; the guards themselves were proven by a
+throwaway CLI harness (stub provider, stub limiter, temp-dir cache — 14
+checks: anon→login, inactive→403, no-policy→403+event, missing-perm→403+event,
+allowed→next, guest-only→mark, public→next, allow→next, trip→bare-429 with no
+outbox and no fatal, trip→429+X-Cache-HIT, junk-limiter→next, loopback
+bypass, GET cached, POST skipped). ALL GREEN. The harness lives in `/tmp`,
+not in the tree: without the PHPUnit harness (task 2.1) a committed test
+could not run anywhere.
+
 ## Bootstrapper
 
 ```
