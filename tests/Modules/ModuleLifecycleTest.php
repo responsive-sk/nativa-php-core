@@ -140,24 +140,40 @@ final class ModuleLifecycleTest extends TestCase
     /**
      * Best-effort restore: every step is attempted even if one fails, the
      * first failure rethrown afterwards — a half-cleaned tree must be loud.
+     * Explicit per-step blocks (not a dynamic dispatch loop): PHPStan sees
+     * the @throws on each step, so the catches are provably live.
      */
     private static function cleanup(): void
     {
-        $first = null;
+        /** @var list<RuntimeException> $failures */
+        $failures = [];
 
-        foreach (['removeHolder', 'removeLeaf', 'deleteHolderFixture'] as $step) {
-            try {
-                self::{$step}();
-            } catch (\Throwable $e) {
-                $first ??= $e;
-            }
+        try {
+            self::removeHolder();
+        } catch (RuntimeException $e) {
+            $failures[] = $e;
         }
 
-        if (null !== $first) {
-            throw $first;
+        try {
+            self::removeLeaf();
+        } catch (RuntimeException $e) {
+            $failures[] = $e;
+        }
+
+        try {
+            self::deleteHolderFixture();
+        } catch (RuntimeException $e) {
+            $failures[] = $e;
+        }
+
+        if ([] !== $failures) {
+            throw $failures[0];
         }
     }
 
+    /**
+     * @throws RuntimeException
+     */
     private static function removeHolder(): void
     {
         $installer = ModuleInstaller::fromAppPaths();
@@ -171,6 +187,9 @@ final class ModuleLifecycleTest extends TestCase
         }
     }
 
+    /**
+     * @throws RuntimeException
+     */
     private static function removeLeaf(): void
     {
         $installer = ModuleInstaller::fromAppPaths();
@@ -184,6 +203,9 @@ final class ModuleLifecycleTest extends TestCase
         }
     }
 
+    /**
+     * @throws RuntimeException
+     */
     private static function deleteHolderFixture(): void
     {
         $dir = APP_BASE_PATH . '/modules/' . self::HOLDER;

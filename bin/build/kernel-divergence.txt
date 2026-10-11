@@ -1,0 +1,72 @@
+# Kernel divergence record — the complement --check guards.
+#
+# The kernel's source of truth is THIS repository (one-way import, not
+# re-derivation): extract-kernel.sh cannot regenerate this tree from
+# nativa-minimal, because ten boots of deliberate work stand between the
+# upstream slice and what is committed here. What --check asserts is that
+# every difference is a RECORDED one. A line missing here fails the check,
+# in both directions: a hand-edit outside the record, and an upstream change
+# nobody reviewed.
+#
+# Format: KIND <path> [# reason]   (path relative to the repo root)
+#
+#   DIVERGED  counterpart exists upstream but differs — recorded rewrite
+#   OWNED     exists only here (exact file, or a directory = whole subtree)
+#   DROPPED   exists only upstream — moved out or deleted on purpose
+#
+# --- Rewritten surfaces: the edge cuts (Boots 3-9) ---------------------------
+DIVERGED src/Modules/Core/Application/Services/View/InlineCss.php # Boot 5: comment-strip fix, Mono renders through it
+DIVERGED src/Modules/Core/Infrastructure/Registry/NavBadgeRegistry.php # Boot 9: prose without the deleted MetricRegistry
+DIVERGED src/Modules/Core/Interfaces/HTTP/Actions/HomepageAction.php # Boot 4: kernel home from ShellContext + PageContext
+DIVERGED src/Modules/Core/Interfaces/HTTP/Actions/SitemapAction.php # Boot 6: home + locale roots only
+DIVERGED src/Modules/Core/Interfaces/HTTP/ContentServices.php # Boot 3: default locale through the shell port
+DIVERGED src/Modules/Core/Interfaces/HTTP/FrontendLayout.php # Boot 3: brand, nav, languages through the shell port
+DIVERGED src/Modules/Core/Interfaces/HTTP/Middleware/AuthMiddleware.php # Boot 5: auth port, no Users import
+DIVERGED src/Modules/Core/Interfaces/HTTP/Middleware/PageCacheMiddleware.php # Boot 5: locale key without Locales
+DIVERGED src/Modules/Core/Interfaces/HTTP/Middleware/RateLimitMiddleware.php # Boot 5: ports + guards, no module imports
+DIVERGED src/Modules/Core/Interfaces/HTTP/PageContext.php # Boot 9: Blog types trimmed (C)
+DIVERGED src/Modules/Core/Interfaces/HTTP/ShellContext.php # Boot 3: kernel-owned nav items
+DIVERGED src/Modules/Core/Interfaces/HTTP/ThemeKernel.php # Boot 3: kernel theme only, unknown falls back
+DIVERGED src/Modules/Core/Interfaces/HTTP/ThemeResolver.php # Boot 3: theme + whitelist through the port
+#
+# --- Rewritten surfaces: upstream moved after our import ----------------------
+DIVERGED src/Modules/Core/Interfaces/HTTP/Router.php # upstream task 0.3 loader guard (mayDeclareRoute) not adopted here; Boot 1 defect still inherited
+#
+# --- Rewritten roots ----------------------------------------------------------
+DIVERGED public/index.php # kernel-only composition root: nothing to wire, wiring is discovery
+DIVERGED bin/cms # kernel module tool (module:*), not the showcase console
+DIVERGED composer.json # repo identity nativa/nativa-php-core, kernel dev deps
+DIVERGED composer.lock # resolved for the kernel composer.json
+DIVERGED phpunit.xml # kernel suites (Boot 10 harness)
+DIVERGED phpstan.neon # kernel analyse paths (this file is new here, adapted from upstream)
+DIVERGED Makefile # kernel target subset (this file is new here, adapted from upstream)
+DIVERGED .gitignore # installed slices are operator state, never history
+DIVERGED .env.example # the keys the kernel reads
+DIVERGED README.md # kernel README
+#
+# --- Owned: written here, no upstream counterpart ------------------------------
+OWNED src/Themes/kernel # the kernel's own theme (Boot 3); ThemeModule.php itself is upstream-identical and compared
+OWNED src/Modules/Core/Interfaces/HTTP/ThemeRegistry.php # kept after upstream removal; ThemeResolver + ThemeKernel still use it
+OWNED src/Modules/Core/Domain/Contracts/ShellContextProvider.php # shell port (Boot 3)
+OWNED src/Modules/Core/Domain/ShellNavItem.php # shell port (Boot 3)
+OWNED src/Modules/Core/Domain/Contracts/AuthProvider.php # auth port (Boot 5)
+OWNED src/Modules/Core/Domain/AuthIdentity.php # auth port (Boot 5)
+OWNED src/Modules/Core/Infrastructure/Attributes/AsShellContextProvider.php # shell port (Boot 3)
+OWNED src/Modules/Core/Infrastructure/Attributes/AsAuthProvider.php # auth port (Boot 5)
+OWNED src/Modules/Core/Application/Services/ShellContextProviderRegistry.php # shell port (Boot 3)
+OWNED src/Modules/Core/Application/Services/AuthProviderRegistry.php # auth port (Boot 5)
+OWNED src/Modules/Core/Application/Services/ModuleCatalog.php # module catalogue (catalog task)
+OWNED src/Modules/Core/Application/Services/ModuleManifest.php # module catalogue (catalog task)
+OWNED src/Modules/Core/Application/Services/ModuleInstaller.php # lifecycle service (Boot 10)
+OWNED src/Modules/Core/Domain/Contracts/RateLimiter.php # limiter shape the middleware guards (Boot 11)
+OWNED tests # kernel-native harness (Boot 10); extraction adopts it, not the reverse
+OWNED docs # kernel status log lives here
+OWNED bin/build # this script and this record (generation never emits them)
+#
+# --- Dropped: upstream-only, moved out on purpose --------------------------------
+DROPPED src/Modules/Core/Interfaces/CLI/Command/SeedCommand.php # Boot 8 (M): seed belongs to Users + Security
+DROPPED src/Modules/Core/Interfaces/HTTP/Actions/ServeUploadedFileAction.php # Boot 7 (M): serving uploads is Media's route
+DROPPED src/Modules/Core/Domain/Contracts/MetricContract.php # Boot 9: metric subsystem deleted whole
+DROPPED src/Modules/Core/Infrastructure/Attributes/AsMetricProvider.php # Boot 9: metric subsystem deleted whole
+DROPPED src/Modules/Core/Infrastructure/Registry/MetricRegistry.php # Boot 9: metric subsystem deleted whole
+DROPPED src/Modules/Core/Infrastructure/Registry/CardboardRegistry.php # Boot 9: metric subsystem deleted whole

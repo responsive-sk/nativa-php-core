@@ -30,7 +30,7 @@ final class MonoShellContextProvider implements ShellContextProvider
         return null;
     }
 
-    public function theme(): ?string
+    public function theme(): string
     {
         return 'mono';
     }

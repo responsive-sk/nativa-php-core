@@ -432,6 +432,21 @@ final class ModuleCatalog
 
         $decoded = json_decode((string) file_get_contents($file), true);
 
-        return is_array($decoded) ? $decoded : null;
+        if (!is_array($decoded)) {
+            return null;
+        }
+
+        // A JSON list is a malformed manifest, not a manifest without keys.
+        $manifest = [];
+
+        foreach ($decoded as $key => $value) {
+            if (!is_string($key)) {
+                return null;
+            }
+
+            $manifest[$key] = $value;
+        }
+
+        return $manifest;
     }
 }

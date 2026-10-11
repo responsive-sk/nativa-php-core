@@ -380,6 +380,56 @@ All six surfaces unchanged, log 35 = 35. Task 2.1's `extract-kernel.sh`
 still does not exist — but when it does, there is now a `tests/` worth
 adopting instead of bringing one.
 
+## Boot 11 — the extraction guard (2026-10-11)
+
+Task 2.1 closes the gap its own text names: the baseline commit carried the
+tree without `tests/`/`phpunit.xml`/`phpstan.neon`/`Makefile`, and `composer
+test` in a fresh clone failed until the harness landed (Boot 10) — now the
+remaining two files land too, plus the script the task actually asks for.
+
+- `bin/build/extract-kernel.sh` (`--to`, `--check`, `--minimal-root`):
+  materializes the upstream slice or diffs it against this tree. The
+  semantics are adapted to the section-1 ruling (the work happens HERE —
+  one-way import, not re-derivation): the script cannot regenerate our tree
+  from minimal, so `--check` guards the complement instead. Every difference
+  must be recorded in `bin/build/kernel-divergence.txt` (`DIVERGED` 20 /
+  `OWNED` 16 / `DROPPED` 6); anything unrecorded fails, in both directions.
+- `--check` is green: **65 identical, 30 recorded, exit 0** — and the
+  spec's mutation proof holds: a probe comment in an unlisted file flips it
+  to exit 1 with a unified diff naming the file; reverting flips it back.
+- `phpstan.neon` (level 9, kernel paths) + `Makefile` (kernel target subset
+  incl. `extract-check`): `composer phpstan` is green, `composer test` stays
+  7/7. Getting there fixed 8 real findings, no suppressions: a kernel-owned
+  `RateLimiter` contract narrows the middleware's guarded factory product
+  (the `isLimiter()` pass-through contract is untouched — only the type
+  after the guard changed), `readModuleJson` rejects non-string keys,
+  `bin/cms` handles undefined `$argv`, the lifecycle cleanup is explicit
+  per-step blocks, and two Mono annotations were fixed in the catalog and
+  synced to the installed copy.
+
+Two things the guard surfaced, recorded rather than fixed (both owned
+elsewhere): upstream's `Router` gained the task-0.3 loader guard after our
+import — the Boot-1 defect is still inherited here — and upstream deleted
+`ThemeRegistry`, which we keep. Both lines sit in the divergence record with
+the reason attached, so adopting either is a one-line deletion, not an
+investigation.
+
+Still open, deliberately: `cs-fix-dry`/`rector-dry` need configs this tree
+does not have (minimal's were not in 2.1's emitted list; importing them +
+passing them is its own task), and `composer analyze` stays red until then.
+`phpstan` + `test` + `extract-check` + `lint` are the green gates.
+
+Surfaces over HTTP (fresh `php -S` — the dev server was down when this
+boot was written): all six statuses match (`/` 200, robots/sitemap/docs
+200, `/nope` + `/mark` 404; sizes match except `/` at 22934 B vs historical
+22936 B). The 2 B are unexplained but bounded: two fresh renders differ in
+exactly three 32-byte runs — the three CSP nonces — and nothing else, and
+nothing in the `/` render path changed (both Mono edits are annotation- /
+signature-only, the middleware is not in the pipeline here). `php-error.log`
+grew during this boot, entirely from harness construction probes (the
+session-after-output fatal and the first-version OOM, all from `php -r` /
+PHPUnit processes — none from a served request).
+
 ## Bootstrapper
 
 ```

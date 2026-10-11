@@ -1,0 +1,16 @@
+parameters:
+    level: 9
+    paths:
+        - src/
+        - public/index.php
+        - bin/cms
+        - tests/
+    # src/init.php defines APP_BASE_PATH and loads the autoloaders, so
+    # analysed files resolve runtime constants and class metadata exactly
+    # as the application would.
+    bootstrapFiles:
+        - src/init.php
+    reportUnmatchedIgnoredErrors: false
+    ignoreErrors:
+        # MiddlewareRegistry::scanFile() uses array &$middlewares by-ref pattern
+        - '#Method Modules\\Core\\Interfaces\\HTTP\\Middleware\\MiddlewareRegistry::scanFile\(\) has parameter \$middlewares with no value type specified in iterable type array\.#'

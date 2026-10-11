@@ -138,6 +138,9 @@ final class MonoTheme implements ThemeModule
         return $this->cardSection($this->authorName($context), '', $context->articles);
     }
 
+    /**
+     * @param array<array-key, mixed> $articles article DTOs (slug + title read via get_object_vars, like cards())
+     */
     private function cardSection(string $title, string $subtitle, array $articles): string
     {
         $html = '<section class="mo-features-section"><div class="mo-container">'

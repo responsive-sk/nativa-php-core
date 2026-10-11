@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Core\Interfaces\HTTP\Middleware;
 
 use Modules\Core\Application\Services\PageCacheService;
+use Modules\Core\Domain\Contracts\RateLimiter;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\ContentServices;
@@ -46,7 +47,10 @@ final readonly class RateLimitMiddleware implements MiddlewareInterface
     private const int GENERAL_WINDOW = 60;
 
     /**
-     * @param \Closure(): object $rateLimiterFactory Yields the limiter (isAllowed + getRetryAfter, see above)
+     * @param \Closure(): object $rateLimiterFactory Yields the limiter candidate.
+     *        The product is unchecked until isLimiter() verifies the RateLimiter
+     *        shape, so the closure stays `object` — typing it narrower would
+     *        turn a junk product (pass-through by contract) into a TypeError.
      * @param PageCacheService|null $cache Optional page cache for rate-limit fallback
      */
     public function __construct(
@@ -67,6 +71,7 @@ final readonly class RateLimitMiddleware implements MiddlewareInterface
             return $next($request);
         }
 
+        /** @var RateLimiter $rateLimiter The isLimiter() guard verified the shape. */
         $key = 'rate_limit:' . $request->getClientIp();
 
         if (!$rateLimiter->isAllowed($key, self::GENERAL_LIMIT, self::GENERAL_WINDOW)) {
@@ -113,7 +118,7 @@ final readonly class RateLimitMiddleware implements MiddlewareInterface
      * Build the 429 response — serve cached HTML when available, bare
      * error string otherwise.
      */
-    private function blockedResponse(object $rateLimiter, string $key, Request $request): Response
+    private function blockedResponse(RateLimiter $rateLimiter, string $key, Request $request): Response
     {
         $this->recordTrip($key, $request);
 
