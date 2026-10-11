@@ -1,0 +1,345 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types = 1);
+
+/*
+ * bin/cms — the kernel's module tool. Plain PHP, zero dependencies.
+ *
+ * The kernel runtime has no Composer packages, so this tool cannot be a
+ * symfony/console application the way the showcase's bin/cms is: what manages
+ * modules must run in a tree whose vendor/ directory may not exist. Four
+ * commands, argv-parsed, exit 0 on success and 1 on refusal or error:
+ *
+ *   module:list              installed + catalogued modules
+ *   module:show <Name>       the manifest — what WOULD be installed, before anything is copied
+ *   module:add <Name>        copy the slice in (refuses an incomplete closure by name)
+ *   module:remove <Name>     delete the slice (refuses while another module imports it)
+ */
+
+use Modules\Core\Application\Services\ModuleCatalog;
+use Modules\Core\Application\Services\ModuleManifest;
+use Modules\Core\Application\Services\PageCacheService;
+use Modules\Core\Infrastructure\Paths\AppPaths;
+
+require_once __DIR__ . '/../src/init.php';
+
+/** @return never */
+function fail(string $message): void
+{
+    fwrite(STDERR, 'cms: ' . $message . PHP_EOL);
+    exit(1);
+}
+
+function out(string $message = ''): void
+{
+    fwrite(STDOUT, $message . PHP_EOL);
+}
+
+/**
+ * Copy a directory tree (every file, not just PHP — assets travel too).
+ *
+ * @throws \RuntimeException
+ */
+function copyTree(string $from, string $to): int
+{
+    $count = 0;
+    $iterator = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($from, FilesystemIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::SELF_FIRST,
+    );
+
+    /** @var SplFileInfo $entry */
+    foreach ($iterator as $entry) {
+        $target = $to . DIRECTORY_SEPARATOR . $iterator->getSubPathname();
+
+        if ($entry->isDir()) {
+            if (!is_dir($target) && !@mkdir($target, 0o775, true) && !is_dir($target)) {
+                throw new RuntimeException(sprintf('Cannot create directory: %s', $target));
+            }
+
+            continue;
+        }
+
+        if (!@copy($entry->getPathname(), $target)) {
+            throw new RuntimeException(sprintf('Cannot copy %s to %s.', $entry->getPathname(), $target));
+        }
+
+        $count++;
+    }
+
+    return $count;
+}
+
+/**
+ * Delete a directory tree.
+ *
+ * @throws \RuntimeException
+ */
+function deleteTree(string $dir): void
+{
+    $iterator = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::CHILD_FIRST,
+    );
+
+    /** @var SplFileInfo $entry */
+    foreach ($iterator as $entry) {
+        if ($entry->isDir() && !$entry->isLink()) {
+            if (!@rmdir($entry->getPathname())) {
+                throw new RuntimeException(sprintf('Cannot remove directory: %s', $entry->getPathname()));
+            }
+        } elseif (!@unlink($entry->getPathname())) {
+            throw new RuntimeException(sprintf('Cannot remove file: %s', $entry->getPathname()));
+        }
+    }
+
+    if (!@rmdir($dir)) {
+        throw new RuntimeException(sprintf('Cannot remove directory: %s', $dir));
+    }
+}
+
+function flushPageCache(): int
+{
+    $dir = AppPaths::instance()->storage(PageCacheService::DEFAULT_DIR);
+
+    return (new PageCacheService($dir))->flush();
+}
+
+function printManifest(ModuleManifest $manifest, string $where): void
+{
+    out(sprintf('Module %s (%s)', $manifest->name, $where));
+    out(sprintf('  source:      %s', $manifest->sourceDir));
+    out(sprintf('  sqlite file: storage/data/%s', $manifest->sqliteFile()));
+
+    foreach ($manifest->routes as $route) {
+        out(sprintf(
+            '  route:       %s %s  (name: %s, in %s)',
+            $route['method'],
+            $route['path'],
+            $route['name'] ?? '(none)',
+            $route['file'],
+        ));
+    }
+
+    $lists = [
+        'migrator'       => $manifest->migrators,
+        'middleware'     => $manifest->middleware,
+        'nav badge'      => $manifest->navBadges,
+        'markdown block' => $manifest->markdownBlocks,
+        'shell provider' => $manifest->shellProviders,
+        'theme module'   => $manifest->themeModules,
+        'asset'          => $manifest->assets,
+    ];
+
+    foreach ($lists as $kind => $files) {
+        foreach ($files as $file) {
+            out(sprintf('  %-14s %s', $kind . ':', $file));
+        }
+    }
+
+    $closure = $manifest->closure();
+
+    out('  closure:     ' . ([] === $closure ? '(none — a leaf)' : implode(', ', $closure)));
+    out('  module.json: ' . (null === $manifest->extra ? 'absent (scan alone decides)' : 'present'));
+
+    if ([] === $manifest->routes && [] === $manifest->migrators && [] === $manifest->middleware
+        && [] === $manifest->navBadges && [] === $manifest->markdownBlocks
+        && [] === $manifest->shellProviders && [] === $manifest->themeModules && [] === $manifest->assets
+    ) {
+        out('  contributes: nothing the scan can see');
+    }
+}
+
+function cmdList(ModuleCatalog $catalog): void
+{
+    $installed = $catalog->installed();
+    $catalogued = $catalog->catalogued();
+
+    out('Installed (' . count($installed) . '): ' . ([] === $installed ? '(none — kernel only)' : implode(', ', $installed)));
+    out('Catalogued (' . count($catalogued) . '): ' . ([] === $catalogued ? '(empty catalog)' : implode(', ', $catalogued)));
+}
+
+function cmdShow(ModuleCatalog $catalog, string $name): void
+{
+    try {
+        if ($catalog->isInstalled($name)) {
+            printManifest($catalog->installedManifest($name), 'installed');
+
+            return;
+        }
+
+        printManifest($catalog->manifest($name), 'catalog — not installed');
+    } catch (RuntimeException $e) {
+        fail($e->getMessage());
+    }
+}
+
+function cmdAdd(ModuleCatalog $catalog, string $name): void
+{
+    try {
+        $manifest = $catalog->manifest($name);
+    } catch (RuntimeException $e) {
+        fail($e->getMessage());
+    }
+
+    if (!ModuleCatalog::isValidName($name)) {
+        fail(sprintf("Invalid module name '%s'.", $name));
+    }
+
+    if ($catalog->isInstalled($name)) {
+        fail(sprintf("Module '%s' is already installed — refusing to overwrite the installed slice.", $name));
+    }
+
+    $missing = $catalog->missingDependencies($manifest);
+
+    if ([] !== $missing) {
+        // Refuse BEFORE copying anything: a half-installed module is worse
+        // than a refused one, because the tree it leaves behind answers for
+        // a module whose dependencies never arrived.
+        fail(sprintf(
+            "Cannot install '%s': missing dependencies: %s. Install them first (or add them to the catalog). Nothing was copied.",
+            $name,
+            implode(', ', $missing),
+        ));
+    }
+
+    $target = AppPaths::instance()->src('Modules') . DIRECTORY_SEPARATOR . $name;
+
+    try {
+        $count = copyTree($manifest->sourceDir, $target);
+    } catch (RuntimeException $e) {
+        fail($e->getMessage());
+    }
+
+    $flushed = flushPageCache();
+
+    out(sprintf("Installed '%s': %d file(s) copied to src/Modules/%s/.", $name, $count, $name));
+    out(sprintf('Page cache flushed (%d entr%s removed) — routes are reachable on the next request.', $flushed, 1 === $flushed ? 'y' : 'ies'));
+}
+
+function cmdRemove(ModuleCatalog $catalog, string $name, bool $force): void
+{
+    if (!ModuleCatalog::isValidName($name)) {
+        fail(sprintf("Invalid module name '%s'.", $name));
+    }
+
+    if (in_array($name, ModuleCatalog::KERNEL_MODULES, true)) {
+        fail(sprintf("Module '%s' is the kernel itself — it cannot be removed.", $name));
+    }
+
+    if (!$catalog->isInstalled($name)) {
+        fail(sprintf("Module '%s' is not installed.", $name));
+    }
+
+    $holders = $catalog->importedBy($name);
+
+    if ([] !== $holders && !$force) {
+        fail(sprintf(
+            "Cannot remove '%s': still imported by:%s%s\nRemove those first, or pass --force (the only way past a refusal). The slice is untouched.",
+            $name,
+            PHP_EOL . '  - ',
+            implode(PHP_EOL . '  - ', $holders),
+        ));
+    }
+
+    $slice = AppPaths::instance()->src('Modules') . DIRECTORY_SEPARATOR . $name;
+
+    try {
+        deleteTree($slice);
+    } catch (RuntimeException $e) {
+        fail($e->getMessage());
+    }
+
+    $flushed = flushPageCache();
+
+    out(sprintf("Removed '%s': the slice is gone.", $name));
+    out(sprintf('Page cache flushed (%d entr%s removed).', $flushed, 1 === $flushed ? 'y' : 'ies'));
+
+    // The code is not the data: what the module WROTE stays where it is, and
+    // the operator is told exactly what and where — a removal that silently
+    // deletes the only copy of someone's data is not a removal, it is loss.
+    $leftovers = [];
+    $db = AppPaths::instance()->storage('data' . DIRECTORY_SEPARATOR . strtolower($name) . '.db');
+
+    foreach ([$db, $db . '-wal', $db . '-shm', $db . '-journal'] as $file) {
+        if (is_file($file)) {
+            $leftovers[] = $file . ' (module database — kept)';
+        }
+    }
+
+    if ([] === $leftovers) {
+        out('No leftover data: no module database, no tracked uploads, no frontend package entry in this tree.');
+    } else {
+        out('Left behind (not deleted):');
+        foreach ($leftovers as $leftover) {
+            out('  - ' . $leftover);
+        }
+    }
+
+    if ([] !== $holders) {
+        out('Note: removed with --force while still imported by:');
+        foreach ($holders as $holder) {
+            out('  - ' . $holder);
+        }
+    }
+}
+
+function usage(): void
+{
+    out('Usage: php bin/cms <command> [args]');
+    out('');
+    out('  module:list              installed + catalogued modules');
+    out('  module:show <Name>       the manifest before anything is copied');
+    out('  module:add <Name>        install a module (refuses an incomplete closure)');
+    out('  module:remove <Name> [--force]  remove a module (refuses while imported)');
+}
+
+/** @param list<string> $argv */
+function main(array $argv): void
+{
+    $command = $argv[1] ?? '';
+
+    $catalog = ModuleCatalog::fromAppPaths();
+
+    switch ($command) {
+        case 'module:list':
+            cmdList($catalog);
+
+            break;
+
+        case 'module:show':
+            if (!isset($argv[2])) {
+                fail('module:show needs a module name.');
+            }
+
+            cmdShow($catalog, $argv[2]);
+
+            break;
+
+        case 'module:add':
+            if (!isset($argv[2])) {
+                fail('module:add needs a module name.');
+            }
+
+            cmdAdd($catalog, $argv[2]);
+
+            break;
+
+        case 'module:remove':
+            if (!isset($argv[2])) {
+                fail('module:remove needs a module name.');
+            }
+
+            cmdRemove($catalog, $argv[2], in_array('--force', $argv, true));
+
+            break;
+
+        default:
+            usage();
+
+            exit('' === $command ? 0 : 1);
+    }
+}
+
+main($argv);

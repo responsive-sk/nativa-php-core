@@ -199,8 +199,15 @@ Present and verified: the kernel slice, the shell port, the kernel theme,
 `nativa_core` — the IR grammar takes no hyphens — `lekalo.lock` committed,
 `validate` + `validate --strict` green on CLI 0.6.5, 23 rules, 0 findings).
 
-Absent, deliberately: the module catalogue and `bin/cms module:add` /
-`module:remove` (tasks 3.1–3.2), `KernelOnlyBootTest` as a real test (2.3), and
+Present since 2026-10-11: the module catalogue (`modules/`, task 3.1–3.2) —
+`ModuleCatalog`/`ModuleManifest` scan a slice as text, `bin/cms`
+`module:list/show/add/remove` (plain PHP, zero dependencies) moves it, and
+`modules/Scratch` is the lifecycle fixture whose round trip
+(`docs/modules.md`) leaves the tree byte-identical. `KernelOnlyBootTest` as a
+real test still waits for the harness: the round trip was proven live over
+HTTP, not by PHPUnit.
+
+Absent, deliberately: `KernelOnlyBootTest` as a real test (2.3), and
 `bin/build/extract-kernel.sh` + `--check` (2.1). The kernel theme ships no CSS, so
 a page it renders is valid and unstyled — plan task 2.2 wants a real trimmed
 design, not just a working one.
