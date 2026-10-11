@@ -11,10 +11,11 @@ use Themes\ThemeModule;
  * ThemeKernel connector — the ONLY place mapping a resolved theme name to its
  * `Themes\ThemeModule` implementation (explicit static match table).
  *
- * In this tree the table holds exactly one entry, the kernel's own theme, and
- * that is the correct size for a kernel-only tree rather than a gap: a theme
- * arrives with the module that ships it, and a module that is removed takes its
- * entry with it.
+ * In a kernel-only tree the table holds exactly one entry, the kernel's own
+ * theme — and a module-carried theme never lands here at all: `ThemeRegistry`
+ * discovers it from the installed modules, so a module that is removed takes
+ * its theme with it without anyone editing this file. The static table wins
+ * over discovery, so no module can shadow the kernel's own fallback.
  *
  * **An unknown name falls back to the kernel theme, never to a theme the tree
  * does not have.** This repo has already paid for the other shape once:
@@ -24,9 +25,9 @@ use Themes\ThemeModule;
  * `Themes\starter\StarterTheme` here would be the same bug with a fatal
  * instead of a wrong stylesheet.
  *
- * One-way dependency edge, Modules\Core → Themes, for this file alone; no real
- * runtime cycle, because a theme already depends on Core helpers
- * (`FrontendLayout::e`) — documented in ADR-0003.
+ * One-way dependency edge, Modules\Core → Themes, for this file and
+ * `ThemeRegistry` alone; no real runtime cycle, because a theme already
+ * depends on Core helpers (`FrontendLayout::e`) — documented in ADR-0003.
  */
 final class ThemeKernel
 {
@@ -37,7 +38,7 @@ final class ThemeKernel
 
     public static function for(string $theme): ThemeModule
     {
-        $class = self::MODULES[$theme] ?? self::MODULES[ThemeResolver::KERNEL_THEME];
+        $class = self::MODULES[$theme] ?? ThemeRegistry::all()[$theme] ?? self::MODULES[ThemeResolver::KERNEL_THEME];
 
         // class_exists() rather than a bare `new`: a stale catalogue entry or a
         // theme class deleted by hand must degrade to the kernel theme, not

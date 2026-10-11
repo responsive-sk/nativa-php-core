@@ -41,9 +41,9 @@ final class ThemeResolver
     public const string THEME_SETTING = 'theme';
 
     /**
-     * Public themes this tree can render. The kernel ships one; a module that
-     * installs a theme adds its own name here (or, from Phase 2/3 of the kernel
-     * change, the catalogue does it from the filesystem).
+     * Public themes this tree can render without asking anyone. The kernel
+     * ships one; a module-carried theme extends the set through
+     * `ThemeRegistry` (discovered from the filesystem, not added here).
      *
      * @var list<string>
      */
@@ -62,8 +62,12 @@ final class ThemeResolver
 
         $value = ShellContextProviderRegistry::theme();
 
-        return null !== $value && in_array($value, self::PUBLIC_WHITELIST, true)
-            ? $value
-            : self::KERNEL_THEME;
+        if (null !== $value
+            && (in_array($value, self::PUBLIC_WHITELIST, true) || ThemeRegistry::has($value))
+        ) {
+            return $value;
+        }
+
+        return self::KERNEL_THEME;
     }
 }

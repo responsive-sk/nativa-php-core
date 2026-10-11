@@ -1,0 +1,45 @@
+/* Erik critical CSS — the dark-first shell in one file, no build.
+   Inlined into <head> when no Vite manifest resolves (the honest answer for
+   a tree with no stylesheet build in it). No @charset/@import/@layer: the
+   bytes are inlined into every document response. */
+.er-shell {
+    background: #0b0f1a;
+    color: #e2e8f0;
+    font-family: system-ui, sans-serif;
+}
+.er-header, .er-footer {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+}
+.er-header__brand {
+    color: #f8fafc;
+    font-weight: 700;
+    text-decoration: none;
+}
+.er-nav__link, .er-locale__link {
+    color: #94a3b8;
+    text-decoration: none;
+}
+.er-nav__link[aria-current="page"] {
+    color: #f8fafc;
+}
+.er-main {
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+.er-section__title {
+    font-size: 1.75rem;
+    margin: 0 0 1rem;
+}
+.er-list {
+    padding-left: 1.25rem;
+}
+.er-list a {
+    color: #7dd3fc;
+}
+.er-section__empty {
+    color: #64748b;
+}
