@@ -852,7 +852,7 @@ does for its own tree, on the shape a fresh clone actually has (kernel-only:
 | PHPUnit | `composer test` in the kernel-only shape |
 | Assets (pnpm) | the committed workspace builds; the admin manifest keeps its entry keys; no `@layer` survived (Chrome 70 drops the block) |
 | Boot (no vendor) | no `vendor/`; `bin/cms migrate` + `module:list`; six surfaces over HTTP; a module installed → 200 → removed → 404; an empty error log |
-| Extract-check | a real checkout of upstream, then `bin/build/extract-kernel.sh --check` (Boot 20 — it printed "NOT RUN" until the upstream repository turned out to be public) |
+| Extract-check | **not run** — the guard diffs against upstream (`evan70/nativa-minimal`), which is PRIVATE and unreachable with this run's `GITHUB_TOKEN`; the job states the measurement and how to enable it (Boot 20) |
 
 ## What the no-vendor job caught
 
@@ -996,39 +996,87 @@ Absent, deliberately: a real trimmed design for the kernel theme. It ships no
 CSS, so a page it renders is valid and unstyled — plan task 2.2 wants a kernel
 theme that was *designed*, not just one that works. (`bin/build/extract-kernel.sh`
 + `--check`, listed here as absent while it did not exist, arrived in Boot 11 and
-runs in CI since Boot 20 — see below.)
+runs as `make extract-check`; a CI run would need a credential for the private
+upstream — see Boot 20, below.)
 
-# Boot 20 — extract-check in CI, and the four files upstream had not committed
+# Boot 20 — the extract-check linkage that was added and removed, and the four files upstream had not committed
 
-The `extract-check` job was a placeholder: it printed `NOT RUN` and exited 0
-because the guard diffs this tree against `../nativa-minimal` and a runner has
-no checkout of it. **The repository was never the obstacle — the path was.**
-`evan70/nativa-minimal` is public (`git ls-remote` answers anonymously,
-`HEAD = cc79d4e`), so CI can check it out.
+The `extract-check` job printed `NOT RUN` and exited 0 because the guard diffs
+this tree against `../nativa-minimal` and a runner has no checkout of it. The
+attempt to make it real ended where it started — with `NOT RUN` — and both
+halves are worth keeping, because the reason for the failure was measured late
+and would have been cheap to guess wrong (it *was* guessed wrong first).
 
-**One constraint fixes the layout.** `actions/checkout` throws on any `path`
-outside the workspace — from its source (`src/input-helper.ts`, the `path`
-input, read on `main`):
+## The attempt
+
+**Layout, first.** `actions/checkout` cannot produce a literal sibling — it
+throws on any `path` outside the workspace (its source, `src/input-helper.ts`,
+the `path` input: `Repository path '<resolved>' is not under
+'<GITHUB_WORKSPACE>'`, compared as `(repositoryPath + sep).startsWith(
+workspace + sep)` on absolute paths). So upstream went **inside** the
+workspace (`.upstream/nativa-minimal`) and the guard was pointed at it with
+`--minimal-root`, the override the script documents for CI. The nested tree is
+inert for the diff: the guard walks only `SLICE_DIRS` + `SLICE_FILES`.
+
+**It failed inside the action, and not because of the layout:**
 
 ```
-Repository path '<resolved path>' is not under '<GITHUB_WORKSPACE>'
+Syncing repository: evan70/nativa-minimal
+Determining the default branch
+Error: Not Found - https://docs.github.com/rest/repos/repos#get-a-repository
 ```
 
-The comparison is `(repositoryPath + sep).startsWith(githubWorkspacePath +
-sep)` on resolved absolute paths, so `../…` cannot satisfy it for any caller.
-A literal sibling `../nativa-minimal` therefore cannot be produced by the
-action. Upstream lands
-**inside** the workspace at `.upstream/nativa-minimal` and the guard is pointed
-at it with `--minimal-root` — the override the script documents for exactly
-this ("overridable, e.g. for CI checkouts elsewhere"). The nested tree is inert
-for the diff: the guard walks only `SLICE_DIRS` + `SLICE_FILES`, and
-`.upstream/` is in neither.
+**`evan70/nativa-minimal` is PRIVATE.** The run's `GITHUB_TOKEN` is scoped to
+*this* repository, so `GET /repos/evan70/nativa-minimal` answers **404** — for a
+private repository, even to a token that exists.
 
-## The gate's first real run was red, and it was right
+## How this got mis-diagnosed first (the useful part)
 
-Run in the CI layout — fresh clone of this repo + `git clone --depth 1` of
-upstream into `.upstream/nativa-minimal` — the guard reported **4 unrecorded
-differences**:
+The measurement the attempt rested on was this one:
+
+```
+$ git ls-remote https://github.com/evan70/nativa-minimal HEAD
+cc79d4ee994dda7ba2f563c8c224a34559cf032d	HEAD
+```
+
+Read as "a public read — the repository is reachable without credentials". It
+is not a public read: **this machine's git config carries
+`credential.helper = store`**, so the call was authenticated by a stored token
+and said nothing about visibility. With the helpers out of the picture:
+
+```
+$ GIT_CONFIG_GLOBAL=/dev/null GIT_ASKPASS=/bin/true \
+    git ls-remote https://github.com/evan70/nativa-minimal HEAD
+remote: Repository not found.
+fatal: Authentication failed for 'https://github.com/evan70/nativa-minimal/'
+```
+
+and the API agrees: `GET /repos/evan70/nativa-minimal` → **404** anonymously,
+**200** with the owner's token, which reports `"private": true`.
+
+The lesson generalises past this job: *a local check that passes is evidence
+about the local environment until you know what else it used.* "Anonymous" in
+a shell with a credential helper is a claim about the helper. The CI job was
+that check, run in the one environment that does not have the operator's
+credentials.
+
+## Resolution: the linkage is deleted
+
+Searching for a credential the runner has (a PAT secret) is a real option, and
+it is written down in the job rather than done: a fine-grained PAT with
+`contents: read` on the private upstream, stored as `UPSTREAM_TOKEN`, the
+checkout with that token, the guard with `--minimal-root`. Until someone
+decides to hold that secret, the job is `NOT RUN` again — now stating the
+measured reason instead of "a runner has no checkout of it", which was true but
+not the whole truth.
+
+Where the gate *can* run it is unchanged and green: `make extract-check` on a
+workstation, against the sibling checkout.
+
+## What the attempt found anyway
+
+Run against a **clone** of upstream — committed state, as opposed to the
+sibling's working tree — the guard reported **4 unrecorded differences**:
 
 ```
 DRIFT: Frontend/packages/jednotka/src/main.ts differs from upstream (not DIVERGED)
@@ -1056,22 +1104,22 @@ cannot report this.
 in `bin/build/kernel-divergence.txt` under a section that states the expiry:
 delete it once upstream commits them, because after that the two sides are
 identical and a `DIVERGED` line would only hide later drift in four theme
-files. Counts moved accordingly: **246 identical / 42 recorded** (was 250/38),
-locally and in the CI layout alike.
+files. The section also carries the reproduction — `git clone --depth 1` of
+upstream, then `--check --minimal-root` at the clone — because that comparison
+is the only one that shows them. Counts with the section in place: **246
+identical / 42 recorded** (was 250/38).
 
 ## Verified
 
-The job's steps, extracted from `ci.yml` and run in the CI layout:
+| check | result |
+|---|---|
+| guard against a fresh clone of upstream, four entries recorded | `OK (246 identical, 42 recorded divergences)`, exit **0** |
+| the same run with those four lines removed | exit **1**, `4 unrecorded difference(s)` — the entries are load-bearing, and the finding reproduces without CI |
+| `make extract-check` (sibling working tree) | `OK (246 identical, 42 recorded)`, exit **0** |
+| the job's `NOT RUN` step, extracted from the workflow and run | exit **0**, prints the private-repo reason and the way to enable it |
+| the job's steps | `Checkout code` (this repo) + that step; no second repository, no `secrets.` reference anywhere in the workflow |
+| anonymised upstream access | `Repository not found` / API 404 without a token; 200 with the owner's, `"private": true` |
 
-- guard step → exit **0**, `extract-kernel --check: OK (246 identical, 42
-  recorded divergences)`;
-- negative control — one planted comment appended to `src/init.php` → exit
-  **1**, `1 unrecorded difference(s)`; the `if: failure()` step then prints
-  both causes and the upstream SHA (`cc79d4e…`);
-- revert → green again.
-- `make extract-check` on the workstation stays green (246/42).
-
-What a red `extract-check` now means, stated in the job itself: a slice file
-was edited without recording it, **or upstream moved** — the second is the
-guard working as designed, and `make extract-check` reproduces the same diff
-locally.
+The planted-edit negative control from the previous version of this section no
+longer applies to CI (there is no guard step there any more); it still holds for
+the clone-based run above.

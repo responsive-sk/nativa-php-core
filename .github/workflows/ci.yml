@@ -34,11 +34,11 @@
 #                         deliberately: the kernel runtime has zero Composer
 #                         dependencies, and this is where that claim is either
 #                         true or not.
-#   6. Extract-check    — `bin/build/extract-kernel.sh --check` against a real
-#                         checkout of upstream, not a placeholder. Upstream is
-#                         public, so this is a gate CI can actually run (see
-#                         the job for the layout constraint actions/checkout
-#                         imposes, and for what a red here means).
+#   6. Extract-check    — NOT run: `bin/build/extract-kernel.sh --check` needs
+#                         a checkout of upstream, which is PRIVATE, and the
+#                         run's GITHUB_TOKEN cannot read it. The job records
+#                         that (with the measured evidence and how to enable
+#                         it) instead of reporting a pass it did not earn.
 # =============================================================================
 
 name: CI
@@ -384,68 +384,61 @@ jobs:
         run: tail -50 /tmp/server.log || true
 
   # ---------------------------------------------------------------------------
-  # EXTRACT-CHECK — the extraction guard, run against a checkout of upstream
+  # EXTRACT-CHECK — not run here, and the reason is measured, not assumed
   # ---------------------------------------------------------------------------
-  # This job used to print "NOT RUN" and exit 0, on the grounds that a runner
-  # has no checkout of `../nativa-minimal`. That was true of the PATH and false
-  # of the repository: upstream (`evan70/nativa-minimal`) is public, so the
-  # checkout is available to CI. One constraint decides the layout, and it is
-  # not cosmetic — actions/checkout THROWS on any `path` outside the workspace
-  # (`Repository path '…' is not under '…'`, src/input-helper.ts), so a literal
-  # sibling `../nativa-minimal` cannot be produced by it. Upstream therefore
-  # lands INSIDE this workspace and the guard is pointed at it with
-  # `--minimal-root` — the override the script documents for exactly this
-  # ("overridable, e.g. for CI checkouts elsewhere"). The nested tree is inert
-  # for the diff: the guard walks only its SLICE_DIRS/SLICE_FILES, and
-  # `.upstream/` is in neither.
+  # This job was briefly a real gate: a cross-repository `actions/checkout` of
+  # `evan70/nativa-minimal` plus `extract-kernel.sh --check --minimal-root
+  # .upstream/nativa-minimal`. It failed inside the action, at
+  # `Determining the default branch`:
   #
-  # A red job here means one of two things and the log names the file: someone
-  # edited inside the slice without recording it in
-  # bin/build/kernel-divergence.txt, or upstream moved and the change has not
-  # been reviewed. Triage is `make extract-check` on a workstation, where the
-  # same guard runs against the sibling checkout.
+  #     Error: Not Found - https://docs.github.com/rest/repos/repos#get-a-repository
+  #
+  # THE UPSTREAM REPOSITORY IS PRIVATE. The run's GITHUB_TOKEN is scoped to
+  # THIS repository, so `GET /repos/evan70/nativa-minimal` answers 404 — for a
+  # private repo it answers 404 even to a token that exists.
+  #
+  # The first version of this job concluded the opposite from a workstation
+  # measurement, and the way it was wrong is worth keeping: an "anonymous"
+  # `git ls-remote https://github.com/evan70/nativa-minimal` SUCCEEDS locally —
+  # because this machine's git config carries `credential.helper = store`, so
+  # the call was authenticated by a stored token and reported nothing about
+  # publicness. With the helpers disabled it is unambiguous:
+  #
+  #     GIT_CONFIG_GLOBAL=/dev/null GIT_ASKPASS=/bin/true git ls-remote …
+  #     remote: Repository not found.
+  #     fatal: Authentication failed for 'https://github.com/evan70/nativa-minimal/'
+  #
+  # and the API agrees: `GET /repos/evan70/nativa-minimal` is 404 without a
+  # token, 200 with the owner's, which reports `"private": true`.
+  #
+  # So the linkage is deleted rather than propped up with a secret. The guard
+  # itself is unchanged and runs where upstream IS a checkout — a workstation:
+  # `make extract-check`. What it needs to return here is a credential the
+  # runner has none of: a fine-grained PAT with `contents: read` on the private
+  # upstream, stored as the `UPSTREAM_TOKEN` secret, then `actions/checkout`
+  # with `repository: evan70/nativa-minimal` and that token, and the guard
+  # pointed at wherever the checkout lands with `--minimal-root` (a path INSIDE
+  # the workspace: the action throws on any `path` that escapes it —
+  # `Repository path '…' is not under '…'`, src/input-helper.ts).
+  #
+  # Recorded as not-run, not as a pass. A gate that cannot run must say so.
   extract-check:
     name: Extract-check
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
-    env:
-      UPSTREAM_REPOSITORY: evan70/nativa-minimal
-      UPSTREAM_PATH: .upstream/nativa-minimal
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Checkout the upstream kernel slice
-        uses: actions/checkout@v6
-        with:
-          repository: ${{ env.UPSTREAM_REPOSITORY }}
-          path: ${{ env.UPSTREAM_PATH }}
-          # The guard compares file CONTENTS, so history is dead weight.
-          fetch-depth: 1
-          # Upstream is public: no token is needed, and this keeps the run's
-          # own GITHUB_TOKEN from being offered to another repository.
-          persist-credentials: false
-
-      # No setup step: the guard needs bash + coreutils and nothing else, by
-      # design (its header: what manages the kernel must run where the kernel's
-      # own vendor/ may not exist).
-      - name: Diff this tree against the upstream slice
+      - name: Extract-check needs a credential this runner does not have
         run: |
-          set -euo pipefail
-          test -d "$UPSTREAM_PATH/src/Modules/Core" || {
-            echo "::error::no upstream slice at $UPSTREAM_PATH — the checkout step did not produce it"
-            exit 1
-          }
-          bin/build/extract-kernel.sh --check --minimal-root "$UPSTREAM_PATH"
-
-      # A gate that goes red has to say what red means, or the next person
-      # reads a diff of a file they never touched and calls it flaky.
-      - name: What a failure here means
-        if: failure()
-        run: |
-          echo "::error title=Extract-check failed::Either a slice file was edited without recording it in bin/build/kernel-divergence.txt, or upstream ($UPSTREAM_REPOSITORY) moved. Run 'make extract-check' locally to see the same diff."
-          echo "Upstream HEAD in this run:"
-          git -C "$UPSTREAM_PATH" log -1 --format='%H %ad %s' --date=short || true
+          echo "NOT RUN: bin/build/extract-kernel.sh --check diffs this tree against evan70/nativa-minimal."
+          echo "That repository is PRIVATE and this run's GITHUB_TOKEN is scoped to this one, so a"
+          echo "cross-repository checkout fails with: Not Found (GET /repos/evan70/nativa-minimal)."
+          echo
+          echo "Run it where upstream is a sibling checkout:  make extract-check"
+          echo "To run it here: add a fine-grained PAT (contents: read on the private repo) as the"
+          echo "UPSTREAM_TOKEN secret and check the upstream out with it, then pass the checkout"
+          echo "path to the guard as --minimal-root."
 

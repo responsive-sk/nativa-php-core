@@ -87,10 +87,18 @@ DROPPED src/Modules/Core/Infrastructure/Registry/CardboardRegistry.php # Boot 9:
 # edits were not committed yet — so what is committed here is upstream's NEXT
 # commit, not a hand-edit.
 #
-# They are recorded because CI's extract-check compares against a CHECKOUT of
-# upstream, i.e. committed state: without these lines the job reports four
-# "unrecorded difference(s)" that no one edited. Measured upstream HEAD when
-# they were added: cc79d4e (2026-10-10).
+# They are recorded because comparing against a CLONE of upstream — i.e. its
+# committed state — reports them, while the sibling check cannot: the sibling
+# is a working tree with those edits already in it. Reproduce, with the clone
+# anywhere (upstream is PRIVATE, so this needs a credential local git has):
+#
+#   git clone --depth 1 https://github.com/evan70/nativa-minimal /tmp/up
+#     (upstream is PRIVATE: this works here because the local git config has a
+#      credential helper carrying the token, and it fails `Repository not
+#      found` once the helper is out of the picture)
+#   bin/build/extract-kernel.sh --check --minimal-root /tmp/up
+#     → 4 unrecorded differences without this section, OK (246 identical, 42
+#       recorded) with it.  Measured at upstream HEAD cc79d4e (2026-10-10).
 #
 # DELETE THIS SECTION once upstream commits them. The guard is then identical
 # on both sides and these lines would only hide later drift in four theme
