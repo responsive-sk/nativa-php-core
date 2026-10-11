@@ -1,0 +1,33 @@
+<?php
+
+declare(strict_types = 1);
+
+/**
+ * Rendered via Modules\Core\Application\Services\View\ViewRenderer.
+ * Variables are provided by the caller; $this is not available.
+ *
+ * The folder grid above this block is LINKS. Rename and delete are forms, so
+ * they live here instead of inside a tile: a `<form>` nested in an `<a>` is
+ * invalid HTML that browsers resolve by silently dropping one of the two, and
+ * which one they drop depends on the parser.
+ */
+
+if (!isset($viewRendererGuard)) {
+    throw new \RuntimeException('Template must be rendered via ViewRenderer.');
+}
+
+?>    <!-- OPEN by default: a `<details>` that ships closed is a control nobody
+         finds, and the project has already paid for that lesson once (the
+         jednotka contents strip painted 25px off-screen inside a closed
+         summary). Collapsing is the user's choice, not the default. -->
+    <details class="m-card m-folder-manage" open>
+        <summary class="m-folder-manage__summary">Manage folders <span class="m-badge m-badge-gray"><?php echo $folderCount; ?></span></summary>
+        <form class="m-folder-manage__create" method="post" action="/mark/media/folders/create">
+            <?php echo $csrf; ?>
+            <label class="m-label" for="folder-new">New folder</label>
+            <input class="m-input m-input--compact" id="folder-new" type="text" name="path" placeholder="photos/2026" required>
+            <button class="m-btn m-btn--sm" type="submit">Create folder</button>
+            <p class="m-muted m-folder-manage__hint">A folder exists as soon as it is created, even before a file lands in it.</p>
+        </form>
+        <?php echo $rows; ?>
+    </details>

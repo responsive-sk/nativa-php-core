@@ -31,6 +31,13 @@ use Modules\Core\Infrastructure\Paths\AppPaths;
 final class FrontendLayout
 {
     /**
+     * Last-resort site name — used when no provider answers through the
+     * shell port. One constant so the layout, the title helpers and the
+     * error fallback cannot disagree about what the tree is called.
+     */
+    public const string DEFAULT_SITE_NAME = 'Nativa PHP Core';
+
+    /**
      * The shared public base critical-CSS chain, in cascade order — the
      * single source of truth every public theme's `criticalCss()` list
      * starts with (themes that layer their own sections append them after
@@ -93,7 +100,7 @@ final class FrontendLayout
     public static function render(
         string $title,
         string $content,
-        string $siteName = 'Nativa PHP Core',
+        string $siteName = self::DEFAULT_SITE_NAME,
         string $description = 'Nativa PHP Core — the kernel-only tree: zero-dependency runtime, attribute routing, a middleware pipeline, per-module SQLite connections and a theme that needs no build.',
         string $currentPath = '/',
         ?array $localeLinks = null,

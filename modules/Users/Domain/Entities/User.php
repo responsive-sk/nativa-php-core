@@ -1,0 +1,158 @@
+<?php
+
+declare(strict_types = 1);
+
+namespace Modules\Users\Domain\Entities;
+
+/**
+ * User domain entity.
+ */
+final class User
+{
+    /** @var list<string> role names */
+    private array $roles = [];
+
+    /** @var list<string> permission names */
+    private array $permissions = [];
+
+    /** Normalized once at the boundary (fromRow) — no re-guessing per call. */
+    private readonly bool $isActive;
+
+    private readonly ?string $lastLoginAt;
+
+    /**
+     * @param array<string, mixed> $data raw row from users table
+     */
+    public function __construct(private array $data)
+    {
+        $active = $data['is_active'] ?? 1;
+        $this->isActive = 1 === (is_numeric($active) ? (int) $active : 0);
+
+        $lastLogin = $data['last_login_at'] ?? null;
+        $this->lastLoginAt = is_string($lastLogin) && '' !== $lastLogin ? $lastLogin : null;
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    public static function fromRow(array $row): self
+    {
+        return new self($row);
+    }
+
+    public function id(): string
+    {
+        /** @var string $id */
+        $id = $this->data['id'];
+
+        return $id;
+    }
+
+    public function name(): string
+    {
+        /** @var string $name */
+        $name = $this->data['name'];
+
+        return $name;
+    }
+
+    public function email(): string
+    {
+        /** @var string $email */
+        $email = $this->data['email'];
+
+        return $email;
+    }
+
+    /**
+     * Relative stored-avatar path (e.g. 2026/08/09/<hex>.png), or null when
+     * the user has no avatar.
+     */
+    public function avatar(): ?string
+    {
+        $avatar = $this->data['avatar'] ?? null;
+
+        return is_string($avatar) && '' !== $avatar ? $avatar : null;
+    }
+
+    public function password(): string
+    {
+        /** @var string $password */
+        $password = $this->data['password'];
+
+        return $password;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->isActive;
+    }
+
+    public function lastLoginAt(): ?string
+    {
+        return $this->lastLoginAt;
+    }
+
+    public function createdAt(): string
+    {
+        /** @var string $createdAt */
+        $createdAt = $this->data['created_at'];
+
+        return $createdAt;
+    }
+
+    /**
+     * @param list<string> $roles
+     */
+    public function setRoles(array $roles): void
+    {
+        $this->roles = $roles;
+    }
+
+    /**
+     * @param list<string> $permissions
+     */
+    public function setPermissions(array $permissions): void
+    {
+        $this->permissions = $permissions;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function roles(): array
+    {
+        return $this->roles;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function permissions(): array
+    {
+        return $this->permissions;
+    }
+
+    public function hasRole(string $role): bool
+    {
+        return in_array($role, $this->roles, true);
+    }
+
+    /**
+     * Check whether the user holds a permission, either directly or through
+     * any of their roles.
+     */
+    public function hasPermission(string $permission): bool
+    {
+        if (in_array($permission, $this->permissions, true)) {
+            return true;
+        }
+
+        // 'admin' role bypasses permission checks (super-user).
+        if (in_array('admin', $this->roles, true)) {
+            return true;
+        }
+
+        return false;
+    }
+}

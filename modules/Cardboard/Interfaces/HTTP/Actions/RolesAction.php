@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Cardboard\Interfaces\HTTP\Actions;
 
 use Modules\Audit\Interfaces\HTTP\AuditServices;
-use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
+use Modules\CardboardKit\Interfaces\HTTP\AdminLayout;
 use Modules\Cardboard\Interfaces\HTTP\CardboardServices;
 use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Application\Services\View\ViewRenderer;

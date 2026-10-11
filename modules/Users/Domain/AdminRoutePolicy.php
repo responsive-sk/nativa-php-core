@@ -1,0 +1,189 @@
+<?php
+
+declare(strict_types = 1);
+
+namespace Modules\Users\Domain;
+
+use Modules\Users\Domain\Entities\User;
+
+/**
+ * AdminRoutePolicy — which permission each `/mark` path needs.
+ *
+ * `/mark` was one gate on one hardcoded role name, which meant the whole
+ * permission graph — five permissions, a roles UI, per-role assignment — was
+ * decorative: an administrator could grant an author role every right in the
+ * system and the author still got a 403, because `admin` was a literal.
+ *
+ * This is the table that makes those grants mean something. It is a TABLE and
+ * not a chain of `if` statements on purpose: a new admin route that nobody
+ * classified must fail CLOSED. An unmapped `/mark/whatever` resolves to
+ * `null`, and `null` is not a permission anyone holds — so forgetting to add a
+ * row costs access, never leaks it.
+ *
+ * Longest prefix wins, so `/mark/users/create` resolves through `users.manage`
+ * rather than falling back to the `/mark` baseline.
+ *
+ * `User::hasPermission()` still short-circuits on the `admin` role, so an
+ * administrator passes every row below — but by holding all five, not by the
+ * gate skipping the check.
+ *
+ * @internal
+ *
+ * @coversNothing
+ */
+final class AdminRoutePolicy
+{
+    /**
+     * Path prefix => permission. NOT sorted: `permits()` picks the longest
+     * matching prefix, so order here carries no meaning.
+     *
+     * @var array<string, string>
+     */
+    private const array TABLE = [
+        '/mark'                  => Permissions::MARK_ACCESS,
+
+        // Content. Articles, pages, comments, media and forms are all "the
+        // things a writer works with" — one permission keeps the author role
+        // readable, and the audit log still says exactly which action ran.
+        '/mark/articles'         => Permissions::CONTENT,
+        '/mark/pages'            => Permissions::CONTENT,
+        '/mark/categories'       => Permissions::CONTENT,
+        '/mark/tags'             => Permissions::CONTENT,
+        '/mark/comments'         => Permissions::CONTENT,
+        '/mark/questions'        => Permissions::CONTENT,
+        '/mark/media'            => Permissions::CONTENT,
+        '/mark/forms'            => Permissions::CONTENT,
+
+        // Bulk actions: the COARSE check only. The POST body names the entity,
+        // and that choice is attacker-controlled, so `permissionForEntity()`
+        // applies the fine-grained one before any id is touched. This row is
+        // "may reach a bulk endpoint at all"; it is not the entity's own gate.
+        '/mark/bulk-publish'     => Permissions::CONTENT,
+        '/mark/bulk-delete'      => Permissions::CONTENT,
+
+        // Admin-only: these can reshape access itself, so they are never part
+        // of a content role.
+        '/mark/locales'          => Permissions::SETTINGS,
+        '/mark/settings'         => Permissions::SETTINGS,
+        '/mark/users'            => Permissions::USERS,
+        '/mark/roles'            => Permissions::ROLES,
+        '/mark/permissions'      => Permissions::ROLES,
+        '/mark/audit'            => Permissions::ROLES,
+    ];
+
+    /**
+     * Is this path inside the admin area at all?
+     *
+     * `/mark` exactly, or anything below it.
+     */
+    public static function isAdminPath(string $path): bool
+    {
+        return '/mark' === $path || str_starts_with($path, '/mark/');
+    }
+
+    /**
+     * The permission this path requires, or null when it is an admin path no
+     * table row classifies. Callers must treat null as DENY.
+     *
+     * @return string|null
+     */
+    public static function requiredPermission(string $path): ?string
+    {
+        if (!self::isAdminPath($path)) {
+            return null;
+        }
+
+        $best = null;
+        $bestLength = -1;
+
+        foreach (self::TABLE as $prefix => $permission) {
+            if (!self::matches($path, $prefix)) {
+                continue;
+            }
+
+            $length = strlen($prefix);
+
+            if ($length > $bestLength) {
+                $best = $permission;
+                $bestLength = $length;
+            }
+        }
+
+        return $best;
+    }
+
+    /**
+     * May this user open this path?
+     *
+     * An unmapped admin path is refused, so adding a route without
+     * classifying it is a 403 rather than an accidental hole.
+     */
+    public static function permits(string $path, User $user): bool
+    {
+        $permission = self::requiredPermission($path);
+
+        if (null === $permission) {
+            return false;
+        }
+
+        return $user->hasPermission($permission);
+    }
+
+    /**
+     * The classified prefixes, for the coverage guard and for documentation.
+     *
+     * @return list<string>
+     */
+    public static function prefixes(): array
+    {
+        return array_keys(self::TABLE);
+    }
+
+    /**
+     * The permission a BULK operation needs, keyed by the entity it names.
+     *
+     * `/mark/bulk-publish` and `/mark/bulk-delete` are one route each, but the
+     * POST body chooses what they operate on — and that choice is
+     * attacker-controlled. Classifying the path alone was the live hole: an
+     * author passed the `content.manage` row for the bulk route and then named
+     * `users`, reaching user deletion through a content permission. This table
+     * is checked AFTER the path and BEFORE any id is touched.
+     *
+     * An unknown entity returns null, so a new entity type cannot be added to
+     * a bulk form without also being classified here.
+     */
+    public static function permissionForEntity(string $entity): ?string
+    {
+        return match ($entity) {
+            'articles', 'pages'     => Permissions::CONTENT,
+            'users'                 => Permissions::USERS,
+            'roles'                 => Permissions::ROLES,
+            default                 => null,
+        };
+    }
+
+    /**
+     * Every entity a bulk operation accepts — the coverage guard's counterpart
+     * to `permissionForEntity()`.
+     *
+     * @return list<string>
+     */
+    public static function bulkEntities(): array
+    {
+        return ['articles', 'pages', 'users', 'roles'];
+    }
+
+    /**
+     * A prefix matches a path whole-segment only, so `/mark/users` cannot
+     * authorize `/mark/usersomething` — the trailing part of the prefix has to
+     * be either nothing or a `/`.
+     */
+    private static function matches(string $path, string $prefix): bool
+    {
+        if ($path === $prefix) {
+            return true;
+        }
+
+        return str_starts_with($path, str_ends_with($prefix, '/') ? $prefix : $prefix . '/');
+    }
+}

@@ -1,0 +1,113 @@
+<?php
+
+declare(strict_types = 1);
+
+namespace Modules\Audit\Application\Services;
+
+use Modules\CardboardKit\Domain\Model\Card;
+use Modules\CardboardKit\Domain\Model\CardLink;
+use Modules\CardboardKit\Domain\Model\Charts\Bar;
+use Modules\CardboardKit\Domain\Model\Period;
+use Modules\CardboardKit\Domain\Model\Trend;
+use Modules\CardboardKit\Domain\Contracts\MetricContract;
+use Modules\CardboardKit\Infrastructure\Attributes\AsMetricProvider;
+use Modules\CardboardKit\Infrastructure\Registry\CardboardRegistry;
+use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
+
+/**
+ * AuditMetric — aggregated admin action metric cards for the dashboard.
+ *
+ * Registers 1 card:
+ * 1. Audit — admin actions in period + trend + top actions bar chart
+ *
+ * Data sources: audit.db → audit_log (created_at, action).
+ */
+#[AsMetricProvider(priority: 60)]
+final readonly class AuditMetric implements MetricContract
+{
+    public function registerCards(Period $period): void
+    {
+        try {
+            $pdo = DatabaseConnectionManager::instance()->connection('audit');
+
+            $total = $this->countInPeriod($pdo, $period->sqlInterval());
+            $previous = $this->countBetweenPeriods(
+                $pdo,
+                $period->previousSqlInterval(),
+                $period->sqlInterval(),
+            );
+
+            $trend = Trend::make($total, $previous);
+
+            $topActions = $this->topActions($pdo, $period->sqlInterval());
+            $bar = new Bar($topActions);
+
+            CardboardRegistry::register(
+                Card::make('audit', 'Admin Actions', $total)
+                    ->withChart($bar)
+                    ->withTrend($trend)
+                    ->withSubtitle('in ' . $period->label())
+                    ->withActions(
+                        CardLink::make('View Log', '/mark/audit'),
+                    )
+                    ->withPriority(55),
+            );
+        } catch (\Throwable) {
+            // Database not ready — skip silently.
+        }
+    }
+
+    private function countInPeriod(\PDO $pdo, string $interval): int
+    {
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*) FROM audit_log WHERE created_at >= datetime(\'now\', :interval)',
+        );
+        $stmt->execute([':interval' => $interval]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    private function countBetweenPeriods(\PDO $pdo, string $fromInterval, string $toInterval): int
+    {
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*) FROM audit_log WHERE created_at >= datetime(\'now\', :from) AND created_at < datetime(\'now\', :to)',
+        );
+        $stmt->execute([':from' => $fromInterval, ':to' => $toInterval]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    /**
+     * Top 5 actions by count in the period, for the bar chart.
+     *
+     * @return list<array{label: string, value: int, color: string}>
+     */
+    private function topActions(\PDO $pdo, string $interval): array
+    {
+        $stmt = $pdo->prepare(
+            'SELECT action, COUNT(*) as cnt FROM audit_log WHERE created_at >= datetime(\'now\', :interval) GROUP BY action ORDER BY cnt DESC LIMIT 5',
+        );
+        $stmt->execute([':interval' => $interval]);
+
+        $colors = [
+            'var(--m-primary)',
+            'var(--m-info)',
+            'var(--m-success)',
+            'var(--m-warning)',
+            'var(--m-muted)',
+        ];
+
+        $bars = [];
+        $i = 0;
+        foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $row) {
+            $bars[] = [
+                'label' => (string) $row['action'],
+                'value' => (int) $row['cnt'],
+                'color' => $colors[$i % count($colors)],
+            ];
+            $i++;
+        }
+
+        return $bars;
+    }
+}

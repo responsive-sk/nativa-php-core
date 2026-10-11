@@ -1,0 +1,126 @@
+<?php
+
+declare(strict_types = 1);
+
+namespace Modules\Users\Application\Services;
+
+use Modules\CardboardKit\Domain\Model\Card;
+use Modules\CardboardKit\Domain\Model\CardLink;
+use Modules\CardboardKit\Domain\Model\Period;
+use Modules\CardboardKit\Domain\Model\Trend;
+use Modules\CardboardKit\Domain\Contracts\MetricContract;
+use Modules\CardboardKit\Infrastructure\Attributes\AsMetricProvider;
+use Modules\CardboardKit\Infrastructure\Registry\CardboardRegistry;
+use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
+
+/**
+ * UsersMetric — aggregated user/session metric cards for the dashboard.
+ *
+ * Registers 2 cards:
+ * 1. Users — total count + new in period (Trend)
+ * 2. Sessions — active sessions (last 30min) + new in period (Trend)
+ *
+ * Data sources: users.db → users (created_at), sessions (created_at, last_activity).
+ */
+#[AsMetricProvider(priority: 100)]
+final readonly class UsersMetric implements MetricContract
+{
+    public function registerCards(Period $period): void
+    {
+        try {
+            $pdo = DatabaseConnectionManager::instance()->connection('users');
+
+            $this->registerUsersCard($pdo, $period);
+            $this->registerSessionsCard($pdo, $period);
+        } catch (\Throwable) {
+            // Database not ready — skip silently.
+        }
+    }
+
+    private function registerUsersCard(\PDO $pdo, Period $period): void
+    {
+        $totalStmt = $pdo->query('SELECT COUNT(*) FROM users');
+        $total = false !== $totalStmt ? (int) $totalStmt->fetchColumn() : 0;
+
+        $newInPeriod = $this->countInPeriod($pdo, 'users', 'created_at', $period->sqlInterval());
+        $newPreviously = $this->countBetweenPeriods(
+            $pdo,
+            'users',
+            'created_at',
+            $period->previousSqlInterval(),
+            $period->sqlInterval(),
+        );
+
+        $trend = Trend::make($newInPeriod, $newPreviously);
+
+        CardboardRegistry::register(
+            Card::make('users', 'Users', $total)
+                ->withTrend($trend)
+                ->withSubtitle('new in ' . $period->label())
+                ->withActions(
+                    CardLink::make('List', '/mark/users'),
+                    CardLink::make('New', '/mark/users/create'),
+                )
+                ->withPriority(100),
+        );
+    }
+
+    private function registerSessionsCard(\PDO $pdo, Period $period): void
+    {
+        $activeStmt = $pdo->query(
+            'SELECT COUNT(*) FROM sessions WHERE last_activity > datetime("now", "-30 minutes")',
+        );
+        $active = false !== $activeStmt ? (int) $activeStmt->fetchColumn() : 0;
+
+        $newInPeriod = $this->countInPeriod($pdo, 'sessions', 'created_at', $period->sqlInterval());
+        $newPreviously = $this->countBetweenPeriods(
+            $pdo,
+            'sessions',
+            'created_at',
+            $period->previousSqlInterval(),
+            $period->sqlInterval(),
+        );
+
+        $trend = Trend::make($newInPeriod, $newPreviously);
+
+        CardboardRegistry::register(
+            Card::make('sessions', 'Sessions', $active)
+                ->withTrend($trend)
+                ->withSubtitle('new in ' . $period->label())
+                ->withPriority(90),
+        );
+    }
+
+    /**
+     * Count rows where column >= now + interval.
+     */
+    private function countInPeriod(\PDO $pdo, string $table, string $column, string $interval): int
+    {
+        $stmt = $pdo->prepare(
+            "SELECT COUNT(*) FROM {$table} WHERE {$column} >= datetime('now', :interval)",
+        );
+        $stmt->execute([':interval' => $interval]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    /**
+     * Count rows where column >= now + fromInterval AND column < now + toInterval.
+     *
+     * This gives the count for the period between fromInterval and toInterval ago.
+     */
+    private function countBetweenPeriods(
+        \PDO $pdo,
+        string $table,
+        string $column,
+        string $fromInterval,
+        string $toInterval,
+    ): int {
+        $stmt = $pdo->prepare(
+            "SELECT COUNT(*) FROM {$table} WHERE {$column} >= datetime('now', :from) AND {$column} < datetime('now', :to)",
+        );
+        $stmt->execute([':from' => $fromInterval, ':to' => $toInterval]);
+
+        return (int) $stmt->fetchColumn();
+    }
+}

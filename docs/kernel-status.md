@@ -503,6 +503,88 @@ Gates: `phpstan` clean, `composer test` 11/29, `--check` green (58
 identical, 37 recorded). HTTP: all seven surfaces answer (`/llms.txt` 200,
 792 B, kernel copy with absolute links); `/` back at 22934 B.
 
+## Boot 14 — the admin stack installs (2026-10-11)
+
+The catalogue had one installable module and one that refused with nine
+missing dependencies. It now has **sixteen**, and Cardboard — the real
+admin app — installs and serves `/mark`.
+
+### What the guard found
+
+`module:add` refused Cardboard because twelve module slices each import the
+other's classes. That was not a tooling bug: running `module:show` over the
+graph surfaced **five real dependency cycles**, each fixed at its cause:
+
+1. **Cardboard ↔ everything (62 import sites).** The admin overlay was two
+   things in one module: a *presentation kit* (layout, card/trend/chart
+   models, locale keys, bulk-action shell, the metric registry) and the
+   *admin app* (dashboard, users, roles, settings actions). The kit half
+   moved to `modules/CardboardKit` — a leaf with zero module dependencies —
+   and eleven modules now depend on the kit instead of on the admin app.
+   The kit's one back-reference (the layout asked `CardboardServices` for
+   nav/user/settings) became the **`AdminContextProvider` port** (attribute
+   + registry, same discovery shape as the shell port), implemented in
+   Cardboard. The kit names the port; nothing points kit → Cardboard.
+2. **Users ↔ Outbox.** Users' login/logout actions imported Outbox's event
+   services; Outbox imported Users' `AdminRoutePolicy`. Both were
+   observability, not function: each call site is now a `class_exists`
+   guard (no `use`), so login works without the outbox and audit still
+   records with it.
+3. **Users → Locales → Audit → Users.** Same treatment on the Locales→Audit
+   edge (the only one that needed a guard — the other two are load-bearing).
+4. **Pages ↔ Questions** and **Blog ↔ Questions/Comments.** The embeds
+   (question box, comment section, questions sidebar) are optional content:
+   guarded, and absent module means the block is omitted, not fatal.
+5. **Cardboard → Blog/Users/Pages services.** `CardboardServices::blogCrud()`
+   and `::users()` were convenience re-exports; the two callers now build
+   the service they need directly.
+
+Two side findings, fixed: the metric subsystem Boot 9 deleted from the
+kernel actually belonged to the dashboard (`MetricContract`, registry,
+attribute, `CardboardRegistry`) and was restored **into the kit**, where its
+readers are; and `PageContext`'s Boot-9 parameter removal left
+`BlogIndexAction` passing a now-nonexistent argument positionally, so
+`forBlogSearch` received the result list where the dropped `SearchResult`
+had been — a latent argument-shift bug that only became reachable once Blog
+was installable. Boot 9's claim was true for every theme *in this tree*; the
+upstream showcase themes do read `$context->result`, so that property is
+still absent here and the call site is the fix.
+
+### The wall came down honestly
+
+`Security Settings CardboardKit Outbox Locales Users Audit Media Blog
+Comments Pages Questions Cardboard` — thirteen slices, installed in the
+order the acyclic graph allows, each copied verbatim from the catalogue.
+
+Measured over HTTP (`php -S`, all thirteen installed): `/` 200 (Mono, with
+Settings' theme setting pinned to `kernel` so the public whitelist keeps
+answering), `/mark` **200** (35391 B, `cba-` chrome, no fatal), `/blog` 200,
+`/blog/feed.xml` 200, `/login` 200, `/docs` 200, robots/sitemap/llms 200,
+`/nope` 404. No new `[KERNEL] Error` across the run.
+
+### Gates
+
+- `phpstan.neon` scope corrected: it analysed `src/` including installed
+  slices, so a gate result depended on what the operator had installed.
+  Now the kernel scope only (Core/Database/Themes/public/bin/tests) and
+  green.
+- `KernelOnlyBootTest` is install-aware: `/mark` expects 404 kernel-only
+  and 200 with Cardboard installed, and a separate test asserts the
+  kernel rule that holds either way — an unrouted admin path is NOT FOUND,
+  never Forbidden. Verified in both directions (12/31 installed, 12/31
+  kernel-only with the skip correctly not firing).
+- `extract-kernel --check` green, `composer test` 12/32.
+
+### Still open
+
+Upstream showcase themes (starter, moonshine, magazine, …) read
+`$context->result`; neither our themes nor the CATALOG's do. Restoring that
+property is a kernel decision with a Blog-typed argument — deferred, and the
+only caller is fixed. The nine newly catalogued modules arrived verbatim and
+are **unverified beyond install + route**: their own acceptance suites (if
+any) were not run — this boot proves the graph installs and serves, not that
+the admin CRUD flows are correct.
+
 ## Bootstrapper
 
 ```

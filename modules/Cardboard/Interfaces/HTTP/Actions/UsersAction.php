@@ -6,7 +6,7 @@ namespace Modules\Cardboard\Interfaces\HTTP\Actions;
 
 use Modules\Audit\Interfaces\HTTP\AuditServices;
 use Modules\Blog\Application\Services\AuthorAvatar;
-use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
+use Modules\CardboardKit\Interfaces\HTTP\AdminLayout;
 use Modules\Cardboard\Interfaces\HTTP\CardboardServices;
 use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Application\Services\View\ViewRenderer;

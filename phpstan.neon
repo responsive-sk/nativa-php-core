@@ -1,7 +1,15 @@
 parameters:
     level: 9
+    # The kernel scope only. Installed module slices (src/Modules/<Name> outside
+    # Core/Database) are operator state — gitignored, never committed — so
+    # analysing them would make the gate's result depend on which modules this
+    # checkout happens to have installed. The catalogue (modules/) is text the
+    # kernel does not run until module:add copies it; its verification is
+    # module:show's closure scan, not PHPStan.
     paths:
-        - src/
+        - src/Modules/Core
+        - src/Modules/Database
+        - src/Themes
         - public/index.php
         - bin/cms
         - tests/

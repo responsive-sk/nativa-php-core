@@ -1,0 +1,28 @@
+<?php
+
+declare(strict_types = 1);
+
+/**
+ * Rendered via Modules\Core\Application\Services\View\ViewRenderer.
+ * Variables are provided by the caller; $this is not available.
+ */
+
+if (!isset($viewRendererGuard)) {
+    throw new \RuntimeException('Template must be rendered via ViewRenderer.');
+}
+
+?>    <tr>
+        <td><code><?php echo $key; ?></code></td>
+        <td><?php echo $value; ?></td>
+        <td><?php echo $rowGroup; ?></td>
+        <td>
+            <div class="m-btn-group">
+                <a class="m-btn m-btn-sm m-btn-icon" href="/mark/locales/<?php echo $id; ?>/edit" title="Edit"><?php echo $iconEdit; ?></a>
+                <form method="POST" action="/mark/locales/<?php echo $id; ?>/delete" class="m-inline-form">
+                    <?php echo $csrf . "\n"; ?>
+                    <button class="m-btn m-btn-error m-btn-sm m-btn-icon"
+                            data-confirm="Delete this translation?" title="Delete"><?php echo $iconDelete; ?></button>
+                </form>
+            </div>
+        </td>
+    </tr>

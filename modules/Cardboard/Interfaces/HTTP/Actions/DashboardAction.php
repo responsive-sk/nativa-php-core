@@ -4,14 +4,14 @@ declare(strict_types = 1);
 
 namespace Modules\Cardboard\Interfaces\HTTP\Actions;
 
-use Modules\Cardboard\Domain\Model\Period;
-use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
+use Modules\CardboardKit\Domain\Model\Period;
+use Modules\CardboardKit\Interfaces\HTTP\AdminLayout;
 use Modules\Cardboard\Interfaces\HTTP\CardboardServices;
 use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
-use Modules\Core\Infrastructure\Registry\CardboardRegistry;
-use Modules\Core\Infrastructure\Registry\MetricRegistry;
+use Modules\CardboardKit\Infrastructure\Registry\CardboardRegistry;
+use Modules\CardboardKit\Infrastructure\Registry\MetricRegistry;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 
 /**
