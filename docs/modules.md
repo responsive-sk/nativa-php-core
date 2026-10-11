@@ -141,6 +141,55 @@ live site scroll-JS adds it, but this tree ships no such JS and without the
 class the H1 keeps `opacity:0` (a homepage that renders its own title
 invisible; caught over HTTP, fixed, re-measured).
 
+### The article view (measured 2026-10-12)
+
+The vendored snapshot is a LANDING PAGE — navbar, hero, feature cards, footer.
+The kernel serves surfaces that page never had, and each of them reaches the
+DOM wearing `mo-` classes no rule matched. On `/blog/nativa-php-core`, before
+this pass: **27 `mo-` names without a rule** (20 classes — 9 comments, 11
+questions — plus 7 `id` attributes, which need none), and the article's own
+elements bare: no `pre`, no `code`, no `table`, no `th`/`td`.
+
+Same defect class the Frontend packages already guard against, in a tree that
+cannot run their generator: `CommentSection` and `QuestionBlockRenderer` build
+every class from the ACTIVE THEME'S prefix, so `mo-comments` can only ever
+match rules written for mono, and mono has no package under
+`Frontend/packages/` for `bin/generate/generate-*-css.mjs` to stamp.
+
+Added to the vendored file, in its idiom (mono tokens, minified, one rule per
+line): prose (`pre`, `code`, `pre code`, `table`, `th`/`td`), the two reaction
+blocks (`mo-comments*`, `mo-questions*` — all 33 classes the two renderers can
+emit), and the two structural wrappers the docs/pages surfaces emit
+(`mo-section`, `mo-article__body`).
+
+| | before | after |
+|---|---|---|
+| inlined stylesheet on the article page | 19 056 chars | **23 827 chars** |
+| `mo-` classes without a rule, across `/`, `/blog`, `/docs`, the article | 27 on the article; `mo-section` on `/docs` | **0** |
+
+Verified in chromium over the running server, in both colour modes — the rules
+name mono tokens only, so `[data-theme=light]` needs no second copy:
+
+- **dark**: button `rgb(212, 175, 55)` on ink `rgb(10, 10, 10)`, `pre` bg
+  `#1a1a1a` with a `#2d2d2d` border and 8px radius, `pre > code` reset to
+  transparent / 0 padding, `th` bg `#1a1a1a` weight 600, `td` bottom border
+  1px `#2d2d2d`, the honeypot `display:none`;
+- **light**: the same rules through the light palette (`#f8fafc` surfaces,
+  `#e2e8f0` borders, `#926f00` button) — the light block shipped dormant all
+along and needed nothing new;
+- the class check re-run over every served page: zero `mo-` classes without a
+  rule.
+
+One rule has no element to style in this deployment: `mo-article__body` is
+emitted by `DocsPageAction` / `PageViewAction` for a guide or page that has
+content, and no guide is published here — so it was verified as a parsed rule
+(the browser accepted it) rather than against a rendered element.
+
+Not covered, recorded so the next reader does not mistake them for present:
+`blockquote` and the article body's headings/lists still render with browser
+defaults, and `mo-inline-edit*` (9 classes from `BlogInlineEditor`, rendered
+only for a signed-in editor) has no rules at all.
+
 The slice carries the same one-question fixture provider (`theme()` → `mono`).
 Never install Erik and Mono together: both vote, the merge rule takes the
 first, and a theme decided by glob order is a theme nobody chose.
