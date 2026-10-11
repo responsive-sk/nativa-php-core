@@ -24,15 +24,19 @@ unset($_earlyLogDir);
  *
  *   - The kernel discovers its own middleware (security headers, CSRF) through
  *     #[AsMiddleware], so no addMiddleware() call appears below.
- *   - Every other concern — locale prefixes, rate limiting, page cache, auth,
- *     outbox handlers — belongs to a module that is NOT installed in this tree.
- *     A kernel-only tree answers what Modules\Core + Modules\Database can answer
- *     on their own; everything else is a module's job, and a module is added
- *     through `bin/cms module:add`.
+ *   - Every other concern — locale prefixes, rate limiting, page cache, auth —
+ *     belongs to a module that is NOT installed in this tree. A kernel-only
+ *     tree answers what Modules\Core + Modules\Database can answer on their
+ *     own; everything else is a module's job, and a module is added through
+ *     `bin/cms module:add`.
  *
  * A line added here is a module dependency the kernel cannot have. If a
  * surface needs one, the surface belongs to a module (docs/kernel-status.md
  * lists what moved and why).
+ *
+ * The one exception below is a PAIRING, not a dependency: two installed modules
+ * that must not know about each other, declared under class_exists guards so a
+ * tree without either of them boots exactly as before.
  */
 
 use Modules\Core\Application\Services\DisposalRegistry;
@@ -52,6 +56,36 @@ require_once __DIR__ . '/../src/init.php';
 // idempotently. With no feature module installed this creates the kernel's own
 // tables and nothing else.
 (new Bootstrapper())->boot();
+
+// ============================================================================
+// OUTBOX HANDLERS — the one pairing discovery cannot express.
+//
+// `OutboxDrain::drain()` (end of request) registers only the handler the Outbox
+// module can see — the article-publish cache flush. The security handler lives
+// in the Audit module, because its output IS an audit row, and Outbox reaching
+// into Audit would be a module dependency ModuleIsolationTest refuses. Neither
+// module may know about the other, so the pairing is declared here.
+//
+// Registered on the cached `OutboxServices::processor()` — the same instance
+// drain() uses. Register it anywhere else and the handler is silently dropped,
+// which is exactly what happened: sign-in recorded its `security.auth.attempt`
+// and then logged `No handler registered for event type` on every drain
+// (Boot 16), while the response looked fine.
+//
+// Guarded rather than `use`d: the kernel-only tree (no Audit, no Outbox) has to
+// boot with no classes to wire, and a tree with only one of the two must not
+// fatal on the other.
+// ============================================================================
+
+if (class_exists('Modules\\Audit\\Application\\Services\\SecurityEventHandler')
+    && class_exists('Modules\\Outbox\\Interfaces\\HTTP\\OutboxServices')
+    && class_exists('Modules\\Audit\\Interfaces\\HTTP\\AuditServices')
+) {
+    \Modules\Audit\Application\Services\SecurityEventHandler::register(
+        \Modules\Outbox\Interfaces\HTTP\OutboxServices::processor(),
+        \Modules\Audit\Interfaces\HTTP\AuditServices::audit(),
+    );
+}
 
 // ============================================================================
 // ROUTER — scan module action directories for #[Route] attributes

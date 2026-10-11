@@ -92,13 +92,24 @@ final class CategoriesManageAction
             return Response::redirect('/mark/categories');
         }
 
+        // Both halves matter, and neither implies the other: the registry holds
+        // a pre-created category (zero articles use it), the articles hold the
+        // rest. Renaming only the articles left the registry-only entry in the
+        // list under its old name — the button looked like a no-op.
+        $renamed = BlogServices::taxonomy()->renameCategory($oldCategory, $newCategory);
         $count = $this->replaceCategoryInAllArticles($oldCategory, $newCategory);
 
         CacheInvalidator::flush();
         AuditServices::log(
             'categories.rename',
             'categories',
-            "Renamed category \"{$oldCategory}\" to \"{$newCategory}\" ({$count} articles)",
+            sprintf(
+                'Renamed category "%s" to "%s" (%d articles, registry: %s)',
+                $oldCategory,
+                $newCategory,
+                $count,
+                $renamed ? 'renamed' : 'not registered',
+            ),
             $request->getClientIp(),
         );
 
@@ -113,13 +124,21 @@ final class CategoriesManageAction
             return Response::redirect('/mark/categories');
         }
 
+        // Same two halves as rename(): without the registry edit a pre-created
+        // category stayed in the list after "delete" answered 302.
+        $removed = BlogServices::taxonomy()->deleteCategory($category);
         $count = $this->removeCategoryFromAllArticles($category);
 
         CacheInvalidator::flush();
         AuditServices::log(
             'categories.delete',
             'categories',
-            "Deleted category \"{$category}\" from {$count} articles",
+            sprintf(
+                'Deleted category "%s" from %d articles (registry: %s)',
+                $category,
+                $count,
+                $removed ? 'removed' : 'not registered',
+            ),
             $request->getClientIp(),
         );
 

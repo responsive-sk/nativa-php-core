@@ -774,6 +774,71 @@ php bin/cms migrate
 Verified against the Boot 16 failure state: `audit_log` dropped by hand,
 `migrate` recreated it, exit 0; an unknown command still exits 1.
 
+# Boot 18 — the two silent gaps the admin flow exposed
+
+Both were found by reading the log after the Boot 16 fix, and both share a
+shape: an operation answered 302, and nothing happened.
+
+## `security.auth.attempt` had no handler
+
+```
+[OUTBOX] Failed to process security.auth.attempt (attempt 0/5):
+No handler registered for event type: security.auth.attempt
+```
+
+Sign-in records the attempt into the Outbox; the Outbox's end-of-request
+drain (`OutboxDrain::drain()`) registers only the handler the Outbox module
+can see — the article-publish cache flush. The security handler lives in the
+**Audit** module, because its output is an audit row, and Outbox reaching into
+Audit is the module dependency `ModuleIsolationTest` refuses. Upstream wires
+the pair in its composition root; this tree's `public/index.php` is the
+kernel's half and has "nothing to wire", so the pair was never declared and
+every security event landed in `outbox_messages` as `failed`.
+
+Fixed where upstream fixes it — the composition root — under `class_exists`
+guards on all three classes, so a kernel-only tree still boots with nothing
+to wire (the same trick `LoginAction` uses for its Outbox call, and the reason
+no `use` statement appears).
+
+**Measured:** a sign-in now delivers 1 message, writes the audit row
+(`security.auth.attempt`, `audit_log` rowid 2 — the table's first security
+record) and logs **zero** `No handler registered` lines. The 10 messages that failed before the fix stay `failed`:
+`findPending()` selects `pending`, so they are history, not a queue — they are
+left as the record of the outage rather than silently replayed.
+
+## Rename and delete never touched the registry
+
+`/mark/categories` lists the **registry** (`storage/data/blog-taxonomy.json`,
+where a pre-created category lives) merged with article front matter. Its
+Rename and Delete actions only rewrote **front matter**
+(`replaceCategoryInAllArticles` / `removeCategoryFromAllArticles`) — so on any
+category that lives in the registry alone, both buttons answered 302, wrote
+an audit row, and changed nothing. This tree has no `storage/blog/` at all, so
+*every* category was in that case.
+
+`TaxonomyService` gained `renameCategory()` / `deleteCategory()` (registry
+edit, case-insensitive, first-occurrence-wins dedupe — the same rule readers
+apply), and the action now does both halves: the registry and the articles.
+The audit detail says which: `(0 articles, registry: renamed)`.
+
+**Measured** through HTTP, registry-only: create → `[\"Reg…\"]`; rename →
+`[\"Reg…-renamed\"]` and the list shows the new name; delete → `[]` and the
+list no longer shows it.
+
+**This is the catalogue's first fork of an upstream module.** `modules/Blog`
+now differs from `nativa-minimal/src/Modules/Blog` in two files, and the
+installed copy under `src/Modules/Blog` was synced to match (the slice is
+operator state and is gitignored — the catalogue is the source). No
+`kernel-divergence.txt` entry applies: the record guards the kernel slice
+(`Core`, `Database`, `config`, `Frontend/packages`), not module catalogues.
+
+**Verification gotcha worth knowing:** `php -S` runs under the CLI SAPI, where
+`opcache.enable_cli=On` and `opcache.revalidate_freq=180` are both set — the
+long-running dev server kept serving the pre-edit action, so the first run
+read as "the fix did nothing". The files were correct the whole time; the
+server needed a restart. Same class of trap as the Boot 1 opcache incident,
+same lesson: restart before believing a null result.
+
 ## Bootstrapper
 
 ```

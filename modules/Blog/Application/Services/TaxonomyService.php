@@ -54,6 +54,30 @@ final class TaxonomyService
     }
 
     /**
+     * Rename a registered category.
+     *
+     * The registry is the only place a pre-created category lives: with zero
+     * articles using it, it exists nowhere else. A rename that only rewrites
+     * article front matter — what the admin action used to do — is therefore a
+     * silent no-op for it, which is why this exists. Returns false when either
+     * name is empty, when they differ only by case, or when nothing matched.
+     */
+    public function renameCategory(string $old, string $new): bool
+    {
+        return $this->rename($old, $new, 'categories');
+    }
+
+    /**
+     * Dropping a registered category is what makes a pre-created one vanish
+     * from the admin list; articles are the caller's business, not this
+     * registry's. Returns false when the name is empty or nothing matched.
+     */
+    public function deleteCategory(string $name): bool
+    {
+        return $this->delete($name, 'categories');
+    }
+
+    /**
      * @param array<string, string> $derived lowercase key => display value
      * @param 'tags'|'categories'   $key
      *
@@ -93,6 +117,114 @@ final class TaxonomyService
         $this->writeRegistry($registry);
 
         return true;
+    }
+
+    /**
+     * Rewrite one registry entry, case-insensitively, keeping the list deduped.
+     *
+     * A target that already exists as its own entry is a MERGE, not a
+     * contradiction: articles move from the old name to the new one exactly the
+     * same way, so the two entries must not both survive and render twice.
+     *
+     * @param 'tags'|'categories' $key
+     */
+    private function rename(string $old, string $new, string $key): bool
+    {
+        $old = trim($old);
+        $new = trim($new);
+
+        if ('' === $old || '' === $new || 0 === strcasecmp($old, $new)) {
+            return false;
+        }
+
+        $registry = $this->readRegistry();
+        $changed = false;
+
+        foreach ($registry[$key] as $index => $entry) {
+            if (is_string($entry) && 0 === strcasecmp(trim($entry), $old)) {
+                $registry[$key][$index] = $new;
+                $changed = true;
+
+                break;
+            }
+        }
+
+        if (!$changed) {
+            return false;
+        }
+
+        $registry[$key] = $this->dedupe($registry[$key]);
+        $this->writeRegistry($registry);
+
+        return true;
+    }
+
+    /**
+     * Drop every registry entry matching the name, case-insensitively.
+     *
+     * @param 'tags'|'categories' $key
+     */
+    private function delete(string $name, string $key): bool
+    {
+        $name = trim($name);
+
+        if ('' === $name) {
+            return false;
+        }
+
+        $registry = $this->readRegistry();
+        $kept = [];
+        $removed = false;
+
+        foreach ($registry[$key] as $entry) {
+            if (is_string($entry) && 0 === strcasecmp(trim($entry), $name)) {
+                $removed = true;
+
+                continue;
+            }
+
+            $kept[] = $entry;
+        }
+
+        if (!$removed) {
+            return false;
+        }
+
+        $registry[$key] = $kept;
+        $this->writeRegistry($registry);
+
+        return true;
+    }
+
+    /**
+     * First occurrence wins, case-insensitively — the same rule readers apply
+     * when they merge the registry with the front-matter-derived taxonomy.
+     *
+     * @param list<mixed> $entries
+     *
+     * @return list<string>
+     */
+    private function dedupe(array $entries): array
+    {
+        $seen = [];
+        $kept = [];
+
+        foreach ($entries as $entry) {
+            if (!is_string($entry)) {
+                continue;
+            }
+
+            $normalized = strtolower(trim($entry));
+
+            if ('' === $normalized || isset($seen[$normalized])) {
+                continue;
+            }
+
+            $seen[$normalized] = true;
+            $kept[] = trim($entry);
+        }
+
+        return $kept;
     }
 
     /**
