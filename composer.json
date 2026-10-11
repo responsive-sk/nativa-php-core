@@ -1,0 +1,52 @@
+{
+    "name": "nativa/nativa-php-core",
+    "description": "Nativa PHP Core — the kernel-only tree: Modules\\Core + Modules\\Database, one theme that needs no build, and a module catalog you can add to and remove from.",
+    "type": "project",
+    "license": "MIT",
+    "keywords": [
+        "php",
+        "kernel",
+        "zero-dependency",
+        "sqlite",
+        "modular"
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "ext-pdo": "*",
+        "ext-pdo_sqlite": "*",
+        "ext-sqlite3": "*",
+        "php": "^8.5"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.0",
+        "phpstan/phpstan": "^2.0",
+        "phpunit/phpunit": "^12.0",
+        "rector/rector": "^2.0",
+        "symfony/console": "^8.0",
+        "vlucas/phpdotenv": "^5.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\": "src/Modules/",
+            "Themes\\": "src/Themes/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "phpstan": "phpstan analyse --ansi -c phpstan.neon --memory-limit=512M",
+        "cs-fix": "php-cs-fixer fix --ansi --verbose",
+        "cs-fix-dry": "php-cs-fixer fix --ansi --verbose --dry-run",
+        "rector": "rector process --ansi",
+        "rector-dry": "rector process --ansi --dry-run"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

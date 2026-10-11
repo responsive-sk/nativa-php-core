@@ -1,0 +1,152 @@
+<?php
+
+declare(strict_types = 1);
+
+namespace Modules\Core\Application\Services;
+
+use Modules\Core\Infrastructure\Paths\AppPaths;
+use Modules\Core\Interfaces\HTTP\ThemeResolver;
+
+/**
+ * AssetManager — asset manifest reader for PHP templates (task 10.5).
+ *
+ * Resolves hashed JS/CSS URLs from the Vite manifest of the requested theme
+ * bundle (public/dist/<bundle>/manifest.json), built from the
+ * `Frontend/packages` pnpm workspace where every theme is its own package.
+ * Returns null / empty arrays when the manifest is missing so templates
+ * degrade gracefully before a build has run.
+ *
+ * Usage:
+ *   $assets = new AssetManager('starter');
+ *   $jsUrl  = $assets->jsUrl('main');      // '/dist/starter/assets/main-xxx.js'
+ *   $cssUrls = $assets->cssUrls('main');   // ['/dist/starter/assets/main-xxx.css']
+ */
+final class AssetManager
+{
+    /**
+     * Known bundles — one per theme package under `Frontend/packages/`.
+     * Anything outside the list falls back to `starter` so a stale or
+     * hand-written bundle name still resolves to the default public shell.
+     *
+     * The list is DERIVED from the runtime theme set, not written out here.
+     * It used to be a literal, and that literal was the fourth place a theme
+     * has to be registered: a theme wired into `ThemeResolver`,
+     * `ThemeKernel`, the Vite factory and every parity guard still rendered
+     * the DEFAULT theme's stylesheet and script, because this one missed it.
+     * Nothing errored and nothing was logged — a theme whose entire CSS was
+     * another theme's is indistinguishable from a theme that works, right up
+     * until a reader opens the page. `AssetBundlesTest` now fails when a
+     * package exists that this list does not know.
+     *
+     * `minimal` is in the set and not in the public whitelist on purpose: it
+     * ships no markup and no route can name it, but its package still builds
+     * and `BuildCssAuditTest` audits its token family.
+     *
+     * @return list<string>
+     */
+    public static function knownBundles(): array
+    {
+        return array_values(array_unique([
+            ThemeResolver::ADMIN_THEME,
+            ...ThemeResolver::PUBLIC_WHITELIST,
+            'minimal',
+        ]));
+    }
+
+    private readonly string $bundlePrefix;
+
+    /** @var array<string, array{file?: string, css?: list<string>, imports?: list<string>}> */
+    private array $manifest;
+
+    public function __construct(?string $bundle = 'starter')
+    {
+        $resolved = (null === $bundle || '' === $bundle) ? 'starter' : $bundle;
+        // Every theme package builds into its own dist directory, so the
+        // bundle name maps straight onto the manifest path. Unknown names
+        // fall back to the default public shell.
+        $manifestBundle = in_array($resolved, self::knownBundles(), true) ? $resolved : 'starter';
+        $this->bundlePrefix = '/dist/' . $manifestBundle . '/';
+
+        $manifestPath = AppPaths::instance()->public('dist/' . $manifestBundle . '/manifest.json');
+
+        /** @var array<string, array{file?: string, css?: list<string>, imports?: list<string>}> $decoded */
+        $decoded = [];
+
+        if (is_file($manifestPath)) {
+            $content = file_get_contents($manifestPath);
+            if (false !== $content) {
+                $parsed = json_decode($content, true);
+                if (is_array($parsed)) {
+                    /** @var array<string, array{file?: string, css?: list<string>, imports?: list<string>}> $decoded */
+                    $decoded = $parsed;
+                }
+            }
+        }
+
+        $this->manifest = $decoded;
+    }
+
+    /**
+     * Resolve the hashed JS file URL for a manifest entry key.
+     */
+    public function jsUrl(string $key): ?string
+    {
+        $entry = $this->manifestEntry($key);
+        $file = $entry['file'] ?? null;
+
+        return is_string($file) && '' !== $file ? $this->bundlePrefix . $file : null;
+    }
+
+    /**
+     * Resolve the hashed CSS file URLs for a manifest entry key.
+     *
+     * @return list<string>
+     */
+    public function cssUrls(string $key): array
+    {
+        $css = $this->manifestEntry($key)['css'] ?? [];
+
+        $urls = [];
+        foreach ($css as $file) {
+            if ('' !== $file) {
+                $urls[] = $this->bundlePrefix . $file;
+            }
+        }
+
+        return $urls;
+    }
+
+    /**
+     * Manifest entry for a logical entry key ('main', 'mark', 'erik', …).
+     *
+     * Vite 8 keys the manifest by the resolved source path
+     * ('src/main.ts', 'src/magazine.ts', 'src/mark/index.css', …) rather than
+     * the rollupOptions input key ('main', …). Look up both forms so the
+     * templates can keep the short logical key regardless of the Vite version
+     * — and whether the entry is a single file or a split section chain.
+     *
+     * @return array{file?: string, css?: list<string>, imports?: list<string>}
+     */
+    private function manifestEntry(string $key): array
+    {
+        $candidates = [$key, 'src/' . $key . '.ts', 'src/' . $key . '.css', 'src/' . $key . '/index.css'];
+
+        foreach ($candidates as $candidate) {
+            $entry = $this->manifest[$candidate] ?? null;
+
+            if (is_array($entry)) {
+                return $entry;
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * Whether the manifest for this bundle is available (build has run).
+     */
+    public function isAvailable(): bool
+    {
+        return [] !== $this->manifest;
+    }
+}

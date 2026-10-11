@@ -1,0 +1,36 @@
+# Dependencies (dev-only; the kernel itself has none). The lockfile IS committed —
+# the same convention as nativa-minimal, and dev tooling that resolves differently
+# on two machines is a difference nobody asked for.
+/vendor/
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Runtime data — the kernel's SQLite files and the things a running site writes.
+#
+# Ignore the CONTENTS, never the directory. A `/storage/logs/` rule followed by
+# `!/storage/logs/.gitkeep` re-includes nothing: git does not descend into an
+# ignored directory, so the un-ignore line is unreachable and the skeleton
+# silently disappears from the commit. (Measured on this file's first version —
+# all five .gitkeep files were ignored.)
+/storage/data/*.db
+/storage/data/*.db-journal
+/storage/data/*.db-wal
+/storage/data/*.db-shm
+/storage/logs/*.log
+/storage/cache/*
+/storage/sessions/*
+/storage/uploads/*
+!/storage/data/.gitkeep
+!/storage/logs/.gitkeep
+!/storage/cache/.gitkeep
+!/storage/sessions/.gitkeep
+!/storage/uploads/.gitkeep
+
+# Editor / OS noise
+.idea/
+.vscode/
+.DS_Store
+*.swp

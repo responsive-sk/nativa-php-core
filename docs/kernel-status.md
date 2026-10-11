@@ -1,0 +1,162 @@
+# Kernel status — measured, 2026-10-11
+
+This document records what this tree **actually does** when it is booted, not what
+the plan intends it to do. Every status code below was read back off this checkout
+with `curl` against a freshly started server.
+
+> **Restart the server after editing PHP.** `opcache.revalidate_freq` is 180s in
+> this environment and `-d opcache.enable_cli=0` does not switch it off for the
+> built-in server: the first version of this document was written from responses
+> that were partly stale, and the way that was caught was rendering through the
+> layout in a CLI process and comparing the two answers. A check run against
+> stale bytecode is a green run of a file that no longer exists.
+
+## What was imported
+
+| | Files | Lines |
+|---|---|---|
+| `src/Modules/Core` | 65 PHP | 8 194 |
+| `src/Modules/Database` | 2 PHP | 372 |
+| `src/init.php`, `public/.htaccess` | 2 | — |
+
+Imported verbatim from `../nativa-minimal` — no file in the slice was edited on
+import. The import carries the showcase's coupling: **34 non-kernel
+`use Modules\<X>\…` statements across 14 files, naming 9 modules**, the number the
+ledger in `../nativa-minimal` (`tests/Architecture/KernelCouplingTest.php`)
+asserts in both directions.
+
+## Boot 1 — no `vendor/` (a production-shaped tree)
+
+Every surface answers **500**, and the cause is named in the application log:
+
+```
+[FATAL] Error: Class "Symfony\Component\Console\Command\Command" not found
+        in src/Modules/Core/Interfaces/CLI/Command/MigrateCommand.php:17
+  #2 .../Core/Interfaces/HTTP/Router.php(214): class_exists()
+  #3 .../Core/Interfaces/HTTP/Router.php(193): scanDirectory()
+  #4 .../Core/Interfaces/HTTP/Router.php(40):  discover()
+  #5 public/index.php(60): Router->__construct()
+```
+
+`Router::scanDirectory()` calls `class_exists()` on **every** PHP class under
+`src/Modules` and lets the autoloader trigger. Three of Core's own files —
+`Interfaces/CLI/Command/{Migrate,Serve,Seed}Command` — extend a class from
+`symfony/console`, a **dev-only** dependency. So a tree with no vendor directory
+cannot serve a single request, including the ones that have nothing to do with
+the CLI. That is the kernel's zero-dependency claim failing at load time, and it
+is why `../nativa-minimal`'s dist works: `bin/build/build-dist.sh` excludes
+`*/Interfaces/CLI/Command/` by path, so the scan never sees those files. A loader
+guard belongs in that repo's architecture suite; this tree inherits the defect
+rather than owning it.
+
+## Boot 2 — `composer install`, BEFORE the first edge was cut
+
+| Surface | Status | First cause | Ledger answer |
+|---|---|---|---|
+| `/` | 500 | `HomepageAction.php:103` → `Locales\…\LocalesServices` | **M** — the landing page is the app's, not the kernel's |
+| `/robots.txt` | 200 (228 B) | — | already correct |
+| `/sitemap.xml` | 500 | `ContentServices.php:33` → `Locales\…\LocalesServices` | **C** — default locale through a kernel-owned port |
+| `/docs` | 500 | `ThemeResolver.php:61` → `Settings\…\SettingsServices` | **C** — theme name through the same port |
+| `/nope` | 404 | — | already correct |
+| `/mark` | 404 | — | already correct — and 404, never 500 |
+
+Three of the six surfaces were already at their target value at that point; two
+of those for the uninteresting reason that the kernel has nothing to say about
+them and one — `/mark` — for the reason the plan gives: a kernel with no `Users`
+module has no admin route to protect, so it is *not found* rather than
+*forbidden*.
+
+## Boot 3 — the first edge cut: the shell port (2026-10-11)
+
+`ThemeResolver`, `ContentServices` and `FrontendLayout` no longer import
+`Settings` or `Locales`. They ask a kernel-owned port instead.
+
+**Added**
+
+| File | What it is |
+|---|---|
+| `Core/Domain/Contracts/ShellContextProvider.php` | the port: site name, theme, default locale, languages, `<html lang>`, navigation |
+| `Core/Domain/ShellNavItem.php` | kernel-owned nav item (the shell cannot carry a module's DTO) |
+| `Core/Infrastructure/Attributes/AsShellContextProvider.php` | the discovery attribute |
+| `Core/Application/Services/ShellContextProviderRegistry.php` | directory-scan discovery + the documented merge rule |
+| `Themes/ThemeModule.php`, `Themes/kernel/KernelTheme.php` | the kernel's own theme, prefix `k`, no build, no module import |
+
+**Rewired** — `ThemeResolver` (theme + whitelist), `ContentServices` (default
+locale closure), `FrontendLayout` (site name, nav, languages, htmlLang),
+`ShellContext` (nav type), `ThemeKernel` (kernel theme only, and an unknown name
+falls back to it rather than to a class the tree does not have), `SitemapAction`
+(each module-owned entry family is skipped when its module is absent).
+
+The ledger moved with it: **34 → 27 edges (14 → 10 files)**, and `Settings` is gone
+from the kernel's imports entirely — the module list is now Blog, Cardboard,
+Locales, Media, Outbox, Pages, Security, Users.
+
+| Surface | Boot 2 | **Boot 3** | Note |
+|---|---|---|---|
+| `/` | 500 | 500 | `HomepageAction.php:103` → `LocalesServices` — the **M** edge, not yet moved |
+| `/robots.txt` | 200 | **200** (228 B) | unchanged |
+| `/sitemap.xml` | 500 | **200** (396 B) | well-formed XML, 2 URLs — and it no longer advertises `/blog`, because a kernel-only tree serves no `/blog` and a sitemap that advertises a 404 teaches a crawler to find one |
+| `/docs` | 500 | **200** (3346 B) | rendered by the kernel theme, `<html lang="en">`, `noindex`, and the catalogue's own "No guides are published in this deployment." |
+| `/nope` | 404 | **404** (3765 B) | now a full document in the kernel theme |
+| `/mark` | 404 | **404** (3765 B) | unchanged — still not found rather than forbidden |
+
+No PHP warning, notice, deprecation or undefined-property error appears in the
+application log across all six.
+
+### Both halves of the port were exercised
+
+A port whose every method returns null is a port whose read path never runs, and
+a green boot in a tree with no provider proves only the absence half. So a
+throwaway provider was installed, measured, and deleted:
+
+| | with a provider | with none |
+|---|---|---|
+| brand | `Scratch Site` | `Nativa PHP Core` (the layout's own default) |
+| header nav | 2 items — the active one carries `aria-current="page"`, the external one carries `rel="noopener noreferrer"` | 0 items, and no empty `<nav>` element |
+| locale switcher | `en` / `sk` links | nothing (fewer than two languages) |
+| status | 200 | 200 |
+
+### Known gaps this step did NOT close
+
+1. **`/` is still 500, and the sitemap still lists `/`.** The kernel lists the URL
+   shapes it knows (home + the locale roots); whether anything serves `/` is
+   decided by the `M` move of `HomepageAction`, which has not happened yet. Until
+   it does, the sitemap advertises a URL that answers 500 — the next step has to
+   settle what serves home rather than leave two surfaces disagreeing.
+2. **The default locale still resolves through `ContentLocaleMapper`'s own
+   `LANGUAGES` map** (`sk_SK`/`en_US`). The *default* is now the provider's answer,
+   but the *set* of known languages is still a literal in the kernel, which is why
+   `/sitemap.xml` emits `/en/` in a tree with no locale module. The port has
+   `languages()`; nothing in `ContentLocaleMapper` reads it yet.
+3. **The middleware are not wired here at all** (`LocaleMiddleware`,
+   `RateLimitMiddleware`, `PageCacheMiddleware`, `AuthMiddleware`), so the statuses
+   above are kernel + routing, not the full production pipeline.
+   `RateLimitMiddleware:89`, `PageCacheMiddleware:36` and `HomepageAction` still
+   import `LocalesServices` directly, and `HomepageAction:190` calls
+   `LocalesServices::t()` for its copy.
+4. **The admin/SEO meta strings** in `HomepageAction` and `ErrorPageRenderer` still
+   name the showcase (`Nativa Starter — Home`).
+
+## Bootstrapper
+
+```
+[bootstrapper] No migrators found (add #[AsMigrator] classes under
+               src/Modules/*/Infrastructure/Persistence/Migrations/).
+```
+
+Correct and expected: `Modules\Database` is the connection manager and the
+migrator runner, not a table owner, and the kernel ships no migrations of its
+own. A tree that created tables here would be creating a module's schema.
+
+## Not yet in this tree
+
+Present and verified: the kernel slice, the shell port, the kernel theme,
+`src/init.php`, the composition root, `config/session.php`, the storage skeleton,
+`composer.json` (zero production dependencies, dev-only tooling) and the
+`.env.example` for the keys the kernel reads.
+
+Absent, deliberately: the module catalogue and `bin/cms module:add` /
+`module:remove` (tasks 3.1–3.2), `KernelOnlyBootTest` as a real test (2.3), and
+`bin/build/extract-kernel.sh` + `--check` (2.1). The kernel theme ships no CSS, so
+a page it renders is valid and unstyled — plan task 2.2 wants a real trimmed
+design, not just a working one.

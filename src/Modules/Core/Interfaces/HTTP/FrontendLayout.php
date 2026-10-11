@@ -1,0 +1,502 @@
+<?php
+
+declare(strict_types = 1);
+
+namespace Modules\Core\Interfaces\HTTP;
+
+use Modules\Core\Application\Services\AssetManager;
+use Modules\Core\Application\Services\ShellContextProviderRegistry;
+use Modules\Core\Application\Services\View\InlineCss;
+use Modules\Core\Application\Services\View\InlineJs;
+use Modules\Core\Domain\ShellNavItem;
+use Modules\Core\Infrastructure\Paths\AppPaths;
+
+/**
+ * FrontendLayout — shared public page shell (task 10.3).
+ *
+ * Renders a self-contained HTML page with a minimal BEM-styled header
+ * (site name + DB-driven navigation via MenuService) and footer. No
+ * external CDNs — assets are resolved from the local Vite manifest via
+ * AssetManager (task 10.5).
+ *
+ * CSS strategy: the starter bundle is ~1–2 kB, so the built stylesheet is
+ * inlined into <head> (with the CSP nonce) instead of being linked. This
+ * removes the render-blocking stylesheet request from the critical path
+ * (better LCP) while keeping first paint styled exactly once (CLS stays 0).
+ *
+ * Fallback: when the Vite build has not run (no manifest), the layout
+ * degrades to a minimal inline critical style so pages never render fully
+ * unstyled during development.
+ */
+final class FrontendLayout
+{
+    /**
+     * The shared public base critical-CSS chain, in cascade order — the
+     * single source of truth every public theme's `criticalCss()` list
+     * starts with (themes that layer their own sections append them after
+     * this block). `criticalCss()` concatenates exactly this list.
+     *
+     * @var list<string>
+     */
+    public const array BASE_CRITICAL_CSS = [
+        'Modules/Core/Interfaces/HTTP/assets/critical/base.css',
+        'Modules/Core/Interfaces/HTTP/assets/critical/shell.css',
+        'Modules/Core/Interfaces/HTTP/assets/critical/nav.css',
+        'Modules/Core/Interfaces/HTTP/assets/critical/blog.css',
+        'Modules/Core/Interfaces/HTTP/assets/critical/blog-search.css',
+        'Modules/Core/Interfaces/HTTP/assets/critical/blog-comments.css',
+        'Modules/Core/Interfaces/HTTP/assets/critical/blog-toc.css',
+        'Modules/Core/Interfaces/HTTP/assets/critical/blog-members.css',
+        'Modules/Core/Interfaces/HTTP/assets/critical/home.css',
+    ];
+    /**
+     * Navigation data (header + footer) — the provider that owns the menu
+     * answers through the shell port, already mapped into kernel-owned
+     * ShellNavItems; the theme module owns the nav markup. No provider
+     * installed means no menu: a decided answer, not a failure.
+     *
+     * @return array{list<ShellNavItem>, list<ShellNavItem>} [headerNav, footerNav]
+     */
+    private static function navData(string $currentPath): array
+    {
+        return [
+            ShellContextProviderRegistry::navigation('header', $currentPath),
+            ShellContextProviderRegistry::navigation('footer', $currentPath),
+        ];
+    }
+
+    /**
+     * Render the public page shell.
+     *
+     * @param array<string, string>|null              $localeLinks    Optional explicit
+     *                                                                locale→URL map (e.g. article translations). When provided the locale
+     *                                                                switcher renders exactly these links (a missing locale = no link),
+     *                                                                instead of prefixing the current path for every available locale.
+     * @param array<string, string>|null              $hreflangLinks  Optional
+     *                                                                language code → absolute URL map for <link rel="alternate" hreflang>
+     *                                                                tags in <head> (SEO — translated pages announce their alternates;
+     *                                                                x-default points at the default locale version). Rendered only when
+     *                                                                provided — single-language pages emit nothing.
+     * @param string|null                             $canonicalUrl   Optional absolute canonical URL for <link rel="canonical">
+     *                                                                (SEO — the preferred version of a translated page, e.g. the
+     *                                                                default-locale SK article). Rendered only when provided.
+     * @param string|null                             $ogType         Optional Open Graph type ('website'|'article'|'profile');
+     *                                                                defaults to 'website'. Also drives twitter:card sizing.
+     * @param string|null                             $ogImage        Optional absolute Open Graph / twitter image URL (self-hosted
+     *                                                                or the allowed Cloudinary cover origin). Omitted when null.
+     * @param string|null                             $structuredData Optional pre-encoded JSON-LD blob rendered in an
+     *                                                                <script type="application/ld+json"> (StructuredDataService).
+     * @param bool                                    $noindex        When true emits <meta name="robots" content="noindex, nofollow">
+     *                                                                (admin/debug/error/auth pages must not be indexed).
+     * @param array{atom?: string, rss?: string}|null $feedLinks      RSS/Atom feed auto-discovery links for <head>.
+     */
+    public static function render(
+        string $title,
+        string $content,
+        string $siteName = 'Nativa PHP Core',
+        string $description = 'Nativa PHP Core — the kernel-only tree: zero-dependency runtime, attribute routing, a middleware pipeline, per-module SQLite connections and a theme that needs no build.',
+        string $currentPath = '/',
+        ?array $localeLinks = null,
+        ?string $lang = null,
+        ?array $hreflangLinks = null,
+        ?string $canonicalUrl = null,
+        ?string $ogType = null,
+        ?string $ogImage = null,
+        ?string $structuredData = null,
+        bool $noindex = false,
+        ?array $feedLinks = null,
+        ?string $theme = null,
+    ): string {
+        // The site's own name comes first: a provider that knows it answers
+        // through the port, and the caller's literal is the last resort (a
+        // kernel with nothing installed still renders a titled document).
+        $siteName = ShellContextProviderRegistry::siteName() ?? $siteName;
+
+        $titleEscaped = self::e($title);
+        $siteNameEscaped = self::e($siteName);
+        $descriptionEscaped = self::e($description);        // Dynamic html lang from the resolved active locale (sk / en). An
+        // explicit $lang overrides it — an action that knows the actual
+        // content language passes it, even when the site default differs. With
+        // no locale provider installed the document still declares a language
+        // rather than emitting `<html lang="">`, which reads as no language.
+        $htmlLang = $lang ?? ShellContextProviderRegistry::htmlLang() ?? 'en';
+
+        [$headerNav, $footerNav] = self::navData($currentPath);
+        $shellContext = self::shellContext(
+            $siteName,
+            $headerNav,
+            $footerNav,
+            $currentPath,
+            $localeLinks,
+            ShellContextProviderRegistry::defaultLocale() ?? '',
+            ShellContextProviderRegistry::languages(),
+        );
+
+        $themeModule = ThemeKernel::for($theme ?? ThemeResolver::PUBLIC_THEME);
+        $bundle = $themeModule->name();
+        $jsKey = $themeModule->jsKey();
+        $pageChrome = $themeModule->header($shellContext)
+            . $themeModule->pageWrap($content)
+            . $themeModule->footer($shellContext);
+
+        // Byte-parity with the legacy heredoc: every head segment sits on
+        // its own heredoc line in document() (multi-line segments keep
+        // their own newlines, empty segments emit the bare indent line).
+        return self::document(
+            $titleEscaped,
+            $descriptionEscaped,
+            $htmlLang,
+            $bundle,
+            self::canonicalTag($canonicalUrl),
+            self::hreflangTags($hreflangLinks),
+            self::ogTags($titleEscaped, $descriptionEscaped, $siteNameEscaped, $canonicalUrl, $htmlLang, $ogType, $ogImage),
+            self::noindexTag($noindex),
+            self::structuredTag($structuredData),
+            self::feedTags($feedLinks),
+            self::styleTag($bundle, $jsKey, $themeModule->criticalCss()),
+            self::themeInitScript($themeModule->themeInitScript()),
+            self::themeToggleScript(),
+            self::jsTag($bundle, $jsKey),
+            $pageChrome,
+        );
+    }
+
+    /** Noindex robots meta — admin/debug/error/auth pages must not be indexed. */
+    private static function noindexTag(bool $noindex): string
+    {
+        return $noindex ? '<meta name="robots" content="noindex, nofollow">' . "\n" : '';
+    }
+
+    /** Built-stylesheet <style> tag with the CSP nonce placeholder (critical-CSS fallback when the build is missing).
+     *
+     * @param list<string> $criticalCss
+     */
+    private static function styleTag(string $bundle, string $jsKey, array $criticalCss): string
+    {
+        $inlineCss = self::inlineCss(new AssetManager($bundle), $jsKey);
+
+        if ('' === $inlineCss) {
+            $inlineCss = InlineCss::files($criticalCss);
+        }
+
+        return '<style nonce="__CSP_NONCE_PLACEHOLDER__">' . "\n" . $inlineCss . "\n" . '</style>' . "\n";
+    }
+
+    /** Manifest-resolved deferred JS tag (empty when no entry resolves). */
+    private static function jsTag(string $bundle, string $jsKey): string
+    {
+        $jsUrl = (new AssetManager($bundle))->jsUrl($jsKey);
+
+        return null !== $jsUrl
+            ? '<script src="' . $jsUrl . '" nonce="__CSP_NONCE_PLACEHOLDER__" defer></script>' . "\n"
+            : '';
+    }
+
+    /** Shared theme-toggle handler — one copy referenced by every theme module. */
+    private static function themeToggleScript(): string
+    {
+        return InlineJs::file('Modules/Core/Interfaces/HTTP/assets/scripts/theme-toggle.js');
+    }
+
+    /**
+     * Pre-paint colour-mode resolution — the theme's own script when it
+     * supplies one, otherwise the shared bytes every other theme uses.
+     *
+     * The fallback is not a simplification: for a theme whose LAST
+     * resolution step is a design decision (jednotka is dark-first, and its
+     * `:root` IS the dark palette), the shared script's unconditional
+     * `matchMedia(...)` cannot express it. A theme that returns '' keeps the
+     * shared bytes exactly — the emitted block is identical either way, which
+     * is why the golden-master documents of the other five do not move.
+     */
+    private static function themeInitScript(string $themeScript): string
+    {
+        return '' !== $themeScript ? $themeScript : self::sharedThemeInitScript();
+    }
+
+    /**
+     * The shared theme-init block, verbatim as it has always been emitted
+     * (comment, indentation and all) for every theme that does not override
+     * it — restoring the persisted choice before first paint to avoid a
+     * flash of the wrong colour mode.
+     */
+    private static function sharedThemeInitScript(): string
+    {
+        return <<<'HTML'
+            <!-- Sync theme init — FOUC prevention: restore the persisted theme
+                 (or the OS preference) before first paint. Falls back to the
+                 dark default when neither is available (Chrome 70 baseline). -->
+            <script nonce="__CSP_NONCE_PLACEHOLDER__">
+                (function() {
+                    try {
+                        var theme = localStorage.getItem('nativa-theme');
+                        if (!theme) {
+                            theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                        }
+                        document.documentElement.setAttribute('data-theme', theme);
+                    } catch (e) {}
+                })();
+            </script>
+            HTML;
+    }
+
+    /** Canonical <link> — rendered only when the action provides a URL. */
+    private static function canonicalTag(?string $canonicalUrl): string
+    {
+        return null !== $canonicalUrl
+            ? '<link rel="canonical" href="' . self::e($canonicalUrl) . '">' . "\n"
+            : '';
+    }
+
+    /** JSON-LD block — rendered only when the action provides structured data. */
+    private static function structuredTag(?string $structuredData): string
+    {
+        return null !== $structuredData
+            ? '<script type="application/ld+json">' . $structuredData . '</script>' . "\n"
+            : '';
+    }
+
+    /**
+     * Assemble the final HTML document (head + body). The $pageChrome
+     * carries 12 leading spaces from the legacy heredoc — the theme modules
+     * reproduce them for byte parity (theme-as-module golden masters).
+     */
+    private static function document(
+        string $titleEscaped,
+        string $descriptionEscaped,
+        string $htmlLang,
+        string $bundle,
+        string $canonicalTag,
+        string $hreflangTags,
+        string $ogTags,
+        string $noindexTag,
+        string $structuredTag,
+        string $feedTags,
+        string $styleTag,
+        string $themeInitScript,
+        string $themeToggleScript,
+        string $jsTag,
+        string $pageChrome,
+    ): string {
+        return <<<HTML
+        <!DOCTYPE html>
+        <html lang="{$htmlLang}">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <meta name="theme-color" content="#0f172a">
+            <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+            <link rel="icon" type="image/x-icon" href="/favicon.ico">
+            <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+            <title>{$titleEscaped}</title>
+            <meta name="description" content="{$descriptionEscaped}">
+            {$canonicalTag}
+            {$hreflangTags}
+            {$ogTags}
+            {$noindexTag}
+            {$structuredTag}
+            {$feedTags}
+            {$styleTag}
+            {$themeInitScript}
+        </head>
+        <body class="{$bundle}-shell">
+            {$pageChrome}
+            <!-- Theme toggle handler — flips data-theme on <html>, persisted to localStorage -->
+            <script nonce="__CSP_NONCE_PLACEHOLDER__">{$themeToggleScript}</script>
+            {$jsTag}
+        </body>
+        </html>
+        HTML;
+    }
+
+    /**
+     * Build the ShellContext for the theme module (kernel owns data fetch,
+     * the theme owns markup).
+     *
+     * The locale half arrives as finished answers — the port resolved which
+     * locale is active and which ones exist — so this method does no locale
+     * work of its own and imports no locale module.
+     *
+     * @param list<ShellNavItem>         $headerNav
+     * @param list<ShellNavItem>         $footerNav
+     * @param array<string, string>|null $localeLinks
+     * @param list<string>               $availableLocales language codes, in display order
+     */
+    private static function shellContext(
+        string $siteName,
+        array $headerNav,
+        array $footerNav,
+        string $currentPath,
+        ?array $localeLinks,
+        string $activeLocale,
+        array $availableLocales,
+    ): ShellContext {
+        return ShellContext::from(
+            $siteName,
+            $headerNav,
+            $footerNav,
+            $currentPath,
+            $localeLinks,
+            $activeLocale,
+            $availableLocales,
+            self::sessionHasAuth(),
+        );
+    }
+
+    /**
+     * Read the built stylesheet contents from the Vite manifest so the CSS
+     * can be inlined (the starter bundle is tiny — no separate request).
+     *
+     * @return string concatenated built CSS (empty when the build is missing)
+     */
+    private static function inlineCss(AssetManager $assets, string $jsKey): string
+    {
+        $css = '';
+
+        foreach ($assets->cssUrls($jsKey) as $url) {
+            $path = AppPaths::instance()->public(ltrim($url, '/'));
+
+            if (is_file($path)) {
+                $content = file_get_contents($path);
+                if (is_string($content) && '' !== trim($content)) {
+                    $css .= $content . "\n";
+                }
+            }
+        }
+
+        return $css;
+    }
+
+    /**
+     * Critical CSS — development fallback when the Vite build has not run.
+     * The bytes live as real .css files under
+     * Modules/Core/Interfaces/HTTP/assets/critical/ and are inlined verbatim
+     * via InlineCss (byte-parity guarded by CriticalCssByteParityTest).
+     */
+    public static function criticalCss(): string
+    {
+        return InlineCss::files(self::BASE_CRITICAL_CSS);
+    }
+
+    /**
+     * Open Graph + Twitter card meta tags — emitted in <head> for social
+     * previews (Facebook/LinkedIn/WhatsApp read og:*, Twitter reads both).
+     * og:url mirrors the canonical URL when present (otherwise the scraper
+     * falls back to the page URL); og:locale is derived from the html lang.
+     * All values arrive already escaped by the caller.
+     */
+    private static function ogTags(
+        string $title,
+        string $description,
+        string $siteName,
+        ?string $canonicalUrl,
+        string $htmlLang,
+        ?string $ogType,
+        ?string $ogImage,
+    ): string {
+        $locale = 'en' === $htmlLang ? 'en_US' : 'sk_SK';
+
+        $tags = '<meta property="og:site_name" content="' . $siteName . '">' . "\n"
+            . '<meta property="og:type" content="' . ($ogType ?? 'website') . '">' . "\n"
+            . '<meta property="og:title" content="' . $title . '">' . "\n"
+            . '<meta property="og:description" content="' . $description . '">' . "\n"
+            . '<meta property="og:locale" content="' . $locale . '">' . "\n"
+            . '<meta name="twitter:card" content="' . (null !== $ogImage ? 'summary_large_image' : 'summary') . '">' . "\n"
+            . '<meta name="twitter:title" content="' . $title . '">' . "\n"
+            . '<meta name="twitter:description" content="' . $description . '">' . "\n";
+
+        if (null !== $canonicalUrl) {
+            $tags .= '<meta property="og:url" content="' . $canonicalUrl . '">' . "\n";
+        }
+
+        if (null !== $ogImage) {
+            $tags .= '<meta property="og:image" content="' . $ogImage . '">' . "\n"
+                . '<meta name="twitter:image" content="' . $ogImage . '">' . "\n";
+        }
+
+        return $tags;
+    }
+
+    /**
+     * hreflang alternate link tags for translated pages — emitted in <head>
+     * so search engines know the language versions of the current URL. Each
+     * entry maps a language code (sk, en, x-default) to an absolute URL.
+     *
+     * @param array<string, string>|null $hreflangLinks
+     */
+    private static function hreflangTags(?array $hreflangLinks): string
+    {
+        if (null === $hreflangLinks) {
+            return '';
+        }
+
+        $tags = '';
+
+        foreach ($hreflangLinks as $language => $url) {
+            $tags .= '<link rel="alternate" hreflang="' . self::e($language) . '" href="'
+                . self::e($url) . '">' . "\n";
+        }
+
+        return $tags;
+    }
+
+    /**
+     * RSS/Atom feed auto-discovery links.
+     *
+     * @param array{atom?: string, rss?: string}|null $feedLinks
+     */
+    private static function feedTags(?array $feedLinks): string
+    {
+        if (null === $feedLinks) {
+            return '';
+        }
+
+        $tags = '';
+
+        if (isset($feedLinks['atom'])) {
+            $tags .= '<link rel="alternate" type="application/atom+xml" title="Atom Feed" href="'
+                . self::e($feedLinks['atom']) . '">' . "\n";
+        }
+
+        if (isset($feedLinks['rss'])) {
+            $tags .= '<link rel="alternate" type="application/rss+xml" title="RSS Feed" href="'
+                . self::e($feedLinks['rss']) . '">' . "\n";
+        }
+
+        return $tags;
+    }
+
+    /**
+     * Does the (already-started or startable) session carry an auth stamp?
+     * Zero users.db I/O — only the session cookie + session file are touched,
+     * and the session is only started when the cookie is present.
+     */
+    private static function sessionHasAuth(): bool
+    {
+        $sessionName = session_name();
+        if (false === $sessionName || !isset($_COOKIE[$sessionName])) {
+            return false;
+        }
+
+        if (PHP_SESSION_NONE === session_status()) {
+            session_start();
+        }
+
+        /** @var array{auth?: array{user_id: string}} $session */
+        $session = $_SESSION;
+
+        return isset($session['auth']['user_id']);
+    }
+
+    public static function e(mixed $value): string
+    {
+        if (is_string($value)) {
+            return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        }
+        if (is_int($value) || is_float($value)) {
+            return (string) $value;
+        }
+
+        return '';
+    }
+}
