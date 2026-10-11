@@ -852,7 +852,7 @@ does for its own tree, on the shape a fresh clone actually has (kernel-only:
 | PHPUnit | `composer test` in the kernel-only shape |
 | Assets (pnpm) | the committed workspace builds; the admin manifest keeps its entry keys; no `@layer` survived (Chrome 70 drops the block) |
 | Boot (no vendor) | no `vendor/`; `bin/cms migrate` + `module:list`; six surfaces over HTTP; a module installed → 200 → removed → 404; an empty error log |
-| Extract-check | **not run** — needs `../nativa-minimal`; the job records that rather than reporting a pass |
+| Extract-check | a real checkout of upstream, then `bin/build/extract-kernel.sh --check` (Boot 20 — it printed "NOT RUN" until the upstream repository turned out to be public) |
 
 ## What the no-vendor job caught
 
@@ -992,7 +992,86 @@ Present since 2026-10-11: the module catalogue (`modules/`, task 3.1–3.2) —
 `ModuleLifecycleTest` since Boot 10, with `KernelOnlyBootTest` beside it
 (`composer test`, 7 tests, 13 assertions).
 
-Absent, deliberately:
-`bin/build/extract-kernel.sh` + `--check` (2.1). The kernel theme ships no CSS, so
-a page it renders is valid and unstyled — plan task 2.2 wants a real trimmed
-design, not just a working one.
+Absent, deliberately: a real trimmed design for the kernel theme. It ships no
+CSS, so a page it renders is valid and unstyled — plan task 2.2 wants a kernel
+theme that was *designed*, not just one that works. (`bin/build/extract-kernel.sh`
++ `--check`, listed here as absent while it did not exist, arrived in Boot 11 and
+runs in CI since Boot 20 — see below.)
+
+# Boot 20 — extract-check in CI, and the four files upstream had not committed
+
+The `extract-check` job was a placeholder: it printed `NOT RUN` and exited 0
+because the guard diffs this tree against `../nativa-minimal` and a runner has
+no checkout of it. **The repository was never the obstacle — the path was.**
+`evan70/nativa-minimal` is public (`git ls-remote` answers anonymously,
+`HEAD = cc79d4e`), so CI can check it out.
+
+**One constraint fixes the layout.** `actions/checkout` throws on any `path`
+outside the workspace — from its source (`src/input-helper.ts`, the `path`
+input, read on `main`):
+
+```
+Repository path '<resolved path>' is not under '<GITHUB_WORKSPACE>'
+```
+
+The comparison is `(repositoryPath + sep).startsWith(githubWorkspacePath +
+sep)` on resolved absolute paths, so `../…` cannot satisfy it for any caller.
+A literal sibling `../nativa-minimal` therefore cannot be produced by the
+action. Upstream lands
+**inside** the workspace at `.upstream/nativa-minimal` and the guard is pointed
+at it with `--minimal-root` — the override the script documents for exactly
+this ("overridable, e.g. for CI checkouts elsewhere"). The nested tree is inert
+for the diff: the guard walks only `SLICE_DIRS` + `SLICE_FILES`, and
+`.upstream/` is in neither.
+
+## The gate's first real run was red, and it was right
+
+Run in the CI layout — fresh clone of this repo + `git clone --depth 1` of
+upstream into `.upstream/nativa-minimal` — the guard reported **4 unrecorded
+differences**:
+
+```
+DRIFT: Frontend/packages/jednotka/src/main.ts differs from upstream (not DIVERGED)
+DRIFT: Frontend/packages/jednotka/src/jednotka/content.css …
+DRIFT: Frontend/packages/jednotka/src/jednotka/toc.css …
+DRIFT: Frontend/packages/jednotka/src/jednotka/tokens.css …
+```
+
+No one hand-edited them. `cmp` settles it in both directions:
+
+| comparison | result |
+|---|---|
+| our file vs `../nativa-minimal/<file>` (working tree) | **identical** |
+| our file vs `git -C ../nativa-minimal show HEAD:<file>` | differs |
+| upstream working tree vs its own `HEAD` | differs (the four are `M` there) |
+
+The import that first carried `Frontend/packages` read a checkout whose
+jednotka edits were **not committed yet**. What is committed here is upstream's
+next commit. The workstation's `make extract-check` could never see this — it
+compares against the sibling's *working tree*, where the bytes match. A gate
+that only ever runs where somebody's uncommitted work lives is a gate that
+cannot report this.
+
+**Resolution: recorded, with an expiry date.** The four paths are `DIVERGED`
+in `bin/build/kernel-divergence.txt` under a section that states the expiry:
+delete it once upstream commits them, because after that the two sides are
+identical and a `DIVERGED` line would only hide later drift in four theme
+files. Counts moved accordingly: **246 identical / 42 recorded** (was 250/38),
+locally and in the CI layout alike.
+
+## Verified
+
+The job's steps, extracted from `ci.yml` and run in the CI layout:
+
+- guard step → exit **0**, `extract-kernel --check: OK (246 identical, 42
+  recorded divergences)`;
+- negative control — one planted comment appended to `src/init.php` → exit
+  **1**, `1 unrecorded difference(s)`; the `if: failure()` step then prints
+  both causes and the upstream SHA (`cc79d4e…`);
+- revert → green again.
+- `make extract-check` on the workstation stays green (246/42).
+
+What a red `extract-check` now means, stated in the job itself: a slice file
+was edited without recording it, **or upstream moved** — the second is the
+guard working as designed, and `make extract-check` reproduces the same diff
+locally.

@@ -78,3 +78,25 @@ DROPPED src/Modules/Core/Domain/Contracts/MetricContract.php # Boot 9: metric su
 DROPPED src/Modules/Core/Infrastructure/Attributes/AsMetricProvider.php # Boot 9: metric subsystem deleted whole
 DROPPED src/Modules/Core/Infrastructure/Registry/MetricRegistry.php # Boot 9: metric subsystem deleted whole
 DROPPED src/Modules/Core/Infrastructure/Registry/CardboardRegistry.php # Boot 9: metric subsystem deleted whole
+#
+# --- Ahead of upstream: imported from upstream's WORKING TREE ------------------
+# These four differ from upstream's HEAD but are byte-identical to upstream's
+# WORKING-TREE copy (`cmp` against ../nativa-minimal: identical; `git show
+# HEAD:<path>` there: differs; the four are `M` in that checkout's status). The
+# import that first carried Frontend/packages read a checkout whose jednotka
+# edits were not committed yet — so what is committed here is upstream's NEXT
+# commit, not a hand-edit.
+#
+# They are recorded because CI's extract-check compares against a CHECKOUT of
+# upstream, i.e. committed state: without these lines the job reports four
+# "unrecorded difference(s)" that no one edited. Measured upstream HEAD when
+# they were added: cc79d4e (2026-10-10).
+#
+# DELETE THIS SECTION once upstream commits them. The guard is then identical
+# on both sides and these lines would only hide later drift in four theme
+# files — a DIVERGED entry is a promise that a difference was reviewed ONCE,
+# never a licence to stop looking.
+DIVERGED Frontend/packages/jednotka/src/main.ts # ahead of upstream HEAD cc79d4e; same bytes in upstream's worktree (uncommitted there)
+DIVERGED Frontend/packages/jednotka/src/jednotka/content.css # as above
+DIVERGED Frontend/packages/jednotka/src/jednotka/toc.css # as above
+DIVERGED Frontend/packages/jednotka/src/jednotka/tokens.css # as above
