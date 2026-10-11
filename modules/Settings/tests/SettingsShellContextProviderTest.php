@@ -24,6 +24,11 @@ use Symfony\Component\Console\Output\NullOutput;
  * error and no log line. That is the failure this file pins — not the styling of
  * a link, the existence of the answer.
  *
+ * It also pins what a VISITOR may see: the seed puts `Admin` (→ `/mark`) in the
+ * header, and an anonymous reader must not be pointed at the admin surface
+ * (202 + login is what a dead end looks like in a navbar). Signed-in editors
+ * keep it, nested admin items included.
+ *
  * ## Why it lives here and not under `tests/`
  *
  * Settings is a module. A kernel-only tree has no provider to construct, so the
@@ -46,6 +51,8 @@ final class SettingsShellContextProviderTest extends TestCase
 
     private string $tmpDir = '';
 
+    private \PDO $pdo;
+
     protected function setUp(): void
     {
         if (!is_dir(APP_BASE_PATH . '/src/Modules/' . self::MODULE)) {
@@ -59,10 +66,11 @@ final class SettingsShellContextProviderTest extends TestCase
         DatabaseConnectionManager::resetInstance();
         SettingsServices::reset();
 
+        $this->pdo = new \PDO('sqlite:' . $this->tmpDir . '/config.db');
+
         // The migrator the kernel would run, against a database of our own —
         // same schema, same seeded menu, no shared state.
-        $migrator = new SettingsDatabaseMigrator(new \PDO('sqlite:' . $this->tmpDir . '/config.db'));
-        $migrator->run(new NullOutput());
+        (new SettingsDatabaseMigrator($this->pdo))->run(new NullOutput());
     }
 
     protected function tearDown(): void
@@ -86,9 +94,9 @@ final class SettingsShellContextProviderTest extends TestCase
         $items = (new SettingsShellContextProvider())->navigation('header', '/');
 
         $this->assertSame(
-            ['Home', 'Articles', 'Admin'],
-            array_map(static fn (ShellNavItem $item): string => $item->label, $items),
-            'The header slot must answer the seeded menu — an empty list here is a navbar with nothing to click.',
+            ['Home', 'Articles'],
+            self::labels($items),
+            'The header slot must answer the seeded menu minus what a guest may not see.',
         );
 
         // Kernel-owned values, not the module's DTO: the shell cannot carry a
@@ -102,11 +110,7 @@ final class SettingsShellContextProviderTest extends TestCase
     #[Test]
     public function theItemUnderTheCurrentPathIsTheActiveOne(): void
     {
-        $byLabel = [];
-
-        foreach ((new SettingsShellContextProvider())->navigation('header', '/blog/nativa-php-core') as $item) {
-            $byLabel[$item->label] = $item;
-        }
+        $byLabel = self::byLabel((new SettingsShellContextProvider())->navigation('header', '/blog/nativa-php-core'));
 
         $this->assertTrue($byLabel['Articles']->active, 'An article is under /blog, so Articles is current.');
         $this->assertFalse($byLabel['Home']->active, 'A prefix match must not light up the root item.');
@@ -119,10 +123,71 @@ final class SettingsShellContextProviderTest extends TestCase
 
         $this->assertSame(
             ['Privacy', 'Cookies'],
-            array_map(static fn (ShellNavItem $item): string => $item->label, $provider->navigation('footer', '/')),
+            self::labels($provider->navigation('footer', '/')),
         );
 
         $this->assertSame([], $provider->navigation('sidebar', '/'), 'A slot with no rows is the port\'s no-menu answer.');
+    }
+
+    /**
+     * The seed puts `Admin` in the header location. A reader who is not signed
+     * in must not be handed a link into the admin surface.
+     */
+    #[Test]
+    public function adminLinksAreHiddenFromAnonymousVisitors(): void
+    {
+        $this->assertNotContains(
+            'Admin',
+            self::labels((new SettingsShellContextProvider())->navigation('header', '/')),
+            'An anonymous visitor was handed the admin link.',
+        );
+    }
+
+    /**
+     * The recursion, which the seed's own header does not exercise: a child that
+     * points at the admin surface is dropped while its parent stays.
+     */
+    #[Test]
+    public function aNestedAdminItemIsDroppedWhileItsParentStays(): void
+    {
+        $this->insertMenuItem('Tools', '/tools', 'header', 30);
+        $this->insertMenuItem('Moderation', '/mark/comments', 'header', 10, 'Tools');
+
+        $guest = self::byLabel((new SettingsShellContextProvider())->navigation('header', '/'));
+
+        $this->assertArrayHasKey('Tools', $guest, 'The parent does not point at the admin surface and must stay.');
+        $this->assertSame([], $guest['Tools']->children, 'A nested admin link reached an anonymous visitor.');
+
+        $this->signIn();
+
+        try {
+            $signedIn = self::byLabel((new SettingsShellContextProvider())->navigation('header', '/'));
+            $this->assertSame(
+                ['Moderation'],
+                self::labels($signedIn['Tools']->children),
+                'A signed-in editor must keep the nested admin link.',
+            );
+        } finally {
+            $this->signOut();
+        }
+    }
+
+    #[Test]
+    public function anAdminLinkStaysForASignedInEditor(): void
+    {
+        $this->assertNotContains('Admin', self::labels((new SettingsShellContextProvider())->navigation('header', '/')));
+
+        $this->signIn();
+
+        try {
+            $this->assertContains(
+                'Admin',
+                self::labels((new SettingsShellContextProvider())->navigation('header', '/')),
+                'The signed-in editor lost the admin link — the item exists for exactly this visitor.',
+            );
+        } finally {
+            $this->signOut();
+        }
     }
 
     #[Test]
@@ -135,5 +200,79 @@ final class SettingsShellContextProviderTest extends TestCase
         $this->assertNull($provider->defaultLocale());
         $this->assertNull($provider->htmlLang());
         $this->assertSame([], $provider->languages());
+    }
+
+    /**
+     * @param list<ShellNavItem> $items
+     *
+     * @return list<string>
+     */
+    private static function labels(array $items): array
+    {
+        return array_map(static fn (ShellNavItem $item): string => $item->label, $items);
+    }
+
+    /**
+     * @param list<ShellNavItem> $items
+     *
+     * @return array<string, ShellNavItem>
+     */
+    private static function byLabel(array $items): array
+    {
+        $byLabel = [];
+
+        foreach ($items as $item) {
+            $byLabel[$item->label] = $item;
+        }
+
+        return $byLabel;
+    }
+
+    /**
+     * The session the app itself would have: started, populated with the key the
+     * kernel's shell chrome reads, and announced by cookie — which is what the
+     * provider's own guard requires before it looks at `$_SESSION` at all.
+     */
+    private function signIn(): void
+    {
+        if (PHP_SESSION_NONE === session_status()) {
+            session_start();
+        }
+
+        $_SESSION['auth'] = ['user_id' => 'test-editor'];
+        $_COOKIE[session_name()] = session_id();
+    }
+
+    private function signOut(): void
+    {
+        $_SESSION = [];
+        session_destroy();
+        unset($_COOKIE[session_name()]);
+    }
+
+    private function insertMenuItem(string $label, string $href, string $location, int $sort, ?string $parentLabel = null): void
+    {
+        $parent = null;
+
+        if (null !== $parentLabel) {
+            $stmt = $this->pdo->prepare('SELECT id FROM menu_items WHERE label = :label AND location = :loc');
+            $stmt->execute([':label' => $parentLabel, ':loc' => $location]);
+            $parent = $stmt->fetchColumn();
+            $this->assertIsString($parent, 'The parent row must exist before its child is inserted.');
+        }
+
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO menu_items (id, label, href, sort_order, location, icon, parent_item_id, is_active, created_at, updated_at)
+             VALUES (:id, :label, :href, :sort, :loc, :icon, :parent, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
+        );
+        $stmt->execute([
+            ':id' => bin2hex(random_bytes(16)),
+            ':label' => $label,
+            ':href' => $href,
+            ':sort' => $sort,
+            ':loc' => $location,
+            ':icon' => '',
+            ':parent' => $parent,
+        ]);
     }
 }

@@ -1442,7 +1442,9 @@ is a straight map (label, href, active, external, children one level down).
 The rows come from the same seed upstream has: header `Home /`, `Articles /blog`,
 `Admin /mark`; footer `Privacy /privacy`, `Cookies /cookies`. `Admin` in a public
 navbar is upstream's own seed, kept as parity — hiding it is an operator choice
-in `/mark/settings`, not a kernel decision.
+in `/mark/settings`, not a kernel decision. **(Boot 24 revised this: for a reader
+who is not signed in the item is a 302 to `/login`, so the provider now withholds
+admin hrefs from anonymous visitors and keeps them for editors.)**
 
 Cost, because the nav is now read on every public render: **0.24 ms per page**
 for both slots (1000 iterations, SQLite, `SettingsServices` memoizes the
@@ -1464,6 +1466,8 @@ this tree's text-first registries**, and the failure is invisible. The robust
 change — anchor the pattern to a declaration line rather than the first mention —
 touches `ShellContextProviderRegistry`, `ThemeRegistry` and `MiddlewareRegistry`,
 and is deliberately NOT in this commit; it is recorded here as a known trap.
+**(Boot 24 closed it — and found a fourth copy of the resolver in
+`MarkdownBlockRegistry`.)**
 
 ## Mono's navbar on a phone
 
@@ -1483,3 +1487,91 @@ already has. Desktop is untouched.
 - chromium at **390px and 1280px**: menu `display:flex`, three links, inside the viewport, nothing clipped;
 - `phpunit` 28/28 (6 skips), `phpstan`, `rector --dry-run`, `php-cs-fixer --dry-run` clean; `extract-kernel --check` OK (246 identical, 42 recorded divergences — the new file needed no entry).
 - 4 of those tests are new (`modules/Settings/tests/SettingsShellContextProviderTest.php`): the header and footer answers, the active item under a nested path, and the abstentions. They build their own temp `config.db` with the Settings migrator — not `DatabaseMigrator`, which would run every module's migrator and touch the working tree's real databases — and **3 of the 4 fail when `navigation()` is reverted to `[]`**, so the silent-empty answer that caused this cannot come back unnoticed.
+
+# Boot 24 — the admin link a visitor may not see, and the prose that ate discovery (2026-10-12)
+
+Two asks: hide the admin link from anonymous readers while editors keep it, and
+close the trap Boot 23 recorded and left open. The first one turned out to have a
+second half nobody had asked for.
+
+## The admin link
+
+Boot 23 left `Admin` (→ `/mark`) in the header for everyone, on the grounds that
+hiding it was an operator's choice in `/mark/settings` rather than a kernel
+decision. That reading missed a direction: for a reader who is not signed in the
+item is a 302 to `/login` — a dead end dressed as navigation, in every theme, on
+every public page. So the provider that answers the slot now answers it per
+visitor: an item whose href is `/mark` or under it is dropped unless the visitor
+is signed in, children included by the same rule however deep the menu nests (a
+nested `Moderation → /mark/comments` goes with it while its parent stays).
+
+"Signed in" is read the way the kernel already reads it — `$_SESSION['auth']['user_id']`,
+behind the guard that keeps a public page from handing a session to a reader who
+never logged in (`FrontendLayout::sessionHasAuth()`). The auth PORT is not asked
+because its `identity()` takes a `Request` and the shell port carries none:
+asking would mean inventing a second answer to a question the kernel already
+answers for itself.
+
+**Measured on the live server**, with a real session in `storage/sessions` and its
+cookie:
+
+| request | navbar |
+|---|---|
+| guest `GET /blog` | `['Home', 'Articles']` |
+| editor `GET /blog/nativa-php-core` | `['Home', 'Articles', 'Admin']` |
+| guest `GET /blog/nativa-php-core` | `['Home', 'Articles']` |
+
+## The leak the nav half exposed
+
+Verifying that table found the other half: a page cache that does not know WHO a
+page was rendered for. `PageCacheService` keys an entry by method + path + query +
+locale and `PageCacheMiddleware` writes one on every cacheable response — while
+the shell chrome advertises `/mark` to exactly one class of visitor. An editor's
+`/` stored under that shared key is an anonymous reader being handed a link to the
+admin surface, and it is not served back to the session that produced it:
+`RateLimitMiddleware` serves the cache to **whoever trips the limit**.
+
+`isCacheable()` now refuses a response rendered for a signed-in visitor
+(`renderedForASignedInVisitor()` — same session read, same guard). The anonymous
+render of the same URL is still cached: a policy that quietly stopped caching the
+site would silence the leak and this test with it.
+
+**This tree never populated that cache**: `PageCacheMiddleware` needs a
+`PageCacheService`, so `#[AsMiddleware]` discovery skips it (zero-argument classes
+only) and the kernel-only root wires nothing by hand — `storage/cache/pages` held
+0 files after every request above. Upstream is the other case:
+`../nativa-minimal/public/index.php:127` constructs it. The rule is latent here
+and live there, which is the shape a kernel-owned policy has to be written for.
+`PageCacheService.php` is now a recorded DIVERGED file.
+
+## The prose trap, closed
+
+Boot 23 recorded the discovery defect and deliberately did not fix it. Four
+registries resolve an FQCN from file text the same way —
+`ShellContextProviderRegistry`, `ThemeRegistry`, `MiddlewareRegistry` and
+`MarkdownBlockRegistry` — and all four took the FIRST `class <name>` mention in
+the file, so a docblock sentence ("This class says the one thing…") resolved a
+type named `says`; the class did not exist, the file was skipped, and the
+provider, theme or middleware disappeared with no error and no log line.
+
+A declaration now has to START something: the pattern is anchored to a line start
+(or a statement, after `;`) with the modifiers PHP allows in front
+(`final|abstract|readonly`). The `;` half is not decoration — a compact but legal
+`namespace Demo; class Thing {}` has to keep resolving, and too strict a heuristic
+trades one silent skip for another, which is the failure mode this whole exercise
+is about.
+
+`tests/Discovery/TextFirstFqcnTest.php` pins all four copies at once (12 cases:
+both prose-shadowing halves, one real declaration shape per modifier, and a file
+with no declaration answering null rather than guessing). Against `HEAD`'s
+resolver **3 of the 12 fail** — the docblock's own phrase "a class of things"
+resolving as the type name `Demo\of`.
+
+## Verified
+
+- live `:8000`, fresh server — opcache's 180s revalidate means a running server answers from the front of the last three minutes, so every response above was read after a restart;
+- guest/editor/guest navbar exactly as tabulated, `200` on all three, nothing in the server log;
+- `storage/cache/pages`: 0 files after a guest render and 0 after an editor render — the middleware is not wired here, which is why the rule is recorded rather than demonstrated in this tree;
+- `phpunit` 51 tests (6 skipped), `phpstan`, `rector --dry-run`, `php -l` and `php-cs-fixer --dry-run` (84 files) clean;
+- the negative checks, so the two new rules cannot be dropped unnoticed: with the cache rule removed **2 of the 8** `tests/Cache/PageCacheServiceTest.php` cases fail (the editor's page lands in the cache), and with `HEAD`'s resolver **3 of the 12** discovery cases fail;
+- `extract-kernel --check` OK (243 identical, 45 recorded divergences) — the three kernel files this boot rewrote (`PageCacheService`, `MiddlewareRegistry`, `MarkdownBlockRegistry`) are recorded as DIVERGED with their reasons. Upstream still carries both defects; the record is what says so.

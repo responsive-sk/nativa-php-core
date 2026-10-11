@@ -192,6 +192,10 @@ final readonly class PageCacheService
             return false;
         }
 
+        if ($this->renderedForASignedInVisitor()) {
+            return false;
+        }
+
         return '' !== trim($response->getContent());
     }
 
@@ -204,6 +208,41 @@ final readonly class PageCacheService
         $params = $request->getQueryParams();
 
         return array_any(self::BYPASS_QUERY_PARAMS, fn ($name) => array_key_exists($name, $params));
+    }
+
+    /**
+     * Whether this response was rendered for a signed-in visitor.
+     *
+     * The page a signed-in editor is served is not the page an anonymous
+     * reader gets: the shell chrome names the admin surface for exactly one of
+     * them (`FrontendLayout::sessionHasAuth()` and, through the shell port, the
+     * Settings provider's own menu filter). A cache key is method + path +
+     * query + locale — shared by every visitor — so storing an editor's render
+     * under it hands the next reader a link to a surface they cannot open.
+     * That is not a staleness annoyance: `RateLimitMiddleware` serves this cache
+     * to whoever trips the limit, not to whoever triggered the write, so the
+     * leak escapes the session that produced it.
+     *
+     * Read exactly as the kernel reads it elsewhere, guard included: no session
+     * cookie, no session started — a cache policy has no business handing a
+     * session to a visitor who never logged in.
+     */
+    private function renderedForASignedInVisitor(): bool
+    {
+        $sessionName = session_name();
+
+        if (false === $sessionName || !isset($_COOKIE[$sessionName])) {
+            return false;
+        }
+
+        if (PHP_SESSION_NONE === session_status()) {
+            session_start();
+        }
+
+        /** @var array{auth?: array{user_id?: string}} $session */
+        $session = $_SESSION;
+
+        return isset($session['auth']['user_id']);
     }
 
     /**
