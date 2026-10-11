@@ -137,6 +137,47 @@ throwaway provider was installed, measured, and deleted:
 4. **The admin/SEO meta strings** in `HomepageAction` and `ErrorPageRenderer` still
    name the showcase (`Nativa Starter — Home`).
 
+## Boot 4 — the home surface stays in the kernel (2026-10-11)
+
+`HomepageAction` no longer imports `Blog` or `Locales`. The showcase home
+(hero + feature sections + latest articles, copy through the translation
+system) is the app's, not the kernel's — its ledger answer is **M** and it
+moves to the slice that owns its copy (`Modules\Site`, task 1.1). What stays
+here is the smallest surface the kernel answers honestly with nothing
+installed: the site name through the `ShellContextProvider` port, rendered by
+the kernel theme from `ShellContext` + `PageContext` alone.
+
+The ledger moved with it: **27 → 24 edges (10 → 9 files)**. `HomepageAction`
+is the first `M` row gone; the remaining `M` rows are `SitemapAction`
+(Blog ×3, Pages), `ServeUploadedFileAction` (Media), `SeedCommand`
+(Security + Users ×3), `MetricContract` + `CardboardRegistry` (Cardboard ×2)
+and `PageContext` (Blog ×2, answered `C`).
+
+| Surface | Boot 3 | **Boot 4** | Note |
+|---|---|---|---|
+| `/` | 500 | **200** (3694 B) | kernel theme, `<html lang="en">`, brand + H1 `Nativa PHP Core`, no `<nav>` (0 items, none rendered), canonical `/` |
+| `/robots.txt` | 200 | **200** (229 B) | unchanged |
+| `/sitemap.xml` | 200 | **200** (398 B) | unchanged — and it no longer advertises a 500: the `/` it lists now answers 200 |
+| `/docs` | 200 | **200** (3346 B) | unchanged |
+| `/nope` | 404 | **404** (3765 B) | unchanged |
+| `/mark` | 404 | **404** (3765 B) | unchanged — still not found rather than forbidden |
+
+No new `[KERNEL] Error` across the six requests (log count 35 before = 35
+after); the only entries are the pre-existing `LocalesServices not found`
+lines from before the cut.
+
+### What this step did NOT close
+
+1. **`/en/` is still advertised but unserved** (gap #2 survives): the sitemap
+   lists `/` + `/en/` from `ContentLocaleMapper::LANGUAGES`, but the tree has
+   no `/en/` route — only `/` answers 200. The port has `languages()`; nothing
+   in the mapper reads it yet.
+2. **The middleware `G` edges are untouched** (`AuthMiddleware` 6,
+   `RateLimitMiddleware` 4, `PageCacheMiddleware` 1) — task 1.3.
+3. **`ErrorPageRenderer` still names the showcase** (`Nativa Starter`); the
+home title is kernel-named since this step, the error pages are not — gap #4
+narrowed, not closed.
+
 ## Bootstrapper
 
 ```
