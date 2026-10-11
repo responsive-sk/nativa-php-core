@@ -1261,3 +1261,147 @@ brings instead of leaving it to be discovered inside the artifact:
     12 slice(s) byte-identical to the installed copy (a second copy of what runs)
     2 drifted, 2 not installed
 ```
+
+# Boot 22 — testing the `erik` theme, and the asset defect it found
+
+The question was "can we test the erik theme too?" — and testing it is what
+found the bug, because the theme **rendered**: `er-` classes, correct markup,
+200 everywhere. What it did not do was load its own stylesheet.
+
+## What the theme is
+
+`erik` is not a kernel theme. It arrives with the `Erik` module (3 files:
+`Theme/ErikTheme.php`, `assets/critical/erik.css`,
+`Interfaces/HTTP/ErikShellContextProvider.php`), and installing that module is
+what makes it active:
+
+```
+php bin/cms module:add Erik          # 3 file(s) copied
+ThemeRegistry::all()  → erik, mono
+ThemeKernel::for('erik') → Modules\Erik\Theme\ErikTheme   (bundle=erik, prefix=er)
+```
+
+Note what that says about this tree: `settings.theme` is still `kernel`, and
+`ThemeResolver::resolvePath('/')` answers `erik` anyway — the Erik **and** Mono
+modules both ship a provider that hardcodes its theme
+(`#[AsShellContextProvider(priority: 0)]`, "a real deployment answers `theme()`
+from its settings module instead" — the Erik provider's own comment). Providers
+win over the setting, first non-null in (priority, discovery) order, so with
+both installed `erik` is active; removing Erik makes **`mono`** active, not the
+kernel theme. The kernel theme is what you get when neither is installed.
+
+## The defect: the built stylesheet was never used
+
+`FrontendLayout` inlines the theme's CSS rather than linking it (deliberate —
+it removes a render-blocking request). It asks `AssetManager` for the active
+theme's name (`$themeModule->name()`, which is also what names the body class
+`<body class="erik-shell">`), and `AssetManager::knownBundles()` was:
+
+```php
+[ ThemeResolver::ADMIN_THEME, ...ThemeResolver::PUBLIC_WHITELIST, 'minimal' ]
+```
+
+— a **static** list: `moonshine`, `kernel`, `minimal`. `erik` is not in it, so
+the bundle resolved to `kernel`, the manifest under
+`public/dist/kernel/manifest.json` does not exist, and the layout fell back to
+the theme's critical file. Measured on `/`:
+
+| | inlined CSS | `.er-` rules |
+|---|---|---|
+| before | **706 chars** (the 1119-byte critical file, minified) | 12 |
+| after | **35 261 chars** — byte-equal to `public/dist/erik/assets/erik-A5GsJi84.css` | 412 |
+
+A page styled with 2 % of its stylesheet and nothing in the log to say so. It is
+the same shape as the defect `ThemeKernel`'s docblock already warns about (a
+theme served another theme's stylesheet is "indistinguishable from a page that
+works"), one layer down: this time the fallback was *correct* for the kernel's
+own theme and silently starved a discovered one.
+
+## The fix
+
+The bundles this tree has are discovered the way its themes are.
+`ThemeRegistry::bundles()` asks each discovered theme for `bundle()` — asked,
+not derived from the theme's name, because the contract has both for a reason —
+skips a theme that cannot be constructed (the same rule `all()` already
+follows), and memoizes, since `AssetManager` reads the list from its
+constructor (200 calls: 1.75 ms). `AssetManager::knownBundles()` adds it to the
+static three. `ThemeRegistry::reset()` clears the memo alongside `$themes`.
+
+Verified after the fix: `/`, `/blog`, `/blog/nativa-php-core`, `/docs` all
+inline the 35 261-char build (412 `.er-` rules) and the `erik` JS bundle is
+referenced; `/nope` still 404s; the error log stays empty. Removing Erik returns
+the tree to `mono` with 19 058 chars of its own critical CSS and no `.er-`
+rules — the discovery is not sticky. `AssetManager('kernel')` still reports
+`available() = no` (there is no `public/dist/kernel/`), so the kernel-only tree
+keeps the critical-CSS fallback it had.
+
+## The tests
+
+Two files, split the way this tree splits tests. `tests/` is inside PHPStan's
+scope and `modules/` is not, so the half that names `ErikTheme` lives beside
+the module and the half that names only kernel classes lives in the harness.
+
+`modules/Erik/tests/ErikThemeTest.php` (the fixture): the theme is discovered,
+`name()` and `bundle()` both answer `erik`, the bundle is in
+`AssetManager::knownBundles()`, the rendered `<style>` block is byte-equal to
+`public/dist/erik/assets/erik-A5GsJi84.css` **and** not the critical subset
+(which is named explicitly, so the assertion cannot pass by the fallback
+growing), the `.er-` vocabulary is present in quantity, the document wears
+`erik-shell` + `er-header`/`er-main`/`er-footer` and no sibling's `k-`/`mo-`
+class, and the live homepage — dispatched through `Kernel` — carries the
+active theme's build.
+
+`tests/Theme/ThemeBundleDiscoveryTest.php` (the door, closed for the next
+theme): every theme `ThemeRegistry` discovers must declare a bundle
+`AssetManager` knows, and every discovered theme whose build sits under
+`public/dist/` must render a document containing that build's bytes. It walks
+the same discovery `ThemeResolver` uses — and holds the same "no module class
+names" line as every other file under `tests/` — so it runs and passes in the
+kernel-only tree too, where the discovered set is simply empty.
+
+Two details in those files are load-bearing, and both were measured:
+
+- **The skip guard is the manifest on disk, never `AssetManager::isAvailable()`.**
+  The first draft guarded the byte-parity assertions on `isAvailable()` — the
+  exact call the defect breaks — so with the fix removed the test *skipped*
+  instead of failing. Guarding on the path makes it fail, which is the whole
+  job.
+- **The live-surface test asserts against the resolver's answer, not against
+  `erik`.** Installing another provider re-points the test instead of breaking
+  it, while the defect still fails it.
+
+Five tests now fail with the fix removed and pass with it in place — checked by
+reverting only the `...ThemeRegistry::bundles()` line:
+
+| | without the fix | with the fix |
+|---|---|---|
+| `ErikThemeTest::themeIsDiscoveredAndItsBundleIsKnownToAssetManager` | fails | passes |
+| `ErikThemeTest::layoutInlinesTheBuiltStylesheetAndNotTheCriticalSubset` | fails | passes |
+| `ErikThemeTest::liveSurfacesInlineTheActiveThemesOwnBuild` | fails | passes |
+| `ThemeBundleDiscoveryTest::everyDiscoveredThemesBundleIsAKnownAssetBundle` | fails (`erik`, `mono`) | passes |
+| `ThemeBundleDiscoveryTest::everyDiscoveredThemeWithABuildRendersItsOwnStylesheet` | fails | passes |
+
+The whole suite: 24 tests, 76 assertions, 1 skip (the pre-existing Cardboard
+one) — plus `phpstan`, `rector --dry-run` and `php-cs-fixer --dry-run` clean.
+
+One gap the second test now covers but the kernel does not yet close: nothing
+today has `name() !== bundle()`, while `FrontendLayout` hands `name()` to
+`AssetManager` where the contract offers `bundle()`. A theme that renames its
+bundle would be served under its name — the same wrong-stylesheet shape, one
+step further in. The guard fails on it (`"does not inline bundle X"`) instead
+of staying silent, which is why the assertion was written against the
+declared bundle rather than against the theme name.
+
+## State of the tree afterwards
+
+Erik was installed to run this test and **uninstalled again** afterwards —
+`bin/cms module:remove Erik`, which is a change to `src/Modules/` and therefore
+gitignored. The live theme is `mono` once more: `/`, `/blog`, `/docs` all serve
+its own 19 056-char critical CSS (211 `.mo-` rules, zero `.er-`), body
+`mono-shell`, and `/nope` still answers 404.
+
+That is why the erik suite SKIPS in this working copy — `ErikThemeTest` and the
+build half of `ThemeBundleDiscoveryTest` guard on `src/Modules/Erik` being
+installed, exactly as `TaxonomyRegistryTest` guards on Blog. Suite in this
+state: 24 tests, 49 assertions, 6 skips. `bin/cms module:add Erik` puts it back
+and all six run.

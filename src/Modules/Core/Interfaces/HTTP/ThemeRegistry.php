@@ -28,6 +28,9 @@ final class ThemeRegistry
     /** @var array<string, class-string<ThemeModule>>|null theme name → class */
     private static ?array $themes = null;
 
+    /** @var list<string>|null memoized `bundles()` — it is read per AssetManager */
+    private static ?array $bundles = null;
+
     /**
      * Every module-carried theme, by name.
      *
@@ -69,11 +72,50 @@ final class ThemeRegistry
     public static function reset(): void
     {
         self::$themes = null;
+        self::$bundles = null;
     }
 
     public static function has(string $name): bool
     {
         return isset(self::all()[$name]);
+    }
+
+    /**
+     * The asset bundle each discovered theme declares — what `AssetManager`
+     * needs to find its manifest.
+     *
+     * Asked of the theme, not derived from its name: the name and the bundle
+     * are separate declarations in `ThemeModule` (`bundle()` exists precisely
+     * because a theme may rename one without the other), so a list built from
+     * `all()`'s keys would be right only by accident.
+     *
+     * A theme that cannot be constructed is SKIPPED, never guessed — `get()`
+     * logs the reason, and a bundle nobody can name is a bundle whose manifest
+     * must not be looked up. Measured why this exists: with the bundle list
+     * hardcoded to kernel/moonshine/minimal, the `erik` theme resolved its
+     * assets as bundle `kernel`, looked for `public/dist/kernel/manifest.json`
+     * (absent), and rendered with the 1.1 KB critical subset inlined instead of
+     * its own 35 KB built stylesheet — a page that looks styled and is not.
+     *
+     * @return list<string>
+     */
+    public static function bundles(): array
+    {
+        if (null !== self::$bundles) {
+            return self::$bundles;
+        }
+
+        $bundles = [];
+
+        foreach (array_keys(self::all()) as $name) {
+            $theme = self::get($name);
+
+            if (null !== $theme) {
+                $bundles[] = $theme->bundle();
+            }
+        }
+
+        return self::$bundles = array_values(array_unique($bundles));
     }
 
     /**

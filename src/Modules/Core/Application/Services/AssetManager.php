@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Core\Application\Services;
 
 use Modules\Core\Infrastructure\Paths\AppPaths;
+use Modules\Core\Interfaces\HTTP\ThemeRegistry;
 use Modules\Core\Interfaces\HTTP\ThemeResolver;
 
 /**
@@ -38,8 +39,9 @@ final class AssetManager
      * the DEFAULT theme's stylesheet and script, because this one missed it.
      * Nothing errored and nothing was logged — a theme whose entire CSS was
      * another theme's is indistinguishable from a theme that works, right up
-     * until a reader opens the page. `AssetBundlesTest` now fails when a
-     * package exists that this list does not know.
+     * until a reader opens the page. `ThemeBundleDiscoveryTest` now fails when
+     * a discovered theme's bundle is missing from this list, and
+     * `ErikThemeTest` pins the page it produces.
      *
      * `minimal` is in the set and not in the public whitelist on purpose: it
      * ships no markup and no route can name it, but its package still builds
@@ -53,6 +55,15 @@ final class AssetManager
             ThemeResolver::ADMIN_THEME,
             ...ThemeResolver::PUBLIC_WHITELIST,
             'minimal',
+            // A theme that arrives with a module brings its bundle with it, so
+            // the bundles this tree has are discovered the same way its themes
+            // are. Without this the list is a statement about the KERNEL's own
+            // themes, and every module-carried one resolves to the kernel
+            // bundle: the manifest under public/dist/kernel/ does not exist, so
+            // the built stylesheet is never inlined and the page renders with
+            // the critical subset only. Measured on the `erik` theme — 706
+            // chars of CSS inlined where its build has 35 258.
+            ...ThemeRegistry::bundles(),
         ]));
     }
 
