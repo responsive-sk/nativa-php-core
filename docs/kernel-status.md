@@ -1405,3 +1405,81 @@ build half of `ThemeBundleDiscoveryTest` guard on `src/Modules/Erik` being
 installed, exactly as `TaxonomyRegistryTest` guards on Blog. Suite in this
 state: 24 tests, 49 assertions, 6 skips. `bin/cms module:add Erik` puts it back
 and all six run.
+
+# Boot 23 — the menu nobody asked for (2026-10-12)
+
+The Mono work ended with a styled page and a navbar carrying a brand and
+nothing else. The vendored CSS was fine; the document simply had no
+`mo-navbar__menu` in it. Asked to "add the nav menu", the honest first step was
+to find out who was supposed to answer it — and the answer was nobody.
+
+## What was missing
+
+Boot 3 moved navigation behind the shell port. Upstream, `FrontendLayout` read
+it straight from `SettingsServices::menu()->menu('header'|'footer', $path)`;
+here that call became `ShellContextProviderRegistry::navigation()`, whose merge
+rule is **first provider that returns a non-empty list for that slot** — and no
+installed module implemented `navigation()` at all. Only the two theme fixtures
+did, and both answer `[]` on purpose. The rule is also the reason the failure
+was invisible: an empty answer *is* the "no menu" answer, so an unasked question
+renders exactly like a site with no menu configured.
+
+Measured: `header: 0 items`, `footer: 0 items` on every path, and
+`mo-navbar__menu` absent from `/`, `/blog`, `/docs` and the article.
+
+## The fix
+
+`Settings` owns the `menu_items` table, its `MenuService` already builds the
+nested tree, filters `is_active` and marks the current path active — it was the
+owner without a voice. So it got one:
+
+`modules/Settings/Interfaces/HTTP/SettingsShellContextProvider.php` (+ the
+installed copy under `src/Modules/Settings/`), `#[AsShellContextProvider]`,
+answering `navigation()` only. Site name, theme and locale are answered by other
+providers; a second answer would be a second source. `MenuItemDTO` → `ShellNavItem`
+is a straight map (label, href, active, external, children one level down).
+
+The rows come from the same seed upstream has: header `Home /`, `Articles /blog`,
+`Admin /mark`; footer `Privacy /privacy`, `Cookies /cookies`. `Admin` in a public
+navbar is upstream's own seed, kept as parity — hiding it is an operator choice
+in `/mark/settings`, not a kernel decision.
+
+Cost, because the nav is now read on every public render: **0.24 ms per page**
+for both slots (1000 iterations, SQLite, `SettingsServices` memoizes the
+service), against 0.63 ms for a full mono render.
+
+## The trap it sprung
+
+The provider was written, copied, and **not discovered**: the registry still
+listed one provider, and the menu stayed empty. The cause was the discovery
+mechanism itself. `ShellContextProviderRegistry::load()` resolves the FQCN with
+the FIRST `class <name>` match in the file — a text-first rule, the same shape
+as `Router::mayDeclareRoute` — and the docblock's phrase "This class says the one
+thing…" made it resolve a type named `says`. The class did not exist, so the file
+was skipped, silently, with the menu still gone.
+
+Rewording is the whole fix here (the note is now phrased without the keyword),
+and it is what surfaced the fragility: **prose can shadow discovery in any of
+this tree's text-first registries**, and the failure is invisible. The robust
+change — anchor the pattern to a declaration line rather than the first mention —
+touches `ShellContextProviderRegistry`, `ThemeRegistry` and `MiddlewareRegistry`,
+and is deliberately NOT in this commit; it is recorded here as a known trap.
+
+## Mono's navbar on a phone
+
+Mono's vendored CSS hides `.mo-navbar__menu` below 768px and opens it by adding
+`mo-navbar--menu-open` from the live site's JavaScript — which this tree does not
+ship (mono has no build; `criticalCss()` is the whole theme). So the menu the
+port had just filled would have been unreachable on a narrow screen. One media
+query in `mono.css` shows it inline and scrollable under 768px instead: no JS,
+no markup change, the same always-visible shape the kernel theme's `k-nav`
+already has. Desktop is untouched.
+
+## Verified
+
+- registry discovers 2 providers; `header: [*Home → /] [Articles → /blog] [Admin → /mark]`, `footer: [Privacy] [Cookies]`; `/` marks Home active, `/blog` and the article mark Articles;
+- live on `:8000`: `/`, `/blog`, `/blog/nativa-php-core`, `/docs` all 200, each with `mo-navbar__menu` and the active link correct;
+- the same rows render in the kernel theme (`k-nav`) and its footer — the port feeds every theme, not just the one that prompted this;
+- chromium at **390px and 1280px**: menu `display:flex`, three links, inside the viewport, nothing clipped;
+- `phpunit` 28/28 (6 skips), `phpstan`, `rector --dry-run`, `php-cs-fixer --dry-run` clean; `extract-kernel --check` OK (246 identical, 42 recorded divergences — the new file needed no entry).
+- 4 of those tests are new (`modules/Settings/tests/SettingsShellContextProviderTest.php`): the header and footer answers, the active item under a nested path, and the abstentions. They build their own temp `config.db` with the Settings migrator — not `DatabaseMigrator`, which would run every module's migrator and touch the working tree's real databases — and **3 of the 4 fail when `navigation()` is reverted to `[]`**, so the silent-empty answer that caused this cannot come back unnoticed.
