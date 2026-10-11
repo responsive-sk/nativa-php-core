@@ -17,16 +17,19 @@ use Modules\Core\Interfaces\HTTP\ThemeResolver;
  * degrade gracefully before a build has run.
  *
  * Usage:
- *   $assets = new AssetManager('starter');
- *   $jsUrl  = $assets->jsUrl('main');      // '/dist/starter/assets/main-xxx.js'
- *   $cssUrls = $assets->cssUrls('main');   // ['/dist/starter/assets/main-xxx.css']
+ *   $assets = new AssetManager('kernel');
+ *   $jsUrl  = $assets->jsUrl('main');      // '/dist/kernel/assets/main-xxx.js'
+ *   $cssUrls = $assets->cssUrls('main');   // ['/dist/kernel/assets/main-xxx.css']
+ *
+ * (Both null here — the kernel ships no build. The example shows the shape,
+ * not a bundle this tree has.)
  */
 final class AssetManager
 {
     /**
      * Known bundles — one per theme package under `Frontend/packages/`.
-     * Anything outside the list falls back to `starter` so a stale or
-     * hand-written bundle name still resolves to the default public shell.
+     * Anything outside the list falls back to `kernel` so a stale or
+     * hand-written bundle name still resolves to the theme this tree has.
      *
      * The list is DERIVED from the runtime theme set, not written out here.
      * It used to be a literal, and that literal was the fourth place a theme
@@ -58,13 +61,13 @@ final class AssetManager
     /** @var array<string, array{file?: string, css?: list<string>, imports?: list<string>}> */
     private array $manifest;
 
-    public function __construct(?string $bundle = 'starter')
+    public function __construct(?string $bundle = 'kernel')
     {
-        $resolved = (null === $bundle || '' === $bundle) ? 'starter' : $bundle;
+        $resolved = (null === $bundle || '' === $bundle) ? 'kernel' : $bundle;
         // Every theme package builds into its own dist directory, so the
         // bundle name maps straight onto the manifest path. Unknown names
-        // fall back to the default public shell.
-        $manifestBundle = in_array($resolved, self::knownBundles(), true) ? $resolved : 'starter';
+        // fall back to the kernel: the one theme this tree always has.
+        $manifestBundle = in_array($resolved, self::knownBundles(), true) ? $resolved : 'kernel';
         $this->bundlePrefix = '/dist/' . $manifestBundle . '/';
 
         $manifestPath = AppPaths::instance()->public('dist/' . $manifestBundle . '/manifest.json');

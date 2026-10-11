@@ -29,7 +29,7 @@ final class DashboardAction
     public function handle(Request $request): Response
     {
         $settings = CardboardServices::settings()->all();
-        $siteName = is_string($settings['site_name'] ?? null) ? $settings['site_name'] : 'Nativa Starter';
+        $siteName = is_string($settings['site_name'] ?? null) ? $settings['site_name'] : 'Mark';
 
         $periodParam = $request->query('period', '7d');
         $period = Period::tryFrom(is_string($periodParam) ? $periodParam : '7d')

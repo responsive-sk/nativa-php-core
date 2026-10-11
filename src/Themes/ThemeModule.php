@@ -10,7 +10,7 @@ use Modules\Core\Interfaces\HTTP\ShellContext;
 /**
  * Theme module contract — the single entry point of a wired theme.
  *
- * Every wired theme (starter, erik, moonshine) is a self-contained module
+ * Every wired theme (kernel, and module-carried ones like mono or erik) is a self-contained module
  * owning ALL of its HTML: shell chrome (header/footer, locale switcher,
  * user link, nav + footer nav), the theme-init script and one composition
  * method per public page surface. Actions resolve the active module through
@@ -19,7 +19,7 @@ use Modules\Core\Interfaces\HTTP\ShellContext;
  */
 interface ThemeModule
 {
-    /** Theme slug — matches ThemeResolver values ('starter', 'erik', 'moonshine'). */
+    /** Theme slug — matches ThemeResolver values ('kernel', plus module-carried names). */
     public function name(): string;
 
     /** Asset bundle id resolved through AssetManager ('main' | 'erik' | 'mark'). */

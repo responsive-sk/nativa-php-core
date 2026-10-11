@@ -473,6 +473,36 @@ Deliberately not this task: `starter` as an addable module (no starter
 slice exists in this tree; packaging it is minimal-side work) and the
 `cs-fixer`/`rector` configs from Boot 11.
 
+## Boot 13 — the last showcase strings (2026-10-11)
+
+Gap #4 closes: a grep for `Nativa Starter|nativa_starter` across the tree
+now hits only history (this log), the harness assertion that guards it,
+and Cardboard's fixed fallback. What moved:
+
+- `config/session.php`: the session default is `nativa_core` — matching
+  `.env.example` at last (code said `nativa_starter` while the example said
+  `nativa_core`). No live sessions to invalidate: no auth module installed.
+- `AssetManager`: unknown bundles fall back to `kernel`, the theme this
+  tree has, not `starter`. Behavior-identical (no manifest either way —
+  every in-tree caller passes the bundle explicitly), name-honest.
+- `LlmsTxtAction`: the served `/llms.txt` was full showcase copy *and*
+  advertised blog/feed/author routes that answer 404 here. Rewritten to
+  describe the kernel and link only what it serves (`/`, `/docs`,
+  `/sitemap.xml`, `/robots.txt`) — same rule as the sitemap.
+- `ThemeModule` docblock + `FrontendLayout` comments: wired themes are
+  kernel/mono/erik now, critical CSS is "small" without naming a bundle.
+- Cardboard's dashboard fallback: `Nativa Starter` → `Mark` (its own
+  brand, per its layout titles). Catalog edit, uninstalled module, zero
+  runtime effect here.
+
+Kept deliberately: `ThemeKernel`'s docblock naming `StarterTheme` (it
+documents the fallback that must NOT happen) and "starter kit" as a
+generic term in `MarkdownRenderer`.
+
+Gates: `phpstan` clean, `composer test` 11/29, `--check` green (58
+identical, 37 recorded). HTTP: all seven surfaces answer (`/llms.txt` 200,
+792 B, kernel copy with absolute links); `/` back at 22934 B.
+
 ## Bootstrapper
 
 ```

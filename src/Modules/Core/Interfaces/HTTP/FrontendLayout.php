@@ -19,10 +19,10 @@ use Modules\Core\Infrastructure\Paths\AppPaths;
  * external CDNs — assets are resolved from the local Vite manifest via
  * AssetManager (task 10.5).
  *
- * CSS strategy: the starter bundle is ~1–2 kB, so the built stylesheet is
- * inlined into <head> (with the CSP nonce) instead of being linked. This
- * removes the render-blocking stylesheet request from the critical path
- * (better LCP) while keeping first paint styled exactly once (CLS stays 0).
+ * CSS strategy: critical CSS is small, so the built stylesheet is inlined
+ * into <head> (with the CSP nonce) instead of being linked. This removes
+ * the render-blocking stylesheet request from the critical path (better
+ * LCP) while keeping first paint styled exactly once (CLS stays 0).
  *
  * Fallback: when the Vite build has not run (no manifest), the layout
  * degrades to a minimal inline critical style so pages never render fully
@@ -345,7 +345,7 @@ final class FrontendLayout
 
     /**
      * Read the built stylesheet contents from the Vite manifest so the CSS
-     * can be inlined (the starter bundle is tiny — no separate request).
+     * can be inlined (critical CSS is small — no separate request).
      *
      * @return string concatenated built CSS (empty when the build is missing)
      */

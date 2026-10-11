@@ -11,7 +11,7 @@ declare(strict_types = 1);
 
 use Modules\Core\Infrastructure\Env;
 
-$sessionName = Env::get('SESSION_NAME', 'nativa_starter') ?? 'nativa_starter';
+$sessionName = Env::get('SESSION_NAME', 'nativa_core') ?? 'nativa_core';
 $sessionLifetime = Env::int('SESSION_LIFETIME', 1209600);
 
 $sessionSecureValue = Env::get('SESSION_SECURE');

@@ -23,49 +23,35 @@ final class LlmsTxtAction
      * absolute against the request host before serving.
      */
     private const string TEMPLATE = <<<'TXT'
-        # Nativa Minimal — PHP 8.5 Starter Kit
+        # Nativa PHP Core
 
-        A minimal PHP 8.5 starter kit with zero production dependencies, SQLite per-module databases, admin panel, Markdown blog with full-text search, and two frontend themes.
+        A kernel-only PHP tree: zero production dependencies, attribute routing, a middleware pipeline, per-module SQLite databases, and a theme with no build step. A module that is installed extends what is listed here through its own routes.
 
         ## Sections
 
-        - [Homepage](/): Bilingual landing page (Slovak and English)
-        - [Blog — SK](/sk/blog): Slovak technical articles on PHP, performance, and web development
-        - [Blog — EN](/en/blog): English technical articles on PHP, performance, and web development
-        - [Blog RSS — SK](/sk/blog/feed.xml): RSS 2.0 feed (Slovak)
-        - [Blog RSS — EN](/en/blog/feed.xml): RSS 2.0 feed (English)
-        - [Blog Atom — SK](/sk/blog/feed.atom): Atom 1.0 feed (Slovak)
-        - [Blog Atom — EN](/en/blog/feed.atom): Atom 1.0 feed (English)
-        - [Authors](/authors): Blog author profiles
+        - [Homepage](/): the kernel home surface
+        - [Documentation](/docs): guides published in this deployment
         - [Sitemap](/sitemap.xml): XML sitemap for search engines
-
-        ## About
-
-        Nativa Minimal is a learning-oriented starter kit demonstrating clean PHP 8.5 architecture with vertical-slice modules, middleware pipeline, CSRF protection, session-based auth with RBAC, and a Markdown blog with full-text search powered by SQLite FTS5.
+        - [Robots](/robots.txt): crawler permissions
 
         ## Details
 
         - Zero Composer runtime dependencies — self-hosted PSR-4 autoloader
-        - SQLite per-module databases (users, config, locales, audit, media)
-        - Two themes: starter (public, default) and moonshine (admin chrome behind /mark)
-        - Admin panel at /mark (requires admin role)
+        - SQLite per-module databases, migrated idempotently on boot
+        - One theme that needs no build (plain CSS, inlined)
         - Strict CSP with per-request nonces
-        - Vanilla TypeScript + Vite frontend
         TXT;
 
     /**
-     * @var list<string> paths linked from TEMPLATE (Markdown placeholder form)
+     * @var list<string> paths linked from TEMPLATE (Markdown placeholder form).
+     *        Only routes the kernel serves: advertising a module's route here
+     *        would teach a crawler to find a 404 (same rule as the sitemap).
      */
     private const array LINKED_PATHS = [
         '/',
-        '/sk/blog',
-        '/en/blog',
-        '/sk/blog/feed.xml',
-        '/en/blog/feed.xml',
-        '/sk/blog/feed.atom',
-        '/en/blog/feed.atom',
-        '/authors',
+        '/docs',
         '/sitemap.xml',
+        '/robots.txt',
     ];
 
     public function handle(Request $request): Response

@@ -32,6 +32,9 @@ DIVERGED src/Themes/ThemeModule.php # Boot 12: errorContent() surface (upstream 
 DIVERGED src/Modules/Core/Interfaces/HTTP/ErrorPageRenderer.php # Boot 12: theme-owned error block, no showcase strings
 DIVERGED src/Modules/Core/Interfaces/HTTP/Kernel.php # Boot 12: error path threads the request path for theme resolution
 DIVERGED src/Modules/Core/Interfaces/HTTP/Actions/DocsPageAction.php # Boot 12: guide-404 delegates to the renderer (no st- classes)
+DIVERGED config/session.php # Boot 13: session default is nativa_core (matches .env.example)
+DIVERGED src/Modules/Core/Application/Services/AssetManager.php # Boot 13: unknown bundles fall back to kernel, not starter
+DIVERGED src/Modules/Core/Interfaces/HTTP/Actions/LlmsTxtAction.php # Boot 13: kernel-neutral copy, only routes the kernel serves
 #
 # --- Rewritten surfaces: upstream moved after our import ----------------------
 DIVERGED src/Modules/Core/Interfaces/HTTP/Router.php # upstream task 0.3 loader guard (mayDeclareRoute) not adopted here; Boot 1 defect still inherited
