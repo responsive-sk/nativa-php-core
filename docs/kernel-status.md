@@ -307,6 +307,37 @@ theme it may not have is the same bug class this tree exists to kill
 (a page rendering another theme's answer). `ThemeKernel` falls back, the
 provider votes, the merge rule keeps every other kernel default.
 
+## Boot 9 — zero edges (2026-10-11)
+
+The last four rows are gone, and the count the tree exists to move reads
+**0**: no kernel file imports a module anymore (`Database` excluded — it is
+the kernel's second half, contributing zero by definition).
+
+- `MetricContract`, `MetricRegistry`, `AsMetricProvider`, `CardboardRegistry`
+  deleted as one subsystem: the metric registry has no reader in a kernel
+  with no admin, and deleting two of the four would have left the other two
+  referencing the missing. Content in git history and `../nativa-minimal`.
+- `PageContext` trimmed (`C`): the `?SearchResult` prop and factory param are
+dropped (no theme in any tree reads `$context->result` — only `query` +
+`results`), article lists re-documented as plain `list<object>` (slug, title)
+read via `get_object_vars`, the shape the themes actually consume.
+- `NavBadgeRegistry`'s prose no longer names the deleted `MetricRegistry`.
+
+The ledger: **4 → 0 edges (3 → 0 files)**. The boundary rule from the README
+now holds by measurement, not by intention.
+
+### The first real catalogue module
+
+`modules/Cardboard/` — 22 files, copied verbatim from `../nativa-minimal`
+(`diff -r` identical; an import that starts fixing things is a fork).
+`module:show` reads it on scan strength alone (6 `/mark` routes, admin
+scripts, no `module.json`): closure `Audit, Blog, Locales, Media, Outbox,
+Pages, Security, Settings, Users`. `module:add` refuses by name (exit 1,
+nothing copied) — the guard proving itself against a real module, not a
+fixture.
+
+All six surfaces unchanged (`/` 200 Mono through `/mark` 404), log 35 = 35.
+
 ## Bootstrapper
 
 ```

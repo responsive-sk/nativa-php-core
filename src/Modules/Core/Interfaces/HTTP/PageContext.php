@@ -4,8 +4,6 @@ declare(strict_types = 1);
 
 namespace Modules\Core\Interfaces\HTTP;
 
-use Modules\Blog\Domain\Entities\Article;
-use Modules\Blog\Domain\Entities\SearchResult;
 use Modules\Core\Infrastructure\Http\Request;
 
 /**
@@ -17,6 +15,11 @@ use Modules\Core\Infrastructure\Http\Request;
  * so PHPStan L9 sees through every read. Construction goes exclusively
  * through the typed named constructors below (not readonly: each factory
  * initializes a different subset at construction time).
+ *
+ * Article lists travel as plain objects (`slug`, `title`), read through
+ * `get_object_vars` — the Blog entity is never imported: a kernel payload
+ * naming the module that owns the article is the coupling the kernel exists
+ * to avoid.
  */
 final class PageContext
 {
@@ -24,10 +27,10 @@ final class PageContext
      * @param array<string, string>                                 $copy           translation key → resolved copy
      * @param array<string, string>                                 $links          feature-card key → article href
      * @param array<string, list<string>>                           $cards          section key → card keys
-     * @param list<Article>                                         $latestArticles pre-fetched articles for the theme's latest section
-     * @param list<Article>                                         $articles       full article list (pagination slice happens in the theme)
+     * @param list<object>                                          $latestArticles pre-fetched articles for the theme's latest section
+     * @param list<object>                                          $articles       full article list (pagination slice happens in the theme)
      * @param array<string, int>                                    $viewCounts     slug → view count
-     * @param list<Article>                                         $results        search results (ordered)
+     * @param list<object>                                          $results        search results (ordered)
      * @param list<array{level: int, text: string, anchor: string}> $headings       article TOC headings
      * @param array<string, mixed>                                  $meta           article front matter
      * @param list<string>                                          $tags           tag cloud terms
@@ -51,7 +54,6 @@ final class PageContext
         public int $page = 1,
         public int $perPage = 9,
         public string $query = '',
-        public ?SearchResult $result = null,
         public array $results = [],
         public string $slug = '',
         public string $title = '',
@@ -87,7 +89,7 @@ final class PageContext
      * @param array<string, string>       $copy           translation key → resolved copy
      * @param array<string, string>       $links          feature-card key → article href
      * @param array<string, list<string>> $cards          section key → card keys
-     * @param list<Article>               $latestArticles pre-fetched articles for the theme's latest section
+     * @param list<object>               $latestArticles pre-fetched articles for the theme's latest section
      */
     public static function forHomepage(
         Request $request,
@@ -116,7 +118,7 @@ final class PageContext
     }
 
     /**
-     * @param list<Article>      $articles   full article list (pagination slice happens in the theme)
+     * @param list<object>      $articles   full article list (pagination slice happens in the theme)
      * @param array<string, int> $viewCounts slug → view count
      */
     public static function forBlogIndex(
@@ -140,14 +142,13 @@ final class PageContext
     }
 
     /**
-     * @param list<Article> $results
+     * @param list<object> $results
      */
     public static function forBlogSearch(
         Request $request,
         string $theme,
         string $locale,
         string $query,
-        SearchResult $result,
         array $results,
     ): self {
         return new self(
@@ -155,7 +156,6 @@ final class PageContext
             theme: $theme,
             locale: $locale,
             query: $query,
-            result: $result,
             results: $results,
         );
     }
@@ -207,13 +207,13 @@ final class PageContext
     /**
      * @param list<string>       $tags
      * @param array<string, int> $counts
-     * @param list<Article>      $articles
+     * @param list<object>      $articles
      */
     /**
      * @param list<string>       $tags     tag cloud terms (index page)
      * @param array<string, int> $counts   term → article count
      * @param string|null        $tag      active tag slug (filtered page)
-     * @param list<Article>      $articles filtered article list
+     * @param list<object>      $articles filtered article list
      */
     public static function forBlogTags(
         Request $request,
@@ -246,13 +246,13 @@ final class PageContext
     /**
      * @param list<string>       $categories
      * @param array<string, int> $counts
-     * @param list<Article>      $articles
+     * @param list<object>      $articles
      */
     /**
      * @param list<string>       $categories category cloud terms (index page)
      * @param array<string, int> $counts     term → article count
      * @param string|null        $category   active category slug (filtered page)
-     * @param list<Article>      $articles   filtered article list
+     * @param list<object>      $articles   filtered article list
      */
     public static function forBlogCategories(
         Request $request,
@@ -284,11 +284,11 @@ final class PageContext
 
     /**
      * @param array{id: string, name: string, avatar: ?string} $author   resolved author profile
-     * @param list<Article>                                    $articles
+     * @param list<object>                                    $articles
      */
     /**
      * @param array{id: string, name: string, avatar: ?string} $author   resolved profile
-     * @param list<Article>                                    $articles every article by this author
+     * @param list<object>                                    $articles every article by this author
      */
     public static function forAuthorProfile(
         Request $request,

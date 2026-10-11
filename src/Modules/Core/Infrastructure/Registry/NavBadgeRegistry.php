@@ -12,9 +12,9 @@ use Modules\Core\Infrastructure\Paths\AppPaths;
  * NavBadgeRegistry — auto-discovers `#[AsNavBadge]` classes and answers
  * "how many?" for one admin nav item.
  *
- * The discovery pass is deliberately the shape `MetricRegistry` already uses
+ * The discovery pass is deliberately the shape the sibling registries use
  * (directory scan + FQCN extraction + a zero-arg constructor check) rather
- * than a fourth variant: a registry that discovers differently from its
+ * than another variant: a registry that discovers differently from its
  * siblings is a registry whose failure nobody can predict.
  *
  * A provider that THROWS is skipped, not propagated. The sidebar renders on
