@@ -25,9 +25,10 @@ use Themes\ThemeModule;
  * through `ShellContextProvider`) and `PageContext`. A property read on an
  * object the kernel handed it is not an import — see `links()`.
  *
- * No asset bundle ships with it: `criticalCss()` is empty and the layout's
- * style tag stays empty, so the page is valid and unstyled rather than styled
- * by a stylesheet the tree does not have.
+ * No asset bundle ships with it and none is needed: the whole design is one
+ * hand-written file (`assets/critical/kernel.css`, inlined by `InlineCss`),
+ * plain CSS with no build step. A theme that needs Vite to render is a theme
+ * the kernel cannot serve.
  */
 final class KernelTheme implements ThemeModule
 {
@@ -47,15 +48,13 @@ final class KernelTheme implements ThemeModule
     }
 
     /**
-     * Empty on purpose — the kernel theme ships no build. The layout's
-     * manifest lookup degrades to an empty style tag, which is the honest
-     * answer for a tree with no stylesheet in it.
+     * The whole design, one file, no build — see the file header.
      *
      * @return list<string>
      */
     public function criticalCss(): array
     {
-        return [];
+        return ['Themes/kernel/assets/critical/kernel.css'];
     }
 
     /**
@@ -144,6 +143,16 @@ final class KernelTheme implements ThemeModule
     public function authorProfile(PageContext $context): string
     {
         return $this->pageWrap($this->section($this->authorName($context), $this->links($context->articles)));
+    }
+
+    public function errorContent(int $status, string $title, string $detail): string
+    {
+        return '<section class="k-error">'
+            . '<p class="k-error__code">' . $status . '</p>'
+            . '<h1 class="k-error__title">' . self::e($title) . '</h1>'
+            . '<p class="k-error__detail">' . self::e($detail) . '</p>'
+            . '<a class="k-error__link" href="/">Back to homepage</a>'
+            . '</section>';
     }
 
     /**

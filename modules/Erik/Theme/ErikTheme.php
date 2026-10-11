@@ -130,6 +130,15 @@ final class ErikTheme implements ThemeModule
         return $this->pageWrap($this->section($this->authorName($context), $this->links($context->articles)));
     }
 
+    public function errorContent(int $status, string $title, string $detail): string
+    {
+        return '<section class="er-section">'
+            . '<h1 class="er-section__title">' . $status . ' ' . self::e($title) . '</h1>'
+            . '<p>' . self::e($detail) . '</p>'
+            . '<p><a href="/">Back to homepage</a></p>'
+            . '</section>';
+    }
+
     private function section(string $title, string $body): string
     {
         return '<section class="er-section">'

@@ -27,7 +27,11 @@ DIVERGED src/Modules/Core/Interfaces/HTTP/Middleware/RateLimitMiddleware.php # B
 DIVERGED src/Modules/Core/Interfaces/HTTP/PageContext.php # Boot 9: Blog types trimmed (C)
 DIVERGED src/Modules/Core/Interfaces/HTTP/ShellContext.php # Boot 3: kernel-owned nav items
 DIVERGED src/Modules/Core/Interfaces/HTTP/ThemeKernel.php # Boot 3: kernel theme only, unknown falls back
-DIVERGED src/Modules/Core/Interfaces/HTTP/ThemeResolver.php # Boot 3: theme + whitelist through the port
+DIVERGED src/Modules/Core/Interfaces/HTTP/ThemeResolver.php # Boot 3: theme + whitelist through the port; Boot 12: resolvePath() for the error renderer
+DIVERGED src/Themes/ThemeModule.php # Boot 12: errorContent() surface (upstream contract has none)
+DIVERGED src/Modules/Core/Interfaces/HTTP/ErrorPageRenderer.php # Boot 12: theme-owned error block, no showcase strings
+DIVERGED src/Modules/Core/Interfaces/HTTP/Kernel.php # Boot 12: error path threads the request path for theme resolution
+DIVERGED src/Modules/Core/Interfaces/HTTP/Actions/DocsPageAction.php # Boot 12: guide-404 delegates to the renderer (no st- classes)
 #
 # --- Rewritten surfaces: upstream moved after our import ----------------------
 DIVERGED src/Modules/Core/Interfaces/HTTP/Router.php # upstream task 0.3 loader guard (mayDeclareRoute) not adopted here; Boot 1 defect still inherited

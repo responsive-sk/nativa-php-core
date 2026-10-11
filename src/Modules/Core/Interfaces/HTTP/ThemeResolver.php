@@ -54,8 +54,16 @@ final class ThemeResolver
      */
     public function resolve(Request $request): string
     {
-        $path = $request->getPathInfo();
+        return self::resolvePath($request->getPathInfo());
+    }
 
+    /**
+     * Path-only half of resolve(): the error renderer names a theme from a
+     * bare path (no Request to build), and anything that resolves must
+     * resolve the same way whether a request object exists or not.
+     */
+    public static function resolvePath(string $path): string
+    {
         if ($path === '/mark' || str_starts_with($path, '/mark/')) {
             return self::ADMIN_THEME;
         }

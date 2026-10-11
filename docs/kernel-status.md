@@ -430,6 +430,49 @@ grew during this boot, entirely from harness construction probes (the
 session-after-output fatal and the first-version OOM, all from `php -r` /
 PHPUnit processes — none from a served request).
 
+## Boot 12 — the kernel theme gets a design (2026-10-11)
+
+Task 2.2: a trimmed design that renders from `ShellContext` alone, plain
+CSS, no build, registered as the default. The registration was already true
+(`PUBLIC_THEME` is `kernel`, unknown names fall back to it); what was
+missing was the design — pages were valid and unstyled.
+
+- `src/Themes/kernel/assets/critical/kernel.css`: one hand-written file
+  (~60 rules, system stack, light), inlined through `InlineCss` like every
+other theme's critical CSS. No `@charset`/`@import`/`@layer`, no build step.
+  `KernelTheme::criticalCss()` returns it instead of `[]`.
+- `ThemeModule::errorContent()` — the error block belongs to the active
+  theme. `ErrorPageRenderer` resolves the theme from the request path
+  (`ThemeResolver::resolvePath()`, extracted from `resolve()` so both
+  answer identically) and can no longer fail the error page: resolution is
+  wrapped, anything trips → kernel theme. The `st-hero` classes and the
+  `... Nativa Starter` title are gone from the renderer, and the guide-404
+  in `DocsPageAction` delegates to it instead of carrying its own `st-`
+  markup with inline styles. `Kernel::renderError` threads the path from
+  all four call sites.
+- Implemented in all three `ThemeModule`s: kernel (`k-error`), Mono
+  (`mo-hero`), Erik (`er-section`). Mono's fix went into the catalog and
+  was synced to the installed copy — and the gap bit immediately: PHPStan
+  failed on the stale installed `MonoTheme` (abstract-method fatal), the
+  same catalog/installed skew `module:add` refuses to create. A note for
+  the lifecycle docs, not a code change.
+- `tests/Theme/KernelThemeTest`: the file ships, survives the loader with
+  the theme's vocabulary in it, the kernel layout wears `k-`, the error
+  page is `k-error` with escaped inputs and no showcase strings.
+
+Measured over HTTP (fresh `php -S`, Mono installed): `/` 200 Mono
+unchanged, `/nope` 404 now Mono-chrome (was kernel 3765 B), `/mark` 404
+kernel-chrome (admin theme `moonshine` is not installed — the fallback rule
+working as documented), guide-404 Mono-chrome. Bodies verified by grep:
+`mo-hero` without `st-hero`/`Nativa Starter`, `k-error` without `mo-`.
+Gates: `composer test` 11/29, `phpstan` clean, `--check` green (61
+identical, 34 recorded — the four rewritten slice files added to the
+record).
+
+Deliberately not this task: `starter` as an addable module (no starter
+slice exists in this tree; packaging it is minimal-side work) and the
+`cs-fixer`/`rector` configs from Boot 11.
+
 ## Bootstrapper
 
 ```

@@ -10,6 +10,7 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\Core\Interfaces\HTTP\ErrorPageRenderer;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\Markdown\MarkdownBlockContext;
 use Modules\Core\Interfaces\HTTP\ThemeKernel;
@@ -53,7 +54,7 @@ final readonly class DocsPageAction
         $guide = $this->catalog->read($key);
 
         if (null === $guide) {
-            return $this->notFound();
+            return $this->notFound($request);
         }
 
         return $this->render($request, $key, $guide);
@@ -104,19 +105,14 @@ final readonly class DocsPageAction
      * as the page 404, so a deployment that ships no `docs/` reads as a missing
      * document rather than a broken site.
      */
-    private function notFound(): Response
+    private function notFound(Request $request): Response
     {
-        $content = '<section class="st-section" style="text-align:center;padding:80px 20px;">'
-            . '<h1 class="st-section__title">404 Not Found</h1>'
-            . '<p>That guide is not published.</p>'
-            . '<a class="st-hero__link" href="/docs">All documentation</a>'
-            . '</section>';
-
-        return Response::html(FrontendLayout::render(
-            '404 — Not Found',
-            $content,
-            lang: DocsCatalog::LANGUAGE,
-            noindex: true,
-        ), 404);
+        return ErrorPageRenderer::response(
+            404,
+            'Not Found',
+            'That guide is not published.',
+            $request->getPathInfo(),
+            DocsCatalog::LANGUAGE,
+        );
     }
 }

@@ -63,4 +63,13 @@ interface ThemeModule
     public function blogCategories(PageContext $context): string;
 
     public function authorProfile(PageContext $context): string;
+
+    /**
+     * Error content block (404/405/500): the INNER section, wrapped in the
+     * layout by the caller. Theme-owned so an error page wears the active
+     * theme's vocabulary instead of another theme's class names — a 404 in
+     * `.st-hero` on a kernel-styled page is the same bug class as a page in
+     * another theme's stylesheet.
+     */
+    public function errorContent(int $status, string $title, string $detail): string;
 }

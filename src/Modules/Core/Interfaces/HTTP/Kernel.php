@@ -75,7 +75,7 @@ final class Kernel
         try {
             return $this->dispatchMatched($request);
         } catch (\Throwable $e) {
-            return $this->renderThrowable($e);
+            return $this->renderThrowable($e, $request->getPathInfo());
         }
     }
 
@@ -88,7 +88,7 @@ final class Kernel
         $match = $this->router->match($request);
 
         if (null === $match) {
-            return $this->renderError(404, 'Not Found', 'The requested page could not be found.');
+            return $this->renderError(404, 'Not Found', 'The requested page could not be found.', $request->getPathInfo());
         }
 
         $redirect = $this->resolveRedirect($match);
@@ -96,7 +96,7 @@ final class Kernel
             return $redirect;
         }
 
-        $methodError = $this->resolveMethodNotAllowed($match);
+        $methodError = $this->resolveMethodNotAllowed($match, $request->getPathInfo());
         if (null !== $methodError) {
             return $methodError;
         }
@@ -158,10 +158,10 @@ final class Kernel
      * 500 path — debug mode leaks the message + trace; production logs the
      * exception and answers with a generic error page.
      */
-    private function renderThrowable(\Throwable $e): Response
+    private function renderThrowable(\Throwable $e, ?string $path = null): Response
     {
         if (Env::bool('APP_DEBUG', false)) {
-            return $this->renderError(500, 'Server Error', $e->getMessage() . "\n\n" . $e->getTraceAsString());
+            return $this->renderError(500, 'Server Error', $e->getMessage() . "\n\n" . $e->getTraceAsString(), $path);
         }
 
         error_log(sprintf(
@@ -172,7 +172,7 @@ final class Kernel
             $e->getLine(),
         ));
 
-        return $this->renderError(500, 'Server Error', 'An unexpected error occurred.');
+        return $this->renderError(500, 'Server Error', 'An unexpected error occurred.', $path);
     }
 
     /**
@@ -196,10 +196,10 @@ final class Kernel
      *
      * @param array{route: Route, action: class-string, params: array<string, string>, methodNotAllowed?: bool, redirect?: string} $match
      */
-    private function resolveMethodNotAllowed(array $match): ?Response
+    private function resolveMethodNotAllowed(array $match, ?string $path = null): ?Response
     {
         if (isset($match['methodNotAllowed']) && true === $match['methodNotAllowed']) {
-            $response = $this->renderError(405, 'Method Not Allowed', 'This method is not allowed for the requested resource.');
+            $response = $this->renderError(405, 'Method Not Allowed', 'This method is not allowed for the requested resource.', $path);
             $response->setHeader('Allow', $match['route']->method);
 
             return $response;
@@ -208,8 +208,8 @@ final class Kernel
         return null;
     }
 
-    private function renderError(int $status, string $title, string $detail): Response
+    private function renderError(int $status, string $title, string $detail, ?string $path = null): Response
     {
-        return ErrorPageRenderer::response($status, $title, $detail);
+        return ErrorPageRenderer::response($status, $title, $detail, $path);
     }
 }

@@ -138,6 +138,17 @@ final class MonoTheme implements ThemeModule
         return $this->cardSection($this->authorName($context), '', $context->articles);
     }
 
+    public function errorContent(int $status, string $title, string $detail): string
+    {
+        return '<section class="mo-hero-section">'
+            . '<div class="mo-hero-section__content">'
+            . '<p class="mo-hero-section__title mo-is-visible">' . $status . '</p>'
+            . '<p class="mo-hero-section__description mo-is-visible">' . self::e($title) . ' — ' . self::e($detail) . '</p>'
+            . '<div class="mo-hero-section__buttons">'
+            . '<a class="mo-btn" href="/">Back to homepage</a>'
+            . '</div></div></section>';
+    }
+
     /**
      * @param array<array-key, mixed> $articles article DTOs (slug + title read via get_object_vars, like cards())
      */
