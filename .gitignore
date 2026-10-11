@@ -44,6 +44,9 @@ src/Modules/*
 # Lekalo runtime cache (regenerated, never committed) — same convention as nativa-minimal.
 .lekalo/cache/
 
+# PHPUnit result cache (written on every run, never committed)
+.phpunit.result.cache
+
 # Editor / OS noise
 .idea/
 .vscode/

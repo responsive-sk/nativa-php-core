@@ -338,6 +338,48 @@ fixture.
 
 All six surfaces unchanged (`/` 200 Mono through `/mark` 404), log 35 = 35.
 
+## Boot 10 — the harness (2026-10-11)
+
+`composer test` is green: **7 tests, 13 assertions, ~1 s, in-process** —
+the six surfaces no longer need six curls through `:8000` and the lifecycle
+no longer needs eyeballing.
+
+- `ModuleInstaller` (`Core/Application/Services`): the add/remove half of
+  `bin/cms` moved verbatim into a service that throws the refusal with the
+exact CLI string. The script is a thin printer now (same strings, same exit
+codes — `add → 0, re-add → 1, remove → 0, re-remove → 1`, verified after the
+move). One wording, two front-ends.
+- `phpunit.xml` + `tests/bootstrap.php`: the harness boots the REAL
+  `src/init.php`, not a fixture — a fixture init that drifts is the
+  staleness this harness exists to catch.
+- `KernelOnlyBootTest` (task 2.3): the six surfaces dispatched through the
+  `Kernel`, never by calling an action. Status codes only — with Mono
+  installed `/` wears Mono, kernel-only the kernel theme; both are 200, and
+  which theme renders is `ThemeKernel`'s business, not the boot contract's.
+- `ModuleLifecycleTest` (task 3.3): hash → add Scratch → `/scratch` 200s →
+  second add refuses → remove → `/scratch` 404s → hash equals the pre-add
+  value; plus the negative (a throwaway `TempHolder` importing Scratch →
+  removal refused with the holder named, fixture deleted in cleanup).
+
+Two traps the harness tripped over while being built, both load-bearing:
+
+1. **The 404 leg runs in a subprocess.** PHP's class table persists per
+   process: after `remove()`, the in-process `Router` still resolves the
+   deleted `ScratchAction` (already declared) and answers 200 — the same
+   staleness class as the opcache incident, one layer down. A fresh `php -r`
+   is the only honest 404.
+2. **The tree hash streams.** The first version held every file's content
+   in one array and OOM'd at 128 M on `vendor/` — `hash_update` per file,
+   O(1) memory. (And a probe footnote: `config/session.php` fatals when any
+   output precedes `init.php` — session ini settings cannot move after
+   headers. The harness is safe because the bootstrap emits nothing, but a
+   `php -r 'echo …; require init'` dies with 255 and the reason lives only
+   in `storage/logs/php-error.log`.)
+
+All six surfaces unchanged, log 35 = 35. Task 2.1's `extract-kernel.sh`
+still does not exist — but when it does, there is now a `tests/` worth
+adopting instead of bringing one.
+
 ## Bootstrapper
 
 ```
@@ -363,11 +405,11 @@ Present since 2026-10-11: the module catalogue (`modules/`, task 3.1–3.2) —
 `ModuleCatalog`/`ModuleManifest` scan a slice as text, `bin/cms`
 `module:list/show/add/remove` (plain PHP, zero dependencies) moves it, and
 `modules/Scratch` is the lifecycle fixture whose round trip
-(`docs/modules.md`) leaves the tree byte-identical. `KernelOnlyBootTest` as a
-real test still waits for the harness: the round trip was proven live over
-HTTP, not by PHPUnit.
+(`docs/modules.md`) leaves the tree byte-identical — proven by
+`ModuleLifecycleTest` since Boot 10, with `KernelOnlyBootTest` beside it
+(`composer test`, 7 tests, 13 assertions).
 
-Absent, deliberately: `KernelOnlyBootTest` as a real test (2.3), and
+Absent, deliberately:
 `bin/build/extract-kernel.sh` + `--check` (2.1). The kernel theme ships no CSS, so
 a page it renders is valid and unstyled — plan task 2.2 wants a real trimmed
 design, not just a working one.

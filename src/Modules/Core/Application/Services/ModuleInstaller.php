@@ -1,0 +1,190 @@
+<?php
+
+declare(strict_types = 1);
+
+namespace Modules\Core\Application\Services;
+
+use Modules\Core\Infrastructure\Paths\AppPaths;
+use RuntimeException;
+
+/**
+ * ModuleInstaller — the add/remove half of bin/cms, as a service.
+ *
+ * bin/cms used to own copyTree/deleteTree and every refusal inline, which
+ * meant the lifecycle contract (round trip leaves a byte-identical tree, a
+ * second add refuses, removal while imported refuses) was only provable by
+ * shelling out and eyeballing output. The CLI is now a thin printer over
+ * this class; ModuleLifecycleTest drives it in-process instead.
+ *
+ * Every refusal throws RuntimeException with the exact message bin/cms
+ * prints — one source of truth for the wording, two front-ends (CLI, tests).
+ */
+final class ModuleInstaller
+{
+    public function __construct(
+        private readonly ModuleCatalog $catalog,
+    ) {
+    }
+
+    public static function fromAppPaths(): self
+    {
+        return new self(ModuleCatalog::fromAppPaths());
+    }
+
+    /**
+     * Install a catalogued module: refuse an incomplete closure BEFORE
+     * copying anything (a half-installed module answers for dependencies
+     * that never arrived), then copy the slice verbatim and flush.
+     *
+     * @return array{copied: int, flushed: int}
+     *
+     * @throws RuntimeException on refusal (unknown / invalid / installed / closure)
+     */
+    public function add(string $name): array
+    {
+        $manifest = $this->catalog->manifest($name);
+
+        if (!ModuleCatalog::isValidName($name)) {
+            throw new RuntimeException(sprintf("Invalid module name '%s'.", $name));
+        }
+
+        if ($this->catalog->isInstalled($name)) {
+            throw new RuntimeException(sprintf("Module '%s' is already installed — refusing to overwrite the installed slice.", $name));
+        }
+
+        $missing = $this->catalog->missingDependencies($manifest);
+
+        if ([] !== $missing) {
+            throw new RuntimeException(sprintf(
+                "Cannot install '%s': missing dependencies: %s. Install them first (or add them to the catalog). Nothing was copied.",
+                $name,
+                implode(', ', $missing),
+            ));
+        }
+
+        $target = AppPaths::instance()->src('Modules') . DIRECTORY_SEPARATOR . $name;
+        $copied = self::copyTree($manifest->sourceDir, $target);
+
+        return ['copied' => $copied, 'flushed' => $this->flushPageCache()];
+    }
+
+    /**
+     * Remove an installed slice. Refuses while another installed module
+     * imports it (unless forced), and never touches module data: the code
+     * is not the data, so leftovers are reported, not deleted.
+     *
+     * @return array{flushed: int, leftovers: list<string>, holders: list<string>}
+     *
+     * @throws RuntimeException on refusal (invalid / kernel / missing / imported)
+     */
+    public function remove(string $name, bool $force = false): array
+    {
+        if (!ModuleCatalog::isValidName($name)) {
+            throw new RuntimeException(sprintf("Invalid module name '%s'.", $name));
+        }
+
+        if (in_array($name, ModuleCatalog::KERNEL_MODULES, true)) {
+            throw new RuntimeException(sprintf("Module '%s' is the kernel itself — it cannot be removed.", $name));
+        }
+
+        if (!$this->catalog->isInstalled($name)) {
+            throw new RuntimeException(sprintf("Module '%s' is not installed.", $name));
+        }
+
+        $holders = $this->catalog->importedBy($name);
+
+        if ([] !== $holders && !$force) {
+            throw new RuntimeException(sprintf(
+                "Cannot remove '%s': still imported by:%s%s\nRemove those first, or pass --force (the only way past a refusal). The slice is untouched.",
+                $name,
+                PHP_EOL . '  - ',
+                implode(PHP_EOL . '  - ', $holders),
+            ));
+        }
+
+        self::deleteTree(AppPaths::instance()->src('Modules') . DIRECTORY_SEPARATOR . $name);
+
+        $flushed = $this->flushPageCache();
+
+        $leftovers = [];
+        $db = AppPaths::instance()->storage('data' . DIRECTORY_SEPARATOR . strtolower($name) . '.db');
+
+        foreach ([$db, $db . '-wal', $db . '-shm', $db . '-journal'] as $file) {
+            if (is_file($file)) {
+                $leftovers[] = $file . ' (module database — kept)';
+            }
+        }
+
+        return ['flushed' => $flushed, 'leftovers' => $leftovers, 'holders' => $force ? $holders : []];
+    }
+
+    public function flushPageCache(): int
+    {
+        $dir = AppPaths::instance()->storage(PageCacheService::DEFAULT_DIR);
+
+        return (new PageCacheService($dir))->flush();
+    }
+
+    /**
+     * Copy a directory tree (every file, not just PHP — assets travel too).
+     *
+     * @throws RuntimeException
+     */
+    public static function copyTree(string $from, string $to): int
+    {
+        $count = 0;
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($from, \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::SELF_FIRST,
+        );
+
+        /** @var \SplFileInfo $entry */
+        foreach ($iterator as $entry) {
+            $target = $to . DIRECTORY_SEPARATOR . $iterator->getSubPathname();
+
+            if ($entry->isDir()) {
+                if (!is_dir($target) && !@mkdir($target, 0o775, true) && !is_dir($target)) {
+                    throw new RuntimeException(sprintf('Cannot create directory: %s', $target));
+                }
+
+                continue;
+            }
+
+            if (!@copy($entry->getPathname(), $target)) {
+                throw new RuntimeException(sprintf('Cannot copy %s to %s.', $entry->getPathname(), $target));
+            }
+
+            $count++;
+        }
+
+        return $count;
+    }
+
+    /**
+     * Delete a directory tree.
+     *
+     * @throws RuntimeException
+     */
+    public static function deleteTree(string $dir): void
+    {
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::CHILD_FIRST,
+        );
+
+        /** @var \SplFileInfo $entry */
+        foreach ($iterator as $entry) {
+            if ($entry->isDir() && !$entry->isLink()) {
+                if (!@rmdir($entry->getPathname())) {
+                    throw new RuntimeException(sprintf('Cannot remove directory: %s', $entry->getPathname()));
+                }
+            } elseif (!@unlink($entry->getPathname())) {
+                throw new RuntimeException(sprintf('Cannot remove file: %s', $entry->getPathname()));
+            }
+        }
+
+        if (!@rmdir($dir)) {
+            throw new RuntimeException(sprintf('Cannot remove directory: %s', $dir));
+        }
+    }
+}
