@@ -102,20 +102,22 @@ dark-first, one critical CSS file) rendering from `ShellContext` +
 Blog/Locales/Settings, modules this tree does not have — so this one is the
 smallest Erik that is still Erik, not a copy that fatals.
 
-The slice also carries a fixture provider answering exactly one question
+The slice used to carry a fixture provider answering exactly one question
 (`theme()` → `erik`, everything else abstained), because a theme the port
-never names is a theme no surface renders: with zero other modules the kernel
-theme would win every time and installing Erik would change nothing anyone
-can curl. The provider travels with the slice, so removing the module removes
-the vote.
+never names is a theme no surface renders. The fixtures are removed since:
+with three theme modules the glob-order vote became a liability, and the
+Settings theme vote (priority −100) is the only theme answer — a theme
+activates by picking it in `/mark` → Design, and removing the module removes
+the option. With no stored choice the kernel theme renders.
 
 - hash `b2bb62c8…` before and after — byte-identical;
-- `module:add Erik` → `erik` discovered, `/` answers **200** in the `erik-shell`
-  body class with `er-header__brand` chrome and the critical CSS inlined
-  (45-line `<style>`, no `dist/` references — the absent Vite manifest
-  degrades to the theme's own bytes, not to another theme's);
-- `module:remove Erik` → discovery empty, `/` answers **200** back in
-  `kernel-shell` with `k-header__brand`.
+- `module:add Erik` → `erik` discovered (registry + Design select), the
+  chrome itself switches only when picked: stored `erik` answers **200** in
+  the `erik-shell` body class with `er-header__brand` chrome and the critical
+  CSS inlined (45-line `<style>`, no `dist/` references — the absent Vite
+  manifest degrades to the theme's own bytes, not to another theme's);
+- `module:remove Erik` → discovery empty, the select option gone, a stale
+  stored `erik` degrades to `kernel-shell` with `k-header__brand`, no fatal.
 
 A theme that cannot be constructed is skipped and logged, never fatal — the
 answer to a broken theme is the kernel theme, not a 500 on every surface.
@@ -190,15 +192,18 @@ Not covered, recorded so the next reader does not mistake them for present:
 defaults, and `mo-inline-edit*` (9 classes from `BlogInlineEditor`, rendered
 only for a signed-in editor) has no rules at all.
 
-The slice carries the same one-question fixture provider (`theme()` → `mono`).
-Never install Erik and Mono together: both vote, the merge rule takes the
-first, and a theme decided by glob order is a theme nobody chose.
+The slice used to carry the same one-question fixture provider (`theme()` →
+`mono`) — removed together with the Erik/Griffe fixtures once the Settings
+vote became the only theme answer (see above). There is no glob-order vote
+left to collide: co-installed themes simply wait in the Design select.
 
 - hash identical before and after the round trip;
-- `module:add Mono` → `/` answers **200** in `mono-shell`, hero H1 visible,
-  the full CSS inlined, zero runtime fetches (no `url(`, no `@import`, the
-  single `http` href is the page's own canonical);
-- `module:remove Mono` → `/` answers **200** back in `kernel-shell`.
+- `module:add Mono` → `mono` discovered (registry + Design select), stored
+  `mono` answers **200** in `mono-shell`, hero H1 visible, the full CSS
+  inlined, zero runtime fetches (no `url(`, no `@import`, the single `http`
+  href is the page's own canonical);
+- `module:remove Mono` → discovery empty, the select option gone, a stale
+  stored `mono` degrades to `kernel-shell`.
 
 The first hash pair of this round trip mismatched — honestly recorded: two
 catalog fixes (an unprefixed `btn--sm` in the markup, the missing
@@ -251,3 +256,46 @@ and the variants re-skin light mode too (`html[data-variant]` outranks
 `[data-theme=light]`) — measured in headless over the light default
 (`rgb(255, 255, 255)`): ember body `rgb(12, 7, 5)`, glacier body
 `rgb(6, 10, 14)`.
+
+## A third theme: Griffe (measured 2026-10-12)
+
+`modules/Griffe/` renders the public surfaces in the webgriffe.com agency
+idiom (sticky text-nav header, fullscreen home slider, line-mask scroll
+reveals, case-study grid, minimal legal footer). The reference runs on Xtend
+UI (Tailwind + vanilla JS); the port re-expresses only the USED behaviours in
+hand-written `gr-` CSS plus three vendored ES2015-safe scripts
+(`gr-header.js` hide-on-scroll, `gr-slider.js` autoplay/pagination/arrows,
+`gr-reveal.js` IntersectionObserver reveals) — no framework, no build, no
+CDN, colours deliberately neutral placeholders (layout and motion first).
+
+Measured from the live homepage HTML (13 slides: 1 editorial hero + 12 case
+studies, `data-xt-pag` progress pagination, `anim-block` line masks): the
+theme maps articles to case slides and the grid below from the same
+slug+title shape Mono/Erik read, hero slide active server-side, pagination
+and arrows rendered only for 2+ slides, scripts gated on the markup they
+drive (no slider markup → no slider JS). No-JS fallbacks: stacked readable
+slides, plain sticky header, fully visible text (the reveal arms its masked
+state from JS — the stylesheet never hides text on its own).
+
+- `composer test` 88 / `phpstan` / Rector dry-run / `cs-fix-dry` green;
+- Chromium/CDP over the running server: griffe chrome renders, reveal arms
+  and hero lines gain `.gr-in`, hamburger opens the menu at 390px, reload
+  keeps the chrome with `data-theme` restored, body wears the paper token
+  (`rgb(255, 255, 255)`, sticky header confirmed — the white-page class of
+  defect revisited and absent), served `<style>` 10 358 chars with `:root`,
+  `@media` and `.tok-*` intact;
+- the shipped `gr-slider.js` proven in Chromium against a grafted 2-slide DOM
+  (verbatim server markup): goes live, pagination click activates slide 2,
+  autoplay wraps;
+- Selected work is illustrated: the kernel HomepageAction passes no articles
+  (no Blog import by explicit contract), so the theme falls back to the
+  latest published ones itself — `class_exists`-guarded, empty when Blog is
+  absent, logged on failure. Case slides carry full-bleed covers, grid cards
+  carry `gr-case__img` thumbnails; covers resolve locally when
+  `storage/blog-images/` holds generated SVGs, else the established
+  Cloudinary pool fallback. Live tree: hero + 2 case slides, pagination,
+  autoplay wrap, every illustration loaded (CDP, 6/6).
+
+The slice used to carry the same one-question fixture provider (`theme()` →
+`griffe`) — removed together with the Erik/Mono fixtures once the Settings
+vote became the only theme answer (see above).

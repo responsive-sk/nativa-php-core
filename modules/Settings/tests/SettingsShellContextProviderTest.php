@@ -230,9 +230,50 @@ final class SettingsShellContextProviderTest extends TestCase
             $provider->theme(),
             'The migrator seeds theme=kernel; the provider must echo the stored value.',
         );
+        // Narrowed like theme() above: the admin locale vote REQUIRES
+        // defaultLocale()/htmlLang() to echo a well-formed stored value.
+        // The migrator seeds locale=sk_SK, so the seeded answers are Slovak.
+        $this->assertSame(
+            'sk_SK',
+            $provider->defaultLocale(),
+            'The migrator seeds locale=sk_SK; the provider must echo the stored value.',
+        );
+        $this->assertSame('sk', $provider->htmlLang(), 'The language part of the voted default, not the kernel fallback.');
+        $this->assertSame([], $provider->languages());
+    }
+
+    #[Test]
+    public function aStoredLocaleIsAnswered(): void
+    {
+        $this->storeLocale('en_US');
+
+        $provider = new SettingsShellContextProvider();
+
+        $this->assertSame('en_US', $provider->defaultLocale());
+        $this->assertSame('en', $provider->htmlLang());
+    }
+
+    #[Test]
+    public function aStoredGarbageLocaleAbstains(): void
+    {
+        $this->storeLocale('not-a-locale');
+
+        $provider = new SettingsShellContextProvider();
+
+        $this->assertNull($provider->defaultLocale(), 'Free-text admin field — only ll_CC echoes, the rest keeps the kernel degradation.');
+        $this->assertNull($provider->htmlLang());
+    }
+
+    #[Test]
+    public function aMissingLocaleKeyAbstains(): void
+    {
+        $this->pdo->prepare('DELETE FROM settings WHERE setting_key = :key')->execute([':key' => 'locale']);
+        SettingsServices::reset();
+
+        $provider = new SettingsShellContextProvider();
+
         $this->assertNull($provider->defaultLocale());
         $this->assertNull($provider->htmlLang());
-        $this->assertSame([], $provider->languages());
     }
 
     #[Test]
@@ -390,6 +431,16 @@ final class SettingsShellContextProviderTest extends TestCase
     private function storeTheme(string $value): void
     {
         (new SettingsRepository($this->pdo))->set('theme', $value, 'design', false);
+        SettingsServices::reset();
+    }
+
+    /**
+     * Write the `locale` key the way `saveSite()` does, then drop the cached
+     * service so the provider reads the new row, not the old snapshot.
+     */
+    private function storeLocale(string $value): void
+    {
+        (new SettingsRepository($this->pdo))->set('locale', $value, 'general', false);
         SettingsServices::reset();
     }
 
