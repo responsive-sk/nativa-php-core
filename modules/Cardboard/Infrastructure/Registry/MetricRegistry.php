@@ -2,10 +2,10 @@
 
 declare(strict_types = 1);
 
-namespace Modules\CardboardKit\Infrastructure\Registry;
+namespace Modules\Cardboard\Infrastructure\Registry;
 
-use Modules\CardboardKit\Domain\Contracts\MetricContract;
-use Modules\CardboardKit\Infrastructure\Attributes\AsMetricProvider;
+use Modules\Cardboard\Domain\Contracts\MetricContract;
+use Modules\Cardboard\Infrastructure\Attributes\AsMetricProvider;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 
 /**

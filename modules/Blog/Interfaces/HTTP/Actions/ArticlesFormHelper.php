@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Blog\Interfaces\HTTP\Actions;
 
 use Modules\Blog\Application\BlogServices;
-use Modules\CardboardKit\Interfaces\HTTP\AdminLayout;
+use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Users\Infrastructure\Persistence\Repositories\UserRepository;
 use Modules\Core\Application\Services\View\ViewRenderer;

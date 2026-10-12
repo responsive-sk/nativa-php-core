@@ -4,8 +4,8 @@ declare(strict_types = 1);
 
 namespace Modules\Pages\Interfaces\HTTP;
 
-use Modules\CardboardKit\Application\Services\BulkActions;
-use Modules\CardboardKit\Interfaces\HTTP\AdminLayout;
+use Modules\Cardboard\Application\Services\BulkActions;
+use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Locales\Interfaces\HTTP\LocalesServices;
 

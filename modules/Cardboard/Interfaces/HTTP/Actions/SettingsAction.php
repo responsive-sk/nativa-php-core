@@ -4,9 +4,8 @@ declare(strict_types = 1);
 
 namespace Modules\Cardboard\Interfaces\HTTP\Actions;
 
-use Modules\Audit\Interfaces\HTTP\AuditServices;
-use Modules\CardboardKit\Application\Services\IconRegistry;
-use Modules\CardboardKit\Interfaces\HTTP\AdminLayout;
+use Modules\Cardboard\Application\Services\IconRegistry;
+use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Cardboard\Interfaces\HTTP\CardboardServices;
 use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Application\Services\View\ViewRenderer;
@@ -321,7 +320,7 @@ final class SettingsAction
         }
 
         CacheInvalidator::flush();
-        AuditServices::log('settings.save', 'settings', 'Saved site settings', $request->getClientIp());
+        \Modules\Audit\Interfaces\HTTP\AuditServices::log('settings.save', 'settings', 'Saved site settings', $request->getClientIp());
 
         return Response::redirect('/mark/settings');
     }
@@ -334,7 +333,7 @@ final class SettingsAction
         if ('' !== $key && '' !== $value) {
             CardboardServices::settings()->setDesignToken($key, $value);
             CacheInvalidator::flush();
-            AuditServices::log('settings.tokens', 'settings', 'Saved design token ' . $key, $request->getClientIp());
+            \Modules\Audit\Interfaces\HTTP\AuditServices::log('settings.tokens', 'settings', 'Saved design token ' . $key, $request->getClientIp());
         }
 
         return Response::redirect('/mark/settings');
@@ -359,7 +358,7 @@ final class SettingsAction
         if ('' !== $label && '' !== $href) {
             CardboardServices::menu()->create($label, $href, 'header', $sort);
             CacheInvalidator::flush();
-            AuditServices::log('settings.nav', 'settings', 'Added nav item ' . $label, $request->getClientIp());
+            \Modules\Audit\Interfaces\HTTP\AuditServices::log('settings.nav', 'settings', 'Added nav item ' . $label, $request->getClientIp());
         }
 
         return Response::redirect('/mark/settings');
@@ -372,7 +371,7 @@ final class SettingsAction
         if (null !== $id) {
             CardboardServices::menu()->delete($id);
             CacheInvalidator::flush();
-            AuditServices::log('settings.nav.delete', 'settings', 'Deleted nav item ' . $id, $request->getClientIp());
+            \Modules\Audit\Interfaces\HTTP\AuditServices::log('settings.nav.delete', 'settings', 'Deleted nav item ' . $id, $request->getClientIp());
         }
 
         return Response::redirect('/mark/settings');
@@ -381,7 +380,7 @@ final class SettingsAction
     public function flushCache(Request $request): Response
     {
         $deleted = CacheInvalidator::flush();
-        AuditServices::log('settings.flush-cache', 'settings', 'Flushed page cache (' . $deleted . ' files)', $request->getClientIp());
+        \Modules\Audit\Interfaces\HTTP\AuditServices::log('settings.flush-cache', 'settings', 'Flushed page cache (' . $deleted . ' files)', $request->getClientIp());
 
         return Response::redirect('/mark/settings');
     }
@@ -408,7 +407,7 @@ final class SettingsAction
         if ('' !== $label && '' !== $href) {
             CardboardServices::menu()->create($label, $href, 'admin', $sort, '' !== $parentId ? $parentId : null, false, null, $icon);
             CacheInvalidator::flush();
-            AuditServices::log('settings.admin-nav', 'settings', 'Added admin nav item ' . $label, $request->getClientIp());
+            \Modules\Audit\Interfaces\HTTP\AuditServices::log('settings.admin-nav', 'settings', 'Added admin nav item ' . $label, $request->getClientIp());
         }
 
         return Response::redirect('/mark/settings');
@@ -421,7 +420,7 @@ final class SettingsAction
         if (null !== $id) {
             CardboardServices::menu()->toggleActive($id);
             CacheInvalidator::flush();
-            AuditServices::log('settings.admin-nav.toggle', 'settings', 'Toggled admin nav item ' . $id, $request->getClientIp());
+            \Modules\Audit\Interfaces\HTTP\AuditServices::log('settings.admin-nav.toggle', 'settings', 'Toggled admin nav item ' . $id, $request->getClientIp());
         }
 
         return Response::redirect('/mark/settings');
@@ -436,7 +435,7 @@ final class SettingsAction
         if (null !== $id) {
             CardboardServices::menu()->updateSortOrder($id, $sort);
             CacheInvalidator::flush();
-            AuditServices::log('settings.admin-nav.sort', 'settings', 'Reordered admin nav item ' . $id . ' to ' . $sort, $request->getClientIp());
+            \Modules\Audit\Interfaces\HTTP\AuditServices::log('settings.admin-nav.sort', 'settings', 'Reordered admin nav item ' . $id . ' to ' . $sort, $request->getClientIp());
         }
 
         return Response::redirect('/mark/settings');
@@ -449,7 +448,7 @@ final class SettingsAction
         if (null !== $id) {
             CardboardServices::menu()->delete($id);
             CacheInvalidator::flush();
-            AuditServices::log('settings.admin-nav.delete', 'settings', 'Deleted admin nav item ' . $id, $request->getClientIp());
+            \Modules\Audit\Interfaces\HTTP\AuditServices::log('settings.admin-nav.delete', 'settings', 'Deleted admin nav item ' . $id, $request->getClientIp());
         }
 
         return Response::redirect('/mark/settings');
@@ -462,7 +461,7 @@ final class SettingsAction
         if ([] !== $pairs) {
             CardboardServices::menu()->batchUpdateSortOrder($pairs);
             CacheInvalidator::flush();
-            AuditServices::log('settings.admin-nav.reorder', 'settings', 'Reordered admin nav (' . count($pairs) . ' items)', $request->getClientIp());
+            \Modules\Audit\Interfaces\HTTP\AuditServices::log('settings.admin-nav.reorder', 'settings', 'Reordered admin nav (' . count($pairs) . ' items)', $request->getClientIp());
         }
 
         return Response::html('ok');
@@ -483,7 +482,7 @@ final class SettingsAction
         if ([] !== $pairs) {
             CardboardServices::menu()->batchUpdateSortOrder($pairs);
             CacheInvalidator::flush();
-            AuditServices::log('settings.nav.reorder', 'settings', 'Reordered header nav (' . count($pairs) . ' items)', $request->getClientIp());
+            \Modules\Audit\Interfaces\HTTP\AuditServices::log('settings.nav.reorder', 'settings', 'Reordered header nav (' . count($pairs) . ' items)', $request->getClientIp());
         }
 
         return Response::html('ok');
@@ -532,7 +531,7 @@ final class SettingsAction
         if (null !== $id && IconRegistry::isValid($icon)) {
             CardboardServices::menu()->updateIcon($id, $icon);
             CacheInvalidator::flush();
-            AuditServices::log('settings.admin-nav.icon', 'settings', 'Updated icon for admin nav item ' . $id, $request->getClientIp());
+            \Modules\Audit\Interfaces\HTTP\AuditServices::log('settings.admin-nav.icon', 'settings', 'Updated icon for admin nav item ' . $id, $request->getClientIp());
         }
 
         return Response::redirect('/mark/settings');

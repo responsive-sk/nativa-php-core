@@ -2,9 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace Modules\CardboardKit\Domain\Contracts;
+namespace Modules\Cardboard\Domain\Contracts;
 
-use Modules\CardboardKit\Domain\Model\Period;
+use Modules\Cardboard\Domain\Model\Period;
 
 /**
  * MetricContract — interface for module metric providers.

@@ -6,8 +6,8 @@ namespace Modules\Blog\Interfaces\HTTP\Actions;
 
 use Modules\Audit\Interfaces\HTTP\AuditServices;
 use Modules\Blog\Application\Services\BlogCrudService;
-use Modules\CardboardKit\Application\Services\AdminLocale;
-use Modules\CardboardKit\Interfaces\HTTP\AdminLayout;
+use Modules\Cardboard\Application\Services\AdminLocale;
+use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;

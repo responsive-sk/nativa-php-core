@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Modules\CardboardKit\Domain\Model;
+namespace Modules\Cardboard\Domain\Model;
 
 /**
  * CardLink — immutable value object for a card action link.

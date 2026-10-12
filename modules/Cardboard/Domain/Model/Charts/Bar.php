@@ -2,9 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace Modules\CardboardKit\Domain\Model\Charts;
+namespace Modules\Cardboard\Domain\Model\Charts;
 
-use Modules\CardboardKit\Domain\Contracts\ChartContract;
+use Modules\Cardboard\Domain\Contracts\ChartContract;
 
 /**
  * Bar — inline SVG categorical comparison chart.

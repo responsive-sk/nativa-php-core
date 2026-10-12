@@ -4,9 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Cardboard\Interfaces\HTTP\Actions;
 
-use Modules\Audit\Interfaces\HTTP\AuditServices;
-use Modules\Blog\Application\Services\AuthorAvatar;
-use Modules\CardboardKit\Interfaces\HTTP\AdminLayout;
+use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Cardboard\Interfaces\HTTP\CardboardServices;
 use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Application\Services\View\ViewRenderer;
@@ -14,12 +12,8 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Infrastructure\Storage\LocalStorageProvider;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
-use Modules\Media\Interfaces\HTTP\MediaUploadPayload;
 use Modules\Outbox\Interfaces\HTTP\SecurityEventServices;
 use Modules\Security\Application\Services\PasswordHasher;
-use Modules\Users\Domain\Entities\User;
-use Modules\Users\Infrastructure\Persistence\Repositories\UserRepository;
-use Modules\Users\Interfaces\HTTP\UsersTableRenderer;
 
 /**
  * Users CRUD — task 9.2.
@@ -65,7 +59,7 @@ final class UsersAction
             . ' placeholder="Search users...">'
             . '</div>';
 
-        $grid = UsersTableRenderer::render($users);
+        $grid = \Modules\Users\Interfaces\HTTP\UsersTableRenderer::render($users);
 
         // HTMX: return partial HTML.
         if (AdminLayout::isHtmx($request)) {
@@ -91,9 +85,9 @@ final class UsersAction
     /**
      * Filter users by name or email.
      *
-     * @param list<User> $users
+     * @param list<\Modules\Users\Domain\Entities\User> $users
      *
-     * @return list<User>
+     * @return list<\Modules\Users\Domain\Entities\User>
      */
     private function filterUsers(array $users, string $search): array
     {
@@ -101,7 +95,7 @@ final class UsersAction
 
         return array_values(array_filter(
             $users,
-            static fn (User $user): bool => str_contains(strtolower($user->name()), $query)
+            static fn (\Modules\Users\Domain\Entities\User $user): bool => str_contains(strtolower($user->name()), $query)
                 || str_contains(strtolower($user->email()), $query),
         ));
     }
@@ -159,7 +153,7 @@ final class UsersAction
         }
 
         CacheInvalidator::flush();
-        AuditServices::log('users.create', 'user:' . $user->id(), 'Created user ' . $email, $request->getClientIp());
+        \Modules\Audit\Interfaces\HTTP\AuditServices::log('users.create', 'user:' . $user->id(), 'Created user ' . $email, $request->getClientIp());
         SecurityEventServices::userChanged($user->id(), SecurityEventServices::OP_CREATE, $request->getClientIp());
 
         if (AdminLayout::isHtmx($request)) {
@@ -235,7 +229,7 @@ final class UsersAction
         }
 
         CacheInvalidator::flush();
-        AuditServices::log('users.update', 'user:' . $user->id(), 'Updated user ' . $email, $request->getClientIp());
+        \Modules\Audit\Interfaces\HTTP\AuditServices::log('users.update', 'user:' . $user->id(), 'Updated user ' . $email, $request->getClientIp());
         SecurityEventServices::userChanged($user->id(), SecurityEventServices::OP_UPDATE, $request->getClientIp());
 
         if (AdminLayout::isHtmx($request)) {
@@ -260,7 +254,7 @@ final class UsersAction
             if (null !== $user && $user->id() !== CardboardServices::auth()->currentUserId()) {
                 $users->delete($id);
                 CacheInvalidator::flush();
-                AuditServices::log('users.delete', 'user:' . $user->id(), 'Deleted user ' . $user->email(), $request->getClientIp());
+                \Modules\Audit\Interfaces\HTTP\AuditServices::log('users.delete', 'user:' . $user->id(), 'Deleted user ' . $user->email(), $request->getClientIp());
                 SecurityEventServices::userChanged($user->id(), SecurityEventServices::OP_DELETE, $request->getClientIp());
             }
         }
@@ -286,7 +280,7 @@ final class UsersAction
         array $errors,
         array $values = [],
         array $selectedRoleIds = [],
-        ?User $user = null,
+        ?\Modules\Users\Domain\Entities\User $user = null,
         ?Request $request = null,
     ): string {
         $errorHtml = AdminLayout::messages($errors, 'err');
@@ -349,7 +343,7 @@ final class UsersAction
     /**
      * @return list<string>
      */
-    private function editErrors(User $user, string $name, string $email, string $roleId, UserRepository $users): array
+    private function editErrors(\Modules\Users\Domain\Entities\User $user, string $name, string $email, string $roleId, \Modules\Users\Infrastructure\Persistence\Repositories\UserRepository $users): array
     {
         $errors = $this->validate($name, $email, '', false);
 
@@ -393,7 +387,7 @@ final class UsersAction
      *
      * @param list<string> $errors
      */
-    private function editFormResponse(User $user, array $errors, string $name, string $email, ?Request $request = null): Response
+    private function editFormResponse(\Modules\Users\Domain\Entities\User $user, array $errors, string $name, string $email, ?Request $request = null): Response
     {
         return Response::html($this->form(
             'Edit user — ' . $user->name(),
@@ -416,7 +410,7 @@ final class UsersAction
         $storage = new LocalStorageProvider();
         $src = $storage->exists($avatar)
             ? $storage->url($avatar)
-            : (new AuthorAvatar($storage))->placeholderDataUri($name);
+            : (new \Modules\Blog\Application\Services\AuthorAvatar($storage))->placeholderDataUri($name);
 
         return '<img src="' . AdminLayout::e($src) . '" alt="" width="48" height="48" class="m-avatar">';
     }
@@ -434,7 +428,7 @@ final class UsersAction
         // shared hosting the multipart path can be unusable (broken
         // upload_tmp_dir / upload_max_filesize) while the urlencoded path
         // works.
-        $file = MediaUploadPayload::filesFor('avatar')['avatar'] ?? null;
+        $file = \Modules\Media\Interfaces\HTTP\MediaUploadPayload::filesFor('avatar')['avatar'] ?? null;
 
         if (!is_array($file) || UPLOAD_ERR_NO_FILE === ($file['error'] ?? UPLOAD_ERR_NO_FILE)) {
             return ['path' => null, 'error' => ''];
@@ -481,7 +475,7 @@ final class UsersAction
      * Apply an avatar change from the edit form: a new upload, a removal, or
      * nothing. Old files are deleted best-effort after the DB write.
      */
-    private function applyAvatarChange(User $user, ?string $newAvatar, bool $removeAvatar): void
+    private function applyAvatarChange(\Modules\Users\Domain\Entities\User $user, ?string $newAvatar, bool $removeAvatar): void
     {
         if (null !== $newAvatar) {
             $old = $user->avatar();

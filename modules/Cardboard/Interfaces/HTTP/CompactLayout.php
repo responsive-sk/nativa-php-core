@@ -2,12 +2,11 @@
 
 declare(strict_types = 1);
 
-namespace Modules\CardboardKit\Interfaces\HTTP;
+namespace Modules\Cardboard\Interfaces\HTTP;
 
 use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
-use Modules\CardboardKit\Application\Services\AdminContextRegistry;
 use Modules\Core\Application\Services\ShellContextProviderRegistry;
 
 /**
@@ -62,7 +61,7 @@ final class CompactLayout
         // plus the mark-switch entry for the Publish/Draft switch).
         $markCssLinks = AdminLayout::markCssLinks();
 
-        return ViewRenderer::render('Modules/CardboardKit/Interfaces/HTTP/templates/compact.phtml', ['actionsBar' => $actionsBar, 'content' => $content, 'csrf' => $csrf, 'currentUserName' => $currentUserName, 'htmlLang' => $htmlLang, 'htmxConfig' => $htmxConfig, 'htmxScript' => $htmxScript, 'markCssLinks' => $markCssLinks, 'navHtml' => $navHtml, 'recentJson' => $recentJson, 'titleEscaped' => $titleEscaped]);
+        return ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/compact.phtml', ['actionsBar' => $actionsBar, 'content' => $content, 'csrf' => $csrf, 'currentUserName' => $currentUserName, 'htmlLang' => $htmlLang, 'htmxConfig' => $htmxConfig, 'htmxScript' => $htmxScript, 'markCssLinks' => $markCssLinks, 'navHtml' => $navHtml, 'recentJson' => $recentJson, 'titleEscaped' => $titleEscaped]);
     }
 
     /**
@@ -74,8 +73,11 @@ final class CompactLayout
      */
     private static function navHtml(string $activeSection): string
     {
-        $context = AdminContextRegistry::first();
-        $navItems = null === $context ? [] : $context->navItems($activeSection, self::grantedPermissions());
+        try {
+            $navItems = CardboardServices::adminNav()->hierarchicalItems($activeSection, self::grantedPermissions());
+        } catch (\Throwable) {
+            $navItems = [];
+        }
         $html = '';
 
         foreach ($navItems as $item) {
@@ -125,30 +127,36 @@ final class CompactLayout
      */
     private static function grantedPermissions(): ?array
     {
-        $context = AdminContextRegistry::first();
+        try {
+            $userId = CardboardServices::auth()->currentUserId();
 
-        if (null === $context) {
+            if (null === $userId) {
+                return null;
+            }
+
+            $user = CardboardServices::users()->findById($userId);
+
+            return null === $user ? null : $user->permissions();
+        } catch (\Throwable) {
             return null;
         }
-
-        $userId = $context->currentUserId();
-
-        if (null === $userId) {
-            return null;
-        }
-
-        return $context->userPermissions($userId);
     }
 
     private static function currentUserName(): string
     {
-        $context = AdminContextRegistry::first();
+        try {
+            $userId = CardboardServices::auth()->currentUserId();
 
-        if (null === $context) {
+            if (null === $userId) {
+                return 'Guest';
+            }
+
+            $user = CardboardServices::users()->findById($userId);
+
+            return null === $user ? 'Guest' : $user->name();
+        } catch (\Throwable) {
             return 'Guest';
         }
-
-        return $context->userDisplayName($context->currentUserId());
     }
 
     private static function htmxScriptTag(): string

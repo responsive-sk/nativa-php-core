@@ -6,7 +6,7 @@ namespace Modules\Audit\Interfaces\HTTP\Actions;
 
 use Modules\Audit\Domain\Entities\AuditEntry;
 use Modules\Audit\Interfaces\HTTP\AuditServices;
-use Modules\CardboardKit\Interfaces\HTTP\AdminLayout;
+use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;

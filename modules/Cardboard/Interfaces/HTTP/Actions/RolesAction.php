@@ -4,8 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Cardboard\Interfaces\HTTP\Actions;
 
-use Modules\Audit\Interfaces\HTTP\AuditServices;
-use Modules\CardboardKit\Interfaces\HTTP\AdminLayout;
+use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Cardboard\Interfaces\HTTP\CardboardServices;
 use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Application\Services\View\ViewRenderer;
@@ -13,7 +12,6 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Outbox\Interfaces\HTTP\SecurityEventServices;
-use Modules\Users\Interfaces\HTTP\RolesTableRenderer;
 
 /**
  * Roles + permissions management — task 9.3.
@@ -56,7 +54,7 @@ final class RolesAction
             . ' placeholder="Search roles...">'
             . '</div>';
 
-        $grid = RolesTableRenderer::render($allRoles);
+        $grid = \Modules\Users\Interfaces\HTTP\RolesTableRenderer::render($allRoles);
 
         // HTMX: return partial HTML.
         if (AdminLayout::isHtmx($request)) {
@@ -107,7 +105,7 @@ final class RolesAction
             $id = bin2hex(random_bytes(16));
             CardboardServices::roles()->createRole($id, $name, $description);
             CacheInvalidator::flush();
-            AuditServices::log('roles.create', 'role:' . $id, 'Created role ' . $name, $request->getClientIp());
+            \Modules\Audit\Interfaces\HTTP\AuditServices::log('roles.create', 'role:' . $id, 'Created role ' . $name, $request->getClientIp());
             // A role is an access-control object, so its creation is a
             // security event and not just an admin write. The inline audit row
             // above is the non-atomic fallback; this one rides the outbox so
@@ -136,7 +134,7 @@ final class RolesAction
             if (null !== $role && 'admin' !== $role['name']) {
                 CardboardServices::roles()->deleteRole($id);
                 CacheInvalidator::flush();
-                AuditServices::log('roles.delete', 'role:' . $id, 'Deleted role ' . $role['name'], $request->getClientIp());
+                \Modules\Audit\Interfaces\HTTP\AuditServices::log('roles.delete', 'role:' . $id, 'Deleted role ' . $role['name'], $request->getClientIp());
                 SecurityEventServices::roleChanged($id, SecurityEventServices::OP_DELETE, $request->getClientIp());
             }
         }
@@ -215,7 +213,7 @@ final class RolesAction
 
         $role = $this->findRole($id);
         CacheInvalidator::flush();
-        AuditServices::log(
+        \Modules\Audit\Interfaces\HTTP\AuditServices::log(
             'roles.permissions',
             'role:' . $id,
             'Saved ' . count($wanted) . ' permissions' . (null === $role ? '' : ' for ' . $role['name']),

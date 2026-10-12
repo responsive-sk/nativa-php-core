@@ -4,12 +4,9 @@ declare(strict_types = 1);
 
 namespace Modules\Cardboard\Interfaces\HTTP\Actions;
 
-use Modules\Audit\Interfaces\HTTP\AuditServices;
-use Modules\Blog\Application\BlogServices;
-use Modules\Blog\Interfaces\HTTP\ArticlesTableRenderer;
-use Modules\CardboardKit\Application\Services\AdminLocale;
+use Modules\Cardboard\Application\Services\AdminLocale;
 use Modules\Cardboard\Application\Services\BulkEntityGate;
-use Modules\CardboardKit\Interfaces\HTTP\AdminLayout;
+use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Cardboard\Interfaces\HTTP\CardboardServices;
 use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
@@ -18,10 +15,6 @@ use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Database\Infrastructure\Persistence\UnitOfWork;
 use Modules\Outbox\Interfaces\HTTP\SecurityEventServices;
-use Modules\Pages\Interfaces\HTTP\PagesTableRenderer;
-use Modules\Users\Interfaces\HTTP\AuthServices;
-use Modules\Users\Interfaces\HTTP\RolesTableRenderer;
-use Modules\Users\Interfaces\HTTP\UsersTableRenderer;
 
 /**
  * BulkDeleteAction — handles bulk delete for admin tables.
@@ -41,7 +34,7 @@ final class BulkDeleteAction
         // (content.manage) is not the entity's own gate. Checked BEFORE any id
         // is read: without this, an author holding content.manage could post
         // entity=users here and delete accounts.
-        $denied = BulkEntityGate::refuse($entity, 'delete', AuthServices::auth()->currentUser());
+        $denied = BulkEntityGate::refuse($entity, 'delete', \Modules\Users\Interfaces\HTTP\AuthServices::auth()->currentUser());
 
         if (null !== $denied) {
             // A refused bulk operation is the same category of fact as a
@@ -112,7 +105,7 @@ final class BulkDeleteAction
             : "Bulk deleted {$deleted} {$entity}";
 
         CacheInvalidator::flush();
-        AuditServices::log('bulk.delete', $entity, $detail, $request->getClientIp());
+        \Modules\Audit\Interfaces\HTTP\AuditServices::log('bulk.delete', $entity, $detail, $request->getClientIp());
     }
 
     /**
@@ -249,7 +242,7 @@ final class BulkDeleteAction
         // bulk endpoint while every single-article route returned 403. Pages
         // carry no per-page owner and stay group-editable by design.
         if ('articles' === $entity) {
-            $partition = BlogServices::writeGuard()->partition($slugs, $locale, AuthServices::auth()->currentUser());
+            $partition = \Modules\Blog\Application\BlogServices::writeGuard()->partition($slugs, $locale, \Modules\Users\Interfaces\HTTP\AuthServices::auth()->currentUser());
             $skipped = count($partition['refused']);
             $slugs = $partition['allowed'];
         }
@@ -366,13 +359,13 @@ final class BulkDeleteAction
     private function renderUpdatedTable(string $entity, string $locale): string
     {
         return match ($entity) {
-            'users' => UsersTableRenderer::render(CardboardServices::users()->all()),
-            'roles' => RolesTableRenderer::render(CardboardServices::roles()->allRoles()),
-            'pages' => PagesTableRenderer::render(
+            'users' => \Modules\Users\Interfaces\HTTP\UsersTableRenderer::render(CardboardServices::users()->all()),
+            'roles' => \Modules\Users\Interfaces\HTTP\RolesTableRenderer::render(CardboardServices::roles()->allRoles()),
+            'pages' => \Modules\Pages\Interfaces\HTTP\PagesTableRenderer::render(
                 CardboardServices::pageCrud()->list($locale),
                 $locale,
             ),
-            'articles' => ArticlesTableRenderer::render(
+            'articles' => \Modules\Blog\Interfaces\HTTP\ArticlesTableRenderer::render(
                 CardboardServices::blogCrud()->list($locale),
                 $locale,
             ),

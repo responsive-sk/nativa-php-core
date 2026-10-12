@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Modules\CardboardKit\Application\Services;
+namespace Modules\Cardboard\Application\Services;
 
 /**
  * IconRegistry — predefined SVG icons for admin navigation items.

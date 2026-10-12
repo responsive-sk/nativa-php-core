@@ -2,10 +2,10 @@
 
 declare(strict_types = 1);
 
-namespace Modules\CardboardKit\Domain\Model;
+namespace Modules\Cardboard\Domain\Model;
 
-use Modules\CardboardKit\Domain\Contracts\ChartContract;
-use Modules\CardboardKit\Interfaces\HTTP\AdminLayout;
+use Modules\Cardboard\Domain\Contracts\ChartContract;
+use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 
 /**
  * Card — immutable dashboard stat card value object.

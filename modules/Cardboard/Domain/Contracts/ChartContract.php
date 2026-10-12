@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Modules\CardboardKit\Domain\Contracts;
+namespace Modules\Cardboard\Domain\Contracts;
 
 /**
  * ChartContract — interface for inline SVG chart visualization.

@@ -4,13 +4,13 @@ declare(strict_types = 1);
 
 namespace Modules\Media\Application\Services;
 
-use Modules\CardboardKit\Domain\Model\Card;
-use Modules\CardboardKit\Domain\Model\CardLink;
-use Modules\CardboardKit\Domain\Model\Period;
-use Modules\CardboardKit\Domain\Model\Trend;
-use Modules\CardboardKit\Domain\Contracts\MetricContract;
-use Modules\CardboardKit\Infrastructure\Attributes\AsMetricProvider;
-use Modules\CardboardKit\Infrastructure\Registry\CardboardRegistry;
+use Modules\Cardboard\Domain\Model\Card;
+use Modules\Cardboard\Domain\Model\CardLink;
+use Modules\Cardboard\Domain\Model\Period;
+use Modules\Cardboard\Domain\Model\Trend;
+use Modules\Cardboard\Domain\Contracts\MetricContract;
+use Modules\Cardboard\Infrastructure\Attributes\AsMetricProvider;
+use Modules\Cardboard\Infrastructure\Registry\CardboardRegistry;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 
 /**

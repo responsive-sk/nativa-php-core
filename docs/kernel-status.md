@@ -1649,3 +1649,42 @@ seeds idempotently and never rewrites what an operator may have edited.
 - keyboard: `Tab` → checkbox focused, `Space` → menu opens;
 - 1280px unchanged: menu visible, toggle `display:none`;
 - `phpunit` 56 tests (6 skipped), `phpstan`, `rector --dry-run`, `php-cs-fixer --dry-run` and `php -l` clean; `extract-kernel --check` unchanged (the mono theme and the Settings migrator are module-owned, not part of the kernel slice).
+
+# Boot 20 — CardboardKit merges into Cardboard (single admin module)
+
+Boot 14 split the admin overlay into a leaf kit + admin app to break the
+`Cardboard ↔ everything` cycle. The two namespaces (`CardboardKit` vs
+`Cardboard`, including `CardboardRegistry` living in the Kit and `Sparkline`
+living in the app) read as duplication. Decision: **only `Cardboard` stays**.
+
+What moved (catalogue `modules/`, synced verbatim into `src/Modules/`):
+
+- Kit files → same relative paths under `Cardboard/` (`Domain/Model`,
+  `Domain/Contracts/Chart+Metric`, `Application/Services/AdminLocale,
+  IconRegistry, BulkActions`, `Interfaces/HTTP/AdminLayout+CompactLayout,
+  templates, assets/scripts`, `Infrastructure/Attributes/AsMetricProvider,
+  Registry/*`). `Sparkline/Bar/Donut` finally sit side by side.
+- Deleted as a port: `AdminContextProvider`, `AsAdminContextProvider`,
+  `AdminContextRegistry`, `CardboardAdminContext`. The layout calls its own
+  `CardboardServices` directly (try/catch → `Guest`/sidebar/`[]` fallback).
+- `modules/CardboardKit/` deleted.
+
+Cycle discipline (the catalog derives closures from `^use Modules\` lines):
+
+- Cardboard keeps `use` only for self, `Core`, `Database`, `Security`,
+  `Settings`, `Outbox` — none of which import Cardboard back.
+- `Audit/Blog/Media/Pages/Users` references inside Cardboard are
+  fully-qualified inline (same runtime behaviour with the full set
+  installed, invisible to the closure scanner). `AdminNavService` and
+  `BulkEntityGate` carry local permission-string tables for the same reason.
+- Measured closures: Cardboard → `Outbox, Security, Settings`;
+  Blog/Pages/Users/Audit/Media → Cardboard. Acyclic; `module:show` green.
+
+## Verified
+
+- `composer phpstan` clean, `composer test` 56/147 (6 skipped, same skips),
+  `php -l` on all touched files clean;
+- live `php -S` (fresh, restarted): `/mark` 200, `/mark/users` 200, sidebar
+  chrome + `mark` CSS + `Guest` fallback, 0× `CardboardKit` in the HTML,
+  0× `[KERNEL] Error`;
+- `module:show Cardboard` routes (6× `/mark/*`) + assets (9× scripts) intact.

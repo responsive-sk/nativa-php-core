@@ -2,9 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace Modules\CardboardKit\Infrastructure\Attributes;
+namespace Modules\Cardboard\Infrastructure\Attributes;
 
-use Modules\CardboardKit\Domain\Contracts\MetricContract;
+use Modules\Cardboard\Domain\Contracts\MetricContract;
 
 /**
  * Marks a class as a dashboard metric provider for auto-discovery.

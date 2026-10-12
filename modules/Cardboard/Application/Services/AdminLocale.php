@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Modules\CardboardKit\Application\Services;
+namespace Modules\Cardboard\Application\Services;
 
 /**
  * AdminLocale — canonical mapping for admin locale query/body params.

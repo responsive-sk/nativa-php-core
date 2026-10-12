@@ -2,9 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace Modules\CardboardKit\Application\Services;
+namespace Modules\Cardboard\Application\Services;
 
-use Modules\CardboardKit\Interfaces\HTTP\AdminLayout;
+use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
 
@@ -210,6 +210,6 @@ final class BulkActions
      */
     private static function deleteConfirmScript(): string
     {
-        return ViewRenderer::render('Modules/CardboardKit/Interfaces/HTTP/templates/bulk-actions.phtml', []);
+        return ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/bulk-actions.phtml', []);
     }
 }

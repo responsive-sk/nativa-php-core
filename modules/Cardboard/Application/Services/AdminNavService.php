@@ -4,8 +4,6 @@ declare(strict_types = 1);
 
 namespace Modules\Cardboard\Application\Services;
 
-use Modules\Users\Domain\AdminRoutePolicy;
-
 /**
  * AdminNavService — resolves admin panel navigation items from DB.
  *
@@ -211,11 +209,64 @@ final readonly class AdminNavService
         return array_values(array_filter(
             $this->activeItems(),
             static function (array $item) use ($granted): bool {
-                $required = AdminRoutePolicy::requiredPermission($item['href']);
+                $required = self::requiredPermission($item['href']);
 
                 return null === $required || in_array($required, $granted, true);
             },
         ));
+    }
+
+    /**
+     * Local copy of the admin-route permission table (permission strings
+     * only, no Users import — see CardboardServices note about the single
+     * admin module staying a leaf for the install-closure scanner).
+     */
+    private static function requiredPermission(string $path): ?string
+    {
+        if ('/mark' !== $path && !str_starts_with($path, '/mark/')) {
+            return null;
+        }
+
+        $table = [
+            '/mark' => 'mark.access',
+            '/mark/articles' => 'content.manage',
+            '/mark/pages' => 'content.manage',
+            '/mark/categories' => 'content.manage',
+            '/mark/tags' => 'content.manage',
+            '/mark/comments' => 'content.manage',
+            '/mark/questions' => 'content.manage',
+            '/mark/media' => 'content.manage',
+            '/mark/forms' => 'content.manage',
+            '/mark/bulk-publish' => 'content.manage',
+            '/mark/bulk-delete' => 'content.manage',
+            '/mark/locales' => 'settings.manage',
+            '/mark/settings' => 'settings.manage',
+            '/mark/users' => 'users.manage',
+            '/mark/roles' => 'roles.manage',
+            '/mark/permissions' => 'roles.manage',
+            '/mark/audit' => 'roles.manage',
+        ];
+
+        $best = null;
+        $bestLength = -1;
+
+        foreach ($table as $prefix => $permission) {
+            $matches = $path === $prefix
+                || str_starts_with($path, str_ends_with($prefix, '/') ? $prefix : $prefix . '/');
+
+            if (!$matches) {
+                continue;
+            }
+
+            $length = strlen($prefix);
+
+            if ($length > $bestLength) {
+                $best = $permission;
+                $bestLength = $length;
+            }
+        }
+
+        return $best;
     }
 
     /**

@@ -2,9 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace Modules\CardboardKit\Infrastructure\Registry;
+namespace Modules\Cardboard\Infrastructure\Registry;
 
-use Modules\CardboardKit\Domain\Model\Card;
+use Modules\Cardboard\Domain\Model\Card;
 
 /**
  * CardboardRegistry — static registry for dashboard stat cards.

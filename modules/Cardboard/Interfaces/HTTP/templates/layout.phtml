@@ -64,7 +64,7 @@ if (!isset($viewRendererGuard)) {
     <!-- Sync theme init — FOUC prevention: restore the persisted theme
          (or the OS preference) before first paint. Falls back to the
          dark default when neither is available. -->
-    <?php $layoutThemeInitScript = Modules\Core\Application\Services\View\InlineJs::file('Modules/CardboardKit/Interfaces/HTTP/assets/scripts/admin-theme-init.js'); ?>
+    <?php $layoutThemeInitScript = Modules\Core\Application\Services\View\InlineJs::file('Modules/Cardboard/Interfaces/HTTP/assets/scripts/admin-theme-init.js'); ?>
     <script nonce="__CSP_NONCE_PLACEHOLDER__"><?php echo $layoutThemeInitScript; ?></script>
 </head>
 <body>
@@ -152,8 +152,8 @@ if (!isset($viewRendererGuard)) {
         </div>
     </div>
     <!-- Theme toggle + Sidebar toggle handler -->
-<?php $adminShellScript = Modules\Core\Application\Services\View\InlineJs::file('Modules/CardboardKit/Interfaces/HTTP/assets/scripts/admin-shell.js'); ?>
-    <?php $adminShellCommands = Modules\Core\Application\Services\View\InlineJs::file('Modules/CardboardKit/Interfaces/HTTP/assets/scripts/admin-shell-commands.js'); ?>
+<?php $adminShellScript = Modules\Core\Application\Services\View\InlineJs::file('Modules/Cardboard/Interfaces/HTTP/assets/scripts/admin-shell.js'); ?>
+    <?php $adminShellCommands = Modules\Core\Application\Services\View\InlineJs::file('Modules/Cardboard/Interfaces/HTTP/assets/scripts/admin-shell-commands.js'); ?>
     <script nonce="__CSP_NONCE_PLACEHOLDER__"><?php echo $adminShellScript; ?>
         var recent = <?php echo $recentJson; ?>;
         <?php echo $adminShellCommands; ?></script>

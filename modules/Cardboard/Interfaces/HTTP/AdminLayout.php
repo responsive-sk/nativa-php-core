@@ -2,10 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace Modules\CardboardKit\Interfaces\HTTP;
+namespace Modules\Cardboard\Interfaces\HTTP;
 
-use Modules\CardboardKit\Application\Services\AdminContextRegistry;
-use Modules\CardboardKit\Application\Services\IconRegistry;
+use Modules\Cardboard\Application\Services\IconRegistry;
 use Modules\Core\Application\Services\AssetManager;
 use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;
@@ -56,10 +55,14 @@ final class AdminLayout
         $titleEscaped = self::e($title);
         $currentUserName = self::e(self::currentUserName());
 
-        // DB-driven admin navigation items (hierarchical tree) through the
-        // admin context port — no provider, no personalized nav, still a page.
-        $context = AdminContextRegistry::first();
-        $adminNavItems = null === $context ? [] : $context->navItems($activeSection, self::grantedPermissions());
+        // DB-driven admin navigation items (hierarchical tree) — Cardboard is
+        // the admin app itself, so the layout calls its own services directly.
+        // No provider, no personalized nav, still a page.
+        try {
+            $adminNavItems = CardboardServices::adminNav()->hierarchicalItems($activeSection, self::grantedPermissions());
+        } catch (\Throwable) {
+            $adminNavItems = [];
+        }
 
         $navHtml = '';
         foreach ($adminNavItems as $item) {
@@ -82,7 +85,7 @@ final class AdminLayout
         // Encode recent items for command palette.
         $recentJson = json_encode($recentItems, JSON_HEX_TAG | JSON_HEX_AMP) ?: '[]';
 
-        return ViewRenderer::render('Modules/CardboardKit/Interfaces/HTTP/templates/layout.phtml', ['actionsBar' => $actionsBar, 'content' => $content, 'csrf' => $csrf, 'currentUserName' => $currentUserName, 'htmlLang' => $htmlLang, 'htmxConfig' => $htmxConfig, 'htmxScript' => $htmxScript, 'markCssLinks' => $markCssLinks, 'navHtml' => $navHtml, 'recentJson' => $recentJson, 'titleEscaped' => $titleEscaped]);
+        return ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/layout.phtml', ['actionsBar' => $actionsBar, 'content' => $content, 'csrf' => $csrf, 'currentUserName' => $currentUserName, 'htmlLang' => $htmlLang, 'htmxConfig' => $htmxConfig, 'htmxScript' => $htmxScript, 'markCssLinks' => $markCssLinks, 'navHtml' => $navHtml, 'recentJson' => $recentJson, 'titleEscaped' => $titleEscaped]);
     }
 
     /**
@@ -424,12 +427,19 @@ final class AdminLayout
     }
 
     /**
-     * Resolve the admin layout variant through the port ('sidebar' when no
-     * module answers — the compact/admin choice is the admin app's setting).
+     * Resolve the admin layout variant from settings ('sidebar' on any
+     * failure — the compact/admin choice is the admin app's own setting).
      */
     private static function resolveLayout(): string
     {
-        return AdminContextRegistry::first()?->adminLayout() ?? 'sidebar';
+        try {
+            $all = CardboardServices::settings()->all();
+            $layout = is_string($all['admin_layout'] ?? null) ? $all['admin_layout'] : 'sidebar';
+
+            return in_array($layout, ['sidebar', 'compact'], true) ? $layout : 'sidebar';
+        } catch (\Throwable) {
+            return 'sidebar';
+        }
     }
 
     /**
@@ -443,30 +453,36 @@ final class AdminLayout
      */
     private static function grantedPermissions(): ?array
     {
-        $context = AdminContextRegistry::first();
+        try {
+            $userId = CardboardServices::auth()->currentUserId();
 
-        if (null === $context) {
+            if (null === $userId) {
+                return null;
+            }
+
+            $user = CardboardServices::users()->findById($userId);
+
+            return null === $user ? null : $user->permissions();
+        } catch (\Throwable) {
             return null;
         }
-
-        $userId = $context->currentUserId();
-
-        if (null === $userId) {
-            return null;
-        }
-
-        return $context->userPermissions($userId);
     }
 
     private static function currentUserName(): string
     {
-        $context = AdminContextRegistry::first();
+        try {
+            $userId = CardboardServices::auth()->currentUserId();
 
-        if (null === $context) {
+            if (null === $userId) {
+                return 'Guest';
+            }
+
+            $user = CardboardServices::users()->findById($userId);
+
+            return null === $user ? 'Guest' : $user->name();
+        } catch (\Throwable) {
             return 'Guest';
         }
-
-        return $context->userDisplayName($context->currentUserId());
     }
 
     /**

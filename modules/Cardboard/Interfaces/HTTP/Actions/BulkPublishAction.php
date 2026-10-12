@@ -4,20 +4,15 @@ declare(strict_types = 1);
 
 namespace Modules\Cardboard\Interfaces\HTTP\Actions;
 
-use Modules\Audit\Interfaces\HTTP\AuditServices;
-use Modules\Blog\Application\BlogServices;
-use Modules\Blog\Interfaces\HTTP\ArticlesTableRenderer;
-use Modules\CardboardKit\Application\Services\AdminLocale;
+use Modules\Cardboard\Application\Services\AdminLocale;
 use Modules\Cardboard\Application\Services\BulkEntityGate;
-use Modules\CardboardKit\Interfaces\HTTP\AdminLayout;
+use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Cardboard\Interfaces\HTTP\CardboardServices;
 use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Outbox\Interfaces\HTTP\SecurityEventServices;
-use Modules\Pages\Interfaces\HTTP\PagesTableRenderer;
-use Modules\Users\Interfaces\HTTP\AuthServices;
 
 /**
  * BulkPublishAction — handles bulk publish/unpublish for admin tables.
@@ -36,7 +31,7 @@ final class BulkPublishAction
         // (content.manage) is not the entity's own gate. Checked BEFORE any id
         // is read: without this, an author holding content.manage could post
         // entity=users here.
-        $denied = BulkEntityGate::refuse($entity, 'publish', AuthServices::auth()->currentUser());
+        $denied = BulkEntityGate::refuse($entity, 'publish', \Modules\Users\Interfaces\HTTP\AuthServices::auth()->currentUser());
 
         if (null !== $denied) {
             // A refused bulk operation is the same category of fact as a
@@ -120,7 +115,7 @@ final class BulkPublishAction
         $action = $published ? 'publish' : 'unpublish';
 
         CacheInvalidator::flush();
-        AuditServices::log(
+        \Modules\Audit\Interfaces\HTTP\AuditServices::log(
             'bulk.' . $action,
             $entity,
             "Bulk {$action}d {$updated} " . $entity,
@@ -193,7 +188,7 @@ final class BulkPublishAction
         // bulk endpoint while every single-article route returned 403. Pages
         // carry no per-page owner and stay group-editable by design.
         if ('articles' === $entity) {
-            $partition = BlogServices::writeGuard()->partition($slugs, $locale, AuthServices::auth()->currentUser());
+            $partition = \Modules\Blog\Application\BlogServices::writeGuard()->partition($slugs, $locale, \Modules\Users\Interfaces\HTTP\AuthServices::auth()->currentUser());
             $skipped = count($partition['refused']);
             $slugs = $partition['allowed'];
         } else {
@@ -212,11 +207,11 @@ final class BulkPublishAction
     private function publishItem(string $entity, string $slug, bool $published, string $locale): bool
     {
         return match ($entity) {
-            'articles' => BlogServices::writeGuard()->setPublished(
+            'articles' => \Modules\Blog\Application\BlogServices::writeGuard()->setPublished(
                 $slug,
                 $published,
                 $locale,
-                AuthServices::auth()->currentUser(),
+                \Modules\Users\Interfaces\HTTP\AuthServices::auth()->currentUser(),
             ),
             'pages' => CardboardServices::pageCrud()->setPublished($slug, $published, $locale),
             default => false,
@@ -226,11 +221,11 @@ final class BulkPublishAction
     private function renderUpdatedTable(string $entity, string $locale): string
     {
         return match ($entity) {
-            'pages' => PagesTableRenderer::render(
+            'pages' => \Modules\Pages\Interfaces\HTTP\PagesTableRenderer::render(
                 CardboardServices::pageCrud()->list($locale),
                 $locale,
             ),
-            'articles' => ArticlesTableRenderer::render(
+            'articles' => \Modules\Blog\Interfaces\HTTP\ArticlesTableRenderer::render(
                 CardboardServices::blogCrud()->list($locale),
                 $locale,
             ),

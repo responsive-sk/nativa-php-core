@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Media\Interfaces\HTTP;
 
-use Modules\CardboardKit\Interfaces\HTTP\AdminLayout;
+use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 

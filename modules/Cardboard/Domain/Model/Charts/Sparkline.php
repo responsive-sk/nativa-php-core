@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Cardboard\Domain\Model\Charts;
 
-use Modules\CardboardKit\Domain\Contracts\ChartContract;
+use Modules\Cardboard\Domain\Contracts\ChartContract;
 
 /**
  * Sparkline — inline SVG line trend chart.
