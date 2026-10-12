@@ -67,6 +67,9 @@ PHPUnit). It is not a prerequisite: `src/init.php` installs a PSR-4 fallback
 loader for the tree that has none, and the CI job called "Boot (kernel-only, no
 vendor)" exists precisely to keep that claim honest.
 
+Commit messages carry no agent footer (the nativa-minimal convention) —
+after cloning, enable the enforcer: `cp bin/git-hooks/commit-msg .git/hooks/commit-msg`.
+
 ## Build a deployable tree
 
 ```sh

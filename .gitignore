@@ -75,6 +75,11 @@ src/Modules/*
 .vscode/
 .DS_Store
 *.swp
+
+# Local agent-runner state (machine-specific, never committed). Note: this is
+# NOT .agents/skills/ — installed community skills are shared on purpose and
+# stay visible (committing them is the operator's call, not the default).
+/.ai-factory.json
 # Deployable build output (bin/build/build-dist.sh). An artifact, exactly like
 # /public/dist/ above: produced by a script, never committed. A trailing
 # comment on the pattern line does NOT work here — gitignore has no comment

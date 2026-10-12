@@ -28,6 +28,13 @@ use Modules\Settings\Infrastructure\Persistence\Repositories\SettingsRepository;
  * when the full set is installed, invisible to the closure scanner).
  * Security/Settings/Outbox never import Cardboard, so their `use` lines
  * are safe and stay.
+ *
+ * The price of that invisibility: the catalog cannot refuse
+ * `module:remove Users` while Cardboard is installed, so an amputated admin
+ * fails here instead of at the CLI. Every factory below that resolves a
+ * cycle-hidden module therefore fails LOUD via need() — naming the missing
+ * module and the `module:add` that restores it — instead of a bare
+ * `Class not found` fatal.
  */
 final class CardboardServices
 {
@@ -51,6 +58,8 @@ final class CardboardServices
 
     public static function users(): \Modules\Users\Infrastructure\Persistence\Repositories\UserRepository
     {
+        self::need('Modules\\Users\\Infrastructure\\Persistence\\Repositories\\UserRepository', 'Users');
+
         return self::$users ??= new \Modules\Users\Infrastructure\Persistence\Repositories\UserRepository(
             DatabaseConnectionManager::instance()->connection('users'),
         );
@@ -58,6 +67,8 @@ final class CardboardServices
 
     public static function roles(): \Modules\Users\Infrastructure\Persistence\Repositories\RoleRepository
     {
+        self::need('Modules\\Users\\Infrastructure\\Persistence\\Repositories\\RoleRepository', 'Users');
+
         return self::$roles ??= new \Modules\Users\Infrastructure\Persistence\Repositories\RoleRepository(
             DatabaseConnectionManager::instance()->connection('users'),
         );
@@ -79,6 +90,8 @@ final class CardboardServices
 
     public static function auth(): \Modules\Users\Application\Services\AuthService
     {
+        self::need('Modules\\Users\\Application\\Services\\AuthService', 'Users');
+
         return self::$auth ??= new \Modules\Users\Application\Services\AuthService(
             DatabaseConnectionManager::instance()->connection('users'),
             self::users(),
@@ -105,12 +118,34 @@ final class CardboardServices
 
     public static function pageCrud(): \Modules\Pages\Application\Services\PageCrudService
     {
+        self::need('Modules\\Pages\\Application\\Services\\PageCrudService', 'Pages');
+
         return self::$pageCrud ??= new \Modules\Pages\Application\Services\PageCrudService();
     }
 
     public static function blogCrud(): \Modules\Blog\Application\Services\BlogCrudService
     {
+        self::need('Modules\\Blog\\Application\\Services\\BlogCrudService', 'Blog');
+
         return self::$blogCrud ??= new \Modules\Blog\Application\Services\BlogCrudService();
+    }
+
+    /**
+     * Fail loud when a cycle-hidden module is absent.
+     *
+     * The class name arrives as a plain string (never a `::class` constant
+     * on a `use`-imported name) so this guard stays invisible to the closure
+     * scanner — the same reason the factories above are fully-qualified.
+     *
+     * @throws \RuntimeException naming the missing module and its restore
+     */
+    private static function need(string $class, string $module): void
+    {
+        if (!class_exists($class)) {
+            throw new \RuntimeException(
+                sprintf("Cardboard requires the '%s' module (bin/cms module:add %s).", $module, $module),
+            );
+        }
     }
 
     /**
