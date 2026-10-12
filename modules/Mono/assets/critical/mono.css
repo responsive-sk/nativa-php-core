@@ -111,3 +111,12 @@ main pre .tok-punctuation{color:#94a3b8}
 [data-theme=light] main pre .tok-punctuation{color:#64748b}
 main pre.has-badge{padding-top:2rem}
 main pre .mo-code-badge{position:absolute;top:8px;left:8px;font-family:var(--font-mono);font-size:var(--text-xs);color:var(--color-text-muted);background-color:var(--color-bg-hover);border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:.15em .5em;text-transform:uppercase;letter-spacing:.05em;pointer-events:none}
+.mo-article-layout{display:block}@media (min-width:1024px){.mo-article-layout{display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:var(--space-8);align-items:start}}
+.mo-toc{margin-top:var(--space-6);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-4);background-color:var(--color-bg);font-size:var(--text-sm)}
+.mo-toc__title{margin:0 0 var(--space-2);font-size:var(--text-xs);font-weight:var(--font-semibold);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted)}
+.mo-toc__list{list-style:none;margin:0;padding:0}
+.mo-toc__item--sub{padding-left:var(--space-4)}
+.mo-toc__link{display:block;padding:var(--space-1) 0;color:var(--color-text-muted);text-decoration:none}
+.mo-toc__link:hover{color:var(--brand-gold)}
+.mo-toc__link:focus-visible{box-shadow:var(--focus-ring);outline:none}
+@media (min-width:1024px){.mo-toc{margin-top:0;position:sticky;top:calc(var(--navbar-height) + var(--space-4))}}

@@ -6,6 +6,8 @@ namespace Modules\Mono\Tests;
 
 use Modules\Core\Application\Services\View\InlineCss;
 use Modules\Core\Domain\ShellNavItem;
+use Modules\Core\Infrastructure\Http\Request;
+use Modules\Core\Interfaces\HTTP\PageContext;
 use Modules\Core\Interfaces\HTTP\ShellContext;
 use Modules\Mono\Theme\MonoTheme;
 use PHPUnit\Framework\Attributes\Test;
@@ -155,6 +157,80 @@ final class MonoThemeTest extends TestCase
         $plain = $theme->pageWrap('<p>no code here</p>');
 
         $this->assertStringNotContainsString('<script', $plain, 'A page without fences must ship no JS.');
+    }
+
+    /**
+     * The article aside: h2/h3 become labelled anchor links, h3 indented —
+     * the same HTML the browser sees, so every href matches a heading id.
+     */
+    #[Test]
+    public function blogArticleRendersTheTocAsideFromHeadings(): void
+    {
+        $html = (new MonoTheme())->blogArticle(self::articleContext([
+            ['level' => 2, 'text' => 'Getting started', 'anchor' => 'getting-started'],
+            ['level' => 3, 'text' => 'Install', 'anchor' => 'install'],
+        ]));
+
+        $this->assertStringContainsString('<aside class="mo-toc">', $html);
+        $this->assertStringContainsString('aria-label="On this page"', $html, 'The nav needs a name — two navs without one are noise to a screen reader.');
+        $this->assertStringContainsString('href="#getting-started"', $html);
+        $this->assertStringContainsString('>Install</a>', $html);
+        $this->assertStringContainsString('mo-toc__item--sub', $html, 'h3 nests under its h2 — a flat list lies about the structure.');
+        $this->assertStringContainsString('data-toc-link data-heading="install"', $html, 'The scrollspy opt-in travels with the link, so a future Mono scrollspy needs no new markup.');
+    }
+
+    /**
+     * No headings, no aside — and the markup stays exactly the pre-TOC shape,
+     * so short articles ship not one byte of navigation chrome.
+     */
+    #[Test]
+    public function blogArticleOmitsTheTocAsideWithoutHeadings(): void
+    {
+        $html = (new MonoTheme())->blogArticle(self::articleContext([]));
+
+        $this->assertStringNotContainsString('mo-toc', $html);
+        $this->assertStringNotContainsString('mo-article-layout', $html);
+        $this->assertStringContainsString('<article class="mo-card">', $html);
+    }
+
+    /**
+     * TOC text and anchors are escaped — a heading is author input, and
+     * `"#` in an href is a breakout waiting for a quote.
+     */
+    #[Test]
+    public function blogArticleEscapesTocTextAndAnchors(): void
+    {
+        $html = (new MonoTheme())->blogArticle(self::articleContext([
+            ['level' => 2, 'text' => 'A & B <script>', 'anchor' => 'a-"b'],
+            ['level' => 2, 'text' => '', 'anchor' => 'empty-text'],
+            ['level' => 2, 'text' => 'No anchor', 'anchor' => ''],
+        ]));
+
+        $this->assertStringContainsString('A &amp; B &lt;script&gt;', $html);
+        $this->assertStringContainsString('href="#a-&quot;b"', $html);
+        $this->assertStringNotContainsString('#empty-text', $html, 'An entry with no text is a link to nowhere.');
+        $this->assertStringNotContainsString('No anchor', $html, 'An entry with no anchor cannot be jumped to.');
+    }
+
+    /**
+     * @param list<array{level: int, text: string, anchor: string}> $headings
+     */
+    private static function articleContext(array $headings): PageContext
+    {
+        return PageContext::forBlogArticle(
+            Request::create('GET', '/blog/toc-test'),
+            'mono',
+            'sk',
+            'toc-test',
+            'TOC test',
+            '<h2 id="getting-started">Getting started</h2>',
+            '',
+            '',
+            '',
+            '',
+            $headings,
+            [],
+        );
     }
 
     private static function headerWithItems(): string

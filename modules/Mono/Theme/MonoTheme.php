@@ -145,11 +145,64 @@ final class MonoTheme implements ThemeModule
 
     public function blogArticle(PageContext $context): string
     {
-        return '<section class="mo-features-section"><div class="mo-container">'
-            . '<article class="mo-card"><div class="mo-card__header">'
+        $article = '<article class="mo-card"><div class="mo-card__header">'
             . '<h1 class="mo-card__title">' . self::e($context->title) . '</h1>'
-            . '</div><div class="mo-card__body">' . $context->bodyHtml . '</div></article>'
+            . '</div><div class="mo-card__body">' . $context->bodyHtml . '</div></article>';
+        $toc = self::articleToc($context->headings);
+
+        if ('' === $toc) {
+            return '<section class="mo-features-section"><div class="mo-container">'
+                . $article
+                . '</div></section>';
+        }
+
+        return '<section class="mo-features-section"><div class="mo-container">'
+            . '<div class="mo-article-layout">' . $article . $toc . '</div>'
             . '</div></section>';
+    }
+
+    /**
+     * The "On this page" aside, rendered from the headings
+     * MarkdownRenderer::extractHeadings() collected — the same HTML the
+     * browser sees, so every anchor matches a heading id actually present.
+     * Server-side links only: no JS needed to jump, and Mono ships none.
+     * The data-toc-link / data-heading opt-ins mirror the shared scrollspy
+     * contract, so a future Mono scrollspy can hook in without new markup.
+     * '' when the article has no h2/h3 — without headings there is nothing
+     * to navigate, and an empty aside would ship a labelled nav to nowhere.
+     *
+     * @param list<array{level: int, text: string, anchor: string}> $headings
+     */
+    private static function articleToc(array $headings): string
+    {
+        $items = '';
+
+        foreach ($headings as $heading) {
+            if (!is_array($heading)) {
+                continue;
+            }
+
+            $anchor = $heading['anchor'] ?? '';
+            $text = $heading['text'] ?? '';
+
+            if (!is_string($anchor) || '' === $anchor || !is_string($text) || '' === trim($text)) {
+                continue;
+            }
+
+            $itemClass = (3 === ($heading['level'] ?? 0)) ? ' mo-toc__item--sub' : '';
+            $items .= '<li class="mo-toc__item' . $itemClass . '">'
+                . '<a class="mo-toc__link" data-toc-link data-heading="' . self::e($anchor) . '"'
+                . ' href="#' . self::e($anchor) . '">' . self::e($text) . '</a></li>';
+        }
+
+        if ('' === $items) {
+            return '';
+        }
+
+        return '<aside class="mo-toc"><nav class="mo-toc__nav" aria-label="On this page">'
+            . '<p class="mo-toc__title">On this page</p>'
+            . '<ul class="mo-toc__list">' . $items . '</ul>'
+            . '</nav></aside>';
     }
 
     public function blogTags(PageContext $context): string
