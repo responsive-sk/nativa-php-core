@@ -178,9 +178,18 @@ final class MonoThemeTest extends TestCase
         $header = self::headerWithItems();
 
         $this->assertStringContainsString('id="dev-theme-switcher"', $header);
+        $this->assertStringContainsString('id="dev-variant-switcher-2"', $header);
         $this->assertStringContainsString('data-variant-toggle="ember"', $header);
         $this->assertStringContainsString('data-variant-toggle="glacier"', $header);
         $this->assertStringContainsString('aria-pressed="false"', $header, 'Static markup cannot know the stored choice — the tracker syncs on load.');
+
+        $toggle = (int) strpos($header, 'data-theme-toggle');
+        $ember = (int) strpos($header, 'id="dev-theme-switcher"');
+        $glacier = (int) strpos($header, 'id="dev-variant-switcher-2"');
+        $meatball = (int) strpos($header, 'mo-navbar__toggle-icon--meatball');
+        $this->assertLessThan($ember, $toggle, 'Upstream order: dark/light toggle first, then the variant buttons.');
+        $this->assertLessThan($glacier, $ember, 'Ember keeps the upstream id, so it stays the first variant.');
+        $this->assertLessThan($meatball, $glacier, 'The meatball stays the final control — the variant buttons sit before it.');
 
         $css = InlineCss::file('Modules/Mono/assets/critical/mo-variants.css');
 

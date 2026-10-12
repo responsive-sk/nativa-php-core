@@ -244,5 +244,10 @@ buttons are inert and the page stays in the default palette.
 
 Verified over CDP against the running server: click → `data-variant="ember"`
 with `--brand-gold: #ff7a1a` computed, `aria-pressed` synced, reload restores
-pre-paint, second click clears. `MonoThemeTest` pins the ids, the stylesheet
-selectors, and the init-script restore.
+pre-paint, second click clears. `MonoThemeTest` pins the ids, the button
+order, the stylesheet selectors, and the init-script restore. A stale stored
+value is ignored by both restores (pre-paint and tracker agree on default),
+and the variants re-skin light mode too (`html[data-variant]` outranks
+`[data-theme=light]`) — measured in headless over the light default
+(`rgb(255, 255, 255)`): ember body `rgb(12, 7, 5)`, glacier body
+`rgb(6, 10, 14)`.

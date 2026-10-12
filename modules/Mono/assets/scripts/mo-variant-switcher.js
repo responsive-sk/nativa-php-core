@@ -58,11 +58,18 @@
 
   function initMoVariantSwitcher() {
     var buttons = document.querySelectorAll('[data-variant-toggle]');
+    var current = stored();
     var i;
 
     if (0 === buttons.length) return;
 
-    paint(buttons, stored());
+    // A stale stored value must never reskin the page — the pre-paint
+    // restore ignores unknowns the same way, so both agree on default.
+    if ('ember' !== current && 'glacier' !== current) {
+      current = null;
+    }
+
+    paint(buttons, current);
 
     for (i = 0; i < buttons.length; i++) {
       buttons[i].addEventListener('click', function () {
