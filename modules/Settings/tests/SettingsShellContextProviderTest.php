@@ -75,15 +75,20 @@ final class SettingsShellContextProviderTest extends TestCase
 
     protected function tearDown(): void
     {
-        putenv('DB_CONFIG');
-        DatabaseConnectionManager::resetInstance();
-        SettingsServices::reset();
+        // PHPUnit runs tearDown() even when setUp() skipped, and setUp()
+        // skips in a kernel-only tree — so this must not touch the module
+        // (or the tmp dir it never created) when Settings is not installed.
+        if (is_dir(APP_BASE_PATH . '/src/Modules/' . self::MODULE)) {
+            putenv('DB_CONFIG');
+            DatabaseConnectionManager::resetInstance();
+            SettingsServices::reset();
 
-        foreach (glob($this->tmpDir . '/*') ?: [] as $file) {
-            @unlink($file);
+            foreach (glob($this->tmpDir . '/*') ?: [] as $file) {
+                @unlink($file);
+            }
+
+            @rmdir($this->tmpDir);
         }
-
-        @rmdir($this->tmpDir);
 
         parent::tearDown();
     }
