@@ -7,6 +7,7 @@ namespace Modules\Griffe\Tests;
 use Modules\Core\Application\Services\View\InlineCss;
 use Modules\Core\Domain\ShellNavItem;
 use Modules\Core\Infrastructure\Http\Request;
+use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Core\Interfaces\HTTP\PageContext;
 use Modules\Core\Interfaces\HTTP\ShellContext;
 use Modules\Core\Interfaces\HTTP\ThemeRegistry;
@@ -132,17 +133,48 @@ final class GriffeThemeTest extends TestCase
         $this->assertStringContainsString('data-gr-autoplay="6000"', $html);
     }
 
+    /**
+     * The kernel HomepageAction passes no articles (no Blog import by explicit
+     * contract), so the theme falls back to the latest published ones itself —
+     * guarded: without Blog the hero stands alone, exactly as before. The
+     * expectation is computed from the same source the theme reads, so the
+     * test holds whatever storage publishes (including nothing).
+     */
     #[Test]
-    public function anEmptyHomepageStillRendersTheHeroAlone(): void
+    public function homepageWithoutPassedArticlesFallsBackToPublishedOnes(): void
     {
-        $context = PageContext::forHomepage(Request::create('GET', '/'), 'griffe', 'en');
+        $facade = 'Modules\\Blog\\Application\\BlogServices';
+
+        $locale = ContentServices::mapper()->defaultLocale();
+        $context = PageContext::forHomepage(Request::create('GET', '/'), 'griffe', $locale);
 
         $html = self::bodyOf((new GriffeTheme())->homepage($context));
 
-        $this->assertSame(1, substr_count($html, '<li class="gr-slide'), 'The hero slide renders with no articles.');
-        $this->assertStringNotContainsString('gr-slider__pag', $html, 'No pagination for a single slide.');
-        $this->assertStringNotContainsString('gr-slider__arrow', $html, 'No arrows for a single slide.');
-        $this->assertStringContainsString('Nothing published yet.', $html);
+        if (!class_exists($facade)) {
+            $this->assertSame(1, substr_count($html, '<li class="gr-slide'), 'The hero slide renders with no articles.');
+            $this->assertStringNotContainsString('gr-slider__pag', $html, 'No pagination for a single slide.');
+            $this->assertStringNotContainsString('gr-slider__arrow', $html, 'No arrows for a single slide.');
+            $this->assertStringContainsString('Nothing published yet.', $html);
+
+            return;
+        }
+
+        $expected = $facade::articles()->latestCards(6, $locale);
+
+        $this->assertSame(1 + count($expected), substr_count($html, '<li class="gr-slide'), 'Hero slide plus one case slide per published article.');
+
+        if ([] === $expected) {
+            $this->assertStringContainsString('Nothing published yet.', $html);
+
+            return;
+        }
+
+        foreach ($expected as $card) {
+            $this->assertStringContainsString('/blog/' . $card['slug'], $html);
+            $this->assertStringContainsString($card['image'], $html, 'Selected work is illustrated — every fallback article ships its cover.');
+        }
+
+        $this->assertStringContainsString('gr-case__img', $html, 'The grid cards carry illustrations, not just headlines.');
     }
 
     #[Test]

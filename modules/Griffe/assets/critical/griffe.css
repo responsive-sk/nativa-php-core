@@ -356,6 +356,7 @@
 
 .gr-case:hover { border-color: var(--gr-accent); }
 
+.gr-case__img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: calc(var(--gr-radius) - 6px); }
 .gr-case__client { font-size: 1.4rem; margin: 0; letter-spacing: -.01em; }
 .gr-case__service { color: var(--gr-muted); margin: 0; flex: 1; }
 .gr-case__more { color: var(--gr-accent); font-weight: 700; text-decoration: none; }

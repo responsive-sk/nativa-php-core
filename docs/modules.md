@@ -252,8 +252,15 @@ state from JS — the stylesheet never hides text on its own).
   `@media` and `.tok-*` intact;
 - the shipped `gr-slider.js` proven in Chromium against a grafted 2-slide DOM
   (verbatim server markup): goes live, pagination click activates slide 2,
-  autoplay wraps — the kernel homepage passes no articles, so the live tree
-  honestly renders the hero alone until a richer homepage exists.
+  autoplay wraps;
+- Selected work is illustrated: the kernel HomepageAction passes no articles
+  (no Blog import by explicit contract), so the theme falls back to the
+  latest published ones itself — `class_exists`-guarded, empty when Blog is
+  absent, logged on failure. Case slides carry full-bleed covers, grid cards
+  carry `gr-case__img` thumbnails; covers resolve locally when
+  `storage/blog-images/` holds generated SVGs, else the established
+  Cloudinary pool fallback. Live tree: hero + 2 case slides, pagination,
+  autoplay wrap, every illustration loaded (CDP, 6/6).
 
 The slice carries the same one-question fixture provider (`theme()` →
 `griffe`). The NEVER-two-fixtures rule now spans three themes — and the

@@ -141,6 +141,10 @@ final class GriffeTheme implements ThemeModule
     public function homepage(PageContext $context): string
     {
         $articles = [] !== $context->latestArticles ? $context->latestArticles : $context->articles;
+
+        if ([] === $articles) {
+            $articles = self::latestFallback($context->locale);
+        }
         $slides = $this->heroSlide($context) . $this->caseSlides($context, $articles);
         $count = substr_count($slides, '<li class="gr-slide');
 
@@ -304,6 +308,46 @@ final class GriffeTheme implements ThemeModule
     }
 
     /**
+     * Latest published articles when the action passed none. The kernel
+     * HomepageAction carries no Blog import by explicit contract, so it never
+     * passes any — without this fallback the Selected-work section would stay
+     * empty on every tree that actually publishes. Guarded by class_exists:
+     * a tree without Blog renders the hero alone, exactly as before. A
+     * failure here degrades to empty, never to a white homepage — and it is
+     * logged, so the silence stays visible.
+     *
+     * @return list<object>
+     */
+    private static function latestFallback(string $locale): array
+    {
+        $facade = 'Modules\\Blog\\Application\\BlogServices';
+
+        if (!class_exists($facade)) {
+            return [];
+        }
+
+        try {
+            $cards = $facade::articles()->latestCards(6, $locale);
+        } catch (\Throwable $e) {
+            error_log('[GriffeTheme] latest fallback failed: ' . $e->getMessage());
+
+            return [];
+        }
+
+        return array_map(static fn (array $card): object => (object) $card, $cards);
+    }
+
+    private static function caseImg(?string $src, string $alt): string
+    {
+        if (null === $src || '' === $src) {
+            return '';
+        }
+
+        return '<img class="gr-case__img" loading="lazy" src="' . self::e($src) . '"'
+            . ' alt="' . self::e($alt) . '">';
+    }
+
+    /**
      * Slug + title are required; an image is opportunistic (`image`, `cover`
      * or `coverImage` when the producer carries one) — still no import, still
      * no coupling, just one more optional field off the same shape.
@@ -359,6 +403,7 @@ final class GriffeTheme implements ThemeModule
 
         foreach ($pairs as $pair) {
             $cards .= '<article class="gr-case">'
+                . self::caseImg($pair['image'], $pair['title'])
                 . '<h3 class="gr-case__client">' . self::e($pair['title']) . '</h3>'
                 . '<p class="gr-case__service">' . self::e($service) . '</p>'
                 . '<a class="gr-case__more" href="/blog/' . self::e($pair['slug']) . '">Read More →</a>'
