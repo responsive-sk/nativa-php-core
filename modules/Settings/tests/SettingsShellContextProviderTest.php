@@ -4,9 +4,13 @@ declare(strict_types = 1);
 
 namespace Modules\Settings\Tests;
 
+use Modules\Core\Application\Services\ShellContextProviderRegistry;
 use Modules\Core\Domain\ShellNavItem;
+use Modules\Core\Interfaces\HTTP\ThemeRegistry;
+use Modules\Core\Interfaces\HTTP\ThemeResolver;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Settings\Infrastructure\Persistence\Migrations\SettingsDatabaseMigrator;
+use Modules\Settings\Infrastructure\Persistence\Repositories\SettingsRepository;
 use Modules\Settings\Interfaces\HTTP\SettingsServices;
 use Modules\Settings\Interfaces\HTTP\SettingsShellContextProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -213,15 +217,104 @@ final class SettingsShellContextProviderTest extends TestCase
     }
 
     #[Test]
-    public function theProviderAnswersTheMenuAndAbstainsFromEverythingElse(): void
+    public function theProviderAnswersTheMenuAndAbstainsFromEverythingButTheStoredTheme(): void
     {
         $provider = new SettingsShellContextProvider();
 
         $this->assertNull($provider->siteName(), 'A theme fixture answers the name; a second answer is a second source.');
-        $this->assertNull($provider->theme());
+        // Narrowed, not deleted: the admin theme vote REQUIRES theme() to answer
+        // a valid stored value (fix-settings-theme-switch). The seed stores
+        // `kernel`, so the seeded answer is the kernel theme — not null.
+        $this->assertSame(
+            ThemeResolver::KERNEL_THEME,
+            $provider->theme(),
+            'The migrator seeds theme=kernel; the provider must echo the stored value.',
+        );
         $this->assertNull($provider->defaultLocale());
         $this->assertNull($provider->htmlLang());
         $this->assertSame([], $provider->languages());
+    }
+
+    #[Test]
+    public function aStoredRegistryThemeIsAnswered(): void
+    {
+        $names = array_keys(ThemeRegistry::all());
+
+        if ([] === $names) {
+            $this->markTestSkipped('No module-carried theme installed — nothing resolvable beyond the whitelist.');
+        }
+
+        $this->storeTheme($names[0]);
+
+        $this->assertSame($names[0], (new SettingsShellContextProvider())->theme());
+    }
+
+    #[Test]
+    public function aStoredGarbageThemeAbstains(): void
+    {
+        $this->storeTheme('no-such-theme');
+
+        $this->assertNull(
+            (new SettingsShellContextProvider())->theme(),
+            'A stale stored name (theme module removed) must keep the fixture/kernel'
+            . ' degradation instead of pre-empting it with a name nothing can render.',
+        );
+    }
+
+    #[Test]
+    public function aMissingThemeKeyAbstains(): void
+    {
+        $this->pdo->prepare('DELETE FROM settings WHERE setting_key = :key')->execute([':key' => 'theme']);
+        SettingsServices::reset();
+
+        $this->assertNull((new SettingsShellContextProvider())->theme());
+    }
+
+    #[Test]
+    public function resolvePathFollowsTheStoredTheme(): void
+    {
+        $stored = ThemeResolver::KERNEL_THEME;
+        $names = array_keys(ThemeRegistry::all());
+
+        if ([] !== $names) {
+            $stored = $names[0];
+        }
+
+        $this->storeTheme($stored);
+        ShellContextProviderRegistry::reset();
+
+        $this->assertSame(
+            $stored,
+            ThemeResolver::resolvePath('/'),
+            'The mechanism proof: stored theme → registry vote → resolved theme.',
+        );
+    }
+
+    #[Test]
+    public function theStoredThemeVoteSortsBeforeFixtureVotes(): void
+    {
+        ShellContextProviderRegistry::reset();
+
+        $settingsIndex = null;
+
+        foreach (ShellContextProviderRegistry::all() as $index => $provider) {
+            if ($provider instanceof SettingsShellContextProvider) {
+                $settingsIndex = $index;
+
+                continue;
+            }
+
+            if (null !== $provider->theme()) {
+                $this->assertNotNull($settingsIndex, 'A theme vote sorts before the Settings provider.');
+                $this->assertLessThan(
+                    $index,
+                    $settingsIndex,
+                    sprintf('The %s vote would beat the admin choice on discovery order.', $provider::class),
+                );
+            }
+        }
+
+        $this->assertNotNull($settingsIndex, 'The Settings provider must be discovered.');
     }
 
     /**
@@ -288,6 +381,16 @@ final class SettingsShellContextProviderTest extends TestCase
         $_SESSION = [];
         session_destroy();
         unset($_COOKIE[session_name()]);
+    }
+
+    /**
+     * Write the `theme` key the way `saveSite()` does, then drop the cached
+     * service so the provider reads the new row, not the old snapshot.
+     */
+    private function storeTheme(string $value): void
+    {
+        (new SettingsRepository($this->pdo))->set('theme', $value, 'design', false);
+        SettingsServices::reset();
     }
 
     private function insertMenuItem(string $label, string $href, string $location, int $sort, ?string $parentLabel = null): void
