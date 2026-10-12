@@ -22,10 +22,10 @@ use Modules\Settings\Application\DTOs\MenuItemDTO;
  * Measured on the Mono theme, whose navbar has no links of its own to fall back
  * on: `mo-navbar__menu` was absent from the document entirely.
  *
- * Only `navigation()` is implemented, and that is deliberate. The same module
- * owns the site name and the active theme, but a theme slice ships a fixture
- * provider that answers those, and a second answer would be a second source.
- * This provider says the one thing nothing else in the tree says.
+ * Besides `navigation()` this provider also answers the two stored admin
+ * choices nothing else in the tree says: the public `theme()` and the
+ * default locale (`defaultLocale()` + `htmlLang()`). The site name stays
+ * unanswered by design — a second answer would be a second source.
  *
  * ## What a visitor may see
  *
@@ -101,9 +101,25 @@ final class SettingsShellContextProvider implements ShellContextProvider
         return null;
     }
 
+    /**
+     * The stored default locale — the vote that makes `<html lang>` follow
+     * the admin's Locale field instead of the kernel's 'en' fallback.
+     *
+     * Only a well-formed ll_CC code is answered (the admin field is free
+     * text); anything else abstains, keeping the kernel degradation. No
+     * Locales import on purpose: availability stays the Locales module's
+     * answer (LocaleService::default), this port only echoes a sane stored
+     * value — the same split as the theme vote above it.
+     */
     public function defaultLocale(): ?string
     {
-        return null;
+        $stored = SettingsServices::settings()->get('locale');
+
+        if (!is_string($stored) || 1 !== preg_match('/^[a-z]{2}_[A-Z]{2}$/', $stored)) {
+            return null;
+        }
+
+        return $stored;
     }
 
     /**
@@ -114,9 +130,19 @@ final class SettingsShellContextProvider implements ShellContextProvider
         return [];
     }
 
+    /**
+     * The language part of the voted default locale ('sk_SK' → 'sk') —
+     * null when there is no vote, so the kernel fallback still applies.
+     */
     public function htmlLang(): ?string
     {
-        return null;
+        $default = $this->defaultLocale();
+
+        if (null === $default) {
+            return null;
+        }
+
+        return explode('_', $default)[0];
     }
 
     /**
