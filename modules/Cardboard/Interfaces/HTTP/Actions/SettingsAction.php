@@ -12,6 +12,7 @@ use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
+use Modules\Core\Interfaces\HTTP\ThemeRegistry;
 use Modules\Core\Interfaces\HTTP\ThemeResolver;
 use Modules\Settings\Application\DTOs\MenuItemDTO;
 
@@ -105,9 +106,39 @@ final class SettingsAction
     }
 
     /**
+     * Themes the admin may pick — the kernel whitelist plus every discovered
+     * module-carried theme. The single source both `themeSelect()` and the
+     * `saveSite()` validation read, so the form and the save path cannot drift
+     * apart: a theme the admin can pick but the save path rejects would look
+     * like a save that silently did nothing.
+     *
+     * Public and static so the rule is unit-testable without the request/auth
+     * stack `saveSite()` needs.
+     *
+     * @return list<string>
+     */
+    public static function selectableThemes(): array
+    {
+        $discovered = array_keys(ThemeRegistry::all());
+        sort($discovered);
+
+        return array_values(array_unique([...ThemeResolver::PUBLIC_WHITELIST, ...$discovered]));
+    }
+
+    /**
+     * The `saveSite()` acceptance rule, extracted so it is unit-testable
+     * without the request/auth stack — and so the form and the save path
+     * share more than a comment.
+     */
+    public static function isSelectableTheme(string $theme): bool
+    {
+        return in_array($theme, self::selectableThemes(), true);
+    }
+
+    /**
      * The public-theme `<select>` (ADR-0002).
      *
-     * Options render from the resolver whitelist, so the form and the validation
+     * Options render from `selectableThemes()`, so the form and the validation
      * in `saveSite()` cannot drift apart — a theme the admin can pick but the
      * save path rejects would look like a save that silently did nothing.
      *
@@ -119,9 +150,9 @@ final class SettingsAction
         $current = is_string($raw) ? $raw : ThemeResolver::PUBLIC_THEME;
         $options = '';
 
-        foreach (ThemeResolver::PUBLIC_WHITELIST as $whitelisted) {
-            $selected = $whitelisted === $current ? ' selected' : '';
-            $options .= '<option value="' . $whitelisted . '"' . $selected . '>' . ucfirst($whitelisted) . '</option>';
+        foreach (self::selectableThemes() as $selectable) {
+            $selected = $selectable === $current ? ' selected' : '';
+            $options .= '<option value="' . $selectable . '"' . $selected . '>' . ucfirst($selectable) . '</option>';
         }
 
         return '<select id="theme" name="theme">' . $options . '</select>';
@@ -295,12 +326,13 @@ final class SettingsAction
                 $layout = is_string($value) ? $value : 'sidebar';
                 $settings->set($key, in_array($layout, ['sidebar', 'compact'], true) ? $layout : 'sidebar', $group, false);
             } elseif ('theme' === $key) {
-                // ADR-0002: whitelist-validated public theme; an off-whitelist
-                // value falls back to the default instead of being stored.
+                // ADR-0002: the posted value must be one `themeSelect()` could
+                // have offered (`selectableThemes()`); anything else falls back
+                // to the default instead of being stored.
                 $theme = is_string($value) ? $value : ThemeResolver::PUBLIC_THEME;
                 $settings->set(
                     $key,
-                    in_array($theme, ThemeResolver::PUBLIC_WHITELIST, true) ? $theme : ThemeResolver::PUBLIC_THEME,
+                    self::isSelectableTheme($theme) ? $theme : ThemeResolver::PUBLIC_THEME,
                     $group,
                     false,
                 );
