@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace Modules\Griffe\Theme;
 
-use Modules\Core\Application\Services\View\InlineJs;
 use Modules\Core\Domain\ShellNavItem;
 use Modules\Core\Interfaces\HTTP\PageContext;
 use Modules\Core\Interfaces\HTTP\ShellContext;
@@ -107,27 +106,13 @@ final class GriffeTheme implements ThemeModule
 
     public function pageWrap(string $content): string
     {
-        // Each script is gated on the markup it drives (Mono idiom): pages
-        // without a slider ship no slider JS, pages without masked lines ship
-        // no reveal JS, pages without fences ship no highlighter.
-        $scripts = self::inlineScript('Modules/Griffe/assets/scripts/gr-header.js');
-
-        if (str_contains($content, 'gr-hero-slider')) {
-            $scripts .= self::inlineScript('Modules/Griffe/assets/scripts/gr-slider.js');
-        }
-
-        if (str_contains($content, 'gr-anim')) {
-            $scripts .= self::inlineScript('Modules/Griffe/assets/scripts/gr-reveal.js');
-        }
-
-        if (str_contains($content, 'language-')) {
-            $scripts .= self::inlineScript('Modules/Griffe/assets/scripts/gr-code-highlight.js');
-        }
-
+        // No inline scripts here: the four behaviours this wrap used to gate
+        // per surface (header, slider, reveal, highlight) ship in the frozen
+        // `griffe` bundle FrontendLayout defers from the manifest. Each init
+        // self-gates on its markup, so a page without a slider runs nothing.
         return '<main class="gr-main">' . "\n"
             . '    ' . $content . "\n"
-            . '</main>' . "\n"
-            . $scripts;
+            . '</main>' . "\n";
     }
 
     /**
@@ -792,21 +777,6 @@ final class GriffeTheme implements ThemeModule
         }
 
         return '<div class="gr-footer__links">' . $links . '</div>';
-    }
-
-    /**
-     * Inline a vendored script with the CSP nonce placeholder, '' when the
-     * file is absent (a theme must never fatal on a missing asset).
-     */
-    private static function inlineScript(string $srcRelative): string
-    {
-        $js = InlineJs::file($srcRelative);
-
-        if ('' === $js) {
-            return '';
-        }
-
-        return '<script nonce="__CSP_NONCE_PLACEHOLDER__">' . $js . '</script>' . "\n";
     }
 
     private static function e(mixed $value): string

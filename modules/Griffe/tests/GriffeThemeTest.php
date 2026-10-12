@@ -8,6 +8,7 @@ use Modules\Core\Application\Services\View\InlineCss;
 use Modules\Core\Domain\ShellNavItem;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\PageContext;
 use Modules\Core\Interfaces\HTTP\ShellContext;
 use Modules\Core\Interfaces\HTTP\ThemeRegistry;
@@ -17,15 +18,16 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * GriffeThemeTest — the checkbox hamburger's DOM order, the slider contract,
- * and the script gates that keep pages lean.
+ * and the frozen bundle the behaviours ship in.
  *
  * The mobile menu opens through `:checked`, which only works while the input
  * precedes both the menu and the label (one `~` selector, no `:has()`).
  * Nothing in the stylesheet enforces that order, so this file does.
  *
- * The slider counts are asserted on the markup BEFORE the first `<script`:
- * pageWrap inlines the slider/reveal/highlight twins, whose sources name the
- * same classes — counting over the whole document would count the scripts.
+ * pageWrap ships a bare `<main>`: the header/slider/reveal/highlight twins
+ * moved into the frozen `griffe` bundle FrontendLayout defers, each init
+ * self-gating on its markup. The slider counts still cut at the first
+ * `<script` — belt and braces against an inline script sneaking back in.
  */
 final class GriffeThemeTest extends TestCase
 {
@@ -230,36 +232,35 @@ final class GriffeThemeTest extends TestCase
     }
 
     #[Test]
-    public function scriptsAreGatedOnTheMarkupTheyDrive(): void
+    public function pageWrapShipsNoInlineScripts(): void
     {
         // Surfaces return bare sections; the single pageWrap (FrontendLayout's)
-        // is what injects scripts — assert on the wrapped document.
+        // wraps them in a bare <main> — the frozen bundle owns every behaviour.
         $theme = new GriffeTheme();
         $home = $theme->pageWrap($theme->homepage(self::homepageContext()));
 
-        $this->assertStringContainsString('gr-header.js', $home, 'The header always renders.');
-        $this->assertStringContainsString('gr-slider.js', $home);
-        $this->assertStringContainsString('gr-reveal.js', $home);
         $this->assertSame(1, substr_count($home, '<main class="gr-main">'), 'One wrap, one <main> — no nested mains.');
-        $this->assertSame(1, substr_count($home, 'gr-slider.js'), 'One wrap, one slider script — never twice.');
+        $this->assertStringNotContainsString('<script', $home, 'No inline scripts — header, slider and reveal run from the bundle.');
+        $this->assertStringNotContainsString('gr-slider.js', $home);
 
-        $plain = $theme->pageWrap($theme->blogIndex(self::indexContext([])));
-
-        $this->assertStringContainsString('gr-header.js', $plain);
-        $this->assertStringNotContainsString('gr-slider.js', $plain, 'No slider markup, no slider JS.');
-        $this->assertStringNotContainsString('gr-reveal.js', $plain, 'No masked lines, no reveal JS.');
-        $this->assertStringNotContainsString('gr-code-highlight.js', $plain, 'No fences, no highlighter JS.');
-    }
-
-    #[Test]
-    public function fencedBlocksPullInTheHighlighter(): void
-    {
-        $theme = new GriffeTheme();
-        $html = $theme->pageWrap($theme->blogArticle(self::articleContext(
+        $article = $theme->pageWrap($theme->blogArticle(self::articleContext(
             '<pre><code class="language-php">echo 1;</code></pre>',
         )));
 
-        $this->assertStringContainsString('gr-code-highlight.js', $html);
+        $this->assertStringNotContainsString('<script', $article, 'Even fenced pages ship no inline highlighter.');
+    }
+
+    #[Test]
+    public function renderedDocumentDefersTheFrozenBundle(): void
+    {
+        $html = FrontendLayout::render('Test', '<p>x</p>', theme: self::THEME);
+
+        $this->assertStringContainsString(
+            '<script src="/dist/griffe/',
+            $html,
+            'The document must defer the frozen bundle — without it griffe pages keep the critical CSS but lose every behaviour.',
+        );
+        $this->assertStringContainsString('defer></script>', $html, 'The bundle script stays deferred, never render-blocking.');
     }
 
     #[Test]
