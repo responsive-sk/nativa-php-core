@@ -179,7 +179,7 @@
 .gr-slides { list-style: none; margin: 0; padding: 0; }
 
 /* No-JS: slides stack, all readable, controls hidden (see --live below). */
-.gr-slide { padding: clamp(3rem, 9vh, 6rem) 0; border-top: 1px solid var(--gr-line); }
+.gr-slide { position: relative; padding: clamp(3rem, 9vh, 6rem) 0; border-top: 1px solid var(--gr-line); }
 .gr-slide:first-child { border-top: 0; }
 
 .gr-slider--live .gr-slide {
@@ -203,6 +203,30 @@
     transition: opacity .6s var(--gr-ease), transform .6s var(--gr-ease);
     position: relative;
 }
+
+.gr-slide { background: var(--gr-slide-bg, transparent); }
+[data-theme="dark"] .gr-slide { background: var(--gr-slide-bg-dark, var(--gr-slide-bg, transparent)); }
+
+/* Full-bleed slide imagery (reference slides are photographic): the <img>
+   covers the stage, a legibility shade sits above it, content on top. No
+   image → the per-slide tint (or paper) carries the slide alone. */
+.gr-slide__bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+}
+
+.gr-slide__shade {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(100deg, color-mix(in srgb, var(--gr-paper) 82%, transparent) 20%, transparent 65%);
+}
+
+.gr-slide .gr-container { position: relative; z-index: 2; }
 
 .gr-slide__kicker {
     color: var(--gr-accent);

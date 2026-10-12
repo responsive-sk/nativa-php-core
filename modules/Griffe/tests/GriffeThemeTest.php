@@ -230,6 +230,36 @@ final class GriffeThemeTest extends TestCase
     }
 
     #[Test]
+    public function slidesCarryTintsAndImageryWhenProvided(): void
+    {
+        $imaged = self::article('pic', 'Pictured Client');
+        $imaged->image = '/img/case.jpg';
+
+        $context = PageContext::forHomepage(
+            Request::create('GET', '/'),
+            'griffe',
+            'en',
+            copy: ['title' => 'Hero'],
+            blogHref: '/blog',
+            heroSrc: '/img/hero.jpg',
+            heroSrcset: '/img/hero-800.jpg 800w',
+            latestArticles: [$imaged, self::article('plain', 'Plain Client')],
+        );
+
+        $html = self::bodyOf((new GriffeTheme())->homepage($context));
+
+        $this->assertStringContainsString('src="/img/hero.jpg"', $html);
+        $this->assertStringContainsString('srcset="/img/hero-800.jpg 800w"', $html);
+        $this->assertStringContainsString('src="/img/case.jpg"', $html);
+        $this->assertStringContainsString('gr-slide__shade', $html, 'Imagery ships its legibility shade.');
+        $this->assertSame(3, substr_count($html, '--gr-slide-bg:'), 'Every slide carries its tint.');
+
+        $bare = self::bodyOf((new GriffeTheme())->homepage(self::homepageContext()));
+
+        $this->assertStringNotContainsString('gr-slide__bg', $bare, 'No source, no <img> — the tint carries the slide.');
+    }
+
+    #[Test]
     public function untrustedCopyEscapes(): void
     {
         $context = PageContext::forHomepage(

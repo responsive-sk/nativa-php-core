@@ -154,15 +154,31 @@ final class GriffeTheme implements ThemeModule
     }
 
     /**
+     * Neutral per-slide tints, cycled (the reference tints every slide via
+     * `data-light`/`data-dark`; no action passes tints, so the theme owns a
+     * quiet rotation — colours stay deprioritised, photography stays optional).
+     *
+     * @var list<array{light: string, dark: string}>
+     */
+    private const array SLIDE_TINTS = [
+        ['light' => '#eef0f4', 'dark' => '#151a24'],
+        ['light' => '#f4efe8', 'dark' => '#1a1611'],
+        ['light' => '#e9f0ef', 'dark' => '#101a18'],
+        ['light' => '#f0eaf0', 'dark' => '#181420'],
+    ];
+
+    /**
      * @param array<array-key, mixed> $articles
      */
     private function caseSlides(PageContext $context, array $articles): string
     {
         $service = $context->copy['case_service'] ?? 'Case study';
         $html = '';
+        $i = 1;
 
         foreach (self::pairs($articles) as $pair) {
-            $html .= '<li class="gr-slide">'
+            $html .= '<li class="gr-slide"' . self::tint($i++) . '>'
+                . self::slideBg($pair['image'], $pair['title'])
                 . '<div class="gr-container">'
                 . '<p class="gr-slide__kicker">' . self::e($service) . '</p>'
                 . '<h2 class="gr-slide__title">' . self::revealLines($pair['title']) . '</h2>'
@@ -181,7 +197,8 @@ final class GriffeTheme implements ThemeModule
         $cta = $context->copy['cta'] ?? 'Discover more';
         $href = $context->blogHref ?? '/blog';
 
-        $html = '<li class="gr-slide gr-slide--active">'
+        $html = '<li class="gr-slide gr-slide--active"' . self::tint(0) . '>'
+            . self::slideBg($context->heroSrc, $title, $context->heroSrcset)
             . '<div class="gr-container">'
             . '<h1 class="gr-slide__title">' . self::revealLines($title) . '</h1>';
 
@@ -193,6 +210,37 @@ final class GriffeTheme implements ThemeModule
             . '<a class="gr-btn" href="' . self::e($href) . '">' . self::e($cta) . '</a>'
             . '</div>'
             . '</li>';
+    }
+
+    private static function tint(int $index): string
+    {
+        $tint = self::SLIDE_TINTS[$index % count(self::SLIDE_TINTS)];
+
+        return sprintf(
+            ' style="--gr-slide-bg: %s; --gr-slide-bg-dark: %s;"',
+            $tint['light'],
+            $tint['dark'],
+        );
+    }
+
+    /**
+     * Full-bleed slide image + legibility shade, '' when the action provides
+     * no source. `alt` carries the slide headline — a background with no
+     * `<img>` alternative is invisible to assistive tech.
+     */
+    private static function slideBg(?string $src, string $alt, ?string $srcset = null): string
+    {
+        if (null === $src || '' === $src) {
+            return '';
+        }
+
+        $set = null !== $srcset && '' !== $srcset
+            ? ' srcset="' . self::e($srcset) . '"'
+            : '';
+
+        return '<img class="gr-slide__bg" src="' . self::e($src) . '"' . $set
+            . ' alt="' . self::e($alt) . '">' . "\n"
+            . '<div class="gr-slide__shade" aria-hidden="true"></div>';
     }
 
     private function sliderPag(int $count): string
@@ -253,8 +301,12 @@ final class GriffeTheme implements ThemeModule
     }
 
     /**
+     * Slug + title are required; an image is opportunistic (`image`, `cover`
+     * or `coverImage` when the producer carries one) — still no import, still
+     * no coupling, just one more optional field off the same shape.
+     *
      * @param array<array-key, mixed> $articles
-     * @return list<array{slug: string, title: string}>
+     * @return list<array{slug: string, title: string, image: ?string}>
      */
     private static function pairs(array $articles): array
     {
@@ -270,7 +322,12 @@ final class GriffeTheme implements ThemeModule
             $title = $fields['title'] ?? null;
 
             if (is_string($slug) && is_string($title)) {
-                $pairs[] = ['slug' => $slug, 'title' => $title];
+                $image = $fields['image'] ?? $fields['cover'] ?? $fields['coverImage'] ?? null;
+                $pairs[] = [
+                    'slug' => $slug,
+                    'title' => $title,
+                    'image' => is_string($image) && '' !== $image ? $image : null,
+                ];
             }
         }
 
