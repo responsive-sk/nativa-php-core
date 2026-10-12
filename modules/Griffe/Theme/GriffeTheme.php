@@ -150,7 +150,10 @@ final class GriffeTheme implements ThemeModule
             . $this->sliderArrows($count)
             . '</section>';
 
-        return $this->pageWrap($slider . $this->caseGrid($context, $articles));
+        // No pageWrap here: FrontendLayout owns the single wrap (it calls
+        // pageWrap($content) itself) — wrapping here nests <main> and ships
+        // every gated script twice. Mono precedent, not Erik's.
+        return $slider . $this->caseGrid($context, $articles);
     }
 
     /**
@@ -367,17 +370,12 @@ final class GriffeTheme implements ThemeModule
 
     public function blogIndex(PageContext $context): string
     {
-        return $this->pageWrap(
-            self::section('Blog', $this->caseCards($context->articles) . self::pager($context)),
-        );
+        return self::section('Blog', $this->caseCards($context->articles) . self::pager($context));
     }
 
     public function blogSearch(PageContext $context): string
     {
-        // Task 4 owns the blog family.
-        return $this->pageWrap(
-            self::section('Search: ' . $context->query, self::links($context->results)),
-        );
+        return self::section('Search: ' . $context->query, self::links($context->results));
     }
 
     /**
@@ -419,9 +417,7 @@ final class GriffeTheme implements ThemeModule
             $article .= $toc;
         }
 
-        return $this->pageWrap(
-            '<section class="gr-cases"><div class="gr-container">' . $article . '</div></section>',
-        );
+        return '<section class="gr-cases"><div class="gr-container">' . $article . '</div></section>';
     }
 
     /**
@@ -467,20 +463,16 @@ final class GriffeTheme implements ThemeModule
     {
         $title = null !== $context->tag ? 'Tag: ' . $context->tag : 'Tags';
 
-        return $this->pageWrap(
-            self::section($title, self::cloud($context->tags, $context->counts, 'tag', $context->tag)
-                . self::links($context->articles)),
-        );
+        return self::section($title, self::cloud($context->tags, $context->counts, 'tag', $context->tag)
+            . self::links($context->articles));
     }
 
     public function blogCategories(PageContext $context): string
     {
         $title = null !== $context->category ? $context->category : 'Categories';
 
-        return $this->pageWrap(
-            self::section($title, self::cloud($context->categories, $context->counts, 'category', $context->category)
-                . self::links($context->articles)),
-        );
+        return self::section($title, self::cloud($context->categories, $context->counts, 'category', $context->category)
+            . self::links($context->articles));
     }
 
     /**
@@ -528,10 +520,8 @@ final class GriffeTheme implements ThemeModule
             $head .= '<p class="gr-article__meta">Member since ' . self::e($context->memberSince) . '</p>';
         }
 
-        return $this->pageWrap(
-            '<section class="gr-cases"><div class="gr-container">' . $head
-            . $this->caseCards($context->articles) . '</div></section>',
-        );
+        return '<section class="gr-cases"><div class="gr-container">' . $head
+            . $this->caseCards($context->articles) . '</div></section>';
     }
 
     public function errorContent(int $status, string $title, string $detail): string

@@ -156,13 +156,18 @@ final class GriffeThemeTest extends TestCase
     #[Test]
     public function scriptsAreGatedOnTheMarkupTheyDrive(): void
     {
-        $home = (new GriffeTheme())->homepage(self::homepageContext());
+        // Surfaces return bare sections; the single pageWrap (FrontendLayout's)
+        // is what injects scripts — assert on the wrapped document.
+        $theme = new GriffeTheme();
+        $home = $theme->pageWrap($theme->homepage(self::homepageContext()));
 
         $this->assertStringContainsString('gr-header.js', $home, 'The header always renders.');
         $this->assertStringContainsString('gr-slider.js', $home);
         $this->assertStringContainsString('gr-reveal.js', $home);
+        $this->assertSame(1, substr_count($home, '<main class="gr-main">'), 'One wrap, one <main> — no nested mains.');
+        $this->assertSame(1, substr_count($home, 'gr-slider.js'), 'One wrap, one slider script — never twice.');
 
-        $plain = (new GriffeTheme())->blogIndex(self::indexContext([]));
+        $plain = $theme->pageWrap($theme->blogIndex(self::indexContext([])));
 
         $this->assertStringContainsString('gr-header.js', $plain);
         $this->assertStringNotContainsString('gr-slider.js', $plain, 'No slider markup, no slider JS.');
@@ -173,9 +178,10 @@ final class GriffeThemeTest extends TestCase
     #[Test]
     public function fencedBlocksPullInTheHighlighter(): void
     {
-        $html = (new GriffeTheme())->blogArticle(self::articleContext(
+        $theme = new GriffeTheme();
+        $html = $theme->pageWrap($theme->blogArticle(self::articleContext(
             '<pre><code class="language-php">echo 1;</code></pre>',
-        ));
+        )));
 
         $this->assertStringContainsString('gr-code-highlight.js', $html);
     }
