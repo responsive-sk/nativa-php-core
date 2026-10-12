@@ -37,7 +37,12 @@ final class LocalesShellContextProviderTest extends TestCase
 
     protected function tearDown(): void
     {
-        LocalesServices::reset();
+        // PHPUnit runs tearDown() even when setUp() skipped, and setUp()
+        // skips in a kernel-only tree — so this must not touch the module
+        // when Locales is not installed (Settings precedent).
+        if (is_dir(APP_BASE_PATH . '/src/Modules/' . self::MODULE)) {
+            LocalesServices::reset();
+        }
 
         parent::tearDown();
     }
