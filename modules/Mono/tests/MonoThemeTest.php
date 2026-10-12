@@ -260,6 +260,26 @@ final class MonoThemeTest extends TestCase
         );
     }
 
+    /**
+     * The upstream navbar__actions carries a dark/light switcher next to the
+     * meatball — the vendored snapshot styles its icons, the shared layout
+     * handler owns the click, so the theme only has to render the button.
+     */
+    #[Test]
+    public function theNavbarActionsCarryTheThemeToggleBeforeTheMeatball(): void
+    {
+        $header = self::headerWithItems();
+
+        $this->assertStringContainsString('data-theme-toggle', $header, 'Without the opt-in the shared handler never wires the button.');
+        $this->assertStringContainsString('mo-theme-toggle__sun', $header);
+        $this->assertStringContainsString('mo-theme-toggle__moon', $header, 'Both icons ship; CSS shows one at a time.');
+        $this->assertStringContainsString('aria-label="Toggle theme"', $header);
+
+        $toggle = (int) strpos($header, 'data-theme-toggle');
+        $meatball = (int) strpos($header, 'mo-navbar__toggle-icon--meatball');
+        $this->assertLessThan($meatball, $toggle, 'Upstream order: theme switcher first, meatball last — the meatball stays the final control.');
+    }
+
     private static function headerWithItems(): string
     {
         $context = ShellContext::from(

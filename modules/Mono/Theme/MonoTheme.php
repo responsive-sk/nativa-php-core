@@ -68,6 +68,7 @@ final class MonoTheme implements ThemeModule
             . '<a class="mo-navbar__brand" href="/">' . self::e($context->siteName) . '</a>'
             . $this->menu($context->headerNav)
             . '<div class="mo-navbar__actions">'
+            . self::themeToggle()
             . $this->menuToggleLabel($hasMenu)
             . $this->localeLinks($context)
             . '</div>'
@@ -357,6 +358,37 @@ final class MonoTheme implements ThemeModule
         }
 
         return '<input type="checkbox" id="mo-nav-toggle" class="mo-navbar__toggle-input" aria-label="Open navigation">';
+    }
+
+    /**
+     * The dark/light switcher, straight from the upstream navbar__actions
+     * (evan70.github.io/mono) with the mo- prefix: sun shows in dark mode,
+     * moon in light mode, both in the DOM and CSS showing one at a time.
+     *
+     * No Mono JS needed — the click is owned by the shared theme-toggle
+     * handler FrontendLayout inlines for every theme, which wires every
+     * [data-theme-toggle]. The pre-paint restore comes from the same place.
+     */
+    private static function themeToggle(): string
+    {
+        return '<button type="button" class="mo-icon-btn mo-theme-toggle" data-theme-toggle aria-label="Toggle theme">'
+            . '<svg class="mo-theme-toggle__sun" width="20" height="20" viewBox="0 0 24 24" fill="none"'
+            . ' stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            . '<circle cx="12" cy="12" r="5"></circle>'
+            . '<line x1="12" y1="1" x2="12" y2="3"></line>'
+            . '<line x1="12" y1="21" x2="12" y2="23"></line>'
+            . '<line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>'
+            . '<line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>'
+            . '<line x1="1" y1="12" x2="3" y2="12"></line>'
+            . '<line x1="21" y1="12" x2="23" y2="12"></line>'
+            . '<line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>'
+            . '<line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>'
+            . '</svg>'
+            . '<svg class="mo-theme-toggle__moon" width="20" height="20" viewBox="0 0 24 24" fill="none"'
+            . ' stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            . '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>'
+            . '</svg>'
+            . '</button>';
     }
 
     /**
