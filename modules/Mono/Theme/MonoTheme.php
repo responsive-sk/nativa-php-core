@@ -45,12 +45,49 @@ final class MonoTheme implements ThemeModule
      */
     public function criticalCss(): array
     {
-        return ['Modules/Mono/assets/critical/mono.css'];
+        return ['Modules/Mono/assets/critical/mono.css', 'Modules/Mono/assets/critical/mo-variants.css'];
     }
 
+    /**
+     * Pre-paint colour-mode resolution: the shared dark/light restore,
+     * verbatim, plus the persisted dev variant.
+     *
+     * Returning '' would keep the shared bytes exactly — but the variant
+     * must also apply before first paint, or the page flashes the default
+     * palette on every load. The override therefore reproduces the shared
+     * block and appends the variant restore; only Mono pages move.
+     */
     public function themeInitScript(): string
     {
-        return '';
+        return <<<'HTML'
+            <!-- Sync theme init — FOUC prevention: restore the persisted theme
+                 (or the OS preference) before first paint. Falls back to the
+                 dark default when neither is available (Chrome 70 baseline). -->
+            <script nonce="__CSP_NONCE_PLACEHOLDER__">
+                (function() {
+                    try {
+                        var theme = localStorage.getItem('nativa-theme');
+                        if (!theme) {
+                            theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                        }
+                        document.documentElement.setAttribute('data-theme', theme);
+                    } catch (e) {}
+                })();
+            </script>
+            <!-- Sync dev variant — same FOUC contract as the theme above:
+                 unknown values are ignored, so a stale stored variant can
+                 never leave the page unstyled. -->
+            <script nonce="__CSP_NONCE_PLACEHOLDER__">
+                (function() {
+                    try {
+                        var variant = localStorage.getItem('nativa-variant');
+                        if ('ember' === variant || 'glacier' === variant) {
+                            document.documentElement.setAttribute('data-variant', variant);
+                        }
+                    } catch (e) {}
+                })();
+            </script>
+            HTML;
     }
 
     public function prefix(): string
@@ -69,6 +106,8 @@ final class MonoTheme implements ThemeModule
             . $this->menu($context->headerNav)
             . '<div class="mo-navbar__actions">'
             . self::themeToggle()
+            . self::variantToggle('ember', 'dev-theme-switcher', 'Toggle Ember variant', self::flameIcon())
+            . self::variantToggle('glacier', 'dev-variant-switcher-2', 'Toggle Glacier variant', self::snowflakeIcon())
             . $this->menuToggleLabel($hasMenu)
             . $this->localeLinks($context)
             . '</div>'
@@ -90,7 +129,7 @@ final class MonoTheme implements ThemeModule
 
     public function pageWrap(string $content): string
     {
-        return '<main>' . "\n" . $content . '</main>' . "\n" . self::codeHighlight($content) . self::tocScrollspy($content);
+        return '<main>' . "\n" . $content . '</main>' . "\n" . self::codeHighlight($content) . self::tocScrollspy($content) . self::variantSwitcher();
     }
 
     /**
@@ -111,6 +150,25 @@ final class MonoTheme implements ThemeModule
         }
 
         $js = InlineJs::file('Modules/Mono/assets/scripts/mo-code-highlight.js');
+
+        if ('' === $js) {
+            return '';
+        }
+
+        return '<script nonce="__CSP_NONCE_PLACEHOLDER__">' . $js . '</script>' . "\n";
+    }
+
+    /**
+     * The dev variant switcher, inline on every page.
+     *
+     * Unlike the highlighter and the scrollspy this one cannot gate on
+     * content: its buttons live in the navbar, which precedes every page.
+     * ~1 kB of ES2015-safe JS, idle after wiring the two buttons — the
+     * price of the dev preview on every Mono response.
+     */
+    private static function variantSwitcher(): string
+    {
+        $js = InlineJs::file('Modules/Mono/assets/scripts/mo-variant-switcher.js');
 
         if ('' === $js) {
             return '';
@@ -389,6 +447,41 @@ final class MonoTheme implements ThemeModule
             . '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>'
             . '</svg>'
             . '</button>';
+    }
+
+    /**
+     * One dev variant button: the upstream dev-theme-switcher idiom
+     * (evan70.github.io/mono) with a custom Mono palette behind it.
+     *
+     * The first button keeps the upstream `id="dev-theme-switcher"`; both
+     * key off `data-variant-toggle`, which is what the vendored tracker
+     * reads. `aria-pressed` ships false and is synced from storage by the
+     * tracker on load — static markup cannot know the persisted choice.
+     */
+    private static function variantToggle(string $variant, string $id, string $label, string $icon): string
+    {
+        return '<button type="button" class="mo-icon-btn mo-navbar__dev-toggle"'
+            . ' id="' . $id . '" data-variant-toggle="' . $variant . '"'
+            . ' aria-pressed="false" aria-label="' . $label . '" title="' . $label . '">'
+            . $icon . '</button>';
+    }
+
+    private static function flameIcon(): string
+    {
+        return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"'
+            . ' stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            . '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.292 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>'
+            . '</svg>';
+    }
+
+    private static function snowflakeIcon(): string
+    {
+        return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"'
+            . ' stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            . '<line x1="12" y1="2" x2="12" y2="22"></line>'
+            . '<line x1="3.34" y1="7" x2="20.66" y2="17"></line>'
+            . '<line x1="20.66" y1="7" x2="3.34" y2="17"></line>'
+            . '</svg>';
     }
 
     /**

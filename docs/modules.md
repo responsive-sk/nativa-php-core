@@ -222,3 +222,32 @@ theme headers no longer name the at-rules even in prose. Re-measured:
 `:root{--brand-gold:#d4af37;` and the `body` rule present in the served
 `<style>`, zero comment residue. Erik's header had the same trap and survived
 by luck — its first semicolon fell inside the comment.
+
+### The dev variant switcher (measured 2026-10-12)
+
+The upstream `navbar__actions` carries dev-preview palette switchers
+(`dev-theme-switcher` toggling `neon.css`, a second button `fire-show.css`);
+both stylesheets are `:root` variable overrides only (~1–3 kB), which is what
+makes the port cheap. Mono keeps the shape but not the palettes: `ember`
+(warm orange on near-black) and `glacier` (ice-cyan) live in the vendored
+`mo-variants.css` as `html[data-variant]` blocks, the upstream webfont
+overrides dropped (no external dependencies — the system stack stays).
+
+The first button keeps the upstream `id="dev-theme-switcher"`; both key off
+`data-variant-toggle`, mutually exclusive, second click toggles off, choice
+persisted to `localStorage` (`nativa-variant`). The tracker is the same
+vendored no-build twin idiom as the highlighter and the scrollspy
+(`mo-variant-switcher.js`, ungated — its buttons precede every page), and the
+persisted variant restores pre-paint from `MonoTheme::themeInitScript()`, which
+reproduces the shared dark/light restore plus the variant. Without JS the
+buttons are inert and the page stays in the default palette.
+
+Verified over CDP against the running server: click → `data-variant="ember"`
+with `--brand-gold: #ff7a1a` computed, `aria-pressed` synced, reload restores
+pre-paint, second click clears. `MonoThemeTest` pins the ids, the button
+order, the stylesheet selectors, and the init-script restore. A stale stored
+value is ignored by both restores (pre-paint and tracker agree on default),
+and the variants re-skin light mode too (`html[data-variant]` outranks
+`[data-theme=light]`) — measured in headless over the light default
+(`rgb(255, 255, 255)`): ember body `rgb(12, 7, 5)`, glacier body
+`rgb(6, 10, 14)`.

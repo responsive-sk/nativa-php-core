@@ -7,6 +7,8 @@ namespace Modules\Settings\Interfaces\HTTP;
 use Modules\Core\Domain\Contracts\ShellContextProvider;
 use Modules\Core\Domain\ShellNavItem;
 use Modules\Core\Infrastructure\Attributes\AsShellContextProvider;
+use Modules\Core\Interfaces\HTTP\ThemeRegistry;
+use Modules\Core\Interfaces\HTTP\ThemeResolver;
 use Modules\Settings\Application\DTOs\MenuItemDTO;
 
 /**
@@ -59,7 +61,13 @@ use Modules\Settings\Application\DTOs\MenuItemDTO;
  * cannot see. `bin/cms migrate` — or the first request after a fresh checkout —
  * is what creates the table.
  */
-#[AsShellContextProvider(priority: 0)]
+// Priority -100 ("lower sorts first"): the stored theme vote must sort before
+// the theme fixtures' votes (`Mono`/`Erik` answer `theme()` at 0) while those
+// fixtures are installed — otherwise the admin's choice would lose to glob
+// order. A real deployment may drop the fixtures entirely; then this is the
+// only theme answer either way. The promotion also covers `navigation()`, of
+// which this provider is the sole non-empty answerer (fixtures return `[]`).
+#[AsShellContextProvider(priority: -100)]
 final class SettingsShellContextProvider implements ShellContextProvider
 {
     /** The admin surface the kernel protects; a visitor is never sent there. */
@@ -70,8 +78,26 @@ final class SettingsShellContextProvider implements ShellContextProvider
         return null;
     }
 
+    /**
+     * The stored public theme — the vote that makes the admin `<select>` real.
+     *
+     * Only a resolvable value is answered: the kernel whitelist or a discovered
+     * registry theme. A stale stored name (theme module removed) or an unset
+     * key answers `null`, keeping the fixture/kernel degradation instead of
+     * pre-empting it with a name nothing can render.
+     */
     public function theme(): ?string
     {
+        $stored = SettingsServices::settings()->get(ThemeResolver::THEME_SETTING);
+
+        if (!is_string($stored) || '' === $stored) {
+            return null;
+        }
+
+        if (in_array($stored, ThemeResolver::PUBLIC_WHITELIST, true) || ThemeRegistry::has($stored)) {
+            return $stored;
+        }
+
         return null;
     }
 

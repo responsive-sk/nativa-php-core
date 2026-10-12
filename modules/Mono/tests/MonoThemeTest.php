@@ -140,8 +140,9 @@ final class MonoThemeTest extends TestCase
 
     /**
      * The loader ships inline, and only where fenced blocks exist: pages
-     * without fences carry no JS at all, and the no-JS fallback stays the
-     * plain mono code block.
+     * without fences carry no highlighter, and the no-JS fallback stays the
+     * plain mono code block. (The variant switcher below rides on every
+     * pageWrap — its buttons live in the navbar, which precedes all pages.)
      */
     #[Test]
     public function pageWrapLoadsTheHighlighterOnlyWhereFencesExist(): void
@@ -156,7 +157,50 @@ final class MonoThemeTest extends TestCase
 
         $plain = $theme->pageWrap('<p>no code here</p>');
 
-        $this->assertStringNotContainsString('<script', $plain, 'A page without fences must ship no JS.');
+        $this->assertStringNotContainsString('initMoCodeHighlight', $plain, 'A page without fences must ship no highlighter.');
+        $this->assertStringContainsString('initMoVariantSwitcher', $plain, 'The navbar switcher has no content gate — its buttons precede every page.');
+    }
+
+    /**
+     * The dev variant switcher: upstream-ids, palettes in the stylesheet,
+     * pre-paint restore in the init script.
+     */
+    #[Test]
+    public function pageWrapLoadsTheVariantSwitcherWithUpstreamIds(): void
+    {
+        $theme = new MonoTheme();
+
+        $html = $theme->pageWrap('<p>any page</p>');
+
+        $this->assertStringContainsString('initMoVariantSwitcher', $html);
+        $this->assertStringNotContainsString('initMoTocScrollspy', $html, 'The scrollspy keeps its TOC gate — only the switcher is ungated.');
+
+        $header = self::headerWithItems();
+
+        $this->assertStringContainsString('id="dev-theme-switcher"', $header);
+        $this->assertStringContainsString('id="dev-variant-switcher-2"', $header);
+        $this->assertStringContainsString('data-variant-toggle="ember"', $header);
+        $this->assertStringContainsString('data-variant-toggle="glacier"', $header);
+        $this->assertStringContainsString('aria-pressed="false"', $header, 'Static markup cannot know the stored choice — the tracker syncs on load.');
+
+        $toggle = (int) strpos($header, 'data-theme-toggle');
+        $ember = (int) strpos($header, 'id="dev-theme-switcher"');
+        $glacier = (int) strpos($header, 'id="dev-variant-switcher-2"');
+        $meatball = (int) strpos($header, 'mo-navbar__toggle-icon--meatball');
+        $this->assertLessThan($ember, $toggle, 'Upstream order: dark/light toggle first, then the variant buttons.');
+        $this->assertLessThan($glacier, $ember, 'Ember keeps the upstream id, so it stays the first variant.');
+        $this->assertLessThan($meatball, $glacier, 'The meatball stays the final control — the variant buttons sit before it.');
+
+        $css = InlineCss::file('Modules/Mono/assets/critical/mo-variants.css');
+
+        $this->assertStringContainsString('html[data-variant="ember"]', $css);
+        $this->assertStringContainsString('html[data-variant="glacier"]', $css);
+        $this->assertStringNotContainsString('@import', $css, 'Vendored palettes must not pull external dependencies.');
+
+        $init = $theme->themeInitScript();
+
+        $this->assertStringContainsString('nativa-variant', $init, 'The persisted variant must restore pre-paint, or the page flashes default.');
+        $this->assertStringContainsString('nativa-theme', $init, 'The override reproduces the shared dark/light restore — it replaces it, not appends.');
     }
 
     /**
