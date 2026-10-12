@@ -242,6 +242,22 @@ jobs:
           echo "ok  the manifest names its three entries and $mark_css exists"
           ls -l public/dist/moonshine/assets/
 
+      # The griffe bundle is the freeze exception: its dist IS committed (see
+      # the .gitignore negation), so this step asserts the committed manifest
+      # still carries the entry the layout inlines and defers — a renamed
+      # entry renders griffe pages with the critical fallback and no script.
+      - name: Assert the frozen griffe manifest still carries its entry
+        run: |
+          set -euo pipefail
+          manifest=public/dist/griffe/manifest.json
+          jq -e 'any(.[]; .name == "griffe")' "$manifest"
+          js="public/dist/griffe/$(jq -r '.[] | select(.name == "griffe") | .file' "$manifest")"
+          css="public/dist/griffe/$(jq -r '.[] | select(.name == "griffe") | .css[0]' "$manifest")"
+          test -f "$js"
+          test -f "$css"
+          echo "ok  the manifest names griffe and $js + $css exist"
+          ls -l public/dist/griffe/assets/
+
       # Chrome 70 (< 99) drops @layer blocks entirely, which is why the build
       # strips them (build/strip-at-layer.ts). A reintroduced one parses,
       # matches nothing, and unstyled is indistinguishable from a design.

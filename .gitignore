@@ -56,7 +56,16 @@ src/Modules/*
 # unstyled (its CSS comes from the manifest) while every PHP surface still
 # answers — see docs/kernel-status.md, Boot 15. The fonts the admin
 # stylesheet needs ARE tracked (public/fonts/): they are source, not output.
-/public/dist/
+# NOTE: the trailing `/*` (not a bare dir) is load-bearing — git does not
+# descend into an ignored directory, so with a bare `/public/dist/` no
+# negation below could ever re-include a frozen bundle (same trap as the
+# storage .gitkeep rules above).
+/public/dist/*
+# Freeze exception (pilot: griffe): the frozen bundle IS committed — a deploy
+# without Node serves it byte-identical, and GriffeBuildFreezeTest fails when
+# the committed files drift from what `make assets` reproduces. Edit only by
+# rebuilding; never by hand.
+!/public/dist/griffe/
 
 # pnpm workspace dependencies (Frontend/packages). The theme SOURCES are
 # tracked — they are what `make assets` builds; node_modules and pnpm's
