@@ -197,8 +197,17 @@ final class GriffeTheme implements ThemeModule
         return $html;
     }
 
+    /**
+     * Slide 1, the editorial hero in the nativa-minimal Erik hero shape:
+     * eyebrow kicker, display title, lede, two actions, line-art visual.
+     * Text is copy-driven (showcase strings by default); the primary action
+     * goes to the blog, the secondary to the admin surface the kernel owns.
+     * The visual is the inline line-art twin (gradient id gr-glow) — the
+     * same self-contained geometry as the Erik port, no external asset.
+     */
     private function heroSlide(PageContext $context): string
     {
+        $eyebrow = $context->copy['hero_eyebrow'] ?? '';
         $title = $context->copy['title'] ?? 'Home';
         $lede = $context->copy['lede'] ?? '';
         $cta = $context->copy['cta'] ?? 'Discover more';
@@ -206,17 +215,46 @@ final class GriffeTheme implements ThemeModule
 
         $html = '<li class="gr-slide gr-slide--active"' . self::tint(0) . '>'
             . self::slideBg($context->heroSrc, $title, $context->heroSrcset)
-            . '<div class="gr-container">'
-            . '<h1 class="gr-slide__title">' . self::revealLines($title) . '</h1>';
+            . self::heroVisual()
+            . '<div class="gr-container">';
+
+        if ('' !== $eyebrow) {
+            $html .= '<p class="gr-slide__kicker">' . self::e($eyebrow) . '</p>';
+        }
+
+        $html .= '<h1 class="gr-slide__title">' . self::revealLines($title) . '</h1>';
 
         if ('' !== $lede) {
             $html .= '<p class="gr-slide__lede">' . self::e($lede) . '</p>';
         }
 
         return $html
+            . '<div class="gr-slide__actions">'
             . '<a class="gr-btn" href="' . self::e($href) . '">' . self::e($cta) . '</a>'
+            . '<a class="gr-btn gr-btn--link" href="/mark">Open admin</a>'
+            . '</div>'
             . '</div>'
             . '</li>';
+    }
+
+    /**
+     * Full-stage line-art behind the hero copy: glow disc, terrain
+     * polyline, two rails, two nodes. Decorative by contract
+     * (aria-hidden visual container), content stays in `.gr-container`.
+     */
+    private static function heroVisual(): string
+    {
+        return '<div class="gr-slide__visual" aria-hidden="true">'
+            . '<svg class="gr-slide__svg" viewBox="0 0 900 620" focusable="false">'
+            . '<defs><linearGradient id="gr-glow" x1="0" y1="0" x2="1" y2="1">'
+            . '<stop offset="0" stop-color="#d9f99d" stop-opacity=".9"/>'
+            . '<stop offset="1" stop-color="#bef264" stop-opacity=".05"/>'
+            . '</linearGradient></defs>'
+            . '<circle cx="680" cy="170" r="150" fill="url(#gr-glow)" opacity=".35"/>'
+            . '<path d="M80 470 310 240l110 110 180-210 220 240" fill="none" stroke="currentColor" stroke-width="2" opacity=".5"/>'
+            . '<path d="M80 510h720M80 550h560" fill="none" stroke="currentColor" stroke-width="1" opacity=".3"/>'
+            . '<circle cx="310" cy="240" r="7" fill="#d9f99d"/><circle cx="600" cy="140" r="7" fill="#d9f99d"/>'
+            . '</svg></div>';
     }
 
     private static function tint(int $index): string

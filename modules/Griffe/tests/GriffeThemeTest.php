@@ -177,6 +177,42 @@ final class GriffeThemeTest extends TestCase
         $this->assertStringContainsString('gr-case__img', $html, 'The grid cards carry illustrations, not just headlines.');
     }
 
+    /**
+     * Slide 1 is the Erik hero shape: eyebrow kicker, title, lede, two
+     * actions, inline line-art visual — and only slide 1 (case slides keep
+     * their single Read More link).
+     */
+    #[Test]
+    public function theHeroSlideHasTheErikShape(): void
+    {
+        $context = PageContext::forHomepage(
+            Request::create('GET', '/'),
+            'griffe',
+            'en',
+            copy: ['title' => 'Hero', 'lede' => 'Lede.', 'hero_eyebrow' => 'Proof & Co', 'cta' => 'Go'],
+            blogHref: '/blog',
+            latestArticles: [self::article('a', 'A')],
+        );
+
+        $html = self::bodyOf((new GriffeTheme())->homepage($context));
+
+        $this->assertStringContainsString('<p class="gr-slide__kicker">Proof &amp; Co</p>', $html);
+        $this->assertStringContainsString('<a class="gr-btn" href="/blog">Go</a>', $html);
+        $this->assertStringContainsString('<a class="gr-btn gr-btn--link" href="/mark">Open admin</a>', $html);
+        $this->assertStringContainsString('class="gr-slide__actions"', $html);
+        $this->assertSame(1, substr_count($html, 'gr-slide__actions'), 'Actions row lives on the hero slide only.');
+        $this->assertStringContainsString('gr-slide__visual', $html);
+        $this->assertStringContainsString('id="gr-glow"', $html);
+        $this->assertStringContainsString('aria-hidden="true">', $html);
+        $this->assertStringNotContainsString('.webp', $html, 'The showcase WebP underlay stays out of the kernel port.');
+
+        $css = InlineCss::file('Modules/Griffe/assets/critical/griffe.css');
+
+        foreach (['gr-slide__actions', 'gr-slide__visual', 'gr-slide__svg'] as $class) {
+            $this->assertStringContainsString('.' . $class, $css, sprintf('Hero emits `%s` with no rule.', $class));
+        }
+    }
+
     #[Test]
     public function headingsShipMaskedLinesForTheReveal(): void
     {
