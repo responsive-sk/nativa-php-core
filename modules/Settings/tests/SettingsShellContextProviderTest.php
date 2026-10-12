@@ -122,11 +122,28 @@ final class SettingsShellContextProviderTest extends TestCase
         $provider = new SettingsShellContextProvider();
 
         $this->assertSame(
-            ['Privacy', 'Cookies'],
+            ['Docs'],
             self::labels($provider->navigation('footer', '/')),
+            'The footer slot must answer the rows seeded for it.',
         );
 
         $this->assertSame([], $provider->navigation('sidebar', '/'), 'A slot with no rows is the port\'s no-menu answer.');
+    }
+
+    /**
+     * The seed used to ship `Privacy -> /privacy` and `Cookies -> /cookies`,
+     * and a fresh kernel install serves neither path: two of the footer's links
+     * were 404s on a brand-new site. This pins the rule that replaced them —
+     * every seeded href is a route the kernel itself owns.
+     */
+    #[Test]
+    public function theSeedAdvertisesNoRouteTheKernelDoesNotServe(): void
+    {
+        $this->assertSame(
+            ['/', '/blog', '/docs', '/mark'],
+            $this->seededPublicHrefs(),
+            'A seeded menu item points at a path this tree does not serve.',
+        );
     }
 
     /**
@@ -200,6 +217,24 @@ final class SettingsShellContextProviderTest extends TestCase
         $this->assertNull($provider->defaultLocale());
         $this->assertNull($provider->htmlLang());
         $this->assertSame([], $provider->languages());
+    }
+
+    /**
+     * Every href the Settings migrator seeds into the public slots, sorted —
+     * the navigation a visitor can actually see.
+     *
+     * @return list<string>
+     */
+    private function seededPublicHrefs(): array
+    {
+        /** @var list<string> $hrefs */
+        $hrefs = $this->pdo->query(
+            "SELECT href FROM menu_items WHERE location IN ('header', 'footer')",
+        )->fetchAll(\PDO::FETCH_COLUMN);
+
+        sort($hrefs);
+
+        return $hrefs;
     }
 
     /**

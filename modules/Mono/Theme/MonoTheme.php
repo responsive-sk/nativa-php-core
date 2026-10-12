@@ -59,11 +59,17 @@ final class MonoTheme implements ThemeModule
 
     public function header(ShellContext $context): string
     {
+        $hasMenu = [] !== $context->headerNav;
+
         return '<nav class="mo-navbar">'
             . '<div class="mo-navbar__container mo-container">'
+            . $this->menuToggleInput($hasMenu)
             . '<a class="mo-navbar__brand" href="/">' . self::e($context->siteName) . '</a>'
             . $this->menu($context->headerNav)
-            . '<div class="mo-navbar__actions">' . $this->localeLinks($context) . '</div>'
+            . '<div class="mo-navbar__actions">'
+            . $this->menuToggleLabel($hasMenu)
+            . $this->localeLinks($context)
+            . '</div>'
             . '</div>'
             . '</nav>' . "\n";
     }
@@ -227,6 +233,64 @@ final class MonoTheme implements ThemeModule
         }
 
         return '<div class="mo-navbar__menu">' . $links . '</div>';
+    }
+
+    /**
+     * The checkbox the meatball label toggles on a phone.
+     *
+     * The vendored snapshot expects the live site's JS to add
+     * `mo-navbar--menu-open` to the navbar; this tree ships no JS, so the open
+     * state is a form control and the styling keys off `:checked` instead. The
+     * input is first in the container on purpose: the menu and the label both
+     * come after it, which is what lets one `~` selector reach them without
+     * `:has()`. Rendered only when there is a menu to open — a toggle that
+     * opens nothing is worse than no toggle.
+     */
+    private function menuToggleInput(bool $hasMenu): string
+    {
+        if (!$hasMenu) {
+            return '';
+        }
+
+        return '<input type="checkbox" id="mo-nav-toggle" class="mo-navbar__toggle-input" aria-label="Open navigation">';
+    }
+
+    /**
+     * The meatball itself: the visible control the checkbox's label activates.
+     *
+     * Both icons ship in the DOM and CSS shows one at a time (the vendored
+     * rules already hide `--close` in the closed state), so opening the menu
+     * costs no JS and no second request.
+     */
+    private function menuToggleLabel(bool $hasMenu): string
+    {
+        if (!$hasMenu) {
+            return '';
+        }
+
+        return '<label class="mo-navbar__toggle mo-icon-btn" for="mo-nav-toggle" title="Menu">'
+            . '<span class="mo-navbar__toggle-icon mo-navbar__toggle-icon--meatball" aria-hidden="true">'
+            . self::meatballIcon() . '</span>'
+            . '<span class="mo-navbar__toggle-icon mo-navbar__toggle-icon--close" aria-hidden="true">'
+            . self::closeIcon() . '</span>'
+            . '</label>';
+    }
+
+    private static function meatballIcon(): string
+    {
+        return '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">'
+            . '<circle cx="12" cy="5" r="2"></circle>'
+            . '<circle cx="12" cy="12" r="2"></circle>'
+            . '<circle cx="12" cy="19" r="2"></circle>'
+            . '</svg>';
+    }
+
+    private static function closeIcon(): string
+    {
+        return '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">'
+            . '<path d="M6 6l12 12"></path>'
+            . '<path d="M18 6L6 18"></path>'
+            . '</svg>';
     }
 
     private function menuLink(ShellNavItem $item): string

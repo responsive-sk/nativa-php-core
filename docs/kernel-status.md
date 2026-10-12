@@ -1475,9 +1475,9 @@ Mono's vendored CSS hides `.mo-navbar__menu` below 768px and opens it by adding
 `mo-navbar--menu-open` from the live site's JavaScript — which this tree does not
 ship (mono has no build; `criticalCss()` is the whole theme). So the menu the
 port had just filled would have been unreachable on a narrow screen. One media
-query in `mono.css` shows it inline and scrollable under 768px instead: no JS,
-no markup change, the same always-visible shape the kernel theme's `k-nav`
-already has. Desktop is untouched.
+query in `mono.css` shows it inline and scrollable under 768px instead:no JS, no markup change, the same always-visible shape the kernel theme's `k-nav`
+already has. Desktop is untouched. **(Boot 25 replaced the always-visible strip
+with the theme's own meatball — a checkbox plus a label, still no JS.)**
 
 ## Verified
 
@@ -1575,3 +1575,77 @@ resolving as the type name `Demo\of`.
 - `phpunit` 51 tests (6 skipped), `phpstan`, `rector --dry-run`, `php -l` and `php-cs-fixer --dry-run` (84 files) clean;
 - the negative checks, so the two new rules cannot be dropped unnoticed: with the cache rule removed **2 of the 8** `tests/Cache/PageCacheServiceTest.php` cases fail (the editor's page lands in the cache), and with `HEAD`'s resolver **3 of the 12** discovery cases fail;
 - `extract-kernel --check` OK (243 identical, 45 recorded divergences) — the three kernel files this boot rewrote (`PageCacheService`, `MiddlewareRegistry`, `MarkdownBlockRegistry`) are recorded as DIVERGED with their reasons. Upstream still carries both defects; the record is what says so.
+
+# Boot 25 — mono gets the meatball, and two seeded links that were 404s (2026-10-12)
+
+Reported as "the mono nav has no menu on mobile; cardboard has one". Measured
+first, and the strip Boot 23 added **was** there in this checkout: at 390px and
+320px on `/`, `/blog`, the article and `/docs`, `.mo-navbar__menu` computed
+`display:flex` with its links visible, unoccluded (`elementFromPoint` returned
+the link itself), for guests and for a signed-in editor — and the rule that does
+it is in the served bytes. So the report was really about *pattern*, not
+presence: cardboard's nav is a button that opens a drawer, and mono's was a
+permanently visible swipeable strip.
+
+## What mono does now
+
+The theme's own meatball — the vendored snapshot already ships
+`.mo-navbar__toggle`, `--meatball`, `--close` and `mo-icon-btn`, and expects the
+live site's JS to add `mo-navbar--menu-open`; this tree ships no JS, so the open
+state is a **form control** and the styling keys off `:checked`, in the idiom the
+shared layout uses for the starter nav and Erik repeats in `er-nav__toggle-input`:
+
+- `MonoTheme::menuToggleInput()` renders a visually hidden
+  `input[type=checkbox]#mo-nav-toggle`, named by `aria-label` (both are dropped
+  when the header has no items — a toggle that opens nothing is worse than none);
+- `MonoTheme::menuToggleLabel()` renders the meatball + close icons as a `label`
+  in the actions cluster;
+- `mono.css` keys the open state on `.mo-navbar__toggle-input:checked ~ …`.
+
+The mechanism rests on **DOM order**: one `~` selector has to reach both the menu
+and the label from the input, which only works while the input is first and the
+label comes after the menu. `modules/Mono/tests/MonoThemeTest.php` pins that
+order, the checkbox contract and the `:checked` CSS, because nothing in a
+stylesheet enforces it.
+
+The open state is deliberately scoped to `@media (max-width:767px)`: without the
+query, a menu left checked in portrait would follow the reader into landscape as
+an absolute overlay — and the control that could close it, the meatball, is
+hidden from 768px up.
+
+## Measured (chromium, fresh server)
+
+| width | closed | after tapping the meatball | desktop |
+|---|---|---|---|
+| 390px | menu `none`, toggle `flex`, meatball `block`, close `none` | `checked`, menu `flex`, 2 links visible, meatball `none`, close `block` | 1280px: menu `flex`, toggle `none` |
+| 320px | same | same (signed in: Home, Articles, Admin — all inside the opened panel, none clipped) | — |
+
+Also: `Tab` reaches the checkbox (first focusable in the navbar), `Space` opens
+the menu, and following a link leaves the state behind (`checked:false`, menu
+`none` on the next page — it is markup state, not persisted). The focus ring
+rule matches and changes the computed style (deleting it flips `outline-style`
+from `solid` to `none`); the headless build reports `outline-width: 0px` even for
+an inline literal, so the ring was verified by matched-rule, not by pixels.
+
+## Two seeded menu links that were dead ends
+
+While sweeping the nav for this, every path in it was requested: the seed's
+footer rows `Privacy -> /privacy` and `Cookies -> /cookies` **both 404** in this
+tree — there is no route for either (the kernel serves `/`, `/blog`, `/docs`,
+`/mark`, `/storage/*`, the feeds and the auth pages). A fresh install therefore
+shipped a footer with two dead links.
+
+The seed now carries one row the kernel can serve — `Docs -> /docs` — and the
+rule that produced it is pinned by
+`SettingsShellContextProviderTest::theSeedAdvertisesNoRouteTheKernelDoesNotServe()`:
+*the seed may only advertise routes the tree it ships to serves.* A deployment
+with its own legal pages adds them in `/mark` → Navigation; the seed is a
+starting point, not a policy. Existing databases keep their rows — the migrator
+seeds idempotently and never rewrites what an operator may have edited.
+
+## Verified
+
+- live `:8000` (restarted, so no opcache staleness): toggle closed → open → closed at 390px and 320px, guest and editor, on the homepage;
+- keyboard: `Tab` → checkbox focused, `Space` → menu opens;
+- 1280px unchanged: menu visible, toggle `display:none`;
+- `phpunit` 56 tests (6 skipped), `phpstan`, `rector --dry-run`, `php-cs-fixer --dry-run` and `php -l` clean; `extract-kernel --check` unchanged (the mono theme and the Settings migrator are module-owned, not part of the kernel slice).

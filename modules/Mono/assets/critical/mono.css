@@ -54,10 +54,24 @@ tbody tr:last-child th,tbody tr:last-child td{border-bottom:0}
 .mo-questions__sent{background-color:var(--color-bg-alt);color:var(--color-text);border-left:3px solid var(--brand-gold);border-radius:var(--radius-md);padding:var(--space-2) var(--space-4);font-size:var(--text-sm);margin:0 0 var(--space-4)}
 .mo-questions__hp{display:none}
 
-/* --- Nav on a phone. The vendored snapshot hides the menu below 768px and
-   opens it by adding `mo-navbar--menu-open` from the live site's JS — which
-   this tree does not ship, so the menu would be unreachable on a narrow
-   screen and the navbar would carry nothing but a brand. Shown inline and
-   allowed to scroll instead: no JS, no markup change, same as the kernel
-   theme's always-visible `k-nav`. Desktop (>=768px) is untouched. --- */
-@media (max-width:767px){.mo-navbar__menu{gap:var(--space-4);overflow-x:auto;margin-left:auto;padding:0 var(--space-2);display:flex}.mo-navbar__actions{flex-shrink:0}.mo-navbar__brand{flex-shrink:0}}
+/* --- Nav on a phone: the theme's own meatball, driven by a checkbox.
+   The vendored snapshot hides the menu below 768px and opens it by adding
+   `mo-navbar--menu-open` from the live site's JS — which this tree does not
+   ship, so the menu used to be unreachable on a narrow screen and the navbar
+   carried nothing but a brand. Layout keeps the shared checkbox markup
+   (`MonoTheme::menuToggleInput()`, named by aria-label) and the menu's open
+   state is `:checked`, in Erik's idiom; the vendored toggle classes
+   (`mo-navbar__toggle`, `--meatball`, `--close`, `mo-icon-btn`) already carry
+   the closed/hidden-at-widths behaviour, so only the open state is re-keyed.
+   The input sits before the menu and the label in the DOM order the `~`
+   selectors below need. Desktop (>=768px) is untouched. --- */
+.mo-navbar__toggle-input{height:1px;opacity:0;position:absolute;width:1px}
+.mo-navbar__toggle-icon--meatball{display:block}
+/* The checkbox stays focusable and named; this surfaces its focus on the
+   visible control the label renders. */
+.mo-navbar__toggle-input:focus-visible~.mo-navbar__actions .mo-navbar__toggle{outline:2px solid var(--brand-gold);outline-offset:2px}
+/* The open state is scoped to the phone on purpose: without the query a
+   menu left checked in portrait would follow the user into landscape (or into
+   a resized window) as an absolute overlay, and the control that could close
+   it — the meatball — is hidden from 768px up. */
+@media (max-width:767px){.mo-navbar__brand{flex-shrink:0}.mo-navbar__actions{flex-shrink:0;margin-left:auto}.mo-navbar__toggle-input:checked~.mo-navbar__menu{background-color:var(--color-bg);padding:var(--space-4);border-bottom:1px solid var(--color-border);box-shadow:var(--shadow-md);gap:var(--space-4);flex-direction:column;align-items:stretch;display:flex;position:absolute;top:100%;left:0;right:0}.mo-navbar__toggle-input:checked~.mo-navbar__menu .mo-navbar__link{font-size:var(--text-base);padding:var(--space-2) 0}.mo-navbar__toggle-input:checked~.mo-navbar__actions .mo-navbar__toggle-icon--meatball{display:none}.mo-navbar__toggle-input:checked~.mo-navbar__actions .mo-navbar__toggle-icon--close{display:block}}

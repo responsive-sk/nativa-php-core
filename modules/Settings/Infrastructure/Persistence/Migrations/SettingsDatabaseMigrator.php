@@ -21,14 +21,21 @@ final readonly class SettingsDatabaseMigrator implements MigratorInterface
     /**
      * Default menu items seeded idempotently — label, href, location, sort[, icon].
      *
+     * Every href here must be a route the kernel itself serves: measured on a
+     * fresh install, the seed used to ship `Privacy -> /privacy` and
+     * `Cookies -> /cookies`, and neither path exists in this tree (both 404).
+     * A navbar that offers a dead end is the same defect the shell provider
+     * filters admin links for, so the footer seeds the one site-level route the
+     * kernel owns, `/docs`. A deployment that has its own legal pages adds
+     * them in `/mark` (Navigation) — the seed is a starting point, not a policy.
+     *
      * @var list<array{0: string, 1: string, 2: string, 3: int, 4?: string}>
      */
     private const array DEFAULT_MENU_ITEMS = [
         ['Home', '/', 'header', 10],
         ['Articles', '/blog', 'header', 15],
         ['Admin', '/mark', 'header', 20],
-        ['Privacy', '/privacy', 'footer', 10],
-        ['Cookies', '/cookies', 'footer', 20],
+        ['Docs', '/docs', 'footer', 10],
         // Admin panel navigation (location = 'admin') — label, href, location, sort, icon
         ['Dashboard', '/mark', 'admin', 10, 'dashboard'],
         ['Users', '/mark/users', 'admin', 20, 'users'],
