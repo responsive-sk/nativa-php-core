@@ -299,7 +299,11 @@ final class GriffeTheme implements ThemeModule
         $html = '';
 
         foreach ($units as $unit) {
-            $html .= '<span class="gr-anim"><span class="gr-anim__line">'
+            // A newline between the masked units: the spans are blocks, so it
+            // paints nothing — but without a text boundary the last word of
+            // one unit and the first of the next copy as one
+            // ("ktoré"+"dokáže,"), and assistive tech loses the pause.
+            $html .= "\n" . '<span class="gr-anim"><span class="gr-anim__line">'
                 . self::e(implode(' ', $unit))
                 . '</span></span>';
         }
@@ -426,8 +430,8 @@ final class GriffeTheme implements ThemeModule
     /**
      * Article anatomy (Mono's shape, renamed): H1 + meta line + cover +
      * body + tag chips + TOC aside + views + comments. Raw HTML fields
-     * (`bodyHtml`, `tagChips`, `commentsHtml`) pass through by contract;
-     * everything else escapes through `e()`.
+     * (`bodyHtml`, `metaLine`, `tagChips`, `commentsHtml`) pass through by
+     * contract; everything else escapes through `e()`.
      */
     public function blogArticle(PageContext $context): string
     {
@@ -436,7 +440,11 @@ final class GriffeTheme implements ThemeModule
             . '<h1 class="gr-section__title">' . self::revealLines($context->title) . '</h1>';
 
         if ('' !== $context->metaLine) {
-            $article .= '<p class="gr-article__meta">' . self::e($context->metaLine) . '</p>';
+            // Raw by contract: BlogArticleHelper::metaLine() escapes the date
+            // and category itself and embeds the pre-built author link — the
+            // same bytes the starter renders unescaped in st-article__meta.
+            // Escaping here would print the author anchor as visible tag text.
+            $article .= '<p class="gr-article__meta">' . $context->metaLine . '</p>';
         }
 
         $cover = '' !== $context->coverUrl ? $context->coverUrl : $context->coverImage;

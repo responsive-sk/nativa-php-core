@@ -185,6 +185,50 @@ final class GriffeThemeTest extends TestCase
         $this->assertStringContainsString('class="gr-anim"><span class="gr-anim__line"', $html);
     }
 
+    /**
+     * The meta line carries a pre-built author anchor
+     * (BlogArticleHelper::metaLine — the same bytes the starter renders raw
+     * in st-article__meta), so the theme must pass it through: escaping it
+     * prints the tag as visible text under the headline.
+     */
+    #[Test]
+    public function blogArticlePassesTheMetaLineThroughUnescaped(): void
+    {
+        $html = (new GriffeTheme())->blogArticle(self::articleContext(
+            '<p>Body.</p>',
+            '2026-10-12 · Architektúra · <a href="/authors/nativa-dev">Nativa Dev</a>',
+        ));
+
+        $this->assertStringContainsString('<p class="gr-article__meta">2026-10-12', $html);
+        $this->assertStringContainsString('<a href="/authors/nativa-dev">Nativa Dev</a>', $html);
+        $this->assertStringNotContainsString('&lt;a', $html, 'The author anchor escaped into visible tag text.');
+    }
+
+    /**
+     * Masked units keep a text boundary between them: the spans are blocks,
+     * so a newline paints nothing — but without one the last word of a unit
+     * and the first of the next copy as a single word ("ktoré"+"dokáže,").
+     */
+    #[Test]
+    public function maskedLineUnitsStaySeparatedByWhitespace(): void
+    {
+        $context = PageContext::forHomepage(
+            Request::create('GET', '/'),
+            'griffe',
+            'en',
+            copy: ['title' => 'One two three four five six'],
+            blogHref: '/blog',
+        );
+
+        $html = (new GriffeTheme())->homepage($context);
+
+        $this->assertStringContainsString(
+            '</span></span>' . "\n" . '<span class="gr-anim">',
+            $html,
+            'Six words make two masked units; the boundary between them must survive copy.',
+        );
+    }
+
     #[Test]
     public function scriptsAreGatedOnTheMarkupTheyDrive(): void
     {
@@ -354,7 +398,7 @@ final class GriffeThemeTest extends TestCase
         );
     }
 
-    private static function articleContext(string $bodyHtml): PageContext
+    private static function articleContext(string $bodyHtml, string $metaLine = ''): PageContext
     {
         return PageContext::forBlogArticle(
             Request::create('GET', '/blog/hello'),
@@ -363,7 +407,7 @@ final class GriffeThemeTest extends TestCase
             'hello',
             'Hello',
             $bodyHtml,
-            '',
+            $metaLine,
             '',
             '',
             '',
