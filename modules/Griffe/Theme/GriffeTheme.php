@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace Modules\Griffe\Theme;
 
-use Modules\Core\Application\Services\View\InlineJs;
 use Modules\Core\Domain\ShellNavItem;
 use Modules\Core\Interfaces\HTTP\PageContext;
 use Modules\Core\Interfaces\HTTP\ShellContext;
@@ -50,13 +49,53 @@ final class GriffeTheme implements ThemeModule
     }
 
     /**
-     * No override state to restore: the shared dark/light pre-paint bytes
-     * FrontendLayout inlines for `''` are exactly right, and returning ''
-     * keeps every other theme's golden master byte-identical.
+     * Pre-paint colour-mode resolution (the shared dark/light restore,
+     * verbatim) plus the `gr-js` staging signal.
+     *
+     * The deferred `griffe` bundle adds `.gr-slider--live` only after it
+     * downloads, parses and runs — on a slow load the browser paints first,
+     * and the multi-slide hero flashes fully stacked before collapsing onto
+     * one stage. `gr-js` on `<html>` (set here, synchronously in `<head>`)
+     * lets the stylesheet stage the multi-slider before first paint, so the
+     * opening frame already shows the hero alone. Reduced motion is honoured
+     * up front: without `gr-js` the slider keeps its stacked calm fallback
+     * and the bundle never goes live — the no-JS shape doubles as the calm
+     * one, exactly as before. Only griffe pages move (Mono precedent).
      */
     public function themeInitScript(): string
     {
-        return '';
+        return <<<'HTML'
+            <!-- Sync theme init — FOUC prevention: restore the persisted theme
+                 (or the OS preference) before first paint. Falls back to the
+                 dark default when neither is available (Chrome 70 baseline). -->
+            <script nonce="__CSP_NONCE_PLACEHOLDER__">
+                (function() {
+                    try {
+                        var theme = localStorage.getItem('nativa-theme');
+                        if (!theme) {
+                            theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                        }
+                        document.documentElement.setAttribute('data-theme', theme);
+                    } catch (e) {}
+                })();
+            </script>
+            <!-- Sync slider staging signal — same pre-paint contract as above:
+                 the stylesheet stages a multi-slide hero the moment `gr-js`
+                 is present, so the deferred bundle never reflows a stacked
+                 opening frame. Skipped under reduced motion (the calm
+                 fallback stays stacked) — `classList` and `matchMedia` are
+                 both older than the Chrome 70 baseline. -->
+            <script nonce="__CSP_NONCE_PLACEHOLDER__">
+                (function() {
+                    try {
+                        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                            return;
+                        }
+                        document.documentElement.classList.add('gr-js');
+                    } catch (e) {}
+                })();
+            </script>
+            HTML;
     }
 
     public function prefix(): string
@@ -107,27 +146,13 @@ final class GriffeTheme implements ThemeModule
 
     public function pageWrap(string $content): string
     {
-        // Each script is gated on the markup it drives (Mono idiom): pages
-        // without a slider ship no slider JS, pages without masked lines ship
-        // no reveal JS, pages without fences ship no highlighter.
-        $scripts = self::inlineScript('Modules/Griffe/assets/scripts/gr-header.js');
-
-        if (str_contains($content, 'gr-hero-slider')) {
-            $scripts .= self::inlineScript('Modules/Griffe/assets/scripts/gr-slider.js');
-        }
-
-        if (str_contains($content, 'gr-anim')) {
-            $scripts .= self::inlineScript('Modules/Griffe/assets/scripts/gr-reveal.js');
-        }
-
-        if (str_contains($content, 'language-')) {
-            $scripts .= self::inlineScript('Modules/Griffe/assets/scripts/gr-code-highlight.js');
-        }
-
+        // No inline scripts here: the four behaviours this wrap used to gate
+        // per surface (header, slider, reveal, highlight) ship in the frozen
+        // `griffe` bundle FrontendLayout defers from the manifest. Each init
+        // self-gates on its markup, so a page without a slider runs nothing.
         return '<main class="gr-main">' . "\n"
             . '    ' . $content . "\n"
-            . '</main>' . "\n"
-            . $scripts;
+            . '</main>' . "\n";
     }
 
     /**
@@ -148,7 +173,12 @@ final class GriffeTheme implements ThemeModule
         $slides = $this->heroSlide($context) . $this->caseSlides($context, $articles);
         $count = substr_count($slides, '<li class="gr-slide');
 
-        $slider = '<section class="gr-hero-slider" data-gr-autoplay="6000" aria-roledescription="carousel">'
+        // `gr-hero-slider--multi` lets the stylesheet stage the hero before
+        // first paint (see themeInitScript): a lone hero needs no staging —
+        // it reads the same stacked or staged — so only 2+ slides opt in.
+        $multi = $count >= 2 ? ' gr-hero-slider--multi' : '';
+
+        $slider = '<section class="gr-hero-slider' . $multi . '" data-gr-autoplay="6000" aria-roledescription="carousel">'
             . '<ul class="gr-slides">' . $slides . '</ul>'
             . $this->sliderPag($count)
             . $this->sliderArrows($count)
@@ -207,7 +237,7 @@ final class GriffeTheme implements ThemeModule
         $html = '<li class="gr-slide gr-slide--active"' . self::tint(0) . '>'
             . self::slideBg($context->heroSrc, $title, $context->heroSrcset)
             . '<div class="gr-container">'
-            . '<h1 class="gr-slide__title">' . self::revealLines($title) . '</h1>';
+            . '<h1 class="gr-slide__title">' . self::revealLines($title, true) . '</h1>';
 
         if ('' !== $lede) {
             $html .= '<p class="gr-slide__lede">' . self::e($lede) . '</p>';
@@ -286,8 +316,16 @@ final class GriffeTheme implements ThemeModule
      * breaks, so copy is chunked into short masked units that reveal one
      * after another — the reference's line-by-line shape without measuring
      * text. Five words per unit keeps display headings near two units.
+     *
+     * `$revealed` is the opening hero's opt-out: its slide is already on
+     * stage in the first paint, so its lines ship `gr-in` and never depend
+     * on the bundle or the observer's first tick — no script timing (defer
+     * position included) can leave an empty hero behind. Everywhere else the
+     * mask stays: hidden slides unmask on activation, scrolled-to blocks on
+     * intersection. The entrance animation is intentionally lost on the hero
+     * alone — guaranteed visibility beats it.
      */
-    private static function revealLines(string $text): string
+    private static function revealLines(string $text, bool $revealed = false): string
     {
         $words = preg_split('/\s+/u', trim($text));
 
@@ -297,13 +335,14 @@ final class GriffeTheme implements ThemeModule
 
         $units = array_chunk($words, 5);
         $html = '';
+        $open = $revealed ? 'gr-anim gr-in' : 'gr-anim';
 
         foreach ($units as $unit) {
             // A newline between the masked units: the spans are blocks, so it
             // paints nothing — but without a text boundary the last word of
             // one unit and the first of the next copy as one
             // ("ktoré"+"dokáže,"), and assistive tech loses the pause.
-            $html .= "\n" . '<span class="gr-anim"><span class="gr-anim__line">'
+            $html .= "\n" . '<span class="' . $open . '"><span class="gr-anim__line">'
                 . self::e(implode(' ', $unit))
                 . '</span></span>';
         }
@@ -437,7 +476,7 @@ final class GriffeTheme implements ThemeModule
     {
         $article = '<article class="gr-article">'
             . '<p class="gr-slide__kicker">Article</p>'
-            . '<h1 class="gr-section__title">' . self::revealLines($context->title) . '</h1>';
+            . '<h1 class="gr-section__title">' . self::revealLines($context->title, true) . '</h1>';
 
         if ('' !== $context->metaLine) {
             // Raw by contract: BlogArticleHelper::metaLine() escapes the date
@@ -792,21 +831,6 @@ final class GriffeTheme implements ThemeModule
         }
 
         return '<div class="gr-footer__links">' . $links . '</div>';
-    }
-
-    /**
-     * Inline a vendored script with the CSP nonce placeholder, '' when the
-     * file is absent (a theme must never fatal on a missing asset).
-     */
-    private static function inlineScript(string $srcRelative): string
-    {
-        $js = InlineJs::file($srcRelative);
-
-        if ('' === $js) {
-            return '';
-        }
-
-        return '<script nonce="__CSP_NONCE_PLACEHOLDER__">' . $js . '</script>' . "\n";
     }
 
     private static function e(mixed $value): string

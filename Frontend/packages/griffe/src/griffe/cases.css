@@ -1,0 +1,43 @@
+/**
+ * cases.css — case-study grid below the slider.
+ *
+ * From Modules/Griffe/assets/critical/griffe.css (`case grid` section).
+ */
+
+.gr-cases { padding: clamp(3rem, 8vh, 5.5rem) 0; }
+
+.gr-section__title {
+    font-size: clamp(1.75rem, 4vw, 2.75rem);
+    letter-spacing: -.02em;
+    margin: 0 0 .5rem;
+}
+
+.gr-section__sub { color: var(--gr-muted); margin: 0 0 2.5rem; }
+
+.gr-case-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--gr-gap);
+}
+
+@media (max-width: 900px) { .gr-case-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .gr-case-grid { grid-template-columns: 1fr; } }
+
+.gr-case {
+    border: 1px solid var(--gr-line);
+    border-radius: var(--gr-radius);
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+}
+
+.gr-case:hover { border-color: var(--gr-accent); }
+
+.gr-case__img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: calc(var(--gr-radius) - 6px); }
+.gr-case__client { font-size: 1.4rem; margin: 0; letter-spacing: -.01em; }
+.gr-case__service { color: var(--gr-muted); margin: 0; flex: 1; }
+.gr-case__more { color: var(--gr-accent); font-weight: 700; text-decoration: none; }
+.gr-case__more:hover { text-decoration: underline; }
+
+.gr-empty { color: var(--gr-muted); }

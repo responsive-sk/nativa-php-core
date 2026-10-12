@@ -8,6 +8,7 @@ use Modules\Core\Application\Services\View\InlineCss;
 use Modules\Core\Domain\ShellNavItem;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\PageContext;
 use Modules\Core\Interfaces\HTTP\ShellContext;
 use Modules\Core\Interfaces\HTTP\ThemeRegistry;
@@ -17,15 +18,16 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * GriffeThemeTest — the checkbox hamburger's DOM order, the slider contract,
- * and the script gates that keep pages lean.
+ * and the frozen bundle the behaviours ship in.
  *
  * The mobile menu opens through `:checked`, which only works while the input
  * precedes both the menu and the label (one `~` selector, no `:has()`).
  * Nothing in the stylesheet enforces that order, so this file does.
  *
- * The slider counts are asserted on the markup BEFORE the first `<script`:
- * pageWrap inlines the slider/reveal/highlight twins, whose sources name the
- * same classes — counting over the whole document would count the scripts.
+ * pageWrap ships a bare `<main>`: the header/slider/reveal/highlight twins
+ * moved into the frozen `griffe` bundle FrontendLayout defers, each init
+ * self-gating on its markup. The slider counts still cut at the first
+ * `<script` — belt and braces against an inline script sneaking back in.
  */
 final class GriffeThemeTest extends TestCase
 {
@@ -50,7 +52,62 @@ final class GriffeThemeTest extends TestCase
         $this->assertInstanceOf(GriffeTheme::class, $theme);
         $this->assertSame('griffe', $theme->bundle());
         $this->assertSame('gr', $theme->prefix());
-        $this->assertSame('', $theme->themeInitScript(), 'No override state — the shared pre-paint bytes stay.');
+
+        // The colour-mode restore stays verbatim (Mono precedent); the
+        // override only appends the sync `gr-js` staging signal.
+        $init = $theme->themeInitScript();
+
+        $this->assertStringContainsString("localStorage.getItem('nativa-theme')", $init);
+        $this->assertStringContainsString("setAttribute('data-theme', theme)", $init);
+        $this->assertStringContainsString("classList.add('gr-js')", $init, 'The multi-slider stages pre-paint — without gr-js the opening frame stacks.');
+        $this->assertStringContainsString('prefers-reduced-motion', $init, 'Reduced motion keeps the stacked calm fallback.');
+    }
+
+    #[Test]
+    public function theRenderedDocumentSignalsJsBeforeFirstPaint(): void
+    {
+        $html = FrontendLayout::render('Test', '<p>x</p>', theme: self::THEME);
+        $head = substr($html, 0, (int) strpos($html, '</head>'));
+
+        $this->assertStringContainsString("classList.add('gr-js')", $head, 'The staging signal must run synchronously in <head>, before first paint.');
+
+        $style = (int) strpos($head, '<style');
+        $signal = (int) strpos($head, "classList.add('gr-js')");
+        $this->assertLessThan($signal, $style, 'The <style> paints first — the signal after it still precedes the body.');
+    }
+
+    #[Test]
+    public function theMultiSliderOptsIntoPrePaintStaging(): void
+    {
+        $multi = (new GriffeTheme())->homepage(self::homepageContext());
+
+        $this->assertStringContainsString(
+            '<section class="gr-hero-slider gr-hero-slider--multi"',
+            $multi,
+            '2+ slides stage before first paint; without --multi the opening frame stacks.',
+        );
+    }
+
+    #[Test]
+    public function stagingOptInFollowsTheSlideCount(): void
+    {
+        // No articles passed: the theme falls back to published ones, so the
+        // count — and therefore the opt-in — follows whatever storage holds.
+        $context = PageContext::forHomepage(
+            Request::create('GET', '/'),
+            'griffe',
+            'en',
+            copy: ['title' => 'Hero'],
+        );
+
+        $html = (new GriffeTheme())->homepage($context);
+        $count = substr_count($html, '<li class="gr-slide');
+
+        if ($count >= 2) {
+            $this->assertStringContainsString('gr-hero-slider--multi', $html);
+        } else {
+            $this->assertStringNotContainsString('gr-hero-slider--multi', $html, 'One slide reads the same stacked or staged — no opt-in, no surprise.');
+        }
     }
 
     #[Test]
@@ -186,11 +243,47 @@ final class GriffeThemeTest extends TestCase
     }
 
     /**
+     * The opening hero ships revealed: its slide is already on stage in the
+     * first paint, so its lines carry `gr-in` from the server and never wait
+     * on the bundle, the observer, or any script position. Case slides keep
+     * the mask — they unmask on activation, exactly as before.
+     */
+    #[Test]
+    public function theHeroSlideShipsRevealedWhileCaseSlidesStayMasked(): void
+    {
+        $html = self::bodyOf((new GriffeTheme())->homepage(self::homepageContext()));
+
+        $hero = substr($html, 0, (int) strpos($html, '<li class="gr-slide"'));
+
+        $this->assertStringContainsString('gr-slide--active', $hero);
+        $this->assertStringContainsString('class="gr-anim gr-in"><span class="gr-anim__line"', $hero, 'The hero must not depend on script timing for its visibility.');
+        $this->assertStringNotContainsString('class="gr-anim"><span class="gr-anim__line"', $hero, 'No masked line may survive on the opening slide.');
+
+        $cases = substr($html, (int) strpos($html, '<li class="gr-slide"'));
+
+        $this->assertStringContainsString('class="gr-anim"><span class="gr-anim__line"', $cases, 'Hidden slides keep the mask until the slider reveals them.');
+    }
+
+    /**
      * The meta line carries a pre-built author anchor
      * (BlogArticleHelper::metaLine — the same bytes the starter renders raw
      * in st-article__meta), so the theme must pass it through: escaping it
      * prints the tag as visible text under the headline.
      */
+    /**
+     * The article headline sits above the fold, exactly like the homepage
+     * hero: it ships `gr-in` from the server and never waits on the bundle
+     * or the observer — a dead observer must not eat the headline.
+     */
+    #[Test]
+    public function theArticleHeadlineShipsRevealed(): void
+    {
+        $html = (new GriffeTheme())->blogArticle(self::articleContext('<p>Body.</p>'));
+
+        $this->assertStringContainsString('class="gr-anim gr-in"><span class="gr-anim__line"', $html);
+        $this->assertStringNotContainsString('class="gr-anim"><span class="gr-anim__line"', $html, 'No masked line may survive above the fold.');
+    }
+
     #[Test]
     public function blogArticlePassesTheMetaLineThroughUnescaped(): void
     {
@@ -223,43 +316,42 @@ final class GriffeThemeTest extends TestCase
         $html = (new GriffeTheme())->homepage($context);
 
         $this->assertStringContainsString(
-            '</span></span>' . "\n" . '<span class="gr-anim">',
+            '</span></span>' . "\n" . '<span class="gr-anim gr-in">',
             $html,
             'Six words make two masked units; the boundary between them must survive copy.',
         );
     }
 
     #[Test]
-    public function scriptsAreGatedOnTheMarkupTheyDrive(): void
+    public function pageWrapShipsNoInlineScripts(): void
     {
         // Surfaces return bare sections; the single pageWrap (FrontendLayout's)
-        // is what injects scripts — assert on the wrapped document.
+        // wraps them in a bare <main> — the frozen bundle owns every behaviour.
         $theme = new GriffeTheme();
         $home = $theme->pageWrap($theme->homepage(self::homepageContext()));
 
-        $this->assertStringContainsString('gr-header.js', $home, 'The header always renders.');
-        $this->assertStringContainsString('gr-slider.js', $home);
-        $this->assertStringContainsString('gr-reveal.js', $home);
         $this->assertSame(1, substr_count($home, '<main class="gr-main">'), 'One wrap, one <main> — no nested mains.');
-        $this->assertSame(1, substr_count($home, 'gr-slider.js'), 'One wrap, one slider script — never twice.');
+        $this->assertStringNotContainsString('<script', $home, 'No inline scripts — header, slider and reveal run from the bundle.');
+        $this->assertStringNotContainsString('gr-slider.js', $home);
 
-        $plain = $theme->pageWrap($theme->blogIndex(self::indexContext([])));
-
-        $this->assertStringContainsString('gr-header.js', $plain);
-        $this->assertStringNotContainsString('gr-slider.js', $plain, 'No slider markup, no slider JS.');
-        $this->assertStringNotContainsString('gr-reveal.js', $plain, 'No masked lines, no reveal JS.');
-        $this->assertStringNotContainsString('gr-code-highlight.js', $plain, 'No fences, no highlighter JS.');
-    }
-
-    #[Test]
-    public function fencedBlocksPullInTheHighlighter(): void
-    {
-        $theme = new GriffeTheme();
-        $html = $theme->pageWrap($theme->blogArticle(self::articleContext(
+        $article = $theme->pageWrap($theme->blogArticle(self::articleContext(
             '<pre><code class="language-php">echo 1;</code></pre>',
         )));
 
-        $this->assertStringContainsString('gr-code-highlight.js', $html);
+        $this->assertStringNotContainsString('<script', $article, 'Even fenced pages ship no inline highlighter.');
+    }
+
+    #[Test]
+    public function renderedDocumentDefersTheFrozenBundle(): void
+    {
+        $html = FrontendLayout::render('Test', '<p>x</p>', theme: self::THEME);
+
+        $this->assertStringContainsString(
+            '<script src="/dist/griffe/',
+            $html,
+            'The document must defer the frozen bundle — without it griffe pages keep the critical CSS but lose every behaviour.',
+        );
+        $this->assertStringContainsString('defer></script>', $html, 'The bundle script stays deferred, never render-blocking.');
     }
 
     #[Test]

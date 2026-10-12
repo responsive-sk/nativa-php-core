@@ -1,0 +1,14 @@
+/**
+ * index.css — griffe stylesheet assembly.
+ *
+ * Import order IS the cascade of the former single griffe.css: tokens
+ * and base first, surfaces after, footer and misc last. Do not reorder
+ * without a visual diff on every griffe surface.
+ */
+@import './tokens.css';
+@import './header.css';
+@import './hero-slider.css';
+@import './reveal.css';
+@import './cases.css';
+@import './blog.css';
+@import './footer.css';
