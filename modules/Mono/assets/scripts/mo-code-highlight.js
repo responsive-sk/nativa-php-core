@@ -207,6 +207,24 @@
     return btn;
   }
 
+  function langOf(code) {
+    var m = /(?:^|\s)language-([^\s]+)/.exec(code.className || '');
+    return m ? m[1] : '';
+  }
+
+  var NO_BADGE = ' plain plaintext text console terminal output log ';
+
+  function langBadge(lang) {
+    var badge = document.createElement('span');
+    badge.className = 'mo-code-badge';
+    badge.textContent = lang.toUpperCase();
+    return badge;
+  }
+
+  function showBadge(lang) {
+    return '' !== lang && NO_BADGE.indexOf(' ' + lang.toLowerCase() + ' ') < 0;
+  }
+
   function initMoCodeHighlight() {
     var blocks = document.querySelectorAll('pre code[class^="language-"]');
     var i, code, lang;
@@ -218,12 +236,18 @@
       code.setAttribute('data-highlighted', 'true');
     }
     var pres = document.querySelectorAll('pre');
-    var pre;
+    var pre, badgeLang;
     for (i = 0; i < pres.length; i++) {
       pre = pres[i];
-      if (!pre.querySelector('code')) continue;
+      code = pre.querySelector('code');
+      if (!code) continue;
+      badgeLang = langOf(code);
+      if (showBadge(badgeLang) && !pre.querySelector('.mo-code-badge')) {
+        pre.insertBefore(langBadge(badgeLang), pre.firstChild);
+        pre.classList.add('has-badge');
+      }
       if (pre.querySelector('.copy-btn')) continue;
-      pre.appendChild(copyButton(pre.querySelector('code')));
+      pre.appendChild(copyButton(code));
     }
   }
 

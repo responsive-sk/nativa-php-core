@@ -128,6 +128,12 @@ final class MonoThemeTest extends TestCase
             $css,
             'The light variant needs its own token colours — the dark palette on white fails contrast.',
         );
+
+        $this->assertStringContainsString(
+            'main pre .mo-code-badge',
+            $css,
+            'The language badge needs positioning — without it the badge overlaps the code.',
+        );
     }
 
     /**
@@ -144,6 +150,7 @@ final class MonoThemeTest extends TestCase
 
         $this->assertStringContainsString('<script nonce="__CSP_NONCE_PLACEHOLDER__">', $fenced);
         $this->assertStringContainsString('initMoCodeHighlight', $fenced);
+        $this->assertStringContainsString('mo-code-badge', $fenced, 'The loader must carry the language badge — a fence without its label ships half the feature.');
 
         $plain = $theme->pageWrap('<p>no code here</p>');
 
