@@ -105,6 +105,51 @@ final class MonoThemeTest extends TestCase
         );
     }
 
+    /**
+     * The token palette the client-side highlighter needs: without these
+     * rules mo-code-highlight.js still runs, but every span it emits is
+     * invisible — one colour either way, and nothing says why.
+     */
+    #[Test]
+    public function theStylesheetCarriesTokenColorsForHighlightedBlocks(): void
+    {
+        $css = InlineCss::file('Modules/Mono/assets/critical/mono.css');
+
+        foreach (['keyword', 'string', 'comment', 'number', 'function', 'variable', 'type'] as $token) {
+            $this->assertStringContainsString(
+                'main pre .tok-' . $token,
+                $css,
+                'The token palette is missing .' . $token . ' — highlighted blocks fall back to one colour.',
+            );
+        }
+
+        $this->assertStringContainsString(
+            '[data-theme=light] main pre .tok-keyword',
+            $css,
+            'The light variant needs its own token colours — the dark palette on white fails contrast.',
+        );
+    }
+
+    /**
+     * The loader ships inline, and only where fenced blocks exist: pages
+     * without fences carry no JS at all, and the no-JS fallback stays the
+     * plain mono code block.
+     */
+    #[Test]
+    public function pageWrapLoadsTheHighlighterOnlyWhereFencesExist(): void
+    {
+        $theme = new MonoTheme();
+
+        $fenced = $theme->pageWrap('<pre><code class="language-php">echo 1;</code></pre>');
+
+        $this->assertStringContainsString('<script nonce="__CSP_NONCE_PLACEHOLDER__">', $fenced);
+        $this->assertStringContainsString('initMoCodeHighlight', $fenced);
+
+        $plain = $theme->pageWrap('<p>no code here</p>');
+
+        $this->assertStringNotContainsString('<script', $plain, 'A page without fences must ship no JS.');
+    }
+
     private static function headerWithItems(): string
     {
         $context = ShellContext::from(

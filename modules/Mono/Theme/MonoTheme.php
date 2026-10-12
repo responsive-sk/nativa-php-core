@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Mono\Theme;
 
+use Modules\Core\Application\Services\View\InlineJs;
 use Modules\Core\Domain\ShellNavItem;
 use Modules\Core\Interfaces\HTTP\PageContext;
 use Modules\Core\Interfaces\HTTP\ShellContext;
@@ -88,7 +89,33 @@ final class MonoTheme implements ThemeModule
 
     public function pageWrap(string $content): string
     {
-        return '<main>' . "\n" . $content . '</main>' . "\n";
+        return '<main>' . "\n" . $content . '</main>' . "\n" . self::codeHighlight($content);
+    }
+
+    /**
+     * The syntax highlighter, inline and only where fenced blocks exist.
+     *
+     * Mono has no Frontend package and no build, so it cannot bundle the
+     * shared code-highlight.ts — mo-code-highlight.js is its 1:1 no-build
+     * twin, loaded here through InlineJs::file like the admin shell scripts.
+     * The nonce placeholder is substituted per response by the security
+     * headers middleware, exactly like every other inline script. Pages
+     * without fences ship no JS at all (the no-JS fallback is the plain
+     * mono code block, still readable, just one colour).
+     */
+    private static function codeHighlight(string $content): string
+    {
+        if (!str_contains($content, 'language-')) {
+            return '';
+        }
+
+        $js = InlineJs::file('Modules/Mono/assets/scripts/mo-code-highlight.js');
+
+        if ('' === $js) {
+            return '';
+        }
+
+        return '<script nonce="__CSP_NONCE_PLACEHOLDER__">' . $js . '</script>' . "\n";
     }
 
     public function homepage(PageContext $context): string
