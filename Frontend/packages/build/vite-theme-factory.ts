@@ -42,6 +42,7 @@ const THEME_PORTS: Record<string, { dev: number; preview: number }> = {
   minimal: { dev: 5181, preview: 4181 },
   basic: { dev: 5182, preview: 4182 },
   jednotka: { dev: 5183, preview: 4183 },
+  griffe: { dev: 5184, preview: 4184 },
 };
 
 export interface ThemeConfigOptions {

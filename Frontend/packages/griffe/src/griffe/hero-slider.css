@@ -1,0 +1,149 @@
+/**
+ * hero-slider.css — fullscreen home slider: stacked no-JS slides, one
+ * active stage once gr-slider.ts adds `.gr-slider--live`, progress
+ * pagination + arrows.
+ *
+ * From Modules/Griffe/assets/critical/griffe.css (`hero slider` section).
+ */
+
+.gr-hero-slider {
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--gr-line);
+}
+
+.gr-slides { list-style: none; margin: 0; padding: 0; }
+
+/* No-JS: slides stack, all readable, controls hidden (see --live below). */
+.gr-slide { position: relative; padding: clamp(3rem, 9vh, 6rem) 0; border-top: 1px solid var(--gr-line); }
+.gr-slide:first-child { border-top: 0; }
+
+.gr-slider--live .gr-slide {
+    border-top: 0;
+    min-height: 92svh;
+    display: flex;
+    align-items: center;
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(4%);
+    transition: opacity .6s var(--gr-ease), transform .6s var(--gr-ease), visibility 0s .6s;
+    padding: 0;
+}
+
+.gr-slider--live .gr-slide--active {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition: opacity .6s var(--gr-ease), transform .6s var(--gr-ease);
+    position: relative;
+}
+
+.gr-slide { background: var(--gr-slide-bg, transparent); }
+[data-theme="dark"] .gr-slide { background: var(--gr-slide-bg-dark, var(--gr-slide-bg, transparent)); }
+
+/* Full-bleed slide imagery (reference slides are photographic): the <img>
+   covers the stage, a legibility shade sits above it, content on top. No
+   image → the per-slide tint (or paper) carries the slide alone. */
+.gr-slide__bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+}
+
+.gr-slide__shade {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(100deg, color-mix(in srgb, var(--gr-paper) 82%, transparent) 20%, transparent 65%);
+}
+
+.gr-slide .gr-container { position: relative; z-index: 2; }
+
+.gr-slide__kicker {
+    color: var(--gr-accent);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    font-size: .8rem;
+    margin: 0 0 1rem;
+}
+
+.gr-slide__title {
+    font-size: var(--gr-display);
+    line-height: 1.02;
+    letter-spacing: -.03em;
+    margin: 0 0 1.25rem;
+    text-wrap: balance;
+}
+
+.gr-slide__lede {
+    font-size: 1.15rem;
+    color: var(--gr-muted);
+    max-width: 44rem;
+    margin: 0 0 2rem;
+}
+
+.gr-btn {
+    display: inline-block;
+    padding: .8rem 1.6rem;
+    border-radius: 999px;
+    background: var(--gr-ink);
+    color: var(--gr-paper);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.gr-btn:hover { background: var(--gr-accent); color: #fff; }
+
+.gr-btn--link {
+    background: none;
+    color: var(--gr-accent);
+    padding: .8rem 0;
+}
+
+.gr-btn--link:hover { background: none; text-decoration: underline; }
+
+/* Pagination + arrows appear only once the slider is live. */
+.gr-slider__pag, .gr-slider__arrow { display: none; }
+.gr-slider--live .gr-slider__pag, .gr-slider--live .gr-slider__arrow { display: flex; }
+
+.gr-slider__pag {
+    position: absolute;
+    left: 0; right: 0; bottom: 1.5rem;
+    justify-content: center;
+    gap: .6rem;
+    z-index: 2;
+}
+
+.gr-pag {
+    width: 2.75rem;
+    height: .3rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--gr-line);
+    padding: 0;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.gr-pag__fill { display: block; height: 100%; width: 0; background: var(--gr-accent); transition: width linear; }
+.gr-pag--active .gr-pag__fill { width: 100%; }
+/* Duration comes from the slider (data-gr-autoplay); without JS the filler
+   never runs and the transition above is inert. */
+
+.gr-slider__arrow {
+    position: absolute;
+    top: 50%;
+    translate: 0 -50%;
+    z-index: 2;
+    background: var(--gr-paper);
+    border: 1px solid var(--gr-line);
+}
+
+.gr-slider__arrow--prev { left: 1rem; }
+.gr-slider__arrow--next { right: 1rem; }
