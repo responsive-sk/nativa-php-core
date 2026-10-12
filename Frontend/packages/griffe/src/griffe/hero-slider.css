@@ -3,6 +3,13 @@
  * active stage once gr-slider.ts adds `.gr-slider--live`, progress
  * pagination + arrows.
  *
+ * The stage is claimed before first paint, not by the bundle: the sync
+ * `gr-js` signal (GriffeTheme::themeInitScript, skipped under reduced
+ * motion) stages a `--multi` hero the moment `<html>` carries it, so the
+ * deferred bundle never reflows a stacked opening frame. `--live` stays
+ * as the behaviour hook (autoplay, controls) — it implies `gr-js`, so
+ * both selectors stage identically.
+ *
  * From Modules/Griffe/assets/critical/griffe.css (`hero slider` section).
  */
 
@@ -18,7 +25,8 @@
 .gr-slide { position: relative; padding: clamp(3rem, 9vh, 6rem) 0; border-top: 1px solid var(--gr-line); }
 .gr-slide:first-child { border-top: 0; }
 
-.gr-slider--live .gr-slide {
+.gr-slider--live .gr-slide,
+.gr-js .gr-hero-slider--multi .gr-slide {
     border-top: 0;
     min-height: 92svh;
     display: flex;
@@ -32,7 +40,8 @@
     padding: 0;
 }
 
-.gr-slider--live .gr-slide--active {
+.gr-slider--live .gr-slide--active,
+.gr-js .gr-hero-slider--multi .gr-slide--active {
     opacity: 1;
     visibility: visible;
     transform: none;

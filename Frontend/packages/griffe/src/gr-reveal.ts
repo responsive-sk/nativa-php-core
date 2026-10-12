@@ -12,7 +12,8 @@
  * activation, so this file never needs to know about it.
  *
  * Self-gating: returns early when the page renders no `.gr-anim`, so the
- * single griffe bundle entry can call it on every page.
+ * single griffe bundle entry can call it on every page. A timed sweep
+ * rescues above-fold lines when the observer itself never fires.
  *
  * ES2015-safe: no `?.`, `??` or other Chrome 70-unsupported syntax.
  */
@@ -40,4 +41,21 @@ export function initGrReveal(): void {
   for (let j = 0; j < lines.length; j++) {
     observer.observe(lines[j])
   }
+  // Rescue sweep: if the observer never fires (dead implementation, a tab
+  // opened in the background, a stalled frame budget), above-fold lines
+  // would stay masked behind the armed state forever. After a beat, reveal
+  // whatever is already at or above the viewport — below-fold blocks keep
+  // their scroll animation, and when the observer works this finds nothing.
+  window.setTimeout(() => {
+    const viewport = window.innerHeight || 0
+    for (let k = 0; k < lines.length; k++) {
+      if (lines[k].classList.contains('gr-in')) {
+        continue
+      }
+      if (lines[k].getBoundingClientRect().top < viewport) {
+        lines[k].classList.add('gr-in')
+        observer.unobserve(lines[k])
+      }
+    }
+  }, 1200)
 }

@@ -156,6 +156,29 @@ final class GriffeBuildFreezeTest extends TestCase
         }
     }
 
+    /**
+     * The opening frame must not stack: the sync `gr-js` signal
+     * (GriffeTheme::themeInitScript) stages a `--multi` hero before first
+     * paint, so the deferred bundle never reflows it. If this selector goes
+     * missing from the build, every load flashes the stacked slides again.
+     */
+    #[Test]
+    public function theFrozenStylesheetStagesTheMultiSliderPrePaint(): void
+    {
+        $css = $this->frozenCss();
+
+        $this->assertStringContainsString(
+            '.gr-js .gr-hero-slider--multi .gr-slide',
+            $css,
+            'Built CSS lost the pre-paint staging — the hero flashes stacked on every load.',
+        );
+        $this->assertStringContainsString(
+            '.gr-js .gr-hero-slider--multi .gr-slide--active',
+            $css,
+            'Staging without a visible active slide ships an empty hero.',
+        );
+    }
+
     #[Test]
     public function theFrozenBundleShipsNoSourcemaps(): void
     {

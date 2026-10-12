@@ -9,7 +9,8 @@
  * the progress bar, wires pagination buttons + prev/next arrows + arrow
  * keys, pauses on hover/focus and when the tab hides. Slide changes force
  * `.gr-in` on the incoming slide's reveal lines (hidden slides never
- * intersected the observer).
+ * intersected the observer); the opening slide gets the same treatment at
+ * init, so the hero never waits on the observer's first tick.
  *
  * Self-gating: stays static (no `--live`, slides stack, controls stay
  * hidden) on pages without a slider, with a single slide, or under
@@ -39,6 +40,15 @@ export function initGrSlider(): void {
   let timer: number | null = null
 
   root.classList.add('gr-slider--live')
+
+  // The opening slide is already on stage (server-side `--active`): reveal
+  // its lines synchronously instead of waiting for the observer's first
+  // tick. On slow frames the armed mask would otherwise leave an empty hero
+  // behind — the same force-reveal `go()` applies on every later switch.
+  const initial = slides[0].querySelectorAll('.gr-anim')
+  for (let k = 0; k < initial.length; k++) {
+    initial[k].classList.add('gr-in')
+  }
 
   const fill = (): void => {
     const active = root.querySelector('.gr-pag--active .gr-pag__fill') as HTMLElement | null
