@@ -120,3 +120,4 @@ main pre .mo-code-badge{position:absolute;top:8px;left:8px;font-family:var(--fon
 .mo-toc__link:hover{color:var(--brand-gold)}
 .mo-toc__link:focus-visible{box-shadow:var(--focus-ring);outline:none}
 @media (min-width:1024px){.mo-toc{margin-top:0;position:sticky;top:calc(var(--navbar-height) + var(--space-4))}}
+.mo-toc__link--active{color:var(--brand-gold);font-weight:var(--font-semibold)}

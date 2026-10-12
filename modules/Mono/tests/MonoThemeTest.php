@@ -160,6 +160,33 @@ final class MonoThemeTest extends TestCase
     }
 
     /**
+     * The scrollspy ships inline, and only where a TOC aside exists: the
+     * gate is the same data-toc-link opt-in the tracker keys off, so the
+     * two cannot drift apart — markup without the attribute gets no script.
+     */
+    #[Test]
+    public function pageWrapLoadsTheScrollspyOnlyWhereATocAsideExists(): void
+    {
+        $theme = new MonoTheme();
+
+        $withToc = $theme->pageWrap(
+            '<aside class="mo-toc"><a class="mo-toc__link" data-toc-link data-heading="a" href="#a">A</a></aside>',
+        );
+
+        $this->assertStringContainsString('<script nonce="__CSP_NONCE_PLACEHOLDER__">', $withToc);
+        $this->assertStringContainsString('initMoTocScrollspy', $withToc);
+        $this->assertStringContainsString(
+            '.mo-toc__link--active',
+            InlineCss::file('Modules/Mono/assets/critical/mono.css'),
+            'The active rule must ship in the stylesheet — a tracker with no style highlights invisibly.',
+        );
+
+        $withoutToc = $theme->pageWrap('<article><h2>Just text</h2></article>');
+
+        $this->assertStringNotContainsString('initMoTocScrollspy', $withoutToc, 'A page without a TOC aside must ship no scrollspy.');
+    }
+
+    /**
      * The article aside: h2/h3 become labelled anchor links, h3 indented —
      * the same HTML the browser sees, so every href matches a heading id.
      */

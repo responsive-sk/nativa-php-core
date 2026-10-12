@@ -89,7 +89,7 @@ final class MonoTheme implements ThemeModule
 
     public function pageWrap(string $content): string
     {
-        return '<main>' . "\n" . $content . '</main>' . "\n" . self::codeHighlight($content);
+        return '<main>' . "\n" . $content . '</main>' . "\n" . self::codeHighlight($content) . self::tocScrollspy($content);
     }
 
     /**
@@ -110,6 +110,30 @@ final class MonoTheme implements ThemeModule
         }
 
         $js = InlineJs::file('Modules/Mono/assets/scripts/mo-code-highlight.js');
+
+        if ('' === $js) {
+            return '';
+        }
+
+        return '<script nonce="__CSP_NONCE_PLACEHOLDER__">' . $js . '</script>' . "\n";
+    }
+
+    /**
+     * The TOC scrollspy, inline and only where a TOC aside exists.
+     *
+     * Same deal as the highlighter above: mo-toc-scrollspy.js is the 1:1
+     * no-build twin of the shared toc-scrollspy.ts, gated here on the
+     * data-toc-link opt-in the tracker itself keys off — a page whose TOC
+     * links lost the attribute gets no script, and the tracker would idle
+     * anyway. Without JS the aside stays a plain list of working anchors.
+     */
+    private static function tocScrollspy(string $content): string
+    {
+        if (!str_contains($content, 'data-toc-link')) {
+            return '';
+        }
+
+        $js = InlineJs::file('Modules/Mono/assets/scripts/mo-toc-scrollspy.js');
 
         if ('' === $js) {
             return '';
