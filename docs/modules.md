@@ -222,3 +222,40 @@ theme headers no longer name the at-rules even in prose. Re-measured:
 `:root{--brand-gold:#d4af37;` and the `body` rule present in the served
 `<style>`, zero comment residue. Erik's header had the same trap and survived
 by luck — its first semicolon fell inside the comment.
+
+## A third theme: Griffe (measured 2026-10-12)
+
+`modules/Griffe/` renders the public surfaces in the webgriffe.com agency
+idiom (sticky text-nav header, fullscreen home slider, line-mask scroll
+reveals, case-study grid, minimal legal footer). The reference runs on Xtend
+UI (Tailwind + vanilla JS); the port re-expresses only the USED behaviours in
+hand-written `gr-` CSS plus three vendored ES2015-safe scripts
+(`gr-header.js` hide-on-scroll, `gr-slider.js` autoplay/pagination/arrows,
+`gr-reveal.js` IntersectionObserver reveals) — no framework, no build, no
+CDN, colours deliberately neutral placeholders (layout and motion first).
+
+Measured from the live homepage HTML (13 slides: 1 editorial hero + 12 case
+studies, `data-xt-pag` progress pagination, `anim-block` line masks): the
+theme maps articles to case slides and the grid below from the same
+slug+title shape Mono/Erik read, hero slide active server-side, pagination
+and arrows rendered only for 2+ slides, scripts gated on the markup they
+drive (no slider markup → no slider JS). No-JS fallbacks: stacked readable
+slides, plain sticky header, fully visible text (the reveal arms its masked
+state from JS — the stylesheet never hides text on its own).
+
+- `composer test` 88 / `phpstan` / Rector dry-run / `cs-fix-dry` green;
+- Chromium/CDP over the running server: griffe chrome renders, reveal arms
+  and hero lines gain `.gr-in`, hamburger opens the menu at 390px, reload
+  keeps the chrome with `data-theme` restored, body wears the paper token
+  (`rgb(255, 255, 255)`, sticky header confirmed — the white-page class of
+  defect revisited and absent), served `<style>` 10 358 chars with `:root`,
+  `@media` and `.tok-*` intact;
+- the shipped `gr-slider.js` proven in Chromium against a grafted 2-slide DOM
+  (verbatim server markup): goes live, pagination click activates slide 2,
+  autoplay wraps — the kernel homepage passes no articles, so the live tree
+  honestly renders the hero alone until a richer homepage exists.
+
+The slice carries the same one-question fixture provider (`theme()` →
+`griffe`). The NEVER-two-fixtures rule now spans three themes — and the
+Settings theme vote (priority −100) outranks every fixture, so the admin's
+stored choice is what a multi-fixture tree renders.
