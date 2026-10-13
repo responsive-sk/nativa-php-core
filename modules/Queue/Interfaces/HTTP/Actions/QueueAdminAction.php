@@ -221,6 +221,7 @@ final class QueueAdminAction
             . $csrf
             . '<button class="m-btn m-btn-sm m-btn-icon m-btn-error"'
             . ' data-tooltip="' . AdminLayout::e($label) . '" title="' . AdminLayout::e($label) . '"'
+            . ' aria-label="' . AdminLayout::e($label) . '"'
             . '>' . AdminLayout::iconDelete() . '</button></form>';
     }
 
