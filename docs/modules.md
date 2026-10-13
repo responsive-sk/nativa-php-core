@@ -334,3 +334,27 @@ the scan still reports the closure, which is the honest dependency).
 - `schedule:run` live twice in a row: nothing due, exit 0 both times; the
 due path driven at a fixed 13:00 against the real outbox.db —
 `Executed: outbox:drain`, exit 0.
+
+## Dashboard stat cards for Queue / Outbox / Schedule (measured 2026-10-13)
+
+Three `#[AsMetricProvider]` cards on `GET /mark`, reusing the metric
+subsystem untouched (Blog/Audit precedent — `MetricRegistry` discovers
+them, `DashboardAction` renders them): `QueueMetric` (reservable jobs,
+reserved/failed subtitle, pushed-in-period trend), `OutboxMetric`
+(pending+processing needing attention, processed/failed subtitle,
+processed trend), `ScheduleMetric` (due-now entries, overlap-held locks,
+no trend — the timetable is configuration, not history). No action links
+(no list pages to point at) and default color only (no shipped provider
+sets custom colors). A stats DB that is missing or unmigrated skips its
+card silently — the dashboard never 500s on a metric.
+
+Testability without breaking the no-required-ctor-params contract: each
+provider takes an optional `?PDO` (default: its module connection),
+`ScheduleMetric` takes an optional `Schedule` + `FileTaskMutex`
+(default: shipped timetable + site mutex dir) — tests seed throwaway
+SQLite or synthetic timetables, never real closures or `storage/`.
+
+- `composer test` 250 / `phpstan` / Rector dry-run / `cs-fix-dry` green;
+- live discovery on the real tree: 10 providers, all three cards render
+  in 7d and 30d (`queue=0`, `outbox=0 [6 processed · 0 failed]`,
+  `schedule=0 [2 entries]`), empty-DB run registers nothing, no fatal.
