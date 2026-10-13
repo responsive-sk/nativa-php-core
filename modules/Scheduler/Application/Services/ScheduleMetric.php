@@ -7,6 +7,7 @@ namespace Modules\Scheduler\Application\Services;
 use DateTimeImmutable;
 use Modules\Cardboard\Domain\Contracts\MetricContract;
 use Modules\Cardboard\Domain\Model\Card;
+use Modules\Cardboard\Domain\Model\CardLink;
 use Modules\Cardboard\Domain\Model\Period;
 use Modules\Cardboard\Infrastructure\Attributes\AsMetricProvider;
 use Modules\Cardboard\Infrastructure\Registry\CardboardRegistry;
@@ -60,6 +61,7 @@ final readonly class ScheduleMetric implements MetricContract
             CardboardRegistry::register(
                 Card::make('schedule', 'Schedule', $due)
                     ->withSubtitle("{$count} entries · {$held} overlap-held")
+                    ->withActions(CardLink::make('View Timetable', '/mark/schedule'))
                     ->withPriority(66),
             );
         } catch (\Throwable) {

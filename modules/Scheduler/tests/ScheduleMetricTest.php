@@ -74,6 +74,7 @@ final class ScheduleMetricTest extends TestCase
 
         $card = $cards[0];
         $this->assertSame('schedule', $card->id);
+        $this->assertSame('/mark/schedule', $card->actions[0]->href ?? null);
         // everyMinute is due at any wall time; daily (midnight) is due
         // only at 00:xx — so the value is 1 or 2 depending on the clock.
         // The subtitle is fully deterministic: 3 entries, 1 held.

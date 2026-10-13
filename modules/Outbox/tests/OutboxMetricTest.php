@@ -80,6 +80,7 @@ final class OutboxMetricTest extends TestCase
 
         $card = $cards[0];
         $this->assertSame('outbox', $card->id);
+        $this->assertSame('/mark/outbox', $card->actions[0]->href ?? null);
         $this->assertSame(3, $card->value, 'pending + processing need attention');
         $this->assertSame('2 processed · 1 failed in 7 days', $card->subtitle);
         $this->assertNotNull($card->trend);

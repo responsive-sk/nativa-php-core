@@ -6,6 +6,7 @@ namespace Modules\Outbox\Application\Services;
 
 use Modules\Cardboard\Domain\Contracts\MetricContract;
 use Modules\Cardboard\Domain\Model\Card;
+use Modules\Cardboard\Domain\Model\CardLink;
 use Modules\Cardboard\Domain\Model\Period;
 use Modules\Cardboard\Domain\Model\Trend;
 use Modules\Cardboard\Infrastructure\Attributes\AsMetricProvider;
@@ -57,6 +58,7 @@ final readonly class OutboxMetric implements MetricContract
                 Card::make('outbox', 'Outbox', $attention)
                     ->withSubtitle("{$processed} processed · {$failed} failed in {$period->label()}")
                     ->withTrend(Trend::make($processed, $processedBefore))
+                    ->withActions(CardLink::make('View Messages', '/mark/outbox'))
                     ->withPriority(67),
             );
         } catch (\Throwable) {

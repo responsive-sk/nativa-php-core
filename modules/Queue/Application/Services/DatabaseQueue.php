@@ -141,6 +141,203 @@ final class DatabaseQueue
     }
 
     /**
+     * List jobs newest-first (null queue = all queues).
+     *
+     * Read-only admin API: rows carry a derived `state` (reserved /
+     * delayed / pending) and no decoded payload — the detail accessor
+     * decodes that. Payload stays raw so a corrupt row lists instead of
+     * fataling.
+     *
+     * @return list<array{id: string, queue: string, handler: string, attempts: int, max_attempts: int, reserved_at: ?string, available_at: string, created_at: ?string, state: string}>
+     */
+    public function listJobs(?string $queue = null, int $limit = 100): array
+    {
+        $now = $this->stamp();
+
+        if (null === $queue) {
+            $statement = $this->pdo->prepare(
+                'SELECT id, queue, handler, attempts, max_attempts, reserved_at, available_at, created_at'
+                . ' FROM jobs ORDER BY created_at DESC, rowid DESC LIMIT :limit',
+            );
+            $statement->bindValue(':limit', max(1, $limit), PDO::PARAM_INT);
+        } else {
+            $statement = $this->pdo->prepare(
+                'SELECT id, queue, handler, attempts, max_attempts, reserved_at, available_at, created_at'
+                . ' FROM jobs WHERE queue = :queue ORDER BY created_at DESC, rowid DESC LIMIT :limit',
+            );
+            $statement->bindValue(':queue', $queue);
+            $statement->bindValue(':limit', max(1, $limit), PDO::PARAM_INT);
+        }
+
+        $statement->execute();
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+        return array_map(fn (array $row): array => $this->presentJobRow($row, $now), $rows);
+    }
+
+    /**
+     * One job row with raw payload (null when missing). The caller
+     * decodes the payload for display, falling back to the raw string
+     * when the row is poison.
+     *
+     * @return array{id: string, queue: string, handler: string, attempts: int, max_attempts: int, reserved_at: ?string, available_at: string, created_at: ?string, state: string, payload: string}|null
+     */
+    public function findJob(string $id): ?array
+    {
+        $statement = $this->pdo->prepare(
+            'SELECT id, queue, handler, attempts, max_attempts, reserved_at, available_at, created_at, payload'
+            . ' FROM jobs WHERE id = :id',
+        );
+        $statement->execute([':id' => $id]);
+
+        /** @var array<string, mixed>|false $row */
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+
+        if (false === $row) {
+            return null;
+        }
+
+        return $this->presentJobRow($row, $this->stamp()) + ['payload' => (string) $row['payload']];
+    }
+
+    /**
+     * List failed jobs newest-first.
+     *
+     * @return list<array{id: string, queue: string, handler: string, attempts: int, error: ?string, failed_at: ?string, payload: string}>
+     */
+    public function listFailed(int $limit = 100): array
+    {
+        $statement = $this->pdo->prepare(
+            'SELECT id, queue, handler, attempts, error, failed_at, payload'
+            . ' FROM failed_jobs ORDER BY failed_at DESC, rowid DESC LIMIT :limit',
+        );
+        $statement->bindValue(':limit', max(1, $limit), PDO::PARAM_INT);
+        $statement->execute();
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+        return array_map(fn (array $row): array => [
+            'id' => (string) $row['id'],
+            'queue' => (string) $row['queue'],
+            'handler' => (string) $row['handler'],
+            'attempts' => (int) $row['attempts'],
+            'error' => null !== $row['error'] ? (string) $row['error'] : null,
+            'failed_at' => null !== $row['failed_at'] ? (string) $row['failed_at'] : null,
+            'payload' => (string) $row['payload'],
+        ], $rows);
+    }
+
+    /**
+     * One failed row (null when missing).
+     *
+     * @return array{id: string, queue: string, handler: string, attempts: int, error: ?string, failed_at: ?string, payload: string}|null
+     */
+    public function findFailed(string $id): ?array
+    {
+        $statement = $this->pdo->prepare(
+            'SELECT id, queue, handler, attempts, error, failed_at, payload'
+            . ' FROM failed_jobs WHERE id = :id',
+        );
+        $statement->execute([':id' => $id]);
+
+        /** @var array<string, mixed>|false $row */
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+
+        if (false === $row) {
+            return null;
+        }
+
+        return [
+            'id' => (string) $row['id'],
+            'queue' => (string) $row['queue'],
+            'handler' => (string) $row['handler'],
+            'attempts' => (int) $row['attempts'],
+            'error' => null !== $row['error'] ? (string) $row['error'] : null,
+            'failed_at' => null !== $row['failed_at'] ? (string) $row['failed_at'] : null,
+            'payload' => (string) $row['payload'],
+        ];
+    }
+
+    /**
+     * Re-queue a failed job under its own id with attempts reset.
+     *
+     * failed_jobs carries no max_attempts column (schema is fixed), so a
+     * retried job gets $maxAttempts (default 3) — documented, not hidden.
+     * Returns false when the id is not in failed_jobs.
+     */
+    public function retryFailed(string $id, int $maxAttempts = 3): bool
+    {
+        $failed = $this->findFailed($id);
+
+        if (null === $failed) {
+            return false;
+        }
+
+        $statement = $this->pdo->prepare(
+            'INSERT INTO jobs (id, queue, handler, payload, attempts, max_attempts, reserved_at, available_at)'
+            . ' VALUES (:id, :queue, :handler, :payload, 0, :max_attempts, NULL, :available_at)',
+        );
+        $statement->execute([
+            ':id' => $failed['id'],
+            ':queue' => $failed['queue'],
+            ':handler' => $failed['handler'],
+            ':payload' => $failed['payload'],
+            ':max_attempts' => max(1, $maxAttempts),
+            ':available_at' => $this->stamp(),
+        ]);
+
+        $this->deleteFailed($id);
+
+        return true;
+    }
+
+    /**
+     * Drop a failed job. Returns false when the id is not there.
+     */
+    public function deleteFailed(string $id): bool
+    {
+        $statement = $this->pdo->prepare('DELETE FROM failed_jobs WHERE id = :id');
+        $statement->execute([':id' => $id]);
+
+        return $statement->rowCount() > 0;
+    }
+
+    /**
+     * Shape a raw jobs row for the admin list (derived state included).
+     *
+     * @param array<string, mixed> $row
+     *
+     * @return array{id: string, queue: string, handler: string, attempts: int, max_attempts: int, reserved_at: ?string, available_at: string, created_at: ?string, state: string}
+     */
+    private function presentJobRow(array $row, string $now): array
+    {
+        $reservedAt = null !== $row['reserved_at'] ? (string) $row['reserved_at'] : null;
+
+        if (null !== $reservedAt) {
+            $state = 'reserved';
+        } elseif ((string) $row['available_at'] > $now) {
+            $state = 'delayed';
+        } else {
+            $state = 'pending';
+        }
+
+        return [
+            'id' => (string) $row['id'],
+            'queue' => (string) $row['queue'],
+            'handler' => (string) $row['handler'],
+            'attempts' => (int) $row['attempts'],
+            'max_attempts' => (int) $row['max_attempts'],
+            'reserved_at' => $reservedAt,
+            'available_at' => (string) $row['available_at'],
+            'created_at' => null !== $row['created_at'] ? (string) $row['created_at'] : null,
+            'state' => $state,
+        ];
+    }
+
+    /**
      * Release a reserved job back to available (optional backoff delay).
      */
     public function release(string $id, int $delaySeconds = 0): void
