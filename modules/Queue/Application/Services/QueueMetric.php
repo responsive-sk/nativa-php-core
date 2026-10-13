@@ -6,6 +6,7 @@ namespace Modules\Queue\Application\Services;
 
 use Modules\Cardboard\Domain\Contracts\MetricContract;
 use Modules\Cardboard\Domain\Model\Card;
+use Modules\Cardboard\Domain\Model\CardLink;
 use Modules\Cardboard\Domain\Model\Period;
 use Modules\Cardboard\Domain\Model\Trend;
 use Modules\Cardboard\Infrastructure\Attributes\AsMetricProvider;
@@ -54,6 +55,7 @@ final readonly class QueueMetric implements MetricContract
                 Card::make('queue', 'Queue Jobs', $pending)
                     ->withSubtitle("{$reserved} reserved · {$failed} failed")
                     ->withTrend(Trend::make($pushed, $previous))
+                    ->withActions(CardLink::make('View Jobs', '/mark/queue'))
                     ->withPriority(68),
             );
         } catch (\Throwable) {

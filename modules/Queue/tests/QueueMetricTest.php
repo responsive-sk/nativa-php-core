@@ -93,6 +93,7 @@ final class QueueMetricTest extends TestCase
 
         $card = $cards[0];
         $this->assertSame('queue', $card->id);
+        $this->assertSame('/mark/queue', $card->actions[0]->href ?? null);
         // After work(): the 2 pendings processed + deleted, the reserved
         // one still held, the delayed one waiting, 1 failed.
         $this->assertSame(0, $card->value);
