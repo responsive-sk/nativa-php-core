@@ -8,7 +8,7 @@ declare(strict_types = 1);
  *
  * The kernel runtime has no Composer packages, so this tool cannot be a
  * symfony/console application the way the showcase's bin/cms is: what manages
- * modules must run in a tree whose vendor/ directory may not exist. Five
+ * modules must run in a tree whose vendor/ directory may not exist. Six
  * commands, argv-parsed, exit 0 on success and 1 on refusal or error:
  *
  *   module:list              installed + catalogued modules
@@ -16,6 +16,7 @@ declare(strict_types = 1);
  *   module:add <Name>        copy the slice in (refuses an incomplete closure by name)
  *   module:remove <Name>     delete the slice (refuses while another module imports it)
  *   migrate                  run every module migrator (the first-request run, forced)
+ *   schedule:run             run the Scheduler timetable entries due now (needs the Scheduler module)
  *
  * The lifecycle itself lives in ModuleInstaller (a service the test harness
  * drives in-process); this script only prints results and maps refusals to
@@ -164,6 +165,7 @@ function usage(): void
     out('  module:add <Name>        install a module (refuses an incomplete closure)');
     out('  module:remove <Name> [--force]  remove a module (refuses while imported)');
     out('  migrate                  run every module migrator (the first-request run, forced)');
+    out('  schedule:run             run due Scheduler timetable entries (exit 1 on any failure)');
     out('  discovery:clear          delete the discovery cache (rebuilt on the next request)');
     out('  discovery:status         whether the discovery cache exists and is fresh');
 }
@@ -187,6 +189,31 @@ function cmdMigrate(): void
     };
 
     (new DatabaseMigrator())->run($output);
+}
+
+/**
+ * Run the Scheduler timetable entries due now — the cron entry (`* * * * *
+ * php bin/cms schedule:run`) that replaces the showcase's long-running
+ * worker. Per-task lines plus the summary go to stdout; the exit code is 1
+ * when any due task failed, else 0, so the cron daemon notices a poison
+ * task instead of silently rotating past it.
+ */
+function cmdScheduleRun(): void
+{
+    if (!class_exists(\Modules\Scheduler\Interfaces\HTTP\SchedulerServices::class)) {
+        fail('schedule:run needs the Scheduler module (bin/cms module:add Scheduler).');
+    }
+
+    $output = new class () implements \Modules\Scheduler\Scheduling\RunnerOutput {
+        public function writeLine(string $message): void
+        {
+            out($message);
+        }
+    };
+
+    $schedule = \Modules\Scheduler\Interfaces\HTTP\SchedulerServices::schedule();
+
+    exit(\Modules\Scheduler\Interfaces\HTTP\SchedulerServices::run($schedule, $output));
 }
 
 /**
@@ -259,6 +286,11 @@ function main(array $argv): void
 
         case 'migrate':
             cmdMigrate();
+
+            break;
+
+        case 'schedule:run':
+            cmdScheduleRun();
 
             break;
 
