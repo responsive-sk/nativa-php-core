@@ -20,6 +20,13 @@ use RuntimeException;
  * the assertion like `ModuleLifecycleTest::createHolderFixture()`. The log
  * line itself is not asserted (`error_log` is not observable here) — what is
  * pinned is the winner's stability with and without the contender.
+ *
+ * The premise needs an incumbent: on a kernel-only tree no installed
+ * provider votes a theme, so `$before` is null and the fixture would become
+ * the only answer (correct first-wins, nothing preempted). That tree skips
+ * rather than fails — the same contract the module test-suite documents for
+ * missing modules. The pure tie order itself is pinned without discovery in
+ * `PreferenceVoteTest`, which runs everywhere.
  */
 final class PreferenceContentionTest extends TestCase
 {
@@ -38,6 +45,10 @@ final class PreferenceContentionTest extends TestCase
     {
         ShellContextProviderRegistry::reset();
         $before = ShellContextProviderRegistry::theme();
+
+        if (null === $before) {
+            $this->markTestSkipped('No installed provider votes a theme — nothing to contend with (kernel-only tree).');
+        }
 
         try {
             self::createFixture();
