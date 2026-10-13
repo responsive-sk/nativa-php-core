@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace Modules\Mono\Theme;
 
-use Modules\Core\Application\Services\View\InlineJs;
 use Modules\Core\Domain\ShellNavItem;
 use Modules\Core\Interfaces\HTTP\PageContext;
 use Modules\Core\Interfaces\HTTP\ShellContext;
@@ -87,6 +86,22 @@ final class MonoTheme implements ThemeModule
                     } catch (e) {}
                 })();
             </script>
+            <!-- Sync slider staging signal — same pre-paint contract as above:
+                 the stylesheet stages a multi-slide hero the moment `mo-js`
+                 is present, so the deferred bundle never reflows a stacked
+                 opening frame. Skipped under reduced motion (the calm
+                 fallback stays stacked) — `classList` and `matchMedia` are
+                 both older than the Chrome 70 baseline. -->
+            <script nonce="__CSP_NONCE_PLACEHOLDER__">
+                (function() {
+                    try {
+                        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                            return;
+                        }
+                        document.documentElement.classList.add('mo-js');
+                    } catch (e) {}
+                })();
+            </script>
             HTML;
     }
 
@@ -129,91 +144,206 @@ final class MonoTheme implements ThemeModule
 
     public function pageWrap(string $content): string
     {
-        return '<main>' . "\n" . $content . '</main>' . "\n" . self::codeHighlight($content) . self::tocScrollspy($content) . self::variantSwitcher();
+        // No inline scripts here: the three behaviours this wrap used to
+        // gate per surface (highlight on fences, scrollspy on TOC asides,
+        // the ungated variant switcher) ship in the frozen `mono` bundle
+        // FrontendLayout defers from the manifest. Each init self-gates on
+        // its markup, so a page without fences or a TOC runs nothing. The
+        // switcher syncs its buttons on DOMContentLoaded rather than during
+        // parsing now — the pre-paint variant restore in themeInitScript()
+        // still applies before first paint, so only the button pressed
+        // state arrives a tick later, never the palette.
+        return '<main>' . "\n" . $content . '</main>' . "\n";
     }
 
     /**
-     * The syntax highlighter, inline and only where fenced blocks exist.
+     * Fullscreen home slider, the griffe shape in the mono idiom: slide 1 is
+     * the editorial hero (H1 + lede + CTA from `$copy`), slides 2+ are case
+     * slides from `$latestArticles` (falling back to `$articles`, then to the
+     * Blog latest-cards port when the action passed none — the kernel home
+     * carries no Blog import by contract, so without the fallback the slider
+     * would stay a lone hero on every tree that actually publishes). Slide 1
+     * is active server-side, so a static render (no JS, reduced motion) still
+     * opens on the hero.
      *
-     * Mono has no Frontend package and no build, so it cannot bundle the
-     * shared code-highlight.ts — mo-code-highlight.js is its 1:1 no-build
-     * twin, loaded here through InlineJs::file like the admin shell scripts.
-     * The nonce placeholder is substituted per response by the security
-     * headers middleware, exactly like every other inline script. Pages
-     * without fences ship no JS at all (the no-JS fallback is the plain
-     * mono code block, still readable, just one colour).
+     * Every slide's text ships `mo-is-visible`: the slider cross-fades the
+     * slide containers, never the titles — a stacked no-JS render stays fully
+     * readable, and no bundle timing can leave an empty hero behind.
      */
-    private static function codeHighlight(string $content): string
-    {
-        if (!str_contains($content, 'language-')) {
-            return '';
-        }
-
-        $js = InlineJs::file('Modules/Mono/assets/scripts/mo-code-highlight.js');
-
-        if ('' === $js) {
-            return '';
-        }
-
-        return '<script nonce="__CSP_NONCE_PLACEHOLDER__">' . $js . '</script>' . "\n";
-    }
-
-    /**
-     * The dev variant switcher, inline on every page.
-     *
-     * Unlike the highlighter and the scrollspy this one cannot gate on
-     * content: its buttons live in the navbar, which precedes every page.
-     * ~1 kB of ES2015-safe JS, idle after wiring the two buttons — the
-     * price of the dev preview on every Mono response.
-     */
-    private static function variantSwitcher(): string
-    {
-        $js = InlineJs::file('Modules/Mono/assets/scripts/mo-variant-switcher.js');
-
-        if ('' === $js) {
-            return '';
-        }
-
-        return '<script nonce="__CSP_NONCE_PLACEHOLDER__">' . $js . '</script>' . "\n";
-    }
-
-    /**
-     * The TOC scrollspy, inline and only where a TOC aside exists.
-     *
-     * Same deal as the highlighter above: mo-toc-scrollspy.js is the 1:1
-     * no-build twin of the shared toc-scrollspy.ts, gated here on the
-     * data-toc-link opt-in the tracker itself keys off — a page whose TOC
-     * links lost the attribute gets no script, and the tracker would idle
-     * anyway. Without JS the aside stays a plain list of working anchors.
-     */
-    private static function tocScrollspy(string $content): string
-    {
-        if (!str_contains($content, 'data-toc-link')) {
-            return '';
-        }
-
-        $js = InlineJs::file('Modules/Mono/assets/scripts/mo-toc-scrollspy.js');
-
-        if ('' === $js) {
-            return '';
-        }
-
-        return '<script nonce="__CSP_NONCE_PLACEHOLDER__">' . $js . '</script>' . "\n";
-    }
-
     public function homepage(PageContext $context): string
     {
-        $title = $context->copy['title'] ?? 'Home';
+        $articles = [] !== $context->latestArticles ? $context->latestArticles : $context->articles;
 
-        // mo-is-visible is rendered server-side: on the live site it is added
-        // by scroll JS, but an above-fold hero is visible on load — and this
-        // tree ships no JS that would add it later. Without the class the
-        // title keeps opacity:0 and the homepage renders its own H1 invisible.
-        return '<section class="mo-hero-section mo-hero-section--fw">'
-            . '<div class="mo-hero-section__content">'
-            . '<h1 class="mo-hero-section__title mo-is-visible">' . self::e($title) . '</h1>'
-            . '</div>'
+        if ([] === $articles) {
+            $articles = self::latestFallback($context->locale);
+        }
+        $slides = $this->heroSlide($context) . $this->caseSlides($context, $articles);
+        $count = substr_count($slides, '<li class="mo-slide');
+
+        // `mo-hero-slider--multi` lets the stylesheet stage the hero before
+        // first paint (see themeInitScript): a lone hero needs no staging —
+        // it reads the same stacked or staged — so only 2+ slides opt in.
+        $multi = $count >= 2 ? ' mo-hero-slider--multi' : '';
+
+        return '<section class="mo-hero-slider' . $multi . '" data-mo-autoplay="6000" aria-roledescription="carousel">'
+            . '<ul class="mo-slides">' . $slides . '</ul>'
+            . $this->sliderPag($count)
+            . $this->sliderArrows($count)
             . '</section>';
+    }
+
+    /**
+     * Quiet per-slide tints, cycled — the dark default carries the slide,
+     * the light override reverts to warm paper. Colours stay deprioritised,
+     * photography stays optional.
+     *
+     * @var list<array{light: string, dark: string}>
+     */
+    private const array SLIDE_TINTS = [
+        ['light' => '#faf7f0', 'dark' => '#0a0a0a'],
+        ['light' => '#f4efe4', 'dark' => '#14110a'],
+        ['light' => '#eef2f0', 'dark' => '#0b1210'],
+        ['light' => '#f1ecec', 'dark' => '#120d0d'],
+    ];
+
+    /**
+     * @param array<array-key, mixed> $articles
+     */
+    private function caseSlides(PageContext $context, array $articles): string
+    {
+        $service = $context->copy['case_service'] ?? 'Case study';
+        $html = '';
+        $i = 1;
+
+        foreach (self::pairs($articles) as $pair) {
+            $html .= '<li class="mo-slide"' . self::tint($i++) . '>'
+                . self::slideBg($pair['image'], $pair['title'])
+                . '<div class="mo-container">'
+                . '<p class="mo-slide__kicker">' . self::e($service) . '</p>'
+                . '<h2 class="mo-slide__title mo-is-visible">' . self::e($pair['title']) . '</h2>'
+                . '<a class="mo-btn mo-btn--outline" href="/blog/' . self::e($pair['slug']) . '">Read More →</a>'
+                . '</div>'
+                . '</li>';
+        }
+
+        return $html;
+    }
+
+    private function heroSlide(PageContext $context): string
+    {
+        $title = $context->copy['title'] ?? 'Home';
+        $lede = $context->copy['lede'] ?? '';
+        $cta = $context->copy['cta'] ?? 'Discover more';
+        $href = $context->blogHref ?? '/blog';
+
+        // `mo-slide--hero` stages the editorial glow: slide 1 carries no
+        // photo (the kernel home passes no heroSrc), so without it the
+        // opening stage is a flat tint next to photographic case slides.
+        $html = '<li class="mo-slide mo-slide--active mo-slide--hero"' . self::tint(0) . '>'
+            . self::slideBg($context->heroSrc, $title, $context->heroSrcset)
+            . '<div class="mo-container">'
+            . '<h1 class="mo-slide__title mo-is-visible">' . self::e($title) . '</h1>';
+
+        if ('' !== $lede) {
+            $html .= '<p class="mo-slide__lede mo-is-visible">' . self::e($lede) . '</p>';
+        }
+
+        return $html
+            . '<a class="mo-btn" href="' . self::e($href) . '">' . self::e($cta) . '</a>'
+            . '</div>'
+            . '</li>';
+    }
+
+    private static function tint(int $index): string
+    {
+        $tint = self::SLIDE_TINTS[$index % count(self::SLIDE_TINTS)];
+
+        return sprintf(
+            ' style="--mo-slide-bg: %s; --mo-slide-bg-dark: %s;"',
+            $tint['light'],
+            $tint['dark'],
+        );
+    }
+
+    /**
+     * Full-bleed slide image + legibility shade, '' when the action provides
+     * no source. `alt` carries the slide headline — a background with no
+     * `<img>` alternative is invisible to assistive tech.
+     */
+    private static function slideBg(?string $src, string $alt, ?string $srcset = null): string
+    {
+        if (null === $src || '' === $src) {
+            return '';
+        }
+
+        $set = null !== $srcset && '' !== $srcset
+            ? ' srcset="' . self::e($srcset) . '"'
+            : '';
+
+        return '<img class="mo-slide__bg" src="' . self::e($src) . '"' . $set
+            . ' alt="' . self::e($alt) . '">' . "\n"
+            . '<div class="mo-slide__shade" aria-hidden="true"></div>';
+    }
+
+    private function sliderPag(int $count): string
+    {
+        if ($count < 2) {
+            return '';
+        }
+
+        $buttons = '';
+
+        for ($i = 0; $i < $count; $i++) {
+            $active = 0 === $i ? ' mo-pag--active' : '';
+            $current = 0 === $i ? ' aria-current="true"' : '';
+            $buttons .= '<button type="button" class="mo-pag' . $active . '"'
+                . ' aria-label="Go to slide ' . ($i + 1) . '"' . $current . '>'
+                . '<span class="mo-pag__fill"></span></button>';
+        }
+
+        return '<div class="mo-slider__pag">' . $buttons . '</div>';
+    }
+
+    private function sliderArrows(int $count): string
+    {
+        if ($count < 2) {
+            return '';
+        }
+
+        return '<button type="button" class="mo-icon-btn mo-slider__arrow mo-slider__arrow--prev"'
+            . ' aria-label="Previous slide">←</button>'
+            . '<button type="button" class="mo-icon-btn mo-slider__arrow mo-slider__arrow--next"'
+            . ' aria-label="Next slide">→</button>';
+    }
+
+    /**
+     * Latest published articles when the action passed none. The kernel
+     * HomepageAction carries no Blog import by explicit contract, so it never
+     * passes any — without this fallback the slider would stay a lone hero on
+     * every tree that actually publishes. Guarded by class_exists: a tree
+     * without Blog renders the hero alone, exactly as before. A failure here
+     * degrades to empty, never to a white homepage — and it is logged, so the
+     * silence stays visible.
+     *
+     * @return list<object>
+     */
+    private static function latestFallback(string $locale): array
+    {
+        $facade = 'Modules\\Blog\\Application\\BlogServices';
+
+        if (!class_exists($facade)) {
+            return [];
+        }
+
+        try {
+            $cards = $facade::articles()->latestCards(6, $locale);
+        } catch (\Throwable $e) {
+            error_log('[MonoTheme] latest fallback failed: ' . $e->getMessage());
+
+            return [];
+        }
+
+        return array_map(static fn (array $card): object => (object) $card, $cards);
     }
 
     public function blogIndex(PageContext $context): string
@@ -335,9 +465,14 @@ final class MonoTheme implements ThemeModule
     }
 
     /**
+     * Slug + title are required; an image is opportunistic (`image`, `cover`
+     * or `coverImage` when the producer carries one) — still no import, still
+     * no coupling, just one more optional field off the same shape.
+     *
      * @param array<array-key, mixed> $articles
+     * @return list<array{slug: string, title: string, image: ?string}>
      */
-    private function cards(array $articles): string
+    private static function pairs(array $articles): array
     {
         $pairs = [];
 
@@ -351,9 +486,24 @@ final class MonoTheme implements ThemeModule
             $title = $fields['title'] ?? null;
 
             if (is_string($slug) && is_string($title)) {
-                $pairs[] = ['slug' => $slug, 'title' => $title];
+                $image = $fields['image'] ?? $fields['cover'] ?? $fields['coverImage'] ?? null;
+                $pairs[] = [
+                    'slug' => $slug,
+                    'title' => $title,
+                    'image' => is_string($image) && '' !== $image ? $image : null,
+                ];
             }
         }
+
+        return $pairs;
+    }
+
+    /**
+     * @param array<array-key, mixed> $articles
+     */
+    private function cards(array $articles): string
+    {
+        $pairs = self::pairs($articles);
 
         if ([] === $pairs) {
             return '<p>Nothing published yet.</p>';

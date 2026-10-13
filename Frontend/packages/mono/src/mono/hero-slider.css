@@ -1,0 +1,176 @@
+/**
+ * hero-slider.css — fullscreen home slider: stacked no-JS slides, one
+ * active stage once mo-slider.ts adds `.mo-slider--live`, progress
+ * pagination + arrows.
+ *
+ * The stage is claimed before first paint, not by the bundle: the sync
+ * `mo-js` signal (MonoTheme::themeInitScript, skipped under reduced
+ * motion) stages a `--multi` hero the moment `<html>` carries it, so the
+ * deferred bundle never reflows a stacked opening frame. `--live` stays
+ * as the behaviour hook (autoplay, controls) — it implies `mo-js`, so
+ * both selectors stage identically.
+ *
+ * Ported from griffe's hero-slider.css; only the vocabulary changed
+ * (`mo-`, mono tokens). The shade is rgba-based, not color-mix: the mono
+ * baseline honours Chrome 70, which drops color-mix and would lose the
+ * legibility layer entirely. Slide text ships `mo-is-visible` server-side,
+ * so titles never depend on a reveal observer.
+ */
+
+.mo-hero-slider {
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.mo-slides { list-style: none; margin: 0; padding: 0; }
+
+/* No-JS: slides stack, all readable, controls hidden (see --live below). */
+.mo-slide { position: relative; padding: clamp(3rem, 9vh, 6rem) 0; border-top: 1px solid var(--color-border); }
+.mo-slide:first-child { border-top: 0; }
+
+.mo-slider--live .mo-slide,
+.mo-js .mo-hero-slider--multi .mo-slide {
+    border-top: 0;
+    min-height: calc(100vh - var(--navbar-height));
+    min-height: calc(100dvh - var(--navbar-height));
+    display: flex;
+    align-items: center;
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(4%);
+    transition: opacity .6s ease, transform .6s ease, visibility 0s .6s;
+    padding: 0;
+}
+
+.mo-slider--live .mo-slide--active,
+.mo-js .mo-hero-slider--multi .mo-slide--active {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition: opacity .6s ease, transform .6s ease;
+    position: relative;
+}
+
+/* Mono is dark-first: the stage carries the dark tint, light reverts to
+   warm paper (MonoTheme::SLIDE_TINTS owns the pairs). */
+.mo-slide { background: var(--mo-slide-bg-dark, var(--mo-slide-bg, transparent)); }
+[data-theme="light"] .mo-slide { background: var(--mo-slide-bg, var(--mo-slide-bg-dark, transparent)); }
+
+/* Full-bleed slide imagery: the <img> covers the stage, a legibility shade
+   sits above it, content on top. No image → the per-slide tint carries the
+   slide alone. The shade pushes toward the theme background each mode, so
+   the title keeps contrast on photography either way. */
+.mo-slide__bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+}
+
+.mo-slide__shade {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(180deg, rgba(10,10,10,.72) 0%, rgba(10,10,10,.45) 60%, rgba(10,10,10,.65) 100%);
+}
+
+[data-theme="light"] .mo-slide__shade {
+    background: linear-gradient(180deg, rgba(250,247,240,.85) 0%, rgba(250,247,240,.55) 60%, rgba(250,247,240,.8) 100%);
+}
+
+.mo-slide .mo-container { position: relative; z-index: 2; text-align: center; max-width: 800px; }
+
+/* The opening slide carries no photo (the kernel home passes no heroSrc),
+   so a flat tint next to photographic case slides reads dead. The hero
+   class layers a gold radial glow + a faint grid over the tint — pure
+   decoration, no markup, no contrast cost (the title keeps its colour
+   either mode). radial-gradient + repeating-linear-gradient predate the
+   Chrome 70 baseline, so no fallback is needed. */
+.mo-slide--hero {
+    background:
+        radial-gradient(60% 50% at 50% 38%, rgba(212,175,55,.16), transparent 70%),
+        repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 1px, transparent 1px 56px),
+        var(--mo-slide-bg-dark, #0a0a0a);
+}
+
+[data-theme="light"] .mo-slide--hero {
+    background:
+        radial-gradient(60% 50% at 50% 38%, rgba(146,111,0,.14), transparent 70%),
+        repeating-linear-gradient(0deg, rgba(30,41,59,.035) 0 1px, transparent 1px 56px),
+        var(--mo-slide-bg, #faf7f0);
+}
+
+.mo-slide__kicker {
+    color: var(--brand-gold);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    font-size: .8rem;
+    margin: 0 0 1rem;
+}
+
+.mo-slide__title {
+    font-size: max(2.5rem, min(8vw, 5rem));
+    font-weight: var(--font-bold);
+    line-height: 1.1;
+    margin: 0 0 var(--space-6);
+    color: #fff;
+    text-wrap: balance;
+}
+
+[data-theme="light"] .mo-slide__title { color: var(--color-text); }
+
+.mo-slide__lede {
+    font-size: max(1.125rem, min(2vw, 1.5rem));
+    line-height: 1.6;
+    color: rgba(255,255,255,.9);
+    max-width: 44rem;
+    margin: 0 auto 2rem;
+}
+
+[data-theme="light"] .mo-slide__lede { color: var(--color-text-muted); }
+
+/* Pagination + arrows appear only once the slider is live. */
+.mo-slider__pag, .mo-slider__arrow { display: none; }
+.mo-slider--live .mo-slider__pag, .mo-slider--live .mo-slider__arrow { display: flex; }
+
+.mo-slider__pag {
+    position: absolute;
+    left: 0; right: 0; bottom: 1.5rem;
+    justify-content: center;
+    gap: .6rem;
+    z-index: 2;
+}
+
+.mo-pag {
+    width: 2.75rem;
+    height: .3rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--color-border);
+    padding: 0;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.mo-pag__fill { display: block; height: 100%; width: 0; background: var(--brand-gold); transition: width linear; }
+.mo-pag--active .mo-pag__fill { width: 100%; }
+/* Duration comes from the slider (data-mo-autoplay); without JS the filler
+   never runs and the transition above is inert. */
+
+.mo-slider__arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-border);
+}
+
+.mo-slider__arrow--prev { left: 1rem; }
+.mo-slider__arrow--next { right: 1rem; }

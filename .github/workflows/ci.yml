@@ -258,6 +258,20 @@ jobs:
           echo "ok  the manifest names griffe and $js + $css exist"
           ls -l public/dist/griffe/assets/
 
+      # The mono bundle is the second freeze exception: same contract as
+      # griffe above, guarded by MonoBuildFreezeTest.
+      - name: Assert the frozen mono manifest still carries its entry
+        run: |
+          set -euo pipefail
+          manifest=public/dist/mono/manifest.json
+          jq -e 'any(.[]; .name == "mono")' "$manifest"
+          js="public/dist/mono/$(jq -r '.[] | select(.name == "mono") | .file' "$manifest")"
+          css="public/dist/mono/$(jq -r '.[] | select(.name == "mono") | .css[0]' "$manifest")"
+          test -f "$js"
+          test -f "$css"
+          echo "ok  the manifest names mono and $js + $css exist"
+          ls -l public/dist/mono/assets/
+
       # Chrome 70 (< 99) drops @layer blocks entirely, which is why the build
       # strips them (build/strip-at-layer.ts). A reintroduced one parses,
       # matches nothing, and unstyled is indistinguishable from a design.
