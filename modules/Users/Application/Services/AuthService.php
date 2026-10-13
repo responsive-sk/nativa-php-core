@@ -9,6 +9,7 @@ use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
 use Modules\Security\Application\Services\PasswordHasher;
 use Modules\Security\Application\Services\RateLimiter;
 use Modules\Users\Domain\Entities\User;
+use Modules\Validation\Validation\Validator;
 use Modules\Users\Infrastructure\Persistence\Repositories\UserRepository;
 
 /**
@@ -59,28 +60,48 @@ final readonly class AuthService
      */
     public function register(string $name, string $email, string $password, string $confirmation): array
     {
-        $errors = [];
-
         $name = trim($name);
         $email = strtolower(trim($email));
 
-        if ('' === $name || mb_strlen($name) > 255) {
-            $errors[] = 'Name is required (max 255 characters).';
-        }
+        // The field rules live in the Validation module; the messages stay
+        // byte-identical to the strings this method returned before, so
+        // callers (and their assertions) see no change.
+        $failures = (new Validator())->validate(
+            [
+                'name'                  => $name,
+                'email'                 => $email,
+                'password'              => $password,
+                'password_confirmation' => $confirmation,
+            ],
+            [
+                'name'     => 'required|max:255',
+                'email'    => 'required|email',
+                'password' => 'required|min:8|confirmed',
+            ],
+            [
+                'name.required'      => 'Name is required (max 255 characters).',
+                'name.max'           => 'Name is required (max 255 characters).',
+                'email.required'     => 'A valid email address is required.',
+                'email.email'        => 'A valid email address is required.',
+                'password.required'  => 'Password must be at least 8 characters.',
+                'password.min'       => 'Password must be at least 8 characters.',
+                'password.confirmed' => 'Password confirmation does not match.',
+            ],
+        );
 
-        if (false === filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $errors[] = 'A valid email address is required.';
-        } elseif ($this->users->emailExists($email)) {
-            $errors[] = 'An account with this email already exists.';
-        }
+        // Uniqueness is not a validation rule — it needs the database. It
+        // keeps its position between the email-format and password errors,
+        // and is only checked when the address itself passed (as before).
+        $taken = [] === $failures->forField('email') && $this->users->emailExists($email)
+            ? ['An account with this email already exists.']
+            : [];
 
-        if (mb_strlen($password) < 8) {
-            $errors[] = 'Password must be at least 8 characters.';
-        }
-
-        if ($password !== $confirmation) {
-            $errors[] = 'Password confirmation does not match.';
-        }
+        $errors = array_merge(
+            $failures->forField('name'),
+            $failures->forField('email'),
+            $taken,
+            $failures->forField('password'),
+        );
 
         if ([] !== $errors) {
             return ['user' => User::fromRow([]), 'errors' => $errors];

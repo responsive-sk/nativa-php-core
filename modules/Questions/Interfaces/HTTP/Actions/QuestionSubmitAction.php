@@ -13,6 +13,7 @@ use Modules\Pages\Interfaces\HTTP\Actions\PageViewAction;
 use Modules\Questions\Application\QuestionsServices;
 use Modules\Questions\Domain\Entities\Question;
 use Modules\Users\Interfaces\HTTP\AuthServices;
+use Modules\Validation\Validation\Validator;
 
 /**
  * QuestionSubmitAction — POST /questions/{subjectType}/{subjectSlug}.
@@ -108,21 +109,25 @@ final class QuestionSubmitAction
      */
     private function errors(Request $request): array
     {
-        $rules = [
-            'display_name'     => 'Please enter your name.',
-            'text'             => 'Please enter your question.',
-            'attempted_answer' => 'Please describe what you tried.',
-        ];
-
-        $errors = [];
-
-        foreach ($rules as $field => $message) {
-            if (null === $this->stringOrNull($request->body($field))) {
-                $errors[] = $message;
-            }
-        }
-
-        return $errors;
+        // stringOrNull() trims and maps blanks to null, so `required` matches
+        // the old null checks exactly — same messages, same field order.
+        return (new Validator())->validate(
+            [
+                'display_name'     => $this->stringOrNull($request->body('display_name')),
+                'text'             => $this->stringOrNull($request->body('text')),
+                'attempted_answer' => $this->stringOrNull($request->body('attempted_answer')),
+            ],
+            [
+                'display_name'     => 'required',
+                'text'             => 'required',
+                'attempted_answer' => 'required',
+            ],
+            [
+                'display_name.required'     => 'Please enter your name.',
+                'text.required'             => 'Please enter your question.',
+                'attempted_answer.required' => 'Please describe what you tried.',
+            ],
+        )->all();
     }
 
     /**

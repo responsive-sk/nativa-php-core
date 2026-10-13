@@ -7,6 +7,7 @@ namespace Modules\Users\Application\Services;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Security\Application\Services\PasswordHasher;
 use Modules\Users\Infrastructure\Persistence\Repositories\UserRepository;
+use Modules\Validation\Validation\Validator;
 
 /**
  * PasswordResetService — request token → reset flow.
@@ -73,15 +74,21 @@ final readonly class PasswordResetService
      */
     public function reset(string $token, string $password, string $confirmation): array
     {
-        $errors = [];
-
-        if (mb_strlen($password) < 8) {
-            $errors[] = 'Password must be at least 8 characters.';
-        }
-
-        if ($password !== $confirmation) {
-            $errors[] = 'Password confirmation does not match.';
-        }
+        // Same rule shape as AuthService::register() (minus the name/email
+        // fields) and the same two legacy strings — an empty password
+        // reports the min message via `required`, exactly as before.
+        $errors = (new Validator())->validate(
+            [
+                'password'              => $password,
+                'password_confirmation' => $confirmation,
+            ],
+            ['password' => 'required|min:8|confirmed'],
+            [
+                'password.required'  => 'Password must be at least 8 characters.',
+                'password.min'       => 'Password must be at least 8 characters.',
+                'password.confirmed' => 'Password confirmation does not match.',
+            ],
+        )->all();
 
         if ([] !== $errors) {
             return $errors;

@@ -15,6 +15,7 @@ use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Users\Interfaces\HTTP\AuthServices;
+use Modules\Validation\Validation\Validator;
 
 /**
  * Articles create — GET/POST /mark/articles/create.
@@ -151,19 +152,23 @@ final class ArticlesCreateAction
      */
     private function validate(array $data): array
     {
-        $errors = [];
-
-        if ('' === $data['title']) {
-            $errors[] = 'Title is required.';
-        }
-        if ('' === $data['date']) {
-            $errors[] = 'Date is required.';
-        }
-        if ('' === $data['body']) {
-            $errors[] = 'Content is required.';
-        }
-
-        return $errors;
+        // Title and date arrive trimmed from the form payload, so `required`
+        // matches the old `=== ''` checks exactly. Body travels raw (base64
+        // or plain), so a whitespace-only body is now rejected instead of
+        // stored — the same deliberate tightening as UsersAction.
+        return (new Validator())->validate(
+            $data,
+            [
+                'title' => 'required',
+                'date'  => 'required',
+                'body'  => 'required',
+            ],
+            [
+                'title.required' => 'Title is required.',
+                'date.required'  => 'Date is required.',
+                'body.required'  => 'Content is required.',
+            ],
+        )->all();
     }
 
     /**

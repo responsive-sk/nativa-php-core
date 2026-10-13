@@ -13,6 +13,7 @@ use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Locales\Application\DTOs\TranslationDTO;
 use Modules\Locales\Domain\Model\Locale;
 use Modules\Locales\Interfaces\HTTP\LocalesServices;
+use Modules\Validation\Validation\Validator;
 
 /**
  * Locales admin — translation CRUD at /mark/locales.
@@ -154,12 +155,14 @@ final class LocalesAction
         $value = $this->stringParam($request->body('value', ''));
         $group = $this->stringParam($request->body('group', 'general'));
 
-        if ('' === $value) {
+        $valueErrors = $this->validateValue($value);
+
+        if ([] !== $valueErrors) {
             return Response::html($this->form(
                 'Edit translation',
                 '/mark/locales/' . $translation->id() . '/edit',
                 'Save changes',
-                ['Value is required.'],
+                $valueErrors,
                 [
                     'key'    => $translation->key(),
                     'locale' => $translation->locale()->code(),
@@ -419,25 +422,55 @@ final class LocalesAction
      */
     private function validate(string $key, string $localeCode, string $value): array
     {
-        $errors = [];
+        // Raw, untrimmed inputs reach this method, so `required` also rejects
+        // whitespace-only keys/values the old `=== ''` checks stored — the
+        // same deliberate tightening as UsersAction. Availability is not a
+        // validation rule (it reads the locale catalogue), so it keeps its
+        // position after the locale-format errors, like AuthService's
+        // email-taken check.
+        $failures = (new Validator())->validate(
+            ['key' => $key, 'locale' => $localeCode, 'value' => $value],
+            [
+                'key'    => 'required|regex:/^[a-zA-Z0-9._-]+$/',
+                'locale' => 'required',
+                'value'  => 'required',
+            ],
+            [
+                'key.required'    => 'Translation key is required.',
+                'key.regex'       => 'Key must match [a-zA-Z0-9._-]+ (e.g. nav.home).',
+                'locale.required' => 'Locale is required.',
+                'value.required'  => 'Value is required.',
+            ],
+        );
 
-        if ('' === $key) {
-            $errors[] = 'Translation key is required.';
-        } elseif (1 !== preg_match('/^[a-zA-Z0-9._-]+$/', $key)) {
-            $errors[] = 'Key must match [a-zA-Z0-9._-]+ (e.g. nav.home).';
-        }
+        $unavailable = [] === $failures->forField('locale') && !LocalesServices::locale()->isAvailable($localeCode)
+            ? ['The selected locale is not available.']
+            : [];
 
-        if ('' === $localeCode) {
-            $errors[] = 'Locale is required.';
-        } elseif (!LocalesServices::locale()->isAvailable($localeCode)) {
-            $errors[] = 'The selected locale is not available.';
-        }
+        return array_merge(
+            $failures->forField('key'),
+            $failures->forField('locale'),
+            $unavailable,
+            $failures->forField('value'),
+        );
+    }
 
-        if ('' === $value) {
-            $errors[] = 'Value is required.';
-        }
-
-        return $errors;
+    /**
+     * Edit only touches the value (key/locale are immutable), so it gets
+     * its own single-field check with the same legacy string.
+     *
+     * @return list<string>
+     */
+    private function validateValue(string $value): array
+    {
+        // Raw input, so `required` also rejects a whitespace-only value
+        // the old `=== ''` check stored — the same deliberate tightening
+        // as validate().
+        return (new Validator())->validate(
+            ['value' => $value],
+            ['value' => 'required'],
+            ['value.required' => 'Value is required.'],
+        )->all();
     }
 
     private function stringParam(mixed $value, string $default = ''): string

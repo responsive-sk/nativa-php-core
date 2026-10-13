@@ -7,6 +7,7 @@ namespace Modules\Comments\Application\Services;
 use Modules\Comments\Domain\Entities\Comment;
 use Modules\Comments\Infrastructure\Persistence\Repositories\CommentRepository;
 use Modules\Security\Application\Services\RateLimiter;
+use Modules\Validation\Validation\Validator;
 
 /**
  * CommentsService — submit, list and moderate article comments.
@@ -150,34 +151,37 @@ final readonly class CommentsService
      */
     private function validate(string $slug, ?string $userId, ?string $guestName, ?string $guestEmail, string $body): array
     {
-        $errors = [];
-
-        if ('' === $slug || 1 !== preg_match('/^[a-z0-9][a-z0-9_-]*$/i', $slug)) {
-            $errors[] = 'Invalid article.';
-        }
-
-        if ('' === $body) {
-            $errors[] = 'Comment body is required.';
-        } elseif (mb_strlen($body) > self::MAX_BODY_LENGTH) {
-            $errors[] = 'Comment is too long (max ' . self::MAX_BODY_LENGTH . ' characters).';
-        }
+        // Inputs arrive trimmed by submit(), so `required` matches the old
+        // `=== ''`/`=== null` checks exactly. One deliberate edge: an
+        // invalid AND over-long guest email reports both lines (the old
+        // elseif reported only the validity one) — the validator has no
+        // bail, and an invalid 255+ char email is not a real input.
+        $rules = [
+            'slug' => 'required|regex:/^[a-z0-9][a-z0-9_-]*$/i',
+            'body' => 'required|max:' . self::MAX_BODY_LENGTH,
+        ];
 
         if (null === $userId) {
             // Guests must provide a name + valid email.
-            if (null === $guestName || '' === $guestName) {
-                $errors[] = 'Name is required.';
-            } elseif (mb_strlen($guestName) > self::MAX_NAME_LENGTH) {
-                $errors[] = 'Name is too long (max ' . self::MAX_NAME_LENGTH . ' characters).';
-            }
-
-            if (null === $guestEmail || false === filter_var($guestEmail, FILTER_VALIDATE_EMAIL)) {
-                $errors[] = 'A valid email address is required.';
-            } elseif (mb_strlen($guestEmail) > self::MAX_EMAIL_LENGTH) {
-                $errors[] = 'Email is too long (max ' . self::MAX_EMAIL_LENGTH . ' characters).';
-            }
+            $rules['guest_name'] = 'required|max:' . self::MAX_NAME_LENGTH;
+            $rules['guest_email'] = 'required|email|max:' . self::MAX_EMAIL_LENGTH;
         }
 
-        return $errors;
+        return (new Validator())->validate(
+            ['slug' => $slug, 'body' => $body, 'guest_name' => $guestName, 'guest_email' => $guestEmail],
+            $rules,
+            [
+                'slug.required'       => 'Invalid article.',
+                'slug.regex'          => 'Invalid article.',
+                'body.required'       => 'Comment body is required.',
+                'body.max'            => 'Comment is too long (max ' . self::MAX_BODY_LENGTH . ' characters).',
+                'guest_name.required' => 'Name is required.',
+                'guest_name.max'      => 'Name is too long (max ' . self::MAX_NAME_LENGTH . ' characters).',
+                'guest_email.required' => 'A valid email address is required.',
+                'guest_email.email'    => 'A valid email address is required.',
+                'guest_email.max'      => 'Email is too long (max ' . self::MAX_EMAIL_LENGTH . ' characters).',
+            ],
+        )->all();
     }
 
     /**

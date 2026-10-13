@@ -14,6 +14,7 @@ use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Media\Interfaces\HTTP\MediaEditorHelper;
 use Modules\Pages\Application\Services\PageCrudService;
+use Modules\Validation\Validation\Validator;
 
 /**
  * Pages create — GET/POST /mark/pages/create.
@@ -156,19 +157,22 @@ final class PagesCreateAction
      */
     private function validate(array $data): array
     {
-        $errors = [];
-
-        if ('' === $data['title']) {
-            $errors[] = 'Title is required.';
-        }
-        if ('' === $data['body']) {
-            $errors[] = 'Content is required.';
-        }
-        if ('' !== $data['translation'] && 1 !== preg_match('/^[a-z0-9][a-z0-9_-]*$/', $data['translation'])) {
-            $errors[] = 'Translation slug must be URL-safe.';
-        }
-
-        return $errors;
+        // Inputs arrive trimmed from the form payload, so `required` matches
+        // the old `=== ''` checks exactly; the translation slug is optional
+        // (a non-required empty value skips `regex`).
+        return (new Validator())->validate(
+            $data,
+            [
+                'title'       => 'required',
+                'body'        => 'required',
+                'translation' => 'regex:/^[a-z0-9][a-z0-9_-]*$/',
+            ],
+            [
+                'title.required'   => 'Title is required.',
+                'body.required'    => 'Content is required.',
+                'translation.regex' => 'Translation slug must be URL-safe.',
+            ],
+        )->all();
     }
 
     /**

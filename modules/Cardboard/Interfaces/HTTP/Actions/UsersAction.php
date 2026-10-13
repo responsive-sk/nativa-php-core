@@ -14,6 +14,7 @@ use Modules\Core\Infrastructure\Storage\LocalStorageProvider;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Outbox\Interfaces\HTTP\SecurityEventServices;
 use Modules\Security\Application\Services\PasswordHasher;
+use Modules\Validation\Validation\Validator;
 
 /**
  * Users CRUD — task 9.2.
@@ -517,24 +518,25 @@ final class UsersAction
      */
     private function validate(string $name, string $email, string $password, bool $passwordRequired): array
     {
-        $errors = [];
-
-        if ('' === $name) {
-            $errors[] = 'Name is required.';
-        }
-
-        if ('' === $email || false === filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $errors[] = 'A valid email is required.';
-        }
-
-        if ($passwordRequired && '' === $password) {
-            $errors[] = 'Password is required.';
-        }
-
-        if ('' !== $password && strlen($password) < 8) {
-            $errors[] = 'Password must be at least 8 characters.';
-        }
-
-        return $errors;
+        // The admin form's legacy strings, kept byte-identical; the field
+        // rules live in the Validation module. Two deliberate tightenings
+        // vs the old `=== ''` checks (which the raw, untrimmed inputs
+        // reached): `required` also rejects whitespace-only names and
+        // passwords, and `min` counts characters, not bytes.
+        return (new Validator())->validate(
+            ['name' => $name, 'email' => $email, 'password' => $password],
+            [
+                'name'     => 'required',
+                'email'    => 'required|email',
+                'password' => $passwordRequired ? 'required|min:8' : 'min:8',
+            ],
+            [
+                'name.required'     => 'Name is required.',
+                'email.required'    => 'A valid email is required.',
+                'email.email'       => 'A valid email is required.',
+                'password.required' => 'Password is required.',
+                'password.min'      => 'Password must be at least 8 characters.',
+            ],
+        )->all();
     }
 }
