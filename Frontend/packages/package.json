@@ -13,6 +13,7 @@
     "build:magazine": "pnpm --filter @nativa/theme-magazine run build",
     "build:minimal": "pnpm --filter @nativa/theme-minimal run build",
     "build:griffe": "pnpm --filter @nativa/theme-griffe run build",
+    "build:mono": "pnpm --filter @nativa/theme-mono run build",
     "typecheck": "tsc -p tsconfig.build.json && pnpm -r run typecheck"
   },
   "devDependencies": {

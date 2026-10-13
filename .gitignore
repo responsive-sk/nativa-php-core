@@ -66,6 +66,9 @@ src/Modules/*
 # the committed files drift from what `make assets` reproduces. Edit only by
 # rebuilding; never by hand.
 !/public/dist/griffe/
+# Freeze exception (follow-up: mono): same contract as griffe above, guarded
+# by MonoBuildFreezeTest.
+!/public/dist/mono/
 
 # pnpm workspace dependencies (Frontend/packages). The theme SOURCES are
 # tracked — they are what `make assets` builds; node_modules and pnpm's

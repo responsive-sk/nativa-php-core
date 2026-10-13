@@ -7,6 +7,7 @@ namespace Modules\Mono\Tests;
 use Modules\Core\Application\Services\View\InlineCss;
 use Modules\Core\Domain\ShellNavItem;
 use Modules\Core\Infrastructure\Http\Request;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\PageContext;
 use Modules\Core\Interfaces\HTTP\ShellContext;
 use Modules\Mono\Theme\MonoTheme;
@@ -139,26 +140,38 @@ final class MonoThemeTest extends TestCase
     }
 
     /**
-     * The loader ships inline, and only where fenced blocks exist: pages
-     * without fences carry no highlighter, and the no-JS fallback stays the
-     * plain mono code block. (The variant switcher below rides on every
-     * pageWrap — its buttons live in the navbar, which precedes all pages.)
+     * pageWrap ships a bare `<main>`: the highlighter, scrollspy and variant
+     * switcher twins moved into the frozen `mono` bundle FrontendLayout
+     * defers, each init self-gating on its markup. The gating (fences, TOC
+     * aside, navbar buttons) now lives in TypeScript, not PHP.
      */
     #[Test]
-    public function pageWrapLoadsTheHighlighterOnlyWhereFencesExist(): void
+    public function pageWrapShipsNoInlineScripts(): void
     {
         $theme = new MonoTheme();
 
         $fenced = $theme->pageWrap('<pre><code class="language-php">echo 1;</code></pre>');
 
-        $this->assertStringContainsString('<script nonce="__CSP_NONCE_PLACEHOLDER__">', $fenced);
-        $this->assertStringContainsString('initMoCodeHighlight', $fenced);
-        $this->assertStringContainsString('mo-code-badge', $fenced, 'The loader must carry the language badge — a fence without its label ships half the feature.');
+        $this->assertSame(1, substr_count($fenced, '<main>'), 'One wrap, one <main> — no nested mains.');
+        $this->assertStringNotContainsString('<script', $fenced, 'No inline scripts — highlight, scrollspy and switcher run from the bundle.');
+        $this->assertStringNotContainsString('mo-code-highlight.js', $fenced);
 
         $plain = $theme->pageWrap('<p>no code here</p>');
 
-        $this->assertStringNotContainsString('initMoCodeHighlight', $plain, 'A page without fences must ship no highlighter.');
-        $this->assertStringContainsString('initMoVariantSwitcher', $plain, 'The navbar switcher has no content gate — its buttons precede every page.');
+        $this->assertStringNotContainsString('<script', $plain, 'Even fenced pages ship no inline highlighter.');
+    }
+
+    #[Test]
+    public function renderedDocumentDefersTheFrozenBundle(): void
+    {
+        $html = FrontendLayout::render('Test', '<p>x</p>', theme: 'mono');
+
+        $this->assertStringContainsString(
+            '<script src="/dist/mono/',
+            $html,
+            'The document must defer the frozen bundle — without it mono pages keep the critical CSS but lose every behaviour.',
+        );
+        $this->assertStringContainsString('defer></script>', $html, 'The bundle script stays deferred, never render-blocking.');
     }
 
     /**
@@ -169,11 +182,6 @@ final class MonoThemeTest extends TestCase
     public function pageWrapLoadsTheVariantSwitcherWithUpstreamIds(): void
     {
         $theme = new MonoTheme();
-
-        $html = $theme->pageWrap('<p>any page</p>');
-
-        $this->assertStringContainsString('initMoVariantSwitcher', $html);
-        $this->assertStringNotContainsString('initMoTocScrollspy', $html, 'The scrollspy keeps its TOC gate — only the switcher is ungated.');
 
         $header = self::headerWithItems();
 
@@ -201,33 +209,167 @@ final class MonoThemeTest extends TestCase
 
         $this->assertStringContainsString('nativa-variant', $init, 'The persisted variant must restore pre-paint, or the page flashes default.');
         $this->assertStringContainsString('nativa-theme', $init, 'The override reproduces the shared dark/light restore — it replaces it, not appends.');
+        $this->assertStringContainsString("classList.add('mo-js')", $init, 'The multi-slider stages pre-paint — without mo-js the opening frame stacks.');
+        $this->assertStringContainsString('prefers-reduced-motion', $init, 'Reduced motion keeps the stacked calm fallback.');
+    }
+
+    #[Test]
+    public function theRenderedDocumentSignalsJsBeforeFirstPaint(): void
+    {
+        $html = FrontendLayout::render('Test', '<p>x</p>', theme: 'mono');
+        $head = substr($html, 0, (int) strpos($html, '</head>'));
+
+        $this->assertStringContainsString("classList.add('mo-js')", $head, 'The staging signal must run synchronously in <head>, before first paint.');
+    }
+
+    #[Test]
+    public function theMultiSliderOptsIntoPrePaintStaging(): void
+    {
+        $multi = (new MonoTheme())->homepage(self::homepageContext());
+
+        $this->assertStringContainsString(
+            '<section class="mo-hero-slider mo-hero-slider--multi"',
+            $multi,
+            '2+ slides stage before first paint; without --multi the opening frame stacks.',
+        );
+    }
+
+    #[Test]
+    public function stagingOptInFollowsTheSlideCount(): void
+    {
+        // No articles passed: the theme falls back to published ones, so the
+        // count — and therefore the opt-in — follows whatever storage holds.
+        $context = PageContext::forHomepage(
+            Request::create('GET', '/'),
+            'mono',
+            'en',
+            copy: ['title' => 'Hero'],
+        );
+
+        $html = (new MonoTheme())->homepage($context);
+        $count = substr_count($html, '<li class="mo-slide');
+
+        if ($count >= 2) {
+            $this->assertStringContainsString('mo-hero-slider--multi', $html);
+        } else {
+            $this->assertStringNotContainsString('mo-hero-slider--multi', $html, 'One slide reads the same stacked or staged — no opt-in, no surprise.');
+        }
+    }
+
+    #[Test]
+    public function theHomepageIsASliderWithOneSlidePerArticlePlusHero(): void
+    {
+        $html = (new MonoTheme())->homepage(self::homepageContext());
+
+        $this->assertSame(3, substr_count($html, '<li class="mo-slide'), 'Hero slide + 2 case slides.');
+        $this->assertSame(1, substr_count($html, 'mo-slide--active'), 'Slide 1 is active server-side.');
+        $this->assertSame(3, substr_count($html, '<button type="button" class="mo-pag'), 'One pagination button per slide.');
+        $this->assertStringContainsString('aria-current="true"', $html);
+        $this->assertSame(1, substr_count($html, 'mo-slider__arrow--prev'));
+        $this->assertSame(1, substr_count($html, 'mo-slider__arrow--next'));
+        $this->assertStringContainsString('data-mo-autoplay="6000"', $html);
+        $this->assertStringContainsString('aria-roledescription="carousel"', $html, 'A rotating stage announces itself as a carousel.');
     }
 
     /**
-     * The scrollspy ships inline, and only where a TOC aside exists: the
-     * gate is the same data-toc-link opt-in the tracker keys off, so the
-     * two cannot drift apart — markup without the attribute gets no script.
+     * The kernel HomepageAction passes no articles (no Blog import by explicit
+     * contract), so the theme falls back to the latest published ones itself —
+     * guarded: without Blog the hero stands alone, exactly as before. The
+     * expectation is computed from the same source the theme reads, so the
+     * test holds whatever storage publishes (including nothing).
      */
     #[Test]
-    public function pageWrapLoadsTheScrollspyOnlyWhereATocAsideExists(): void
+    public function homepageWithoutPassedArticlesFallsBackToPublishedOnes(): void
     {
-        $theme = new MonoTheme();
+        $facade = 'Modules\\Blog\\Application\\BlogServices';
 
-        $withToc = $theme->pageWrap(
-            '<aside class="mo-toc"><a class="mo-toc__link" data-toc-link data-heading="a" href="#a">A</a></aside>',
+        $context = PageContext::forHomepage(Request::create('GET', '/'), 'mono', 'en', copy: ['title' => 'Hero']);
+
+        $html = (new MonoTheme())->homepage($context);
+
+        if (!class_exists($facade)) {
+            $this->assertSame(1, substr_count($html, '<li class="mo-slide'), 'The hero slide renders with no articles.');
+            $this->assertStringNotContainsString('mo-slider__pag', $html, 'No pagination for a single slide.');
+            $this->assertStringNotContainsString('mo-slider__arrow', $html, 'No arrows for a single slide.');
+
+            return;
+        }
+
+        $expected = $facade::articles()->latestCards(6, 'en');
+
+        $this->assertSame(1 + count($expected), substr_count($html, '<li class="mo-slide'), 'Hero slide plus one case slide per published article.');
+
+        if ([] === $expected) {
+            return;
+        }
+
+        foreach ($expected as $card) {
+            $this->assertStringContainsString('/blog/' . $card['slug'], $html);
+        }
+    }
+
+    /**
+     * Every slide's text ships `mo-is-visible`: the slider cross-fades the
+     * containers, never the titles — a stacked no-JS render stays fully
+     * readable, and no bundle timing can leave an empty hero behind.
+     */
+    #[Test]
+    public function everySlideShipsVisibleTitles(): void
+    {
+        $html = (new MonoTheme())->homepage(self::homepageContext());
+
+        $this->assertSame(3, substr_count($html, 'mo-slide__title mo-is-visible'), 'Hero H1 + 2 case H2s, all visible from first paint.');
+        $this->assertStringContainsString('<a class="mo-btn" href="/blog">', $html, 'The hero CTA leads to the blog.');
+        $this->assertSame(1, substr_count($html, 'mo-slide--hero'), 'Only the opening slide stages the editorial glow.');
+        $this->assertStringContainsString(
+            '.mo-slide--hero',
+            InlineCss::file('Modules/Mono/assets/critical/mono.css'),
+            'The hero glow must ship in the fallback — without it the opening stage is a flat tint next to photos.',
         );
+    }
 
-        $this->assertStringContainsString('<script nonce="__CSP_NONCE_PLACEHOLDER__">', $withToc);
-        $this->assertStringContainsString('initMoTocScrollspy', $withToc);
+    #[Test]
+    public function homepageSlidesCarryTintsAndShadeOnlyWithImage(): void
+    {
+        $html = (new MonoTheme())->homepage(self::homepageContext());
+
+        $this->assertSame(3, substr_count($html, '--mo-slide-bg:'), 'Every slide carries its tint.');
+        $this->assertSame(3, substr_count($html, '--mo-slide-bg-dark:'), 'Every slide carries its dark tint — mono is dark-first.');
+        $this->assertStringContainsString('mo-slide__shade', $html, 'Imagery ships its legibility shade.');
+
+        $bare = (new MonoTheme())->homepage(PageContext::forHomepage(
+            Request::create('GET', '/'),
+            'mono',
+            'en',
+            copy: ['title' => 'Hero'],
+            latestArticles: [self::article('a', 'A')],
+        ));
+
+        $this->assertStringNotContainsString('mo-slide__bg', $bare, 'No source, no <img> — the tint carries the slide.');
+    }
+
+    #[Test]
+    public function homepageShipsNoInlineScripts(): void
+    {
+        $home = (new MonoTheme())->homepage(self::homepageContext());
+
+        $this->assertStringNotContainsString('<script', $home, 'No inline scripts — the slider runs from the bundle.');
+        $this->assertStringNotContainsString('mo-slider.js', $home);
+    }
+
+    /**
+     * The scrollspy's active rule must ship in the stylesheet — a tracker
+     * with no style highlights invisibly. The TOC gate itself moved into
+     * the bundle init; pageWrap no longer decides.
+     */
+    #[Test]
+    public function theStylesheetCarriesTheScrollspyActiveRule(): void
+    {
         $this->assertStringContainsString(
             '.mo-toc__link--active',
             InlineCss::file('Modules/Mono/assets/critical/mono.css'),
             'The active rule must ship in the stylesheet — a tracker with no style highlights invisibly.',
         );
-
-        $withoutToc = $theme->pageWrap('<article><h2>Just text</h2></article>');
-
-        $this->assertStringNotContainsString('initMoTocScrollspy', $withoutToc, 'A page without a TOC aside must ship no scrollspy.');
     }
 
     /**
@@ -322,6 +464,32 @@ final class MonoThemeTest extends TestCase
         $toggle = (int) strpos($header, 'data-theme-toggle');
         $meatball = (int) strpos($header, 'mo-navbar__toggle-icon--meatball');
         $this->assertLessThan($meatball, $toggle, 'Upstream order: theme switcher first, meatball last — the meatball stays the final control.');
+    }
+
+    private static function article(string $slug, string $title, ?string $image = null): object
+    {
+        $article = new \stdClass();
+        $article->slug = $slug;
+        $article->title = $title;
+
+        if (null !== $image) {
+            $article->image = $image;
+        }
+
+        return $article;
+    }
+
+    private static function homepageContext(): PageContext
+    {
+        return PageContext::forHomepage(
+            Request::create('GET', '/'),
+            'mono',
+            'en',
+            copy: ['title' => 'Mono upstream', 'lede' => 'Business first.', 'cta' => 'Discover more'],
+            blogHref: '/blog',
+            heroSrc: 'https://example.test/hero.webp',
+            latestArticles: [self::article('alpha', 'Alpha Client'), self::article('beta', 'Beta Client')],
+        );
     }
 
     private static function headerWithItems(): string
