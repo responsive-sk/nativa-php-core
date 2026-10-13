@@ -158,7 +158,7 @@ final class BlogInlineEditAction
                 sprintf(
                     '<div class="%s-inline-edit__notice" role="status">%s</div>',
                     self::e($prefix),
-                    LocalesServices::t('blog.saved', 'Saved.', $locale),
+                    self::e(LocalesServices::t('blog.saved', 'Saved.', $locale)),
                 ),
                 200,
             );

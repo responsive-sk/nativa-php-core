@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Pages\Interfaces\HTTP\Actions;
 
+use Modules\Cardboard\Application\Services\AdminLocale;
 use Modules\Cardboard\Application\Services\BulkActions;
 use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Infrastructure\Http\Request;
@@ -28,7 +29,10 @@ final class PagesIndexAction
 
     public function handle(Request $request): Response
     {
-        $localeRaw = is_string($request->query('locale')) ? $request->query('locale') : 'sk';
+        // Allowlisted at the boundary: the raw param is re-emitted into
+        // row/filter/create URLs, so anything outside sk/en would reflect
+        // verbatim (AdminLocale::raw() is the identity on legit values).
+        $localeRaw = AdminLocale::raw(is_string($request->query('locale')) ? $request->query('locale') : 'sk');
         $locale = ContentServices::mapper()->code($localeRaw);
         $search = is_string($request->query('q')) ? $request->query('q') : '';
         $pageParam = $request->query('page');

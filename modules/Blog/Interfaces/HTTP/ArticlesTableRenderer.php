@@ -75,6 +75,9 @@ final class ArticlesTableRenderer
      */
     private static function buildRow(array $article, string $locale): string
     {
+        // Defense in depth beside the actions' boundary allowlist: a future
+        // caller passing a raw param must not get attribute breakout.
+        $locale = AdminLayout::e($locale);
         $slug = AdminLayout::e($article['slug']);
         $title = AdminLayout::e($article['title']);
         $date = AdminLayout::e($article['date']);

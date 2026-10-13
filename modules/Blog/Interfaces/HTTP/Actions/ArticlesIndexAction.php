@@ -33,7 +33,10 @@ final class ArticlesIndexAction
 
     public function handle(Request $request): Response
     {
-        $localeRaw = is_string($request->query('locale')) ? $request->query('locale') : 'sk';
+        // Allowlisted at the boundary: the raw param is re-emitted into
+        // row/filter/create URLs, so anything outside sk/en would reflect
+        // verbatim (AdminLocale::raw() is the identity on legit values).
+        $localeRaw = AdminLocale::raw(is_string($request->query('locale')) ? $request->query('locale') : 'sk');
         $locale = AdminLocale::canonical($localeRaw);
         $search = is_string($request->query('q')) ? $request->query('q') : '';
         $periodRaw = is_string($request->query('period')) ? $request->query('period') : '';

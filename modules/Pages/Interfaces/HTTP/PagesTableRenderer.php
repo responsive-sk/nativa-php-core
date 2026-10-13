@@ -68,6 +68,9 @@ final class PagesTableRenderer
      */
     public static function row(array $page, string $locale): string
     {
+        // Defense in depth beside the actions' boundary allowlist: a future
+        // caller passing a raw param must not get attribute breakout.
+        $locale = AdminLayout::e($locale);
         $slug = AdminLayout::e($page['slug']);
         $title = AdminLayout::e($page['title']);
         $editHref = '/mark/pages/' . $slug . '/edit?locale=' . $locale;
