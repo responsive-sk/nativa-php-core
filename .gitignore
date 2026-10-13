@@ -90,6 +90,7 @@ src/Modules/*
 
 # Internal agent tooling (never committed, never pushed to GitHub).
 /.agents/
+/.ai-factory/
 /.ai-factory.json
 # Deployable build output (bin/build/build-dist.sh). An artifact, exactly like
 # /public/dist/ above: produced by a script, never committed. A trailing
