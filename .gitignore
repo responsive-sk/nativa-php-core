@@ -92,6 +92,9 @@ src/Modules/*
 /.agents/
 /.ai-factory/
 /.ai-factory.json
+# OpenSpec plans and specs are our internal tooling too (decision 2026-10-14):
+# they stay local like .ai-factory/ and never go to GitHub.
+/openspec/
 # Deployable build output (bin/build/build-dist.sh). An artifact, exactly like
 # /public/dist/ above: produced by a script, never committed. A trailing
 # comment on the pattern line does NOT work here — gitignore has no comment
