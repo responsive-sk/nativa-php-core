@@ -1,0 +1,115 @@
+<?php
+
+declare(strict_types = 1);
+
+namespace Modules\Outbox\Tests;
+
+use Modules\Cardboard\Domain\Model\Period;
+use Modules\Cardboard\Infrastructure\Registry\CardboardRegistry;
+use Modules\Core\Interfaces\CLI\CliOutput;
+use Modules\Outbox\Application\Services\OutboxMetric;
+use Modules\Outbox\Infrastructure\Persistence\Migrations\OutboxDatabaseMigrator;
+use PDO;
+use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * OutboxMetricTest — beside the code it covers (module test contract:
+ * drives the INSTALLED copy, skips on a kernel-only tree).
+ *
+ * Seeds a throwaway SQLite file with one row per status and asserts the
+ * registered card — never a real module database.
+ */
+final class OutboxMetricTest extends TestCase
+{
+    private string $dbFile;
+
+    private PDO $pdo;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        if (!is_dir(APP_BASE_PATH . '/src/Modules/Outbox')) {
+            $this->markTestSkipped('Outbox is not installed.');
+        }
+
+        $this->dbFile = sys_get_temp_dir() . '/outbox-metric-' . bin2hex(random_bytes(8)) . '.sqlite';
+        $this->pdo = new PDO('sqlite:' . $this->dbFile);
+        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+        $null = new class implements CliOutput {
+            public function writeln(string $message): void
+            {
+            }
+        };
+        (new OutboxDatabaseMigrator($this->pdo))->run($null);
+
+        CardboardRegistry::reset();
+    }
+
+    protected function tearDown(): void
+    {
+        CardboardRegistry::reset();
+
+        unset($this->pdo);
+
+        if (is_file($this->dbFile)) {
+            unlink($this->dbFile);
+        }
+
+        parent::tearDown();
+    }
+
+    #[Test]
+    public function registersOutboxCardWithLiveCounts(): void
+    {
+        $this->seed('pending', null, null);
+        $this->seed('pending', null, null);
+        $this->seed('processing', null, null);
+        $this->seed('processed', date('Y-m-d H:i:s'), null);
+        $this->seed('processed', date('Y-m-d H:i:s'), null);
+        // Old processed row: outside every 7d window, must not count.
+        $this->seed('processed', date('Y-m-d H:i:s', strtotime('-60 days')), null);
+        $this->seed('failed', null, date('Y-m-d H:i:s'));
+
+        (new OutboxMetric($this->pdo))->registerCards(Period::SEVEN_DAYS);
+
+        $cards = CardboardRegistry::all();
+        $this->assertCount(1, $cards);
+
+        $card = $cards[0];
+        $this->assertSame('outbox', $card->id);
+        $this->assertSame(3, $card->value, 'pending + processing need attention');
+        $this->assertSame('2 processed · 1 failed in 7 days', $card->subtitle);
+        $this->assertNotNull($card->trend);
+    }
+
+    #[Test]
+    public function emptyDatabaseRegistersZeroCard(): void
+    {
+        (new OutboxMetric($this->pdo))->registerCards(Period::SEVEN_DAYS);
+
+        $cards = CardboardRegistry::all();
+        $this->assertCount(1, $cards);
+        $this->assertSame(0, $cards[0]->value);
+        $this->assertSame('0 processed · 0 failed in 7 days', $cards[0]->subtitle);
+    }
+
+    private function seed(string $status, ?string $processedAt, ?string $lastAttemptAt): void
+    {
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO outbox_messages (id, event_type, event_payload, status, attempts, max_attempts, processed_at, last_attempt_at, created_at)'
+            . ' VALUES (:id, :type, :payload, :status, 0, 3, :processed, :attempted, :created)',
+        );
+        $stmt->execute([
+            ':id' => bin2hex(random_bytes(16)),
+            ':type' => 'article.published',
+            ':payload' => '{}',
+            ':status' => $status,
+            ':processed' => $processedAt,
+            ':attempted' => $lastAttemptAt,
+            ':created' => date('Y-m-d H:i:s'),
+        ]);
+    }
+}
