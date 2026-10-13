@@ -164,6 +164,8 @@ function usage(): void
     out('  module:add <Name>        install a module (refuses an incomplete closure)');
     out('  module:remove <Name> [--force]  remove a module (refuses while imported)');
     out('  migrate                  run every module migrator (the first-request run, forced)');
+    out('  discovery:clear          delete the discovery cache (rebuilt on the next request)');
+    out('  discovery:status         whether the discovery cache exists and is fresh');
 }
 
 /**
@@ -185,6 +187,33 @@ function cmdMigrate(): void
     };
 
     (new DatabaseMigrator())->run($output);
+}
+
+/**
+ * Delete the discovery cache — the next request rescans and rebuilds it.
+ * The file is derived state (like the migration marker), so clearing it is
+ * always safe; a missing file only costs one scan.
+ */
+function cmdDiscoveryClear(): void
+{
+    \Modules\Core\Application\Services\DiscoveryCache::clearCache();
+    out('Discovery cache cleared.');
+}
+
+/**
+ * Report whether the discovery cache exists, whether its fingerprint still
+ * matches the current module set, and how many routes it holds.
+ */
+function cmdDiscoveryStatus(): void
+{
+    $status = \Modules\Core\Application\Services\DiscoveryCache::fromAppPaths()->status();
+
+    out(sprintf('Exists:      %s', $status['exists'] ? 'yes' : 'no'));
+    out(sprintf('Fresh:       %s', $status['fresh'] ? 'yes' : 'no'));
+    out(sprintf('Routes:      %d', $status['routes']));
+    out(sprintf('Middleware:  %d', $status['middleware']));
+    out(sprintf('Fingerprint: %s', substr($status['fingerprint'], 0, 16) . '…'));
+    out(sprintf('Version:     %d', $status['version']));
 }
 
 /** @param list<string> $argv */
@@ -230,6 +259,16 @@ function main(array $argv): void
 
         case 'migrate':
             cmdMigrate();
+
+            break;
+
+        case 'discovery:clear':
+            cmdDiscoveryClear();
+
+            break;
+
+        case 'discovery:status':
+            cmdDiscoveryStatus();
 
             break;
 

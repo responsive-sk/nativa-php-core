@@ -44,6 +44,22 @@ final class AuthProviderRegistry
             return self::$providers;
         }
 
+        self::$providers = array_map(
+            static fn (array $entry): AuthProvider => $entry[1],
+            self::allWithPriority(),
+        );
+
+        return self::$providers;
+    }
+
+    /**
+     * Every installed provider with its priority, in priority order — the
+     * shape contention logging needs (`PreferenceVote::select()`).
+     *
+     * @return list<array{int, AuthProvider}>
+     */
+    public static function allWithPriority(): array
+    {
         $found = [];
 
         foreach (self::files() as $file) {
@@ -58,9 +74,7 @@ final class AuthProviderRegistry
 
         usort($found, static fn (array $a, array $b): int => $a[0] <=> $b[0]);
 
-        self::$providers = array_map(static fn (array $entry): AuthProvider => $entry[1], $found);
-
-        return self::$providers;
+        return $found;
     }
 
     /** Reset the cached providers (test isolation, module add/remove). */
@@ -72,10 +86,31 @@ final class AuthProviderRegistry
     /**
      * The provider the middleware is wired around, or null when no module
      * owns authentication — in which case the middleware is not wired at all.
+     * A same-priority second provider is logged, never silently dropped.
      */
     public static function first(): ?AuthProvider
     {
-        return self::all()[0] ?? null;
+        $ranked = self::allWithPriority();
+
+        if ([] === $ranked) {
+            return null;
+        }
+
+        [$priority, $winner] = $ranked[0];
+
+        foreach (array_slice($ranked, 1) as [$peerPriority, $provider]) {
+            if ($peerPriority !== $priority) {
+                break;
+            }
+
+            error_log(sprintf(
+                '[auth] provider %s ignored (same priority as %s)',
+                $provider::class,
+                $winner::class,
+            ));
+        }
+
+        return $winner;
     }
 
     /**

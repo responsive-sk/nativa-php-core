@@ -27,13 +27,25 @@ final class MiddlewareRegistry
             return self::$middlewares;
         }
 
-        $middlewares = [];
+        self::$middlewares = self::instantiate(self::discoveredClasses());
+
+        return self::$middlewares;
+    }
+
+    /**
+     * Discover the #[AsMiddleware] class list, sorted by priority — the same
+     * order `all()` instantiates. No instances are created: this is the shape
+     * `DiscoveryCache` stores, and `prime()` rehydrates it without rescanning.
+     *
+     * @return list<class-string<MiddlewareInterface>>
+     */
+    public static function discoveredClasses(): array
+    {
+        $found = [];
         $base = AppPaths::instance()->src('Modules');
 
         $dirs = glob($base . '/*/Interfaces/HTTP/Middleware');
         if (!is_array($dirs)) {
-            self::$middlewares = [];
-
             return [];
         }
 
@@ -44,18 +56,30 @@ final class MiddlewareRegistry
             }
 
             foreach ($files as $file) {
-                self::scanFile($file, $middlewares);
+                self::scanFile($file, $found);
             }
         }
 
-        uasort($middlewares, static fn (array $a, array $b): int => $a[0] <=> $b[0]);
+        uasort($found, static fn (array $a, array $b): int => $a[0] <=> $b[0]);
 
-        self::$middlewares = array_values(array_map(
-            static fn (array $entry): MiddlewareInterface => $entry[1],
-            $middlewares,
+        return array_values(array_map(
+            static fn (array $entry): string => $entry[1],
+            $found,
         ));
+    }
 
-        return self::$middlewares;
+    /**
+     * Prime the registry from a cached class list (see `discoveredClasses()`)
+     * without rescanning. Each class is instantiated fresh, in order; a class
+     * that no longer instantiates is skipped with a log line, never a fatal —
+     * a stale list means the fingerprint failed, and the request must still
+     * be served.
+     *
+     * @param list<class-string> $classes
+     */
+    public static function prime(array $classes): void
+    {
+        self::$middlewares = self::instantiate($classes);
     }
 
     /**
@@ -67,9 +91,9 @@ final class MiddlewareRegistry
     }
 
     /**
-     * @param array<string, array{int, MiddlewareInterface}> $middlewares
+     * @param array<string, array{int, class-string<MiddlewareInterface>}> $found
      */
-    private static function scanFile(string $file, array &$middlewares): void
+    private static function scanFile(string $file, array &$found): void
     {
         $content = file_get_contents($file);
         if (!is_string($content) || !str_contains($content, 'AsMiddleware')) {
@@ -77,7 +101,7 @@ final class MiddlewareRegistry
         }
 
         $fqcn = self::resolveFqcn($content);
-        if (null === $fqcn || !self::loadAndRegister($fqcn, $file, $middlewares)) {
+        if (null === $fqcn || !self::loadAndRegister($fqcn, $file, $found)) {
             return;
         }
     }
@@ -124,11 +148,13 @@ final class MiddlewareRegistry
 
     /**
      * Load the class, validate the MiddlewareInterface + #[AsMiddleware]
-     * contract (zero-arg constructor) and register an instance by priority.
+     * contract (zero-arg constructor) and register its class by priority.
+     * Instances are created later (`all()`, `prime()`), so discovery itself
+     * stays free of side effects.
      *
-     * @param array<string, array{int, MiddlewareInterface}> $middlewares
+     * @param array<string, array{int, class-string<MiddlewareInterface>}> $found
      */
-    private static function loadAndRegister(string $fqcn, string $file, array &$middlewares): bool
+    private static function loadAndRegister(string $fqcn, string $file, array &$found): bool
     {
         if (!class_exists($fqcn)) {
             require_once $file;
@@ -156,10 +182,40 @@ final class MiddlewareRegistry
         /** @var AsMiddleware $attr */
         $attr = $attributes[0]->newInstance();
 
-        /** @var MiddlewareInterface $instance */
-        $instance = $reflection->newInstance();
-        $middlewares[$attr->priority . '_' . $fqcn] = [$attr->priority, $instance];
+        /** @var class-string<MiddlewareInterface> $fqcn */
+        $found[$attr->priority . '_' . $fqcn] = [$attr->priority, $fqcn];
 
         return true;
+    }
+
+    /**
+     * Instantiate middleware classes in order, skipping what no longer
+     * constructs (see `prime()`).
+     *
+     * @param list<class-string> $classes
+     *
+     * @return list<MiddlewareInterface>
+     */
+    private static function instantiate(array $classes): array
+    {
+        $instances = [];
+
+        foreach ($classes as $class) {
+            try {
+                $instance = new $class();
+            } catch (\Throwable $e) {
+                error_log('[middleware] skipping ' . $class . ': ' . $e->getMessage());
+
+                continue;
+            }
+
+            if (!$instance instanceof MiddlewareInterface) {
+                continue;
+            }
+
+            $instances[] = $instance;
+        }
+
+        return $instances;
     }
 }

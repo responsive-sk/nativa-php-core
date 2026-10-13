@@ -20,5 +20,5 @@ parameters:
         - src/init.php
     reportUnmatchedIgnoredErrors: false
     ignoreErrors:
-        # MiddlewareRegistry::scanFile() uses array &$middlewares by-ref pattern
-        - '#Method Modules\\Core\\Interfaces\\HTTP\\Middleware\\MiddlewareRegistry::scanFile\(\) has parameter \$middlewares with no value type specified in iterable type array\.#'
+        # MiddlewareRegistry::scanFile() uses array &$found by-ref pattern
+        - '#Method Modules\\Core\\Interfaces\\HTTP\\Middleware\\MiddlewareRegistry::scanFile\(\) has parameter \$found with no value type specified in iterable type array\.#'

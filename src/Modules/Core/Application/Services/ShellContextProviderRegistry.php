@@ -35,6 +35,10 @@ use Modules\Core\Infrastructure\Paths\AppPaths;
  * | `languages` | union, in provider order, de-duplicated |
  * | `navigation` | first provider that returns a non-empty list for that slot |
  *
+ * A tie at the winning priority keeps the first answer and LOGS the rest
+ * (`PreferenceVote::select()` + `error_log`): two modules answering the same
+ * question is a configuration worth seeing, not a silent coin flip.
+ *
  * Navigation is the one that cannot merge: a header built from two menus is not
  * a menu, it is two menus glued together, and no provider could have known the
  * order of the other's items. First non-empty wins, so a module that owns
@@ -60,6 +64,22 @@ final class ShellContextProviderRegistry
             return self::$providers;
         }
 
+        self::$providers = array_map(
+            static fn (array $entry): ShellContextProvider => $entry[1],
+            self::allWithPriority(),
+        );
+
+        return self::$providers;
+    }
+
+    /**
+     * Every installed provider with its priority, in priority order — the
+     * shape contention logging needs (`PreferenceVote::select()`).
+     *
+     * @return list<array{int, ShellContextProvider}>
+     */
+    public static function allWithPriority(): array
+    {
         $found = [];
 
         foreach (self::files() as $file) {
@@ -74,9 +94,7 @@ final class ShellContextProviderRegistry
 
         usort($found, static fn (array $a, array $b): int => $a[0] <=> $b[0]);
 
-        self::$providers = array_map(static fn (array $entry): ShellContextProvider => $entry[1], $found);
-
-        return self::$providers;
+        return $found;
     }
 
     /** Reset the cached providers (test isolation). */
@@ -88,25 +106,25 @@ final class ShellContextProviderRegistry
     /** First provider that names the site, or null when no module does. */
     public static function siteName(): ?string
     {
-        return self::firstString(static fn (ShellContextProvider $p): ?string => $p->siteName());
+        return self::firstString(static fn (ShellContextProvider $p): ?string => $p->siteName(), 'siteName');
     }
 
     /** First provider that names a theme, or null — which means "use the kernel's". */
     public static function theme(): ?string
     {
-        return self::firstString(static fn (ShellContextProvider $p): ?string => $p->theme());
+        return self::firstString(static fn (ShellContextProvider $p): ?string => $p->theme(), 'theme');
     }
 
     /** First provider that names a default locale, or null when unset. */
     public static function defaultLocale(): ?string
     {
-        return self::firstString(static fn (ShellContextProvider $p): ?string => $p->defaultLocale());
+        return self::firstString(static fn (ShellContextProvider $p): ?string => $p->defaultLocale(), 'defaultLocale');
     }
 
     /** First provider that names a `<html lang>`, or null to follow the locale. */
     public static function htmlLang(): ?string
     {
-        return self::firstString(static fn (ShellContextProvider $p): ?string => $p->htmlLang());
+        return self::firstString(static fn (ShellContextProvider $p): ?string => $p->htmlLang(), 'htmlLang');
     }
 
     /**
@@ -131,36 +149,91 @@ final class ShellContextProviderRegistry
 
     /**
      * The first non-empty navigation for a slot — see the merge rule above.
+     * A same-priority second menu is logged, never silently dropped.
      *
      * @return list<ShellNavItem>
      */
     public static function navigation(string $slot, string $currentPath): array
     {
-        foreach (self::all() as $provider) {
+        $answers = [];
+        $winnerPriority = null;
+
+        foreach (self::allWithPriority() as [$priority, $provider]) {
+            if (null !== $winnerPriority && $priority > $winnerPriority) {
+                break;
+            }
+
             $items = $provider->navigation($slot, $currentPath);
 
-            if ([] !== $items) {
-                return $items;
+            if ([] === $items) {
+                continue;
             }
+
+            $winnerPriority ??= $priority;
+            $answers[] = ['priority' => $priority, 'name' => $provider::class, 'value' => $items];
         }
 
-        return [];
+        $result = PreferenceVote::select($answers);
+        self::logIgnored('navigation:' . $slot, $result);
+
+        /** @var list<ShellNavItem> $winner */
+        $winner = $result['winner']['value'] ?? [];
+
+        return $winner;
     }
 
     /**
+     * First non-empty answer wins; a same-priority second answer is logged,
+     * never silently dropped. Providers past the winner's priority are not
+     * even asked — precedence by design is not contention.
+     *
      * @param \Closure(ShellContextProvider): ?string $ask
      */
-    private static function firstString(\Closure $ask): ?string
+    private static function firstString(\Closure $ask, string $question): ?string
     {
-        foreach (self::all() as $provider) {
+        $answers = [];
+        $winnerPriority = null;
+
+        foreach (self::allWithPriority() as [$priority, $provider]) {
+            if (null !== $winnerPriority && $priority > $winnerPriority) {
+                break;
+            }
+
             $answer = $ask($provider);
 
-            if (null !== $answer && '' !== $answer) {
-                return $answer;
+            if (null === $answer || '' === $answer) {
+                continue;
             }
+
+            $winnerPriority ??= $priority;
+            $answers[] = ['priority' => $priority, 'name' => $provider::class, 'value' => $answer];
         }
 
-        return null;
+        $result = PreferenceVote::select($answers);
+        self::logIgnored($question, $result);
+
+        $winner = $result['winner']['value'] ?? null;
+
+        return is_string($winner) ? $winner : null;
+    }
+
+    /**
+     * @param array{winner: array{priority: int, name: string, value: mixed}|null, ignored: list<array{priority: int, name: string, value: mixed}>} $result
+     */
+    private static function logIgnored(string $question, array $result): void
+    {
+        if (null === $result['winner']) {
+            return;
+        }
+
+        foreach ($result['ignored'] as $loser) {
+            error_log(sprintf(
+                '[shell] %s answer from %s ignored (same priority as %s)',
+                $question,
+                $loser['name'],
+                $result['winner']['name'],
+            ));
+        }
     }
 
     /**

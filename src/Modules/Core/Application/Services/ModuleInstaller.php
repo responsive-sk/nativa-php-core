@@ -68,8 +68,10 @@ final readonly class ModuleInstaller
         $copied = self::copyTree($manifest->sourceDir, $target);
 
         // The new slice may carry #[AsMigrator] classes, so the first-request
-        // marker must not outlive the module set it was written for.
+        // marker must not outlive the module set it was written for. The
+        // discovery cache records the same module set, so it goes with it.
         Bootstrapper::invalidateMigrations();
+        DiscoveryCache::clearCache();
 
         return ['copied' => $copied, 'flushed' => $this->flushPageCache()];
     }
@@ -112,8 +114,10 @@ final readonly class ModuleInstaller
         self::deleteTree(AppPaths::instance()->src('Modules') . DIRECTORY_SEPARATOR . $name);
 
         // The remaining module set may differ from the one the marker was
-        // written for — let the next request re-derive it.
+        // written for — let the next request re-derive it. Same for the
+        // discovery cache, which fingerprints that module set.
         Bootstrapper::invalidateMigrations();
+        DiscoveryCache::clearCache();
 
         $flushed = $this->flushPageCache();
 

@@ -41,10 +41,12 @@ unset($_earlyLogDir);
 
 use Modules\Audit\Application\Services\SecurityEventHandler;
 use Modules\Audit\Interfaces\HTTP\AuditServices;
+use Modules\Core\Application\Services\DiscoveryCache;
 use Modules\Core\Application\Services\DisposalRegistry;
 use Modules\Core\Infrastructure\Bootstrap\Bootstrapper;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Interfaces\HTTP\Kernel;
+use Modules\Core\Interfaces\HTTP\Middleware\MiddlewareRegistry;
 use Modules\Core\Interfaces\HTTP\Router;
 use Modules\Outbox\Interfaces\HTTP\OutboxServices;
 
@@ -94,9 +96,27 @@ if (class_exists(SecurityEventHandler::class)
 // ROUTER — scan module action directories for #[Route] attributes
 // ============================================================================
 
-$router = new Router([
+// ROUTER — scan module action directories for #[Route] attributes, through
+// the fingerprint-validated discovery cache when it is fresh. Any cache
+// failure degrades to a direct scan: a corrupt cache costs one scan, never
+// a 500 (RFC-1).
+$actionDirs = [
     APP_BASE_PATH . '/src/Modules',
-]);
+];
+
+try {
+    $discovery = DiscoveryCache::fromAppPaths();
+    $payload = $discovery->build(
+        static fn (): array => (new Router($actionDirs))->toEntries(),
+        static fn (): array => MiddlewareRegistry::discoveredClasses(),
+    );
+    $router = Router::fromEntries($actionDirs, $payload['routes']);
+    MiddlewareRegistry::prime($payload['middleware']);
+} catch (\Throwable $e) {
+    error_log('[discovery] cache fallback to direct scan: ' . $e->getMessage());
+    MiddlewareRegistry::reset();
+    $router = new Router($actionDirs);
+}
 
 // ============================================================================
 // KERNEL — middleware pipeline + dispatch

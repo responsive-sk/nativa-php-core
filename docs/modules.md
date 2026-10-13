@@ -18,6 +18,8 @@ success, 1 on refusal or error; refusals go to STDERR and copy nothing.
 | `php bin/cms module:show <Name>` | the manifest — what WOULD be installed, before anything is copied |
 | `php bin/cms module:add <Name>` | copy the slice in; flush the page cache |
 | `php bin/cms module:remove <Name> [--force]` | delete the slice; flush the page cache; report (never delete) the data |
+| `php bin/cms discovery:clear` | delete the discovery cache (`storage/cache/discovery.php`); the next request rescans |
+| `php bin/cms discovery:status` | whether the discovery cache exists, is fresh, and how many routes it holds |
 
 ## What the scan sees
 

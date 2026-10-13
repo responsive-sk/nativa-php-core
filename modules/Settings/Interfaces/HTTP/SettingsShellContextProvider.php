@@ -6,6 +6,7 @@ namespace Modules\Settings\Interfaces\HTTP;
 
 use Modules\Core\Domain\Contracts\ShellContextProvider;
 use Modules\Core\Domain\ShellNavItem;
+use Modules\Core\Domain\ThemePreference;
 use Modules\Core\Infrastructure\Attributes\AsShellContextProvider;
 use Modules\Core\Interfaces\HTTP\ThemeRegistry;
 use Modules\Core\Interfaces\HTTP\ThemeResolver;
@@ -90,15 +91,13 @@ final class SettingsShellContextProvider implements ShellContextProvider
     {
         $stored = SettingsServices::settings()->get(ThemeResolver::THEME_SETTING);
 
-        if (!is_string($stored) || '' === $stored) {
+        if (!is_string($stored)) {
             return null;
         }
 
-        if (in_array($stored, ThemeResolver::PUBLIC_WHITELIST, true) || ThemeRegistry::has($stored)) {
-            return $stored;
-        }
+        $available = [...ThemeResolver::PUBLIC_WHITELIST, ...array_keys(ThemeRegistry::all())];
 
-        return null;
+        return ThemePreference::isResolvable($stored, $available) ? $stored : null;
     }
 
     /**

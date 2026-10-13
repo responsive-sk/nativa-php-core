@@ -35,9 +35,39 @@ final class Router
         array $actionDirs,
         private readonly bool $useCache = false,
         private readonly string $cacheFile = '',
+        bool $discover = true,
     ) {
         $this->actionDirs = array_values(array_filter($actionDirs, is_dir(...)));
-        $this->discover();
+
+        if ($discover) {
+            $this->discover();
+        }
+    }
+
+    /**
+     * Build a Router from cached entries (see `DiscoveryCache::routes()`)
+     * without rescanning — the warm path of the composition root.
+     *
+     * @param list<string>                                                                                                   $actionDirs
+     * @param list<array{path: string, method: string, name: string|null, handlerMethod: string|null, action: class-string}> $entries
+     */
+    public static function fromEntries(array $actionDirs, array $entries): self
+    {
+        $router = new self($actionDirs, false, '', false);
+        $router->hydrateFromCache($entries);
+
+        return $router;
+    }
+
+    /**
+     * The scan result as plain arrays — the shape `DiscoveryCache` stores
+     * and `fromEntries()` rehydrates.
+     *
+     * @return list<array{path: string, method: string, name: string|null, handlerMethod: string|null, action: class-string}>
+     */
+    public function toEntries(): array
+    {
+        return array_map($this->entryToArray(...), $this->routes);
     }
 
     /**
@@ -331,19 +361,27 @@ final class Router
         }
     }
 
+    /**
+     * @param array{route: Route, action: class-string} $entry
+     *
+     * @return array{path: string, method: string, name: string|null, handlerMethod: string|null, action: class-string}
+     */
+    private function entryToArray(array $entry): array
+    {
+        $route = $entry['route'];
+
+        return [
+            'path'          => $route->path,
+            'method'        => $route->method,
+            'name'          => $route->name,
+            'handlerMethod' => $route->handlerMethod,
+            'action'        => $entry['action'],
+        ];
+    }
+
     private function writeCache(): void
     {
-        $data = array_map(static function (array $entry): array {
-            $route = $entry['route'];
-
-            return [
-                'path'          => $route->path,
-                'method'        => $route->method,
-                'name'          => $route->name,
-                'handlerMethod' => $route->handlerMethod,
-                'action'        => $entry['action'],
-            ];
-        }, $this->routes);
+        $data = $this->toEntries();
 
         $dir = dirname($this->cacheFile);
         if (!is_dir($dir)) {

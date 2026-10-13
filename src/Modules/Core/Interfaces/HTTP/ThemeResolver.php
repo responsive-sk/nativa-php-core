@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Core\Interfaces\HTTP;
 
 use Modules\Core\Application\Services\ShellContextProviderRegistry;
+use Modules\Core\Domain\ThemePreference;
 use Modules\Core\Infrastructure\Http\Request;
 
 /**
@@ -68,14 +69,10 @@ final class ThemeResolver
             return self::ADMIN_THEME;
         }
 
-        $value = ShellContextProviderRegistry::theme();
-
-        if (null !== $value
-            && (in_array($value, self::PUBLIC_WHITELIST, true) || ThemeRegistry::has($value))
-        ) {
-            return $value;
-        }
-
-        return self::KERNEL_THEME;
+        return ThemePreference::resolve(
+            ShellContextProviderRegistry::theme(),
+            [...self::PUBLIC_WHITELIST, ...array_keys(ThemeRegistry::all())],
+            self::KERNEL_THEME,
+        );
     }
 }
