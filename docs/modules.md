@@ -301,3 +301,60 @@ state from JS — the stylesheet never hides text on its own).
 The slice used to carry the same one-question fixture provider (`theme()` →
 `griffe`) — removed together with the Erik/Mono fixtures once the Settings
 vote became the only theme answer (see above).
+
+## Scheduler + Queue (measured 2026-10-13)
+
+`modules/Scheduler/` is the cron half of the Marko scheduler/queue pair,
+ported to zero dependencies: `CronExpression` (5-field matching),
+`ScheduledTask` fluents (`everyFiveMinutes()`, `hourly()`, `cron()`, …),
+`Schedule::call()` + `dueTasksAt()`, a `flock` `FileTaskMutex` with
+reclaimable expiry under `storage/cache/scheduler-mutexes/`, and a
+`ScheduleRunner` that counts executed/failed/skipped — a throwing task is
+reported, never stops the rest. `modules/Queue/` is the SQLite half:
+`jobs` + `failed_jobs` in `queue.db`, `DatabaseQueue` reserving under
+`BEGIN IMMEDIATE` with a guarded `UPDATE` (SQLite has no `SKIP LOCKED` —
+the second contender's update matches zero rows instead), `attempts`
+authoritative, exhausted jobs parked in `failed_jobs` with the error.
+Unknown handlers and corrupt payloads fail the job, never fatal the
+worker.
+
+The operator surface is `php bin/cms schedule:run` — the cron entry
+(`* * * * * php bin/cms schedule:run`) that replaces a long-running
+worker. The shipped timetable (`SchedulerServices::schedule()`) mirrors
+`outbox:process`: `outbox:drain` every five minutes, `outbox:prune` daily
+(processed rows older than seven days). Per-task lines plus the summary go
+to stdout; the exit code is 1 on any failure else 0. The Outbox entries
+register only when Outbox is installed (`class_exists`, not a hard edge —
+the scan still reports the closure, which is the honest dependency).
+
+- `composer test` 244 / `phpstan` / Rector dry-run / `cs-fix-dry` green;
+- `diff -rq` catalogue vs installed clean for both slices;
+- `module:remove` + `module:add` round-trip byte-identical (Queue
+  `2c90b4b7…`, Scheduler `81c3f87f…` before and after);
+- `schedule:run` live twice in a row: nothing due, exit 0 both times; the
+due path driven at a fixed 13:00 against the real outbox.db —
+`Executed: outbox:drain`, exit 0.
+
+## Dashboard stat cards for Queue / Outbox / Schedule (measured 2026-10-13)
+
+Three `#[AsMetricProvider]` cards on `GET /mark`, reusing the metric
+subsystem untouched (Blog/Audit precedent — `MetricRegistry` discovers
+them, `DashboardAction` renders them): `QueueMetric` (reservable jobs,
+reserved/failed subtitle, pushed-in-period trend), `OutboxMetric`
+(pending+processing needing attention, processed/failed subtitle,
+processed trend), `ScheduleMetric` (due-now entries, overlap-held locks,
+no trend — the timetable is configuration, not history). No action links
+(no list pages to point at) and default color only (no shipped provider
+sets custom colors). A stats DB that is missing or unmigrated skips its
+card silently — the dashboard never 500s on a metric.
+
+Testability without breaking the no-required-ctor-params contract: each
+provider takes an optional `?PDO` (default: its module connection),
+`ScheduleMetric` takes an optional `Schedule` + `FileTaskMutex`
+(default: shipped timetable + site mutex dir) — tests seed throwaway
+SQLite or synthetic timetables, never real closures or `storage/`.
+
+- `composer test` 250 / `phpstan` / Rector dry-run / `cs-fix-dry` green;
+- live discovery on the real tree: 10 providers, all three cards render
+  in 7d and 30d (`queue=0`, `outbox=0 [6 processed · 0 failed]`,
+  `schedule=0 [2 entries]`), empty-DB run registers nothing, no fatal.
