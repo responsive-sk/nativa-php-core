@@ -379,3 +379,6 @@ grew `View Jobs` / `View Messages` links once the pages existed.
   JSON args, unknown ids 404, POST without token 403, retry with token
   302 (failed→pending, attempts 0), delete 302; seeded rows removed
   after the pass.
+- `/mark/schedule` (read-only timetable: entry, cron expression,
+  due-now badge, overlap locks + the `schedule:run` cron hint) renders
+  200 with both shipped entries; the Schedule card links to it.
