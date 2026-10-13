@@ -104,6 +104,49 @@ final readonly class SqliteOutboxRepository
         $stmt->execute([$id]);
     }
 
+    /**
+     * Newest-first admin listing (null status = all statuses).
+     *
+     * @return list<OutboxMessage>
+     */
+    public function listMessages(?string $status = null, int $limit = 100): array
+    {
+        if (null === $status) {
+            $stmt = $this->pdo->prepare(
+                'SELECT * FROM outbox_messages ORDER BY created_at DESC, rowid DESC LIMIT ?',
+            );
+            $stmt->execute([max(1, $limit)]);
+        } else {
+            $stmt = $this->pdo->prepare(
+                'SELECT * FROM outbox_messages WHERE status = ? ORDER BY created_at DESC, rowid DESC LIMIT ?',
+            );
+            $stmt->execute([$status, max(1, $limit)]);
+        }
+
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        /** @var list<OutboxMessage> $messages */
+        $messages = [];
+        foreach ($rows as $row) {
+            /** @var array<string, mixed> $row */
+            $messages[] = OutboxMessage::fromArray($row);
+        }
+
+        return $messages;
+    }
+
+    public function countTotal(?string $status = null): int
+    {
+        if (null === $status) {
+            return (int) $this->pdo->query('SELECT COUNT(*) FROM outbox_messages')->fetchColumn();
+        }
+
+        $stmt = $this->pdo->prepare('SELECT COUNT(*) FROM outbox_messages WHERE status = ?');
+        $stmt->execute([$status]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
     public function cleanProcessed(string $interval = '7 days'): int
     {
         $stmt = $this->pdo->prepare('

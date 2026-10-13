@@ -358,3 +358,24 @@ SQLite or synthetic timetables, never real closures or `storage/`.
 - live discovery on the real tree: 10 providers, all three cards render
   in 7d and 30d (`queue=0`, `outbox=0 [6 processed · 0 failed]`,
   `schedule=0 [2 entries]`), empty-DB run registers nothing, no fatal.
+
+## Queue + Outbox admin pages (measured 2026-10-13)
+
+`/mark/queue` (jobs newest-first with `?queue=` filter, failed table
+below, job detail with pretty JSON args) and `/mark/outbox` (status
+filter, message detail with payload/metadata/error) mirror
+`CommentsAdminAction`: `m-table` + `AdminLayout::e()` escaping,
+redirect-back POSTs, per-action `AuditServices::log` rows. Failed jobs
+re-queue under their own id with attempts reset (`retryFailed`) or drop
+(`deleteFailed`); missing ids redirect without an audit row. Behind the
+pages: `QueueServices` locator and `DatabaseQueue` read API (`listJobs`
+with derived reserved/delayed/pending state, `findJob`, `listFailed`,
+`findFailed`) plus `SqliteOutboxRepository::listMessages/countTotal` —
+covered on throwaway SQLite, never the site DBs. The dashboard cards
+grew `View Jobs` / `View Messages` links once the pages existed.
+
+- `composer test` 256 / `phpstan` / Rector dry-run / `cs-fix-dry` green;
+- live over `php -S`: both lists 200 (empty + seeded), details 200 with
+  JSON args, unknown ids 404, POST without token 403, retry with token
+  302 (failed→pending, attempts 0), delete 302; seeded rows removed
+  after the pass.
