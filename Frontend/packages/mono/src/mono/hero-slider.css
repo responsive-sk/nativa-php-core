@@ -92,11 +92,14 @@
 }
 
 .mo-hero-art__outer { animation: mo-hero-spin 48s linear infinite; }
+.mo-hero-art__inner { animation: mo-hero-spin-rev 32s linear infinite; }
 
 @keyframes mo-hero-spin { to { transform: rotate(360deg); } }
+@keyframes mo-hero-spin-rev { to { transform: rotate(-360deg); } }
 
 @media (prefers-reduced-motion: reduce) {
-    .mo-hero-art__outer { animation: none; }
+    .mo-hero-art__outer,
+    .mo-hero-art__inner { animation: none; }
 }
 
 .mo-slide__shade {
