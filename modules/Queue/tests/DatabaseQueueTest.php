@@ -59,7 +59,7 @@ final class DatabaseQueueTest extends TestCase
     {
         unset($this->queue, $this->pdo);
 
-        if (is_file($this->dbFile)) {
+        if (isset($this->dbFile) && is_file($this->dbFile)) {
             unlink($this->dbFile);
         }
 

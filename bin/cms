@@ -204,12 +204,11 @@ function cmdScheduleRun(): void
         fail('schedule:run needs the Scheduler module (bin/cms module:add Scheduler).');
     }
 
-    $output = new class () implements \Modules\Scheduler\Scheduling\RunnerOutput {
-        public function writeLine(string $message): void
-        {
+    $output = \Modules\Scheduler\Interfaces\HTTP\SchedulerServices::output(
+        static function (string $message): void {
             out($message);
-        }
-    };
+        },
+    );
 
     $schedule = \Modules\Scheduler\Interfaces\HTTP\SchedulerServices::schedule();
 

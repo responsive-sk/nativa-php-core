@@ -331,14 +331,18 @@ jobs:
           php bin/cms migrate | tee /tmp/migrate.log
           grep -q "No migrators found" /tmp/migrate.log
 
-      # Measured in a kernel-only checkout: `Installed (0): (none — kernel
-      # only)`. The catalogue is the other half and IS present — the modules
-      # are committed, the installed slices are not.
+      # Measured in a kernel-only checkout: `Installed (1): KernelTheme`. The
+      # kernel's own theme is the one committed slice under src/Modules/ — it
+      # IS part of the kernel (the default presentation), not operator state,
+      # so it ships with the tree. Core and Database are filtered out of the
+      # count as KERNEL_MODULES. The catalogue is the other half and IS
+      # present: the feature modules are committed as a catalogue (modules/),
+      # their installed slices are not.
       - name: Module catalogue is visible
         run: |
           set -euo pipefail
           php bin/cms module:list | tee /tmp/modules.log
-          grep -q "Installed (0)" /tmp/modules.log
+          grep -q "Installed (1): KernelTheme" /tmp/modules.log
           grep -q "Scratch" /tmp/modules.log
 
       # opcache is ON for the CLI SAPI on the runner image and its default

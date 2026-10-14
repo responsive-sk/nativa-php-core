@@ -30,8 +30,8 @@ final class OutboxMetricTest extends TestCase
     {
         parent::setUp();
 
-        if (!is_dir(APP_BASE_PATH . '/src/Modules/Outbox')) {
-            $this->markTestSkipped('Outbox is not installed.');
+        if (!is_dir(APP_BASE_PATH . '/src/Modules/Outbox') || !class_exists(CardboardRegistry::class)) {
+            $this->markTestSkipped('Outbox (or Cardboard) is not installed.');
         }
 
         $this->dbFile = sys_get_temp_dir() . '/outbox-metric-' . bin2hex(random_bytes(8)) . '.sqlite';
@@ -50,11 +50,13 @@ final class OutboxMetricTest extends TestCase
 
     protected function tearDown(): void
     {
-        CardboardRegistry::reset();
+        if (class_exists(CardboardRegistry::class)) {
+            CardboardRegistry::reset();
+        }
 
         unset($this->pdo);
 
-        if (is_file($this->dbFile)) {
+        if (isset($this->dbFile) && is_file($this->dbFile)) {
             unlink($this->dbFile);
         }
 

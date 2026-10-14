@@ -27,8 +27,8 @@ final class ScheduleMetricTest extends TestCase
     {
         parent::setUp();
 
-        if (!is_dir(APP_BASE_PATH . '/src/Modules/Scheduler')) {
-            $this->markTestSkipped('Scheduler is not installed.');
+        if (!is_dir(APP_BASE_PATH . '/src/Modules/Scheduler') || !class_exists(CardboardRegistry::class)) {
+            $this->markTestSkipped('Scheduler (or Cardboard) is not installed.');
         }
 
         $this->dir = sys_get_temp_dir() . '/scheduler-metric-' . bin2hex(random_bytes(8));
@@ -39,13 +39,17 @@ final class ScheduleMetricTest extends TestCase
 
     protected function tearDown(): void
     {
-        CardboardRegistry::reset();
-
-        foreach (glob($this->dir . '/*') ?: [] as $file) {
-            unlink($file);
+        if (class_exists(CardboardRegistry::class)) {
+            CardboardRegistry::reset();
         }
 
-        rmdir($this->dir);
+        if (isset($this->dir)) {
+            foreach (glob($this->dir . '/*') ?: [] as $file) {
+                unlink($file);
+            }
+
+            rmdir($this->dir);
+        }
 
         parent::tearDown();
     }

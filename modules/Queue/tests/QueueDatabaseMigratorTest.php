@@ -40,7 +40,7 @@ final class QueueDatabaseMigratorTest extends TestCase
     {
         unset($this->pdo);
 
-        if (is_file($this->dbFile)) {
+        if (isset($this->dbFile) && is_file($this->dbFile)) {
             unlink($this->dbFile);
         }
 

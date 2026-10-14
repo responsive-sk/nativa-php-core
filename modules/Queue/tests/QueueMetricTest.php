@@ -34,8 +34,8 @@ final class QueueMetricTest extends TestCase
     {
         parent::setUp();
 
-        if (!is_dir(APP_BASE_PATH . '/src/Modules/Queue')) {
-            $this->markTestSkipped('Queue is not installed.');
+        if (!is_dir(APP_BASE_PATH . '/src/Modules/Queue') || !class_exists(CardboardRegistry::class)) {
+            $this->markTestSkipped('Queue (or Cardboard) is not installed.');
         }
 
         $this->dbFile = sys_get_temp_dir() . '/queue-metric-' . bin2hex(random_bytes(8)) . '.sqlite';
@@ -54,11 +54,13 @@ final class QueueMetricTest extends TestCase
 
     protected function tearDown(): void
     {
-        CardboardRegistry::reset();
+        if (class_exists(CardboardRegistry::class)) {
+            CardboardRegistry::reset();
+        }
 
         unset($this->pdo);
 
-        if (is_file($this->dbFile)) {
+        if (isset($this->dbFile) && is_file($this->dbFile)) {
             unlink($this->dbFile);
         }
 

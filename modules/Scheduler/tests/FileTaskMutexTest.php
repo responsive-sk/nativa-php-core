@@ -39,11 +39,13 @@ final class FileTaskMutexTest extends TestCase
 
     protected function tearDown(): void
     {
-        foreach (glob($this->dir . '/*') ?: [] as $file) {
-            unlink($file);
-        }
+        if (isset($this->dir)) {
+            foreach (glob($this->dir . '/*') ?: [] as $file) {
+                unlink($file);
+            }
 
-        rmdir($this->dir);
+            rmdir($this->dir);
+        }
 
         parent::tearDown();
     }

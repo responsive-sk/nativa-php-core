@@ -68,6 +68,33 @@ final class SchedulerServices
     }
 
     /**
+     * Adapt a per-line writer into the RunnerOutput the runner reports
+     * through.
+     *
+     * The CLI owns the printing (bin/cms's out()); the module owns the type.
+     * Building the anonymous implementation HERE — inside the module — keeps
+     * bin/cms free of any RunnerOutput reference, which is what lets PHPStan
+     * analyse the CLI in a kernel-only tree where no Scheduler slice exists.
+     */
+    public static function output(callable $writeLine): RunnerOutput
+    {
+        return new class ($writeLine) implements RunnerOutput {
+            /** @var callable(string): void */
+            private $writeLine;
+
+            public function __construct(callable $writeLine)
+            {
+                $this->writeLine = $writeLine;
+            }
+
+            public function writeLine(string $message): void
+            {
+                ($this->writeLine)($message);
+            }
+        };
+    }
+
+    /**
      * Run the due tasks of $schedule at $now (default: wall time).
      *
      * @return int 1 when any due task failed, else 0

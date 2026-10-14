@@ -41,13 +41,15 @@ final class ScheduleRunCommandTest extends TestCase
 
     protected function tearDown(): void
     {
-        foreach (glob($this->dir . '/*') ?: [] as $file) {
-            unlink($file);
+        if (isset($this->dir)) {
+            foreach (glob($this->dir . '/*') ?: [] as $file) {
+                unlink($file);
+            }
+
+            rmdir($this->dir);
+
+            SchedulerServices::reset();
         }
-
-        rmdir($this->dir);
-
-        SchedulerServices::reset();
 
         parent::tearDown();
     }
