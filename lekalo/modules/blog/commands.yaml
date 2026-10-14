@@ -1,0 +1,236 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "blog.create_article",
+      "kind": "command",
+      "version": 1,
+      "description": "Create a new Markdown article file with front matter (admin editor, auto-slug); author_email is picked from active users in the admin editor, a custom free-text byline is still possible",
+      "input": [
+        {
+          "name": "locale",
+          "type": {
+            "ref": "blog.locale"
+          },
+          "required": true
+        },
+        {
+          "name": "title",
+          "type": {
+            "ref": "blog.title"
+          },
+          "required": true
+        },
+        {
+          "name": "body",
+          "type": {
+            "ref": "blog.markdown"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "blog.effect_article_created"
+      ]
+    },
+    {
+      "id": "blog.update_article",
+      "kind": "command",
+      "version": 1,
+      "description": "Rewrite an existing article file (front matter + body); author_email is picked from active users in the admin editor, a custom free-text byline is still possible",
+      "input": [
+        {
+          "name": "slug",
+          "type": {
+            "ref": "blog.slug"
+          },
+          "required": true
+        },
+        {
+          "name": "locale",
+          "type": {
+            "ref": "blog.locale"
+          },
+          "required": true
+        },
+        {
+          "name": "body",
+          "type": {
+            "ref": "blog.markdown"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "blog.effect_article_updated"
+      ]
+    },
+    {
+      "id": "blog.delete_article",
+      "kind": "command",
+      "version": 1,
+      "description": "Delete an article file (and its tracked cover if owned)",
+      "input": [
+        {
+          "name": "slug",
+          "type": {
+            "ref": "blog.slug"
+          },
+          "required": true
+        },
+        {
+          "name": "locale",
+          "type": {
+            "ref": "blog.locale"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "blog.effect_article_deleted"
+      ]
+    },
+    {
+      "id": "blog.record_view",
+      "kind": "command",
+      "version": 1,
+      "description": "Count one article view (ViewCounter, per-article aggregation)",
+      "input": [
+        {
+          "name": "slug",
+          "type": {
+            "ref": "blog.slug"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "blog.effect_view_recorded"
+      ]
+    },
+    {
+      "id": "blog.effect_article_created",
+      "kind": "effect",
+      "version": 1,
+      "description": "Write a new article markdown file",
+      "operation": "create",
+      "entity": "blog.article",
+      "emits": [
+        "blog.article_created"
+      ]
+    },
+    {
+      "id": "blog.effect_article_updated",
+      "kind": "effect",
+      "version": 1,
+      "description": "Replace an article's markdown content and front matter",
+      "operation": "update",
+      "entity": "blog.article",
+      "emits": [
+        "blog.article_updated"
+      ]
+    },
+    {
+      "id": "blog.effect_article_deleted",
+      "kind": "effect",
+      "version": 1,
+      "description": "Remove an article file and its owned cover",
+      "operation": "delete",
+      "entity": "blog.article"
+    },
+    {
+      "id": "blog.effect_view_recorded",
+      "kind": "effect",
+      "version": 1,
+      "description": "Increment the article view counter",
+      "operation": "update",
+      "entity": "blog.article"
+    },
+    {
+      "id": "blog.publish_article",
+      "kind": "command",
+      "version": 1,
+      "description": "Single-row publish toggle at /mark/articles/{slug}/publish — explicit to=1|0 flips the frontmatter published flag, flushes the page cache and appends an audit entry",
+      "input": [
+        {
+          "name": "slug",
+          "type": {
+            "ref": "blog.slug"
+          },
+          "required": true
+        },
+        {
+          "name": "locale",
+          "type": {
+            "ref": "blog.locale"
+          },
+          "required": true
+        },
+        {
+          "name": "to",
+          "type": {
+            "ref": "users.flag"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "blog.effect_article_published"
+      ]
+    },
+    {
+      "id": "blog.publish_bulk",
+      "kind": "command",
+      "version": 1,
+      "description": "Bulk publish/unpublish over selected article slugs at /mark/bulk-publish — one cache flush after the loop, one audit entry",
+      "input": [
+        {
+          "name": "slugs",
+          "type": {
+            "ref": "blog.slug_list"
+          },
+          "required": true
+        },
+        {
+          "name": "locale",
+          "type": {
+            "ref": "blog.locale"
+          },
+          "required": true
+        },
+        {
+          "name": "published",
+          "type": {
+            "ref": "users.flag"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "blog.effect_article_bulk_published"
+      ]
+    },
+    {
+      "id": "blog.effect_article_published",
+      "kind": "effect",
+      "version": 1,
+      "description": "Rewrite the article frontmatter published flag, append an audit entry (article.publish / article.unpublish) and flush the page cache",
+      "operation": "update",
+      "entity": "blog.article",
+      "emits": [
+        "blog.article_published"
+      ]
+    },
+    {
+      "id": "blog.effect_article_bulk_published",
+      "kind": "effect",
+      "version": 1,
+      "description": "Rewrite the published flag of every selected article, flush the page cache once and append one audit entry (article.publish_bulk)",
+      "operation": "update",
+      "entity": "blog.article",
+      "emits": [
+        "blog.article_bulk_published"
+      ]
+    }
+  ]
+}

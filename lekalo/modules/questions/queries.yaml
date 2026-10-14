@@ -1,0 +1,41 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "questions.moderation_inbox",
+      "kind": "query",
+      "version": 1,
+      "description": "Every question for the admin inbox, grouped by subject pair with per-status counts and an optional status filter (an unknown filter value is ignored, not refused)",
+      "reads": [
+        "questions.question"
+      ],
+      "returns": {
+        "ref": "questions.question"
+      }
+    },
+    {
+      "id": "questions.find_by_subject",
+      "kind": "query",
+      "version": 1,
+      "description": "Every question asked about one subject pair in one locale, in every status — the caller filters, because the moderation inbox needs the pending rows too",
+      "reads": [
+        "questions.question"
+      ],
+      "returns": {
+        "ref": "questions.question"
+      }
+    },
+    {
+      "id": "questions.find_approved_by_subject",
+      "kind": "query",
+      "version": 1,
+      "description": "Only the APPROVED questions about one subject pair in one locale — what the public block may render",
+      "reads": [
+        "questions.question"
+      ],
+      "returns": {
+        "ref": "questions.question"
+      }
+    }
+  ]
+}

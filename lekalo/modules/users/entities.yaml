@@ -1,0 +1,432 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "users.identifier",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Stable opaque id (32 hex chars from random_bytes, SQLite VARCHAR(32) PK)",
+      "base": "uuid"
+    },
+    {
+      "id": "users.email",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Lowercased, trimmed email address (unique)",
+      "base": "string"
+    },
+    {
+      "id": "users.display_name",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Human-readable display name (max 255 chars)",
+      "base": "string"
+    },
+    {
+      "id": "users.password",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Bcrypt password hash — plaintext never stored",
+      "base": "string"
+    },
+    {
+      "id": "users.avatar_path",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Relative stored avatar path (e.g. 2026/08/09/<hex>.png)",
+      "base": "string"
+    },
+    {
+      "id": "users.ip_address",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Client IP (VARCHAR(45))",
+      "base": "string"
+    },
+    {
+      "id": "users.timestamp",
+      "kind": "scalar",
+      "version": 1,
+      "description": "UTC timestamp",
+      "base": "datetime"
+    },
+    {
+      "id": "users.text",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Free-form text (role/permission descriptions, user agents)",
+      "base": "string"
+    },
+    {
+      "id": "users.token",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Opaque random token; stored as SHA-256 hash (remember tokens, reset tokens)",
+      "base": "string"
+    },
+    {
+      "id": "users.flag",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Boolean flag (checkbox-driven admin form fields such as is_active)",
+      "base": "boolean"
+    },
+    {
+      "id": "users.account_state",
+      "kind": "enum",
+      "version": 1,
+      "description": "Account lifecycle state (is_active column)",
+      "values": [
+        {
+          "value": "active",
+          "description": "May authenticate"
+        },
+        {
+          "value": "inactive",
+          "description": "Admin-deactivated, login denied"
+        }
+      ]
+    },
+    {
+      "id": "users.credentials",
+      "kind": "value-object",
+      "version": 1,
+      "description": "Email + password pair used by register and login",
+      "fields": [
+        {
+          "name": "email",
+          "type": {
+            "ref": "users.email"
+          },
+          "required": true
+        },
+        {
+          "name": "password",
+          "type": {
+            "ref": "users.password"
+          },
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "users.user",
+      "kind": "entity",
+      "version": 1,
+      "description": "Registered account. Roles/permissions are resolved at the boundary (User entity, users table)",
+      "fields": [
+        {
+          "name": "id",
+          "type": {
+            "ref": "users.identifier"
+          },
+          "required": true
+        },
+        {
+          "name": "name",
+          "type": {
+            "ref": "users.display_name"
+          },
+          "required": true
+        },
+        {
+          "name": "email",
+          "type": {
+            "ref": "users.email"
+          },
+          "required": true
+        },
+        {
+          "name": "password",
+          "type": {
+            "ref": "users.password"
+          },
+          "required": true
+        },
+        {
+          "name": "avatar",
+          "type": {
+            "optional": {
+              "ref": "users.avatar_path"
+            }
+          }
+        },
+        {
+          "name": "state",
+          "type": {
+            "ref": "users.account_state"
+          },
+          "required": true
+        },
+        {
+          "name": "last_login_at",
+          "type": {
+            "optional": {
+              "ref": "users.timestamp"
+            }
+          }
+        },
+        {
+          "name": "last_login_ip",
+          "type": {
+            "optional": {
+              "ref": "users.ip_address"
+            }
+          }
+        },
+        {
+          "name": "created_at",
+          "type": {
+            "ref": "users.timestamp"
+          },
+          "required": true
+        }
+      ],
+      "identity": [
+        "id"
+      ]
+    },
+    {
+      "id": "users.role",
+      "kind": "entity",
+      "version": 1,
+      "description": "Named role (admin panel role CRUD, roles table)",
+      "fields": [
+        {
+          "name": "id",
+          "type": {
+            "ref": "users.identifier"
+          },
+          "required": true
+        },
+        {
+          "name": "name",
+          "type": {
+            "ref": "users.display_name"
+          },
+          "required": true
+        },
+        {
+          "name": "description",
+          "type": {
+            "optional": {
+              "ref": "users.text"
+            }
+          }
+        },
+        {
+          "name": "created_at",
+          "type": {
+            "ref": "users.timestamp"
+          },
+          "required": true
+        }
+      ],
+      "identity": [
+        "id"
+      ]
+    },
+    {
+      "id": "users.permission",
+      "kind": "entity",
+      "version": 1,
+      "description": "Granular permission, grouped for the admin UI (permissions table)",
+      "fields": [
+        {
+          "name": "id",
+          "type": {
+            "ref": "users.identifier"
+          },
+          "required": true
+        },
+        {
+          "name": "name",
+          "type": {
+            "ref": "users.display_name"
+          },
+          "required": true
+        },
+        {
+          "name": "description",
+          "type": {
+            "optional": {
+              "ref": "users.text"
+            }
+          }
+        },
+        {
+          "name": "group_name",
+          "type": {
+            "ref": "users.display_name"
+          },
+          "required": true
+        },
+        {
+          "name": "created_at",
+          "type": {
+            "ref": "users.timestamp"
+          },
+          "required": true
+        }
+      ],
+      "identity": [
+        "id"
+      ]
+    },
+    {
+      "id": "users.session",
+      "kind": "entity",
+      "version": 1,
+      "description": "Authenticated session mirrored to the DB sessions table (dashboard Sessions metric source)",
+      "fields": [
+        {
+          "name": "id",
+          "type": {
+            "ref": "users.identifier"
+          },
+          "required": true
+        },
+        {
+          "name": "user_id",
+          "type": {
+            "ref": "users.user"
+          },
+          "required": true
+        },
+        {
+          "name": "ip_address",
+          "type": {
+            "optional": {
+              "ref": "users.ip_address"
+            }
+          }
+        },
+        {
+          "name": "user_agent",
+          "type": {
+            "optional": {
+              "ref": "users.text"
+            }
+          }
+        },
+        {
+          "name": "last_activity",
+          "type": {
+            "ref": "users.timestamp"
+          },
+          "required": true
+        },
+        {
+          "name": "created_at",
+          "type": {
+            "ref": "users.timestamp"
+          },
+          "required": true
+        }
+      ],
+      "identity": [
+        "id"
+      ]
+    },
+    {
+      "id": "users.remember_token",
+      "kind": "entity",
+      "version": 1,
+      "description": "Remember-me cookie token (30-day TTL, hashed at rest, remember_tokens table)",
+      "fields": [
+        {
+          "name": "id",
+          "type": {
+            "ref": "users.identifier"
+          },
+          "required": true
+        },
+        {
+          "name": "user_id",
+          "type": {
+            "ref": "users.user"
+          },
+          "required": true
+        },
+        {
+          "name": "token",
+          "type": {
+            "ref": "users.token"
+          },
+          "required": true
+        },
+        {
+          "name": "expires_at",
+          "type": {
+            "ref": "users.timestamp"
+          },
+          "required": true
+        },
+        {
+          "name": "created_at",
+          "type": {
+            "ref": "users.timestamp"
+          },
+          "required": true
+        }
+      ],
+      "identity": [
+        "id"
+      ]
+    },
+    {
+      "id": "users.reset_token",
+      "kind": "entity",
+      "version": 1,
+      "description": "Password reset token (1-hour TTL, single-use, password_reset_tokens table)",
+      "fields": [
+        {
+          "name": "id",
+          "type": {
+            "ref": "users.identifier"
+          },
+          "required": true
+        },
+        {
+          "name": "email",
+          "type": {
+            "ref": "users.email"
+          },
+          "required": true
+        },
+        {
+          "name": "token",
+          "type": {
+            "ref": "users.token"
+          },
+          "required": true
+        },
+        {
+          "name": "expires_at",
+          "type": {
+            "ref": "users.timestamp"
+          },
+          "required": true
+        },
+        {
+          "name": "used_at",
+          "type": {
+            "optional": {
+              "ref": "users.timestamp"
+            }
+          }
+        },
+        {
+          "name": "created_at",
+          "type": {
+            "ref": "users.timestamp"
+          },
+          "required": true
+        }
+      ],
+      "identity": [
+        "id"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "pages.admin_crud_flow",
+      "kind": "scenario",
+      "version": 1,
+      "description": "An admin manages static pages in the /mark/pages editor",
+      "summary": "Given an admin, they create, edit, delete and publish pages in both locales; saves and toggles flush the page cache and append audit entries.",
+      "covers": [
+        "pages.create_page",
+        "pages.update_page",
+        "pages.delete_page",
+        "pages.publish_page",
+        "pages.publish_bulk",
+        "pages.effect_page_created",
+        "pages.effect_page_updated",
+        "pages.effect_page_deleted",
+        "pages.effect_page_published",
+        "pages.effect_page_bulk_published"
+      ]
+    },
+    {
+      "id": "pages.public_read_flow",
+      "kind": "scenario",
+      "version": 1,
+      "description": "A visitor reads a published page at /{slug}",
+      "summary": "Given a published page, a visitor reading /{slug} gets the rendered Markdown with SEO head; unpublished slugs 404.",
+      "covers": [
+        "pages.rendered_page",
+        "pages.unpublished_never_served"
+      ]
+    }
+  ]
+}

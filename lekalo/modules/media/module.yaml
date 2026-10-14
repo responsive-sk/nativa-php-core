@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "media",
+      "kind": "module",
+      "version": 1,
+      "description": "Media — tracked uploaded files stored in media.db and served from storage."
+    }
+  ]
+}

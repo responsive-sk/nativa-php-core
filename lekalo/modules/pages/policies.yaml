@@ -1,0 +1,29 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "pages.unpublished_never_served",
+      "kind": "policy",
+      "version": 1,
+      "description": "A page that is not published is never rendered on the public /{slug} route — it 404s inside the layout shell",
+      "applies_to": [
+        "pages.publish_page",
+        "pages.publish_bulk"
+      ],
+      "decision": "deny"
+    },
+    {
+      "id": "pages.flush_on_publish",
+      "kind": "policy",
+      "version": 1,
+      "description": "A publish/unpublish/delete side effect flushes the file page cache in the same request so the rate-limit fallback never serves stale content",
+      "applies_to": [
+        "pages.publish_page",
+        "pages.publish_bulk",
+        "pages.delete_page",
+        "pages.update_page"
+      ],
+      "decision": "deny"
+    }
+  ]
+}

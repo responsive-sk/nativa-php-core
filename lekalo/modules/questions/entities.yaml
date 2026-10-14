@@ -1,0 +1,166 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "questions.subject_type",
+      "kind": "enum",
+      "version": 1,
+      "description": "Which content family the subject belongs to — the discriminator half of the subject pair, because `/blog/foo` and `/foo` are two different subjects that happen to share a slug",
+      "values": [
+        {
+          "value": "article",
+          "description": "A blog article, addressed under /blog/{slug}"
+        },
+        {
+          "value": "page",
+          "description": "A static page, addressed under /{slug}"
+        }
+      ]
+    },
+    {
+      "id": "questions.display_name",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Name captured at submit time — the signed-in user's account name or the reader's display name (never an email)",
+      "base": "string"
+    },
+    {
+      "id": "questions.text",
+      "kind": "scalar",
+      "version": 1,
+      "description": "The question itself — where the reader got stuck (rate-limited per IP on submit)",
+      "base": "string"
+    },
+    {
+      "id": "questions.attempted_answer",
+      "kind": "scalar",
+      "version": 1,
+      "description": "The reader's OWN attempted answer — the half that makes the question a signal an author can revise from, rather than a support ticket",
+      "base": "string"
+    },
+    {
+      "id": "questions.ip_address",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Submitter IP captured for the per-IP throttle (never rendered)",
+      "base": "string"
+    },
+    {
+      "id": "questions.timestamp",
+      "kind": "scalar",
+      "version": 1,
+      "description": "ISO-8601 submit timestamp",
+      "base": "datetime"
+    },
+    {
+      "id": "questions.status",
+      "kind": "enum",
+      "version": 1,
+      "description": "Moderation lifecycle state (status column; never read from the request — the entity decides pending)",
+      "values": [
+        {
+          "value": "pending",
+          "description": "Awaiting moderation — invisible on the subject"
+        },
+        {
+          "value": "approved",
+          "description": "Approved — renders on the article or page it was asked about"
+        },
+        {
+          "value": "rejected",
+          "description": "Rejected — hidden from the subject"
+        }
+      ]
+    },
+    {
+      "id": "questions.question",
+      "kind": "entity",
+      "version": 1,
+      "description": "Reader question about a published article or page (questions table, questions.db), addressed by the subject pair (type + slug) in one locale",
+      "fields": [
+        {
+          "name": "id",
+          "type": {
+            "ref": "users.identifier"
+          },
+          "required": true
+        },
+        {
+          "name": "subject_type",
+          "type": {
+            "ref": "questions.subject_type"
+          },
+          "required": true
+        },
+        {
+          "name": "subject_slug",
+          "type": {
+            "ref": "blog.slug"
+          },
+          "required": true
+        },
+        {
+          "name": "locale",
+          "type": {
+            "ref": "blog.locale"
+          },
+          "required": true
+        },
+        {
+          "name": "text",
+          "type": {
+            "ref": "questions.text"
+          },
+          "required": true
+        },
+        {
+          "name": "attempted_answer",
+          "type": {
+            "ref": "questions.attempted_answer"
+          },
+          "required": true
+        },
+        {
+          "name": "display_name",
+          "type": {
+            "ref": "questions.display_name"
+          },
+          "required": true
+        },
+        {
+          "name": "author_user_id",
+          "type": {
+            "optional": {
+              "ref": "users.user"
+            }
+          }
+        },
+        {
+          "name": "status",
+          "type": {
+            "ref": "questions.status"
+          },
+          "required": true
+        },
+        {
+          "name": "ip_address",
+          "type": {
+            "optional": {
+              "ref": "questions.ip_address"
+            }
+          }
+        },
+        {
+          "name": "created_at",
+          "type": {
+            "ref": "questions.timestamp"
+          },
+          "required": true
+        }
+      ],
+      "identity": [
+        "id"
+      ]
+    }
+  ]
+}

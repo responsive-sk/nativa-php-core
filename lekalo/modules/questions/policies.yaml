@@ -1,0 +1,45 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "questions.throttled_per_ip",
+      "kind": "policy",
+      "version": 1,
+      "description": "A submit from an IP that already asked 5 questions in the last 5 minutes is denied (RateLimiter, checked before any DB write)",
+      "applies_to": [
+        "questions.submit"
+      ],
+      "decision": "deny"
+    },
+    {
+      "id": "questions.subject_must_be_published",
+      "kind": "policy",
+      "version": 1,
+      "description": "A submit is denied unless the subject PAIR resolves to real PUBLISHED content — an unknown slug, a draft, or a page with no such slug all 404, so the endpoint cannot be used to probe for slugs",
+      "applies_to": [
+        "questions.submit"
+      ],
+      "decision": "deny"
+    },
+    {
+      "id": "questions.question_and_attempt_required",
+      "kind": "policy",
+      "version": 1,
+      "description": "A submit without both a question and the reader's own attempted answer is denied — an attempt is what makes the question actionable",
+      "applies_to": [
+        "questions.submit"
+      ],
+      "decision": "deny"
+    },
+    {
+      "id": "questions.deleted_question_not_persisted",
+      "kind": "policy",
+      "version": 1,
+      "description": "Question deletion removes the row permanently — a deleted question id never resolves again",
+      "applies_to": [
+        "questions.delete"
+      ],
+      "decision": "deny"
+    }
+  ]
+}

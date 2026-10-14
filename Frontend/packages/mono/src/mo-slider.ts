@@ -25,6 +25,8 @@
  * ES2015-safe: no `?.`, `??` or other Chrome 70-unsupported syntax.
  */
 
+import { revealWithin } from './mo-reveal'
+
 export function initMoSlider(): void {
   const root = document.querySelector('.mo-hero-slider') as HTMLElement | null
   if (!root) {
@@ -83,6 +85,7 @@ export function initMoSlider(): void {
     }
     index = next
     slides[index].classList.add('mo-slide--active')
+    revealWithin(slides[index])
     if (pag[index]) {
       pag[index].classList.add('mo-pag--active')
       pag[index].setAttribute('aria-current', 'true')

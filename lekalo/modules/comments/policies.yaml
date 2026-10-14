@@ -1,0 +1,45 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "comments.throttled_per_ip",
+      "kind": "policy",
+      "version": 1,
+      "description": "A submit from a rate-limited IP is denied (CommentsService per-IP throttle)",
+      "applies_to": [
+        "comments.submit"
+      ],
+      "decision": "deny"
+    },
+    {
+      "id": "comments.identity_or_guest_required",
+      "kind": "policy",
+      "version": 1,
+      "description": "A submit without a signed-in user and without guest name/email is denied",
+      "applies_to": [
+        "comments.submit"
+      ],
+      "decision": "deny"
+    },
+    {
+      "id": "comments.article_must_exist",
+      "kind": "policy",
+      "version": 1,
+      "description": "A submit addressing an unknown article slug is denied",
+      "applies_to": [
+        "comments.submit"
+      ],
+      "decision": "deny"
+    },
+    {
+      "id": "comments.deleted_comment_not_persisted",
+      "kind": "policy",
+      "version": 1,
+      "description": "Comment deletion removes the row permanently — a deleted comment id never resolves again",
+      "applies_to": [
+        "comments.delete"
+      ],
+      "decision": "deny"
+    }
+  ]
+}

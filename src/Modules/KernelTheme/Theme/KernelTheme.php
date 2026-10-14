@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Themes\kernel;
+namespace Modules\KernelTheme\Theme;
 
 use Modules\Core\Domain\ShellNavItem;
 use Modules\Core\Interfaces\HTTP\PageContext;
@@ -54,7 +54,7 @@ final class KernelTheme implements ThemeModule
      */
     public function criticalCss(): array
     {
-        return ['Themes/kernel/assets/critical/kernel.css'];
+        return ['Modules/KernelTheme/assets/critical/kernel.css'];
     }
 
     /**

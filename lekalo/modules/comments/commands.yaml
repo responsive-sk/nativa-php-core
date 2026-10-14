@@ -1,0 +1,140 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "comments.submit",
+      "kind": "command",
+      "version": 1,
+      "description": "Submit a comment on an article (CSRF + per-IP rate limited, pending by default)",
+      "input": [
+        {
+          "name": "article_slug",
+          "type": {
+            "ref": "blog.slug"
+          },
+          "required": true
+        },
+        {
+          "name": "user_id",
+          "type": {
+            "optional": {
+              "ref": "users.user"
+            }
+          }
+        },
+        {
+          "name": "guest_name",
+          "type": {
+            "optional": {
+              "ref": "comments.display_name"
+            }
+          }
+        },
+        {
+          "name": "guest_email",
+          "type": {
+            "optional": {
+              "ref": "comments.guest_email"
+            }
+          }
+        },
+        {
+          "name": "body",
+          "type": {
+            "ref": "comments.body"
+          },
+          "required": true
+        },
+        {
+          "name": "ip_address",
+          "type": {
+            "optional": {
+              "ref": "comments.ip_address"
+            }
+          }
+        }
+      ],
+      "effects": [
+        "comments.effect_comment_created"
+      ]
+    },
+    {
+      "id": "comments.approve",
+      "kind": "command",
+      "version": 1,
+      "description": "Approve a pending or rejected comment (/mark/comments/{id}/approve) — makes it publicly visible",
+      "input": [
+        {
+          "name": "id",
+          "type": {
+            "ref": "users.identifier"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "comments.effect_comment_status_changed"
+      ]
+    },
+    {
+      "id": "comments.reject",
+      "kind": "command",
+      "version": 1,
+      "description": "Reject a pending or approved comment (/mark/comments/{id}/reject) — hides it from the article",
+      "input": [
+        {
+          "name": "id",
+          "type": {
+            "ref": "users.identifier"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "comments.effect_comment_status_changed"
+      ]
+    },
+    {
+      "id": "comments.delete",
+      "kind": "command",
+      "version": 1,
+      "description": "Delete a comment permanently (admin queue; subject to comment persistence policy)",
+      "input": [
+        {
+          "name": "id",
+          "type": {
+            "ref": "users.identifier"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "comments.effect_comment_deleted"
+      ]
+    },
+    {
+      "id": "comments.effect_comment_created",
+      "kind": "effect",
+      "version": 1,
+      "description": "Insert a new comment row with status pending",
+      "operation": "create",
+      "entity": "comments.comment"
+    },
+    {
+      "id": "comments.effect_comment_status_changed",
+      "kind": "effect",
+      "version": 1,
+      "description": "Update the comment status column (approve/reject)",
+      "operation": "update",
+      "entity": "comments.comment"
+    },
+    {
+      "id": "comments.effect_comment_deleted",
+      "kind": "effect",
+      "version": 1,
+      "description": "Remove the comment row permanently",
+      "operation": "delete",
+      "entity": "comments.comment"
+    }
+  ]
+}

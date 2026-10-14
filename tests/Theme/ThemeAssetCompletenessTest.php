@@ -23,9 +23,9 @@ use PHPUnit\Framework\TestCase;
  * 2. Highlight is fail-closed, not uniform: a theme passes when its Frontend
  *    package bundles code-highlight OR its own module assets carry the
  *    capability (tok-* styles, a highlight loader). Otherwise it must be
- *    named in WITHOUT_HIGHLIGHT with the reason. `kernel` is out of scope
- *    here (covered by KernelThemeTest, no JS by design); `minimal` is not a
- *    theme module and never appears. A NEW theme without highlight fails
+ *    named in WITHOUT_HIGHLIGHT with the reason. `kernel` is listed there
+ *    with its reason (no JS by design, pinned by KernelThemeTest); `minimal`
+ *    is not a theme module and never appears. A NEW theme without highlight fails
  *    until its author lists it with a reason — the gap Mono had, found by
  *    eye instead of by a test.
  *
@@ -44,7 +44,9 @@ final class ThemeAssetCompletenessTest extends TestCase
      *
      * @var array<string, string> theme name => reason
      */
-    private const array WITHOUT_HIGHLIGHT = [];
+    private const array WITHOUT_HIGHLIGHT = [
+        'kernel' => 'no JS by design: one hand-written CSS file, no build (KernelThemeTest pins it)',
+    ];
 
     #[Test]
     public function everyDiscoveredThemesCriticalCssExistsOnDisk(): void
@@ -76,10 +78,6 @@ final class ThemeAssetCompletenessTest extends TestCase
     #[Test]
     public function everyDiscoveredThemeShipsHighlightOrDeclaresWhyNot(): void
     {
-        // Local copy with an explicit shape: the constant is empty today by
-        // design, and PHPStan reads its value shape (array{}) rather than
-        // the @var above it.
-        /** @var array<string, string> $without */
         $without = self::WITHOUT_HIGHLIGHT;
 
         $checked = [];

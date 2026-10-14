@@ -6,6 +6,7 @@ namespace Modules\Core\Interfaces\HTTP;
 
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
+use Modules\Core\Kernel\Contracts\RouterInterface;
 
 /**
  * Router — scans action classes for #[Route] attributes and matches requests.
@@ -17,7 +18,7 @@ use Modules\Core\Interfaces\HTTP\Attributes\Route;
  * - route-name → URL resolver for templates
  * - route cache (serialized) for production
  */
-final class Router
+final class Router implements RouterInterface
 {
     /** @var list<array{route: Route, action: class-string}> */
     private array $routes = [];

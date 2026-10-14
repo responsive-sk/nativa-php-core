@@ -11,6 +11,8 @@ use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\Middleware\MiddlewareInterface;
 use Modules\Core\Interfaces\HTTP\Middleware\MiddlewareRegistry;
 use Modules\Core\Interfaces\HTTP\Middleware\SecurityHeadersMiddleware;
+use Modules\Core\Kernel\Contracts\ErrorRendererInterface;
+use Modules\Core\Kernel\Contracts\RouterInterface;
 
 /**
  * HTTP Kernel — middleware pipeline + route dispatch.
@@ -28,8 +30,9 @@ final class Kernel
      * @param bool $autoDiscoverMiddleware When true, auto-discovers #[AsMiddleware] classes
      */
     public function __construct(
-        private readonly Router $router,
+        private readonly RouterInterface $router,
         bool $autoDiscoverMiddleware = true,
+        private readonly ErrorRendererInterface $errors = new ErrorPageRenderer(),
     ) {
         if ($autoDiscoverMiddleware) {
             // Auto-discover #[AsMiddleware] classes (SecurityHeaders, Csrf, Debugbar)
@@ -210,6 +213,6 @@ final class Kernel
 
     private function renderError(int $status, string $title, string $detail, ?string $path = null): Response
     {
-        return ErrorPageRenderer::response($status, $title, $detail, $path);
+        return $this->errors->renderError($status, $title, $detail, $path);
     }
 }

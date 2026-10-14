@@ -1,0 +1,15 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "comments",
+      "kind": "module",
+      "version": 1,
+      "description": "Comments — reader comments on article slugs with a moderation status lifecycle, stored in comments.db.",
+      "imports": [
+        "blog",
+        "users"
+      ]
+    }
+  ]
+}

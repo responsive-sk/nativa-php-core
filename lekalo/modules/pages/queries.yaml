@@ -1,0 +1,31 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "pages.page_index",
+      "kind": "query",
+      "version": 1,
+      "description": "Title-sorted page list for the admin table",
+      "reads": [
+        "pages.article"
+      ],
+      "returns": {
+        "list": {
+          "ref": "pages.article"
+        }
+      }
+    },
+    {
+      "id": "pages.rendered_page",
+      "kind": "query",
+      "version": 1,
+      "description": "A published page resolved by slug+locale for the public /{slug} route; unpublished or missing slugs 404",
+      "reads": [
+        "pages.article"
+      ],
+      "returns": {
+        "ref": "pages.article"
+      }
+    }
+  ]
+}

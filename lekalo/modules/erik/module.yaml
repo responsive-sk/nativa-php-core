@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "erik",
+      "kind": "module",
+      "version": 1,
+      "description": "Erik — dark-first public theme with the er- vocabulary, trimmed for the kernel tree."
+    }
+  ]
+}

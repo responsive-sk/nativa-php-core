@@ -1,0 +1,231 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "pages.create_page",
+      "kind": "command",
+      "version": 1,
+      "description": "Create a page via the /mark/pages editor: frontmatter + Markdown body are written to the locale directory, the create is audited as page.create",
+      "input": [
+        {
+          "name": "locale",
+          "type": {
+            "ref": "pages.locale"
+          },
+          "required": true
+        },
+        {
+          "name": "title",
+          "type": {
+            "ref": "pages.title"
+          },
+          "required": true
+        },
+        {
+          "name": "markdown",
+          "type": {
+            "ref": "pages.markdown"
+          },
+          "required": true
+        },
+        {
+          "name": "published",
+          "type": {
+            "ref": "pages.published"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "pages.effect_page_created"
+      ]
+    },
+    {
+      "id": "pages.update_page",
+      "kind": "command",
+      "version": 1,
+      "description": "Edit a page via /mark/pages/{slug}/edit — the slug is readonly, content/SEO changes are audited as page.edit",
+      "input": [
+        {
+          "name": "slug",
+          "type": {
+            "ref": "pages.slug"
+          },
+          "required": true
+        },
+        {
+          "name": "locale",
+          "type": {
+            "ref": "pages.locale"
+          },
+          "required": true
+        },
+        {
+          "name": "title",
+          "type": {
+            "ref": "pages.title"
+          },
+          "required": true
+        },
+        {
+          "name": "markdown",
+          "type": {
+            "ref": "pages.markdown"
+          },
+          "required": true
+        },
+        {
+          "name": "published",
+          "type": {
+            "ref": "pages.published"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "pages.effect_page_updated"
+      ]
+    },
+    {
+      "id": "pages.delete_page",
+      "kind": "command",
+      "version": 1,
+      "description": "Delete the page markdown file via POST /mark/pages/{slug}/delete (audited as page.delete)",
+      "input": [
+        {
+          "name": "slug",
+          "type": {
+            "ref": "pages.slug"
+          },
+          "required": true
+        },
+        {
+          "name": "locale",
+          "type": {
+            "ref": "pages.locale"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "pages.effect_page_deleted"
+      ]
+    },
+    {
+      "id": "pages.publish_page",
+      "kind": "command",
+      "version": 1,
+      "description": "Single-row publish toggle at /mark/pages/{slug}/publish — explicit to=1|0 flips the frontmatter published flag, flushes the page cache and appends an audit entry (page.publish / page.unpublish)",
+      "input": [
+        {
+          "name": "slug",
+          "type": {
+            "ref": "pages.slug"
+          },
+          "required": true
+        },
+        {
+          "name": "locale",
+          "type": {
+            "ref": "pages.locale"
+          },
+          "required": true
+        },
+        {
+          "name": "to",
+          "type": {
+            "ref": "pages.published"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "pages.effect_page_published"
+      ]
+    },
+    {
+      "id": "pages.publish_bulk",
+      "kind": "command",
+      "version": 1,
+      "description": "Bulk publish/unpublish/delete over selected page slugs via /mark/bulk-publish and /mark/bulk-delete — one cache flush after the loop, one audit entry",
+      "input": [
+        {
+          "name": "slugs",
+          "type": {
+            "ref": "pages.slug_list"
+          },
+          "required": true
+        },
+        {
+          "name": "locale",
+          "type": {
+            "ref": "pages.locale"
+          },
+          "required": true
+        },
+        {
+          "name": "published",
+          "type": {
+            "ref": "pages.published"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "pages.effect_page_bulk_published"
+      ]
+    },
+    {
+      "id": "pages.effect_page_created",
+      "kind": "effect",
+      "version": 1,
+      "description": "Write the page markdown file into the locale directory",
+      "operation": "create",
+      "entity": "pages.article",
+      "emits": [
+        "pages.page_created"
+      ]
+    },
+    {
+      "id": "pages.effect_page_updated",
+      "kind": "effect",
+      "version": 1,
+      "description": "Rewrite the page markdown file",
+      "operation": "update",
+      "entity": "pages.article",
+      "emits": [
+        "pages.page_updated"
+      ]
+    },
+    {
+      "id": "pages.effect_page_deleted",
+      "kind": "effect",
+      "version": 1,
+      "description": "Delete the page markdown file",
+      "operation": "delete",
+      "entity": "pages.article",
+      "emits": [
+        "pages.page_deleted"
+      ]
+    },
+    {
+      "id": "pages.effect_page_published",
+      "kind": "effect",
+      "version": 1,
+      "description": "Rewrite the page frontmatter published flag, append an audit entry (page.publish / page.unpublish) and flush the page cache",
+      "operation": "update",
+      "entity": "pages.article",
+      "emits": [
+        "pages.page_published"
+      ]
+    },
+    {
+      "id": "pages.effect_page_bulk_published",
+      "kind": "effect",
+      "version": 1,
+      "description": "Rewrite the published flag of every selected page, flush the page cache once and append one audit entry (page.publish_bulk)",
+      "operation": "update",
+      "entity": "pages.article"
+    }
+  ]
+}

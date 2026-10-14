@@ -1,0 +1,317 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "blog.slug",
+      "kind": "scalar",
+      "version": 1,
+      "description": "URL-safe article identifier (diacritics-folded, unique per locale directory)",
+      "base": "string"
+    },
+    {
+      "id": "blog.locale",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Content locale code selecting the storage/blog/{sk,en} directory",
+      "base": "string"
+    },
+    {
+      "id": "blog.markdown",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Raw Markdown article body with YAML frontmatter",
+      "base": "string"
+    },
+    {
+      "id": "blog.html",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Rendered article HTML (Markdown with heading anchors)",
+      "base": "string"
+    },
+    {
+      "id": "blog.tag",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Single tag label",
+      "base": "string"
+    },
+    {
+      "id": "blog.category",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Single category label",
+      "base": "string"
+    },
+    {
+      "id": "blog.image_url",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Cover image URL (Cloudinary, local /storage/blog-images path, or generated)",
+      "base": "uri"
+    },
+    {
+      "id": "blog.search_query",
+      "kind": "scalar",
+      "version": 1,
+      "description": "FTS5 full-text query over title/excerpt/tags/body",
+      "base": "string"
+    },
+    {
+      "id": "blog.timestamp",
+      "kind": "scalar",
+      "version": 1,
+      "description": "ISO-8601 publication timestamp",
+      "base": "datetime"
+    },
+    {
+      "id": "blog.view_count",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Non-negative article view counter",
+      "base": "number"
+    },
+    {
+      "id": "blog.article_state",
+      "kind": "enum",
+      "version": 1,
+      "description": "Members-only gating state of an article",
+      "values": [
+        {
+          "value": "public",
+          "description": "Readable by everyone"
+        },
+        {
+          "value": "members_only",
+          "description": "Readable by authenticated members only"
+        }
+      ]
+    },
+    {
+      "id": "blog.title",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Human article title",
+      "base": "string"
+    },
+    {
+      "id": "blog.excerpt",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Short article summary shown on cards and feeds",
+      "base": "string"
+    },
+    {
+      "id": "blog.author_name",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Author display name from front matter (fallback when no linked user)",
+      "base": "string"
+    },
+    {
+      "id": "blog.author_email",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Author email used to resolve the linked users.db account",
+      "base": "string"
+    },
+    {
+      "id": "blog.members_flag",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Front-matter boolean flag marking a members-only article",
+      "base": "boolean"
+    },
+    {
+      "id": "blog.frontmatter",
+      "kind": "value-object",
+      "version": 1,
+      "description": "Parsed YAML frontmatter of an article file",
+      "fields": [
+        {
+          "name": "title",
+          "type": {
+            "ref": "blog.title"
+          },
+          "required": true
+        },
+        {
+          "name": "date",
+          "type": {
+            "ref": "blog.timestamp"
+          },
+          "required": true
+        },
+        {
+          "name": "excerpt",
+          "type": {
+            "ref": "blog.excerpt"
+          },
+          "required": true
+        },
+        {
+          "name": "tags",
+          "type": {
+            "list": {
+              "ref": "blog.tag"
+            }
+          }
+        },
+        {
+          "name": "category",
+          "type": {
+            "optional": {
+              "ref": "blog.category"
+            }
+          }
+        },
+        {
+          "name": "author",
+          "type": {
+            "ref": "blog.author_name"
+          },
+          "required": true
+        },
+        {
+          "name": "author_email",
+          "type": {
+            "optional": {
+              "ref": "blog.author_email"
+            }
+          }
+        },
+        {
+          "name": "image",
+          "type": {
+            "optional": {
+              "ref": "blog.image_url"
+            }
+          }
+        },
+        {
+          "name": "translation",
+          "type": {
+            "optional": {
+              "ref": "blog.slug"
+            }
+          }
+        },
+        {
+          "name": "members_only",
+          "type": {
+            "optional": {
+              "ref": "blog.members_flag"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "blog.article",
+      "kind": "entity",
+      "version": 1,
+      "description": "Blog article (markdown file in storage/blog/{sk,en}/ plus resolved cover, author and views)",
+      "fields": [
+        {
+          "name": "slug",
+          "type": {
+            "ref": "blog.slug"
+          },
+          "required": true
+        },
+        {
+          "name": "locale",
+          "type": {
+            "ref": "blog.locale"
+          },
+          "required": true
+        },
+        {
+          "name": "title",
+          "type": {
+            "ref": "blog.title"
+          },
+          "required": true
+        },
+        {
+          "name": "date",
+          "type": {
+            "ref": "blog.timestamp"
+          },
+          "required": true
+        },
+        {
+          "name": "excerpt",
+          "type": {
+            "ref": "blog.excerpt"
+          },
+          "required": true
+        },
+        {
+          "name": "body",
+          "type": {
+            "ref": "blog.markdown"
+          },
+          "required": true
+        },
+        {
+          "name": "tags",
+          "type": {
+            "list": {
+              "ref": "blog.tag"
+            }
+          }
+        },
+        {
+          "name": "category",
+          "type": {
+            "optional": {
+              "ref": "blog.category"
+            }
+          }
+        },
+        {
+          "name": "cover",
+          "type": {
+            "optional": {
+              "ref": "blog.image_url"
+            }
+          }
+        },
+        {
+          "name": "state",
+          "type": {
+            "ref": "blog.article_state"
+          },
+          "required": true
+        },
+        {
+          "name": "views",
+          "type": {
+            "ref": "blog.view_count"
+          },
+          "required": true
+        },
+        {
+          "name": "author_email",
+          "type": {
+            "optional": {
+              "ref": "blog.author_email"
+            }
+          }
+        }
+      ],
+      "identity": [
+        "slug",
+        "locale"
+      ]
+    },
+    {
+      "id": "blog.slug_list",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Selection of article slugs carried by a bulk action (ids[] form field)",
+      "base": "string"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "mono",
+      "kind": "module",
+      "version": 1,
+      "description": "Mono — public theme with the mono vocabulary and a vendored, prefixed stylesheet."
+    }
+  ]
+}

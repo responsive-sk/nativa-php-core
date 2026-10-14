@@ -41,7 +41,7 @@
     opacity: 0;
     visibility: hidden;
     transform: translateX(4%);
-    transition: opacity .6s ease, transform .6s ease, visibility 0s .6s;
+    transition: opacity 2s cubic-bezier(.36,0,0,1), transform .6s ease, visibility 0s 2s;
     padding: 0;
 }
 
@@ -50,7 +50,7 @@
     opacity: 1;
     visibility: visible;
     transform: none;
-    transition: opacity .6s ease, transform .6s ease;
+    transition: opacity 2s cubic-bezier(.36,0,0,1), transform .6s ease;
     position: relative;
 }
 
@@ -72,18 +72,45 @@
     z-index: 0;
 }
 
+/* Animated double-ring hero art: stages the hero when the action passes no
+   photo. Inline SVG, zero JS; the rings rotate slowly via CSS. Under reduced
+   motion they stay still. Sits behind the text, above the tint. */
+.mo-hero-art {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    color: var(--color-text-muted);
+}
+
+.mo-hero-art__svg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(60vmin, 520px);
+    height: min(60vmin, 520px);
+}
+
+.mo-hero-art__outer { animation: mo-hero-spin 48s linear infinite; }
+
+@keyframes mo-hero-spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+    .mo-hero-art__outer { animation: none; }
+}
+
 .mo-slide__shade {
     position: absolute;
     inset: 0;
     z-index: 1;
-    background: linear-gradient(180deg, rgba(10,10,10,.72) 0%, rgba(10,10,10,.45) 60%, rgba(10,10,10,.65) 100%);
+    background: linear-gradient(100deg, rgba(10,10,10,.82) 20%, rgba(10,10,10,0) 65%);
 }
 
 [data-theme="light"] .mo-slide__shade {
-    background: linear-gradient(180deg, rgba(250,247,240,.85) 0%, rgba(250,247,240,.55) 60%, rgba(250,247,240,.8) 100%);
+    background: linear-gradient(100deg, rgba(250,247,240,.85) 20%, rgba(250,247,240,0) 65%);
 }
 
-.mo-slide .mo-container { position: relative; z-index: 2; text-align: center; max-width: 800px; }
+.mo-slide .mo-container { position: relative; z-index: 2; text-align: left; max-width: 1200px; }
 
 /* The opening slide carries no photo (the kernel home passes no heroSrc),
    so a flat tint next to photographic case slides reads dead. The hero
@@ -115,9 +142,10 @@
 }
 
 .mo-slide__title {
-    font-size: max(2.5rem, min(8vw, 5rem));
-    font-weight: var(--font-bold);
-    line-height: 1.1;
+    font-size: clamp(3.5rem, 8.9vw, 8rem);
+    font-weight: var(--font-semibold);
+    line-height: 1;
+    letter-spacing: 0;
     margin: 0 0 var(--space-6);
     color: #fff;
     text-wrap: balance;
@@ -126,11 +154,11 @@
 [data-theme="light"] .mo-slide__title { color: var(--color-text); }
 
 .mo-slide__lede {
-    font-size: max(1.125rem, min(2vw, 1.5rem));
-    line-height: 1.6;
-    color: rgba(255,255,255,.9);
-    max-width: 44rem;
-    margin: 0 auto 2rem;
+    font-size: clamp(1rem, 1.4vw, 1.25rem);
+    line-height: 1.4;
+    color: rgba(255,255,255,.75);
+    max-width: 60rem;
+    margin: 0 0 2rem;
 }
 
 [data-theme="light"] .mo-slide__lede { color: var(--color-text-muted); }
@@ -141,9 +169,10 @@
 
 .mo-slider__pag {
     position: absolute;
-    left: 0; right: 0; bottom: 1.5rem;
-    justify-content: center;
+    left: 0; right: 0; bottom: 20%;
+    justify-content: flex-start;
     gap: .6rem;
+    padding: 0 var(--space-4);
     z-index: 2;
 }
 
@@ -151,7 +180,7 @@
     width: 2.75rem;
     height: .3rem;
     border: 0;
-    border-radius: 999px;
+    border-radius: 7px;
     background: var(--color-border);
     padding: 0;
     cursor: pointer;

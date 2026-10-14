@@ -1,0 +1,19 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "comments.moderation_lifecycle",
+      "kind": "scenario",
+      "version": 1,
+      "description": "A guest comment travels the moderation queue before it becomes visible",
+      "summary": "Given a reader submitting a comment on an article slug, the runtime stores it with status pending (invisible publicly); the admin approves or rejects it from /mark/comments, and only an approved comment renders on the article. Deletion removes the row permanently — a deleted comment id never resolves again."
+    },
+    {
+      "id": "comments.throttled_submit_denied",
+      "kind": "scenario",
+      "version": 1,
+      "description": "A rate-limited submit never reaches the pending state",
+      "summary": "Given a submit from an IP that exceeded the per-IP throttle, the CommentsService denies it before insert — no comment row is created, the guest sees the throttle rejection, and the moderation queue stays untouched."
+    }
+  ]
+}

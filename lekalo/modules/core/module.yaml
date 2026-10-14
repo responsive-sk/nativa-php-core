@@ -5,7 +5,7 @@
       "id": "core",
       "kind": "module",
       "version": 1,
-      "description": "Core — routing, the request/response pair, the middleware pipeline and its discovery, the ShellContextProvider port, the theme kernel, the SEO text surfaces, the docs catalogue and markdown rendering. No feature-module imports."
+      "description": "Core — routing, the request/response pair, the middleware pipeline and its discovery, the kernel contracts (RouterInterface, ErrorRendererInterface), the ShellContextProvider port, the ThemeKernel connector with its built-in fallback theme, the SEO text surfaces, the docs catalogue and markdown rendering. No feature-module imports."
     }
   ]
 }

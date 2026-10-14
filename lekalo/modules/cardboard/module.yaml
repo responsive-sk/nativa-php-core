@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "cardboard",
+      "kind": "module",
+      "version": 1,
+      "description": "Cardboard — admin panel for content: navigation, bulk actions and admin tables for articles and pages."
+    }
+  ]
+}

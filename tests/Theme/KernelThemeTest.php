@@ -7,9 +7,9 @@ namespace Tests\Theme;
 use Modules\Core\Application\Services\View\InlineCss;
 use Modules\Core\Interfaces\HTTP\ErrorPageRenderer;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
+use Modules\KernelTheme\Theme\KernelTheme;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Themes\kernel\KernelTheme;
 
 /**
  * KernelThemeTest (task 2.2) — the trimmed design, pinned.
@@ -22,7 +22,7 @@ use Themes\kernel\KernelTheme;
  */
 final class KernelThemeTest extends TestCase
 {
-    private const string CSS = 'Themes/kernel/assets/critical/kernel.css';
+    private const string CSS = 'Modules/KernelTheme/assets/critical/kernel.css';
 
     #[Test]
     public function criticalCssResolvesToShippedFile(): void

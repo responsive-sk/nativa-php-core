@@ -1,0 +1,114 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "blog.article_created",
+      "kind": "event",
+      "version": 1,
+      "description": "A new article was published",
+      "payload": [
+        {
+          "name": "slug",
+          "type": {
+            "ref": "blog.slug"
+          },
+          "required": true
+        },
+        {
+          "name": "locale",
+          "type": {
+            "ref": "blog.locale"
+          },
+          "required": true
+        },
+        {
+          "name": "published_at",
+          "type": {
+            "ref": "blog.timestamp"
+          },
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "blog.article_updated",
+      "kind": "event",
+      "version": 1,
+      "description": "An article's content or front matter was rewritten",
+      "payload": [
+        {
+          "name": "slug",
+          "type": {
+            "ref": "blog.slug"
+          },
+          "required": true
+        },
+        {
+          "name": "locale",
+          "type": {
+            "ref": "blog.locale"
+          },
+          "required": true
+        },
+        {
+          "name": "updated_at",
+          "type": {
+            "ref": "blog.timestamp"
+          },
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "blog.article_published",
+      "kind": "event",
+      "version": 1,
+      "description": "An article was published (flag flipped to true)",
+      "payload": [
+        {
+          "name": "slug",
+          "type": {
+            "ref": "blog.slug"
+          },
+          "required": true
+        },
+        {
+          "name": "locale",
+          "type": {
+            "ref": "blog.locale"
+          },
+          "required": true
+        },
+        {
+          "name": "published_at",
+          "type": {
+            "ref": "blog.timestamp"
+          },
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "blog.article_bulk_published",
+      "kind": "event",
+      "version": 1,
+      "description": "A bulk publish/unpublish finished over a batch of articles",
+      "payload": [
+        {
+          "name": "count",
+          "type": {
+            "ref": "blog.slug_list"
+          },
+          "required": true
+        },
+        {
+          "name": "locale",
+          "type": {
+            "ref": "blog.locale"
+          },
+          "required": true
+        }
+      ]
+    }
+  ]
+}

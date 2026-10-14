@@ -1,0 +1,93 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "pages.page_created",
+      "kind": "event",
+      "version": 1,
+      "description": "A new page was created",
+      "payload": [
+        {
+          "name": "slug",
+          "type": {
+            "ref": "pages.slug"
+          },
+          "required": true
+        },
+        {
+          "name": "locale",
+          "type": {
+            "ref": "pages.locale"
+          },
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "pages.page_updated",
+      "kind": "event",
+      "version": 1,
+      "description": "A page was edited",
+      "payload": [
+        {
+          "name": "slug",
+          "type": {
+            "ref": "pages.slug"
+          },
+          "required": true
+        },
+        {
+          "name": "locale",
+          "type": {
+            "ref": "pages.locale"
+          },
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "pages.page_deleted",
+      "kind": "event",
+      "version": 1,
+      "description": "A page was deleted",
+      "payload": [
+        {
+          "name": "slug",
+          "type": {
+            "ref": "pages.slug"
+          },
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "pages.page_published",
+      "kind": "event",
+      "version": 1,
+      "description": "A page publish flag was flipped",
+      "payload": [
+        {
+          "name": "slug",
+          "type": {
+            "ref": "pages.slug"
+          },
+          "required": true
+        },
+        {
+          "name": "locale",
+          "type": {
+            "ref": "pages.locale"
+          },
+          "required": true
+        },
+        {
+          "name": "to",
+          "type": {
+            "ref": "pages.published"
+          },
+          "required": true
+        }
+      ]
+    }
+  ]
+}

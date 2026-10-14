@@ -1,0 +1,48 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "users.password_min_length",
+      "kind": "policy",
+      "version": 1,
+      "description": "Passwords shorter than 8 characters are denied (register + reset)",
+      "applies_to": [
+        "users.register",
+        "users.reset_password"
+      ],
+      "decision": "deny"
+    },
+    {
+      "id": "users.unique_email",
+      "kind": "policy",
+      "version": 1,
+      "description": "Registration with an already-taken email is denied",
+      "applies_to": [
+        "users.register"
+      ],
+      "decision": "deny"
+    },
+    {
+      "id": "users.active_account_required",
+      "kind": "policy",
+      "version": 1,
+      "description": "Login with an inactive account is denied (timing-safe — dummy bcrypt verify)",
+      "applies_to": [
+        "users.login"
+      ],
+      "decision": "deny"
+    },
+    {
+      "id": "users.admin_only_rbac",
+      "kind": "policy",
+      "version": 1,
+      "description": "Only a user holding the admin role may manage roles (admin super-user bypasses permission checks)",
+      "applies_to": [
+        "users.create_role",
+        "users.delete_role",
+        "users.sync_role_permissions"
+      ],
+      "decision": "allow"
+    }
+  ]
+}

@@ -79,7 +79,8 @@ module has no admin route to protect, so it is *not found* rather than
 | `Core/Domain/ShellNavItem.php` | kernel-owned nav item (the shell cannot carry a module's DTO) |
 | `Core/Infrastructure/Attributes/AsShellContextProvider.php` | the discovery attribute |
 | `Core/Application/Services/ShellContextProviderRegistry.php` | directory-scan discovery + the documented merge rule |
-| `Themes/ThemeModule.php`, `Themes/kernel/KernelTheme.php` | the kernel's own theme, prefix `k`, no build, no module import |
+| `Themes/ThemeModule.php`, `Themes/kernel/KernelFallbackTheme.php` | the kernel's built-in default theme (prefix `k`, plain HTML, no CSS), used when no theme module answers |
+| `Modules/KernelTheme/Theme/KernelTheme.php` | the kernel's visual theme, prefix `k`, no build, no module import; a module since the theme move |
 
 **Rewired** — `ThemeResolver` (theme + whitelist), `ContentServices` (default
 locale closure), `FrontendLayout` (site name, nav, languages, htmlLang),
@@ -437,7 +438,7 @@ CSS, no build, registered as the default. The registration was already true
 (`PUBLIC_THEME` is `kernel`, unknown names fall back to it); what was
 missing was the design — pages were valid and unstyled.
 
-- `src/Themes/kernel/assets/critical/kernel.css`: one hand-written file
+- `src/Modules/KernelTheme/assets/critical/kernel.css` (moved from `src/Themes/kernel` in the theme move): one hand-written file
   (~60 rules, system stack, light), inlined through `InlineCss` like every
 other theme's critical CSS. No `@charset`/`@import`/`@layer`, no build step.
   `KernelTheme::criticalCss()` returns it instead of `[]`.
@@ -980,9 +981,10 @@ Present and verified: the kernel slice, the shell port, the kernel theme,
 `src/init.php`, the composition root, `config/session.php`, the storage skeleton,
 `composer.json` (zero production dependencies, dev-only tooling), the
 `.env.example` for the keys the kernel reads, and the Lekalo skeleton
-(`lekalo/project.yaml` + `modules/core` + `modules/database` + `targets/`, id
-`nativa_core` — the IR grammar takes no hyphens — `lekalo.lock` committed,
-`validate` + `validate --strict` green on CLI 0.6.5, 23 rules, 0 findings).
+(`lekalo/project.yaml` + `targets/` + one `modules/<name>/module.yaml` per
+`src/Modules` directory — 21 modules: `core`, `database`, `kernel_theme` and the
+feature modules — id `nativa_core` — the IR grammar takes no hyphens — `lekalo.lock`
+committed, `validate` + `validate --strict` green on CLI 0.6.5, 23 rules, 0 findings).
 
 Present since 2026-10-11: the module catalogue (`modules/`, task 3.1–3.2) —
 `ModuleCatalog`/`ModuleManifest` scan a slice as text, `bin/cms`

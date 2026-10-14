@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "scheduler",
+      "kind": "module",
+      "version": 1,
+      "description": "Scheduler — ordered timetable of scheduled tasks with cron expressions and a runner that skips tasks whose mutex is held, ported from Marko's scheduler package."
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "audit.at",
+      "kind": "scalar",
+      "version": 1,
+      "base": "datetime",
+      "description": "When the audited action happened"
+    },
+    {
+      "id": "audit.action",
+      "kind": "scalar",
+      "version": 1,
+      "base": "string",
+      "description": "Dotted action verb, e.g. page.publish, page.create, article.publish_bulk"
+    },
+    {
+      "id": "audit.actor",
+      "kind": "scalar",
+      "version": 1,
+      "base": "string",
+      "description": "Actor identity from the admin session (email or id)"
+    },
+    {
+      "id": "audit.context",
+      "kind": "scalar",
+      "version": 1,
+      "base": "string",
+      "description": "JSON context payload of the audited action"
+    },
+    {
+      "id": "audit.entry",
+      "kind": "entity",
+      "version": 1,
+      "description": "One immutable append-only admin action record",
+      "fields": [
+        {
+          "name": "at",
+          "type": {
+            "ref": "audit.at"
+          },
+          "required": true
+        },
+        {
+          "name": "action",
+          "type": {
+            "ref": "audit.action"
+          },
+          "required": true
+        },
+        {
+          "name": "actor",
+          "type": {
+            "ref": "audit.actor"
+          },
+          "required": true
+        },
+        {
+          "name": "context",
+          "type": {
+            "ref": "audit.context"
+          },
+          "required": true
+        }
+      ],
+      "identity": [
+        "at",
+        "action",
+        "actor"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,152 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "questions.submit",
+      "kind": "command",
+      "version": 1,
+      "description": "Ask a question about a published article or page, with the reader's own attempted answer (CSRF + honeypot + per-IP rate limited, always pending)",
+      "input": [
+        {
+          "name": "subject_type",
+          "type": {
+            "ref": "questions.subject_type"
+          },
+          "required": true
+        },
+        {
+          "name": "subject_slug",
+          "type": {
+            "ref": "blog.slug"
+          },
+          "required": true
+        },
+        {
+          "name": "locale",
+          "type": {
+            "ref": "blog.locale"
+          },
+          "required": true
+        },
+        {
+          "name": "text",
+          "type": {
+            "ref": "questions.text"
+          },
+          "required": true
+        },
+        {
+          "name": "attempted_answer",
+          "type": {
+            "ref": "questions.attempted_answer"
+          },
+          "required": true
+        },
+        {
+          "name": "display_name",
+          "type": {
+            "ref": "questions.display_name"
+          },
+          "required": true
+        },
+        {
+          "name": "author_user_id",
+          "type": {
+            "optional": {
+              "ref": "users.user"
+            }
+          }
+        },
+        {
+          "name": "ip_address",
+          "type": {
+            "optional": {
+              "ref": "questions.ip_address"
+            }
+          }
+        }
+      ],
+      "effects": [
+        "questions.effect_question_created"
+      ]
+    },
+    {
+      "id": "questions.approve",
+      "kind": "command",
+      "version": 1,
+      "description": "Approve a pending or rejected question (/mark/questions/{id}/approve) — makes it visible on the subject again",
+      "input": [
+        {
+          "name": "id",
+          "type": {
+            "ref": "users.identifier"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "questions.effect_question_status_changed"
+      ]
+    },
+    {
+      "id": "questions.reject",
+      "kind": "command",
+      "version": 1,
+      "description": "Reject a pending or approved question (/mark/questions/{id}/reject) — hides it from the subject",
+      "input": [
+        {
+          "name": "id",
+          "type": {
+            "ref": "users.identifier"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "questions.effect_question_status_changed"
+      ]
+    },
+    {
+      "id": "questions.delete",
+      "kind": "command",
+      "version": 1,
+      "description": "Delete a question permanently (admin queue; subject to question persistence policy)",
+      "input": [
+        {
+          "name": "id",
+          "type": {
+            "ref": "users.identifier"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "questions.effect_question_deleted"
+      ]
+    },
+    {
+      "id": "questions.effect_question_created",
+      "kind": "effect",
+      "version": 1,
+      "description": "Insert a new question row with status pending — the entity, not the request, decides the status",
+      "operation": "create",
+      "entity": "questions.question"
+    },
+    {
+      "id": "questions.effect_question_status_changed",
+      "kind": "effect",
+      "version": 1,
+      "description": "Update the question status column (approve/reject)",
+      "operation": "update",
+      "entity": "questions.question"
+    },
+    {
+      "id": "questions.effect_question_deleted",
+      "kind": "effect",
+      "version": 1,
+      "description": "Remove the question row permanently",
+      "operation": "delete",
+      "entity": "questions.question"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "questions.moderation_lifecycle",
+      "kind": "scenario",
+      "version": 1,
+      "description": "A reader's question travels the moderation queue before it renders back on the subject",
+      "summary": "Given a reader asking a question with their own attempted answer about a published article or page, the runtime stores it with status pending (invisible on the subject); the admin approves, rejects or deletes it from /mark/questions, and only an approved question renders on the subject it was asked about. Deletion removes the row permanently — a deleted question id never resolves again."
+    },
+    {
+      "id": "questions.throttled_submit_denied",
+      "kind": "scenario",
+      "version": 1,
+      "description": "A rate-limited submit never reaches the pending state",
+      "summary": "Given a submit from an IP that already asked five questions in the last five minutes, the action denies it before insert — no question row is created, the reader sees the throttle rejection, and the moderation queue stays untouched."
+    },
+    {
+      "id": "questions.unpublished_subject_denied",
+      "kind": "scenario",
+      "version": 1,
+      "description": "The subject pair is re-resolved against published content, so the endpoint is not a slug oracle",
+      "summary": "Given a submit naming a slug that exists nowhere, a draft, or a page that does not carry that slug, the action refuses with a 404 that carries no Location header — the endpoint never reveals whether a slug exists, and no question is stored."
+    },
+    {
+      "id": "questions.moderation_queue_is_badged",
+      "kind": "scenario",
+      "version": 1,
+      "description": "The queue depth is visible from anywhere in the panel, and only the work waiting is counted",
+      "summary": "Given a reader's question awaiting moderation, every admin page carries the number of pending questions on the Questions navigation item; approving one decrements it, an empty queue renders no badge at all, and a session without the content-management permission sees neither the item nor the number — the count is requested only after the navigation's permission filter, so the badge inherits the surface's authorization."
+    }
+  ]
+}

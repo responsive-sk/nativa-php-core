@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "kernel_theme",
+      "kind": "module",
+      "version": 1,
+      "description": "KernelTheme — the kernel's own visual theme: one hand-written CSS file, no build step, class prefix k. Installed as a module; ThemeKernel falls back to the built-in KernelFallbackTheme in Core when it is absent. Imports nothing from feature modules."
+    }
+  ]
+}

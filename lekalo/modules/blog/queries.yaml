@@ -1,0 +1,89 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "blog.article_index",
+      "kind": "query",
+      "version": 1,
+      "description": "Newest-first article list for the index, tag/category/author surfaces",
+      "reads": [
+        "blog.article"
+      ],
+      "returns": {
+        "list": {
+          "ref": "blog.article"
+        }
+      }
+    },
+    {
+      "id": "blog.article_by_slug",
+      "kind": "query",
+      "version": 1,
+      "description": "One article by slug in the active locale (404 when absent)",
+      "reads": [
+        "blog.article"
+      ],
+      "returns": {
+        "optional": {
+          "ref": "blog.article"
+        }
+      }
+    },
+    {
+      "id": "blog.search",
+      "kind": "query",
+      "version": 1,
+      "description": "FTS5 full-text search over title/excerpt/tags/body with pagination (input: blog.search_query from the ?q= request parameter)",
+      "reads": [
+        "blog.article"
+      ],
+      "returns": {
+        "list": {
+          "ref": "blog.article"
+        }
+      }
+    },
+    {
+      "id": "blog.tags",
+      "kind": "query",
+      "version": 1,
+      "description": "Tag cloud counts over the locale corpus",
+      "reads": [
+        "blog.article"
+      ],
+      "returns": {
+        "list": {
+          "ref": "blog.tag"
+        }
+      }
+    },
+    {
+      "id": "blog.categories",
+      "kind": "query",
+      "version": 1,
+      "description": "Category grid counts over the locale corpus",
+      "reads": [
+        "blog.article"
+      ],
+      "returns": {
+        "list": {
+          "ref": "blog.category"
+        }
+      }
+    },
+    {
+      "id": "blog.series",
+      "kind": "query",
+      "version": 1,
+      "description": "Series (tag) grouping with counts and the leading article",
+      "reads": [
+        "blog.article"
+      ],
+      "returns": {
+        "list": {
+          "ref": "blog.article"
+        }
+      }
+    }
+  ]
+}

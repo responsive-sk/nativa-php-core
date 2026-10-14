@@ -1,0 +1,58 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "blog.read_flow",
+      "kind": "scenario",
+      "version": 1,
+      "description": "A visitor browses the index and reads an article",
+      "summary": "Given a public corpus of Markdown articles, a visitor opens /blog, sees the newest-first paginated cards with the featured hero, opens an article by slug, and the view counter records the visit.",
+      "covers": [
+        "blog.article_index",
+        "blog.article_by_slug",
+        "blog.record_view",
+        "blog.effect_view_recorded"
+      ]
+    },
+    {
+      "id": "blog.search_flow",
+      "kind": "scenario",
+      "version": 1,
+      "description": "A visitor searches the corpus with FTS5",
+      "summary": "Given the indexed corpus, a visitor submits ?q= and receives ranked results with pagination, or the styled empty state when nothing matches.",
+      "covers": [
+        "blog.search"
+      ]
+    },
+    {
+      "id": "blog.members_gate_flow",
+      "kind": "scenario",
+      "version": 1,
+      "description": "A members-only article gates its body (the gate itself is a documented read-side gate in policies.yaml — the policy grammar does not yet accept queries)",
+      "summary": "Given a members-only article, a guest sees the teaser and a sign-in prompt instead of the body; a signed-in member reads the full content.",
+      "covers": [
+        "blog.article_by_slug"
+      ]
+    },
+    {
+      "id": "blog.admin_editing_flow",
+      "kind": "scenario",
+      "version": 1,
+      "description": "An admin manages articles in the /mark editor",
+      "summary": "Given an admin, they create, edit, publish and delete articles in both locales with auto-slug and media-picker covers; bulk publish/unpublish/delete processes selections with one cache flush; deletions clean up owned covers.",
+      "covers": [
+        "blog.create_article",
+        "blog.update_article",
+        "blog.delete_article",
+        "blog.effect_article_created",
+        "blog.effect_article_updated",
+        "blog.effect_article_deleted",
+        "blog.cover_owned_by_article",
+        "blog.publish_article",
+        "blog.publish_bulk",
+        "blog.effect_article_published",
+        "blog.effect_article_bulk_published"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "outbox",
+      "kind": "module",
+      "version": 1,
+      "description": "Outbox — domain event outbox holding messages waiting to be published."
+    }
+  ]
+}

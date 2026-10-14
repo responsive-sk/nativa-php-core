@@ -1,0 +1,55 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "audit.append",
+      "kind": "command",
+      "version": 1,
+      "description": "Append one immutable audit entry via AuditServices::log() — fired internally by every admin write action (users, roles, settings, locales, media, comments, articles, pages, publish toggles, bulk actions)",
+      "input": [
+        {
+          "name": "at",
+          "type": {
+            "ref": "audit.at"
+          },
+          "required": true
+        },
+        {
+          "name": "action",
+          "type": {
+            "ref": "audit.action"
+          },
+          "required": true
+        },
+        {
+          "name": "actor",
+          "type": {
+            "ref": "audit.actor"
+          },
+          "required": true
+        },
+        {
+          "name": "context",
+          "type": {
+            "ref": "audit.context"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "audit.effect_append"
+      ]
+    },
+    {
+      "id": "audit.effect_append",
+      "kind": "effect",
+      "version": 1,
+      "description": "Insert the audit row into audit.db — append-only, SQLite triggers reject any UPDATE or DELETE",
+      "operation": "create",
+      "entity": "audit.entry",
+      "emits": [
+        "audit.entry_appended"
+      ]
+    }
+  ]
+}

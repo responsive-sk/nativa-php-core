@@ -1,0 +1,58 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "users.find_user_by_email",
+      "kind": "query",
+      "version": 1,
+      "description": "Look up a user by email (login, reset)",
+      "reads": [
+        "users.user"
+      ],
+      "returns": {
+        "ref": "users.user"
+      }
+    },
+    {
+      "id": "users.find_user_by_id",
+      "kind": "query",
+      "version": 1,
+      "description": "Look up a user by id (current user, session resolution)",
+      "reads": [
+        "users.user"
+      ],
+      "returns": {
+        "ref": "users.user"
+      }
+    },
+    {
+      "id": "users.current_user",
+      "kind": "query",
+      "version": 1,
+      "description": "Authenticated user from the session, or none",
+      "reads": [
+        "users.user",
+        "users.session"
+      ],
+      "returns": {
+        "optional": {
+          "ref": "users.user"
+        }
+      }
+    },
+    {
+      "id": "users.list_roles",
+      "kind": "query",
+      "version": 1,
+      "description": "All roles alphabetically (admin role CRUD)",
+      "reads": [
+        "users.role"
+      ],
+      "returns": {
+        "list": {
+          "ref": "users.role"
+        }
+      }
+    }
+  ]
+}

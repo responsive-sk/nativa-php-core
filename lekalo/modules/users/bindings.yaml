@@ -1,0 +1,57 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "users.endpoint_register",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "POST /register — RegisterAction (route auth.register.submit)",
+      "invokes": "users.register",
+      "method": "POST",
+      "path": "/register"
+    },
+    {
+      "id": "users.endpoint_login",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "POST /login — LoginAction (route auth.login.submit)",
+      "invokes": "users.login",
+      "method": "POST",
+      "path": "/login"
+    },
+    {
+      "id": "users.endpoint_logout",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "POST /logout — LogoutAction (route auth.logout)",
+      "invokes": "users.logout",
+      "method": "POST",
+      "path": "/logout"
+    },
+    {
+      "id": "users.endpoint_forgot_password",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "POST /forgot-password — PasswordResetRequestAction (route auth.forgot.submit)",
+      "invokes": "users.request_password_reset",
+      "method": "POST",
+      "path": "/forgot-password"
+    },
+    {
+      "id": "users.endpoint_reset_password",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "POST /reset-password — PasswordResetAction (route auth.reset.submit)",
+      "invokes": "users.reset_password",
+      "method": "POST",
+      "path": "/reset-password"
+    },
+    {
+      "id": "users.binding_php",
+      "kind": "target-binding",
+      "version": 1,
+      "description": "Bind the users module to the Nativa PHP runtime target",
+      "target": "php-nativa"
+    }
+  ]
+}

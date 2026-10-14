@@ -13,6 +13,11 @@
 import './mono/index.css'
 import { initMoVariantSwitcher } from './mo-variant-switcher'
 import { initMoSlider } from './mo-slider'
+import { initMoReveal } from './mo-reveal'
+import { initMoChoice } from './mo-choice'
+import { initMoBrandLogo } from './mo-brand-logo'
+import { initMoSteps } from './mo-steps'
+import { initMoQuotes } from './mo-quotes'
 import { initMoTocScrollspy } from './mo-toc-scrollspy'
 import { initMoCodeHighlight } from './mo-code-highlight'
 
@@ -22,7 +27,12 @@ import { initMoCodeHighlight } from './mo-code-highlight'
 // but the order keeps the waterfall familiar.
 const onDomReady = (): void => {
   initMoVariantSwitcher()
+  initMoReveal()
   initMoSlider()
+  initMoChoice()
+  initMoBrandLogo()
+  initMoSteps()
+  initMoQuotes()
   initMoTocScrollspy()
   initMoCodeHighlight()
 }

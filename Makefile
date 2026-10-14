@@ -9,6 +9,10 @@
 PHP ?= php
 COMPOSER ?= composer
 MINIMAL_ROOT ?= ../nativa-minimal
+LEKALO ?= $(shell command -v lekalo 2>/dev/null || echo "$$HOME/.cargo/bin/lekalo")
+# Modules the advisory coupling / architecture-profile reports cover (two, not
+# one: a single module says nothing about whether the shape holds elsewhere).
+LEKALO_MODULES ?= users,blog
 
 ##@ Help
 help: ## Show available targets
@@ -56,6 +60,44 @@ assets-import: ## Fallback: copy the showcase's built bundles when pnpm is not a
 	mkdir -p public/dist
 	cp -r "$(MINIMAL_ROOT)/public/dist/." public/dist/
 	@echo "Copied public/dist from $(MINIMAL_ROOT) (gitignored — a build artifact, not source)."
+
+##@ Lekalo
+# Gates assert and exit 1 on drift. Reports are informational: the advisory
+# states they print are expected today, and a crash is the only failure.
+# `validate --strict` is deliberately NOT run here: strict review requires
+# adapter evidence for authorization mappings, and this tree installs no
+# php-nativa adapter (`lock --check` reports adapters 0). Re-add the strict line
+# once an adapter exists.
+lekalo-check: ## Lekalo gate: lock --check + validate (default profile)
+	@$(LEKALO) lock --check
+	@$(LEKALO) validate
+
+workspace-audit: ## Lekalo gate: pnpm workspace root at Frontend/packages, no monorepo tooling
+	@command -v "$(LEKALO)" > /dev/null 2>&1 || { echo "workspace-audit: FAILED — no lekalo CLI at '$(LEKALO)'; install it or pass LEKALO=<path>" >&2; exit 1; }
+	@command -v jq > /dev/null 2>&1 || { echo "workspace-audit: FAILED — no jq on PATH" >&2; exit 1; }
+	@$(LEKALO) init --adopt --dry-run --json \
+		| jq -e '.detection | ((.workspaceRoots // []) | map(.path)) == ["Frontend/packages"] and ((.monorepoTools // []) == []) and (((.packageManagers // []) | map(.detail) | index("pnpm")) != null)' > /dev/null \
+		&& echo "workspace-audit: OK — pnpm workspace root at Frontend/packages, no monorepo tools" \
+		|| { echo "workspace-audit: FAILED — workspace shape drifted; inspect: $(LEKALO) init --adopt --dry-run --json | jq .detection" >&2; exit 1; }
+
+lekalo-verify: ## Read-only Lekalo verification + CI report (informational)
+	@mkdir -p storage/cache
+	@rm -f storage/cache/lekalo-verify.md
+	@$(LEKALO) verify --report-file storage/cache/lekalo-verify.md --report-format md
+	@cat storage/cache/lekalo-verify.md
+
+lekalo-reports: ## Coupling + architecture-profile reports for LEKALO_MODULES, as markdown (informational)
+	@$(PHP) bin/ops/lekalo-reports.php --lekalo="$(LEKALO)" --modules="$(LEKALO_MODULES)"
+
+lekalo-doctor: ## Read-only Lekalo readiness report (informational)
+	@$(LEKALO) doctor
+
+impact-report: ## Lekalo change-radius report for the working tree (BASE=<ref>, default HEAD)
+	@if git diff --quiet $(BASE) -- lekalo/; then \
+		echo "impact-report: no model changes vs $(BASE) — nothing to project"; \
+	else \
+		$(LEKALO) impact --changed --base $(BASE) --worktree; \
+	fi
 
 ##@ Development
 dev: ## Start the local dev server (localhost:8000)

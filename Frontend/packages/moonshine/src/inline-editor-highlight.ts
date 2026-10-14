@@ -124,7 +124,7 @@ function highlightProse(text: string): string {
 function highlightEmphasis(text: string): string {
   const link = /(\[[^\]\n]*\])(\([^)\n]*\))/g;
 
-  return text.replace(link, (whole, label, target) => span('link', whole)).replace(
+  return text.replace(link, (whole) => span('link', whole)).replace(
     /(\*\*|__)(?=\S)([\s\S]*?\S)\1/g,
     (whole) => span('strong', whole),
   ).replace(

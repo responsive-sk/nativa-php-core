@@ -1,0 +1,138 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "comments.display_name",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Name captured at submit time — the signed-in user's account name or the guest's display name (never the email)",
+      "base": "string"
+    },
+    {
+      "id": "comments.guest_email",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Guest author email (optional, never rendered publicly)",
+      "base": "string"
+    },
+    {
+      "id": "comments.body",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Comment text body (rate-limited per IP on submit)",
+      "base": "string"
+    },
+    {
+      "id": "comments.ip_address",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Submitter IP captured for the moderation queue",
+      "base": "string"
+    },
+    {
+      "id": "comments.timestamp",
+      "kind": "scalar",
+      "version": 1,
+      "description": "ISO-8601 submit timestamp",
+      "base": "datetime"
+    },
+    {
+      "id": "comments.status",
+      "kind": "enum",
+      "version": 1,
+      "description": "Moderation lifecycle state (status column, default pending)",
+      "values": [
+        {
+          "value": "pending",
+          "description": "Awaiting moderation — invisible publicly"
+        },
+        {
+          "value": "approved",
+          "description": "Approved — renders publicly on the article"
+        },
+        {
+          "value": "rejected",
+          "description": "Rejected — hidden from the article"
+        }
+      ]
+    },
+    {
+      "id": "comments.comment",
+      "kind": "entity",
+      "version": 1,
+      "description": "Reader comment on a blog article slug (comments table, comments.db)",
+      "fields": [
+        {
+          "name": "id",
+          "type": {
+            "ref": "users.identifier"
+          },
+          "required": true
+        },
+        {
+          "name": "article_slug",
+          "type": {
+            "ref": "blog.slug"
+          },
+          "required": true
+        },
+        {
+          "name": "user_id",
+          "type": {
+            "optional": {
+              "ref": "users.user"
+            }
+          }
+        },
+        {
+          "name": "guest_name",
+          "type": {
+            "optional": {
+              "ref": "comments.display_name"
+            }
+          }
+        },
+        {
+          "name": "guest_email",
+          "type": {
+            "optional": {
+              "ref": "comments.guest_email"
+            }
+          }
+        },
+        {
+          "name": "body",
+          "type": {
+            "ref": "comments.body"
+          },
+          "required": true
+        },
+        {
+          "name": "status",
+          "type": {
+            "ref": "comments.status"
+          },
+          "required": true
+        },
+        {
+          "name": "ip_address",
+          "type": {
+            "optional": {
+              "ref": "comments.ip_address"
+            }
+          }
+        },
+        {
+          "name": "created_at",
+          "type": {
+            "ref": "comments.timestamp"
+          },
+          "required": true
+        }
+      ],
+      "identity": [
+        "id"
+      ]
+    }
+  ]
+}

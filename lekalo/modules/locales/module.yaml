@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "locales",
+      "kind": "module",
+      "version": 1,
+      "description": "Locales — locale codes in ll_CC format, the admin locale and the locale services and DTOs."
+    }
+  ]
+}

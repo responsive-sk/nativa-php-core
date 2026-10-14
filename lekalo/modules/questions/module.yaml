@@ -1,0 +1,16 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "questions",
+      "kind": "module",
+      "version": 1,
+      "description": "Questions — reader comprehension-gap signals filed against published articles, resolved against real content, with a moderation badge in the admin sidebar.",
+      "imports": [
+        "blog",
+        "pages",
+        "users"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,233 @@
+schema_version: "lekalo/authorization/v0.2.16"
+identity: "dev.lekalo.authorization@0.2.16"
+model_ref:
+  schema_version: "0.2.16"
+  ir_digest: "sha256:c7eb0bbb74617ff76d002226449ab6d8b4f28fcfb1797669470fbcb410ec3ec1"
+profile_ref: "dev.lekalo.authorization-profile@0.2.16"
+roles:
+  - id: users.role.guest
+  - id: users.role.member
+    implies:
+      - "users.role.guest"
+  - id: users.role.admin
+    implies:
+      - "users.role.member"
+policies:
+  - id: users.policy.public_auth_flow
+    actor: public
+    decision: allow
+    error_ref: "users.error.unauthorized"
+    applies_to:
+      - "users.register"
+      - "users.login"
+      - "users.request_password_reset"
+      - "users.reset_password"
+  - id: users.policy.member_session
+    actor: identity.user
+    decision: allow
+    error_ref: "users.error.unauthorized"
+    applies_to:
+      - "users.logout"
+      - "users.current_user"
+    roles:
+      - "users.role.member"
+  - id: users.policy.admin_role_management
+    actor: identity.user
+    decision: allow
+    error_ref: "users.error.forbidden"
+    applies_to:
+      - "users.create_role"
+      - "users.delete_role"
+      - "users.sync_role_permissions"
+      - "users.list_roles"
+    roles:
+      - "users.role.admin"
+  - id: users.policy.internal_runtime_lookup
+    actor: internal
+    decision: allow
+    error_ref: "users.error.forbidden"
+    applies_to:
+      - "users.find_user_by_email"
+      - "users.find_user_by_id"
+  - id: users.policy.admin_user_management
+    actor: identity.user
+    decision: allow
+    error_ref: "users.error.forbidden"
+    applies_to:
+      - "users.update_user"
+    roles:
+      - "users.role.admin"
+  - id: comments.policy.admin_moderation
+    actor: identity.user
+    decision: allow
+    error_ref: "users.error.forbidden"
+    applies_to:
+      - "comments.approve"
+      - "comments.reject"
+      - "comments.delete"
+    roles:
+      - "users.role.admin"
+    fields:
+      write:
+        - status
+  - id: comments.policy.public_submit
+    actor: public
+    decision: allow
+    error_ref: "users.error.unauthorized"
+    applies_to:
+      - "comments.submit"
+    fields:
+      write:
+        - article_slug
+        - user_id
+        - guest_name
+        - guest_email
+        - body
+        - ip_address
+  - id: questions.policy.admin_moderation
+    actor: identity.user
+    decision: allow
+    error_ref: "users.error.forbidden"
+    applies_to:
+      - "questions.approve"
+      - "questions.reject"
+      - "questions.delete"
+      - "questions.moderation_inbox"
+    roles:
+      - "users.role.admin"
+    fields:
+      write:
+        - status
+  - id: questions.policy.public_submit
+    actor: public
+    decision: allow
+    error_ref: "users.error.unauthorized"
+    applies_to:
+      - "questions.submit"
+    fields:
+      write:
+        - subject_type
+        - subject_slug
+        - locale
+        - text
+        - attempted_answer
+        - display_name
+        - author_user_id
+        - ip_address
+  - id: questions.policy.public_read_approved
+    actor: public
+    decision: allow
+    error_ref: "users.error.unauthorized"
+    applies_to:
+      - "questions.find_by_subject"
+      - "questions.find_approved_by_subject"
+    fields:
+      read:
+        - display_name
+        - text
+        - attempted_answer
+        - created_at
+  - id: blog.policy.public_read
+    actor: public
+    decision: allow
+    error_ref: "users.error.unauthorized"
+    applies_to:
+      - "blog.article_index"
+      - "blog.article_by_slug"
+      - "blog.search"
+      - "blog.tags"
+      - "blog.categories"
+      - "blog.series"
+      - "blog.record_view"
+    fields:
+      read:
+        - slug
+        - locale
+        - title
+        - date
+        - excerpt
+        - body
+        - tags
+        - category
+        - cover
+        - state
+        - views
+        - author_email
+  - id: blog.policy.admin_editing
+    actor: identity.user
+    decision: allow
+    error_ref: "users.error.forbidden"
+    applies_to:
+      - "blog.create_article"
+      - "blog.update_article"
+      - "blog.delete_article"
+      - "blog.publish_article"
+      - "blog.publish_bulk"
+    roles:
+      - "users.role.admin"
+    fields:
+      read:
+        - slug
+        - locale
+        - title
+        - date
+        - excerpt
+        - body
+        - tags
+        - category
+        - cover
+        - state
+        - views
+        - author_email
+      write:
+        - slug
+        - locale
+        - title
+        - date
+        - excerpt
+        - body
+        - tags
+        - category
+        - cover
+        - state
+        - views
+        - author_email
+  - id: audit.policy.internal_append
+    actor: internal
+    decision: allow
+    error_ref: "users.error.forbidden"
+    applies_to:
+      - "audit.append"
+  - id: pages.policy.admin_editing
+    actor: identity.user
+    decision: allow
+    error_ref: "users.error.forbidden"
+    applies_to:
+      - "pages.create_page"
+      - "pages.update_page"
+      - "pages.delete_page"
+      - "pages.publish_page"
+      - "pages.publish_bulk"
+    roles:
+      - "users.role.admin"
+  - id: pages.policy.public_read
+    actor: public
+    decision: allow
+    error_ref: "users.error.unauthorized"
+    applies_to:
+      - "pages.page_index"
+      - "pages.rendered_page"
+
+mappings:
+  - target: "php-nativa"
+    authorization_contract_ref: "dev.lekalo.authorization@0.2.16"
+    semantic_policy_ref: "blog.policy.public_read"
+    mapping_state: full
+    evidence_ref: "lekalo/targets/php-nativa.yaml"
+    observed_revision: "sha256:b94316234016d08183583e0ff5fa8efda57f97a83621bf49e4b5afbcac620cd9"
+  - target: "php-nativa"
+    authorization_contract_ref: "dev.lekalo.authorization@0.2.16"
+    semantic_policy_ref: "pages.policy.admin_editing"
+    mapping_state: full
+    evidence_ref: "lekalo/targets/php-nativa.yaml"
+    observed_revision: "sha256:b94316234016d08183583e0ff5fa8efda57f97a83621bf49e4b5afbcac620cd9"

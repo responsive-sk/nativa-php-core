@@ -1,0 +1,31 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "users.register_login_flow",
+      "kind": "scenario",
+      "version": 1,
+      "description": "A visitor registers, then logs in with the new credentials",
+      "summary": "Given a visitor without an account, they register with a unique email and a strong password; the account is created and they can log in, which establishes an authenticated session.",
+      "covers": [
+        "users.register",
+        "users.login",
+        "users.effect_user_created",
+        "users.effect_session_created"
+      ]
+    },
+    {
+      "id": "users.password_reset_flow",
+      "kind": "scenario",
+      "version": 1,
+      "description": "A user requests a reset and sets a new password",
+      "summary": "Given a registered user who forgot their password, they request a reset token; the token is logged by the dev mailer, and consuming it updates the password and marks the token used.",
+      "covers": [
+        "users.request_password_reset",
+        "users.reset_password",
+        "users.effect_password_updated",
+        "users.effect_reset_token_consumed"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "audit.entry_appended",
+      "kind": "event",
+      "version": 1,
+      "description": "An immutable audit entry was appended",
+      "payload": [
+        {
+          "name": "at",
+          "type": {
+            "ref": "audit.at"
+          },
+          "required": true
+        },
+        {
+          "name": "action",
+          "type": {
+            "ref": "audit.action"
+          },
+          "required": true
+        },
+        {
+          "name": "actor",
+          "type": {
+            "ref": "audit.actor"
+          },
+          "required": true
+        },
+        {
+          "name": "context",
+          "type": {
+            "ref": "audit.context"
+          },
+          "required": true
+        }
+      ]
+    }
+  ]
+}

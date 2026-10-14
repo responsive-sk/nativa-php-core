@@ -1,0 +1,102 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "blog.endpoint_index",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "GET /blog — paginated article index with search box (route blog.index)",
+      "invokes": "blog.article_index",
+      "method": "GET",
+      "path": "/blog"
+    },
+    {
+      "id": "blog.endpoint_article",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "GET /blog/{slug} — article page with TOC, comments and members gate (route blog.article)",
+      "invokes": "blog.article_by_slug",
+      "method": "GET",
+      "path": "/blog/{slug}"
+    },
+    {
+      "id": "blog.endpoint_search",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "GET /blog?q= — FTS5 search results page",
+      "invokes": "blog.search",
+      "method": "GET",
+      "path": "/blog"
+    },
+    {
+      "id": "blog.endpoint_tags",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "GET /blog/tags and /blog/tags/{tag} — tag cloud + tag-filtered list",
+      "invokes": "blog.tags",
+      "method": "GET",
+      "path": "/blog/tags/{tag}"
+    },
+    {
+      "id": "blog.endpoint_categories",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "GET /blog/categories and /blog/categories/{category} — category grid + filtered list",
+      "invokes": "blog.categories",
+      "method": "GET",
+      "path": "/blog/categories/{category}"
+    },
+    {
+      "id": "blog.endpoint_author",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "GET /authors/{slug} — author profile with their articles (slug is the diacritics-folded display name)",
+      "invokes": "blog.article_index",
+      "method": "GET",
+      "path": "/authors/{slug}"
+    },
+    {
+      "id": "blog.endpoint_feed_atom",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "Atom 1.0 subscription feed (actual route GET /blog/feed.atom — the dot form is outside the model path grammar)",
+      "invokes": "blog.article_index",
+      "method": "GET",
+      "path": "/blog/feeds/atom"
+    },
+    {
+      "id": "blog.endpoint_feed_rss",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "RSS 2.0 subscription feed (actual route GET /blog/feed.xml — the dot form is outside the model path grammar)",
+      "invokes": "blog.article_index",
+      "method": "GET",
+      "path": "/blog/feeds/rss"
+    },
+    {
+      "id": "blog.endpoint_cover",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "GET /storage/blog-images/{file} — generated/local cover serving",
+      "invokes": "blog.article_by_slug",
+      "method": "GET",
+      "path": "/storage/blog-images/{file}"
+    },
+    {
+      "id": "blog.endpoint_admin_articles",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "/mark/articles CRUD — admin blog editor (list/create/edit/delete, SK/EN toggle, media picker)",
+      "invokes": "blog.create_article",
+      "method": "POST",
+      "path": "/mark/articles"
+    },
+    {
+      "id": "blog.binding_php",
+      "kind": "target-binding",
+      "version": 1,
+      "description": "Bind the blog module to the Nativa PHP runtime target",
+      "target": "php-nativa"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "comments.endpoint_submit",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "POST /blog/{slug}/comments — public guest/identity comment submit (CSRF token + per-IP rate limit, pending by default; HTMX swaps the comment fragment, native submit redirects back to the article)",
+      "invokes": "comments.submit",
+      "method": "POST",
+      "path": "/blog/{slug}/comments"
+    },
+    {
+      "id": "comments.endpoint_approve",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "POST /mark/comments/{id}/approve — admin moderation approves a comment",
+      "invokes": "comments.approve",
+      "method": "POST",
+      "path": "/mark/comments/{id}/approve"
+    },
+    {
+      "id": "comments.endpoint_reject",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "POST /mark/comments/{id}/reject — admin moderation rejects a comment",
+      "invokes": "comments.reject",
+      "method": "POST",
+      "path": "/mark/comments/{id}/reject"
+    },
+    {
+      "id": "comments.endpoint_delete",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "POST /mark/comments/{id}/delete — admin moderation deletes a comment permanently",
+      "invokes": "comments.delete",
+      "method": "POST",
+      "path": "/mark/comments/{id}/delete"
+    }
+  ]
+}

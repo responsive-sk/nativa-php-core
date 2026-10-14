@@ -1,0 +1,94 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "pages.slug",
+      "kind": "scalar",
+      "version": 1,
+      "description": "URL-safe page identifier (diacritics-folded, unique per locale directory, also the public /{slug} route segment)",
+      "base": "string"
+    },
+    {
+      "id": "pages.locale",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Content locale code selecting the storage/pages/{sk,en} directory",
+      "base": "string"
+    },
+    {
+      "id": "pages.title",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Human page title rendered as the heading and the SEO title fallback",
+      "base": "string"
+    },
+    {
+      "id": "pages.markdown",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Raw Markdown page body with YAML frontmatter (seo_title, seo_description, published)",
+      "base": "string"
+    },
+    {
+      "id": "pages.published",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Publish state persisted as the frontmatter published flag; defaults to false (unpublished until explicitly published)",
+      "base": "boolean"
+    },
+    {
+      "id": "pages.slug_list",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Selection of page slugs carried by a bulk action (ids[] form field)",
+      "base": "string"
+    },
+    {
+      "id": "pages.article",
+      "kind": "entity",
+      "version": 1,
+      "description": "A static page document: frontmatter (title, seo, published) plus the Markdown body",
+      "fields": [
+        {
+          "name": "slug",
+          "type": {
+            "ref": "pages.slug"
+          },
+          "required": true
+        },
+        {
+          "name": "locale",
+          "type": {
+            "ref": "pages.locale"
+          },
+          "required": true
+        },
+        {
+          "name": "title",
+          "type": {
+            "ref": "pages.title"
+          },
+          "required": true
+        },
+        {
+          "name": "markdown",
+          "type": {
+            "ref": "pages.markdown"
+          },
+          "required": true
+        },
+        {
+          "name": "published",
+          "type": {
+            "ref": "pages.published"
+          },
+          "required": true
+        }
+      ],
+      "identity": [
+        "slug",
+        "locale"
+      ]
+    }
+  ]
+}

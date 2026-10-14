@@ -27,10 +27,17 @@ final class MonoBuildFreezeTest extends TestCase
 {
     private const string BUNDLE = 'mono';
 
-    /** Raw-byte budgets with ~30% headroom over the freezing build (JS 10 370, CSS 29 200). */
-    private const int JS_BUDGET = 14000;
+    /**
+     * Raw-byte budgets. JS 18 000 covers the Boson-style choice section, the
+     * mask reveal and the navbar dot-grid mark (measured 16 777, ~7% headroom).
+     * CSS 41 500 covers the same sections plus the steps accordion and the
+     * hero-art double ring (measured 40 382, ~2.7% headroom); the earlier
+     * freeze was JS 10 370 / CSS 29 200, then CSS 40 000 at 38 624 measured
+     * before the hero art and the animated slider transition landed.
+     */
+    private const int JS_BUDGET = 18000;
 
-    private const int CSS_BUDGET = 38000;
+    private const int CSS_BUDGET = 41500;
 
     protected function setUp(): void
     {

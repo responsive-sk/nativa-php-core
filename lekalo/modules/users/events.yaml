@@ -1,0 +1,71 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "users.user_registered",
+      "kind": "event",
+      "version": 1,
+      "description": "A new account was created",
+      "payload": [
+        {
+          "name": "user_id",
+          "type": {
+            "ref": "users.identifier"
+          },
+          "required": true
+        },
+        {
+          "name": "created_at",
+          "type": {
+            "ref": "users.timestamp"
+          },
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "users.session_started",
+      "kind": "event",
+      "version": 1,
+      "description": "An authenticated session was established",
+      "payload": [
+        {
+          "name": "user_id",
+          "type": {
+            "ref": "users.identifier"
+          },
+          "required": true
+        },
+        {
+          "name": "started_at",
+          "type": {
+            "ref": "users.timestamp"
+          },
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "users.password_updated",
+      "kind": "event",
+      "version": 1,
+      "description": "A user's password hash was replaced (login rehash or reset)",
+      "payload": [
+        {
+          "name": "user_id",
+          "type": {
+            "ref": "users.identifier"
+          },
+          "required": true
+        },
+        {
+          "name": "updated_at",
+          "type": {
+            "ref": "users.timestamp"
+          },
+          "required": true
+        }
+      ]
+    }
+  ]
+}

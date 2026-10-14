@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "pages",
+      "kind": "module",
+      "version": 1,
+      "description": "Pages — static pages stored as markdown with YAML front matter in storage/pages (one folder per locale), with a CRUD service and the admin table."
+    }
+  ]
+}

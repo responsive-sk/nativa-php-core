@@ -1,0 +1,50 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "questions.endpoint_submit",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "POST /questions/{subjectType}/{subjectSlug} — public reader submit against an article or a page (CSRF token + honeypot + per-IP throttle, subject re-resolved against published content, always pending; POST-redirect-GET back onto the subject with the question-sent marker). The path segments are spelled snake_case in this binding because the wire grammar requires it; the route attribute names them {subjectType}/{subjectSlug}",
+      "invokes": "questions.submit",
+      "method": "POST",
+      "path": "/questions/{subject_type}/{subject_slug}"
+    },
+    {
+      "id": "questions.endpoint_inbox",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "GET /mark/questions — moderation inbox grouped by subject pair with per-status counts and a ?status= filter",
+      "invokes": "questions.moderation_inbox",
+      "method": "GET",
+      "path": "/mark/questions"
+    },
+    {
+      "id": "questions.endpoint_approve",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "POST /mark/questions/{id}/approve — admin moderation approves a question",
+      "invokes": "questions.approve",
+      "method": "POST",
+      "path": "/mark/questions/{id}/approve"
+    },
+    {
+      "id": "questions.endpoint_reject",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "POST /mark/questions/{id}/reject — admin moderation rejects a question",
+      "invokes": "questions.reject",
+      "method": "POST",
+      "path": "/mark/questions/{id}/reject"
+    },
+    {
+      "id": "questions.endpoint_delete",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "POST /mark/questions/{id}/delete — admin moderation deletes a question permanently",
+      "invokes": "questions.delete",
+      "method": "POST",
+      "path": "/mark/questions/{id}/delete"
+    }
+  ]
+}

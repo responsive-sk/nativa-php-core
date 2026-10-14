@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "queue",
+      "kind": "module",
+      "version": 1,
+      "description": "Queue — job queue in queue.db with pending and reserved jobs and attempt counts."
+    }
+  ]
+}

@@ -26,11 +26,11 @@ DIVERGED src/Modules/Core/Interfaces/HTTP/Middleware/PageCacheMiddleware.php # B
 DIVERGED src/Modules/Core/Interfaces/HTTP/Middleware/RateLimitMiddleware.php # Boot 5: ports + guards, no module imports
 DIVERGED src/Modules/Core/Interfaces/HTTP/PageContext.php # Boot 9: Blog types trimmed (C)
 DIVERGED src/Modules/Core/Interfaces/HTTP/ShellContext.php # Boot 3: kernel-owned nav items
-DIVERGED src/Modules/Core/Interfaces/HTTP/ThemeKernel.php # Boot 3: kernel theme only, unknown falls back
+DIVERGED src/Modules/Core/Interfaces/HTTP/ThemeKernel.php # Boot 3: kernel theme only, unknown falls back; kernel theme moved to Modules\KernelTheme, Themes\kernel\KernelFallbackTheme is the built-in default
 DIVERGED src/Modules/Core/Interfaces/HTTP/ThemeResolver.php # Boot 3: theme + whitelist through the port; Boot 12: resolvePath() for the error renderer
 DIVERGED src/Themes/ThemeModule.php # Boot 12: errorContent() surface (upstream contract has none)
-DIVERGED src/Modules/Core/Interfaces/HTTP/ErrorPageRenderer.php # Boot 12: theme-owned error block, no showcase strings
-DIVERGED src/Modules/Core/Interfaces/HTTP/Kernel.php # Boot 12: error path threads the request path for theme resolution
+DIVERGED src/Modules/Core/Interfaces/HTTP/ErrorPageRenderer.php # Boot 12: theme-owned error block, no showcase strings; kernel contracts: implements ErrorRendererInterface
+DIVERGED src/Modules/Core/Interfaces/HTTP/Kernel.php # Boot 12: error path threads the request path for theme resolution; kernel contracts: depends on RouterInterface + ErrorRendererInterface
 DIVERGED src/Modules/Core/Interfaces/HTTP/Actions/DocsPageAction.php # Boot 12: guide-404 delegates to the renderer (no st- classes)
 DIVERGED config/session.php # Boot 13: session default is nativa_core (matches .env.example)
 DIVERGED src/Modules/Core/Application/Services/AssetManager.php # Boot 13: unknown bundles fall back to kernel, not starter; Boot 22: module-carried theme bundles are discovered too (ThemeRegistry::bundles()) — before that the `erik` theme resolved as bundle `kernel` and inlined 706 chars of critical CSS instead of its 35 258-char build
@@ -41,7 +41,7 @@ DIVERGED src/Modules/Core/Interfaces/HTTP/Middleware/MiddlewareRegistry.php # Bo
 DIVERGED src/Modules/Core/Interfaces/HTTP/Markdown/MarkdownBlockRegistry.php # Boot 24: same FQCN resolver fix as MiddlewareRegistry — four copies existed, one left broken is one silent skip
 #
 # --- Rewritten surfaces: upstream moved after our import ----------------------
-DIVERGED src/Modules/Core/Interfaces/HTTP/Router.php # Boot 19: upstream's mayDeclareRoute guard adopted (only the two comments differ); the Boot 1 defect is no longer inherited
+DIVERGED src/Modules/Core/Interfaces/HTTP/Router.php # Boot 19: upstream's mayDeclareRoute guard adopted (only the two comments differ); the Boot 1 defect is no longer inherited; kernel contracts: implements RouterInterface
 #
 # --- Rewritten roots ----------------------------------------------------------
 DIVERGED public/index.php # kernel-only composition root: nothing to wire, wiring is discovery
@@ -56,10 +56,16 @@ DIVERGED .env.example # the keys the kernel reads
 DIVERGED README.md # kernel README
 #
 # --- Owned: written here, no upstream counterpart ------------------------------
-OWNED src/Themes/kernel # the kernel's own theme (Boot 3); ThemeModule.php itself is upstream-identical and compared
+OWNED src/Themes/kernel # the kernel's built-in default theme, KernelFallbackTheme (kernel default theme); the visual kernel theme is Modules\KernelTheme; ThemeModule.php itself is upstream-identical and compared
 OWNED src/Modules/Core/Interfaces/HTTP/ThemeRegistry.php # kept after upstream removal; ThemeResolver + ThemeKernel still use it
 OWNED src/Modules/Core/Domain/Contracts/ShellContextProvider.php # shell port (Boot 3)
 OWNED src/Modules/Core/Domain/ShellNavItem.php # shell port (Boot 3)
+OWNED src/Modules/Core/Kernel # kernel contracts: RouterInterface, ErrorRendererInterface (kernel contracts)
+OWNED src/Modules/Core/Application/Services/PreferenceVote.php # preference voting, added in this tree (no upstream counterpart)
+OWNED src/Modules/Core/Application/Services/DiscoveryCache.php # route + middleware discovery cache, added in this tree
+OWNED src/Modules/Core/Domain/ThemePreference.php # theme preference resolution, added in this tree
+OWNED Frontend/packages/griffe # Griffe theme package (module-carried), added in this tree
+OWNED Frontend/packages/mono # Mono theme package (module-carried), added in this tree
 OWNED src/Modules/Core/Domain/Contracts/AuthProvider.php # auth port (Boot 5)
 OWNED src/Modules/Core/Domain/AuthIdentity.php # auth port (Boot 5)
 OWNED src/Modules/Core/Infrastructure/Attributes/AsShellContextProvider.php # shell port (Boot 3)
@@ -107,7 +113,22 @@ DROPPED src/Modules/Core/Infrastructure/Registry/CardboardRegistry.php # Boot 9:
 # on both sides and these lines would only hide later drift in four theme
 # files — a DIVERGED entry is a promise that a difference was reviewed ONCE,
 # never a licence to stop looking.
+DIVERGED Frontend/packages/package.json # Griffe and Mono build scripts, absent upstream
+DIVERGED Frontend/packages/pnpm-lock.yaml # Griffe workspace importer entry, absent upstream
+DIVERGED Frontend/packages/build/vite-theme-factory.ts # dev/preview ports for griffe (5184) and mono (5185), absent upstream
 DIVERGED Frontend/packages/jednotka/src/main.ts # ahead of upstream HEAD cc79d4e; same bytes in upstream's worktree (uncommitted there)
 DIVERGED Frontend/packages/jednotka/src/jednotka/content.css # as above
 DIVERGED Frontend/packages/jednotka/src/jednotka/toc.css # as above
 DIVERGED Frontend/packages/jednotka/src/jednotka/tokens.css # as above
+DIVERGED Frontend/packages/jednotka/src/inline-editor-highlight.ts # Lint fix: unused identifiers removed (TS6133 failed typecheck; upstream carries the same unused bindings)
+DIVERGED Frontend/packages/jednotka/src/inline-editor-preview.ts # Lint fix: unused identifiers removed (TS6133 failed typecheck; upstream carries the same unused bindings)
+DIVERGED Frontend/packages/basic/src/inline-editor-highlight.ts # Lint fix: unused identifiers removed (TS6133 failed typecheck; upstream carries the same unused bindings)
+DIVERGED Frontend/packages/basic/src/inline-editor-preview.ts # Lint fix: unused identifiers removed (TS6133 failed typecheck; upstream carries the same unused bindings)
+DIVERGED Frontend/packages/magazine/src/inline-editor-highlight.ts # Lint fix: unused identifiers removed (TS6133 failed typecheck; upstream carries the same unused bindings)
+DIVERGED Frontend/packages/magazine/src/inline-editor-preview.ts # Lint fix: unused identifiers removed (TS6133 failed typecheck; upstream carries the same unused bindings)
+DIVERGED Frontend/packages/moonshine/src/inline-editor-highlight.ts # Lint fix: unused identifiers removed (TS6133 failed typecheck; upstream carries the same unused bindings)
+DIVERGED Frontend/packages/moonshine/src/inline-editor-preview.ts # Lint fix: unused identifiers removed (TS6133 failed typecheck; upstream carries the same unused bindings)
+DIVERGED Frontend/packages/erik/src/inline-editor-highlight.ts # Lint fix: unused identifiers removed (TS6133 failed typecheck; upstream carries the same unused bindings)
+DIVERGED Frontend/packages/erik/src/inline-editor-preview.ts # Lint fix: unused identifiers removed (TS6133 failed typecheck; upstream carries the same unused bindings)
+DIVERGED Frontend/packages/starter/src/inline-editor-highlight.ts # Lint fix: unused identifiers removed (TS6133 failed typecheck; upstream carries the same unused bindings)
+DIVERGED Frontend/packages/starter/src/inline-editor-preview.ts # Lint fix: unused identifiers removed (TS6133 failed typecheck; upstream carries the same unused bindings)

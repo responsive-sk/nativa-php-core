@@ -1,0 +1,31 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "blog.cover_owned_by_article",
+      "kind": "policy",
+      "version": 1,
+      "description": "Deleting an article deletes its locally generated cover only when the article owns it (media-tracked)",
+      "applies_to": [
+        "blog.delete_article"
+      ],
+      "decision": "deny"
+    }
+  ],
+  "_read_side_gates": [
+    "Documented-only: the Model 1.0.0 policy grammar accepts commands in applies_to",
+    "(queries are rejected with LEK-SEM-010), so the two read-side gates of the",
+    "Blog module are recorded here instead of as unvalidatable policy symbols:",
+    "",
+    "blog.members_only_gate — the full body of a members-only article is served",
+    "  only to signed-in members; guests get the teaser + sign-in prompt",
+    "  (enforced by BlogArticleAction via AuthServices).",
+    "",
+    "blog.translation_parity — a slug resolves only within its own locale",
+    "  directory; an SK slug cannot address an EN article and vice versa",
+    "  (enforced by the storage/blog/{sk,en} directory layout).",
+    "",
+    "Promote both to policy symbols once the upstream query-policy surface lands."
+  ],
+  "_note": "The _read_side_gates key is intentionally outside the closed IR schema and is stripped before any external consumption; it exists only as an in-repo record."
+}

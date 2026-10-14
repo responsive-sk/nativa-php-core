@@ -1,0 +1,312 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "users.update_user",
+      "kind": "command",
+      "version": 1,
+      "description": "Admin edit of an account (name, email, active flag, role, optional password) at /mark/users/{id}/edit",
+      "input": [
+        {
+          "name": "id",
+          "type": {
+            "ref": "users.identifier"
+          },
+          "required": true
+        },
+        {
+          "name": "name",
+          "type": {
+            "ref": "users.display_name"
+          },
+          "required": true
+        },
+        {
+          "name": "email",
+          "type": {
+            "ref": "users.email"
+          },
+          "required": true
+        },
+        {
+          "name": "is_active",
+          "type": {
+            "ref": "users.flag"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "users.effect_user_updated"
+      ]
+    },
+    {
+      "id": "users.effect_user_updated",
+      "kind": "effect",
+      "version": 1,
+      "description": "Persist the admin edit to the users row (name, email, is_active)",
+      "operation": "update",
+      "entity": "users.user"
+    },
+    {
+      "id": "users.effect_user_created",
+      "kind": "effect",
+      "version": 1,
+      "description": "Insert a new user row",
+      "operation": "create",
+      "entity": "users.user",
+      "emits": [
+        "users.user_registered"
+      ]
+    },
+    {
+      "id": "users.effect_password_updated",
+      "kind": "effect",
+      "version": 1,
+      "description": "Replace the user's bcrypt hash (login rehash or reset)",
+      "operation": "update",
+      "entity": "users.user",
+      "emits": [
+        "users.password_updated"
+      ]
+    },
+    {
+      "id": "users.effect_session_created",
+      "kind": "effect",
+      "version": 1,
+      "description": "Establish an authenticated session (session_regenerate_id + DB sessions row)",
+      "operation": "create",
+      "entity": "users.session",
+      "emits": [
+        "users.session_started"
+      ]
+    },
+    {
+      "id": "users.effect_session_removed",
+      "kind": "effect",
+      "version": 1,
+      "description": "Destroy the session and delete its DB row",
+      "operation": "delete",
+      "entity": "users.session"
+    },
+    {
+      "id": "users.effect_reset_token_created",
+      "kind": "effect",
+      "version": 1,
+      "description": "Insert a reset token, invalidating previous unused tokens for the email",
+      "operation": "create",
+      "entity": "users.reset_token"
+    },
+    {
+      "id": "users.effect_reset_token_consumed",
+      "kind": "effect",
+      "version": 1,
+      "description": "Mark a reset token as used",
+      "operation": "update",
+      "entity": "users.reset_token"
+    },
+    {
+      "id": "users.effect_role_created",
+      "kind": "effect",
+      "version": 1,
+      "description": "Insert a role row",
+      "operation": "create",
+      "entity": "users.role"
+    },
+    {
+      "id": "users.effect_role_deleted",
+      "kind": "effect",
+      "version": 1,
+      "description": "Delete a role and its pivots (role_permissions, user_roles) atomically",
+      "operation": "delete",
+      "entity": "users.role"
+    },
+    {
+      "id": "users.effect_role_permissions_synced",
+      "kind": "effect",
+      "version": 1,
+      "description": "Replace all permission assignments of a role atomically",
+      "operation": "update",
+      "entity": "users.role"
+    },
+    {
+      "id": "users.register",
+      "kind": "command",
+      "version": 1,
+      "description": "Register a new account (validates name/email/password, bcrypt hash)",
+      "input": [
+        {
+          "name": "name",
+          "type": {
+            "ref": "users.display_name"
+          },
+          "required": true
+        },
+        {
+          "name": "email",
+          "type": {
+            "ref": "users.email"
+          },
+          "required": true
+        },
+        {
+          "name": "password",
+          "type": {
+            "ref": "users.password"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "users.effect_user_created"
+      ]
+    },
+    {
+      "id": "users.login",
+      "kind": "command",
+      "version": 1,
+      "description": "Authenticate with credentials (rate-limited per IP+email, timing-safe, optional remember-me)",
+      "input": [
+        {
+          "name": "email",
+          "type": {
+            "ref": "users.email"
+          },
+          "required": true
+        },
+        {
+          "name": "password",
+          "type": {
+            "ref": "users.password"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "users.effect_session_created"
+      ]
+    },
+    {
+      "id": "users.logout",
+      "kind": "command",
+      "version": 1,
+      "description": "Destroy the authenticated session and clear the remember-me token",
+      "effects": [
+        "users.effect_session_removed"
+      ]
+    },
+    {
+      "id": "users.request_password_reset",
+      "kind": "command",
+      "version": 1,
+      "description": "Issue a reset token for an email (always succeeds — no user enumeration)",
+      "input": [
+        {
+          "name": "email",
+          "type": {
+            "ref": "users.email"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "users.effect_reset_token_created"
+      ]
+    },
+    {
+      "id": "users.reset_password",
+      "kind": "command",
+      "version": 1,
+      "description": "Validate + consume a reset token and set a new password",
+      "input": [
+        {
+          "name": "token",
+          "type": {
+            "ref": "users.token"
+          },
+          "required": true
+        },
+        {
+          "name": "password",
+          "type": {
+            "ref": "users.password"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "users.effect_password_updated",
+        "users.effect_reset_token_consumed"
+      ]
+    },
+    {
+      "id": "users.create_role",
+      "kind": "command",
+      "version": 1,
+      "description": "Create a role (admin panel role CRUD)",
+      "input": [
+        {
+          "name": "name",
+          "type": {
+            "ref": "users.display_name"
+          },
+          "required": true
+        },
+        {
+          "name": "description",
+          "type": {
+            "ref": "users.display_name"
+          }
+        }
+      ],
+      "effects": [
+        "users.effect_role_created"
+      ]
+    },
+    {
+      "id": "users.delete_role",
+      "kind": "command",
+      "version": 1,
+      "description": "Delete a role and its pivot rows",
+      "input": [
+        {
+          "name": "role_id",
+          "type": {
+            "ref": "users.identifier"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "users.effect_role_deleted"
+      ]
+    },
+    {
+      "id": "users.sync_role_permissions",
+      "kind": "command",
+      "version": 1,
+      "description": "Replace a role's permission set (admin /roles/{id}/permissions)",
+      "input": [
+        {
+          "name": "role_id",
+          "type": {
+            "ref": "users.identifier"
+          },
+          "required": true
+        },
+        {
+          "name": "permission_ids",
+          "type": {
+            "list": {
+              "ref": "users.identifier"
+            }
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "users.effect_role_permissions_synced"
+      ]
+    }
+  ]
+}

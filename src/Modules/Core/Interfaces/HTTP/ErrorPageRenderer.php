@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Core\Interfaces\HTTP;
 
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Kernel\Contracts\ErrorRendererInterface;
 
 /**
  * ErrorPageRenderer — styled HTTP error pages (404/405/500).
@@ -18,8 +19,13 @@ use Modules\Core\Infrastructure\Http\Response;
  * renderer falls back to a dependency-free bare HTML page with the same
  * status code (the error page must never fail to render).
  */
-final class ErrorPageRenderer
+final class ErrorPageRenderer implements ErrorRendererInterface
 {
+    public function renderError(int $status, string $title, string $detail, ?string $path = null): Response
+    {
+        return self::response($status, $title, $detail, $path);
+    }
+
     /**
      * Styled error Response — the single 404/405/500 entry point used by the
      * Kernel and by actions (Kernel::renderError and the actions' notFound()

@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "security",
+      "kind": "module",
+      "version": 1,
+      "description": "Security — password hashing helper using password_hash and password_verify."
+    }
+  ]
+}

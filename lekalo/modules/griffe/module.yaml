@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "griffe",
+      "kind": "module",
+      "version": 1,
+      "description": "Griffe — public theme in the webgriffe agency idiom."
+    }
+  ]
+}

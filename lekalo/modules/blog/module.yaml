@@ -1,0 +1,14 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "blog",
+      "kind": "module",
+      "version": 1,
+      "description": "Blog — articles read from storage/blog as markdown with front matter, the blog index, author profiles and RSS/Atom feeds.",
+      "imports": [
+        "users"
+      ]
+    }
+  ]
+}

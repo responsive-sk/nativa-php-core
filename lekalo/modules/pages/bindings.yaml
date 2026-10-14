@@ -1,0 +1,32 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "pages.endpoint_index",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "GET /mark/pages — paginated admin page table with locale toggle",
+      "invokes": "pages.page_index",
+      "method": "GET",
+      "path": "/mark/pages"
+    },
+    {
+      "id": "pages.endpoint_publish",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "POST /mark/pages/{slug}/publish — the Publish/Draft switch form target",
+      "invokes": "pages.publish_page",
+      "method": "POST",
+      "path": "/mark/pages/{slug}/publish"
+    },
+    {
+      "id": "pages.endpoint_public",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "GET /{slug} — public rendering of a published page",
+      "invokes": "pages.rendered_page",
+      "method": "GET",
+      "path": "/{slug}"
+    }
+  ]
+}

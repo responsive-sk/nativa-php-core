@@ -1,0 +1,100 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "questions.question_created",
+      "kind": "event",
+      "version": 1,
+      "description": "A question was submitted and stored with status pending",
+      "payload": [
+        {
+          "name": "question_id",
+          "type": {
+            "ref": "users.identifier"
+          },
+          "required": true
+        },
+        {
+          "name": "subject_type",
+          "type": {
+            "ref": "questions.subject_type"
+          },
+          "required": true
+        },
+        {
+          "name": "subject_slug",
+          "type": {
+            "ref": "blog.slug"
+          },
+          "required": true
+        },
+        {
+          "name": "status",
+          "type": {
+            "ref": "questions.status"
+          },
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "questions.question_status_changed",
+      "kind": "event",
+      "version": 1,
+      "description": "A question's moderation status changed (approved or rejected)",
+      "payload": [
+        {
+          "name": "question_id",
+          "type": {
+            "ref": "users.identifier"
+          },
+          "required": true
+        },
+        {
+          "name": "status",
+          "type": {
+            "ref": "questions.status"
+          },
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "questions.question_deleted",
+      "kind": "event",
+      "version": 1,
+      "description": "A question row was removed permanently",
+      "payload": [
+        {
+          "name": "question_id",
+          "type": {
+            "ref": "users.identifier"
+          },
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "questions.question_submit_denied",
+      "kind": "event",
+      "version": 1,
+      "description": "A submit was denied by a submit policy (throttle, unpublished subject, or missing attempt)",
+      "payload": [
+        {
+          "name": "subject_slug",
+          "type": {
+            "ref": "blog.slug"
+          },
+          "required": true
+        },
+        {
+          "name": "reason",
+          "type": {
+            "ref": "questions.display_name"
+          },
+          "required": true
+        }
+      ]
+    }
+  ]
+}

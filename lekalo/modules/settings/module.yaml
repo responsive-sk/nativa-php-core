@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "settings",
+      "kind": "module",
+      "version": 1,
+      "description": "Settings — site settings, navigation menu and design tokens, stored in config.db."
+    }
+  ]
+}

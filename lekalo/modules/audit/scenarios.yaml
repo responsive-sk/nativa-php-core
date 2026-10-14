@@ -1,0 +1,12 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "audit.immutable_trail",
+      "kind": "scenario",
+      "version": 1,
+      "description": "Every admin write lands in the immutable audit trail",
+      "summary": "Given an admin performing any write action (including publish toggles and bulk actions), the runtime appends one audit entry with actor and context; SQLite BEFORE UPDATE/DELETE triggers make the trail append-only, and each write flushes the page cache so stale content is never served."
+    }
+  ]
+}

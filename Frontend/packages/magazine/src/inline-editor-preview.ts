@@ -11,9 +11,7 @@
  */
 
 import {
-  CODE_SENTINEL,
   codeBlock,
-  escapeHtml,
   lineTag,
   renderInline,
   withLine,
@@ -25,7 +23,6 @@ function renderMarkdown(source: string): string {
   let paragraph: string[] = [];
   let paragraphLine = 0;
   let listType: '' | 'ul' | 'ol' = '';
-  let listLine = 0;
   let fence: string[] = [];
   let fenceLang = '';
   let fenceLine = 0;
