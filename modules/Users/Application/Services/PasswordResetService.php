@@ -4,16 +4,21 @@ declare(strict_types = 1);
 
 namespace Modules\Users\Application\Services;
 
-use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Security\Application\Services\PasswordHasher;
+use Modules\Users\Domain\Contracts\PasswordResetMailer;
 use Modules\Users\Infrastructure\Persistence\Repositories\UserRepository;
 use Modules\Validation\Validation\Validator;
 
 /**
  * PasswordResetService — request token → reset flow.
  *
- * Development mailer: tokens are logged to storage/logs/app.log instead of
- * being sent via SMTP (no external service in the starter kit).
+ * Delivery is not this class's business: it stores the token (hashed), asks
+ * the injected `PasswordResetMailer` to carry the link, and answers the same
+ * thing whether the address exists or not. WHERE the link may travel is an
+ * environment fact resolved once at wiring time — before this port existed the
+ * service appended the plaintext token to `storage/logs/app.log` itself, in
+ * every environment, so a production deployment without a mail transport kept
+ * a working credential for a live account on disk (audit finding #1).
  */
 final readonly class PasswordResetService
 {
@@ -23,16 +28,23 @@ final readonly class PasswordResetService
         private \PDO $pdo,
         private UserRepository $users,
         private PasswordHasher $hasher,
+        private PasswordResetMailer $mailer,
     ) {
     }
 
     /**
-     * Create a reset token for an email (always succeeds to avoid
-     * user enumeration). Returns the raw token (for the dev log).
+     * Create a reset token for an email (always succeeds to avoid user
+     * enumeration) and hand the link to the configured mailer.
+     *
+     * The raw token leaves this method only through the port — it is not
+     * returned, so no caller can decide to record it somewhere. A credential
+     * that is only ever handed to a transport cannot end up in a second place
+     * by accident, which is exactly how it ended up in the log before.
      */
-    public function requestReset(string $email): string
+    public function requestReset(string $email): void
     {
         $email = strtolower(trim($email));
+
         $token = bin2hex(random_bytes(32));
 
         // Invalidate previous unused tokens for this email.
@@ -50,21 +62,10 @@ final readonly class PasswordResetService
             ':ttl'   => '+' . self::TOKEN_TTL_HOURS . ' hours',
         ]);
 
-        // Dev mailer — log the plain token so the flow is usable without SMTP.
-        $logsDir = AppPaths::instance()->logs();
-        if (!is_dir($logsDir)) {
-            mkdir($logsDir, 0775, true);
-        }
-        $line = sprintf(
-            "[%s] [mailer:dev] Password reset for %s → token: %s (valid %d h)\n",
-            date('Y-m-d H:i:s'),
-            $email,
-            $token,
-            self::TOKEN_TTL_HOURS,
-        );
-        file_put_contents($logsDir . '/app.log', $line, FILE_APPEND);
-
-        return $token;
+        // The mailer decides what happens to the link: the dev transport appends
+        // it to storage/logs/app.log, the null transport drops it. Neither path
+        // changes the response, and neither throws — see the port's docblock.
+        $this->mailer->sendResetLink($email, $token, self::TOKEN_TTL_HOURS);
     }
 
     /**

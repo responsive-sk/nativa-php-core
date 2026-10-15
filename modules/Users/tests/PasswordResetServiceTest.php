@@ -6,6 +6,7 @@ namespace Modules\Users\Tests;
 
 use Modules\Security\Application\Services\PasswordHasher;
 use Modules\Users\Application\Services\PasswordResetService;
+use Modules\Users\Infrastructure\Mail\NullPasswordResetMailer;
 use Modules\Users\Infrastructure\Persistence\Repositories\UserRepository;
 use PDO;
 use PHPUnit\Framework\Attributes\Test;
@@ -80,7 +81,15 @@ final class PasswordResetServiceTest extends TestCase
             'password' => $this->hasher->hash('correct-horse'),
         ]);
 
-        $this->resets = new PasswordResetService($this->pdo, $users, $this->hasher);
+        // This file is about reset()'s answers, so the delivery port is the one
+        // that delivers nothing: what a mailer does with a link is covered by
+        // PasswordResetMailerTest (audit finding #1).
+        $this->resets = new PasswordResetService(
+            $this->pdo,
+            $users,
+            $this->hasher,
+            new NullPasswordResetMailer(),
+        );
     }
 
     #[Test]

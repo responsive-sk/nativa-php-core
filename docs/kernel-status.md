@@ -1911,3 +1911,91 @@ What shipped, in order (commits `f4e6899`, `a72387a`, `d089a48`, `3542236`):
 Still deferred, deliberately: `#[AsAuthProvider]` attribute discovery (see
 §6.3), and CI's `Extract-check` remains not-run — private upstream (Boot 20).
 
+
+---
+
+# 7 — The reset token in the log (2026-10-15, security-audit finding #1)
+
+The audit of the public routes and the CSRF flow left one medium finding that
+mattered more than its label: `PasswordResetService::requestReset()` appended
+the plaintext reset token — beside the address it belongs to — to
+`storage/logs/app.log` on every request, **in every environment**, and the
+success page named the file for the visitor. The comment above it said "dev
+mailer"; the code carried no gate at all, and `.env.example` ships `APP_ENV`
+that nothing in this flow read. Reading the log was enough to take over any
+account that had asked for a reset.
+
+Reproduced first, through the real route with `APP_ENV=production` (php -S,
+port 8177 — the probe script lives in `/tmp`, not in the tree):
+
+```
+POST /forgot-password (APP_ENV=production) => HTTP 200
+--- response alert ---
+If an account exists for that email, a reset link has been logged by the dev mailer (storage/logs/app.log).
+--- new app.log lines ---
+[2026-10-15 23:30:10] [mailer:dev] Password reset for admin@example.test → token: <64 hex> (valid 1 h)
+exit 1
+```
+
+## The fix: delivery moves behind a port
+
+`PasswordResetMailer` (`Domain/Contracts`) owns delivery. Two implementations:
+
+- `DevLogPasswordResetMailer` — the development transport: the same log line as
+  before, with the log file **injected** rather than resolved inside, so the
+  suite can assert what lands in it on a file the test owns;
+- `NullPasswordResetMailer` — what production gets: nothing is delivered and
+  nothing is written, while the answer stays exactly as neutral as before (no
+  enumeration oracle either way). The drop is noted at `LOG_LEVEL=debug`.
+
+`PasswordResetMailerFactory` is the ONE place that picks between them, from a
+**whitelist** of environment names (`development`, `local`, `testing`, `test`,
+`dev`) rather than "everything that is not production": `staging`, a typo, or
+an environment nobody classified must not be the one that keeps a credential on
+disk. `requestReset()` returns `void` now — the raw token leaves the service
+only through the port, so no caller can decide to record it. `AuthServices::resets()`
+composes the two, which is where the environment fact is read exactly once.
+
+Two consequences worth naming:
+
+- `APP_ENV` is now read by two gates (HSTS, this one), both treating unset as
+  development — that default is what makes a fresh checkout work without a
+  `.env`. `.env.example` now says what each value means for reset links, and
+  which class to implement to deliver them in production (the kernel ships no
+  mail transport).
+- The success page names `storage/logs/app.log` only where the link really is,
+  from the same `writesToLog()` the transport choice comes from. A production
+  visitor is no longer pointed at — or told about — a log file.
+
+**The trap this round walked into:** composer resolves `Modules\` to
+`src/Modules/`, so the INSTALLED slice is what runs and what the tests load;
+`modules/Users/…` on its own is invisible until re-installed. Verified with
+`ReflectionClass::getFileName()`. The sync used the documented path —
+`bin/cms module:remove Users --force` (refused otherwise: fourteen files across
+Audit/Blog/Comments/Questions import Users) then `bin/cms module:add Users` —
+and `diff -rq modules/Users src/Modules/Users` is now empty.
+
+## Verified (2026-10-15, plaintext reset token, all exit 0)
+
+| Gate | Result |
+|---|---|
+| probe, before the fix | exit 1 — `[mailer:dev] … token: <64 hex>` line in `storage/logs/app.log`, page naming it |
+| probe, after the fix | exit 0 — HTTP 200, "…a reset link has been sent.", `(no new lines)` |
+| `PasswordResetMailerTest` (new) | 5 tests green; mutation-checked — forcing `create()` to always return the dev transport fails the production case with the leaked token line in the diff |
+| `composer test --filter PasswordReset` | 10 tests, 39 assertions, 0 failures |
+| `composer test` (full suite) | 289 tests, 1215 assertions, 1 skip |
+| `php -l` on the 9 changed files | clean |
+| `composer phpstan` (gate scope) | level 9, no errors |
+| phpstan level 9 on `src/Modules/Users` (informational — the gate excludes installed slices) | 2 errors, both pre-existing in `UsersAuthProviderTest` (committed on `feature/authprovider-discovery`, untouched here) |
+| `php-cs-fixer --dry-run` on the changed files | 0 fixable (5 other `modules/Users` files were already unfixable-clean outside the config's paths) |
+| `make lekalo-check` | 23 rules, 0 errors, 0 warnings — the `users.password_reset_flow` summary no longer claims the token is logged unconditionally |
+| `make extract-check` | 224 identical, 64 recorded divergences (`.env.example` is in `SLICE_SKIP`, so its note is not a divergence) |
+
+Cleanup after the probes: the token row the reproduction created for
+`admin@example.test` was deleted and `storage/logs/app.log` (created by the
+reproduction, carrying that live token) was removed — the tree is back to
+`php-error.log` only. Servers stopped; the pre-existing dev server was never
+running during this round.
+
+---
+
