@@ -309,9 +309,12 @@ jobs:
       # first would never test it.
       #
       # This job is what found the claim false (Boot 19): Router discovery
-      # class_exists()'d every file under the action dirs, so the kernel's own
-      # ServeCommand/MigrateCommand — they extend symfony/console's Command, a
-      # DEV dependency — made `/` answer 500 in a vendor-less checkout. The fix
+      # class_exists()'d every file under the action dirs, so a route-less
+      # command extending symfony/console's Command — a DEV dependency — made
+      # `/` answer 500 in a vendor-less checkout. It was the kernel's own
+      # ServeCommand then; those are deleted as dead code, and module-level
+      # commands (modules/Blog's GenerateImagesCommand, modules/Outbox's
+      # ProcessOutboxCommand) are the live reason the guard must stay. The fix
       # is upstream's mayDeclareRoute() text guard, adopted in
       # src/Modules/Core/Interfaces/HTTP/Router.php; without it every step below
       # fails on a 500.

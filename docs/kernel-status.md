@@ -194,7 +194,6 @@ narrowed, not closed.
 | `Core/Domain/Contracts/AuthProvider.php` | the port: identity, protected paths, required permission, guest-only paths, event sink |
 | `Core/Domain/AuthIdentity.php` | kernel-owned identity (id, active, permissions) — the User entity never crosses |
 | `Core/Infrastructure/Attributes/AsAuthProvider.php` | the discovery attribute |
-| `Core/Application/Services/AuthProviderRegistry.php` | directory-scan discovery, first provider wins |
 
 **Rewired** — `AuthMiddleware` asks the port (session handling, remember-me
 and the permission table stay the module's; uncovered admin paths still cost
@@ -206,8 +205,9 @@ duck-typed and degrades to pass-through when unusable.
 
 `index.php` is deliberately untouched: with no provider installed there is
 nothing to wire, and an `if` that can never be true here is untestable here.
-The registry IS the mechanism — the composition root wires the middleware
-around `AuthProviderRegistry::first()` when a module arrives.
+The composition root IS the mechanism — it hands `AuthMiddleware` whatever
+`AuthProvider` the installed module supplies, constructor-injected, with no
+kernel registry in between to fall out of step with what is installed.
 
 | Surface | Boot 4 | **Boot 5** | Note |
 |---|---|---|---|
@@ -869,12 +869,14 @@ does for its own tree, on the shape a fresh clone actually has (kernel-only:
 
 `Router` discovery read every file under the action dirs and
 `class_exists()`-ed it, which makes each class's **parent** a load-time
-dependency of *routing* — and the kernel core itself ships three such
-classes (`MigrateCommand`, `ServeCommand`, the rest of
+dependency of *routing* — and at Boot 19 the kernel core itself shipped
+three such classes (`MigrateCommand`, `ServeCommand`, the rest of
 `Interfaces/CLI/Command/`), all extending `symfony/console`, a **dev-only**
 dependency. The divergence record named it as the kernel's one inherited
 defect (`Router.php # upstream task 0.3 loader guard not adopted here; Boot 1
- defect still inherited`).
+ defect still inherited`). Those three are since deleted as dead code — the
+guard is not, because module-level commands still extend symfony/console and
+`$actionDirs` is the whole of `src/Modules`, route-less files included.
 
 **Fixed by porting upstream's guard**: `Router::mayDeclareRoute()` reads the
 file as TEXT and skips anything without a `#[Route(` token before any class is
