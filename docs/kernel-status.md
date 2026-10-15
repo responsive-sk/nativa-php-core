@@ -1969,7 +1969,9 @@ Two consequences worth naming:
   development — that default is what makes a fresh checkout work without a
   `.env`. `.env.example` now says what each value means for reset links, and
   which class to implement to deliver them in production (the kernel ships no
-  mail transport).
+  mail transport). **Amended by §11**, which ships that class: an HTTP transport
+  configured from `MAIL_*` + `APP_URL`, so "install one yourself" is no longer
+  the end of the story.
 - The success page names `storage/logs/app.log` only where the link really is,
   from the same `writesToLog()` the transport choice comes from. A production
   visitor is no longer pointed at — or told about — a log file.
@@ -2312,3 +2314,72 @@ baseline the whole table is measured against.
 | mutation checks (3, each reverted byte-identical) | disable the zero-arg refusal → the refusal test errors; disable the contention logging → the tie test fails with the missing line in the diff; remove BOTH the text gate and the attribute check → the unmarked-file test errors. (Removing either gate ALONE changes nothing — two independent gates guard the label, which is worth knowing when reading that test.) |
 | module install trap (§7/§8/§9) | `module:remove Users --force` + `module:add Users`; `diff -rq modules/Users src/Modules/Users` empty; the cascade into Comments/Questions left both identical (11/11 and 10/10 files) |
 | probe cleanup | probe users deleted (`users` back to 3, 0 `probe-%` rows, their `sessions`/`user_roles`/`login_attempts` rows with them); the probe server stopped; both probe scripts lived in `/tmp`; `git worktree list` back to the single main tree |
+
+---
+
+# 11 — A real transport for reset links, and the fallback that stays forbidden (2026-10-16)
+
+§7 removed the leak and left an honest dead end: in production the null mailer
+was the only implementation, so a reset link reached nobody, and the docs said
+"install a `PasswordResetMailer` implementation". This round ships the
+implementation — **a generic HTTP transport** — because the alternative ends a
+claim this tree makes everywhere else: the kernel has ZERO Composer runtime
+dependencies and CI boots it without `composer install`. A provider SDK would
+make reset links undeliverable from a dependency-free tree; one POST to a
+configured endpoint does not.
+
+## What shipped
+
+| Piece | What it does |
+|---|---|
+| `modules/Users/Infrastructure/Mail/HttpPasswordResetMailer.php` | one HTTPS POST of `{"from", "to", "subject", "text"}` with `Authorization: Bearer <key>` (omitted when no key is set); the text carries the clickable link |
+| `PasswordResetMailerFactory::http()` | the ONE place the three keys are read, and the place a HALF-configured transport is refused |
+| `PasswordResetMailerFactory::create()` | outside the dev whitelist: **configured HTTP transport, else null** — the §7 behaviour, with a way out of it |
+| `.env.example` | `MAIL_API_URL` / `MAIL_API_KEY` / `MAIL_FROM` / `APP_URL`, commented out, each with what it is for and what happens while it is unset |
+
+## Four decisions, each with a reason worth keeping
+
+1. **The contract is documented, not vendor-shaped.** The body is the lowercase
+   `{from,to,subject,text}` shape most transactional APIs accept (Resend,
+   SendGrid's personalizations JSON, Plunk, Loops). An endpoint with a different
+   body shape (Postmark's `From`/`To`/`TextBody`) needs a second implementation
+   next to this one, not a flag inside it — the factory has one branch to grow.
+2. **Delivery failure is logged, never thrown, and never falls back to the
+   log.** A dead transport must not turn a reset request into a 500, and must
+   NOT "helpfully" park the link in `storage/logs/app.log` — that fallback is
+   audit finding #1 itself. The line names the address, the endpoint and the
+   status; the token never appears in it.
+3. **`APP_URL` is required, and the link is not derived from a request.** The
+   port carries no `Request` by contract, and building a reset link out of a
+   `Host` header the caller controls is a phishing surface, not a convenience.
+4. **All three keys or nothing.** A half-configured deployment (endpoint and
+   sender, no base URL) resolves to the null mailer and LOGS which key is
+   missing — a link built on a missing base URL is worse than no link, and a
+   silent skip would leave "mail is configured, why is nothing arriving"
+   unanswerable.
+
+## Verified (2026-10-16, all exit 0)
+
+| Gate | Result |
+|---|---|
+| `composer test` (full suite) | **318 tests, 1339 assertions**, 1 skip (315 → 318: the three new transport cases) |
+| `composer test --filter PasswordResetMailer` | 8 tests, 47 assertions |
+| `composer phpstan` | level 9, no errors (the stream-context closure and the response-header parse included) |
+| `composer cs-fix-dry` / `composer rector-dry` / `make lint` | 0 of 94 fixable / Rector OK / lint clean |
+| `make lekalo-check` | 23 rules, 0 errors, 0 warnings |
+| `make extract-check` | OK — 222 identical, 66 recorded divergences (`.env.example` is in `SLICE_SKIP`, so the new keys need no divergence row) |
+| failure path, through the REAL route (`APP_ENV=production`, `MAIL_API_URL=http://127.0.0.1:9/nowhere` — a port nothing listens on, so the refusal is real, not mocked) | HTTP 200, token row written, `storage/logs/app.log` unchanged, one log line: `[mailer:http] reset link for … rejected by http://127.0.0.1:9/nowhere (status 0)` |
+| mutation check (1, reverted byte-identical) | moving the forbidden fallback back in — a `file_put_contents` of the link into `app.log` when delivery fails — fails `aFailingTransportKeepsTheFlowNeutralAndNeverFallsBackToTheLog` with the leaked link in the diff (the §7 finding's own shape); `storage/logs/app.log` did not exist before or after |
+
+## What is deliberately NOT here
+
+- **No SMTP client.** SMTP without a library means hand-rolling a protocol
+  dialogue in a starter kit; the HTTP contract covers the providers that matter,
+  and one implementation is enough to prove the port end to end.
+- **No retry queue.** A failed delivery is logged, not retried — the Queue
+  module exists, and wiring the mailer into it is a change with its own design
+  (idempotency, who owns the job, what the audit trail is), not something to
+  smuggle into a transport.
+- **No change to the neutral success message.** It says a link has been sent
+  both when a transport delivered it and when none is configured, because the
+  alternative is an enumeration oracle. §7 argued this; it still holds.
