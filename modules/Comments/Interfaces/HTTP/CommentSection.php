@@ -97,6 +97,7 @@ final class CommentSection
 
         return '<form class="' . $prefix . '-comments__form" method="post" action="' . FrontendLayout::e('/blog/' . $slug . '/comments') . '">'
             . $csrf
+            . self::honeypot($prefix)
             . $identity
             . $guestFields
             . '<label class="' . $prefix . '-comments__label" for="' . $prefix . '-comment-body">Comment</label>'
@@ -104,6 +105,25 @@ final class CommentSection
             . $body . '</textarea>'
             . '<button class="' . $prefix . '-comments__button" type="submit">Post comment</button>'
             . '</form>';
+    }
+
+    /**
+     * The honeypot field — hidden from readers, filled by bots that complete
+     * every field they find. `CommentSubmitAction` discards such a submission
+     * silently, so this field is a filter and never an input: it is not
+     * required, it is not validated, and its value is read nowhere else.
+     *
+     * Markup mirrors `QuestionBlockRenderer`'s honeypot (same wrapper, label
+     * and attributes), so the tree's two public forms cannot drift apart.
+     */
+    private static function honeypot(string $prefix): string
+    {
+        return '<!-- honeypot: leave blank — a bot that fills every field is silently discarded -->'
+            . '<div class="' . $prefix . '-comments__hp" hidden>'
+            . '<label class="' . $prefix . '-comments__label" for="' . $prefix . '-comment-website">Website</label>'
+            . '<input class="' . $prefix . '-comments__input" id="' . $prefix . '-comment-website" type="text"'
+            . ' name="comment_website" value="" autocomplete="off" tabindex="-1">'
+            . '</div>';
     }
 
     /**

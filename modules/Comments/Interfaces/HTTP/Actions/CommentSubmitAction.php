@@ -18,6 +18,17 @@ use Modules\Core\Interfaces\HTTP\Attributes\Route;
  * attributed from the session. New comments are always 'pending' — they only
  * become visible after an admin approves them in /mark/comments.
  *
+ * Two bot defenses sit in front of the write, the same pair the other public
+ * form in this tree (`QuestionSubmitAction`) carries:
+ *
+ *  - a HONEYPOT field (`comment_website`), filled by bots that complete every
+ *    field they find and silently discarded here;
+ *  - rate limiting, in `CommentsService` — per IP+slug, applied before
+ *    validation so invalid payloads cannot bypass throttling.
+ *
+ * The honeypot is a cheap filter for naive crawlers, not a boundary: the
+ * limiter is what bounds the moderation queue.
+ *
  * PRG flow: on success redirect back to the article (#comments); on
  * validation failure re-render the article page with the form errors inline
  * (the CommentSection form keeps the old input).
@@ -25,12 +36,29 @@ use Modules\Core\Interfaces\HTTP\Attributes\Route;
 #[Route(path: '/blog/{slug}/comments', method: 'POST', name: 'blog.comments.submit')]
 final class CommentSubmitAction
 {
+    /**
+     * Honeypot field name — rendered hidden in `CommentSection` (`hidden`,
+     * `tabindex="-1"`, no autocomplete), so a human never sees it and a bot
+     * that fills every field hands itself in. Same field shape and the same
+     * silent discard as `QuestionSubmitAction`, so the tree's two public forms
+     * cannot drift apart.
+     */
+    private const string HONEYPOT_FIELD = 'comment_website';
+
     public function handle(Request $request): Response
     {
         $slug = (string) ($request->routeParam('slug') ?? '');
 
         if ('' === $slug || 1 !== preg_match('/^[a-z0-9][a-z0-9_-]*$/i', $slug)) {
             return Response::redirect('/blog');
+        }
+
+        // Honeypot — checked BEFORE any lookup or write, and answered with the
+        // very redirect a real submission gets: a bot cannot tell which field
+        // gave it away, and nothing reaches the moderation queue. A blank (or
+        // absent) field is the human case and falls through unchanged.
+        if (null !== $this->stringOrNull($request->body(self::HONEYPOT_FIELD))) {
+            return Response::redirect('/blog/' . $slug . '#comments');
         }
 
         $user = CommentsServices::auth()->currentUser();

@@ -1999,3 +1999,70 @@ running during this round.
 
 ---
 
+# 8 — The comment form's bot defense (2026-10-15, security-audit finding #2)
+
+**Finding #2 as first written was wrong in its first half, and the correction
+is the useful part.** It claimed `POST /blog/{slug}/comments` carried "only the
+global 60/min limiter". It does not: `CommentsService` rate-limits submissions
+per **IP+slug** at 10 per 60 s (loopback exempt so local dev is not throttled),
+applied BEFORE validation so a malformed payload cannot bypass it. What the
+route really lacked, next to the tree's other public form (`QuestionSubmitAction`
+— 5 per 300 s per IP plus a `question_website` honeypot), was the **honeypot**.
+
+Measured before the change, through the real action on temporary databases
+(`DB_COMMENTS`/`DB_USERS`/`DB_OUTBOX`, so the working tree's `comments.db` was
+never touched):
+
+```
+POST /blog/hello-world/comments (every field filled, incl. comment_website) => HTTP 302 /blog/hello-world#comments
+comments stored: 1
+  row: hello-world | Bot Probe | pending
+exit 1
+```
+
+A submission that filled every field it could find — the naive-crawler shape a
+honeypot exists for — was accepted and left a `pending` row in the moderation
+queue, indistinguishable from a reader's comment.
+
+## What changed
+
+- **`CommentSection::form()`** renders the field in the markup shape the
+  questions block already uses (`<prefix>-comments__hp`, `hidden`,
+  `autocomplete="off"`, `tabindex="-1"`, label "Website"): a honeypot nobody
+  renders catches nobody, so it lives in the form the crawler is handed.
+- **`CommentSubmitAction`** discards a filled `comment_website` BEFORE any
+  lookup or write, and answers with the very redirect a real submission gets —
+  the bot cannot tell which field gave it away and nothing reaches moderation.
+  The malformed-payload case is answered the same way: "silently" is the
+  contract, not a detail.
+- The action's docblock now names both defenses and says which one is the
+  boundary: the honeypot is a cheap filter for naive crawlers, the per-IP+slug
+  limiter is what bounds the queue.
+
+Deliberately **not** added: a second, per-IP-only limiter. The route already
+sits behind the global 60/min per-IP middleware (`RateLimitMiddleware`, wired
+whenever Security is installed — and Comments hard-depends on Security), so a
+third number would be a redundant knob rather than a defense; the per-article
+keying of the existing limiter is exactly what the global cap already covers.
+
+## Verified (2026-10-15, comment honeypot, all exit 0)
+
+| Gate | Result |
+|---|---|
+| probe through the action (temp DBs), before | exit 1 — `pending` row stored for a honeypot-filling bot |
+| probe through the action (temp DBs), after | exit 0 — HTTP 302, `comments stored: 0` |
+| HTTP probe (`php -S`, port 8178, `APP_ENV=production`, real `comments.db`) | form renders `name="comment_website"`; clean submission → 302 `…/{slug}#comments` and +1 row; honeypot submission → **identical 302**, +0 rows; the probe's row deleted afterwards |
+| `CommentHoneypotTest` (new) | 4 tests, 16 assertions (the form field is asserted for BOTH theme vocabularies, `st` and `er`); mutation-checked on the final files — neutering the check fails both discard tests (`1 is identical to 0`, and 404 instead of 302 for the malformed payload) while the control stays green |
+| `composer test` | 293 tests, 1231 assertions, 1 skip |
+| `php -l` on the 3 changed files | clean |
+| `php-cs-fixer --dry-run` on `modules/Comments` | my 3 files clean (`CommentsMetric.php` was already unfixable-clean outside the config's paths) |
+| `composer phpstan` (gate scope) | level 9, no errors |
+| `make extract-check` | 224 identical, 64 recorded divergences |
+| `make lekalo-check` | 23 rules, 0 errors, 0 warnings |
+
+The installed slice was re-copied after the edit (`bin/cms module:remove Comments
+--force` + `module:add Comments`) — same trap as §7: composer resolves `Modules\`
+against `src/Modules/`, so a catalogue edit alone is invisible to the suite.
+
+---
+
