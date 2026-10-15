@@ -20,19 +20,26 @@ unset($_earlyLogDir);
  * Public entry point — the KERNEL composition root.
  *
  * This file is the kernel's half of what nativa-minimal's public/index.php
- * does, and the difference is the point: there is nothing here to wire.
+ * does. Most of the pipeline assembles itself; the two stages that need a
+ * dependency discovery cannot supply are wired below, each behind one
+ * `class_exists` guard.
  *
- *   - The kernel discovers its own middleware (security headers, CSRF) through
- *     #[AsMiddleware], so no addMiddleware() call appears below.
- *   - Every other concern — locale prefixes, rate limiting, page cache, auth —
- *     belongs to a module that is NOT installed in this tree. A kernel-only
- *     tree answers what Modules\Core + Modules\Database can answer on their
- *     own; everything else is a module's job, and a module is added through
- *     `bin/cms module:add`.
+ *   - The kernel discovers its own middleware (security headers, CSRF)
+ *     through #[AsMiddleware] — no call is needed for those.
+ *   - Rate limiting and auth take constructor arguments (`RateLimitMiddleware`
+ *     a limiter factory, `AuthMiddleware` a provider), so the composition
+ *     root adds them explicitly: present when their module is installed,
+ *     inert when it is not. Each block prints one line ([rate] … / [auth] …),
+ *     always exactly one, so a deployment can tell "not installed" from
+ *     "broken" without reading code. In a kernel-only tree both guards fail,
+ *     nothing is wired, and /mark answers 404 — never an unguarded 200.
+ *   - Locale prefixes and the page cache remain a module's job; a module is
+ *     added through `bin/cms module:add`.
  *
- * A line added here is a module dependency the kernel cannot have. If a
- * surface needs one, the surface belongs to a module (docs/kernel-status.md
- * lists what moved and why).
+ * A line added here is a module dependency the kernel cannot have. If one is
+ * needed it must be behind `class_exists`; if the surface itself needs a
+ * module, the surface belongs to a module (docs/kernel-status.md lists what
+ * moved and why).
  *
  * The one exception below is a PAIRING, not a dependency: two installed modules
  * that must not know about each other, declared under class_exists guards so a
@@ -47,8 +54,12 @@ use Modules\Core\Infrastructure\Bootstrap\Bootstrapper;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Interfaces\HTTP\Kernel;
 use Modules\Core\Interfaces\HTTP\Middleware\MiddlewareRegistry;
+use Modules\Core\Interfaces\HTTP\Middleware\RateLimitMiddleware;
 use Modules\Core\Interfaces\HTTP\Router;
+use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Outbox\Interfaces\HTTP\OutboxServices;
+use Modules\Security\Application\Services\RateLimiter;
+use Modules\Users\Interfaces\HTTP\AuthWiring;
 
 // ============================================================================
 // BOOTSTRAP — autoloaders (Composer + PSR-4 fallback), environment,
@@ -123,6 +134,37 @@ try {
 // ============================================================================
 
 $kernel = new Kernel($router);
+
+// ============================================================================
+// WIRING — the pipeline stages auto-discovery cannot construct.
+//
+// Order IS the pipeline: the kernel runs the list front to back, so rate
+// limiting is added before auth and therefore sits outside it — a flood is
+// counted before a session is looked at — and both sit inside the discovered
+// headers/CSRF. Each block logs exactly one line, always, so a deployment
+// can tell "not installed" from "broken" without reading code.
+// ============================================================================
+
+if (class_exists(RateLimiter::class)) {
+    $kernel->addMiddleware(new RateLimitMiddleware(
+        static fn (): RateLimiter => new RateLimiter(
+            DatabaseConnectionManager::instance()->connection('users'),
+        ),
+    ));
+    error_log('[rate] wired RateLimit');
+} else {
+    error_log('[rate] absent — no Security module');
+}
+
+// The admin gate: one address for the wiring, shared with the kernel-level
+// tests (modules/Users/Interfaces/HTTP/AuthWiring) so the pipeline the suite
+// proves and the pipeline this file runs cannot drift apart.
+if (class_exists(AuthWiring::class)) {
+    AuthWiring::wire($kernel);
+    error_log('[auth] wired UsersProvider');
+} else {
+    error_log('[auth] absent — no provider module');
+}
 
 // ============================================================================
 // DISPATCH — handle the incoming request and send the response
