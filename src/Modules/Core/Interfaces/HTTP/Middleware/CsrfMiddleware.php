@@ -15,6 +15,28 @@ use Modules\Core\Infrastructure\Http\Response;
  * valid CSRF token. Tokens are stored in the (lazily started) session and
  * validated with hash_equals.
  *
+ * A state-changing request that ALSO carries evidence of having been launched
+ * from another site (`Origin` naming a different host, or — when `Origin` is
+ * absent — `Referer` doing the same) is refused after the token check (audit
+ * finding #7: the security checklist asks for the header cross-check and only
+ * the token was ever validated). The two checks answer for different failures:
+ * the token is the credential, the origin is the independent second lock, so a
+ * leaked or replayed token still needs the request to reach this host from this
+ * host's own pages.
+ *
+ * Three deliberate properties of the cross-check, each of which exists to keep
+ * a working client working:
+ *
+ *  - **The token check stays FIRST**, so a request without a token is refused
+ *    exactly as it was before this check existed (same 403, same message) and
+ *    no existing probe or integration changes meaning.
+ *  - **Neither header present → token-only.** `curl`, a server-to-server call,
+ *    an older same-origin form, a proxy that strips both: no evidence is not
+ *    evidence of forgery.
+ *  - **A header that does not name this host → refused**, including
+ *    `Origin: null` (a sandboxed document) and a malformed value; see
+ *    `Request::isSameOrigin()`.
+ *
  * Template usage:
  *   <?= CsrfMiddleware::field() ?>
  * or the raw token via CsrfMiddleware::token().
@@ -30,8 +52,14 @@ final class CsrfMiddleware implements MiddlewareInterface
 
     public function handle(Request $request, callable $next): Response
     {
-        if ($this->isStateChangingRequest($request) && !$this->isValidToken($request)) {
-            return Response::html('CSRF token validation failed', 403);
+        if ($this->isStateChangingRequest($request)) {
+            if (!$this->isValidToken($request)) {
+                return Response::html('CSRF token validation failed', 403);
+            }
+
+            if ($this->isCrossOrigin($request)) {
+                return Response::html('Cross-site request rejected', 403);
+            }
         }
 
         return $next($request);
@@ -111,5 +139,50 @@ final class CsrfMiddleware implements MiddlewareInterface
         }
 
         return hash_equals(self::token(), $token);
+    }
+
+    /**
+     * Was this token-bearing request launched from somewhere other than here?
+     *
+     * `Origin` is the header browsers set on form posts and cross-site requests
+     * alike; `Referer` is the fallback for the clients that omit it. Only when
+     * BOTH are absent (or empty) is there nothing to compare, and then the
+     * token — already verified by the caller — is the whole check.
+     */
+    private function isCrossOrigin(Request $request): bool
+    {
+        $evidence = $request->header('origin');
+
+        if (!is_string($evidence) || '' === trim($evidence)) {
+            $evidence = $request->header('referer');
+        }
+
+        if (!is_string($evidence) || '' === trim($evidence)) {
+            return false;
+        }
+
+        if ($request->isSameOrigin($evidence)) {
+            return false;
+        }
+
+        $this->logMismatch($evidence);
+
+        return true;
+    }
+
+    /**
+     * Why a token-bearing request was still refused, at DEBUG — the same gate
+     * and the same tag vocabulary `AuthMiddleware::logDenial()` uses. The
+     * value logged is the header as it arrived: it is the evidence an operator
+     * needs to tell a real cross-site post from a misconfigured public host,
+     * and it is the caller's own header rather than anything secret.
+     */
+    private function logMismatch(string $evidence): void
+    {
+        if ('debug' !== strtolower((string) (getenv('LOG_LEVEL') ?: 'info'))) {
+            return;
+        }
+
+        error_log(sprintf('[security] csrf origin mismatch: %s', $evidence));
     }
 }

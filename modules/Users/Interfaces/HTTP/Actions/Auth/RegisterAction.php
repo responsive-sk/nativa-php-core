@@ -13,6 +13,11 @@ use Modules\Users\Interfaces\HTTP\AuthTemplate;
 
 /**
  * Registration action — GET renders the form, POST registers.
+ *
+ * The POST is rate-limited per IP in `AuthService::register()` (audit finding
+ * #4: an open registration form with no limit of its own is a free account
+ * factory). A refusal answers 429 with `Retry-After`, so a client that speaks
+ * HTTP knows when to come back.
  */
 #[Route(path: '/register', method: 'GET', name: 'auth.register')]
 #[Route(path: '/register', method: 'POST', name: 'auth.register.submit', handlerMethod: 'submit')]
@@ -52,7 +57,15 @@ final class RegisterAction
             is_string($email) ? $email : '',
             is_string($password) ? $password : '',
             is_string($confirmation) ? $confirmation : '',
+            $request->getClientIp(),
         );
+
+        if ($result['retryAfter'] > 0) {
+            return ThrottledResponse::render(
+                $result['retryAfter'],
+                'Too many registration attempts from this address. Please try again later.',
+            );
+        }
 
         if ([] !== $result['errors']) {
             return AuthTemplate::render(
@@ -75,4 +88,5 @@ final class RegisterAction
 
         return Response::redirect(AuthTemplate::returnTo($request) ?? '/mark');
     }
+
 }

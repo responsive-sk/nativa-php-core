@@ -5,10 +5,11 @@
       "id": "users.password_min_length",
       "kind": "policy",
       "version": 1,
-      "description": "Passwords shorter than 8 characters are denied (register + reset)",
+      "description": "Passwords shorter than 12 characters are denied (register, reset, and the admin user forms)",
       "applies_to": [
         "users.register",
-        "users.reset_password"
+        "users.reset_password",
+        "users.update_user"
       ],
       "decision": "deny"
     },

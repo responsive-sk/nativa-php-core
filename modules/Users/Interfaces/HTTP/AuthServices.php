@@ -9,6 +9,7 @@ use Modules\Security\Application\Services\PasswordHasher;
 use Modules\Security\Application\Services\RateLimiter;
 use Modules\Users\Application\Services\AuthService;
 use Modules\Users\Application\Services\PasswordResetService;
+use Modules\Users\Infrastructure\Mail\PasswordResetMailerFactory;
 use Modules\Users\Infrastructure\Persistence\Repositories\UserRepository;
 
 /**
@@ -45,10 +46,15 @@ final class AuthServices
         if (null === self::$resets) {
             $pdo = DatabaseConnectionManager::instance()->connection('users');
 
+            // The mailer is resolved here, once: which transport carries a
+            // reset link is an environment fact, and this is where the service
+            // graph is composed (see PasswordResetMailerFactory).
             self::$resets = new PasswordResetService(
                 $pdo,
                 new UserRepository($pdo),
                 new PasswordHasher(),
+                PasswordResetMailerFactory::create(),
+                new RateLimiter($pdo),
             );
         }
 

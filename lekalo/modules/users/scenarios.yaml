@@ -19,7 +19,7 @@
       "kind": "scenario",
       "version": 1,
       "description": "A user requests a reset and sets a new password",
-      "summary": "Given a registered user who forgot their password, they request a reset token; the token is logged by the dev mailer, and consuming it updates the password and marks the token used.",
+      "summary": "Given a registered user who forgot their password, they request a reset token; the configured mailer carries it (the dev log in development, no transport in production), and consuming it updates the password and marks the token used.",
       "covers": [
         "users.request_password_reset",
         "users.reset_password",

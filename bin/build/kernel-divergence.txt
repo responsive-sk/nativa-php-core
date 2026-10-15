@@ -43,6 +43,12 @@ DIVERGED src/Modules/Core/Interfaces/HTTP/Markdown/MarkdownBlockRegistry.php # B
 # --- Rewritten surfaces: upstream moved after our import ----------------------
 DIVERGED src/Modules/Core/Interfaces/HTTP/Router.php # Boot 19: upstream's mayDeclareRoute guard adopted (only the two comments differ); the Boot 1 defect is no longer inherited; kernel contracts: implements RouterInterface
 #
+# --- Audit remediation round (2026-10-16, security-audit findings #3-#8) ------
+# The two Core files below are edge cuts of that round, not upstream moves: the
+# cross-check lives in the kernel because the token gate does.
+DIVERGED src/Modules/Core/Infrastructure/Http/Request.php # audit finding #7: isSameOrigin() compares a URL's HOST against the request Host through the same trustedHosts()/isTrustedHost() guard absoluteUrl() uses (a forged Host cannot describe a cross-site request as same-site)
+DIVERGED src/Modules/Core/Interfaces/HTTP/Middleware/CsrfMiddleware.php # audit finding #7: Origin/Referer cross-check, AFTER the token check (a tokenless request is refused with the same 403 and the same message as before) and token-only when both headers are absent
+#
 # --- Rewritten roots ----------------------------------------------------------
 DIVERGED public/index.php # kernel-only composition root: nothing to wire, wiring is discovery
 DIVERGED bin/cms # kernel module tool (module:* + migrate), not the showcase console

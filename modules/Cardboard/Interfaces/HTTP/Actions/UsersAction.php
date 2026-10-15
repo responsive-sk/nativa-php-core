@@ -14,6 +14,7 @@ use Modules\Core\Infrastructure\Storage\LocalStorageProvider;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Outbox\Interfaces\HTTP\SecurityEventServices;
 use Modules\Security\Application\Services\PasswordHasher;
+use Modules\Security\Domain\PasswordPolicy;
 use Modules\Validation\Validation\Validator;
 
 /**
@@ -523,19 +524,27 @@ final class UsersAction
         // vs the old `=== ''` checks (which the raw, untrimmed inputs
         // reached): `required` also rejects whitespace-only names and
         // passwords, and `min` counts characters, not bytes.
+        //
+        // The MINIMUM is not this file's to state (audit finding #3): it comes
+        // from `PasswordPolicy`, the same owner the public register and reset
+        // flows ask, so an admin cannot set what a reader cannot choose. The
+        // `required` message stays the admin form's own — an admin who left the
+        // field blank is told the field is required, not lectured about length.
         return (new Validator())->validate(
             ['name' => $name, 'email' => $email, 'password' => $password],
             [
                 'name'     => 'required',
                 'email'    => 'required|email',
-                'password' => $passwordRequired ? 'required|min:8' : 'min:8',
+                'password' => $passwordRequired
+                    ? 'required|' . PasswordPolicy::minRule()
+                    : PasswordPolicy::minRule(),
             ],
             [
                 'name.required'     => 'Name is required.',
                 'email.required'    => 'A valid email is required.',
                 'email.email'       => 'A valid email is required.',
                 'password.required' => 'Password is required.',
-                'password.min'      => 'Password must be at least 8 characters.',
+                'password.min'      => PasswordPolicy::tooShortMessage(),
             ],
         )->all();
     }
