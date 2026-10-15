@@ -80,7 +80,10 @@ final readonly class RateLimitMiddleware implements MiddlewareInterface
         $key = 'rate_limit:' . $request->getClientIp();
 
         if (!$rateLimiter->isAllowed($key, self::GENERAL_LIMIT, self::GENERAL_WINDOW)) {
-            return $this->blockedResponse($rateLimiter, $key, $request);
+            // getRetryAfter() is called HERE, where the @var narrowing above
+            // is in scope — not inside blockedResponse(), whose job is to
+            // render a number, not to hold the module's limiter type.
+            return $this->blockedResponse($rateLimiter->getRetryAfter($key), $key, $request);
         }
 
         return $next($request);
@@ -120,10 +123,19 @@ final readonly class RateLimitMiddleware implements MiddlewareInterface
     }
 
     /**
-     * Build the 429 response — serve cached HTML when available, bare
-     * error string otherwise.
+     * Build the 429 response — serve cached HTML when available, bare error
+     * string otherwise. Every branch carries `Retry-After`: a refusal with no
+     * retry time is a dead end for a client that speaks HTTP.
+     *
+     * `$retryAfter` arrives already resolved by the caller on purpose. This
+     * parameter used to be typed with the kernel's `RateLimiter` contract
+     * while the factory product is duck-typed (`isLimiter()` verifies two
+     * methods, nothing more) — so the first request ever refused through
+     * Security's structurally-valid limiter fatalled with a TypeError
+     * instead of answering 429. The number crosses; the module's type does
+     * not.
      */
-    private function blockedResponse(RateLimiter $rateLimiter, string $key, Request $request): Response
+    private function blockedResponse(int $retryAfter, string $key, Request $request): Response
     {
         $this->recordTrip($key, $request);
 
@@ -133,7 +145,6 @@ final readonly class RateLimitMiddleware implements MiddlewareInterface
 
             if (null !== $cached) {
                 $response = Response::html($cached['content'], 429);
-                $retryAfter = $rateLimiter->getRetryAfter($key);
                 $response->setHeader('Retry-After', (string) $retryAfter);
                 $response->setHeader('X-Cache', 'HIT');
 
@@ -141,7 +152,10 @@ final readonly class RateLimitMiddleware implements MiddlewareInterface
             }
         }
 
-        return Response::html('Too Many Requests', 429);
+        $response = Response::html('Too Many Requests', 429);
+        $response->setHeader('Retry-After', (string) $retryAfter);
+
+        return $response;
     }
 
     private function isLoopback(Request $request): bool
