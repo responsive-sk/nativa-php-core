@@ -7,6 +7,7 @@ namespace Tests\Boot;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Interfaces\HTTP\Kernel;
 use Modules\Core\Interfaces\HTTP\Router;
+use Modules\Users\Interfaces\HTTP\AuthWiring;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -19,10 +20,15 @@ use PHPUnit\Framework\TestCase;
  * ThemeKernel's business, not the boot contract's.
  *
  * `/mark` is the one path whose expected status depends on operator state,
- * and the dependency is written down instead of assumed: the admin app is a
- * module, so the kernel-only tree answers 404 (no route — not 403, not 500)
- * and a tree with Cardboard installed answers 200. Both cases assert the
- * same kernel rule separately below: a path the kernel has no route for is
+ * and the dependency is written down instead of assumed. Two things must be
+ * present for the admin surface to exist: a module that ROUTES it (Cardboard)
+ * and a module that PROVIDES the auth port (Users — its `AuthWiring` puts
+ * `AuthMiddleware` on the pipeline, the same guarded call `public/index.php`
+ * makes). Neither → 404 (no route — not 403, not 500). Router but no
+ * provider → 200, which is the unauthenticated admin serving this file was
+ * written to rule out. Both → 302 to the login: the gate answers before
+ * dispatch, so a guest never reaches a route at all. The kernel rule below
+ * asserts the first case separately: a path the kernel has no route for is
  * never Forbidden.
  */
 final class KernelOnlyBootTest extends TestCase
@@ -35,6 +41,7 @@ final class KernelOnlyBootTest extends TestCase
     public static function surfaces(): iterable
     {
         $adminInstalled = is_dir(APP_BASE_PATH . '/src/Modules/' . self::ADMIN_MODULE);
+        $gated = class_exists(AuthWiring::class);
 
         yield 'homepage'   => ['GET', '/',            200];
 
@@ -46,7 +53,11 @@ final class KernelOnlyBootTest extends TestCase
 
         yield 'unknown'    => ['GET', '/nope',        404];
 
-        yield 'admin'      => ['GET', '/mark',        $adminInstalled ? 200 : 404];
+        // Gate first: with a provider installed the auth middleware answers
+        // before routing, so an anonymous request is 302 whether or not the
+        // route exists — and never the 200 that served the admin dashboard
+        // to a guest (the measured defect, plan fix-mark-access-control).
+        yield 'admin'      => ['GET', '/mark',        $gated ? 302 : ($adminInstalled ? 200 : 404)];
     }
 
     #[Test]
@@ -55,9 +66,23 @@ final class KernelOnlyBootTest extends TestCase
     {
         $kernel = new Kernel(new Router([APP_BASE_PATH . '/src/Modules']));
 
+        // Mirror public/index.php's guarded wiring — the pipeline under test
+        // is the pipeline the composition root builds, not a test-only one.
+        if (class_exists(AuthWiring::class)) {
+            AuthWiring::wire($kernel);
+        }
+
         $response = $kernel->handle(Request::create($method, $uri));
 
         $this->assertSame($expected, $response->getStatusCode(), sprintf('%s %s', $method, $uri));
+
+        if (302 === $expected) {
+            $this->assertSame(
+                '/login',
+                $response->getHeader('Location'),
+                sprintf('%s %s must redirect to the login, not merely answer 302', $method, $uri),
+            );
+        }
     }
 
     /**

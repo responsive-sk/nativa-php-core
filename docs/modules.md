@@ -44,6 +44,17 @@ The scan reads files as TEXT and never loads a class it describes, so a module
 whose dependencies are absent is still describable. A scanner that fatals on a
 missing class cannot report the very closure that is missing.
 
+Two pipeline stages are NOT picked up this way, on purpose: `AuthMiddleware`
+and `RateLimitMiddleware` need constructor arguments the zero-argument scan
+cannot supply, so the composition root wires them behind `class_exists` — a
+module shipping an `AuthProvider` (Users ships `UsersAuthProvider` plus the
+`AuthWiring::wire()` entry point) is noticed by that guard in
+`public/index.php`, never by a list held in the kernel. Install the module and
+the gate exists; a tree with the admin router but no provider module answers
+200 (there is nothing to gate with — a route is not a guard), and a
+kernel-only tree answers 404. The measured states are recorded in
+`docs/kernel-status.md` §6.
+
 ## The closure rule
 
 `module:add` refuses when any closure member is not installed, names the

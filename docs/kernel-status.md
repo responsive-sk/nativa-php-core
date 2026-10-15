@@ -209,6 +209,10 @@ The composition root IS the mechanism — it hands `AuthMiddleware` whatever
 `AuthProvider` the installed module supplies, constructor-injected, with no
 kernel registry in between to fall out of step with what is installed.
 
+(**Superseded by §6:** this tree has since gained a provider module —
+`UsersAuthProvider` — so the composition root now does carry the `if`, behind
+`class_exists`, and §6 records the behaviour measured with and without it.)
+
 | Surface | Boot 4 | **Boot 5** | Note |
 |---|---|---|---|
 | `/` | 200 | **200** (22936 B) | still Mono (installed); ~400 B lighter — the white-page fix strips comments from the inlined CSS |
@@ -1817,4 +1821,93 @@ the `AssetManager` inventory row reported `UNINVENTORIED`. Probes removed.
 
 CI's `Extract-check` job is the one gate that cannot run anywhere but here: the
 upstream repo is private (Boot 20).
+
+## 6 — The gate nobody wired (2026-10-15, `fix/mark-access-control`)
+
+The port existed, the middleware existed, the policy table existed — and
+nothing joined them, because **`Kernel::addMiddleware()` had no callers**.
+Measured before any change, with `php -S` and a request carrying no cookies:
+
+| Path | Before | After |
+|---|---|---|
+| anon `GET /mark` | **200** — full dashboard | **302 → `/login`**, 0 B |
+| anon `GET /mark/users` | **200** — 324 KB user table, e-mails, delete forms, live CSRF token | **302 → `/login`**, 0 B |
+| `POST /login` (form + CSRF) | — | 302 → `/mark` |
+| auth (`mark.access`) `GET /mark` | 200 | **200** (34 649 B) |
+| auth (no permission) `GET /mark` | 200 | **403** — `Forbidden — the mark.access permission is required.` |
+| auth `GET /login` | 200 | **302 → `/mark`** (guest-only) |
+| anon `GET /` | 200 | 200 — public surface untouched |
+
+Static causes, each verified rather than assumed: `addMiddleware()` had zero
+callers (`public/index.php:26` said so in a comment); `AuthMiddleware` had
+zero importers and its constructor requires an `AuthProvider` that **no class
+in the tree implemented**; only `CsrfMiddleware` and `SecurityHeadersMiddleware`
+carried `#[AsMiddleware]`, so the live pipeline was headers + CSRF — the
+kernel docblock's `headers → session → CSRF → rate limiting → auth → dispatch`
+was aspirational; `RateLimitMiddleware` also had zero importers (the audit's
+Medium finding).
+
+What shipped, in order (commits `f4e6899`, `a72387a`, `d089a48`, `3542236`):
+
+1. **`modules/Users/Domain/UsersAuthProvider.php`** — the port's first
+   implementation: identity from the module's own session, path questions
+   delegated to `AdminRoutePolicy` (no `/mark` literal duplicated),
+   `noteEvent()` through an inline `class_exists` string so Users' install
+   closure never names Outbox, marked `#[AsAuthProvider]` for the deferred
+   discovery. **`AdminRoutePolicyCoverageTest`** walks the router scan and
+   pins all **77 registered `/mark` routes** to a permission (floor of 50 so
+   the walk cannot go quietly empty), plus the inverse for the public set.
+2. **The red run came before the wiring.** `AdminAccessControlTest` was
+   written first and failed **4 of 5** with `got 200, expected 302/403` —
+   the evidence the assertions can see the hole at all — then went green
+   when the wiring landed. The test drives the real login→`establishSession`
+   chain against a temp `DB_USERS` built by the module's own migrator.
+3. **Wiring: one address, `AuthWiring::wire()`.** The composition root calls
+   it behind one `class_exists` guard; the kernel-level tests call the same
+   method, so the pipeline the suite proves and the pipeline production runs
+   cannot drift apart (the delegated decision — chosen over inlining in
+   `index.php`, which would have meant three copies). Rate limiting wires
+   inline just above it, added first so the order is headers → CSRF → rate →
+   auth → dispatch; each block prints exactly one line (`[rate] …` /
+   `[auth] …`), always one, so a deployment can tell "not installed" from
+   "broken". **Attribute discovery of `#[AsAuthProvider]` is explicitly
+   deferred**: `MiddlewareRegistry` constructs with `new $class()` and no
+   arguments, and a construct-with-dependencies mechanism in the kernel is
+   not justified by one implementor.
+4. **The role bypass moved into the data.** `User::hasPermission()`
+   short-circuits on `admin`, but `AuthIdentity::hasPermission()` is a plain
+   `in_array` — mapping grants straight across would 403 the very
+   administrator the policy admits. The provider expands an `admin` role
+   into all five `Permissions::*`, so every denial stays explainable from
+   the identity alone. Pinned by `UsersAuthProviderTest` against a user
+   whose `role_permissions` rows are empty.
+5. **`KernelOnlyBootTest` flipped gate-first**: provider installed → 302
+   (+ `Location: /login`), router without provider → 200, neither → 404;
+   kernel-only CI keeps asserting 404 because the guard fails there.
+6. **The 429 test found a 500.** `RateLimitMiddlewareTest` (real limiter,
+   in-memory SQLite: 60 pass, 61st refused, loopback exempt past 65) hit
+   `blockedResponse()`'s type-hint of the kernel `RateLimiter` contract —
+   while the factory is duck-typed by design — so the first request ever
+   refused through Security's structurally-valid limiter would have
+   fatalled: **500 instead of 429**. The caller now resolves
+   `getRetryAfter()` where the `@var` narrowing holds and passes the int;
+   every 429 branch carries `Retry-After` (the bare path sent none).
+
+## Verified (2026-10-15, `/mark` access control, all exit 0)
+
+| Gate | Result |
+|---|---|
+| `composer test` | 284 tests, 1184 assertions, 1 skip |
+| `composer test` (kernel-only worktree) | 284 tests, 224 skipped, 0 failures |
+| `make lint` | clean |
+| `composer phpstan` (full tree) | level 9, no errors |
+| `composer phpstan` (kernel-only worktree) | level 9, no errors — Constraint 5 proved, and the run that caught the factory's closure return type |
+| `composer cs-fix-dry` / `composer rector-dry` | 0 of 91 fixable / Rector OK |
+| `make lekalo-check` | 23 rules, 0 errors |
+| `make extract-check` | 224 identical, 64 recorded divergences |
+| `make kernel-size` | 302 089 B / 71 files, delta −36 103 B |
+| live `curl` (php -S, port 8177) | the matrix above; probe users deleted afterwards, servers: mine stopped, pre-existing dev server untouched |
+
+Still deferred, deliberately: `#[AsAuthProvider]` attribute discovery (see
+§6.3), and CI's `Extract-check` remains not-run — private upstream (Boot 20).
 
