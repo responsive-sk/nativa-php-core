@@ -53,7 +53,9 @@ the module and the gate exists; a tree with the admin router but no provider
 module answers 200 (there is nothing to gate with — a route is not a guard),
 and a kernel-only tree answers 404. (`Users` used to ship an `AuthWiring::wire()`
 entry point for this; it was deleted when discovery landed — see
-`docs/kernel-status.md` §6 and §10 for the measured states.)
+`docs/kernel-status/04-kernel-contracts.md` §6 and
+`docs/kernel-status/06-auth-discovery-and-mail-transport.md` §10 for the
+measured states, with `docs/kernel-status.md` as the index over the parts.)
 
 `RateLimitMiddleware` is the one stage still wired explicitly in
 `public/index.php`, behind `class_exists`: it needs a limiter FACTORY in its
@@ -111,8 +113,8 @@ the lifecycle fixture:
 Restart the server between phases: the built-in server is one long-lived
 process, and a class it already declared outlives the file it came from. A
 check run against a removed-but-remembered class is a green run of a file that
-no longer exists — the same stale-bytecode lesson `docs/kernel-status.md`
-records for edits.
+no longer exists — the same stale-bytecode lesson
+`docs/kernel-status/01-import-and-edge-cuts.md` records for edits.
 
 ## Themes travel as modules (measured 2026-10-11)
 

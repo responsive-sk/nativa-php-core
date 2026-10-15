@@ -52,5 +52,7 @@ Describe **what** and **why** in the PR, not how — the diff already says how.
   acyclic). Exceptions go FQ-inline with a docblock reason, never silently.
 - **Internal tooling** (`.agents/`, `.ai-factory.json`) stays out — never in
   a PR.
-- Larger changes earn an entry in `docs/kernel-status.md`: a boot record of
+- Larger changes earn an entry in the boot log: a part under
+  `docs/kernel-status/` (the newest one while it is still the current round of
+  work — and its row in `docs/kernel-status.md`, the index). A boot record of
   measured states, not a plan.

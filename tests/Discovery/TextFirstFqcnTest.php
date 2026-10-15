@@ -27,7 +27,7 @@ use PHPUnit\Framework\TestCase;
  * type named `says`; the class did not exist, the file was SKIPPED, and the
  * provider / theme / middleware simply disappeared — no error, no log line.
  * Measured on the Settings shell provider, whose nav menu vanished exactly that
- * way (docs/kernel-status.md, Boot 23).
+ * way (docs/kernel-status/03-content-themes-and-the-admin-merge.md, Boot 23).
  *
  * The rule these tests pin is the one the resolver now follows: a declaration
  * is a line that begins with optional modifiers and the keyword — prose cannot

@@ -253,7 +253,7 @@ final class AuthProviderRegistry
      * class says the one thing..." resolved a type named `says`: the class did
      * not exist, the file was skipped with no log line, and the provider
      * silently disappeared — measured on the Settings shell provider, whose nav
-     * menu vanished exactly that way (docs/kernel-status.md, Boot 23).
+     * menu vanished exactly that way (docs/kernel-status/03-content-themes-and-the-admin-merge.md, Boot 23).
      *
      * tests/Discovery/TextFirstFqcnTest.php pins both halves, for all five
      * registries that share this shape.

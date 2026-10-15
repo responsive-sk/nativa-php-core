@@ -21,7 +21,8 @@ statements across 14 files, naming 9 modules** (Blog, Cardboard, Locales, Media,
 Outbox, Pages, Security, Settings, Users). The ledger — every edge, with the
 answer it gets (`M`ove / `C`ontract / `G`uard) — is `../nativa-minimal`'s
 `tests/Architecture/KernelCouplingTest.php` + `tests/Support/KernelCoupling.php`,
-and the measured state of THIS tree is `docs/kernel-status.md`.
+and the measured state of THIS tree is `docs/kernel-status.md` — the index
+over the per-round boot log kept in `docs/kernel-status/`.
 
 ## The boundary rule
 
