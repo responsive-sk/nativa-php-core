@@ -12,6 +12,14 @@ kernel would have to keep.
 Composer packages, so it cannot be a symfony/console application). Exit 0 on
 success, 1 on refusal or error; refusals go to STDERR and copy nothing.
 
+The classes behind it (`ModuleCatalog`, `ModuleInstaller`, `ModuleManifest`)
+live in `src/Modules/Tooling/` — committed kernel code the exported slice
+ships, but **not a module**: `module:list` never lists `Tooling` and
+`module:remove Tooling` refuses with *"is the kernel itself — it cannot be
+removed"*, so the tool cannot be used to delete itself. Before 2026-10-15 they
+sat inside `Modules\Core\Application\Services`; the namespace is the only thing
+that changed.
+
 | Command | What it does |
 |---|---|
 | `php bin/cms module:list` | installed + catalogued modules |
@@ -29,7 +37,8 @@ Routes from `#[Route]`, migrators from `#[AsMigrator]`, middleware from
 from `implements ThemeModule`, assets from `assets/` directories, the SQLite
 file from the module name (`Scratch` → `storage/data/scratch.db`), and the
 dependency closure from `use Modules\<X>\…` across the module's own files
-(never self, `Core` or `Database` — those are the tree, not something in it).
+(never self, `Core`, `Database` or `Tooling` — those are the tree, not
+something in it).
 
 The scan reads files as TEXT and never loads a class it describes, so a module
 whose dependencies are absent is still describable. A scanner that fatals on a

@@ -10,6 +10,12 @@ Reproduce any row with `make kernel-size` for the totals; the per-file numbers
 are `stat -c%s` plus one grep per file, which is why they are written down here
 rather than recomputed on every read.
 
+**The `Bucket` column is the approval record `KernelShapeTest` points at.**
+A concrete file that is not `contract`, `runtime`, `tooling` or `dead` — or that
+is not in the table at all — has no business being in `src/Modules/Core`: the
+test fails with the path, the layer and this file's name until the row is
+written and `ALLOW_LIST` carries the path.
+
 ## Buckets
 
 | Bucket | Means | Count | Bytes |
@@ -60,12 +66,16 @@ baseline; it ships no interfaces and no buckets — it is all runtime.
 
 ## Movement
 
-*(Task 10 appends the after-state here as a dated row. The baseline above does
-not move — a baseline that tracks the tree measures nothing.)*
+The baseline above does not move — a baseline that tracks the tree measures
+nothing. The after-state is appended as dated rows instead, and the Inventory
+table keeps its baseline rows even where the tree no longer holds the file:
+five rows are deleted code and three moved to `src/Modules/Tooling`, which is
+exactly the movement the table exists to record.
 
 | Date | Total | Delta vs baseline | Note |
 |---|---:|---:|---|
 | 2026-10-15 | 338 192 B / 79 files | — | Baseline, before the refactor |
+| 2026-10-15 | 301 231 B / 71 files | −36 961 B | After Phases 3-4: 11 793 B deleted outright (3 dead + 2 dead-CLI files) and 26 167 B relocated to `Modules\Tooling` — the slice keeps those 26 KB, so only the `Core` figure drops. Offset by +999 B of comment and docblock edits the same phases made (`Router::mayDeclareRoute()`, `AsAuthProvider`, `RateLimitMiddleware`). Core types: 10 interface / **59 concrete** (was 67). Source: `make kernel-size`, 2026-10-15. |
 
 ## Inventory
 
