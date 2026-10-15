@@ -8,7 +8,7 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Outbox\Interfaces\HTTP\OutboxServices;
 use Modules\Users\Domain\Permissions;
-use Modules\Users\Domain\UsersAuthProvider;
+use Modules\Users\Interfaces\HTTP\UsersAuthProvider;
 use Modules\Users\Infrastructure\Persistence\Migrations\UsersDatabaseMigrator;
 use Modules\Users\Interfaces\HTTP\AuthServices;
 use PDO;

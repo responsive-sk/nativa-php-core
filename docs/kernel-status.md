@@ -211,7 +211,10 @@ kernel registry in between to fall out of step with what is installed.
 
 (**Superseded by §6:** this tree has since gained a provider module —
 `UsersAuthProvider` — so the composition root now does carry the `if`, behind
-`class_exists`, and §6 records the behaviour measured with and without it.)
+`class_exists`, and §6 records the behaviour measured with and without it.
+**Superseded again by §10:** the `if` no longer names the module — the provider
+is discovered by `#[AsAuthProvider]`, so the composition root asks a Core
+registry instead of a module class.)
 
 | Surface | Boot 4 | **Boot 5** | Note |
 |---|---|---|---|
@@ -1862,7 +1865,10 @@ What shipped, in order (commits `f4e6899`, `a72387a`, `d089a48`, `3542236`):
    the evidence the assertions can see the hole at all — then went green
    when the wiring landed. The test drives the real login→`establishSession`
    chain against a temp `DB_USERS` built by the module's own migrator.
-3. **Wiring: one address, `AuthWiring::wire()`.** The composition root calls
+3. **Wiring: one address, `AuthWiring::wire()`.** *(Superseded by §10: the
+   helper is deleted and the same two lines are discovered from the provider's
+   own attribute — the shared address is now `AuthProviderRegistry::first()`.)*
+   The composition root calls
    it behind one `class_exists` guard; the kernel-level tests call the same
    method, so the pipeline the suite proves and the pipeline production runs
    cannot drift apart (the delegated decision — chosen over inlining in
@@ -1908,8 +1914,9 @@ What shipped, in order (commits `f4e6899`, `a72387a`, `d089a48`, `3542236`):
 | `make kernel-size` | 302 089 B / 71 files, delta −36 103 B |
 | live `curl` (php -S, port 8177) | the matrix above; probe users deleted afterwards, servers: mine stopped, pre-existing dev server untouched |
 
-Still deferred, deliberately: `#[AsAuthProvider]` attribute discovery (see
-§6.3), and CI's `Extract-check` remains not-run — private upstream (Boot 20).
+Still deferred: CI's `Extract-check` remains not-run — private upstream
+(Boot 20). No longer deferred: `#[AsAuthProvider]` attribute discovery (see
+§6.3) **shipped in §10**, with `AuthWiring` deleted.
 
 
 ---
@@ -2206,3 +2213,102 @@ it here rather than upstream.
 | mutation checks (5, each reverted) | hardcoding `min:8` in `register()` → `AuthServiceTest:140` fails; `LocalClient::isLoopback()` → `false` → 2 failures (`AuthServiceTest`, `PasswordResetServiceTest:193`); registration limiter → `true` → `AuthServiceTest:166` fails; `FORGOT_EMAIL_LIMIT = 30` → `PasswordResetServiceTest:179` fails; disabling the CSRF cross-check → 5 `CsrfMiddlewareTest` failures (the cross-site/`null` cases), with the same-origin, `Referer`, absent-header and token cases still green |
 | module install trap (§7/§8) | `bin/cms module:remove <M> --force` + `module:add <M>` for Users, Security, Cardboard, Comments; `diff -rq modules/<M> src/Modules/<M>` empty for all four |
 | probe cleanup | the `php -S` probe server stopped; both probe scripts live in `/tmp`, no probe rows in `storage/data/*.db`, `storage/logs/app.log` untouched (`APP_ENV=production` selects the null transport) |
+
+---
+
+# 10 — The auth provider nobody had to list (2026-10-16, the deferred half of §6)
+
+§6 wired the `/mark` gate explicitly and deferred `#[AsAuthProvider]` discovery
+for a stated reason: the registry would have to construct a middleware with
+dependencies. That reason is §6's, not this round's — a PROVIDER is a port
+implementation with a zero-argument constructor (`UsersAuthProvider` was built
+that way on purpose), so a registry can instantiate it while `AuthMiddleware`,
+which takes the provider, stays explicitly wired. This round does exactly that.
+
+Two facts decided the shape before any code was written, both measured:
+
+- the attribute had **0 readers** since `93b09e3` deleted `AuthProviderRegistry`
+  as dead code, and
+- the two-line wiring existed in **three copies** (`public/index.php`,
+  `KernelOnlyBootTest`, `AdminAccessControlTest`), which is the drift the
+  single shared address was invented to prevent and which no test could catch,
+  since all three were the same code.
+
+## What shipped
+
+| Piece | Before | After |
+|---|---|---|
+| `src/Modules/Core/Application/Services/AuthProviderRegistry.php` | deleted (`git show 93b09e3^`) | **resurrected at its former path**, rebuilt on the CURRENT registry shape |
+| `modules/Users/Domain/UsersAuthProvider.php` | `Domain`, import of `Interfaces\HTTP\AuthServices` | moved to **`Interfaces/HTTP/`** (the registry's published file-name contract), import inverted |
+| `modules/Users/Interfaces/HTTP/AuthWiring.php` | the one explicit wiring address | **deleted** |
+| `public/index.php` | `class_exists(AuthWiring::class)` + `AuthWiring::wire()` | `AuthProviderRegistry::first()` — **no module class named for auth** |
+| the two test mirrors | `class_exists` + `wire()` (a copy each) | the same two Core-only lines as the root |
+
+**The registry is the concept, not the old code.** Its `resolveFqcn()` is the
+declaration-start version Boot 23 hardened — the deleted copy took the FIRST
+mention of `class` anywhere in the file, which resolves a type named `says` out
+of a docblock sentence and silently skips the file — and same-priority
+contention votes through `PreferenceVote::select()`, the rule every other
+registry already shares. `tests/Discovery/TextFirstFqcnTest` now pins this fifth
+copy: a shape shared by five files is a shape that will be fixed in four of them.
+
+Three decisions, each a rule rather than an accident:
+
+- **One provider, not a merged answer.** Unlike the shell port (where two modules
+  legitimately answer different halves), there is no half of "who is this
+  request" a second module could own: two answers is not depth, it is ambiguity.
+  Lowest priority wins; a tie keeps the first and LOGS the rest.
+- **Zero-argument constructors are enforced, not documented.** Discovery
+  instantiates at scan time, so a provider that took a dependency would capture
+  one from the wrong moment — the harness swaps `DB_*` between cases and the
+  captured connection would outlive its database. `getNumberOfRequiredParameters()`
+  refuses it; the module's provider resolves services lazily instead.
+- **A provider that throws is NOT caught** (same rule as the shell registry): an
+  auth answer that disappears quietly is a gate nobody can trust.
+
+## The governance question the plan left open
+
+The plan asked whether the resurrected file's Inventory row should be corrected
+(`dead` → `runtime`) or whether a Movement entry alone suffices, defaulting to
+"correct the row AND add the entry". **The document's own rule wins:**
+`docs/kernel-shape.md` states that the baseline does not move and that rows stay
+at their baseline values even where the tree no longer holds the file. A
+resurrection is movement, so the row keeps its baseline fact (`dead`, 5 366 B)
+and the dated Movement row records the file being alive again — with its new
+size, bucket and importers. Correcting the row would have quietly rewritten the
+baseline the whole table is measured against.
+
+## Two traps this round walked into (both recorded, neither silent)
+
+1. **A glob inside a docblock closed the comment.** Writing the registry's
+   contract as prose — `` `*/Interfaces/HTTP/*AuthProvider.php` `` — put a
+   literal `*` `slash` pair inside the comment, which ends it early: every
+   following line became code, and the moved provider died with
+   `syntax error, unexpected token "#["`. `ShellContextProviderRegistry` already
+   warns about exactly this in its own docblock. The suite caught it in 13
+   errors; the fix is a wording, not an escape.
+2. **A symlinked `vendor` broke the kernel-only worktree, not the change.** The
+   first kernel-only run failed `ModuleLifecycleTest` with
+   `file_get_contents(): … Is a directory`: that test hashes the whole tree and
+   `RecursiveDirectoryIterator` does not follow symlinks, so the fixture
+   `vendor` link was read as a file. Proved by a CONTROL worktree at `HEAD`
+   without this round's changes — it failed identically. `cp -a vendor` instead
+   of `ln -s vendor` turned the real run green.
+
+## Verified (2026-10-16, all exit 0 unless stated)
+
+| Gate | Result |
+|---|---|
+| `composer test` (full suite) | **315 tests, 1323 assertions**, 1 skip (289 → 315: the registry's 5 discovery contracts + the mirrors) |
+| `composer phpstan` | level 9, no errors |
+| `composer cs-fix-dry` | 0 of 94 files fixable |
+| `composer rector-dry` / `make lint` | Rector OK / lint clean |
+| `make lekalo-check` | 23 rules, 0 errors, 0 warnings; `lock --check` unchanged (`sha256:e77647f7…`) |
+| `make extract-check` | OK — 222 identical, 66 recorded divergences, **plus the new `OWNED` row** for the registry (found by running the check, not by guessing the entry shape: it reported `exists only here (not OWNED)` first) |
+| `make kernel-size` | 317 447 B / 72 files, delta −20 745 B; Core types 10 interface / **60 concrete** — the one-line `MAX_APPROVED` 59 → 60 raise the shape test exists to make visible |
+| kernel-only worktree (this round's files, `cp -a vendor`) | `composer phpstan` clean; `composer test` 315 tests, 240 skipped, 0 failures — the mirrors now name only Core classes, and the registry answers `null` with no module installed |
+| live `curl`, `php -S 127.0.0.1:8201` (real session + real `_token` from `GET /login`, two seeded probe users) | anon `/mark` → **302 `/login`, 0 B**; anon `/mark/users` → **302 `/login`, 0 B**; `/` → 200; admin login → 302 `/mark`, then `/mark` → **200 (34 646 B)**, `/mark/users` → **200 (37 663 B)**, `/login` → **302 `/mark`** (guest-only); identity WITHOUT the permission `/mark` → **403 (53 B)**, `/mark/users` → **403 (54 B)** — identical to the explicit wiring §6 measured |
+| `[auth]` log line, live | `[auth] wired Modules\Users\Interfaces\HTTP\UsersAuthProvider` — the discovered class is named, from its new location |
+| mutation checks (3, each reverted byte-identical) | disable the zero-arg refusal → the refusal test errors; disable the contention logging → the tie test fails with the missing line in the diff; remove BOTH the text gate and the attribute check → the unmarked-file test errors. (Removing either gate ALONE changes nothing — two independent gates guard the label, which is worth knowing when reading that test.) |
+| module install trap (§7/§8/§9) | `module:remove Users --force` + `module:add Users`; `diff -rq modules/Users src/Modules/Users` empty; the cascade into Comments/Questions left both identical (11/11 and 10/10 files) |
+| probe cleanup | probe users deleted (`users` back to 3, 0 `probe-%` rows, their `sessions`/`user_roles`/`login_attempts` rows with them); the probe server stopped; both probe scripts lived in `/tmp`; `git worktree list` back to the single main tree |

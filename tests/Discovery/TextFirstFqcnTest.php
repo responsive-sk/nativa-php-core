@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Tests\Discovery;
 
+use Modules\Core\Application\Services\AuthProviderRegistry;
 use Modules\Core\Application\Services\ShellContextProviderRegistry;
 use Modules\Core\Interfaces\HTTP\Markdown\MarkdownBlockRegistry;
 use Modules\Core\Interfaces\HTTP\Middleware\MiddlewareRegistry;
@@ -32,9 +33,10 @@ use PHPUnit\Framework\TestCase;
  * is a line that begins with optional modifiers and the keyword — prose cannot
  * be one, because prose has something else first.
  *
- * One test file for all four registries on purpose: they hold four copies of the
+ * One test file for all five registries on purpose: they hold five copies of the
  * same resolver, and this is what keeps a future edit from fixing one and
- * leaving the other three behind.
+ * leaving the other four behind — the fifth (`AuthProviderRegistry`) was
+ * rebuilt on this very shape when attribute discovery returned.
  */
 final class TextFirstFqcnTest extends TestCase
 {
@@ -44,6 +46,7 @@ final class TextFirstFqcnTest extends TestCase
         ThemeRegistry::class,
         MiddlewareRegistry::class,
         MarkdownBlockRegistry::class,
+        AuthProviderRegistry::class,
     ];
 
     /**
