@@ -47,6 +47,11 @@ MINIMAL_ROOT=""
 SLICE_DIRS=(
     "src/Modules/Core"
     "src/Modules/Database"
+    # NOT src/Modules/Tooling: materialize_slice() FAILS on a SLICE_DIRS
+    # member that is absent upstream, and upstream never carried the tooling
+    # — it was born here. It lives in SLICE_FILES below, whose absence check
+    # is a note rather than a failure, while cmd_check() walks it all the
+    # same (SLICE_DIRS and SLICE_FILES are both feeds into the OWNED walk).
     "config"
     "Frontend/packages"
 )
@@ -63,6 +68,11 @@ SLICE_FILES=(
     "src/Themes/ThemeModule.php"
     "public/index.php"
     "bin/cms"
+    # The module tooling bin/cms imports (ModuleCatalog, ModuleInstaller,
+    # ModuleManifest): committed kernel code that upstream never had, so this
+    # is the list that tolerates its absence there while still walking the
+    # directory on our side for its OWNED row.
+    "src/Modules/Tooling"
     "composer.json"
     "composer.lock"
     "phpunit.xml"

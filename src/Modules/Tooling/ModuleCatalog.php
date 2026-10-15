@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Core\Application\Services;
+namespace Modules\Tooling;
 
 use Modules\Core\Infrastructure\Paths\AppPaths;
 
@@ -21,7 +21,7 @@ use Modules\Core\Infrastructure\Paths\AppPaths;
 final readonly class ModuleCatalog
 {
     /** Modules that are the tree itself — never a dependency, never removable. */
-    public const array KERNEL_MODULES = ['Core', 'Database'];
+    public const array KERNEL_MODULES = ['Core', 'Database', 'Tooling'];
 
     public function __construct(
         private string $catalogDir,

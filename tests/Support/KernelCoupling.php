@@ -43,11 +43,20 @@ use Modules\Core\Infrastructure\Paths\AppPaths;
 final class KernelCoupling
 {
     /**
-     * The shared kernel — the two modules that travel whole.
+     * The shared kernel — the modules that travel whole, and therefore the
+     * directories this scanner walks for imports that reach OUT of it.
+     *
+     * `Tooling` belongs here in both of its roles: it is committed kernel code
+     * (bin/cms ships it and the slice carries it), so `Modules\Core` →
+     * `Modules\Tooling` is the kernel talking to itself rather than a
+     * feature-module edge; and without it in this list `kernelFiles()` would
+     * never walk `src/Modules/Tooling` — leaving the one kernel directory added
+     * after this scanner was written unguarded against a `Modules\Blog` import
+     * nobody had to think twice about.
      *
      * @var list<string>
      */
-    public const array KERNEL_MODULES = ['Core', 'Database'];
+    public const array KERNEL_MODULES = ['Core', 'Database', 'Tooling'];
 
     /**
      * Every `Modules\…` import under the kernel, kernel modules included,

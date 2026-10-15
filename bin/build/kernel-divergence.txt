@@ -71,10 +71,7 @@ OWNED src/Modules/Core/Domain/AuthIdentity.php # auth port (Boot 5)
 OWNED src/Modules/Core/Infrastructure/Attributes/AsShellContextProvider.php # shell port (Boot 3)
 OWNED src/Modules/Core/Infrastructure/Attributes/AsAuthProvider.php # auth port (Boot 5)
 OWNED src/Modules/Core/Application/Services/ShellContextProviderRegistry.php # shell port (Boot 3)
-OWNED src/Modules/Core/Application/Services/AuthProviderRegistry.php # auth port (Boot 5)
-OWNED src/Modules/Core/Application/Services/ModuleCatalog.php # module catalogue (catalog task)
-OWNED src/Modules/Core/Application/Services/ModuleManifest.php # module catalogue (catalog task)
-OWNED src/Modules/Core/Application/Services/ModuleInstaller.php # lifecycle service (Boot 10)
+OWNED src/Modules/Tooling # module catalogue + lifecycle, moved out of Core/Application/Services (bin/cms ships it; born here, never upstream)
 OWNED src/Modules/Core/Domain/Contracts/RateLimiter.php # limiter shape the middleware guards (Boot 11)
 OWNED tests # kernel-native harness (Boot 10); extraction adopts it, not the reverse
 OWNED docs # kernel status log lives here

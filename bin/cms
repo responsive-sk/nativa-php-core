@@ -24,11 +24,11 @@ declare(strict_types = 1);
  * the CLI prints and what the tests assert is the same string.
  */
 
-use Modules\Core\Application\Services\ModuleCatalog;
-use Modules\Core\Application\Services\ModuleInstaller;
-use Modules\Core\Application\Services\ModuleManifest;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Core\Interfaces\CLI\Support\DatabaseMigrator;
+use Modules\Tooling\ModuleCatalog;
+use Modules\Tooling\ModuleInstaller;
+use Modules\Tooling\ModuleManifest;
 
 require_once __DIR__ . '/../src/init.php';
 

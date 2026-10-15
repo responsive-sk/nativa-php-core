@@ -2,8 +2,10 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Core\Application\Services;
+namespace Modules\Tooling;
 
+use Modules\Core\Application\Services\DiscoveryCache;
+use Modules\Core\Application\Services\PageCacheService;
 use Modules\Core\Infrastructure\Bootstrap\Bootstrapper;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use RuntimeException;
