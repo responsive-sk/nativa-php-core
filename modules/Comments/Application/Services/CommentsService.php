@@ -7,6 +7,7 @@ namespace Modules\Comments\Application\Services;
 use Modules\Comments\Domain\Entities\Comment;
 use Modules\Comments\Infrastructure\Persistence\Repositories\CommentRepository;
 use Modules\Security\Application\Services\RateLimiter;
+use Modules\Security\Domain\LocalClient;
 use Modules\Validation\Validation\Validator;
 
 /**
@@ -28,9 +29,6 @@ final readonly class CommentsService
     private const int RATE_LIMIT = 10;
 
     private const int RATE_WINDOW = 60;
-
-    /** @var list<string> Loopback addresses exempt from the per-comment limit. */
-    private const array LOOPBACK_IPS = ['127.0.0.1', '::1', 'localhost'];
 
     public function __construct(
         private CommentRepository $comments,
@@ -200,8 +198,13 @@ final readonly class CommentsService
         );
     }
 
+    /**
+     * The one owner of "the local developer is not a spammer": the same class
+     * the registration and reset-request limits ask, so the tree cannot end up
+     * with three lists that disagree about what "local" means.
+     */
     private function loopback(string $ip): bool
     {
-        return in_array($ip, self::LOOPBACK_IPS, true);
+        return LocalClient::isLoopback($ip);
     }
 }

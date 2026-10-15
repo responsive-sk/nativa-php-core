@@ -8,9 +8,11 @@ use Modules\Core\Infrastructure\Env;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
 use Modules\Security\Application\Services\PasswordHasher;
 use Modules\Security\Application\Services\RateLimiter;
+use Modules\Security\Domain\LocalClient;
+use Modules\Security\Domain\PasswordPolicy;
 use Modules\Users\Domain\Entities\User;
-use Modules\Validation\Validation\Validator;
 use Modules\Users\Infrastructure\Persistence\Repositories\UserRepository;
+use Modules\Validation\Validation\Validator;
 
 /**
  * AuthService — registration, authentication, remember-me, logout.
@@ -30,6 +32,13 @@ final readonly class AuthService
     // table (dashboard Sessions metric source). Capped so a busy admin does
     // not write on every single request.
     private const int SESSION_DB_WRITE_INTERVAL = 60; // seconds
+
+    // Registration limit (audit finding #4): accounts created per address per
+    // hour. Counted on SUCCESS only — see register() for why an honest reader
+    // who mistypes a password five times must not be locked out of the form.
+    private const int REGISTER_LIMIT = 5;
+
+    private const int REGISTER_WINDOW = 3600;
 
     /**
      * Dummy bcrypt hash verified against for unknown/inactive accounts.
@@ -56,9 +65,16 @@ final readonly class AuthService
     /**
      * Register a new user with the given credentials.
      *
-     * @return array{user: User, errors: list<string>}
+     * The per-IP limit (audit finding #4) counts ACCOUNTS CREATED, not
+     * attempts: it is asked once the input is valid and the address is free,
+     * immediately before the insert. Counting every attempt would lock an
+     * honest reader out of the form for an hour after five typos, while the
+     * thing the limit is for — mass account creation — is bounded either way.
+     * Raw request rate stays the global middleware's business (60/min per IP).
+     *
+     * @return array{user: User, errors: list<string>, retryAfter: int}
      */
-    public function register(string $name, string $email, string $password, string $confirmation): array
+    public function register(string $name, string $email, string $password, string $confirmation, string $ip): array
     {
         $name = trim($name);
         $email = strtolower(trim($email));
@@ -76,15 +92,15 @@ final readonly class AuthService
             [
                 'name'     => 'required|max:255',
                 'email'    => 'required|email',
-                'password' => 'required|min:8|confirmed',
+                'password' => 'required|' . PasswordPolicy::minRule() . '|confirmed',
             ],
             [
                 'name.required'      => 'Name is required (max 255 characters).',
                 'name.max'           => 'Name is required (max 255 characters).',
                 'email.required'     => 'A valid email address is required.',
                 'email.email'        => 'A valid email address is required.',
-                'password.required'  => 'Password must be at least 8 characters.',
-                'password.min'       => 'Password must be at least 8 characters.',
+                'password.required'  => PasswordPolicy::tooShortMessage(),
+                'password.min'       => PasswordPolicy::tooShortMessage(),
                 'password.confirmed' => 'Password confirmation does not match.',
             ],
         );
@@ -104,7 +120,22 @@ final readonly class AuthService
         );
 
         if ([] !== $errors) {
-            return ['user' => User::fromRow([]), 'errors' => $errors];
+            if ([] !== $failures->forField('password')) {
+                $this->debug('[security] register refused by the password policy (min ' . PasswordPolicy::MIN_LENGTH . ' characters)');
+            }
+
+            return ['user' => User::fromRow([]), 'errors' => $errors, 'retryAfter' => 0];
+        }
+
+        if (!$this->withinRegistrationLimit($ip)) {
+            $retryAfter = $this->limiter->getRetryAfter('register:' . $ip);
+            $this->debug('[security] registration throttled for ' . $ip . ' (retry in ' . $retryAfter . 's)');
+
+            return [
+                'user'       => User::fromRow([]),
+                'errors'     => ['Too many registration attempts from this address — try again later.'],
+                'retryAfter' => $retryAfter,
+            ];
         }
 
         $user = $this->users->insert([
@@ -114,7 +145,23 @@ final readonly class AuthService
             'password' => $this->hasher->hash($password),
         ]);
 
-        return ['user' => $user, 'errors' => []];
+        return ['user' => $user, 'errors' => [], 'retryAfter' => 0];
+    }
+
+    /**
+     * May this address create another account right now?
+     *
+     * The local developer is exempt (LocalClient) — the same choice the global
+     * middleware and the comments limiter make, for the same reason: a person
+     * exercising the form on their own machine is not the abuse this bounds.
+     */
+    private function withinRegistrationLimit(string $ip): bool
+    {
+        if (LocalClient::isLoopback($ip)) {
+            return true;
+        }
+
+        return $this->limiter->isAllowed('register:' . $ip, self::REGISTER_LIMIT, self::REGISTER_WINDOW);
     }
 
     /**
@@ -401,5 +448,20 @@ final readonly class AuthService
         } catch (\Throwable) {
             // Best-effort.
         }
+    }
+
+    /**
+     * Verbose development aid, gated exactly like
+     * `AuthMiddleware::logDenial()`: the facts a developer needs when a limit
+     * refuses them are printed at LOG_LEVEL=debug and cost nothing otherwise.
+     * Refusals name the field and the address — never a credential.
+     */
+    private function debug(string $line): void
+    {
+        if ('debug' !== strtolower((string) (getenv('LOG_LEVEL') ?: 'info'))) {
+            return;
+        }
+
+        error_log($line);
     }
 }

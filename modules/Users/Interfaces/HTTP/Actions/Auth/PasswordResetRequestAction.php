@@ -14,7 +14,8 @@ use Modules\Users\Interfaces\HTTP\AuthTemplate;
 
 /**
  * Password reset request — GET renders the "forgot password" form, POST hands
- * a link to the configured mailer (dev log, or none).
+ * a link to the configured mailer (dev log, or none), subject to the reset
+ * limits in `PasswordResetService` (per address and per target).
  *
  * The success page names `storage/logs/app.log` only where the link is really
  * there: pointing a production visitor at a log file that holds nothing (or,
@@ -47,9 +48,22 @@ final class PasswordResetRequestAction
         // Always generate a token (and hand it to the mailer) regardless of
         // whether the account exists — avoids user enumeration. If no account
         // exists, we still show the success message.
+        //
+        // The one exception is the rate limit (audit finding #6), and it is
+        // keyed on the caller's own inputs: the address they connect from and
+        // the address they typed. A 429 therefore answers identically for a
+        // registered and an unregistered email, so it adds no enumeration
+        // oracle to the flow.
         /** @var PasswordResetService $resets */
         $resets = AuthServices::resets();
-        $resets->requestReset(is_string($email) ? $email : '');
+        $result = $resets->requestReset(is_string($email) ? $email : '', $request->getClientIp());
+
+        if (!$result['ok']) {
+            return ThrottledResponse::render(
+                $result['retryAfter'],
+                'Too many password reset requests. Please try again later.',
+            );
+        }
 
         return AuthTemplate::render(
             'Check your email',

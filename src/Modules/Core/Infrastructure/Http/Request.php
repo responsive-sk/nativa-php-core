@@ -180,6 +180,60 @@ final class Request
     }
 
     /**
+     * Does the given URL name the host this request was addressed to?
+     *
+     * The rule `CsrfMiddleware`'s Origin/Referer cross-check needs (audit
+     * finding #7), stated once here rather than parsed a second time in the
+     * middleware. Read the rules carefully, because this predicate is written
+     * to be wrong in the direction that does NOT refuse a legitimate client:
+     *
+     *  - **Only the host is compared.** A page on `http://host` posting to
+     *    `https://host` is same-site, and so is a different port: a scheme or
+     *    port mismatch says nothing about who launched the request, and the
+     *    cookie flags (not this check) are what bind a session to a scheme.
+     *    Ports are stripped on both sides, which is also what `Host:`/`Origin`
+     *    must agree on behind a dev server on `:8000`.
+     *  - **Something that does not parse as a URL with a host is NOT this
+     *    site.** `Origin: null` (a sandboxed or opaque document) and a
+     *    malformed header both land here, and a browser never sends either for
+     *    an ordinary on-site form — so the caller fails closed on them.
+     *
+     * The site's own host comes from the `Host` header, guarded exactly as
+     * `absoluteUrl()` guards it: with `TRUSTED_HOSTS` set, a Host that is not
+     * on the allowlist resolves to the first allowed name instead of being
+     * taken at its word, so a forged Host cannot make a cross-site request
+     * describe itself as same-site. Both callers compare through the same
+     * `trustedHosts()`/`isTrustedHost()` pair, so the two cannot drift.
+     */
+    public function isSameOrigin(string $url): bool
+    {
+        $originHost = parse_url(trim($url), PHP_URL_HOST);
+
+        if (!is_string($originHost) || '' === $originHost) {
+            return false;
+        }
+
+        return strtolower($originHost) === $this->requestHost();
+    }
+
+    /**
+     * The host this request was addressed to, lowercase and port-free.
+     */
+    private function requestHost(): string
+    {
+        $host = $this->header('host');
+        $host = is_string($host) && '' !== trim($host) ? trim($host) : 'localhost';
+
+        $allowed = $this->trustedHosts();
+
+        if (null !== $allowed && !$this->isTrustedHost($host, $allowed)) {
+            $host = $allowed[0];
+        }
+
+        return strtolower(trim(explode(':', $host, 2)[0]));
+    }
+
+    /**
      * Resolve the client IP address.
      *
      * Forwarded headers (X-Forwarded-For / X-Real-IP) are spoofable, so they

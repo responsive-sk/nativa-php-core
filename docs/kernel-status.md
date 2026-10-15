@@ -2066,3 +2066,143 @@ against `src/Modules/`, so a catalogue edit alone is invisible to the suite.
 
 ---
 
+# 9 — Password policy, submit throttles, the CSRF origin check (2026-10-16, security-audit findings #3–#8)
+
+This round continued the audit §7/§8 started. The first thing it did was
+re-verify every remaining premise against the code, and that mattered: §8 had
+already caught finding #2's first half being wrong (it claimed the comments
+route had no limiter of its own), so no finding was fixed on its own wording.
+
+| # | Finding as first reported | Re-verified fact | Evidence | Verdict |
+|---|---|---|---|---|
+| 3 | password minimum is 8, baseline is 12 | TRUE — and it lived in **three** places, not one | `AuthService::register()` (`required|min:8|confirmed`), `PasswordResetService::reset()` (same), `Cardboard\…\UsersAction::validate()` (`required|min:8` / `min:8`); the message `'Password must be at least 8 characters.'` typed at all three; `lekalo/modules/users/policies.yaml` said 8 | confirmed, medium |
+| 4 | open registration has no throttle of its own | TRUE — `register()` never touched the injected `RateLimiter`; only the global 60/min/IP middleware bounded it | `AuthService` (no limiter call on the register path; `isLoginAllowed()` is the only use) | confirmed, low-medium |
+| 6 | `/forgot-password` has no per-email throttle | TRUE — no limiter anywhere on the path; each request DELETEs + INSERTs one token row, and a *distinct* address per request grows the table without bound | `PasswordResetRequestAction::submit()` → `PasswordResetService::requestReset()` | confirmed, low-medium |
+| 7 | CSRF is token-only, no Origin/Referer cross-check | TRUE — no `origin`/`referer` read anywhere in the tree | `CsrfMiddleware` (global on POST/PUT/DELETE/PATCH, `hash_equals`, 403 on mismatch) | confirmed, low (defense-in-depth) |
+| 8 | `audit.sh` dies under `set -e`; secrets regex false-positives | TRUE, with a root cause: `((ISSUES++))` returns exit **1** when the counter is 0, so the first branch entered killed the script — exit 1 after one section, no Summary, empty stderr | `.agents/skills/aif-security-checklist/scripts/audit.sh`, measured run | confirmed, tooling |
+
+Sweep of the same surface (nothing else found): the public POST surface is
+`/register`, `/login`, `/logout`, `/forgot-password`, `/reset-password`,
+`/blog/{slug}/comments`, `/blog/{slug}/inline` (guarded by `ArticleWriteGuard`)
+and `/questions/{type}/{slug}`; every other POST route sits behind the auth gate.
+Login ✓ (5/min per IP+email), questions ✓ (5/300 s per IP), comments ✓ (10/60 s
+per IP+slug) + honeypot ✓ (§8), registration and reset requests ✗ → fixed here.
+`/reset-password` needs none: a 256-bit token is not brute-forcible and the
+global middleware bounds the request rate (documented, not silently skipped).
+
+## The password minimum: 8 → 12, and one owner for it
+
+`Modules\Security\Domain\PasswordPolicy` is now the only place the number
+appears (`MIN_LENGTH = 12`, the OWASP ASVS 2.1.1 baseline), with `minRule()` and
+`tooShortMessage()` derived from it. The three call sites compose
+`'required|' . PasswordPolicy::minRule() . '|confirmed'` and the message, so an
+admin form can no longer accept what the public register refuses — which is what
+"four copies of one policy" meant in practice.
+
+**The owner is `Security`, not `Users`, and the ledger is why.**
+`Cardboard`'s closure is `Outbox, Security, Settings, Validation` — `Users` is
+NOT in it, even though `Cardboard` reaches `Users` classes through inline FQCNs
+and `CardboardServices::need()`. Both consumers already depend on `Security`, so
+the constant costs no new edge; anywhere else would have added one (visible or
+invisible). The coupling ledger stays empty.
+
+Length is the ONLY rule owned there, on purpose: NIST SP 800-63B and this tree's
+dislike of decorative controls agree that a length floor is what a policy can
+honestly demand, while character-class rules buy lockouts and a support burden.
+
+## The two unthrottled public writes
+
+`AuthService::register()` gained `$ip` and a per-address limit (5 accounts per
+hour), `PasswordResetService::requestReset()` gained `$ip` and now returns
+`array{ok, retryAfter}` (`CommentsService::submit()`'s shape). Both answer
+**429 + `Retry-After`** through one new `ThrottledResponse`, deliberately with no
+`Location` header — a refusal that also redirects has its body discarded by
+`Response::send()`, so the client never reads why (`QuestionSubmitAction::refusal()`
+is the sibling precedent).
+
+Three properties worth naming, because each is a decision and not an accident:
+
+- **The registration limit counts ACCOUNTS CREATED, not attempts.** It is asked
+  after validation, immediately before the insert, so an honest reader who
+  mistypes a password five times is not locked out of the form; mass account
+  creation is bounded either way. Raw request rate stays the global middleware's
+  business.
+- **The reset-request limit is per caller *and* per target** (5/900 s per
+  address, 3/3600 s per address-like key). An endpoint that mints a token for
+  any address it is handed is otherwise a free amplifier for mail — or, in a
+  tree with no transport, for log lines. It is asked BEFORE the token row is
+  rewritten, so a refused request cannot invalidate the link the reader already
+  holds.
+- **The refusal says nothing about who exists.** Both keys are the caller's own
+  inputs — the address they connect from, the address they typed — never whether
+  an account exists, so a 429 answers identically for a registered and an
+  unregistered email. The non-enumerability of the flow survives the throttle.
+
+`Modules\Security\Domain\LocalClient` is the one owner of "the local developer
+is not a spammer" (`isLoopback()`), and `CommentsService`'s private list folded
+into it — three module limiters would otherwise have spelled the same three
+addresses. `RateLimitMiddleware` keeps its own const, because Core may not name a
+module; that constraint is worth more than one shared constant.
+
+## The CSRF origin check (#7)
+
+`Request::isSameOrigin(string $url)` compares a URL's HOST against the request's
+`Host`, guarded exactly as `absoluteUrl()` guards it (with `TRUSTED_HOSTS` set,
+an unrecognised Host resolves to the first allowed name, so a forged Host cannot
+make a cross-site request describe itself as same-site). `CsrfMiddleware` calls
+it with `Origin`, falling back to `Referer`.
+
+The order inside `handle()` is token **first**, then origin — so a request
+without a token is refused with the same 403 and the same message as before the
+check existed, and no existing probe or integration changes meaning. Neither
+header present → token-only: `curl`, a server-to-server call, a proxy that strips
+both. `Origin: null` (a sandboxed document) and a malformed value name no host,
+so they fail closed.
+
+## Found by the sweep, deliberately not changed
+
+`Request::getClientIp()` walks `X-Forwarded-For` from the RIGHTMOST hop and
+returns the first address that is not a trusted proxy — the correct shape, a
+spoofed leftmost entry is ignored. The one deployment where the loopback
+exemption's reasoning lapses is worth stating: a reverse proxy **on the same
+host** that is not listed in `TRUSTED_PROXIES` and sets no `X-Forwarded-For`
+makes every request arrive from `127.0.0.1`, and the exemption then applies
+production-wide — to the global middleware and every module limiter alike. The
+answer is configuration, not code, so `.env.example` now says it next to
+`TRUSTED_PROXIES` (an INFO item, no behaviour change).
+
+## The audit script, and the vendored-copy drift
+
+`.agents/skills/aif-security-checklist/scripts/audit.sh` (4 increments →
+`ISSUES=$((ISSUES + 1))`, and the secrets pattern requires a quoted literal of
+8+ characters) now reaches its own Summary: exit 0, six sections, empty stderr —
+measured before/after on the same tree. The overshoot in the first attempt is
+worth recording: `-i` was tried to catch camelCase `$apiKey`, and it re-flagged
+`INVALID_TOKEN = 'passwords.token'`-style constants in `vendor/` (three in this
+tree), so the camelCase spelling was added to the alternation instead. Probe on
+a synthetic file: the old pattern reported 4 lines (3 of them code), the new one
+reports exactly the 2 real literals.
+
+`.agents/` is vendored, hash-managed tooling (gitignored, recorded in
+`.ai-factory.json`). The fix is **local and the recorded hash is NOT rewritten**
+— rewriting it would falsify the "pristine installed copy" record — so a future
+`$aif` may flag or re-install the file. That consequence is the price of fixing
+it here rather than upstream.
+
+## Verified (2026-10-16, audit findings #3–#8, all exit 0)
+
+| Gate | Result |
+|---|---|
+| `composer test` (full suite) | 310 tests, 1296 assertions, 1 skip (310 vs 293 at §8: the new policy/throttle/CSRF/USERS cases) |
+| `composer phpstan` | level 9, no errors |
+| `composer cs-fix-dry` | 0 of 92 files fixable (the gate's paths: `src/Modules/Core`, `src/Modules/Database`, `src/Themes`, `bin`, `public`, `tests`) |
+| php-cs-fixer on the touched module files (informational — modules are outside the config's paths) | my 6 files clean; 7 pre-existing `modules/Users`+`modules/Comments` files still unfixable-clean |
+| `php -l` on every changed/new file | clean |
+| `make lint` | exit 0 |
+| `make lekalo-check` | 23 rules, 0 errors, 0 warnings; `lock --check` unchanged (`sha256:e77647f7…`) — the lock does not cover descriptions/`applies_to`, so the policy edit moved no hash |
+| `make extract-check` | OK — 222 identical, **66** recorded divergences (two new `DIVERGED` lines in `bin/build/kernel-divergence.txt` for `Request.php` and `CsrfMiddleware.php`) |
+| live HTTP, `php -S 127.0.0.1:8199` (fresh, `APP_ENV=production`, real session + real token from `GET /register`) | cross-site `Origin` + **valid** token → 403 `Cross-site request rejected`; same-origin `Origin` + token → 200 (and the 12-character policy message); no token + cross-site → 403 `CSRF token validation failed` (**token decided first**); cross-site `Referer` with no `Origin` → 403; **neither header + token → 200**; `Origin: null` → 403; `storage/data/users.db` unchanged (no account created by any probe) |
+| live throttle probe through the REAL actions, synthetic non-loopback `REMOTE_ADDR`, temp DBs | register: 5 → 302, 6th → **429, `Retry-After: 3599`**, exactly 5 rows stored; reset per target from four different callers: 3 → 200, 4th → **429, `Retry-After: 3600`**; reset per caller: 5 → 200, 6th → **429, `Retry-After: 900`**; loopback: 7 of 7 registrations accepted |
+| mutation checks (5, each reverted) | hardcoding `min:8` in `register()` → `AuthServiceTest:140` fails; `LocalClient::isLoopback()` → `false` → 2 failures (`AuthServiceTest`, `PasswordResetServiceTest:193`); registration limiter → `true` → `AuthServiceTest:166` fails; `FORGOT_EMAIL_LIMIT = 30` → `PasswordResetServiceTest:179` fails; disabling the CSRF cross-check → 5 `CsrfMiddlewareTest` failures (the cross-site/`null` cases), with the same-origin, `Referer`, absent-header and token cases still green |
+| module install trap (§7/§8) | `bin/cms module:remove <M> --force` + `module:add <M>` for Users, Security, Cardboard, Comments; `diff -rq modules/<M> src/Modules/<M>` empty for all four |
+| probe cleanup | the `php -S` probe server stopped; both probe scripts live in `/tmp`, no probe rows in `storage/data/*.db`, `storage/logs/app.log` untouched (`APP_ENV=production` selects the null transport) |

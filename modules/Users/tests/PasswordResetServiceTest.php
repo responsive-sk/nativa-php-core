@@ -5,6 +5,8 @@ declare(strict_types = 1);
 namespace Modules\Users\Tests;
 
 use Modules\Security\Application\Services\PasswordHasher;
+use Modules\Security\Application\Services\RateLimiter;
+use Modules\Security\Domain\PasswordPolicy;
 use Modules\Users\Application\Services\PasswordResetService;
 use Modules\Users\Infrastructure\Mail\NullPasswordResetMailer;
 use Modules\Users\Infrastructure\Persistence\Repositories\UserRepository;
@@ -83,12 +85,14 @@ final class PasswordResetServiceTest extends TestCase
 
         // This file is about reset()'s answers, so the delivery port is the one
         // that delivers nothing: what a mailer does with a link is covered by
-        // PasswordResetMailerTest (audit finding #1).
+        // PasswordResetMailerTest (audit finding #1). The limiter is real — the
+        // service's other job (finding #6) is bounded by it.
         $this->resets = new PasswordResetService(
             $this->pdo,
             $users,
             $this->hasher,
             new NullPasswordResetMailer(),
+            new RateLimiter($this->pdo),
         );
     }
 
@@ -96,7 +100,7 @@ final class PasswordResetServiceTest extends TestCase
     public function shortPasswordReportsLegacyMessage(): void
     {
         $this->assertSame(
-            ['Password must be at least 8 characters.'],
+            [PasswordPolicy::tooShortMessage()],
             $this->resets->reset('whatever-token', 'short', 'short'),
         );
     }
@@ -105,7 +109,7 @@ final class PasswordResetServiceTest extends TestCase
     public function emptyPasswordReportsLegacyMessageOnce(): void
     {
         $this->assertSame(
-            ['Password must be at least 8 characters.'],
+            [PasswordPolicy::tooShortMessage()],
             $this->resets->reset('whatever-token', '', ''),
         );
     }
@@ -115,7 +119,7 @@ final class PasswordResetServiceTest extends TestCase
     {
         $this->assertSame(
             ['Password confirmation does not match.'],
-            $this->resets->reset('whatever-token', 'long-enough', 'different'),
+            $this->resets->reset('whatever-token', 'long-enough-pw', 'different'),
         );
     }
 
@@ -124,7 +128,7 @@ final class PasswordResetServiceTest extends TestCase
     {
         $this->assertSame(
             ['This reset link is invalid or has expired.'],
-            $this->resets->reset('no-such-token', 'long-enough', 'long-enough'),
+            $this->resets->reset('no-such-token', 'long-enough-pw', 'long-enough-pw'),
         );
     }
 
@@ -151,5 +155,42 @@ final class PasswordResetServiceTest extends TestCase
             ['This reset link is invalid or has expired.'],
             $this->resets->reset($token, 'another-pass', 'another-pass'),
         );
+    }
+
+    /**
+     * The per-TARGET limit (audit finding #6): one address may be mailed three
+     * times an hour. Four DIFFERENT callers — so the per-caller key never
+     * trips — still cannot aim more than three requests at the same inbox,
+     * which is what stops the endpoint being an amplifier for somebody else's
+     * address.
+     */
+    #[Test]
+    public function oneAddressMayBeTargetedThreeTimesAnHour(): void
+    {
+        for ($i = 1; $i <= 3; $i++) {
+            $result = $this->resets->requestReset('eva@example.test', '203.0.113.' . $i);
+
+            $this->assertTrue($result['ok'], 'request ' . $i . ' of 3 for the same address must be allowed');
+            $this->assertSame(0, $result['retryAfter']);
+        }
+
+        $refused = $this->resets->requestReset('eva@example.test', '203.0.113.9');
+
+        $this->assertFalse($refused['ok'], 'the fourth request for one address must be refused');
+        $this->assertGreaterThan(3500, $refused['retryAfter'], 'the refusal must carry the per-address window');
+    }
+
+    /**
+     * The same three requests from the local address never trip: the developer
+     * exercising the form is not the abuse the limit bounds (LocalClient).
+     */
+    #[Test]
+    public function theLocalAddressIsNeverTargetLimited(): void
+    {
+        for ($i = 1; $i <= 5; $i++) {
+            $result = $this->resets->requestReset('eva@example.test', '127.0.0.1');
+
+            $this->assertTrue($result['ok'], 'request ' . $i . ' from the local address must be allowed');
+        }
     }
 }

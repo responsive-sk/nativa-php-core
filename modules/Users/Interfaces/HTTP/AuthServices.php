@@ -54,6 +54,7 @@ final class AuthServices
                 new UserRepository($pdo),
                 new PasswordHasher(),
                 PasswordResetMailerFactory::create(),
+                new RateLimiter($pdo),
             );
         }
 
