@@ -59,8 +59,11 @@ final class ScheduleMetricTest extends TestCase
     {
         $schedule = new Schedule();
         $schedule->call(static fn (): null => null)->everyMinute()->description('due-now');
-        // Midnight-only: not due at any daytime run.
-        $schedule->call(static fn (): null => null)->daily()->description('later');
+        // "Feb 30" — an expression no clock reaches, so the due count cannot
+        // drift with the wall time. `daily()` reads innocent but is due at
+        // 00:xx, where it turns the card's value into a third entry and moves
+        // the assertion below; a fixture must not depend on when it runs.
+        $schedule->call(static fn (): null => null)->cron('0 0 30 2 *')->description('later');
         $guarded = $schedule->call(static fn (): null => null)
             ->everyMinute()->description('guarded')->withoutOverlapping(60);
 
@@ -79,10 +82,12 @@ final class ScheduleMetricTest extends TestCase
         $card = $cards[0];
         $this->assertSame('schedule', $card->id);
         $this->assertSame('/mark/schedule', $card->actions[0]->href ?? null);
-        // everyMinute is due at any wall time; daily (midnight) is due
-        // only at 00:xx — so the value is 1 or 2 depending on the clock.
-        // The subtitle is fully deterministic: 3 entries, 1 held.
-        $this->assertContains($card->value, [1, 2]);
+        // Both everyMinute entries are due at any wall time: the overlap
+        // lock moves the guarded one into the subtitle's "1 overlap-held",
+        // it does not drop it from the due count (ScheduleMetric counts
+        // `isDue` and `held` independently). The third entry is never due,
+        // so the value is exactly 2 — whenever the suite runs.
+        $this->assertSame(2, $card->value);
         $this->assertSame('3 entries · 1 overlap-held', $card->subtitle);
         $this->assertNull($card->trend);
     }

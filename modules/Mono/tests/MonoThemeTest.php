@@ -328,8 +328,16 @@ final class MonoThemeTest extends TestCase
         );
     }
 
+    /**
+     * The slider's photography is the committed demo art (`public/demo/*.jpg`),
+     * cycled by slide position — every stage ships a photo, so the slider
+     * reads photographic whatever storage publishes. An article's own cover
+     * never drives it; the action's explicit heroSrc still wins on slide 1.
+     * Load intent ships with the markup: the opening slide is the LCP element
+     * (high priority), the off-stage slides load late.
+     */
     #[Test]
-    public function homepageSlidesCarryTintsAndShadeOnlyWithImage(): void
+    public function homepageSlidesCarryTintsAndDemoPhotography(): void
     {
         $html = (new MonoTheme())->homepage(self::homepageContext());
 
@@ -337,15 +345,32 @@ final class MonoThemeTest extends TestCase
         $this->assertSame(3, substr_count($html, '--mo-slide-bg-dark:'), 'Every slide carries its dark tint — mono is dark-first.');
         $this->assertStringContainsString('mo-slide__shade', $html, 'Imagery ships its legibility shade.');
 
-        $bare = (new MonoTheme())->homepage(PageContext::forHomepage(
+        $this->assertSame(3, substr_count($html, '<img class="mo-slide__bg"'), 'Every slide ships a photo — the demo art is the slider imagery.');
+        $this->assertStringContainsString('src="https://example.test/hero.webp"', $html, 'The action\'s explicit hero still wins on slide 1.');
+        $this->assertStringContainsString('src="/demo/hero-2.jpg"', $html, 'The case slides follow the demo frames in position order.');
+        $this->assertStringContainsString('src="/demo/hero-3.jpg"', $html);
+        $this->assertSame(1, substr_count($html, 'fetchpriority="high"'), 'Only the opening slide is the LCP element.');
+        $this->assertSame(2, substr_count($html, 'loading="lazy"'), 'The off-stage case slides load late — never on the critical path.');
+
+        // Without an action-passed hero, slide 1 opens on the demo frame —
+        // and an article's own cover still does not reach the stage.
+        $demo = (new MonoTheme())->homepage(PageContext::forHomepage(
             Request::create('GET', '/'),
             'mono',
             'en',
             copy: ['title' => 'Hero'],
-            latestArticles: [self::article('a', 'A')],
+            latestArticles: [self::article('a', 'A', '/uploads/a.jpg')],
         ));
 
-        $this->assertStringNotContainsString('mo-slide__bg', $bare, 'No source, no <img> — the tint carries the slide.');
+        $this->assertStringContainsString('src="/demo/hero-1.jpg"', $demo, 'The kernel home passes no heroSrc, so slide 1 opens on the demo frame.');
+        $this->assertStringContainsString('src="/demo/hero-2.jpg"', $demo, 'Slide 2 follows in position order.');
+        $this->assertStringNotContainsString('/uploads/a.jpg', $demo, 'An article cover is not slider art — it never drives the stage.');
+
+        // A slider that points at a file the docroot does not ship renders
+        // tints and a broken-image icon: the frames must exist.
+        foreach (['/demo/hero-1.jpg', '/demo/hero-2.jpg', '/demo/hero-3.jpg'] as $src) {
+            $this->assertFileExists(APP_BASE_PATH . '/public' . $src, 'The slider frame is missing from the docroot: ' . $src);
+        }
     }
 
     #[Test]

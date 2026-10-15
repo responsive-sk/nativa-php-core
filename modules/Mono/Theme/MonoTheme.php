@@ -207,6 +207,23 @@ final class MonoTheme implements ThemeModule
     ];
 
     /**
+     * The slider's photography: committed demo art served from the docroot
+     * (`public/demo/*.jpg`), cycled by slide position — slide 1 opens on
+     * index 0, the case slides follow. Every slide ships one, so the stage
+     * reads photographic whatever storage publishes (an article's own cover
+     * is not slider art). Three files reused across every slide: ~240 KiB
+     * fetched once — the budget the single 157 KiB hero jpg broke when it
+     * landed alone on the LCP slide.
+     *
+     * @var list<string>
+     */
+    private const array SLIDE_IMAGES = [
+        '/demo/hero-1.jpg',
+        '/demo/hero-2.jpg',
+        '/demo/hero-3.jpg',
+    ];
+
+    /**
      * @param array<array-key, mixed> $articles
      */
     private function caseSlides(PageContext $context, array $articles): string
@@ -216,8 +233,12 @@ final class MonoTheme implements ThemeModule
         $i = 1;
 
         foreach (self::pairs($articles) as $pair) {
-            $html .= '<li class="mo-slide"' . self::tint($i++) . '>'
-                . self::slideBg($pair['image'], $pair['title'])
+            // Demo art by position: the tint index and the photo index move
+            // together, so every slide keeps its own pair whatever storage
+            // publishes — an article's cover never drives the stage.
+            $index = $i++;
+            $html .= '<li class="mo-slide"' . self::tint($index) . '>'
+                . self::slideBg(self::SLIDE_IMAGES[$index % count(self::SLIDE_IMAGES)], $pair['title'])
                 . '<div class="mo-container">'
                 . '<p class="mo-slide__kicker">' . self::e($service) . '</p>'
                 . '<h2 class="mo-slide__title mo-is-visible">' . self::e($pair['title']) . '</h2>'
@@ -236,11 +257,23 @@ final class MonoTheme implements ThemeModule
         $cta = $context->copy['cta'] ?? 'Discover more';
         $href = $context->blogHref ?? '/blog';
 
-        // `mo-slide--hero` stages the editorial glow: slide 1 carries no
-        // photo (the kernel home passes no heroSrc), so without it the
-        // opening stage is a flat tint next to photographic case slides.
+        // The action's explicit hero still wins — that is the action asking
+        // for one specific photo (and its srcset travels with it). The kernel
+        // home passes none, so slide 1 opens on the demo art like every stage
+        // after it: never a flat tint, never tied to what storage publishes.
+        $heroSrc = $context->heroSrc;
+        $heroSrcset = $context->heroSrcset;
+
+        if (null === $heroSrc || '' === $heroSrc) {
+            $heroSrc = self::SLIDE_IMAGES[0];
+            $heroSrcset = null;
+        }
+
+        // `mo-slide--hero` stages the editorial glow behind the photo: it
+        // carries the opening frame until the jpg decodes and shows through
+        // the shade's transparent side.
         $html = '<li class="mo-slide mo-slide--active mo-slide--hero"' . self::tint(0) . '>'
-            . self::slideBg($context->heroSrc, $title, $context->heroSrcset)
+            . self::slideBg($heroSrc, $title, $heroSrcset, true)
             . '<div class="mo-container">'
             . '<h1 class="mo-slide__title mo-is-visible">' . self::e($title) . '</h1>';
 
@@ -270,7 +303,7 @@ final class MonoTheme implements ThemeModule
      * no source. `alt` carries the slide headline — a background with no
      * `<img>` alternative is invisible to assistive tech.
      */
-    private static function slideBg(?string $src, string $alt, ?string $srcset = null): string
+    private static function slideBg(?string $src, string $alt, ?string $srcset = null, bool $priority = false): string
     {
         if (null === $src || '' === $src) {
             return '';
@@ -280,7 +313,16 @@ final class MonoTheme implements ThemeModule
             ? ' srcset="' . self::e($srcset) . '"'
             : '';
 
-        return '<img class="mo-slide__bg" src="' . self::e($src) . '"' . $set
+        // The opening slide is the LCP element: fetched now, at high
+        // priority. The rest sit off-stage until the slider rotates, so they
+        // load late — a stacked no-JS render would otherwise pull every
+        // slide's jpg onto the critical path, the cost that dropped the demo
+        // photos the first time.
+        $load = $priority
+            ? ' fetchpriority="high"'
+            : ' loading="lazy" decoding="async"';
+
+        return '<img class="mo-slide__bg" src="' . self::e($src) . '"' . $set . $load
             . ' alt="' . self::e($alt) . '">' . "\n"
             . '<div class="mo-slide__shade" aria-hidden="true"></div>';
     }

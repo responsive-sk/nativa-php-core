@@ -88,6 +88,11 @@ WITH_CATALOGUE=false
 #                       The skeleton is recreated below; the databases are
 #                       rebuilt by migrate inside the dist.
 #   ./.lekalo ./.freebuff  local tool caches
+#   ./.agents ./.ai-factory ./.ai-factory.json ./openspec
+#                       internal agent tooling, gitignored for the same reason
+#                       ("never committed, never pushed") and just as little
+#                       deployable: plans, references and the factory config
+#                       are how this tree is BUILT, not how it runs
 #   ./lekalo* ./.gitignore  the Lekalo IR model and the repo's ignore rules are
 #                       how this tree is DEVELOPED, not how it runs
 EXCLUDES=(
@@ -102,6 +107,10 @@ EXCLUDES=(
     "./.env.*"
     "./.lekalo"
     "./.freebuff"
+    "./.agents"
+    "./.ai-factory"
+    "./.ai-factory.json"
+    "./openspec"
     "./lekalo"
     "./lekalo.lock"
     "./.gitignore"
@@ -176,7 +185,12 @@ done
 # never built is not "use the previous build", it is a dist with no stylesheet
 # — reported rather than produced.
 if [ "$SKIP_ASSETS" = true ]; then
-    [ -s "$ROOT/public/dist/moonshine/manifest.json" ] \
+    # ANY built bundle is the signal, not one named bundle: the guard used to
+    # look at moonshine's manifest alone, so a tree that had built only the
+    # two frozen public bundles (mono, griffe) was refused while a tree with
+    # nothing but the admin bundle passed. What the refusal protects is
+    # "never built" — no manifest anywhere.
+    ls "$ROOT"/public/dist/*/manifest.json >/dev/null 2>&1 \
         || fail "--skip-assets needs a built public/dist (run: make assets)" 2
     step "Using the existing public/dist (--skip-assets)"
 else
@@ -338,6 +352,14 @@ else
     check /docs        200
     check /nope        404
 
+    # Static art a page DEPENDS on, not just the routes: the mono home slider
+    # cycles public/demo/*.jpg as its slide photography, so a future exclusion
+    # that dropped them would ship a hero that renders a broken image — and
+    # every status code above would still be green.
+    for frame in hero-1 hero-2 hero-3; do
+        check "/demo/$frame.jpg" 200
+    done
+
     mark_status="$(curl -s -o /dev/null -w '%{http_code}' "http://$SMOKE_HOST:$SMOKE_PORT/mark")"
     echo "    --  /mark → $mark_status (depends on the installed modules; not asserted)"
 
@@ -356,7 +378,11 @@ fi
 step "Setting permissions"
 find "$DIST_DIR" -type d -exec chmod 755 {} \;
 find "$DIST_DIR" -type f -exec chmod 644 {} \;
-[ -f "$DIST_DIR/bin/cms" ] && chmod 755 "$DIST_DIR/bin/cms" || true
+# bin/ is the executable half of the artifact and the blanket 644 above just
+# stripped it: bin/cms manages modules on the server, bin/git-hooks/* are
+# hooks a checkout installs. Restoring one file (the old shape) left the hooks
+# non-executable — every file under bin/ is a program by definition.
+find "$DIST_DIR/bin" -type f -exec chmod 755 {} \;
 
 # --- Summary -----------------------------------------------------------------
 size="$(du -sh "$DIST_DIR" | cut -f1)"
