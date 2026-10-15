@@ -58,7 +58,7 @@ use Modules\Core\Interfaces\HTTP\Middleware\RateLimitMiddleware;
 use Modules\Core\Interfaces\HTTP\Router;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Outbox\Interfaces\HTTP\OutboxServices;
-use Modules\Security\Application\Services\RateLimiter;
+use Modules\Security\Application\Services\RateLimiter as SecurityRateLimiter;
 use Modules\Users\Interfaces\HTTP\AuthWiring;
 
 // ============================================================================
@@ -145,9 +145,16 @@ $kernel = new Kernel($router);
 // can tell "not installed" from "broken" without reading code.
 // ============================================================================
 
-if (class_exists(RateLimiter::class)) {
+// The factory yields an `object` because that is RateLimitMiddleware's own
+// declared shape (`\Closure(): object`) — its product is verified at runtime
+// by isLimiter(), never trusted at compile time. Nothing about the module's
+// class appears in a TYPE position here on purpose: a class_exists guard
+// protects the `new` below, but a return-type annotation is resolved
+// regardless of any guard, which is exactly what a kernel-only checkout
+// (no Modules\Security on disk) caught.
+if (class_exists(SecurityRateLimiter::class)) {
     $kernel->addMiddleware(new RateLimitMiddleware(
-        static fn (): RateLimiter => new RateLimiter(
+        static fn (): object => new SecurityRateLimiter(
             DatabaseConnectionManager::instance()->connection('users'),
         ),
     ));
