@@ -9,6 +9,10 @@ parameters:
     paths:
         - src/Modules/Core
         - src/Modules/Database
+        # The kernel's module tooling: committed kernel code bin/cms ships,
+        # so level 9 must keep covering it — excluding it would silently
+        # drop 26 KB of shipped code from the gate.
+        - src/Modules/Tooling
         - src/Themes
         - public/index.php
         - bin/cms

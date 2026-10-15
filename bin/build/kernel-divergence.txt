@@ -71,10 +71,7 @@ OWNED src/Modules/Core/Domain/AuthIdentity.php # auth port (Boot 5)
 OWNED src/Modules/Core/Infrastructure/Attributes/AsShellContextProvider.php # shell port (Boot 3)
 OWNED src/Modules/Core/Infrastructure/Attributes/AsAuthProvider.php # auth port (Boot 5)
 OWNED src/Modules/Core/Application/Services/ShellContextProviderRegistry.php # shell port (Boot 3)
-OWNED src/Modules/Core/Application/Services/AuthProviderRegistry.php # auth port (Boot 5)
-OWNED src/Modules/Core/Application/Services/ModuleCatalog.php # module catalogue (catalog task)
-OWNED src/Modules/Core/Application/Services/ModuleManifest.php # module catalogue (catalog task)
-OWNED src/Modules/Core/Application/Services/ModuleInstaller.php # lifecycle service (Boot 10)
+OWNED src/Modules/Tooling # module catalogue + lifecycle, moved out of Core/Application/Services (bin/cms ships it; born here, never upstream)
 OWNED src/Modules/Core/Domain/Contracts/RateLimiter.php # limiter shape the middleware guards (Boot 11)
 OWNED tests # kernel-native harness (Boot 10); extraction adopts it, not the reverse
 OWNED docs # kernel status log lives here
@@ -82,6 +79,10 @@ OWNED bin/build # this script and this record (generation never emits them)
 #
 # --- Dropped: upstream-only, moved out on purpose --------------------------------
 DROPPED src/Modules/Core/Interfaces/CLI/Command/SeedCommand.php # Boot 8 (M): seed belongs to Users + Security
+DROPPED src/Modules/Core/Application/Services/ServiceContainer.php # kernel contracts: dead service container, no `new`/`::`/import anywhere
+DROPPED src/Modules/Core/Application/Events/EventDispatcher.php # kernel contracts: dead, referenced only by the dead ServiceContainer
+DROPPED src/Modules/Core/Interfaces/CLI/Command/MigrateCommand.php # kernel contracts: dead symfony command (bin/cms migrates through DatabaseMigrator)
+DROPPED src/Modules/Core/Interfaces/CLI/Command/ServeCommand.php # kernel contracts: dead symfony command, no `serve` branch anywhere
 DROPPED src/Modules/Core/Interfaces/HTTP/Actions/ServeUploadedFileAction.php # Boot 7 (M): serving uploads is Media's route
 DROPPED src/Modules/Core/Domain/Contracts/MetricContract.php # Boot 9: metric subsystem deleted whole
 DROPPED src/Modules/Core/Infrastructure/Attributes/AsMetricProvider.php # Boot 9: metric subsystem deleted whole

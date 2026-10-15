@@ -58,8 +58,17 @@ return (new Config())
         'concat_space' => ['spacing' => 'one'],
         'declare_equal_normalize' => ['space' => 'single'],
         'declare_strict_types' => true,
+        // `import_symbols => false` is deliberate and load-bearing, not a
+        // style preference: it stops this rule from PULLING a `use` statement
+        // into files that spell a fully-qualified name inline on purpose.
+        // RateLimitMiddleware.php calls Modules\Outbox through inline FQCNs
+        // behind a class_exists() guard precisely so that no `use Modules\…`
+        // import exists for KernelCouplingTest to count as a kernel->module
+        // edge — with `true` this rule re-adds those imports and turns a green
+        // gate red for a stylistic gain. Namespaces, aliases and type
+        // positions are still normalised (leading_backslash stays on).
         'fully_qualified_strict_types' => [
-            'import_symbols' => true,
+            'import_symbols' => false,
             'leading_backslash_in_global_namespace' => true,
         ],
         'heredoc_to_nowdoc' => true,

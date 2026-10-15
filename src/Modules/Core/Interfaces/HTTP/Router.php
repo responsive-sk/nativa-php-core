@@ -243,16 +243,19 @@ final class Router implements RouterInterface
 
             // A file that cannot declare a route is never loaded. This scan
             // used to class_exists() every class under the action dirs, which
-            // made every class's PARENT a load-time dependency of ROUTING — and
-            // the kernel CORE itself ships three such classes:
-            // `MigrateCommand`, `ServeCommand` and the rest of
-            // `Interfaces/CLI/Command/` extend symfony/console's Command, which
-            // is a DEV-only dependency (see composer.json). Measured on Boot 19
-            // in a vendor-less checkout of this very tree: `/` answered **500**
+            // made every class's PARENT a load-time dependency of ROUTING —
+            // and $actionDirs is the whole of src/Modules, so its route-less
+            // files are exactly the ones that must not be loaded: `modules/Blog`'s
+            // GenerateImagesCommand and `modules/Outbox`'s ProcessOutboxCommand
+            // extend symfony/console's Command, a DEV-only dependency (see
+            // composer.json), and neither declares a route. Boot 19 caught it in
+            // a vendor-less checkout of this very tree: `/` answered **500**
             // with `Class "Symfony\Component\Console\Command\Command" not found
             // in .../ServeCommand.php:24` — every request, kernel-only or not,
             // which is the opposite of the zero-dependency bootstrap this tree
-            // documents.
+            // documents. The kernel's own route-less commands that produced
+            // that measurement are deleted as dead code; the guard is not,
+            // because the module-level ones named above are its live case.
             if (!$this->mayDeclareRoute($file->getPathname())) {
                 continue;
             }

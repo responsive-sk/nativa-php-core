@@ -4,8 +4,8 @@ declare(strict_types = 1);
 
 namespace Tests\Discovery;
 
-use Modules\Core\Application\Services\ModuleInstaller;
 use Modules\Core\Application\Services\ShellContextProviderRegistry;
+use Modules\Tooling\ModuleInstaller;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;

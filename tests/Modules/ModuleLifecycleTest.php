@@ -4,10 +4,10 @@ declare(strict_types = 1);
 
 namespace Tests\Modules;
 
-use Modules\Core\Application\Services\ModuleInstaller;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Interfaces\HTTP\Kernel;
 use Modules\Core\Interfaces\HTTP\Router;
+use Modules\Tooling\ModuleInstaller;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;

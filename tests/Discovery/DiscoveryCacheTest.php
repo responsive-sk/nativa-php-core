@@ -5,10 +5,10 @@ declare(strict_types = 1);
 namespace Tests\Discovery;
 
 use Modules\Core\Application\Services\DiscoveryCache;
-use Modules\Core\Application\Services\ModuleInstaller;
 use Modules\Core\Interfaces\HTTP\Actions\HomepageAction;
 use Modules\Core\Interfaces\HTTP\Middleware\MiddlewareRegistry;
 use Modules\Core\Interfaces\HTTP\Router;
+use Modules\Tooling\ModuleInstaller;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;

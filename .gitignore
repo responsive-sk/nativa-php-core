@@ -45,6 +45,10 @@
 src/Modules/*
 !src/Modules/Core
 !src/Modules/Database
+# The kernel's module tooling is committed kernel code too, not operator
+# state: bin/cms ships it, so the slice would lose it without this rescue
+# (and the move itself would be invisible to git).
+!src/Modules/Tooling
 
 # Lekalo runtime cache (regenerated, never committed) — same convention as nativa-minimal.
 .lekalo/cache/

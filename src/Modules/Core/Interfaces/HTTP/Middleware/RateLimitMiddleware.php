@@ -9,8 +9,6 @@ use Modules\Core\Domain\Contracts\RateLimiter;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\ContentServices;
-use Modules\Outbox\Domain\SecurityEvents;
-use Modules\Outbox\Interfaces\HTTP\OutboxServices;
 
 /**
  * RateLimitMiddleware — general per-IP request throttling.
@@ -28,7 +26,12 @@ use Modules\Outbox\Interfaces\HTTP\OutboxServices;
  *   outbox is installed: the `class_exists` guard emits through the module's
  *   services when they are here and drops the event when they are not — the
  *   request is answered either way, never fataled. No `use` statement names
- *   the module, so the ledger stays clean while the behaviour survives.
+ *   the module, so the ledger stays clean while the behaviour survives —
+ *   and that is why both FQCNs are written out at the call site instead of
+ *   imported. An import would be a second, quieter way to say the same thing:
+ *   it compiles whether or not the branch ever runs, and `KernelCouplingTest`
+ *   counts it as an edge regardless of the guard. Keep the strings inline;
+ *   adding the `use` back is a green test turning red for a stylistic gain.
  * - LIMITER. The factory product is duck-typed, not type-hinted: the limiter
  *   itself is a kernel obligation, so the middleware degrades (passes the
  *   request through un-limited) rather than disappearing when the factory
@@ -104,14 +107,14 @@ final readonly class RateLimitMiddleware implements MiddlewareInterface
      */
     private function recordTrip(string $key, Request $request): void
     {
-        if (!class_exists(OutboxServices::class)
-            || !class_exists(SecurityEvents::class)
+        if (!class_exists(\Modules\Outbox\Interfaces\HTTP\OutboxServices::class)
+            || !class_exists(\Modules\Outbox\Domain\SecurityEvents::class)
         ) {
             return;
         }
 
-        OutboxServices::securityEvent(
-            SecurityEvents::RATELIMIT_TRIPPED,
+        \Modules\Outbox\Interfaces\HTTP\OutboxServices::securityEvent(
+            \Modules\Outbox\Domain\SecurityEvents::RATELIMIT_TRIPPED,
             ['key' => $key, 'scope' => $request->getPathInfo(), 'ip' => $request->getClientIp()],
         );
     }

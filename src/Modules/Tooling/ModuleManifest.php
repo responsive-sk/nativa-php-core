@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Core\Application\Services;
+namespace Modules\Tooling;
 
 /**
  * ModuleManifest — what one module contributes, as read from its own files.

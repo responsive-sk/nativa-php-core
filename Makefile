@@ -39,6 +39,14 @@ analyze: ## Run phpstan + rector dry + cs-fixer dry
 	$(COMPOSER) rector-dry
 	$(COMPOSER) cs-fix-dry
 
+##@ Measurement
+# Informational by design: it reports whatever is true and exits 0. The gate on
+# kernel shape is `tests/Architecture/KernelShapeTest` (the concrete allow-list) —
+# this target is where its numbers, docs/kernel-shape.md and the plan all read
+# from one source, so the three cannot drift apart.
+kernel-size: ## Measure the kernel shape (bytes, files, layers, interface/concrete split)
+	@bin/build/kernel-size.sh
+
 ##@ Extraction (task 2.1)
 extract-check: ## Verify this tree against the upstream kernel slice
 	bin/build/extract-kernel.sh --check --minimal-root $(MINIMAL_ROOT)

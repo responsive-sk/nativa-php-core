@@ -194,7 +194,6 @@ narrowed, not closed.
 | `Core/Domain/Contracts/AuthProvider.php` | the port: identity, protected paths, required permission, guest-only paths, event sink |
 | `Core/Domain/AuthIdentity.php` | kernel-owned identity (id, active, permissions) — the User entity never crosses |
 | `Core/Infrastructure/Attributes/AsAuthProvider.php` | the discovery attribute |
-| `Core/Application/Services/AuthProviderRegistry.php` | directory-scan discovery, first provider wins |
 
 **Rewired** — `AuthMiddleware` asks the port (session handling, remember-me
 and the permission table stay the module's; uncovered admin paths still cost
@@ -206,8 +205,9 @@ duck-typed and degrades to pass-through when unusable.
 
 `index.php` is deliberately untouched: with no provider installed there is
 nothing to wire, and an `if` that can never be true here is untestable here.
-The registry IS the mechanism — the composition root wires the middleware
-around `AuthProviderRegistry::first()` when a module arrives.
+The composition root IS the mechanism — it hands `AuthMiddleware` whatever
+`AuthProvider` the installed module supplies, constructor-injected, with no
+kernel registry in between to fall out of step with what is installed.
 
 | Surface | Boot 4 | **Boot 5** | Note |
 |---|---|---|---|
@@ -791,7 +791,10 @@ Sign-in records the attempt into the Outbox; the Outbox's end-of-request
 drain (`OutboxDrain::drain()`) registers only the handler the Outbox module
 can see — the article-publish cache flush. The security handler lives in the
 **Audit** module, because its output is an audit row, and Outbox reaching into
-Audit is the module dependency `ModuleIsolationTest` refuses. Upstream wires
+Audit is the module dependency upstream's `ModuleIsolationTest` refuses — a
+guard that does **not** exist in this tree (`find` over the whole tree: zero
+hits outside `../nativa-minimal`; the kernel half now has one, see "Kernel
+contracts" at the end of this file). Upstream wires
 the pair in its composition root; this tree's `public/index.php` is the
 kernel's half and has "nothing to wire", so the pair was never declared and
 every security event landed in `outbox_messages` as `failed`.
@@ -869,12 +872,14 @@ does for its own tree, on the shape a fresh clone actually has (kernel-only:
 
 `Router` discovery read every file under the action dirs and
 `class_exists()`-ed it, which makes each class's **parent** a load-time
-dependency of *routing* — and the kernel core itself ships three such
-classes (`MigrateCommand`, `ServeCommand`, the rest of
+dependency of *routing* — and at Boot 19 the kernel core itself shipped
+three such classes (`MigrateCommand`, `ServeCommand`, the rest of
 `Interfaces/CLI/Command/`), all extending `symfony/console`, a **dev-only**
 dependency. The divergence record named it as the kernel's one inherited
 defect (`Router.php # upstream task 0.3 loader guard not adopted here; Boot 1
- defect still inherited`).
+ defect still inherited`). Those three are since deleted as dead code — the
+guard is not, because module-level commands still extend symfony/console and
+`$actionDirs` is the whole of `src/Modules`, route-less files included.
 
 **Fixed by porting upstream's guard**: `Router::mayDeclareRoute()` reads the
 file as TEXT and skips anything without a `#[Route(` token before any class is
@@ -1690,3 +1695,126 @@ Cycle discipline (the catalog derives closures from `^use Modules\` lines):
   chrome + `mark` CSS + `Guest` fallback, 0× `CardboardKit` in the HTML,
   0× `[KERNEL] Error`;
 - `module:show Cardboard` routes (6× `/mark/*`) + assets (9× scripts) intact.
+
+# Kernel contracts — the shape that can shrink but not silently grow (2026-10-15)
+
+`src/Modules/Core` + `src/Modules/Database` became a **contract kernel plus a
+minimal runtime**: pure interfaces and their discovery attributes as the surface
+modules build against, a small allow-listed runtime behind it, and nothing in
+the kernel the kernel itself does not use. Size is a consequence, not the
+target — what replaced the old "573 KB" number is a shape with three parts: a
+baseline a script reproduces, an inventory that classifies every file, and an
+allow-list a test fails to grow. Plan: `.ai-factory/plans/feature-kernel-contracts.md`;
+inventory: `docs/kernel-shape.md`.
+
+| | Baseline | After | Movement |
+|---|---:|---:|---:|
+| `Core` + `Database`, `.php` | 338 192 B / 79 files | **301 231 B / 71 files** | −36 961 B / −8 files |
+| Core concrete classes | 67 | **59** | −8 |
+| Core interfaces | 10 | 10 | — (published FQCNs never moved) |
+
+## 1 — Measure before touching anything
+
+`bin/build/kernel-size.sh` + `make kernel-size` print the per-layer bytes, the
+file counts and the interface/concrete split on demand, with `baseline:
+338192 B / 79 files` as a footer so any run diffs against the plan in one line.
+`docs/kernel-shape.md` carries one row per Core file — bytes, layer, type,
+importers, bucket (`contract` / `runtime` / `tooling` / `dead`) — and the bucket
+column is what the shape guard reads as the approval record.
+
+## 2 — The guard that did not exist here
+
+`KernelCouplingTest` + `Tests\Support\KernelCoupling` were **upstream-only**;
+`find`/`grep` found zero hits in this tree, so "no kernel file imports a module"
+was untested. Ported (not copied): the ledger starts **empty**, because this
+tree's target state is zero edges — so the first run failed on the two real ones,
+which is the point (a guard never seen failing has never been seen).
+
+Closed in `RateLimitMiddleware`: the two `use Modules\Outbox\…` imports became
+fully-qualified references at the call site behind the existing `class_exists`
+guard — the security event still records with Outbox installed, the request is
+still answered without it, and the file's own docblock ("No `use` statement
+names the module") is true again. `KERNEL_MODULES` now also carries `Tooling`,
+which both treats tooling → Core as kernel self-talk and makes the scanner walk
+the one directory added after it was written.
+
+## 3 — What the kernel never calls
+
+**11 793 B left outright**, each deletion re-proven by grep rather than inferred:
+
+| File | B | Why |
+|---|---:|---|
+| `Application/Services/ServiceContainer.php` | 2 247 | referenced only by `EventDispatcher`, which referenced only it |
+| `Application/Events/EventDispatcher.php` | 1 069 | see above |
+| `Application/Services/AuthProviderRegistry.php` | 5 366 | named only by a docblock and by prose in this file |
+| `Interfaces/CLI/Command/MigrateCommand.php` | 921 | `bin/cms migrate` runs `DatabaseMigrator` itself; no `Console\Application` exists |
+| `Interfaces/CLI/Command/ServeCommand.php` | 2 190 | no `serve` branch anywhere; symfony/console is a **dev** dependency |
+
+`Router::mayDeclareRoute()` stays: `modules/Blog` and `modules/Outbox` still
+ship route-less symfony commands, and `$actionDirs` is all of `src/Modules`.
+Its comment (and this file's Boot 19 prose, and `ci.yml`) now cite those as the
+live reason rather than the kernel's own, which are deleted.
+
+## 4 — The tooling leaves `Modules\Core`
+
+**26 167 B relocated**, not deleted: `ModuleCatalog`, `ModuleInstaller` and
+`ModuleManifest` now live in `src/Modules/Tooling/` under `Modules\Tooling`.
+They *stay in the exported slice* — `bin/cms` is a `SLICE_FILES` member, so its
+classes must travel with it — which is why the move clears 26 KB from the module
+while the slice total keeps them.
+
+Everything that named them by their old home followed: `.gitignore` (a third
+`!src/Modules/Tooling` negation, or the move is invisible to git), `bin/cms`'s
+three of five kernel imports, the three tests that import `ModuleInstaller`,
+`phpstan.neon` `paths:` (level 9 would otherwise silently drop 26 KB),
+`SLICE_FILES` + an `OWNED src/Modules/Tooling` divergence row, and
+`KERNEL_MODULES` (so `module:list` cannot list it and `module:remove` cannot
+delete it).
+
+Measured:
+
+```
+$ php bin/cms module:list
+Installed (19): Audit, Blog, Cardboard, Comments, Erik, Griffe, KernelTheme,
+Locales, Media, Mono, Outbox, Pages, Questions, Queue, Scheduler, Security,
+Settings, Users, Validation        ← no Tooling
+$ php bin/cms module:remove Tooling
+cms: Module 'Tooling' is the kernel itself — it cannot be removed.   (exit 1)
+```
+
+`Router::scanDirectory()` still walks `src/Modules` and now sees the directory:
+harmless, it carries no `#[Route]`, and `mayDeclareRoute()` skips what cannot
+declare one.
+
+## 5 — Locking the shape
+
+`tests/Architecture/KernelShapeTest.php` — two rules, both proven failing on a
+real violation before being trusted:
+
+1. every `.php` under `src/Modules/Core` is an `interface`, `enum` or `trait`, or
+   a path on `ALLOW_LIST` **that also has its row in `docs/kernel-shape.md`**;
+   unapproved, unreadable, declaration-less and stale rows are all reported with
+   path + layer + where to get approval.
+2. `count(ALLOW_LIST) <= 59` — the ceiling is a separate assertion so raising it
+   is its own red line in review, not a line that hides inside an approval
+   commit.
+
+Both were driven to failure on purpose: a probe class under
+`Application/Services/` reported `UNAPPROVED … (layer Application)`, and deleting
+the `AssetManager` inventory row reported `UNINVENTORIED`. Probes removed.
+
+## Verified (2026-10-15, all exit 0)
+
+| Gate | Result |
+|---|---|
+| `composer test` | 264 tests, 979 assertions, 1 skip |
+| `make lint` | clean |
+| `composer phpstan` | level 9, no errors (incl. `src/Modules/Tooling`) |
+| `composer cs-fix-dry` / `composer rector-dry` | 0 fixable / Rector OK |
+| `make lekalo-check` | 23 rules, 0 errors |
+| `make extract-check` | OK — 224 identical, 64 recorded divergences |
+| `make kernel-size` | 301 231 B / 71 files, delta −36 961 B |
+
+CI's `Extract-check` job is the one gate that cannot run anywhere but here: the
+upstream repo is private (Boot 20).
+
