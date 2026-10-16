@@ -255,14 +255,68 @@ Verified: 45 checks, exit 0 on this tree and again on a fresh `git worktree`
 (catalogue installed there, `storage/` byte-identical afterwards, no
 `smoke-*` file left anywhere); `shellcheck` and `actionlint` clean.
 
+## Boot 30 — the gate reaches the anonymous world, and the workers
+
+Boot 29's gate stopped at the panel: every flow it walked needed an admin
+session. The one mutation a stranger can make — a comment — and the two things
+that consume a queue were measured by nothing but unit tests. Both are in
+`admin-smoke.sh` now: **75 checks, was 45**.
+
+### The public comment form
+
+Walked end to end from the article page, on an article the run created:
+
+| flow | checks |
+|---|---|
+| honeypot | POST with `comment_website` filled → 302, and **no row** (the answer is the very redirect an honest submission gets) |
+| guest submit | POST (name, email, body) → 302; the row exists; `status = 'pending'` |
+| pending | `GET /blog/<slug>` does **not** contain the body — from outside, a pending comment and one that was never submitted are indistinguishable |
+| moderation | `GET /mark/comments` 200 and lists it; `POST …/approve` 302; `status = 'approved'` |
+| published | `GET /blog/<slug>` now contains the body |
+| deleted | `POST …/delete` 302; the row is gone; the body is gone from the page |
+
+### The workers
+
+Delivery is asserted where it is deterministic, and the operator command is
+asserted where it is not — the two are not the same claim:
+
+- **The outbox drain.** Every security event this run records has to have been
+  consumed by the end-of-request drain `public/index.php` registers:
+  `pending = 0`, `failed = 0`, `processed AND processed_at IS NOT NULL ≥ 4`,
+  and — the assertion that gives the row count meaning — at least as many
+  `security.%` **audit rows**, because the handler that consumes exactly those
+  events IS the audit writer. Measured on this run: **7 delivered, 7 audit
+  rows**.
+- **`bin/cms schedule:run`.** The shipped timetable is *stateless* cron
+  (`outbox:drain` on `*/5`, prune daily), so it is due one minute in five. The
+  check is that it exits 0 against this queue and prints its outcome line;
+  asserting delivery here would be asserting the minute, and the delivery is
+  already asserted above.
+- **The Queue module's worker.** This tree ships no producer — measured:
+  `DatabaseQueue::push()` has no call site outside the module's own tests — so
+  the job is pushed through the module's own API (the way the seed block above
+  builds its accounts) and worked by `work()` **in its own process**, which is
+  what a worker is. The handler is deliberately unregistered, so the job
+  travels the real failure path: `UnknownHandlerException` → `failed_jobs` with
+  the error → the panel lists it → `…/failed/{id}/retry` puts it back in `jobs`
+  and empties `failed_jobs` → `…/{id}/delete` drops it, and both state changes
+  leave `queue.%` audit rows. That is the queue module's admin half exercised
+  through the panel rather than only through its repository.
+
+Verified: **75 checks, exit 0** on this tree and again on a fresh `git worktree`
+with no `vendor/` (catalogue installed there, `storage/` byte-for-byte as it
+found it, no `smoke-*` file anywhere, no server left listening); `shellcheck` on
+the script and `actionlint` on the workflow clean.
+
 ## What this round did not close
 
 - **CI `Extract-check` is still NOT RUN** (Boot 20): the upstream checkout is
   private. Unchanged by this round.
-- **Comments' public submit and the Queue worker are still not in the gate.**
-  Boot 29 added the article and page editors (the panel's daily flows); the
-  public comment form (honeypot and all) and a real queued job are the next
-  round's checks, and `bin/build/admin-smoke.sh` is where they go.
+- **The Queue module still has no producer.** The gate can only push through the
+  module's own API because nothing in this tree enqueues a job (`push()` is
+  called by tests and by nothing else). When a real producer lands — mail,
+  notifications — the push step in the gate becomes a real one and this note is
+  deleted rather than reworded.
 - **The refusals that need a forged client address** (the register and reset
   throttles, the rate-limit 429) are not in the gate: loopback is exempt from
   throttling by design, and a `php -S` probe cannot forge `REMOTE_ADDR`. Those
