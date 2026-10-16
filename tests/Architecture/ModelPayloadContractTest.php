@@ -8,8 +8,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * ModelPayloadContractTest — the model's refusal event against the code's one
- * payload vocabulary.
+ * ModelPayloadContractTest — the model's declared payloads against the payloads
+ * the code owns.
  *
  * Measured 2026-10-16, before this round, for `users.authorization_denied`:
  *
@@ -33,6 +33,19 @@ use PHPUnit\Framework\TestCase;
  * resolves the `error_ref`s in `lekalo/authorization.yaml`, and
  * `ModelCatalogueContractTest` compares the model's module SET. Neither opens
  * an event's `payload`.
+ *
+ * The same question was then asked of the ARTICLE events, and the model failed it
+ * in both directions. Measured the same day: `blog.article_published` declared
+ * `slug, locale, published_at` while the one emit site —
+ * `OutboxServices::articleEvent()`, the only place either type is recorded —
+ * builds `['slug' => $slug, 'locale' => $locale]` and carries the acting user as
+ * METADATA (`['actor' => $actor]`). The article's date is front matter, not event
+ * data. And the model declared no event at all for `article.unpublished`, the
+ * other half of the toggle the code has raised from that same call site since it
+ * shipped. Both are declared now, both name their constant, and both are compared
+ * against that literal — the article vocabulary has no `payloadKeys()` to obey,
+ * which is exactly why the MODEL is the side compared to it here rather than an
+ * emit site being compared to a declaration.
  *
  * Deliberately dumb, in the shape of its neighbours, and for a harder reason
  * than theirs: `SecurityEvents` lives in an OPTIONAL module, and `phpstan.neon`
@@ -61,6 +74,12 @@ final class ModelPayloadContractTest extends TestCase
      * The constant the anchor event is recorded as, and the type it carries.
      */
     private const string ANCHOR_CONSTANT = 'AUTHZ_DENIED';
+
+    /**
+     * Where the article vocabulary is declared: two constants and one payload
+     * literal, built by the single call site `articleEvent()`.
+     */
+    private const string ARTICLE_VOCABULARY = 'modules/Outbox/Interfaces/HTTP/OutboxServices.php';
 
     /**
      * Every event the model declares, with its payload key names.
@@ -217,6 +236,145 @@ final class ModelPayloadContractTest extends TestCase
     }
 
     /**
+     * The ARTICLE vocabulary: the two event types `OutboxServices` emits, and the
+     * payload `articleEvent()` builds for them.
+     *
+     * Measured 2026-10-16, why this is here rather than in
+     * `SecurityEventPayloadContractTest` beside it: that file asks whether an emit
+     * site obeys a declaration. `articleEvent()` has no declaration to obey — it
+     * builds `['slug' => $slug, 'locale' => $locale]` inline, once — so there is
+     * nothing to compare a site against, and instead the MODEL is compared to the
+     * one literal. Which matters, because the model declared `slug, locale,
+     * published_at` for `blog.article_published` while the code sends two keys and
+     * no timestamp (the article's date is front matter), and had no event at all
+     * for `article.unpublished`, the other of the two types this file names.
+     *
+     * Only the PAYLOAD literal is read. `['actor' => $actor]` is the metadata
+     * argument beside it, a different channel: the model says so in prose ("the
+     * acting user travelling as the message's metadata") and declares no key for
+     * it, which is a modelling decision rather than a mismatch.
+     *
+     * Read as TEXT for the same reason the other vocabularies are: Outbox is an
+     * optional module and `phpstan.neon` analyses `tests/`.
+     *
+     * @return array{constants: array<string, string>, keys: array<string, list<string>>}
+     */
+    private static function articleVocabulary(): array
+    {
+        $source = self::source(self::ARTICLE_VOCABULARY);
+
+        $constants = [];
+
+        if (preg_match_all("/public const string (ARTICLE_\w+) = '([^']*)';/", $source, $declarations, PREG_SET_ORDER) > 0) {
+            foreach ($declarations as $declaration) {
+                $constants[$declaration[1]] = $declaration[2];
+            }
+        }
+
+        self::assertCount(
+            2,
+            $constants,
+            'OutboxServices should declare exactly the two article event types; this check read'
+            . ' something else and would otherwise compare the model against a wrong vocabulary.',
+        );
+
+        $body = self::methodBody($source, 'articleEvent');
+        $create = strpos($body, 'OutboxMessage::create(');
+
+        self::assertNotFalse($create, 'articleEvent() no longer calls OutboxMessage::create() — read how it sends now.');
+
+        // The FIRST literal after the call is the payload: `create($type, [payload],
+        // [metadata])`. Searched for rather than expected at the next character,
+        // because `$type` sits between the parenthesis and the payload.
+        $literal = strpos($body, '[', $create);
+
+        self::assertNotFalse($literal, 'articleEvent() passes OutboxMessage::create() no payload literal.');
+
+        $payload = self::followingLiteral($body, $literal);
+
+        self::assertNotNull($payload, 'The first literal in articleEvent() is not an array literal.');
+
+        preg_match_all("/'([^']+)'\s*=>/", $payload, $named);
+
+        self::assertNotEmpty($named[1], 'The article payload literal names no keys.');
+
+        $keys = [];
+
+        foreach ($constants as $type) {
+            $keys[$type] = $named[1];
+        }
+
+        return ['constants' => $constants, 'keys' => $keys];
+    }
+
+    /**
+     * @return string the catalogue file's source, asserted readable
+     */
+    private static function source(string $relative): string
+    {
+        $file = dirname(__DIR__, 2) . '/' . $relative;
+
+        self::assertFileExists($file, sprintf('%s is missing — the vocabulary cannot be read.', $relative));
+
+        return (string) file_get_contents($file);
+    }
+
+    /**
+     * One method's body, from its declaration to the closing brace on its own
+     * indentation.
+     */
+    private static function methodBody(string $source, string $method): string
+    {
+        $start = strpos($source, 'function ' . $method . '(');
+
+        self::assertNotFalse($start, sprintf('%s() was not found in the vocabulary file.', $method));
+
+        $end = strpos($source, "\n    }", $start);
+
+        self::assertNotFalse($end, sprintf('%s() has no closing brace at method indent.', $method));
+
+        return substr($source, $start, $end - $start);
+    }
+
+    /**
+     * The array literal starting at the first non-space character at or after
+     * `$from`, or null when the next token is not a `[`.
+     *
+     * Bracket-matched rather than a flat `[^\]]*` run: the same mistake was made
+     * and caught in `SecurityEventPayloadContractTest`, where a payload containing
+     * `'roles' => []` was truncated at the inner bracket and the check accused the
+     * code of a defect it did not have.
+     */
+    private static function followingLiteral(string $source, int $from): ?string
+    {
+        $length = strlen($source);
+
+        while ($from < $length && ctype_space($source[$from])) {
+            $from++;
+        }
+
+        if ($from >= $length || '[' !== $source[$from]) {
+            return null;
+        }
+
+        $depth = 0;
+
+        for ($index = $from; $index < $length; $index++) {
+            if ('[' === $source[$index]) {
+                $depth++;
+            } elseif (']' === $source[$index]) {
+                $depth--;
+
+                if (0 === $depth) {
+                    return substr($source, $from, $index - $from + 1);
+                }
+            }
+        }
+
+        self::fail('An array literal in the article emit site is not closed.');
+    }
+
+    /**
      * The model key names, folded onto the code's camelCase form.
      *
      * @param list<string> $keys
@@ -236,44 +394,49 @@ final class ModelPayloadContractTest extends TestCase
     }
 
     #[Test]
-    public function everyModelledEventThatNamesASecurityTypeDeclaresTheKeysTheCodeDeclares(): void
+    public function everyModelledEventThatNamesACodeTypeDeclaresTheKeysTheCodeDeclares(): void
     {
         $vocabulary = self::securityVocabulary();
+        $article = self::articleVocabulary();
         $events = self::modelledEvents();
 
         $checked = 0;
 
         foreach ($events as $id => $event) {
-            // The model states the code type it is recorded as, e.g.
-            // "Recorded through the Outbox as SecurityEvents::AUTHZ_DENIED".
-            if (1 !== preg_match('/SecurityEvents::(\w+)/', $event['description'], $named)) {
+            // The model states which code type it is recorded as, e.g.
+            // "Recorded through the Outbox as SecurityEvents::AUTHZ_DENIED", or
+            // "as OutboxServices::ARTICLE_PUBLISHED, article.published".
+            if (1 !== preg_match('/(SecurityEvents|OutboxServices)::(\w+)/', $event['description'], $named)) {
                 continue;
             }
 
-            $constant = $named[1];
-            $eventType = $vocabulary['constants'][$constant] ?? null;
+            $owner = $named[1];
+            $constant = $named[2];
+            $declaring = 'SecurityEvents' === $owner ? $vocabulary : $article;
+            $eventType = $declaring['constants'][$constant] ?? null;
 
             self::assertNotNull(
                 $eventType,
                 sprintf(
-                    'Event "%s" (%s) says it is recorded as SecurityEvents::%s, which the code no'
-                    . ' longer declares. Either the constant was renamed and the description was'
-                    . ' not, or the reference was never real — the constants the file declares are:'
-                    . ' %s.',
+                    'Event "%s" (%s) says it is recorded as %s::%s, which the code no longer'
+                    . ' declares. Either the constant was renamed and the description was not, or the'
+                    . ' reference was never real — the constants that file declares are: %s.',
                     $id,
                     $event['file'],
+                    $owner,
                     $constant,
-                    implode(', ', array_keys($vocabulary['constants'])),
+                    implode(', ', array_keys($declaring['constants'])),
                 ),
             );
 
-            $declared = $vocabulary['keys'][$eventType] ?? null;
+            $declared = $declaring['keys'][$eventType] ?? null;
 
             self::assertNotNull(
                 $declared,
                 sprintf(
-                    'SecurityEvents::%s resolves to "%s", which payloadKeys() has no arm for, so'
-                    . ' the model cannot be checked against it.',
+                    '%s::%s resolves to "%s", for which no payload is declared, so the model cannot'
+                    . ' be checked against it.',
+                    $owner,
                     $constant,
                     $eventType,
                 ),
@@ -287,13 +450,15 @@ final class ModelPayloadContractTest extends TestCase
                 $declared,
                 $modelKeys,
                 sprintf(
-                    'Event "%s" declares payload keys [%s], but SecurityEvents::payloadKeys(\'%s\')'
-                    . ' declares [%s]. The code is the owner of this vocabulary, so the model is the'
-                    . ' side to correct — and the model must describe what is sent, not what would be'
-                    . ' nicer to send. `roles` reached this list last: it was in the event\'s own'
-                    . ' description and missing from its payload (measured 2026-10-16).',
+                    'Event "%s" declares payload keys [%s], but %s::%s ("%s") declares [%s]. The'
+                    . ' code is the owner of this vocabulary, so the model is the side to correct —'
+                    . ' and the model must describe what is sent, not what would be nicer to send.'
+                    . ' `roles` reached the refusal list that way, and `published_at` left the'
+                    . ' article payload that way (measured 2026-10-16).',
                     $id,
                     implode(', ', $event['keys']),
+                    $owner,
+                    $constant,
                     $eventType,
                     implode(', ', $declared),
                 ),
@@ -303,12 +468,74 @@ final class ModelPayloadContractTest extends TestCase
         }
 
         self::assertGreaterThan(
-            0,
+            2,
             $checked,
-            'No modelled event names a SecurityEvents constant, so this check proves nothing.'
-            . ' That is a fact about the model, not about the code: the anchor event'
-            . ' `users.authorization_denied` names one, and if it stopped, say so deliberately.',
+            'Fewer than three modelled events name a code constant, so this check proves less than it'
+            . ' is written to. That is a fact about the model, not about the code: the refusal event'
+            . ' and the publish/unpublish pair name one each, and both are asserted by name in the'
+            . ' tests below. If one of them stopped naming its constant, say so deliberately rather'
+            . ' than letting this check quietly cover less.',
         );
+    }
+
+    /**
+     * The article pair, asserted by name for the same reason the refusal event is:
+     * they are the events this file was extended for, and a description rewrite
+     * that dropped the constant would otherwise narrow the check in silence.
+     */
+    #[Test]
+    public function theArticlePublishPairIsBoundToTheOutboxVocabulary(): void
+    {
+        $articles = self::articleVocabulary();
+        $events = self::modelledEvents();
+
+        $pair = [
+            'blog.article_published'   => 'ARTICLE_PUBLISHED',
+            'blog.article_unpublished' => 'ARTICLE_UNPUBLISHED',
+        ];
+
+        foreach ($pair as $id => $constant) {
+            self::assertArrayHasKey(
+                $id,
+                $events,
+                sprintf(
+                    'The model declares no "%s". The code has raised both halves of the toggle from one'
+                    . ' call site since it shipped: a model with the publish and not the unpublish is'
+                    . ' the state Boot 32 called out from the other direction.',
+                    $id,
+                ),
+            );
+
+            self::assertStringContainsString(
+                'OutboxServices::' . $constant,
+                $events[$id]['description'],
+                sprintf(
+                    'Event "%s" no longer names OutboxServices::%s, so the payload comparison above'
+                    . ' skips it and the article half of this binding goes unchecked.',
+                    $id,
+                    $constant,
+                ),
+            );
+
+            $eventType = $articles['constants'][$constant] ?? null;
+            self::assertNotNull($eventType, sprintf('OutboxServices::%s is not declared.', $constant));
+
+            $modelKeys = self::asCamelCase($events[$id]['keys']);
+            sort($modelKeys);
+            $declared = $articles['keys'][$eventType] ?? [];
+            sort($declared);
+
+            self::assertSame(
+                $declared,
+                $modelKeys,
+                sprintf(
+                    '"%s" must carry exactly the keys articleEvent() builds for "%s", whatever the'
+                    . ' generic loop above concludes.',
+                    $id,
+                    $eventType,
+                ),
+            );
+        }
     }
 
     #[Test]

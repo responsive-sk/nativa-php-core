@@ -312,6 +312,13 @@
       "version": 1,
       "description": "Selection of article slugs carried by a bulk action (ids[] form field)",
       "base": "string"
+    },
+    {
+      "id": "blog.count",
+      "kind": "scalar",
+      "version": 1,
+      "description": "How many articles a bulk action actually changed",
+      "base": "number"
     }
   ]
 }

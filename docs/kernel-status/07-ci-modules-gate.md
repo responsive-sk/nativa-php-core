@@ -1431,3 +1431,81 @@ then failed as it should.
 - The standing items are unchanged: no Lekalo adapter (Boot 36), the module owning
   its slice (Boot 38), the reset link deliberately not queued (Boot 35), and
   Griffe's hero correct and green but not chosen (Boot 33).
+
+---
+
+## Boot 41 — the blog slice's own claims, and the article half of the payload binding
+
+Boot 40 closed with "the other payloads are still unbound", naming the article
+vocabulary as the modelling question Boot 39 left open. This round answered it and
+fixed what the slice was wrong about.
+
+### Measured before anything changed
+
+The `blog` slice carried four claims the code contradicts:
+
+| claim in the model | what the code does |
+|---|---|
+| `blog.article_bulk_published` payload `count` typed `blog.slug_list` | a count is a number; `slug_list` is "a selection of article slugs" |
+| `blog.article_created` described "A new article was **published**" | `ArticlesCreateAction` writes the markdown, flushes the cache, queues the cover and writes the audit row `article.create` — it publishes nothing |
+| `blog.article_published` payload `slug, locale, published_at` | the ONE emit site, `OutboxServices::articleEvent()`, builds `['slug' => $slug, 'locale' => $locale]`; the actor is METADATA, and the article's date is front matter |
+| no `blog.article_unpublished` at all | `article.unpublished` is one of the two types that site raises, from the same call |
+
+### What changed
+
+The three named defects and the fourth that the binding forced: `count` now
+references a new `blog.count` scalar (base `number`); `article_created` describes
+creation and says which record it has (an audit row, deliberately no outbox event);
+`article_published` carries the two keys that are actually sent; and
+`blog.article_unpublished` exists, mirroring its half of the toggle.
+
+`ModelPayloadContractTest` now reads a SECOND vocabulary —
+`modules/Outbox/Interfaces/HTTP/OutboxServices.php` — and binds any model event
+whose description names a `SecurityEvents::` **or** `OutboxServices::` constant to
+the payload declared for it. Where `SecurityEvents` has a `payloadKeys()` to obey,
+the article vocabulary has only the literal inside `articleEvent()`, so the literal
+is read as TEXT (bracket-matched, for the reason Boot 40 records) and the MODEL is
+the side compared to it. The pair is also asserted by name, like the refusal
+event, so a description rewrite cannot narrow the check in silence — and the
+"nothing was checked" guard now requires **three** named events rather than one.
+
+### Negative controls
+
+Each mutation reverted, every file compared by sha256:
+
+| control | result |
+|---|---|
+| `published_at` put back on `blog.article_published` | red |
+| `blog.article_unpublished` deleted | red — "The code has raised both halves of the toggle from one call site" |
+| the emit site sends one more key (`views`) | red, from the other side |
+| both files restored | byte-identical; green again |
+
+One control was re-run after `cs-fixer` reformatted the test (four `++` → `$from++`
+style changes), because a repair invalidates the run before it: red, restored, green.
+
+### Verified (2026-10-16, all exit 0)
+
+| Gate | Result |
+|---|---|
+| `composer test` | **386 → 387 tests, 3844 → 4256 assertions**, 1 skip |
+| `make analyze` | phpstan L9 no errors · rector clean · cs-fixer 0 of 101 |
+| `make lekalo-check` | 23 rules, 0 errors; 21 modules valid on their own — the model gained one definition (`blog.count`) and one event |
+| `make lint` | clean |
+
+## What this round did not close
+
+- **The module is still called `Blog`.** Measured this round: upstream
+  (`../nativa-minimal/src/Modules/Blog`) owns that name, so renaming it here makes
+  every future re-import a manual re-port. The rename is prepared, with the file
+  and class maps and the one open collision, in
+  `.ai-factory/patches/2026-10-16-blog-to-articles.md`.
+- **`actor()` still attributes by guess.** `SecurityEventHandler::actor()` reads
+  `userId`, then `email`, then metadata, then `'system'` — and `ROLE_CHANGED` sends
+  neither key, so a role change is attributed from metadata or falls back. Nothing
+  declares an attribute key the way `payloadKeys()` declares payload keys.
+- **`blog.article_created` and `blog.article_updated` have no code event to bind
+  to**, so their payloads stay the model's abstraction — the one place in this
+  slice where a payload is not compared to anything.
+- The standing items are unchanged: no Lekalo adapter (Boot 36), the module owning
+  its slice (Boot 38), the reset link deliberately not queued (Boot 35), and
+  Griffe's hero correct and green but not chosen (Boot 33).

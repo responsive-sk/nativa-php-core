@@ -5,7 +5,7 @@
       "id": "blog.article_created",
       "kind": "event",
       "version": 1,
-      "description": "A new article was published",
+      "description": "A new article was created — the markdown file written, the page cache flushed and a cover queued. Recorded as an audit row only (action article.create, target article, context 'Created: {title} ({slug})'): the Outbox carries article.published and article.unpublished on the publish toggle and nothing on create or edit, which is deliberate",
       "payload": [
         {
           "name": "slug",
@@ -63,7 +63,7 @@
       "id": "blog.article_published",
       "kind": "event",
       "version": 1,
-      "description": "An article was published (flag flipped to true)",
+      "description": "An article was published (the front-matter flag flipped to true). Recorded through the Outbox as OutboxServices::ARTICLE_PUBLISHED, article.published — payload {slug, locale}, the acting user travelling as the message's metadata (actor) rather than as a payload key — and as an audit row (action article.publish, target article, context 'Published: {slug}'). The article's date is front matter, not event data, which is why this payload carries no timestamp",
       "payload": [
         {
           "name": "slug",
@@ -78,11 +78,26 @@
             "ref": "blog.locale"
           },
           "required": true
+        }
+      ]
+    },
+    {
+      "id": "blog.article_unpublished",
+      "kind": "event",
+      "version": 1,
+      "description": "An article was unpublished (the flag flipped to false) — the inverse of blog.article_published, from the same single call site, and recorded the same two ways: OutboxServices::ARTICLE_UNPUBLISHED, article.unpublished, payload {slug, locale} with the actor as metadata, plus the audit row (action article.unpublish, target article, context 'Unpublished: {slug}')",
+      "payload": [
+        {
+          "name": "slug",
+          "type": {
+            "ref": "blog.slug"
+          },
+          "required": true
         },
         {
-          "name": "published_at",
+          "name": "locale",
           "type": {
-            "ref": "blog.timestamp"
+            "ref": "blog.locale"
           },
           "required": true
         }
@@ -92,12 +107,12 @@
       "id": "blog.article_bulk_published",
       "kind": "event",
       "version": 1,
-      "description": "A bulk publish/unpublish finished over a batch of articles",
+      "description": "A bulk publish/unpublish finished over a batch of articles (Cardboard's /mark/bulk-publish). Recorded as one audit row — action bulk.publish or bulk.unpublish, target the entity, context 'Bulk published|unpublished N articles' — and not as an outbox event",
       "payload": [
         {
           "name": "count",
           "type": {
-            "ref": "blog.slug_list"
+            "ref": "blog.count"
           },
           "required": true
         },
