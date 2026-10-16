@@ -1114,3 +1114,122 @@ CLI in the gate at all.
 - The three standing items are unchanged: no Lekalo adapter (Boot 36, cost
   measured, recommendation against), the reset link deliberately not queued
   (Boot 35), and Griffe's hero correct and green but not chosen (Boot 33).
+
+---
+
+## Boot 38 — the model's module set, pinned; and where the model may live
+
+Boot 32 recorded that the model described a delete the code did not perform.
+Boot 36 measured what an adapter to catch that class of drift would cost
+(~700 KB of PHP, 10 operations, 14 capabilities) and recommended against
+building it. This round is the third position: not the adapter, and not
+trusting the review — **a check that compares the model's module set to the
+catalogue**, which is the one binding available without an adapter.
+
+### What was asked, and the assumption inside it
+
+The question was whether every module should carry its own `lekalo` slice (and
+its tests), so that the model lives with the thing it describes. The wording
+contained an assumption worth naming: *“lekalo must check every module.”*
+
+Measured, that assumption is false, and one deletion settles it. With `Media`
+removed — `php bin/cms module:remove Media --force`:
+
+```
+lekalo/modules/media/ stale existuje: ANO
+--- lekalo-check po odstraneni Media ---
+lock checked sha256:e77647f7… resolver 0.2.16 (adapters 0, generators 0, profiles 0, capabilities 0)
+validated default profile v0.6.4: 23 rules, 0 errors, 0 warnings, 0 info
+exit=0
+```
+
+The model described a module that was no longer in the tree and the gate stayed
+green. So the dilemma was not “how should the model be arranged so it covers
+every module” — it was **“nothing covers anything”**, which has a different
+answer. `Media` was re-added; `make lekalo-check` and the suite were green
+afterwards, and the tree clean.
+
+### The sets agreed already; the binding was what was missing
+
+The model was not short a module and was not a module ahead:
+
+| | count |
+|---|---|
+| model slices | **21** = **18** catalogued modules + **3** kernel (`core`, `database`, `kernel_theme`) |
+| catalogue | **19**, of which `Scratch` is the only one with no slice |
+| installed modules with no slice | **0** |
+
+`Scratch` is the lifecycle fixture `ModuleLifecycleTest` installs and removes,
+and `bin/build/install-catalogue.sh` already skips it for that reason — so it
+is named in the test as a fixture, not excused by a pattern, and it gets no
+slice: a model file for a test artifact would put an untruth in the model.
+
+### The binding, as a test
+
+`tests/Architecture/ModelCatalogueContractTest.php`, in the shape of
+`KernelContractTest` beside it — two directory listings compared, no adapter, no
+schema knowledge: every `lekalo/modules/<slice>` names a module the catalogue
+knows; every catalogued module has a slice; the kernel slices are the named
+ones; and `Media` stays the negative control.
+
+Two things about the writing of it are worth keeping. `catalog()` used
+`new ModuleCatalog()`, which takes two roots, and the first run failed with
+`ArgumentCountError` — while `ModuleCatalog::fromAppPaths()` had existed the
+whole time. And the check immediately caught something real: `Scratch`,
+catalogued and modelled nowhere, resolved as a named exception rather than a
+pattern (a list that grows silently is the check weakening).
+
+| | |
+|---|---|
+| suite before | **371 tests, 1594 assertions**, 1 skip |
+| suite after | **375 tests, 1635 assertions**, 1 skip — the +4 tests and +41 assertions are this file exactly |
+| negative control | slice directory deleted → the test fails, naming the module; `_probe/` model directory added → it fails from the other side |
+
+### And then the obvious next step — measured, and reverted
+
+The follow-up is to let each module own its slice: move `lekalo/modules/<name>/`
+to `modules/<Name>/lekalo/`. It was attempted on a fingerprinted tree (64 files,
+272 sources, 250 definitions, model digest `5d50cd7a…`), and the tool's answer
+is four measurements, not an opinion:
+
+| route | measured result |
+|---|---|
+| move the slice out of `lekalo/` | **not loaded, not reported**: sources 272 → 271, the module's definitions gone, `lekalo load` still `valid`, `lock --check` still **exit 0** with the same digest. A leaf module is silent; a whole-tree move fails only because `authorization.yaml` references the missing symbols (`LEK-AUTH-005 authorization.ref-unresolved`, exit 1) |
+| symlink the directory, or a single file, out of `lekalo/` | **refused**: `structure.path-link` (`LEK-STR-013`, severity `error`, category `security`, "Project path policy refusal"), `status: denied`, exit 1 |
+| declare `imports:` in `module.yaml` or in `project.yaml` | **nothing happens**: `status: valid`, no diagnostic, and nothing from outside `lekalo/` enters the model |
+| leave a module directory with no document in it | **caught**: `structure.document-missing` (`LEK-STR-004`), `validate` exit 1, `make lekalo-check` exit 2 |
+
+The source map is what makes the first row a measurement rather than a guess: it
+lists project-relative paths, all under `lekalo/`, and neither it nor the lock
+names a configurable source root. `lock --check` does not cover model content at
+all — a shape-valid description edit leaves its digest identical.
+
+So the move was **reverted**, and the revert is part of the record: the 61 moved
+files were hashed *before* anything was deleted and compared against the
+pre-move fingerprint (identical), the originals were restored, and the model came
+back at 272 sources, 250 definitions and the same digest `5d50cd7a…`, with
+`git status` holding nothing but the new test and the day's article.
+
+### Verified (2026-10-16, all exit 0)
+
+| Gate | Result |
+|---|---|
+| `make lekalo-check` | 23 rules, 0 errors, 0 warnings, 0 info — before, and after the revert |
+| `composer test` | **375 tests, 1635 assertions**, 1 skip |
+| `composer phpstan` (L9) · `cs-fix-dry` · `rector-dry` | no errors · 0 of 97 · clean |
+| model fingerprint | 64 files and 21 slices identical before and after the attempt; digest `5d50cd7a…` restored |
+| negative controls | slice directory deleted → contract test fails; `_probe/` slice added → contract test fails; slice moved out → `validate` red only where `authorization.yaml` points at it |
+
+## What this round did not close
+
+- **Nothing compares a description to the code.** The new test binds the model's
+  *module set* to the catalogue and stops there; every statement inside a slice
+  is still unverifiable without an adapter (Boot 36's cost stands, and so does
+  its recommendation).
+- **A module owning its slice is not expressible today.** It needs a generator
+  that materialises authored slices into `lekalo/` with a CI freshness gate, or a
+  source-path seam upstream. Recorded in `docs/modules.md` as an open item
+  against the tool, with the four routes above as the reason.
+- The standing items are unchanged: no Lekalo adapter (Boot 36), the reset link
+  deliberately not queued (Boot 35), and Griffe's hero correct and green but not
+  chosen (Boot 33).

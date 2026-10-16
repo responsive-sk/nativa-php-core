@@ -158,8 +158,15 @@ and `make lekalo-check` exit 2.
    `queue.job`'s `available_at` description to claim "a CONSTANT 30 second
    delay, never growing" — the opposite of the doubling, capped backoff that
    ships — leaves `make lekalo-check` at exit 0.
-4. **No test reads it.** `grep -rl lekalo tests/ modules/*/tests/` is empty, and
-   it was not in CI at all until the gate above was added.
+4. **A test reads the model's module set — and nothing else.**
+   `ModelCatalogueContractTest`
+   (2026-10-16) compares the model's *module set* against the catalogue: every
+   slice names a module the catalogue knows, every catalogued module has a
+   slice, and the kernel slices are named as a list rather than excused by a
+   pattern. That catches a slice left behind by `module:remove` or a module
+   nobody wrote down — measured, by deleting the slice directory and watching
+   the test fail. It says nothing about whether any *description* matches the
+   code, which is item 1; before this test, `grep -rl lekalo tests/` was empty.
 
 So: **the model is documentation with a schema, and the gate keeps the
 documentation well-formed.** It does not make the documentation true. Nothing
@@ -178,6 +185,35 @@ and `database`. A facet is optional (`audit` has no policies, no queries and no
 bindings), which is why `queue` has no `policies.yaml`: the queue has no
 authorization or validation rule to state, and inventing one to fill the gap
 would put the first uncheckable claim in the model.
+
+### Where the model may live is not ours to choose (measured 2026-10-16)
+
+The obvious follow-up to the binding test is "then let each module own its
+slice" — move `lekalo/modules/<name>/` into `modules/<Name>/lekalo/`, so the
+model travels with the thing it describes. **The tool does not support that,
+and the ways it fails are worse than the thing it fixes.** Four routes, all
+measured against the pinned CLI, with the model fingerprinted before and after:
+
+| route | measured result |
+|---|---|
+| move the slice out of `lekalo/` | **not loaded, and not reported**: `sourceMap` 272 → 271, the module's definitions gone, `lekalo load` still `valid`. Only modules whose symbols are referenced elsewhere are caught — `authorization.yaml` gives `LEK-AUTH-005 authorization.ref-unresolved`, exit 1, which is how a whole-tree move fails loudly and a leaf like `media` fails silently |
+| symlink the directory, or one file, out of `lekalo/` | **refused**: `structure.path-link` (`LEK-STR-013`, severity `error`, category `security` — "Project path policy refusal"), `status: denied` |
+| declare `imports:` in `module.yaml` or `project.yaml` | **nothing happens**: `status: valid`, no diagnostic, and no source from outside `lekalo/` enters the model. Imports are not a file-include seam |
+| leave the module's directory with no document in it | **caught**: `structure.document-missing` (`LEK-STR-004`), `lekalo validate` exit 1, `make lekalo-check` exit 2 |
+
+The source map is the evidence for the first row: it lists project-relative
+paths, all of them under `lekalo/`, and there is no key in it — or in the lock —
+that names a source root to configure. `lock --check` is no help either: it pins
+the CLI's contract versions and a resolver request digest, not the model, so it
+stays at exit 0 across a slice disappearing and across a description being
+rewritten (item 2 above).
+
+So the model stays one tree under `lekalo/`, and the binding test is what keeps
+that tree honest. Making a module own its slice needs one of two things that do
+not exist yet: a generator that materialises authored slices into `lekalo/` with
+a freshness gate in CI, or a source-path seam upstream. This is recorded as an
+open item against the tool, not as a design preference — the cheap version of
+that change was attempted and reverted, byte-for-byte, on the same day.
 
 ## Themes travel as modules (measured 2026-10-11)
 

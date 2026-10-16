@@ -138,9 +138,16 @@ jobs:
       #
       # That is still worth a job. The alternative is what this tree had for
       # weeks: a `lekalo/` directory that nothing ran, drifting silently while
-      # every other layer had a gate. Five of twenty-one modules are modelled and
-      # the rest are stubs, which is the coverage question to ask next — not
+      # every other layer had a gate. Seven of twenty-one modules are modelled
+      # and the rest are stubs, which is the coverage question to ask next — not
       # this gate's.
+      #
+      # The model's *module set* is compared to the catalogue, but by a test in
+      # the PHPUnit job rather than here: `ModelCatalogueContractTest` fails if a
+      # slice outlives its module or a module has no slice. That test cannot
+      # replace the adapter, and this job cannot replace that test — measured
+      # 2026-10-16, `lock --check` stays at exit 0 when a slice is moved out of
+      # `lekalo/` and drops out of the model.
       #
       # `--strict` is deliberately NOT run: it demands adapter evidence, and this
       # tree installs no php-nativa adapter. Re-add it when one exists.
