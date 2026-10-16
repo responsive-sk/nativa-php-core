@@ -72,7 +72,10 @@ final class ProcessOutboxCommand
         }
 
         $limit = max(1, (int) ($options['limit'] ?? self::DEFAULT_LIMIT));
-        $prune = isset($options['prune-interval']) || isset($options['no-prune']);
+        // `--no-prune` DISABLES, so the flag has to be read as an absence. The
+        // first port had this as `|| isset(...)` — i.e. the flag that says do
+        // not prune was the flag that pruned — and the module test caught it.
+        $prune = !isset($options['no-prune']);
         $pruneInterval = is_string($options['prune-interval'] ?? null)
             ? $options['prune-interval']
             : self::DEFAULT_PRUNE_INTERVAL;
