@@ -506,6 +506,15 @@ want_at_least 'security events that became audit rows' 4 "$audited"
 # (`*/5` matches, at most, one minute in five), so what is asserted is that it
 # runs clean against this queue and reports its outcome — the delivery itself is
 # asserted above, where it is deterministic instead of minute-dependent.
+#
+# ORDERING IS LOAD-BEARING, and this is the line that has to say so. Since
+# Boot 31 the timetable also carries `queue:work`
+# (`SchedulerServices::withQueueWork`), so `schedule:run` DRAINS THE QUEUE. It
+# is green below because nothing has been pushed yet — the first push is the
+# unroutable job below, and it is worked explicitly so its exit code can be
+# asserted separately. Move a push above this block and `schedule:run` starts
+# exiting 1 on a poison job, and the gate fails here rather than where the push
+# actually belongs.
 if php bin/cms schedule:run > "$TMP/schedule.log" 2>&1; then
     ok 'bin/cms schedule:run exits 0'
 else
