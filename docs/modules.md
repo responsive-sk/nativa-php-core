@@ -367,12 +367,18 @@ due path driven at a fixed 13:00 against the real outbox.db —
 
 ## The queue's worker — `bin/cms queue:work` (measured 2026-10-16)
 
-`DatabaseQueue::work()` shipped with no caller at all. The only thing that
-invoked it was an inline `php` heredoc inside `bin/build/admin-smoke.sh` — a
-fact the tree documented rather than hid ("the Queue module still has no
-producer"), but an operator had nothing to put in crontab and a support
-answer had nothing to point at. So the worker got the surface it should have
-had from the start:
+`DatabaseQueue::work()` shipped with exactly one call site in the tree: an
+inline `php` heredoc inside `bin/build/admin-smoke.sh`. The queue therefore had
+a worker that
+
+- no operator could put in crontab (it was not a command),
+- no support answer could point at (there was nothing to point at), and
+- no documentation could describe (there was nothing to describe).
+
+The gap was recorded as a *producer* problem — "nothing enqueues a job yet",
+which is true — and that hid a *surface* problem one level down, which a
+producer landing would not have fixed. So the worker got the surface it should
+have had from the start:
 
 ```
 php bin/cms queue:work [<name>] [--limit=N]     # default: any queue, 10 jobs

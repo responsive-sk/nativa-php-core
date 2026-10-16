@@ -37,7 +37,6 @@ declare(strict_types = 1);
 
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Core\Interfaces\CLI\Support\DatabaseMigrator;
-use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Tooling\ModuleCatalog;
 use Modules\Tooling\ModuleInstaller;
 use Modules\Tooling\ModuleManifest;
@@ -241,16 +240,16 @@ function cmdScheduleRun(): void
 /**
  * Work one batch of queued jobs — the queue's operator surface.
  *
- * `DatabaseQueue::work()` had no caller in this tree at all: the end-of-
- * request drain that ships today is the OUTBOX's, a different mechanism on a
- * different database with an idempotent handler, and no producer pushes a
- * Queue job yet. That is stated rather than papered over — until a producer
- * lands, this command has nothing to deliver and says so in one line.
+ * `DatabaseQueue::work()` shipped with exactly one call site in the whole tree:
+ * an inline `php` heredoc inside `bin/build/admin-smoke.sh`. So the queue had a
+ * worker that no operator could put in crontab, no support answer could point
+ * at, and no documentation could describe — the gate was the only place on the
+ * planet that could run it. (The end-of-request drain that ships today is the
+ * OUTBOX's: a different mechanism, a different database, an idempotent handler.
+ * No producer pushes a Queue job yet either, so this command has nothing to
+ * deliver until one does — stated rather than papered over.)
  *
- * It exists because the alternative is worse: the only way to run a worker was
- * an inline `php` heredoc, which is not something an operator can put in
- * crontab and a support answer can point at. The handler pairing is wired
- * first, for the reason in the file header.
+ * The handler pairing is wired first, for the reason in the file header.
  *
  * @param list<string> $argv the full argv; options start at index 2
  */
