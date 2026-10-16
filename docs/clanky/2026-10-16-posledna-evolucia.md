@@ -231,7 +231,7 @@ Log má teraz na mieste vetu, prečo sa to stalo. Oprava čísla bez dôvodu by 
 
 ---
 
-## Časť V — tri veci, ktoré zostali otvorené
+## Časť V — tri veci, z ktorých sa jedna v priebehu dňa zavrela
 
 Časť II hovorila o vetvách, ktoré nikto neuzavrel; odvtedy sú zavreté. Nech je ale
 súladné, aby aj toto bolo napísané:
@@ -240,9 +240,20 @@ súladné, aby aj toto bolo napísané:
   dekoratívna scéna patrí vedľa animácie, ktorú si `master` prepísal. Ten hlas
   zostáva otvorený a je hlasom reviewera, nie suite.
 
-- **Mazanie článku neuklízí obálku.** `BlogCrudService::delete()` je jeden `unlink()`
-  markdownu. Brána to v skripte uklízi, produkt nie. A Lekalo model to popisuje **opačne** —
-  čo je druhý merateľný dôkaz, že model bez adaptéra nemôže byť skontrolovaný.
+- **Mazanie článku obálku nezachováva — je to opravené (Boot 34).** Pôvodne
+  `BlogCrudService::delete()` bol jeden `unlink()` markdownu a obálka zostávala na
+  disku, stále servírovaná pod `max-age=31536000` na URL, na ktoré už nič neodkazuje.
+  Brána to uklízila v skripte, produkt nie — a Lekalo model to popisovalo **opačne**,
+  čo bol druhý merateľný dôkaz, že model bez adaptéra nemôže byť skontrolovaný.
+  Teraz to robí produkt, brána tvrdí a model hovorí pravdu.
+
+  Ale oprava, ktorá by len viac `unlink`ovala, by rozbila dve veci: plochý
+  `blog-images/{slug}.svg` nenesie lokále, takže patrí aj druhej, a `resolveCover()`
+  dáva explicitnému `image:` z front matter prednosť pred generovaným súborom.
+  A **negatívna kontrola to chytila, nie testy**: testy posielali `sk`, admin posiela
+  `sk_SK`, a `collides()` porovnáva jazykový kód — článok sa pri `sk_SK` zhodol **sám so
+  sebou** a vlastnú obálku preskočil. Celá modulová suite bola zelená a produkt
+  stále uklížal.
 - **Queued reset link** zostáva bezpečnostné rozhodnutie pre operátora.
 
 ---

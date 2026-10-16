@@ -6,6 +6,7 @@ namespace Modules\Blog\Application\Services;
 
 use Modules\Core\Application\Services\MarkdownRenderer;
 use Modules\Core\Infrastructure\Paths\AppPaths;
+use Modules\Core\Interfaces\HTTP\ContentServices;
 
 /**
  * BlogCrudService — read/write blog articles stored as markdown files
@@ -18,10 +19,12 @@ use Modules\Core\Infrastructure\Paths\AppPaths;
 final readonly class BlogCrudService
 {
     private MarkdownRenderer $renderer;
+    private CoverPathResolver $covers;
 
-    public function __construct()
+    public function __construct(?CoverPathResolver $covers = null)
     {
         $this->renderer = new MarkdownRenderer();
+        $this->covers = $covers ?? new CoverPathResolver();
     }
 
     /**
@@ -158,7 +161,20 @@ final readonly class BlogCrudService
     }
 
     /**
-     * Delete an article file. Returns true on success.
+     * Delete an article file, and the generated cover that belongs to it.
+     *
+     * Returns true on success.
+     *
+     * The cover used to survive: `delete()` was one `unlink()` of the markdown,
+     * so every article ever deleted left its SVG behind — still on disk, still
+     * served by `ServeBlogImageAction`, reachable at a URL no page links to
+     * any more. `lekalo/modules/blog/commands.yaml` has always described this
+     * command as removing "its tracked cover if owned", so the model and the
+     * code disagreed about what delete does, and nothing in the pipeline could
+     * notice: the model has no adapter.
+     *
+     * The cover is removed, not merely unreferenced, so `CoverPathResolver` is
+     * asked for the paths rather than recomputing the rule here.
      */
     public function delete(string $slug, string $locale): bool
     {
@@ -168,7 +184,87 @@ final readonly class BlogCrudService
             return false;
         }
 
-        return unlink($file);
+        $covers = $this->covers->existingCovers($slug, $locale);
+
+        if (!unlink($file)) {
+            return false;
+        }
+
+        $this->removeUnreferencedCovers($covers, $file);
+
+        return true;
+    }
+
+    /**
+     * Unlink the covers of a deleted article — unless a surviving article still
+     * points at one by its `image` front matter.
+     *
+     * `resolveCover()` ranks an explicit `image:` above the generated file, so
+     * an author can point one article at another's cover. Generation is keyed
+     * by slug, so that explicit reference is the ONLY way two articles can end
+     * up sharing a cover; removing such a file would blank a live article's
+     * image, with nothing in any log to say why it vanished.
+     *
+     * The article being deleted is excluded because its own reference dies with
+     * it — it has already been unlinked, and an `image:` on a deleted article
+     * is not a reason to keep a file nobody renders.
+     *
+     * @param list<string> $covers
+     */
+    private function removeUnreferencedCovers(array $covers, string $deletedFile): void
+    {
+        if ([] === $covers) {
+            return;
+        }
+
+        $referenced = $this->coverReferences($deletedFile);
+
+        foreach ($covers as $cover) {
+            if (isset($referenced[$this->covers->urlFor($cover)])) {
+                continue;
+            }
+
+            unlink($cover);
+        }
+    }
+
+    /**
+     * Every image URL a surviving article names in its front matter, as a
+     * lookup set.
+     *
+     * This reads the whole blog tree, on an admin delete — a handful of
+     * markdown files, once per delete, and the alternative is unlinking a file
+     * that something else is rendering.
+     *
+     * @return array<string, true>
+     */
+    private function coverReferences(string $exceptFile): array
+    {
+        $urls = [];
+
+        foreach (ContentServices::mapper()->locales() as $locale) {
+            $dir = AppPaths::instance()->storage(BlogArticlesService::directoryFor($locale));
+
+            foreach (glob($dir . DIRECTORY_SEPARATOR . '*.md') ?: [] as $file) {
+                if ($file === $exceptFile) {
+                    continue;
+                }
+
+                $source = file_get_contents($file);
+
+                if (!is_string($source)) {
+                    continue;
+                }
+
+                $image = $this->renderer->extractFrontMatter($source)['meta']['image'] ?? null;
+
+                if (is_string($image) && '' !== $image) {
+                    $urls[$image] = true;
+                }
+            }
+        }
+
+        return $urls;
     }
 
     /**
