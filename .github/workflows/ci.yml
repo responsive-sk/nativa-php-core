@@ -87,7 +87,7 @@ jobs:
   # LINT + PHPSTAN — syntax and static analysis
   # ---------------------------------------------------------------------------
   analysis:
-    name: Lint + PHPStan
+    name: Lint + PHPStan + Lekalo model
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -124,6 +124,49 @@ jobs:
 
       - name: Run PHPStan
         run: composer phpstan
+
+      # -------------------------------------------------------------------------
+      # LEKALO MODEL — the architectural model under lekalo/
+      #
+      # WHAT THIS DOES NOT DO, and it matters more than what it does: with
+      # `adapters 0` in lekalo.lock there is no PHP adapter, so nothing here
+      # compares the model to the code. `validate` checks the model's own
+      # consistency — refs resolve, ids are unique, the lock's digests match —
+      # NOT that `users.password_min_length` still says what
+      # `PasswordPolicy::MIN_LENGTH` says. The model is documentation with a
+      # schema, and this gate keeps the documentation well-formed.
+      #
+      # That is still worth a job. The alternative is what this tree had for
+      # weeks: a `lekalo/` directory that nothing ran, drifting silently while
+      # every other layer had a gate. Five of twenty-one modules are modelled and
+      # the rest are stubs, which is the coverage question to ask next — not
+      # this gate's.
+      #
+      # `--strict` is deliberately NOT run: it demands adapter evidence, and this
+      # tree installs no php-nativa adapter. Re-add it when one exists.
+      # -------------------------------------------------------------------------
+
+      - name: Install lekalo CLI (pinned v0.6.5, checksum-verified)
+        run: |
+          set -euo pipefail
+          version=v0.6.5
+          target=x86_64-unknown-linux-gnu
+          archive="lekalo-${version}-${target}.tar.gz"
+          # The tag is immutable and the checksum is the identity: a re-rolled
+          # upstream asset fails here instead of silently changing what the gate
+          # ran, and the job needs no Rust toolchain. Same version and checksum
+          # as nativa-minimal's install step, so the two projects cannot drift
+          # into validating against different binaries.
+          curl -fsSL -o "/tmp/${archive}" \
+            "https://github.com/ichinya/lekalo/releases/download/${version}/${archive}"
+          echo "27cdb64ae99d7180530a05fbc722834c129e73faa693ddafc8c08b60e7794694  /tmp/${archive}" | sha256sum -c -
+          mkdir -p "$HOME/.local/bin"
+          tar xzf "/tmp/${archive}" -C /tmp
+          install -m 0755 "/tmp/lekalo-${version}-${target}/lekalo" "$HOME/.local/bin/lekalo"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Lekalo gate (lock --check + validate)
+        run: make lekalo-check
 
   # ---------------------------------------------------------------------------
   # CODE STYLE — php-cs-fixer + Rector dry-runs

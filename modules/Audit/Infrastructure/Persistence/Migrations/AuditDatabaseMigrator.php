@@ -7,7 +7,6 @@ namespace Modules\Audit\Infrastructure\Persistence\Migrations;
 use Modules\Core\Infrastructure\Attributes\AsMigrator;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Core\Interfaces\CLI\MigratorInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Audit Database Migrator — creates the audit.db schema.
@@ -24,7 +23,7 @@ final readonly class AuditDatabaseMigrator implements MigratorInterface
     {
     }
 
-    public function run(CliOutput | OutputInterface $output): void
+    public function run(CliOutput $output): void
     {
         $output->writeln('<info>Migrating audit.db...</info>');
 

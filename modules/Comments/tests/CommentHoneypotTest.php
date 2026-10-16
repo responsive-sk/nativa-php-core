@@ -13,9 +13,9 @@ use Modules\Core\Infrastructure\Http\Response;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Users\Interfaces\HTTP\AuthServices;
 use PDO;
+use Modules\Core\Interfaces\CLI\CliOutput;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Console\Output\NullOutput;
 
 /**
  * CommentHoneypotTest — the comment form carries the same bot defense as the
@@ -62,7 +62,7 @@ final class CommentHoneypotTest extends TestCase
         AuthServices::reset();
 
         (new CommentsDatabaseMigrator(new PDO('sqlite:' . $this->tmpDir . '/comments.db')))
-            ->run(new NullOutput());
+            ->run($this->quietOutput());
     }
 
     protected function tearDown(): void
@@ -205,5 +205,22 @@ final class CommentHoneypotTest extends TestCase
     {
         return (int) DatabaseConnectionManager::instance()->connection('comments')
             ->query('SELECT COUNT(*) FROM comments')->fetchColumn();
+    }
+
+    /**
+     * A `CliOutput` that swallows every line.
+     *
+     * This was a `Symfony\...\NullOutput` until the migrator contract stopped
+     * accepting a dev-only union arm (Boot 32): the kernel's runtime has no
+     * Composer dependencies, so a test asserting a kernel contract should not
+     * need one to satisfy it either.
+     */
+    private function quietOutput(): CliOutput
+    {
+        return new class implements CliOutput {
+            public function writeln(string $message): void
+            {
+            }
+        };
     }
 }

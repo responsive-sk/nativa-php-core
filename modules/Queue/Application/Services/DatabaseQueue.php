@@ -30,6 +30,30 @@ use Throwable;
  */
 final class DatabaseQueue
 {
+    /**
+     * Retry backoff, doubling per attempt from the first: 30s, 60s, 120s …
+     *
+     * A throwing handler used to be released with NO delay, which wrote
+     * `available_at = now` — so the next loop iteration found the same row
+     * again and a failing job burned every attempt inside one batch. Measured:
+     * a job with `max_attempts = 3` and the default limit of 10 ended up parked
+     * with `attempts = 3` after a single `work()` call. `max_attempts` bounded
+     * RETRIES, not MINUTES.
+     *
+     * The formula matches Media's Cloudinary client
+     * (`BASE_DELAY_MS * (2 ** ($attempt - 1))`), which is the one place this
+     * tree already does exponential backoff, so the two retry paths read alike.
+     */
+    private const int RETRY_BASE_SECONDS = 30;
+
+    /**
+     * The cap, and it is not optional: `max_attempts` has no upper bound (a
+     * caller sets it per job), so an uncapped `2 ** attempts` would schedule a
+     * job years into the future and quietly turn a poison handler into a row
+     * nobody ever looks at again.
+     */
+    private const int RETRY_MAX_SECONDS = 3600;
+
     private readonly Closure $now;
 
     public function __construct(
@@ -349,6 +373,20 @@ final class DatabaseQueue
     }
 
     /**
+     * Seconds to wait before attempt N+1, doubling from the base and capped.
+     *
+     * `$job->attempts` already counts the reservation that just failed, so the
+     * first release is the base delay and not half of it.
+     */
+    private function retryDelayFor(QueuedJob $job): int
+    {
+        return min(
+            self::RETRY_MAX_SECONDS,
+            self::RETRY_BASE_SECONDS * (2 ** max(0, $job->attempts - 1)),
+        );
+    }
+
+    /**
      * Park an exhausted job in failed_jobs with the error that sank it.
      */
     public function fail(QueuedJob $job, string $error): void
@@ -406,7 +444,10 @@ final class DatabaseQueue
                     $this->fail($job, $e->getMessage());
                     $failed++;
                 } else {
-                    $this->release($job->id);
+                    // Released INTO THE FUTURE, which is the whole point: the
+                    // row drops out of `findAvailable()` for this batch and for
+                    // every tick until the delay has passed.
+                    $this->release($job->id, $this->retryDelayFor($job));
                 }
             }
         }

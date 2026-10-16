@@ -32,6 +32,9 @@ final class DatabaseQueueTest extends TestCase
 
     private DatabaseQueue $queue;
 
+    /** @var int the clock, in seconds — advanced by hand instead of sleeping */
+    private int $now;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -51,8 +54,15 @@ final class DatabaseQueueTest extends TestCase
         };
         (new QueueDatabaseMigrator($this->pdo))->run($null);
 
+        // `DatabaseQueue` has accepted `?callable $now` since it shipped and no
+        // test ever passed it — the seam existed, unexercised. A retry released
+        // with a backoff lands in the future, where `findAvailable()`'s
+        // `available_at <= :now` cannot see it, so pinning the retry timing
+        // needs a clock. `FileTaskMutexTest` is the same trick for the same
+        // reason: time is injected so expiry is asserted, not waited for.
+        $this->now = 1_700_000_000;
         $this->handlers = new HandlerRegistry();
-        $this->queue = new DatabaseQueue($this->pdo, $this->handlers);
+        $this->queue = new DatabaseQueue($this->pdo, $this->handlers, fn (): int => $this->now);
     }
 
     protected function tearDown(): void
@@ -90,7 +100,7 @@ final class DatabaseQueueTest extends TestCase
     }
 
     #[Test]
-    public function failingHandlerRetriesToMaxThenLandsInFailedJobs(): void
+    public function aFailingHandlerWaitsOutItsBackoffBeforeTheNextAttempt(): void
     {
         $calls = 0;
         $this->handlers->register('always.fails', static function () use (&$calls): void {
@@ -101,10 +111,33 @@ final class DatabaseQueueTest extends TestCase
 
         $this->queue->push('always.fails', [], maxAttempts: 2);
 
+        // One batch, one attempt. This is the whole change: the release used to
+        // write `available_at = now`, so the next loop iteration found the same
+        // row again and both attempts burned inside a single `work()`.
         $result = $this->queue->work();
 
-        $this->assertSame(['processed' => 0, 'failed' => 1], $result);
-        $this->assertSame(2, $calls, 'handler ran once per attempt');
+        $this->assertSame(['processed' => 0, 'failed' => 0], $result);
+        $this->assertSame(1, $calls, 'one batch means one attempt, not max_attempts of them.');
+        $this->assertSame(1, $this->countRows('jobs'), 'the job is still queued for its next turn.');
+
+        $row = $this->jobRow();
+        $this->assertSame(1, (int) $row['attempts']);
+        $this->assertNull($row['reserved_at'], 'and it is released, not left reserved by a worker that is gone.');
+        $this->assertSame(
+            date('Y-m-d H:i:s', $this->now + 30),
+            $row['available_at'],
+            'the first retry waits the base delay: 30s, doubling from there.',
+        );
+
+        // Too early: the row is not reservable yet, and a batch spends nothing.
+        $this->assertSame(['processed' => 0, 'failed' => 0], $this->queue->work());
+        $this->assertSame(1, $calls);
+
+        // A minute later the second attempt runs and exhausts max_attempts, so
+        // this is where the job finally parks.
+        $this->now += 60;
+        $this->assertSame(['processed' => 0, 'failed' => 1], $this->queue->work());
+        $this->assertSame(2, $calls, 'handler ran once per attempt, one batch each.');
         $this->assertSame(0, $this->countRows('jobs'));
 
         /** @var array<string, mixed>|false $failed */
@@ -114,6 +147,48 @@ final class DatabaseQueueTest extends TestCase
         $this->assertSame('always.fails', $failed['handler']);
         $this->assertSame(2, (int) $failed['attempts']);
         $this->assertSame('boom', $failed['error']);
+    }
+
+    #[Test]
+    public function theBackoffDoublesAndIsCapped(): void
+    {
+        // `max_attempts` has no upper bound — a producer sets it per job — so
+        // an uncapped 2**n would schedule a row years out and turn a poison
+        // handler into something nobody looks at again.
+        $this->handlers->register('always.fails', static function (): void {
+            throw new RuntimeException('boom');
+        });
+
+        $this->queue->push('always.fails', [], maxAttempts: 20);
+
+        $expected = [30, 60, 120, 240, 480, 960, 1920, 3600, 3600];
+
+        foreach ($expected as $index => $delay) {
+            $this->assertSame(['processed' => 0, 'failed' => 0], $this->queue->work());
+            $this->assertSame(
+                date('Y-m-d H:i:s', $this->now + $delay),
+                $this->jobRow()['available_at'],
+                sprintf('retry %d waits %ds', $index + 1, $delay),
+            );
+
+            // Jump past whatever delay this attempt asked for.
+            $this->now += $delay;
+        }
+    }
+
+    /**
+     * The single `jobs` row, which every retry assertion reads.
+     *
+     * @return array<string, mixed>
+     */
+    private function jobRow(): array
+    {
+        /** @var array<string, mixed>|false $row */
+        $row = $this->pdo->query('SELECT * FROM jobs')->fetch(PDO::FETCH_ASSOC);
+
+        $this->assertIsArray($row, 'expected exactly one queued job');
+
+        return $row;
     }
 
     #[Test]

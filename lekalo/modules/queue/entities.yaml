@@ -1,0 +1,175 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "queue.identifier",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Job id (32 hex chars from random_bytes, jobs.id VARCHAR(32) PK)",
+      "base": "uuid"
+    },
+    {
+      "id": "queue.handler_name",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Handler name looked up in the process-wide HandlerRegistry (VARCHAR(255)); an unregistered name fails the job rather than fataling the worker",
+      "base": "string"
+    },
+    {
+      "id": "queue.queue_name",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Queue a job belongs to (VARCHAR(64), defaults to 'default')",
+      "base": "string"
+    },
+    {
+      "id": "queue.payload",
+      "kind": "scalar",
+      "version": 1,
+      "description": "JSON argument array (TEXT column) passed to the handler as ONE positional argument. Identifiers, never credentials: the payload lives in queue.db in both `jobs` and `failed_jobs`, and is rendered on screen at /mark/queue/{id}",
+      "base": "string"
+    },
+    {
+      "id": "queue.error_text",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Failure message recorded on the parked job — the handler's own exception message, prefixed for a payload that will not decode",
+      "base": "string"
+    },
+    {
+      "id": "queue.at",
+      "kind": "scalar",
+      "version": 1,
+      "description": "UTC timestamp (created_at, reserved_at, available_at, processed_at, failed_at)",
+      "base": "datetime"
+    },
+    {
+      "id": "queue.attempt_count",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Attempts spent so far and the ceiling per job (max_attempts, default 3, set per job by the producer with no upper bound — which is why the backoff is capped)",
+      "base": "number"
+    },
+    {
+      "id": "queue.job",
+      "kind": "entity",
+      "version": 1,
+      "description": "A queued unit of work. `reserved_at` marks a worker holding it, `available_at` is what the backoff writes (jobs table)",
+      "fields": [
+        {
+          "name": "id",
+          "type": {
+            "ref": "queue.identifier"
+          },
+          "required": true
+        },
+        {
+          "name": "queue",
+          "type": {
+            "ref": "queue.queue_name"
+          },
+          "required": true
+        },
+        {
+          "name": "handler",
+          "type": {
+            "ref": "queue.handler_name"
+          },
+          "required": true
+        },
+        {
+          "name": "payload",
+          "type": {
+            "ref": "queue.payload"
+          },
+          "required": true
+        },
+        {
+          "name": "attempts",
+          "type": {
+            "ref": "queue.attempt_count"
+          },
+          "required": true
+        },
+        {
+          "name": "available_at",
+          "type": {
+            "ref": "queue.at"
+          },
+          "required": true
+        },
+        {
+          "name": "reserved_at",
+          "type": {
+            "optional": {
+              "ref": "queue.at"
+            }
+          }
+        },
+        {
+          "name": "created_at",
+          "type": {
+            "ref": "queue.at"
+          },
+          "required": true
+        }
+      ],
+      "identity": [
+        "id"
+      ]
+    },
+    {
+      "id": "queue.failed_job",
+      "kind": "entity",
+      "version": 1,
+      "description": "A job whose attempts are spent, or whose handler nobody registered, or whose payload will not decode. Carries no max_attempts, which is why retrying it takes the ceiling as an argument (failed_jobs table)",
+      "fields": [
+        {
+          "name": "id",
+          "type": {
+            "ref": "queue.identifier"
+          },
+          "required": true
+        },
+        {
+          "name": "handler",
+          "type": {
+            "ref": "queue.handler_name"
+          },
+          "required": true
+        },
+        {
+          "name": "payload",
+          "type": {
+            "ref": "queue.payload"
+          },
+          "required": true
+        },
+        {
+          "name": "attempts",
+          "type": {
+            "ref": "queue.attempt_count"
+          },
+          "required": true
+        },
+        {
+          "name": "error",
+          "type": {
+            "ref": "queue.error_text"
+          },
+          "required": true
+        },
+        {
+          "name": "failed_at",
+          "type": {
+            "ref": "queue.at"
+          },
+          "required": true
+        }
+      ],
+      "identity": [
+        "id"
+      ]
+    }
+  ]
+}

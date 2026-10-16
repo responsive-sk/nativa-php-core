@@ -8,7 +8,7 @@ declare(strict_types = 1);
  *
  * The kernel runtime has no Composer packages, so this tool cannot be a
  * symfony/console application the way the showcase's bin/cms is: what manages
- * modules must run in a tree whose vendor/ directory may not exist. Nine
+ * modules must run in a tree whose vendor/ directory may not exist. Eleven
  * commands, argv-parsed, exit 0 on success and 1 on refusal or error:
  *
  *   module:list              installed + catalogued modules
@@ -18,6 +18,8 @@ declare(strict_types = 1);
  *   migrate                  run every module migrator (the first-request run, forced)
  *   schedule:run             run the Scheduler timetable entries due now (needs the Scheduler module)
  *   queue:work               work one batch of queued jobs (needs the Queue module)
+ *   outbox:process           deliver pending outbox messages and prune them (needs the Outbox module)
+ *   generate-images          render article preview images (needs the Blog module)
  *   discovery:clear          delete the discovery cache (rebuilt on the next request)
  *   discovery:status         whether the discovery cache exists and is fresh
  *
@@ -26,13 +28,20 @@ declare(strict_types = 1);
  * exit codes. The wording of every message is owned by the service — what
  * the CLI prints and what the tests assert is the same string.
  *
- * Two of the commands DELIVER rather than manage — `schedule:run` and
- * `queue:work` — so both call `wire_module_handlers()` from
- * `src/composition.php` first. A handler pairing that only the web process
- * registers leaves a CLI drain with an empty handler map, and every message
- * lands as `No handler registered for event type` while the HTTP responses
- * still look healthy (Boot 16). The pairing lives in one file; this script is
- * one of the processes that has to run it.
+ * THREE of the commands DELIVER rather than manage — `schedule:run`,
+ * `queue:work` and `outbox:process` — so each calls `wire_module_handlers()`
+ * from `src/composition.php` first. A handler pairing that only the web
+ * process registers leaves a CLI drain with an empty handler map, and every
+ * message lands as `No handler registered for event type` while the HTTP
+ * responses still look healthy (Boot 16). The pairing lives in one file; this
+ * script is one of the processes that has to run it. `generate-images` does
+ * NOT wire, because it delivers nothing — it renders files, and wiring a
+ * handler map it will never read would be a lie about what it does.
+ *
+ * The last two commands come from modules, which is why they are plain PHP
+ * rather than symfony Console commands: a module command that extends
+ * `Symfony\...\Command` cannot be loaded without `vendor/`, so it would be a
+ * command that only exists on a developer machine.
  */
 
 use Modules\Core\Interfaces\CLI\CliOutput;
@@ -179,6 +188,9 @@ function usage(): void
     out('  migrate                  run every module migrator (the first-request run, forced)');
     out('  schedule:run             run due Scheduler timetable entries (exit 1 on any failure)');
     out('  queue:work [<name>] [--limit=N]  work one batch of queued jobs (exit 1 on a parked job)');
+    out('  outbox:process [--limit=N] [--prune-interval="7 days"] [--no-prune]');
+    out('                            deliver pending outbox messages and prune processed ones');
+    out('  generate-images [-s|--slug S] [-f|--format FMT]  render article preview images');
     out('  discovery:clear          delete the discovery cache (rebuilt on the next request)');
     out('  discovery:status         whether the discovery cache exists and is fresh');
 }
@@ -194,14 +206,7 @@ function usage(): void
  */
 function cmdMigrate(): void
 {
-    $output = new class () implements CliOutput {
-        public function writeln(string $message): void
-        {
-            out(strip_tags($message));
-        }
-    };
-
-    (new DatabaseMigrator())->run($output);
+    (new DatabaseMigrator())->run(output());
 }
 
 /**
@@ -235,6 +240,81 @@ function cmdScheduleRun(): void
     );
 
     exit(\Modules\Scheduler\Interfaces\HTTP\SchedulerServices::run($schedule, $output));
+}
+
+/**
+ * Deliver the pending outbox messages and prune the processed ones.
+ *
+ * The operator side of the same queue `public/index.php` drains at the end of
+ * every request — for a deployment without traffic, or an operator who wants to
+ * see the backlog before it clears itself.
+ *
+ * @param list<string> $argv the full argv; options start at index 2
+ */
+function cmdOutboxProcess(array $argv): void
+{
+    if (!class_exists(\Modules\Outbox\Interfaces\CLI\Command\ProcessOutboxCommand::class)) {
+        fail('outbox:process needs the Outbox module (bin/cms module:add Outbox).');
+    }
+
+    // It DRAINS, so it wires first. The command registers the handler its own
+    // module can see; the Audit↔Outbox pairing is the one it cannot, and that
+    // is what `wire_module_handlers()` exists for — without it every
+    // `security.*` message this drain touches would be parked as unroutable.
+    wire_module_handlers();
+
+    $exit = \Modules\Outbox\Interfaces\CLI\Command\ProcessOutboxCommand::run(
+        array_merge(['outbox:process'], array_slice($argv, 2)),
+        output(),
+    );
+
+    exit($exit);
+}
+
+/**
+ * Render article preview images.
+ *
+ * NOT a delivery command: it writes files and reads none of the queues, so it
+ * wires nothing.
+ *
+ * @param list<string> $argv the full argv; options start at index 2
+ */
+function cmdGenerateImages(array $argv): void
+{
+    if (!class_exists(\Modules\Blog\Interfaces\CLI\Command\GenerateImagesCommand::class)) {
+        fail('generate-images needs the Blog module (bin/cms module:add Blog).');
+    }
+
+    $command = new \Modules\Blog\Interfaces\CLI\Command\GenerateImagesCommand();
+
+    exit($command->run(
+        array_merge(['generate-images'], array_slice($argv, 2)),
+        output(),
+    ));
+}
+
+/**
+ * Adapt this file's `out()` into the `CliOutput` a command reports through.
+ *
+ * Built here, in the CLI, so the commands themselves stay free of any printing
+ * concern — the same split `SchedulerServices::output()` keeps for the
+ * timetable, and the reason a test can drive a command in-process and read what
+ * it said.
+ *
+ * `strip_tags` is not decoration: the migrators' wording is shared with a
+ * Console-oriented caller that used to wrap some lines in `<info>`, and
+ * printing those tags literally into a crontab mail is worse than no colour.
+ * The module commands stopped emitting markup at all, so this only protects
+ * the shared migrator text.
+ */
+function output(): CliOutput
+{
+    return new class () implements CliOutput {
+        public function writeln(string $message): void
+        {
+            out(strip_tags($message));
+        }
+    };
 }
 
 /**
@@ -372,6 +452,16 @@ function main(array $argv): void
 
         case 'queue:work':
             cmdQueueWork($argv);
+
+            break;
+
+        case 'outbox:process':
+            cmdOutboxProcess($argv);
+
+            break;
+
+        case 'generate-images':
+            cmdGenerateImages($argv);
 
             break;
 

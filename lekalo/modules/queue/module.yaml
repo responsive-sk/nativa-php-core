@@ -5,7 +5,7 @@
       "id": "queue",
       "kind": "module",
       "version": 1,
-      "description": "Queue — job queue in queue.db with pending and reserved jobs and attempt counts."
+      "description": "Queue — durable background jobs in queue.db: jobs + failed_jobs, reserved under BEGIN IMMEDIATE, retried with a capped exponential backoff and parked in failed_jobs once the attempts are spent."
     }
   ]
 }

@@ -7,7 +7,6 @@ namespace Modules\Settings\Infrastructure\Persistence\Migrations;
 use Modules\Core\Infrastructure\Attributes\AsMigrator;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Core\Interfaces\CLI\MigratorInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Settings Database Migrator — creates the complete config.db schema.
@@ -58,7 +57,7 @@ final readonly class SettingsDatabaseMigrator implements MigratorInterface
     {
     }
 
-    public function run(CliOutput | OutputInterface $output): void
+    public function run(CliOutput $output): void
     {
         $output->writeln('<info>Migrating config.db...</info>');
 

@@ -20,9 +20,9 @@ use Modules\Users\Infrastructure\Persistence\Repositories\UserRepository;
 use Modules\Users\Interfaces\HTTP\Actions\Auth\PasswordResetRequestAction;
 use Modules\Users\Interfaces\HTTP\AuthServices;
 use PDO;
+use Modules\Core\Interfaces\CLI\CliOutput;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Console\Output\NullOutput;
 
 /**
  * PasswordResetMailerTest — audit finding #1: `POST /forgot-password` used to
@@ -92,7 +92,7 @@ final class PasswordResetMailerTest extends TestCase
         AuthServices::reset();
 
         (new UsersDatabaseMigrator(new PDO('sqlite:' . $this->tmpDir . '/users.db')))
-            ->run(new NullOutput());
+            ->run($this->quietOutput());
 
         $this->logFile = AppPaths::instance()->logs('app.log');
         $this->logBefore = is_file($this->logFile) ? (string) file_get_contents($this->logFile) : null;
@@ -485,5 +485,22 @@ final class PasswordResetMailerTest extends TestCase
         if (self::logContents($this->logFile) !== $this->logBefore) {
             file_put_contents($this->logFile, $this->logBefore);
         }
+    }
+
+    /**
+     * A `CliOutput` that swallows every line.
+     *
+     * This was a `Symfony\...\NullOutput` until the migrator contract stopped
+     * accepting a dev-only union arm (Boot 32): the kernel's runtime has no
+     * Composer dependencies, so a test asserting a kernel contract should not
+     * need one to satisfy it either.
+     */
+    private function quietOutput(): CliOutput
+    {
+        return new class implements CliOutput {
+            public function writeln(string $message): void
+            {
+            }
+        };
     }
 }

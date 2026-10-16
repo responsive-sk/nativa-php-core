@@ -360,6 +360,50 @@ check 'the published article is served' "/blog/$ARTICLE" 200
 check 'the article list is served' '/blog' 200
 
 # ---------------------------------------------------------------------------
+# THE QUEUED COVER — the tree's first real queue producer, end to end.
+#
+# Writing the article above queued a `blog.cover` job carrying only its slug and
+# locale. This is the last point in the script where the article exists: the
+# handler renders from the markdown file, so a cover job worked after the delete
+# below would be asserting on a slug that is gone and would fail for a reason
+# that has nothing to do with the producer.
+#
+# The FILE is the assertion, for the reason the article's own check above is the
+# file and not the 302: a status cannot tell a rendered cover from a failed
+# render that still redirected.
+# ---------------------------------------------------------------------------
+want 'writing the article queued exactly one cover job' 1 \
+    "$(dbq DB_QUEUE "SELECT COUNT(*) FROM jobs WHERE handler = 'blog.cover'")"
+
+if php bin/cms queue:work > "$TMP/cover-work.log" 2>&1; then
+    ok 'bin/cms queue:work exits 0 having rendered the cover'
+else
+    cat "$TMP/cover-work.log"
+    bad 'bin/cms queue:work failed on the queued cover'
+fi
+
+if [ -s "storage/blog-images/$ARTICLE.svg" ]; then
+    ok 'the worker rendered the cover the article queued'
+else
+    bad "no cover at storage/blog-images/$ARTICLE.svg"
+fi
+
+want 'the queue is empty again — the job is deleted on success' 0 \
+    "$(dbq DB_QUEUE "SELECT COUNT(*) FROM jobs WHERE handler = 'blog.cover'")"
+
+# KNOWN GAP, cleaned up here on purpose. `POST /mark/articles/{slug}/delete`
+# unlinks the markdown file and NOTHING else — `BlogCrudService::delete()` is a
+# single `unlink()` — so the cover this section just rendered is orphaned when
+# the article goes. The gate removes it, because the storage snapshot below
+# exists to prove THAT THIS SCRIPT leaves no trace, and folding a product gap
+# into that check would make it mean two things at once.
+#
+# Note that `lekalo/modules/blog/commands.yaml` describes that delete as
+# removing "its tracked cover if owned", which the code does not do. Nothing
+# catches it: the model has no adapter (docs/modules.md, "The Lekalo model").
+rm -f "storage/blog-images/$ARTICLE.svg"
+
+# ---------------------------------------------------------------------------
 # The PUBLIC COMMENT FORM — the one mutation a stranger can make, and the
 # moderation gate in front of it. The article from the section above is the
 # host, so this runs before it is deleted.
@@ -528,6 +572,37 @@ else
     cat "$TMP/schedule.log"
     bad 'schedule:run printed no outcome line'
 fi
+
+# A handler that throws while attempts remain is a RETRY, not a failure. The
+# worker must say so: the row goes back with a BACKOFF, so it drops out of the
+# batch, and the run stays green. A worker that reddened every minute for a
+# retry would be a worker whose "1" means nothing — and with the release writing
+# `available_at = now` (no backoff) that was not hypothetical: one `queue:work`
+# call burned all three attempts and parked the row.
+RETRY_JOB="$(php <<'PHP'
+<?php
+require 'src/init.php';
+
+echo \Modules\Queue\Interfaces\HTTP\QueueServices::queue()->push(
+    'smoke.retryable',
+    ['from' => 'admin-smoke'],
+    maxAttempts: 3,
+);
+PHP
+)"
+
+if php bin/cms queue:work > "$TMP/queue-retry.log" 2>&1; then
+    ok 'bin/cms queue:work exits 0 on a job it will retry'
+else
+    cat "$TMP/queue-retry.log"
+    bad 'bin/cms queue:work reddened the run for a retry'
+fi
+
+retry_state="$(dbq DB_QUEUE "SELECT attempts || '/' || (reserved_at IS NULL) FROM jobs WHERE id = '$RETRY_JOB'")"
+want 'the retried job is queued again, released, one attempt spent' '1/1' "$retry_state"
+
+retry_future="$(dbq DB_QUEUE "SELECT (available_at > datetime('now')) FROM jobs WHERE id = '$RETRY_JOB'")"
+want 'its next attempt is in the future' 1 "$retry_future"
 
 # The queue's own operator command, on the path a cron takes: an empty queue
 # must exit 0 and report zeroes. A worker that reddened every tick because it

@@ -7,6 +7,7 @@ namespace Modules\Blog\Interfaces\HTTP\Actions;
 use Modules\Audit\Interfaces\HTTP\AuditServices;
 use Modules\Blog\Application\BlogServices;
 use Modules\Blog\Application\Services\BlogCrudService;
+use Modules\Blog\Application\Services\CoverJobs;
 use Modules\Cardboard\Application\Services\AdminLocale;
 use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Application\Services\CacheInvalidator;
@@ -84,6 +85,13 @@ final class ArticlesEditAction
         }
 
         CacheInvalidator::flush();
+
+        // The cover is derived work: slow, and nothing in this request should
+        // wait for it. Queued where the cache is already flushed for a content
+        // write — see CoverJobs for why this is NOT the outbox publish event,
+        // which fires on publish/unpublish and on nothing else.
+        CoverJobs::request($slug, $locale);
+
         AuditServices::log(
             'article.edit',
             'article',

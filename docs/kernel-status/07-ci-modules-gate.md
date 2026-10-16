@@ -312,11 +312,12 @@ the script and `actionlint` on the workflow clean.
 
 - **CI `Extract-check` is still NOT RUN** (Boot 20): the upstream checkout is
   private. Unchanged by this round.
-- **The Queue module still has no producer.** The gate can only push through the
-  module's own API because nothing in this tree enqueues a job (`push()` is
-  called by tests and by nothing else). When a real producer lands — mail,
-  notifications — the push step in the gate becomes a real one and this note is
-  deleted rather than reworded.
+- ~~**The Queue module still has no producer.**~~ **CLOSED in Boot 32.** The
+  article cover: `ArticlesCreateAction`, `ArticlesEditAction` and
+  `BlogInlineEditAction` each queue a `blog.cover` job next to the cache flush
+  they already do, and `CoverRenderHandler` renders it through the operator's
+  own `generate-images` command. Deleted rather than reworded, as Boot 30
+  promised — the note said it would be, and it was.
 - **The refusals that need a forged client address** (the register and reset
   throttles, the rate-limit 429) are not in the gate: loopback is exempt from
   throttling by design, and a `php -S` probe cannot forge `REMOTE_ADDR`. Those
@@ -473,18 +474,28 @@ Queue: processed=0 failed=1     # one call, three attempts spent, row parked wit
 ```
 
 `release()` takes a `$delaySeconds` exactly to allow a backoff and `work()`
-never passes one. So `max_attempts` bounds *retries*, not *minutes*. Stated
-rather than changed — a backoff is a behaviour decision for the module (what
-delay, per attempt), not a side effect of shipping a command — and the tests
-pin the measured behaviour on **both** sides of the boundary: a parked run
-exits 1, and a batch smaller than `max_attempts` leaves the job queued, its
-`reserved_at` cleared, and exits 0.
+never passed one. So `max_attempts` bounded *retries*, not *minutes*.
+
+**Boot 32 closed this.** `work()` now releases with `30 * 2 ** (attempts - 1)`
+seconds, capped at 3600 — the cap because `max_attempts` has no upper bound (a
+producer sets it per job) and an uncapped power would schedule a row years out,
+turning a poison handler into something nobody looks at again. The formula is
+Media's, so the tree's two retry paths read alike.
+
+The tests pin the timing on an **injected clock**, not by sleeping:
+`DatabaseQueue` has accepted `?callable $now` since it shipped and **no test had
+ever passed it**, so before this the retry path could not be observed at all —
+which is why the defect survived. `FileTaskMutexTest` was already the pattern.
+
+What changed for an operator: a worker that will RETRY now exits **0**, and one
+that has parked something exits **1**. Before, a single retry could redden a run
+— which is how a "1" stops meaning anything.
 
 ### The gate now runs the command an operator runs
 
 The queue section of `admin-smoke.sh` called `work()` through an inline heredoc.
 It now runs `php bin/cms queue:work`, because **a gate that proves the worker by
-calling the module's API proves a worker nobody can run.** Four checks, 79
+calling the module's API proves a worker nobody can run.** Four checks, 78
 total:
 
 | check | asserts |
@@ -498,7 +509,7 @@ total:
 
 | Gate | Result |
 |---|---|
-| `make admin-smoke` | **79 checks**, exit 0; `storage/` back byte-for-byte |
+| `make admin-smoke` | **78 checks**, exit 0; `storage/` back byte-for-byte |
 | `composer test` | 331 tests, 1384 assertions, **1 skip** (the kernel-only one) |
 | `make lint` | clean |
 | `phpstan` (L9) / `rector-dry` / `cs-fix-dry` | no errors; OK; 0 of 95 |
@@ -510,9 +521,12 @@ total:
 
 ## What this round did not close
 
-- **The Queue module still has no producer.** Nothing in this tree enqueues a
-  job; `push()` is still called by tests and by nothing else. Boot 30's note
-  stands as written and is still deleted-when-a-producer-lands.
+- ~~**The Queue module still has no producer.**~~ **CLOSED in Boot 32.** The
+  article cover: `ArticlesCreateAction`, `ArticlesEditAction` and
+  `BlogInlineEditAction` each queue a `blog.cover` job next to the cache flush
+  they already do, and `CoverRenderHandler` renders it through the operator's
+  own `generate-images` command. Deleted rather than reworded, as Boot 30
+  promised — the note said it would be, and it was.
 - **The obvious producer is a security decision, not a feature.** Making the
   reset link a job would put the plaintext token in `queue.db/jobs.payload`,
   again in `failed_jobs.payload` on exhaustion, and on screen at
@@ -535,3 +549,134 @@ total:
   outbox:process` prints the usage text. Out of scope here; recorded because
   `docs/modules.md` quotes `outbox:process`'s exit contract as if it were
   reachable.
+
+## Boot 32 — the first real producer, and a model that could not check it
+
+Boot 30 wrote a note to be **deleted rather than reworded** when a producer
+landed. This is that round.
+
+> **One number above is corrected rather than appended.** Boot 31 recorded **79**
+> checks; the gate as it stands in `master` emits **78**, measured by replaying
+> it from a worktree at `75d50a9` — whose `bin/build/admin-smoke.sh` is
+> byte-identical to `master`'s, so the count is the merged one and not a
+> worktree artefact. The whole chain is now measured rather than assumed:
+> **78** (master) → **81** (Boot 32's backoff checks) → **85** (the cover
+> checks). A log whose subject is measured states cannot carry an off-by-one
+> that nobody re-counted, and the reason is worth naming: the number was taken
+> from a filtered run rather than by counting what the script emits.
+
+### The trigger was measured, and the measurement overruled the plan
+
+The obvious place to hang a producer is the outbox — this tree's established
+async mechanism. It is the wrong place, and one measurement says why:
+
+| action | outbox event | cache flush |
+|---|:---:|:---:|
+| `ArticlesCreateAction` | no | yes |
+| `ArticlesEditAction` | no | yes |
+| `BlogInlineEditAction` | no | yes |
+| `ArticlesDeleteAction` | no | yes |
+| `ArticlePublishToggleAction` | **yes** | yes |
+
+`article.published` / `article.unpublished` are recorded in exactly ONE place.
+A cover tracks **content**, so the publish toggle is wrong twice over: it fires
+on unpublish, when nothing is served at all, and it misses a later edit of an
+already-published article — which is exactly when a stale cover appears on the
+page. The producer therefore sits in the three content-write actions, at the
+`CacheInvalidator::flush()` they already call.
+
+### The payload is two scalars, and that is the property worth keeping
+
+`{slug, locale}` — identifiers, not content. No token, no body, no file handle,
+no rendered SVG. `jobs.payload` and `failed_jobs.payload` both live in
+`storage/data/queue.db`, and the payload is rendered on screen at
+`/mark/queue/{id}`, so a credential in a payload is a credential in a second
+database and on a page — which is what the audit found when a reset token
+turned up in `app.log`.
+
+**The queued reset link is therefore still NOT a producer**, and stays an
+operator decision ("accept and document", "redact sensitive payloads in the
+panel", or "don't"), unchanged from Boot 31. The cover was chosen because its
+payload needed no such decision.
+
+Ids also mean a job that runs late renders the article as it IS rather than as
+it was when queued — which is what an operator wants from a derived artefact,
+and the reason no snapshot is stored.
+
+### The edge is declared, not guarded
+
+`QueueServices` is imported, so `module:show Blog` gains Queue (closure: 8 → 9
+entries, graph still acyclic — Queue's closure is `Audit, Cardboard`) and
+`module:add Blog` refuses without it, exactly as it already refused without
+Outbox. The `class_exists`-without-`use` hatch was available and deliberately
+**not** used: it exists for dependencies genuinely absent without a module, and
+this one is real. A dependency hidden from `module:show` is a dependency an
+operator cannot see.
+
+`CoverRenderHandler` wraps the OPERATOR'S COMMAND rather than copying the
+rendering logic — if it carried its own copy of the front-matter extraction, the
+locale collision rule and the raster fallbacks, the two would drift, and the
+copy nobody runs by hand is the one that quietly stops matching.
+
+### The gate asserts the producer end to end
+
+Four checks, where they had to go: in the **content section**, because that is
+the last point in the script where the article exists — the handler renders from
+the markdown file, so a cover job worked after the delete would be asserting on
+a slug that is gone. 81 → **85** checks.
+
+| check | asserts |
+|---|---|
+| writing the article queued exactly one cover job | the producer fires on the content write |
+| `queue:work` exits 0 | the worker renders rather than parking |
+| the cover file exists and is non-empty | **the file is the assertion**, for the reason the article's own check is the file and not the 302 |
+| the queue is empty again | the job is deleted on success |
+
+Wiring is the thing being proved, so it was proved both ways: wired, a pushed
+`blog.cover` renders a 2 553-byte SVG; **without the wiring the same job parks
+with `No queue handler registered under "blog.cover"`**.
+
+### What the round found by accident: the model lies and nothing catches it
+
+Adding the gate checks meant finding out what article delete actually does.
+`BlogCrudService::delete()` is a single `unlink()` of the markdown file — the
+cover is orphaned when its article goes. And `lekalo/modules/blog/commands.yaml`
+describes that same command as deleting "an article file (and its tracked cover
+if owned)".
+
+**The model states a thing the code does not do, and nothing in the pipeline
+notices** — because `lekalo.lock` reports `adapters 0`, so no PHP adapter
+compares the model to the implementation. The gate removes the orphan itself,
+because the storage snapshot exists to prove *this script* leaves no trace, and
+folding a product gap into that check would make it mean two things at once.
+
+`docs/modules.md` gained a section saying so up front: **the model is
+documentation with a schema, and the gate keeps the documentation well-formed
+(it does not make it true).** That section is not an abstraction — this is the
+second measured instance of the failure it describes.
+
+### Verified (2026-10-16, all exit 0)
+
+| Gate | Result |
+|---|---|
+| `make admin-smoke` | **85 checks**; storage back byte-for-byte |
+| `composer test` | 352 tests, 1471 assertions, 1 skip |
+| `make lint` / `phpstan` (L9) / `rector-dry` / `cs-fix-dry` | clean / no errors / OK / 0 of 96 |
+| `shellcheck` (both scripts) / `actionlint` | clean |
+| `make lekalo-check` | 23 rules, 0 errors — and, in CI (run 38933437965), both the pinned install and the gate green |
+
+## What this round did not close
+
+- **Deleting an article orphans its cover.** Measured above; the gate covers for
+  it in the script, the product does not. `BlogCrudService::delete()` would have
+  to unlink the cover too, which is a behaviour change to a delete — and the
+  model's own description says that is what it already does, so the model and
+  the code have to be reconciled either way. Not done here: it is not this
+  round's change to make silently.
+- **The queued reset link stays an operator decision** (above), and the token
+  cannot be reconstructed from the stored `sha256`, so the options remain
+  "accept and document", "redact sensitive payloads in the panel", or "don't".
+- **The model has no adapter**, so nothing checks it against the code, and
+  seven of twenty-one modules are modelled at all (14 are stubs, including
+  `core` and `database`). `docs/modules.md` now says what the gate buys and what
+  it does not; the adapter is the thing that would close the gap.
