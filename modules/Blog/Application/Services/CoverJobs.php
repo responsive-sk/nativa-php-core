@@ -81,6 +81,24 @@ final class CoverJobs
      * contract `OutboxServices::articleEvent()` states, for the same reason.
      * A cover that is missing is visible (no image); a failed publish is not.
      *
+     * The call below is UNGUARDED and the failure is still CONTAINED, and both
+     * are deliberate — they answer different questions:
+     *
+     *   - Unguarded, because `QueueServices` is imported. That is what puts
+     *     Queue in Blog's closure and makes `module:add Blog` refuse without it.
+     *     A `class_exists` guard with the class named inline would hide the
+     *     dependency from `module:show`, and an operator has to be able to see
+     *     that Blog needs a queue.
+     *   - Contained by the catch, because a tree that installed Blog BEFORE
+     *     this commit still has no Queue installed, and `module:show`'s refusal
+     *     only applies to the next `module:add`. Measured with the Queue slice
+     *     removed: `Class "Modules\Queue\Interfaces\HTTP\QueueServices" not
+     *     found` is logged as `[BLOG] Could not queue the cover for …` and the
+     *     write returns false. The article still saves; the cover is simply not
+     *     queued, and the log says why.
+     *
+     * So the degradation is: no queue, no covers, articles unaffected.
+     *
      * @return bool false when the job could not be queued
      */
     public static function request(string $slug, string $locale): bool
