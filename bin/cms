@@ -8,7 +8,7 @@ declare(strict_types = 1);
  *
  * The kernel runtime has no Composer packages, so this tool cannot be a
  * symfony/console application the way the showcase's bin/cms is: what manages
- * modules must run in a tree whose vendor/ directory may not exist. Six
+ * modules must run in a tree whose vendor/ directory may not exist. Nine
  * commands, argv-parsed, exit 0 on success and 1 on refusal or error:
  *
  *   module:list              installed + catalogued modules
@@ -17,20 +17,33 @@ declare(strict_types = 1);
  *   module:remove <Name>     delete the slice (refuses while another module imports it)
  *   migrate                  run every module migrator (the first-request run, forced)
  *   schedule:run             run the Scheduler timetable entries due now (needs the Scheduler module)
+ *   queue:work               work one batch of queued jobs (needs the Queue module)
+ *   discovery:clear          delete the discovery cache (rebuilt on the next request)
+ *   discovery:status         whether the discovery cache exists and is fresh
  *
  * The lifecycle itself lives in ModuleInstaller (a service the test harness
  * drives in-process); this script only prints results and maps refusals to
  * exit codes. The wording of every message is owned by the service — what
  * the CLI prints and what the tests assert is the same string.
+ *
+ * Two of the commands DELIVER rather than manage — `schedule:run` and
+ * `queue:work` — so both call `wire_module_handlers()` from
+ * `src/composition.php` first. A handler pairing that only the web process
+ * registers leaves a CLI drain with an empty handler map, and every message
+ * lands as `No handler registered for event type` while the HTTP responses
+ * still look healthy (Boot 16). The pairing lives in one file; this script is
+ * one of the processes that has to run it.
  */
 
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Core\Interfaces\CLI\Support\DatabaseMigrator;
+use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Tooling\ModuleCatalog;
 use Modules\Tooling\ModuleInstaller;
 use Modules\Tooling\ModuleManifest;
 
 require_once __DIR__ . '/../src/init.php';
+require_once __DIR__ . '/../src/composition.php';
 
 /** @return never */
 function fail(string $message): void
@@ -166,6 +179,7 @@ function usage(): void
     out('  module:remove <Name> [--force]  remove a module (refuses while imported)');
     out('  migrate                  run every module migrator (the first-request run, forced)');
     out('  schedule:run             run due Scheduler timetable entries (exit 1 on any failure)');
+    out('  queue:work [<name>] [--limit=N]  work one batch of queued jobs (exit 1 on a parked job)');
     out('  discovery:clear          delete the discovery cache (rebuilt on the next request)');
     out('  discovery:status         whether the discovery cache exists and is fresh');
 }
@@ -204,6 +218,9 @@ function cmdScheduleRun(): void
         fail('schedule:run needs the Scheduler module (bin/cms module:add Scheduler).');
     }
 
+    // Delivery in this process, so the handler map is the one the tasks use.
+    wire_module_handlers();
+
     $output = \Modules\Scheduler\Interfaces\HTTP\SchedulerServices::output(
         static function (string $message): void {
             out($message);
@@ -211,8 +228,143 @@ function cmdScheduleRun(): void
     );
 
     $schedule = \Modules\Scheduler\Interfaces\HTTP\SchedulerServices::schedule();
+    withQueueWork($schedule);
 
     exit(\Modules\Scheduler\Interfaces\HTTP\SchedulerServices::run($schedule, $output));
+}
+
+/**
+ * Add the queue's worker to $schedule — HERE, not in the Scheduler module.
+ *
+ * Two reasons, one architectural and one operational:
+ *
+ *  - **Architectural.** Scheduler stays queue-agnostic: a timetable entry
+ *    naming `QueueServices` inside the module would be a Scheduler → Queue
+ *    edge in `module:show`, and the queue is not something every deployment
+ *    has. The entry belongs to the composition, which is what this file is.
+ *  - **Operational.** `queue.db` is created by a migrator, so a cron that
+ *    fires before the first `bin/cms migrate` would otherwise fail a task
+ *    every minute and redden every run for a reason the operator cannot see
+ *    from the failure line. So the entry is skipped — with one line saying
+ *    why — while the database is unmigrated.
+ *
+ * Every minute with a five-minute overlap guard, because `work()` is a batch
+ * and a second tick landing on top of a slow batch is exactly what the guard
+ * is for.
+ *
+ * @param \Modules\Scheduler\Scheduling\Schedule $schedule
+ */
+function withQueueWork($schedule): void
+{
+    if (!class_exists(\Modules\Queue\Interfaces\HTTP\QueueServices::class)) {
+        return;
+    }
+
+    if (!queue_database_ready()) {
+        out(sprintf(
+            'queue:work skipped — %s has no `jobs` table yet (run: php bin/cms migrate).',
+            queue_database_path(),
+        ));
+
+        return;
+    }
+
+    $schedule->call(static function (): void {
+        \Modules\Queue\Interfaces\HTTP\QueueServices::work();
+    })->everyMinute()->description('queue:work')->withoutOverlapping(5);
+}
+
+/**
+ * Where the queue's database actually is — the `DB_QUEUE` override when the
+ * deployment set one, `storage/data/queue.db` otherwise.
+ *
+ * Named separately from `queue_database_ready()` because the two answer
+ * different questions, and the skip message has to quote the REAL path: a
+ * line that says `storage/data/queue.db` while the deployment keeps its
+ * database in /var/lib sends the operator to the wrong file.
+ */
+function queue_database_path(): string
+{
+    return \Modules\Core\Infrastructure\Paths\AppPaths::instance()->database('queue');
+}
+
+/**
+ * Whether the queue's database carries the `jobs` table yet.
+ *
+ * A table lookup, not a file check: an operator who removed and reinstalled
+ * the module has the file and no schema, and a file check would call that
+ * ready and hand the cron a missing-table error every minute.
+ */
+function queue_database_ready(): bool
+{
+    try {
+        $pdo = DatabaseConnectionManager::instance()->connection('queue');
+
+        $statement = $pdo->query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'jobs'");
+    } catch (\Throwable $e) {
+        return false;
+    }
+
+    if (false === $statement) {
+        return false;
+    }
+
+    return false !== $statement->fetchColumn();
+}
+
+/**
+ * Work one batch of queued jobs — the queue's operator surface.
+ *
+ * `DatabaseQueue::work()` had no caller in this tree at all: the end-of-
+ * request drain that ships today is the OUTBOX's, a different mechanism on a
+ * different database with an idempotent handler, and no producer pushes a
+ * Queue job yet. That is stated rather than papered over — until a producer
+ * lands, this command has nothing to deliver and says so in one line.
+ *
+ * It exists because the alternative is worse: the only way to run a worker was
+ * an inline `php` heredoc, which is not something an operator can put in
+ * crontab and a support answer can point at. The handler pairing is wired
+ * first, for the reason in the file header.
+ *
+ * @param list<string> $argv the full argv; options start at index 2
+ */
+function cmdQueueWork(array $argv): void
+{
+    if (!class_exists(\Modules\Queue\Interfaces\HTTP\QueueServices::class)) {
+        fail('queue:work needs the Queue module (bin/cms module:add Queue).');
+    }
+
+    wire_module_handlers();
+
+    $queue = null;
+    $limit = 10;
+
+    foreach (array_slice($argv, 2) as $argument) {
+        if (str_starts_with($argument, '--limit=')) {
+            $limit = max(1, (int) substr($argument, strlen('--limit=')));
+        } elseif (!str_starts_with($argument, '--')) {
+            $queue = $argument;
+        }
+    }
+
+    $result = \Modules\Queue\Interfaces\HTTP\QueueServices::work($queue, $limit);
+
+    out(sprintf(
+        'Queue: processed=%d failed=%d (queue: %s, limit %d)',
+        $result['processed'],
+        $result['failed'],
+        $queue ?? '(any)',
+        $limit,
+    ));
+
+    if ($result['failed'] > 0) {
+        out(sprintf(
+            'Failed jobs are parked in failed_jobs — retry or drop them at /mark/queue%s.',
+            null === $queue ? '' : ' (queue: ' . $queue . ')',
+        ));
+    }
+
+    exit(\Modules\Queue\Interfaces\HTTP\QueueServices::exitCode($result));
 }
 
 /**
@@ -290,6 +442,11 @@ function main(array $argv): void
 
         case 'schedule:run':
             cmdScheduleRun();
+
+            break;
+
+        case 'queue:work':
+            cmdQueueWork($argv);
 
             break;
 
