@@ -223,15 +223,46 @@ Verified by replaying both jobs' `run` blocks in order against a fresh
 | `modules` (build → install → migrate → theme → suite → assert) | **exit 0**: `Installed (19)` from 18 catalogue entries in four rounds, `active theme: mono (bundle available: yes)`, `318 tests, 1339 assertions, 1 skip`, assertion `318 tests ran, 1 skipped, 38 catalogue test classes expected` |
 | `shellcheck` on both scripts / `actionlint` on the workflow | clean |
 
+## Boot 29 — the gate reaches the content flows
+
+The admin gate stopped at the panel's account surfaces, which is not where an
+operator lives: the two editors they use every day are the article and the
+page. Both are now in `admin-smoke.sh`, through the panel, with the FILE as the
+assertion rather than the status:
+
+| flow | checks |
+|---|---|
+| article | `GET /mark/articles` 200; `POST /mark/articles/create?locale=sk` 302; the `.md` exists; `GET /blog/<slug>` **200**; `GET /blog` 200; `POST /mark/articles/<slug>/delete` 302; the file is gone; `GET /blog/<slug>` **404** |
+| page | `GET /mark/pages` 200; `POST /mark/pages/create?locale=sk` 302; the file exists; `GET /<slug>` **200**; delete 302; the file is gone; `GET /<slug>` **404** |
+
+Two things writing the checks measured, both now commented where they bite:
+
+- an article create **without `date`** is a 400 with the form re-rendered
+  (`ArticlesCreateAction::validate` requires title, date and body);
+- deleting an article that does not exist is a **403** from the ownership gate,
+  not a 404 — which is exactly why the file, not the status, is the assertion in
+  both flows.
+
+**Content is the one thing the gate writes into the checkout.** Articles and
+pages live under `storage/` and there is no root override the way there is for
+the ten databases (`AppPaths::storage()` is the checkout, measured), so the
+script snapshots `storage/` minus the volatile trees before the content section
+and **fails** if the tree does not come back exactly as it found it. That is what
+makes `make admin-smoke` safe on a workstation whose `storage/` holds a
+developer's own posts; on a runner the checkout is disposable either way.
+
+Verified: 45 checks, exit 0 on this tree and again on a fresh `git worktree`
+(catalogue installed there, `storage/` byte-identical afterwards, no
+`smoke-*` file left anywhere); `shellcheck` and `actionlint` clean.
+
 ## What this round did not close
 
 - **CI `Extract-check` is still NOT RUN** (Boot 20): the upstream checkout is
   private. Unchanged by this round.
-- **The rest of the catalogue's live surfaces** — Blog's article writes, Pages,
-  Comments' public submit, the Queue worker — are still not swept. The gate
-  covers the flows Boot 26 touched (users, roles, bulk actions) plus the login
-  and dashboard around them; the other modules' own surfaces are the next
-  round's work, and the script is where they go.
+- **Comments' public submit and the Queue worker are still not in the gate.**
+  Boot 29 added the article and page editors (the panel's daily flows); the
+  public comment form (honeypot and all) and a real queued job are the next
+  round's checks, and `bin/build/admin-smoke.sh` is where they go.
 - **The refusals that need a forged client address** (the register and reset
   throttles, the rate-limit 429) are not in the gate: loopback is exempt from
   throttling by design, and a `php -S` probe cannot forge `REMOTE_ADDR`. Those
