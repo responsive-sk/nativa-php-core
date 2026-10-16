@@ -67,4 +67,31 @@ function wire_module_handlers(): void
         \Modules\Outbox\Interfaces\HTTP\OutboxServices::processor(),
         \Modules\Audit\Interfaces\HTTP\AuditServices::audit(),
     );
+
+    wire_queue_handlers();
+}
+
+/**
+ * The Queue module's handlers — currently one, and the tree's first real
+ * producer's consumer (Boot 32).
+ *
+ * Named inline, never imported, for the same reason as the pairing above: a
+ * `use Modules\…` here would be the kernel depending on a module it must not
+ * know. The registry is `QueueServices::handlers()` — the PROCESS-WIDE cached
+ * instance, which is the one `DatabaseQueue` was built around. Registering on a
+ * fresh `HandlerRegistry` compiles, loads, and leaves every job unroutable,
+ * which is Boot 16 in miniature.
+ */
+function wire_queue_handlers(): void
+{
+    if (!class_exists('Modules\Queue\Interfaces\HTTP\QueueServices')
+        || !class_exists('Modules\Queue\Application\Services\HandlerRegistry')
+        || !class_exists('Modules\Blog\Application\Services\CoverRenderHandler')
+    ) {
+        return;
+    }
+
+    \Modules\Blog\Application\Services\CoverRenderHandler::register(
+        \Modules\Queue\Interfaces\HTTP\QueueServices::handlers(),
+    );
 }
