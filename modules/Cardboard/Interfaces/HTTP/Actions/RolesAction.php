@@ -11,7 +11,6 @@ use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
-use Modules\Outbox\Interfaces\HTTP\SecurityEventServices;
 
 /**
  * Roles + permissions management — task 9.3.
@@ -23,6 +22,16 @@ use Modules\Outbox\Interfaces\HTTP\SecurityEventServices;
  * - GET  /mark/permissions               permission list
  * - POST /mark/roles/create              create role
  * - POST /mark/roles/{id}/delete         delete role
+ *
+ * Every security event the role and permission mutations emit rides the
+ * Outbox when it is installed, behind a `class_exists` guard and never a `use`
+ * statement: an import here puts Outbox back in this module's closure, and
+ * Outbox imports Cardboard in turn (its metric provider does), so with
+ * Security also on the path the graph is
+ * `Cardboard → Security → Outbox → Cardboard` — a cycle no install order can
+ * satisfy, measured on a fresh tree in part 07. Without the Outbox the
+ * mutation still happens — only the event is missing, the trade the Users
+ * module's own login and logout actions make.
  */
 #[Route(path: '/mark/roles', method: 'GET', name: 'mark.roles')]
 #[Route(path: '/mark/roles/create', method: 'POST', name: 'mark.roles.create', handlerMethod: 'createRole')]
@@ -110,7 +119,10 @@ final class RolesAction
             // security event and not just an admin write. The inline audit row
             // above is the non-atomic fallback; this one rides the outbox so
             // the record survives a crash between the two databases.
-            SecurityEventServices::roleChanged($id, SecurityEventServices::OP_CREATE, $request->getClientIp());
+            if (class_exists('Modules\\Outbox\\Interfaces\\HTTP\\SecurityEventServices')) {
+                $events = \Modules\Outbox\Interfaces\HTTP\SecurityEventServices::class;
+                $events::roleChanged($id, $events::OP_CREATE, $request->getClientIp());
+            }
         }
 
         if (AdminLayout::isHtmx($request)) {
@@ -135,7 +147,10 @@ final class RolesAction
                 CardboardServices::roles()->deleteRole($id);
                 CacheInvalidator::flush();
                 \Modules\Audit\Interfaces\HTTP\AuditServices::log('roles.delete', 'role:' . $id, 'Deleted role ' . $role['name'], $request->getClientIp());
-                SecurityEventServices::roleChanged($id, SecurityEventServices::OP_DELETE, $request->getClientIp());
+                if (class_exists('Modules\\Outbox\\Interfaces\\HTTP\\SecurityEventServices')) {
+                    $events = \Modules\Outbox\Interfaces\HTTP\SecurityEventServices::class;
+                    $events::roleChanged($id, $events::OP_DELETE, $request->getClientIp());
+                }
             }
         }
 
@@ -224,11 +239,14 @@ final class RolesAction
         // the panel — it is how someone acquires access to everything the role
         // names. It is the reason `security.role.changed` exists, and the
         // reason it must not rely on the inline audit row alone.
-        SecurityEventServices::roleChanged(
-            $id,
-            SecurityEventServices::OP_PERMISSIONS,
-            $request->getClientIp(),
-        );
+        if (class_exists('Modules\\Outbox\\Interfaces\\HTTP\\SecurityEventServices')) {
+            $events = \Modules\Outbox\Interfaces\HTTP\SecurityEventServices::class;
+            $events::roleChanged(
+                $id,
+                $events::OP_PERMISSIONS,
+                $request->getClientIp(),
+            );
+        }
 
         return Response::redirect('/mark/roles');
     }

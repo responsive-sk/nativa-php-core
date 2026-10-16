@@ -1,0 +1,159 @@
+# Boot 26 — the gate that could not see the catalogue (2026-10-16)
+
+The security work of §7–§11 landed behind a CI workflow that stayed **green if
+any of it were deleted**. Every guard those rounds added lives in a module or
+in a module's tests, and a fresh checkout carries none of the catalogue: job 3
+(`tests`) proves the kernel-only shape, and in that shape the guards are
+SKIPPED, not run. Measured on a fresh clone of this commit, with no module
+installed:
+
+| | kernel-only (fresh clone) | catalogue installed |
+|---|---|---|
+| tests | 318 | 318 |
+| skipped | **243** | 1 |
+| assertions reached | 364 | 1339 |
+
+41 test classes skip in that tree. The ones that matter — each of them the
+pinning test of a §7–§11 fix — all skip with it:
+
+```
+Modules.Comments.Tests.CommentHoneypotTest
+Modules.Users.Tests.PasswordResetServiceTest      (the reset-token port)
+Modules.Users.Tests.PasswordResetMailerTest       (the transport)
+Modules.Users.Tests.AuthServiceTest               (policy + throttles)
+Modules.Users.Tests.AdminAccessControlTest
+Modules.Users.Tests.AdminRoutePolicyCoverageTest
+Modules.Security.Tests.RateLimitMiddlewareTest
+Modules.Users.Tests.UsersAuthProviderTest
+```
+
+A pull request could have deleted the honeypot, the port, the policy or the
+throttles and this workflow would have printed `OK, but some tests were
+skipped!` on every run. That is the one thing a gate may not do, so the
+workflow grew a fourth job: **Modules — the SAME suite with the catalogue
+INSTALLED**, which installs the catalogue the way an operator does, migrates,
+builds the bundles, picks a theme, and then **fails on any test that did not
+run** (the skip set is empty but for one kernel-only test whose own reason
+string says why).
+
+## The job could not pass, twice
+
+### 1. The catalogue could not be installed at all
+
+```
+$ php bin/cms module:add Outbox
+Cannot install 'Outbox': missing dependencies: Cardboard.
+$ php bin/cms module:add Cardboard
+Cannot install 'Cardboard': missing dependencies: Outbox, Security.
+$ (the retry loop the job runs)
+::error::no progress in round 2 — pending: Audit Blog Cardboard Comments
+   Locales Media Outbox Pages Questions Queue Scheduler Security Users
+```
+
+`module:add` refuses an incomplete **closure** and copies nothing, so the
+retry loop is a topological sort — and no topological order exists. The graph
+at that commit held a three-module cycle:
+
+```
+Cardboard → Security, Settings, Validation
+Security  → Outbox     (modules/Security/tests/RateLimitMiddlewareTest.php only:
+                        `use Modules\Outbox\…\OutboxServices` for a reset)
+Outbox    → Cardboard  (Application/Services/OutboxMetric.php,
+                        Interfaces/HTTP/Actions/OutboxAdminAction.php)
+```
+
+**Boot 20 caused it.** The CardboardKit merge is what moved the metric
+subsystem back into Cardboard, and the kit had been the leaf every other
+module could depend on — so `Outbox → Cardboard` appeared while
+`Cardboard → Outbox` (four bulk actions recording refused operations) stayed.
+Boot 14 had broken exactly this class of edge by guarding the observability
+call sites; the merge re-made it, and part 03's "Acyclic; `module:show` green"
+was a claim nothing had measured — `module:show` prints a closure, it never
+walks the graph. `CONTRIBUTING.md` states the rule plainly ("`module:show X` →
+`closure:` must stay acyclic") and nothing enforced it, because nothing until
+now had to install the catalogue in dependency order.
+
+Both directions are observability, not function, so both were guarded the way
+Boot 14 guarded Users ↔ Outbox: a `class_exists()` check with the class named
+inline and **no `use` statement** for the closure scanner to count.
+
+- four bulk actions in `modules/Cardboard/Interfaces/HTTP/Actions/`
+  (`BulkPublishAction`, `BulkDeleteAction`, `UsersAction`, `RolesAction`) —
+  eight call sites, each stating the guard and dropping only the event when
+  the Outbox is absent;
+- `modules/Security/tests/RateLimitMiddlewareTest.php` — its `OutboxServices`
+  import existed to reset a static instance that only exists when the module
+  is there; it is now a guarded helper.
+
+Measured after: Cardboard's closure is `Security, Settings, Validation`;
+Security is a leaf; the graph is acyclic (Kahn over all 19 closures). A fresh
+clone installs **all 19 modules in four rounds**:
+
+```
+round 1: Erik Griffe Mono Security Settings Validation
+round 2: Cardboard Locales Outbox Scheduler Users
+round 3: Audit Media Pages Queue
+round 4: Blog Comments Questions
+```
+
+### 2. One honest skip the assertion counted as a missing test
+
+With the install fixed, the job still failed — on a skip that is the SEED
+talking, not a defect:
+
+```
+::error::Modules.Erik.Tests.ErikThemeTest::liveSurfacesInlineTheActiveThemesOwnBuild
+         skipped in a tree with the catalogue installed
+```
+
+The migrators seed `theme=kernel`, and the kernel theme ships **no bundle by
+design** (it is hand-written critical CSS); the test asserts the ACTIVE
+theme's own build is inlined on the live homepage, so with the kernel theme
+active there is no build to inline and it skips. The workstation passes only
+because an operator has picked `mono` in `/mark` → Design.
+
+The job now makes that pick itself, through the module's own repository
+(`SettingsRepository::set('theme', 'mono', 'design')`) — and asserts it took:
+the step fails when the stored name resolves back to a bundle-less theme.
+Negative control: with `Mono` removed, the step prints `active theme: kernel
+(bundle available: no)` and exits 1.
+
+## Also corrected in the workflow's own header
+
+- `240 of 315` → the measured **243 of 318**: the count predated the three
+  transport tests §11 added.
+- the CSRF origin check was listed among the skipped guards. It is not:
+  `CsrfMiddlewareTest` lives in `tests/`, so job 3 — the kernel-only one —
+  already runs it. The claim is now the measured one.
+
+## Verified (2026-10-16, all exit 0)
+
+| Gate | Result |
+|---|---|
+| fresh clone, no module, `composer test` | 318 tests, 243 skipped — the hole the job exists to close |
+| the whole job, replayed: every `run` block of the `modules` job, extracted from the workflow and executed in order against a fresh worktree | **exit 0** — `Installed (19)`, `active theme: mono (bundle available: yes)`, `318 tests, 1339 assertions, 1 skip`, and the assertion's `318 tests ran, 1 skipped, 38 catalogue test classes expected` |
+| fresh worktree + the five edited catalogue files, install loop | **19 modules installed**, 4 rounds, `Installed (19)` |
+| the job's migrate step, that tree | `✓ Migrated: audit, blog, comments, config, locales, media, outbox, questions, queue, users`; all 9 `.db` files present |
+| the job's theme step, that tree | `active theme: mono (bundle available: yes)`, exit 0; with Mono removed → exit 1 |
+| `composer test` on the installed tree | **318 tests, 1339 assertions, 1 skip** (the allowed kernel-only one) |
+| the job's assertion, run on that JUnit log | `318 tests ran, 1 skipped, 38 catalogue test classes expected`, exit 0 |
+| `composer test` / `phpstan` (L9) / `cs-fix-dry` / `rector-dry` on this tree | 318 / 1 skip; no errors; 0 of 94; Rector OK |
+| `make lint` / `make lekalo-check` / `make extract-check` | clean; 23 rules, 0 errors; OK (222 identical, 66 recorded — unchanged, the slice does not carry the catalogue) |
+| `module:show` over all 19 catalogue entries | acyclic; the loop converges |
+
+## What this round did not close
+
+- **CI `Extract-check` is still NOT RUN** (Boot 20): the upstream checkout is
+  private. Unchanged by this round.
+- **The catalogue's tests now run; its live surfaces still are not swept.**
+  The job proves every catalogue test class executed, not that the admin CRUD
+  flows answer the right status codes — that stays the boot records' `curl`
+  work.
+- **Measured drift, left alone:** on this workstation
+  `src/Modules/Outbox/tests/OutboxAdminListTest.php` and
+  `OutboxMetricTest.php` are OLDER than the catalogue's copies (the catalogue
+  guards on `class_exists(CardboardRegistry::class)`, the installed copies do
+  not). The suite reads the catalogue's tests, so nothing fails, and the new
+  job installs verbatim — a fresh tree cannot be in this state. `module:add`
+  never overwrites an installed slice, so the cure is
+  `module:remove Outbox --force` + `module:add Outbox`, not an edit.

@@ -8,7 +8,6 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Middleware\RateLimitMiddleware;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
-use Modules\Outbox\Interfaces\HTTP\OutboxServices;
 use Modules\Security\Application\Services\RateLimiter;
 use PDO;
 use PHPUnit\Framework\Attributes\Test;
@@ -33,7 +32,12 @@ use PHPUnit\Framework\TestCase;
  *
  * A refused request also records a security event; `DB_OUTBOX` points at an
  * unreachable file here so that write is dropped inside the outbox's own
- * catch — the test never touches the working tree's outbox.
+ * catch — the test never touches the working tree's outbox. The Outbox is
+ * therefore RESET through a `class_exists` guard and never imported (the
+ * middleware reaches it the same way): the reset is only ever needed when the
+ * module is installed, and a `use` statement would make Security's closure
+ * claim Outbox — closing Cardboard → Security → Outbox → Cardboard, a cycle no
+ * install order can satisfy.
  *
  * Like every module test it skips when the module is not installed.
  */
@@ -58,7 +62,7 @@ final class RateLimitMiddlewareTest extends TestCase
 
         putenv('DB_OUTBOX=' . $this->tmpDir . '/no-such-dir/outbox.db');
         DatabaseConnectionManager::resetInstance();
-        OutboxServices::reset();
+        self::resetOutbox();
     }
 
     protected function tearDown(): void
@@ -66,7 +70,7 @@ final class RateLimitMiddlewareTest extends TestCase
         if ('' !== $this->tmpDir && is_dir($this->tmpDir)) {
             putenv('DB_OUTBOX');
             DatabaseConnectionManager::resetInstance();
-            OutboxServices::reset();
+            self::resetOutbox();
 
             foreach (glob($this->tmpDir . '/*') ?: [] as $file) {
                 @unlink($file);
@@ -184,5 +188,16 @@ final class RateLimitMiddlewareTest extends TestCase
     private function request(string $ip): Request
     {
         return Request::create('GET', '/docs', [], [], ['REMOTE_ADDR' => $ip]);
+    }
+
+    /**
+     * Drop the Outbox's memoized instance, when the module is there to have
+     * one — see the class docblock for why this is a guard and not an import.
+     */
+    private static function resetOutbox(): void
+    {
+        if (class_exists('Modules\\Outbox\\Interfaces\\HTTP\\OutboxServices')) {
+            \Modules\Outbox\Interfaces\HTTP\OutboxServices::reset();
+        }
     }
 }

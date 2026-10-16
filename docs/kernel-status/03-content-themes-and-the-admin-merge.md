@@ -554,6 +554,16 @@ Cycle discipline (the catalog derives closures from `^use Modules\` lines):
 - Measured closures: Cardboard → `Outbox, Security, Settings`;
   Blog/Pages/Users/Audit/Media → Cardboard. Acyclic; `module:show` green.
 
+**Correction — Boot 26 (part 07).** The last line above is wrong, and nothing
+had measured it: `module:show` prints a closure, it never walks the graph. The
+merge put `Outbox → Cardboard` back (the metric subsystem it absorbed, plus
+`OutboxAdminAction`), and `Security → Outbox` was already there through a test
+file — so the real graph was `Cardboard → Security → Outbox → Cardboard`, a
+cycle no install order satisfies. A fresh clone therefore could not install the
+catalogue at all (`no progress in round 2`). Both observability edges are now
+guarded, Cardboard's closure is `Security, Settings, Validation`, and Security
+is a leaf — measured, with the install order in part 07.
+
 ## Verified
 
 - `composer phpstan` clean, `composer test` 56/147 (6 skipped, same skips),

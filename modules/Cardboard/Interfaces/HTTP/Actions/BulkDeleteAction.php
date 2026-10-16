@@ -14,7 +14,6 @@ use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Database\Infrastructure\Persistence\UnitOfWork;
-use Modules\Outbox\Interfaces\HTTP\SecurityEventServices;
 
 /**
  * BulkDeleteAction — handles bulk delete for admin tables.
@@ -22,6 +21,15 @@ use Modules\Outbox\Interfaces\HTTP\SecurityEventServices;
  * DB-backed entities (users, roles) are deleted inside a UnitOfWork
  * transaction — all-or-nothing.  Filesystem entities (pages, articles)
  * are deleted sequentially; a failure on one does not roll back the rest.
+ *
+ * The refused path's security event rides the Outbox when it is installed,
+ * behind a `class_exists` guard and never a `use` statement: an import here
+ * puts Outbox back in this module's closure, and Outbox imports Cardboard in
+ * turn (its metric provider does), so with Security also on the path the graph
+ * is `Cardboard → Security → Outbox → Cardboard` — a cycle no install order
+ * can satisfy, measured on a fresh tree in part 07. Without the Outbox the
+ * refusal still refuses; only the trace is missing, the trade the Users
+ * module's login and logout actions make too.
  */
 #[Route(path: '/mark/bulk-delete', method: 'POST', name: 'mark.bulk-delete')]
 final class BulkDeleteAction
@@ -41,7 +49,10 @@ final class BulkDeleteAction
             // refused path, so it gets the same durable record — an attacker
             // probing the entity parameter must leave a trace just as probing
             // a URL does.
-            SecurityEventServices::bulkRefused($entity, 'bulk-delete', $request->getClientIp());
+            if (class_exists('Modules\\Outbox\\Interfaces\\HTTP\\SecurityEventServices')) {
+                $events = \Modules\Outbox\Interfaces\HTTP\SecurityEventServices::class;
+                $events::bulkRefused($entity, 'bulk-delete', $request->getClientIp());
+            }
 
             return $denied;
         }

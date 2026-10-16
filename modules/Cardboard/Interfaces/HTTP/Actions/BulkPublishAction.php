@@ -12,13 +12,21 @@ use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
-use Modules\Outbox\Interfaces\HTTP\SecurityEventServices;
 
 /**
  * BulkPublishAction — handles bulk publish/unpublish for admin tables.
  *
  * Toggles the published status of selected articles or pages by
  * rewriting their markdown frontmatter.
+ *
+ * The refused path's security event rides the Outbox when it is installed,
+ * behind a `class_exists` guard and never a `use` statement: an import here
+ * puts Outbox back in this module's closure, and Outbox imports Cardboard in
+ * turn (its metric provider does), so with Security also on the path the graph
+ * is `Cardboard → Security → Outbox → Cardboard` — a cycle no install order
+ * can satisfy, measured on a fresh tree in part 07. Without the Outbox the
+ * refusal still refuses; only the trace is missing, the trade the Users
+ * module's login and logout actions make too.
  */
 #[Route(path: '/mark/bulk-publish', method: 'POST', name: 'mark.bulk-publish')]
 final class BulkPublishAction
@@ -38,7 +46,10 @@ final class BulkPublishAction
             // refused path, so it gets the same durable record — an attacker
             // probing the entity parameter must leave a trace just as probing
             // a URL does.
-            SecurityEventServices::bulkRefused($entity, 'bulk-publish', $request->getClientIp());
+            if (class_exists('Modules\\Outbox\\Interfaces\\HTTP\\SecurityEventServices')) {
+                $events = \Modules\Outbox\Interfaces\HTTP\SecurityEventServices::class;
+                $events::bulkRefused($entity, 'bulk-publish', $request->getClientIp());
+            }
 
             return $denied;
         }
