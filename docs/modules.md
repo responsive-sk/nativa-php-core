@@ -234,7 +234,13 @@ when there are some.
    refusal decided before any policy. Four negative controls, each reverted with the
    tree verified by digest: the bare name back → the delivery test red; the guard
    removed → red; `ip` dropped from the declaration → red; the inactive branch made
-   to record → red.
+   to record → red. The same claim is then made against a **booted server**:
+   `bin/build/admin-smoke.sh` walks an author's `GET /mark/users` to the 403, reads
+   the `security.authz.denied` message back out of the outbox by its `path`
+   (`json_extract`, because `json_encode` escapes the slashes), and — after the
+   end-of-request drain has provably run — asserts the audit row that names
+   `/mark/users` and that nothing sits under the bare `authz.denied` no handler can
+   claim.
 5. **A test reads the model's module set — and nothing else.**
    `ModelCatalogueContractTest`
    (2026-10-16) compares the model's *module set* against the catalogue: every

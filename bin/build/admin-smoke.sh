@@ -344,6 +344,23 @@ if grep -q 'not permitted' "$TMP/last.out"; then ok 'the refusal names the reaso
 denied="$(dbq DB_OUTBOX "SELECT COUNT(*) FROM outbox_messages WHERE event_type = 'security.authz.denied'")"
 want_at_least 'security.authz.denied events' 1 "$denied"
 
+# The MIDDLEWARE refusal branch — a different call site from the bulk gate, and
+# the one that used to be lost. Measured 2026-10-16: the middleware wrote the bare
+# `authz.denied`, a type no handler in `SecurityEvents::all()` claims, so every
+# refused admin path became a message the drain failed with "No handler registered
+# for event type" and NO audit row was ever written. The author holds `mark.access`
+# and `content.manage` and nothing else, so `/mark/users` is that 403 through a
+# booted server; its delivery is asserted in the worker section below, where the
+# drain has provably run.
+check 'author GET /mark/users' '/mark/users' 403 -b "$AUTHOR_JAR" -c "$AUTHOR_JAR"
+
+# `json_extract`, not a LIKE: the payload is `json_encode`d, which escapes the
+# slashes — the stored path is `\/mark\/users`, so a LIKE '%/mark/users%' matches
+# nothing and the check reports a refusal that is right there. (Measured: that
+# version of this line failed the run while the audit row below it passed.)
+refused="$(dbq DB_OUTBOX "SELECT COUNT(*) FROM outbox_messages WHERE event_type = 'security.authz.denied' AND json_extract(event_payload, '\$.path') = '/mark/users'")"
+want_at_least 'the middleware refusal recorded' 1 "$refused"
+
 # ---------------------------------------------------------------------------
 # Content: an ARTICLE is written, served and deleted through the panel
 # ---------------------------------------------------------------------------
@@ -569,6 +586,19 @@ want_at_least 'outbox messages delivered' 4 "$delivered"
 
 audited="$(dbq DB_AUDIT "SELECT COUNT(*) FROM audit_log WHERE action LIKE 'security.%'")"
 want_at_least 'security events that became audit rows' 4 "$audited"
+
+# The MIDDLEWARE refusal's delivery, asserted by name. The suite makes this claim
+# against the classes; this is the same claim against a booted server, and the row
+# has to name the path the author was refused.
+middleware_row="$(dbq DB_AUDIT "SELECT COUNT(*) FROM audit_log WHERE action = 'security.authz.denied' AND target = '/mark/users'")"
+want_at_least 'the refused /mark/users path became an audit row' 1 "$middleware_row"
+
+# And nothing may sit under the bare name that no handler claims — the precise
+# shape of the defect this section keeps closed. (Other event types are legitimate
+# here: the content section publishes an article, so `blog.article.published`
+# belongs in this table.)
+unclaimed="$(dbq DB_OUTBOX "SELECT COUNT(*) FROM outbox_messages WHERE event_type = 'authz.denied'")"
+want 'no event parked under a type no handler claims' 0 "$unclaimed"
 
 # The operator's own worker command. The shipped timetable is stateless cron
 # (`*/5` matches, at most, one minute in five), so what is asserted is that it
