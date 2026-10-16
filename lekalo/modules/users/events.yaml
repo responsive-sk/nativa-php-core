@@ -95,6 +95,15 @@
           "required": true
         },
         {
+          "name": "roles",
+          "type": {
+            "list": {
+              "ref": "users.text"
+            }
+          },
+          "required": true
+        },
+        {
           "name": "ip",
           "type": {
             "ref": "users.ip_address"

@@ -1233,3 +1233,102 @@ back at 272 sources, 250 definitions and the same digest `5d50cd7a…`, with
 - The standing items are unchanged: no Lekalo adapter (Boot 36), the reset link
   deliberately not queued (Boot 35), and Griffe's hero correct and green but not
   chosen (Boot 33).
+
+---
+
+## Boot 39 — the refusal event's payload, bound to the vocabulary that owns it
+
+Boot 38 closed with one thing a test could still bind without an adapter, and
+named the rest as adapter-shaped. This round found that the same round had left
+a second one behind, in the event the previous two rounds were about.
+
+### Measured before anything changed
+
+`SecurityEvents` owns the payload keys of every security event — its docblock
+says so in as many words ("no emit site and no handler spells an event type or
+invents a payload key of its own") — and the model describes the same event
+separately. Nothing compared them:
+
+| | keys |
+|---|---|
+| model `users.authorization_denied` `payload` | `required, path, user_id, ip` — **4** |
+| `SecurityEvents::payloadKeys(AUTHZ_DENIED)` | `path, required, userId, roles, ip` — **5** |
+| in code, not in the model | **`roles`** |
+| in model, not in code | — |
+| that event's own **description** | lists `roles` — the payload array did not |
+
+So the model was wrong twice in one definition: short one key against the code,
+and inconsistent with itself. It is the model-side remainder of the defect this
+repository fixed on the code side the day before — `payloadKeys()` declared `ip`
+for both refusal types while the Audit handler read it and every emit site sent
+it, a key present in prose and absent from the list. Here both emit sites DO
+send `roles` (`AuthMiddleware::recordDenial()`, `SecurityEventServices::
+bulkRefused()`, both `'roles' => []`), so the code was right and the model was
+the side to correct.
+
+### The fix, and the binding under it
+
+`roles` is declared (`{"list": {"ref": "users.text"}}`), and
+`tests/Architecture/ModelPayloadContractTest.php` keeps it there: every model
+event whose *description* names a `SecurityEvents::` constant must declare
+exactly `payloadKeys()` for that constant, after a snake_case→camelCase fold
+(the model names keys `user_id`, the code `userId`; a key outside snake_case
+fails the load, because folding it would make the test accuse the code).
+
+Two things about the writing are deliberate:
+
+- **The class is read as TEXT, not loaded.** `SecurityEvents` lives in an
+  optional module, and `phpstan.neon` analyses `tests/` while `src/Modules/<Name>`
+  outside Core/Database is operator state — naming the class would red the
+  kernel-only gate in a tree where Outbox is not installed. It reads
+  `modules/Outbox/Domain/SecurityEvents.php`, the committed catalogue copy the
+  installed slice is copied from, the way the module scanner reads a class it
+  will not load.
+- **The anchor is named, not matched.** `users.authorization_denied` and
+  `AUTHZ_DENIED` are constants in the test, and the anchor is asserted again on
+  its own — so a rewrite that drops the vocabulary from that description cannot
+  quietly narrow what the file covers, the same reason the catalogue test names
+  its fixture instead of excusing it with a pattern.
+
+It is narrow on purpose: **one event today**, and that is the whole of the seam
+that exists without an adapter. A wider version would have to decide whether the
+model's `blog.article_published` is the code's `article.published` — the code
+sends `['slug', 'locale']` as payload and the actor as metadata, the model
+declares `slug, locale, published_at` — which is a modelling decision, not a
+binding.
+
+### Negative controls
+
+Each mutation reverted, both edited files compared by sha256 rather than by
+`git checkout`:
+
+| control | result |
+|---|---|
+| `roles` removed from the model again | red — the generic loop and the anchor |
+| the description names `SecurityEvents::NOT_A_CONSTANT` | red, naming the constants the file declares |
+| `payloadKeys()` declares one more key than the model | red, from the other side |
+| both files restored | `2c66b888…` and `0f0b8390…` identical; green again |
+
+### Verified (2026-10-16, all exit 0)
+
+| Gate | Result |
+|---|---|
+| `composer test` | **382 → 384 tests, 3076 → 3778 assertions**, 1 skip |
+| `make analyze` | phpstan L9 no errors · rector clean · cs-fixer 0 of 100 (the new file took two style fixes and then passed) |
+| `make lekalo-check` | 23 rules, 0 errors, 0 warnings, 0 info; 21 modules valid on their own |
+| `make lint` | clean |
+| model counts | 251 definitions unchanged — a payload entry is not a definition |
+| `lekalo lock --check` | **`sha256:e77647f7…` unchanged**, which is item 2 of `docs/modules.md` demonstrated on a real edit |
+
+## What this round did not close
+
+- **Still one event.** The binding covers the events whose description names a
+  `SecurityEvents::` constant, and exactly one does. The other twenty modelled
+  events have no code vocabulary to compare against, which is Boot 36's answer
+  unchanged, not a gap this round could have closed.
+- **The fold is a convention, not a contract.** `user_id` ↔ `userId` is asserted
+  on the model side (snake_case only) but the code side is taken as written; a
+  key the code names with an underscore would fold to itself and pass.
+- The standing items are unchanged: no Lekalo adapter (Boot 36), the module
+  owning its slice (Boot 38), the reset link deliberately not queued (Boot 35),
+  and Griffe's hero correct and green but not chosen (Boot 33).

@@ -171,7 +171,29 @@ when there are some.
 3. **A description can be false and pass.** Measured: changing
    `queue.job`'s `available_at` description to claim "a CONSTANT 30 second
    delay, never growing" — the opposite of the doubling, capped backoff that
-   ships — leaves `make lekalo-check` at exit 0.
+   ships — leaves `make lekalo-check` at exit 0. A false *payload list* passes
+   the same way, and that is where the next binding went.
+
+   Measured 2026-10-16, for `users.authorization_denied`:
+
+   | | keys |
+   |---|---|
+   | model `payload` | `required, path, user_id, ip` — **4** |
+   | `SecurityEvents::payloadKeys(AUTHZ_DENIED)` | `path, required, userId, roles, ip` — **5** |
+   | in code, not in the model | **`roles`** |
+   | the same event's own description | lists `roles` — the array did not |
+
+   Both emit sites send it (`AuthMiddleware::recordDenial()`,
+   `SecurityEventServices::bulkRefused()`), so the model was the only side still
+   describing four keys, and it contradicted itself doing so. **Fixed
+   2026-10-16:** `roles` is declared, and `ModelPayloadContractTest` binds the
+   event's payload to `SecurityEvents::payloadKeys()` — the class read as TEXT,
+   not loaded, because it lives in an optional module and `phpstan.neon`
+   analyses `tests/`. Three negative controls (the key removed; the description
+   naming a constant that does not exist; the code declaring one more key) each
+   red, both files restored by digest. It is deliberately narrow: **one event,
+   the one whose description names a `SecurityEvents::` constant**, which is the
+   whole of the seam that exists today.
 4. **`error_ref` is resolved by nothing the tool ships — a test does it instead.**
    The tool resolves the referenced MODULE and denies with `LEK-AUTH-005` when it
    is missing from the model; it never resolves the SYMBOL, and it accepts any
