@@ -112,6 +112,55 @@ found that generates it, so it needs a human decision rather than a sweep.
 `bin/cms` and the live (non-archive) `openspec/` documents carry the name too and
 are source-ish: they take the map by hand.
 
+## Rehearsal — the namespace is mechanical, the *name* is data (measured 2026-10-16)
+
+Run on a **read-only** `git archive HEAD` extraction with a real `vendor/` copy
+(`/tmp/up-reh`; nothing in `../nativa-minimal` was touched), sweeping
+`Modules\Blog` → `Modules\Articles` and the 18-class map over every php file that
+carries the name, then running the tree's own suite:
+
+- **131 php files** swept (133 in the working tree — the two extra are the
+  uncommitted `KernelCoupling*` files), moving `src/Modules/Blog` →
+  `src/Modules/Articles`;
+- **0 leftover `Modules\Blog`**, **0 `php -l` failures**;
+- suite, same environment both sides:
+
+| | tests | errors | failures |
+|---|---|---|---|
+| baseline (unswept HEAD) | 1798 | 55 | 60 |
+| swept | 1798 | 58 | 65 |
+
+**8 new failures, 0 disappeared** — and every one is `Blog`-as-data, none is the
+namespace. That is the whole point: a namespace sweep is verifiably clean and still
+leaves a broken tree.
+
+| failing test | cause | shape |
+|---|---|---|
+| `QuestionsTest` ×2 | `RuntimeException: Template not found: Modules/Blog/…/templates/article-form.phtml` | **template path strings** inside the module — `php -l` passes, it fails only when the article editor opens |
+| `InlineScriptByteParityTest` ×2 | `…assets/scripts/article-create.js must exist` | golden-bytes ledger keyed on asset **paths** |
+| `AdminDeleteConfirmTest` | `file_get_contents(src/Modules/Blog/…/ArticlesTableRenderer.php)` | path in a test |
+| `ThemesBindingParityTest` | `runtime action missing: src/Modules/Blog/…/BlogIndexAction.php` | path-keyed parity ledger |
+| `TraceManifestTest` | `logical path segment does not resolve: blog` | the trace manifest keys on the module's lowercase segment — traces must be regenerated |
+| `CorePatternTest::testNoNearCapMethods` | allowlisted near-cap methods resurface | `NEAR_CAP_ALLOWLIST` is keyed on **paths**, so the move silently un-declares them |
+
+### `Blog` the word, in places a backslash sweep cannot see
+
+| carrier | where | why it is not a sweep |
+|---|---|---|
+| `ViewRenderer::render('Modules/Blog/Interfaces/HTTP/templates/*.phtml')` ×3 | inside the module | path strings, forward slashes |
+| `FrontendLayout::render('Blog', …)` — 8 occurrences | tests | a **layout name**; layouts may be configured outside code |
+| `['Blog', '/mark/articles', 'admin', 70, 'rss']` | `SettingsDatabaseMigrator` | seeds a **menu row** — deployments already ran it; changing it is a migration, not a rename |
+| `['id' => '_blog', 'label' => 'Blog', 'href' => '/mark/articles']` | `AdminNavService` | admin nav identity |
+| `['key' => 'nav.blog', …]` | `Locales/…/SeedData` | a **translation key** referenced from theme templates; renaming orphans translations |
+| `['@type' => 'ListItem', 'name' => 'Blog', …]` | `StructuredDataService` | JSON-LD, user-visible |
+| `Sections\BlogIndex` + `BlogIndexTest` ×6 themes | themes, tests | theme section names; **not** in the class map |
+| "Back to Blog", "Read the Blog" | theme copy | prose — should probably NOT be renamed |
+
+So the honest shape of this work is: **the namespace rename is mechanical and
+verified; the module's *name* is a product decision in at least six further places,
+three of which (the seeded menu row, the translation key, the layout name) cannot
+be swept at all.** The list above is the decision list, not a to-do list.
+
 ## What needs a decision: 18 class names
 
 A mechanical `Blog` → `Articles` swap is wrong twice over: `BlogArticleAction`
@@ -140,7 +189,7 @@ would become `ArticleArticleAction`, and `BlogIndexAction` would become
 | `BlogInlineEditAction` | `ArticleInlineEditAction` | |
 | `BlogInlineEditor` | `ArticleInlineEditor` | |
 | `ServeBlogImageAction` | `ServeArticleImageAction` | URL stays `/storage/blog-images/…` |
-| `BlogIndexAction` | **open** — see below | the one real collision |
+| `BlogIndexAction` | `ArticleListViewAction` | decided 2026-10-16 — see below |
 
 `BlogIndexAction` is the public article list at `/blog`. The admin list at
 `/mark/articles` is already `ArticlesIndexAction`. Either:
@@ -149,8 +198,10 @@ would become `ArticleArticleAction`, and `BlogIndexAction` would become
 - **(b)** public → `ArticlesIndexAction` and admin → `ArticlesAdminIndexAction`
   (consistent `<Plural>IndexAction` for the public surface, admin gets a prefix).
 
-**Recommendation: (a)** — it leaves every existing name in place and adds no new
-convention.
+**Decided 2026-10-16: (a)** — it leaves every existing name in place and adds no new
+convention. Option (b) would rename a name that is already correct (`ArticlesIndexAction`
+for the admin list at `/mark/articles`) purely to free the pattern for the public
+surface, which is the tail wagging the dog.
 
 Route names: `blog.index` → `articles.index`, `blog.article` → `articles.article`,
 `blog.tags`(`.show`) → `articles.tags`(`.show`), `blog.categories`(`.show`) →
