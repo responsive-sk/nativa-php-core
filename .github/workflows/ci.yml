@@ -38,17 +38,24 @@
 #                         do. This job installs the catalogue the way an
 #                         operator does, migrates, picks a built theme, and
 #                         fails on any test that did not run.
-#   5. Assets           — the pnpm workspace is committed, so the bundles that
+#   5. Admin flows      — the panel, BOOTED: a real server, a real session and
+#                         a real CSRF token, a user and a role created and
+#                         deleted through the panel, the CSRF refusals, and an
+#                         author's refused bulk post with its security event
+#                         read back out of the outbox. Job 4 proves the guards a
+#                         class at a time; this proves the deployment, which is
+#                         the only place a 500 in the panel shows up.
+#   6. Assets           — the pnpm workspace is committed, so the bundles that
 #                         /mark's stylesheet comes from are built HERE and the
 #                         manifest the PHP reader probes is asserted, not
 #                         assumed.
-#   6. Boot             — the six kernel surfaces over real HTTP, a module
+#   7. Boot             — the six kernel surfaces over real HTTP, a module
 #                         installed → served → removed → 404, and `bin/cms
 #                         migrate`. No `composer install` in this job,
 #                         deliberately: the kernel runtime has zero Composer
 #                         dependencies, and this is where that claim is either
 #                         true or not.
-#   7. Extract-check    — NOT run: `bin/build/extract-kernel.sh --check` needs
+#   8. Extract-check    — NOT run: `bin/build/extract-kernel.sh --check` needs
 #                         a checkout of upstream, which is PRIVATE, and the
 #                         run's GITHUB_TOKEN cannot read it. The job records
 #                         that (with the measured evidence and how to enable
@@ -274,53 +281,12 @@ jobs:
         run: pnpm build
         working-directory: Frontend/packages
 
+      # The loop lives in bin/build/install-catalogue.sh, not here: the
+      # `admin-smoke` job below needs the same installed tree, and two copies of
+      # a topological sort is one copy too many. `make modules-install` runs the
+      # same script, so a red job is reproducible in one command.
       - name: Install every catalogue module
-        run: |
-          set -euo pipefail
-          # Everything catalogued except Scratch. Scratch is the lifecycle
-          # FIXTURE: ModuleLifecycleTest installs and removes it in-process, and
-          # a tree where it is already installed makes that test fail on its own
-          # "already installed" refusal. It is a leaf with one route, so nothing
-          # else needs it present.
-          pending=""
-          for dir in modules/*/; do
-            name="$(basename "$dir")"
-            [ "$name" = "Scratch" ] && continue
-            pending="$pending $name"
-          done
-          echo "catalogue to install:$pending"
-
-          # A refusal that names missing dependencies is the graph talking, not
-          # a failure: retry the set until a pass copies something. A pass that
-          # copies nothing while modules are still pending is a real cycle (or a
-          # catalogue entry that cannot be installed at all), and it fails HERE
-          # rather than leaving a half-installed tree for the suite to explain.
-          for round in $(seq 1 20); do
-            [ -n "${pending// /}" ] || break
-            still=""
-            progressed=0
-            for name in $pending; do
-              if out="$(php bin/cms module:add "$name" 2>&1)"; then
-                echo "ok  installed $name"
-                progressed=1
-              elif printf '%s' "$out" | grep -q 'missing dependencies'; then
-                still="$still $name"
-              else
-                echo "::error::module:add $name failed: $out"
-                exit 1
-              fi
-            done
-            pending="$still"
-            if [ -n "${pending// /}" ] && [ "$progressed" -eq 0 ]; then
-              echo "::error::no progress in round $round — pending:$pending"
-              exit 1
-            fi
-          done
-          [ -z "${pending// /}" ] || { echo "::error::still pending:$pending"; exit 1; }
-
-          php bin/cms module:list
-          installed="$(php bin/cms module:list | sed -n 's/^Installed (\([0-9]*\)).*/\1/p')"
-          [ "$installed" -ge 19 ] || { echo "::error::only $installed modules installed"; exit 1; }
+        run: bin/build/install-catalogue.sh
 
       # The same idempotent run the HTTP bootstrap does on its first request,
       # forced. A module test that reads a module database skips when the file is
@@ -411,6 +377,52 @@ jobs:
               print('note: %s::%s no longer skips — remove it from ALLOWED_SKIPS' % (cls, name))
           sys.exit(1 if failed else 0)
           PY
+
+  # ---------------------------------------------------------------------------
+  # ADMIN-SMOKE — the panel, booted, with a real session and a real token
+  # ---------------------------------------------------------------------------
+  # The suite above proves the guards a class at a time. This job boots the
+  # server the way a deployment does and walks the flows an operator walks:
+  # guest surfaces, admin login, a user created and deleted, a role created and
+  # deleted, the CSRF refusals, and an author's REFUSED bulk post with the
+  # security event read back out of the outbox. Boot 27 measured that matrix by
+  # hand; `bin/build/admin-smoke.sh` makes it enforceable — a change that 500s
+  # the panel or silently drops a security event now fails a job.
+  #
+  # No `composer install` here, deliberately, for the same reason the `boot` job
+  # skips it: the kernel runtime has zero Composer dependencies and the modules
+  # are installed from the committed catalogue. Every DB_* points at a temp
+  # directory inside the script, and the server starts and stops there, so the
+  # job never writes to the checkout's storage/data/.
+  #
+  # What it does NOT do: sweep the other modules' own surfaces (Blog's article
+  # writes, Pages, the public comment submit, the queue worker). That is the
+  # next gate, not this one.
+  admin-smoke:
+    name: Admin flows (booted server)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: json, mbstring, pdo, pdo_sqlite, sqlite3
+          coverage: none
+
+      - name: Install every catalogue module
+        run: bin/build/install-catalogue.sh
+
+      # The script migrates, seeds its own accounts through the modules'
+      # repositories, starts `php -S` with opcache off, runs the matrix, asserts
+      # the outbox rows, and stops the server — one entry point, so a red job is
+      # `make admin-smoke` on a workstation.
+      - name: The admin flows over HTTP
+        run: bin/build/admin-smoke.sh
 
   # ---------------------------------------------------------------------------
   # ASSETS — the committed pnpm workspace builds here
