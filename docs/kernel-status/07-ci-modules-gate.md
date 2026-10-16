@@ -473,12 +473,22 @@ Queue: processed=0 failed=1     # one call, three attempts spent, row parked wit
 ```
 
 `release()` takes a `$delaySeconds` exactly to allow a backoff and `work()`
-never passes one. So `max_attempts` bounds *retries*, not *minutes*. Stated
-rather than changed — a backoff is a behaviour decision for the module (what
-delay, per attempt), not a side effect of shipping a command — and the tests
-pin the measured behaviour on **both** sides of the boundary: a parked run
-exits 1, and a batch smaller than `max_attempts` leaves the job queued, its
-`reserved_at` cleared, and exits 0.
+never passed one. So `max_attempts` bounded *retries*, not *minutes*.
+
+**Boot 32 closed this.** `work()` now releases with `30 * 2 ** (attempts - 1)`
+seconds, capped at 3600 — the cap because `max_attempts` has no upper bound (a
+producer sets it per job) and an uncapped power would schedule a row years out,
+turning a poison handler into something nobody looks at again. The formula is
+Media's, so the tree's two retry paths read alike.
+
+The tests pin the timing on an **injected clock**, not by sleeping:
+`DatabaseQueue` has accepted `?callable $now` since it shipped and **no test had
+ever passed it**, so before this the retry path could not be observed at all —
+which is why the defect survived. `FileTaskMutexTest` was already the pattern.
+
+What changed for an operator: a worker that will RETRY now exits **0**, and one
+that has parked something exits **1**. Before, a single retry could redden a run
+— which is how a "1" stops meaning anything.
 
 ### The gate now runs the command an operator runs
 

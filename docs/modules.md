@@ -429,12 +429,9 @@ Either surface works: an operator who wants the queue drained by one cron line
 gets it from `schedule:run`, and one who wants it isolated runs `queue:work`
 on its own line.
 
-### Measured while writing it: a retry is not spread over time
+### The retry backoff (Boot 32)
 
-`work()` catches a throwing handler, and the row goes back through
-`release($id)` — which writes `available_at = now`. The next loop iteration
-finds it available again, so **a failing job burns every attempt inside ONE
-batch**, not one per cron tick:
+Measured while writing the command, and then fixed:
 
 ```
 $ php bin/cms queue:work            # a handler that throws, max_attempts 3
@@ -442,13 +439,33 @@ Queue: processed=0 failed=1 (queue: (any), limit 10)
                                    # the row is parked with attempts = 3
 ```
 
-`release()` takes a `$delaySeconds` precisely to allow a backoff, and
-`work()` never passes one. Stated rather than changed: a backoff is a
-behaviour decision for the module (what delay, per attempt), not a side
-effect of shipping a command, and until then the practical consequence is
-that `max_attempts` bounds *retries*, not *minutes*. The tests pin the
-measured behaviour on both sides of the boundary — a parked run exits 1, a
-batch smaller than `max_attempts` leaves the job queued and exits 0.
+One `work()` call, three attempts. `work()` caught the throw and released the
+row with no delay, which writes `available_at = now` — so the next iteration of
+the *same* loop found it again. `max_attempts` bounded *retries*, not *minutes*,
+and a handler that would have succeeded on the next cron tick had already been
+parked.
+
+`release()` always took a `$delaySeconds`; nothing passed one. It does now:
+
+| attempt | delay |
+|---|---|
+| 1 | 30s |
+| 2 | 60s |
+| 3 | 120s |
+| … | doubling |
+| capped | 3600s |
+
+The formula is Media's (`BASE_DELAY_MS * (2 ** ($attempt - 1))`), so the tree's
+two retry paths read alike. **The cap is not optional**: `max_attempts` has no
+upper bound — a producer sets it per job — so an uncapped `2 ** n` would
+schedule a row years out and quietly turn a poison handler into something nobody
+looks at again.
+
+The visible consequence is that a worker which will retry now exits **0**, and
+one that has parked something exits **1**. That distinction is the contract
+`outbox:process` already stated, and before the backoff a single retry could
+make a queue:work run red — training an operator to ignore the number that
+means something.
 
 ## Dashboard stat cards for Queue / Outbox / Schedule (measured 2026-10-13)
 

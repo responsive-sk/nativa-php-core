@@ -529,6 +529,37 @@ else
     bad 'schedule:run printed no outcome line'
 fi
 
+# A handler that throws while attempts remain is a RETRY, not a failure. The
+# worker must say so: the row goes back with a BACKOFF, so it drops out of the
+# batch, and the run stays green. A worker that reddened every minute for a
+# retry would be a worker whose "1" means nothing — and with the release writing
+# `available_at = now` (no backoff) that was not hypothetical: one `queue:work`
+# call burned all three attempts and parked the row.
+RETRY_JOB="$(php <<'PHP'
+<?php
+require 'src/init.php';
+
+echo \Modules\Queue\Interfaces\HTTP\QueueServices::queue()->push(
+    'smoke.retryable',
+    ['from' => 'admin-smoke'],
+    maxAttempts: 3,
+);
+PHP
+)"
+
+if php bin/cms queue:work > "$TMP/queue-retry.log" 2>&1; then
+    ok 'bin/cms queue:work exits 0 on a job it will retry'
+else
+    cat "$TMP/queue-retry.log"
+    bad 'bin/cms queue:work reddened the run for a retry'
+fi
+
+retry_state="$(dbq DB_QUEUE "SELECT attempts || '/' || (reserved_at IS NULL) FROM jobs WHERE id = '$RETRY_JOB'")"
+want 'the retried job is queued again, released, one attempt spent' '1/1' "$retry_state"
+
+retry_future="$(dbq DB_QUEUE "SELECT (available_at > datetime('now')) FROM jobs WHERE id = '$RETRY_JOB'")"
+want 'its next attempt is in the future' 1 "$retry_future"
+
 # The queue's own operator command, on the path a cron takes: an empty queue
 # must exit 0 and report zeroes. A worker that reddened every tick because it
 # had nothing to do is a worker whose "1" means nothing, and this is the line
