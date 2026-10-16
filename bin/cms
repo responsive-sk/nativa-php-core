@@ -228,88 +228,14 @@ function cmdScheduleRun(): void
     );
 
     $schedule = \Modules\Scheduler\Interfaces\HTTP\SchedulerServices::schedule();
-    withQueueWork($schedule);
+    \Modules\Scheduler\Interfaces\HTTP\SchedulerServices::withQueueWork(
+        $schedule,
+        static function (string $message): void {
+            out($message);
+        },
+    );
 
     exit(\Modules\Scheduler\Interfaces\HTTP\SchedulerServices::run($schedule, $output));
-}
-
-/**
- * Add the queue's worker to $schedule — HERE, not in the Scheduler module.
- *
- * Two reasons, one architectural and one operational:
- *
- *  - **Architectural.** Scheduler stays queue-agnostic: a timetable entry
- *    naming `QueueServices` inside the module would be a Scheduler → Queue
- *    edge in `module:show`, and the queue is not something every deployment
- *    has. The entry belongs to the composition, which is what this file is.
- *  - **Operational.** `queue.db` is created by a migrator, so a cron that
- *    fires before the first `bin/cms migrate` would otherwise fail a task
- *    every minute and redden every run for a reason the operator cannot see
- *    from the failure line. So the entry is skipped — with one line saying
- *    why — while the database is unmigrated.
- *
- * Every minute with a five-minute overlap guard, because `work()` is a batch
- * and a second tick landing on top of a slow batch is exactly what the guard
- * is for.
- *
- * @param \Modules\Scheduler\Scheduling\Schedule $schedule
- */
-function withQueueWork($schedule): void
-{
-    if (!class_exists(\Modules\Queue\Interfaces\HTTP\QueueServices::class)) {
-        return;
-    }
-
-    if (!queue_database_ready()) {
-        out(sprintf(
-            'queue:work skipped — %s has no `jobs` table yet (run: php bin/cms migrate).',
-            queue_database_path(),
-        ));
-
-        return;
-    }
-
-    $schedule->call(static function (): void {
-        \Modules\Queue\Interfaces\HTTP\QueueServices::work();
-    })->everyMinute()->description('queue:work')->withoutOverlapping(5);
-}
-
-/**
- * Where the queue's database actually is — the `DB_QUEUE` override when the
- * deployment set one, `storage/data/queue.db` otherwise.
- *
- * Named separately from `queue_database_ready()` because the two answer
- * different questions, and the skip message has to quote the REAL path: a
- * line that says `storage/data/queue.db` while the deployment keeps its
- * database in /var/lib sends the operator to the wrong file.
- */
-function queue_database_path(): string
-{
-    return \Modules\Core\Infrastructure\Paths\AppPaths::instance()->database('queue');
-}
-
-/**
- * Whether the queue's database carries the `jobs` table yet.
- *
- * A table lookup, not a file check: an operator who removed and reinstalled
- * the module has the file and no schema, and a file check would call that
- * ready and hand the cron a missing-table error every minute.
- */
-function queue_database_ready(): bool
-{
-    try {
-        $pdo = DatabaseConnectionManager::instance()->connection('queue');
-
-        $statement = $pdo->query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'jobs'");
-    } catch (\Throwable $e) {
-        return false;
-    }
-
-    if (false === $statement) {
-        return false;
-    }
-
-    return false !== $statement->fetchColumn();
 }
 
 /**

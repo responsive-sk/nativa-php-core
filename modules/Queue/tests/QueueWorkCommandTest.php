@@ -60,28 +60,28 @@ final class QueueWorkCommandTest extends TestCase
 
     protected function tearDown(): void
     {
-        QueueServices::reset();
+        // Everything below exists only if setUp got past its skip. Calling
+        // `QueueServices::reset()` unguarded is an Error — "class not found" —
+        // in a kernel-only tree, which is precisely the tree where this whole
+        // class is supposed to skip quietly.
+        if (isset($this->dbFile)) {
+            QueueServices::reset();
 
-        if (isset($this->dbFile) && is_file($this->dbFile)) {
-            unlink($this->dbFile);
+            foreach ([$this->dbFile, $this->dbFile . '-wal', $this->dbFile . '-shm'] as $file) {
+                if (is_file($file)) {
+                    unlink($file);
+                }
+            }
+
+            if (null === $this->previousDbQueue) {
+                putenv('DB_QUEUE');
+            } else {
+                putenv('DB_QUEUE=' . $this->previousDbQueue);
+            }
+
+            AppPaths::resetInstance();
+            DatabaseConnectionManager::resetInstance();
         }
-
-        if (isset($this->dbFile) && is_file($this->dbFile . '-wal')) {
-            unlink($this->dbFile . '-wal');
-        }
-
-        if (isset($this->dbFile) && is_file($this->dbFile . '-shm')) {
-            unlink($this->dbFile . '-shm');
-        }
-
-        if (null === $this->previousDbQueue) {
-            putenv('DB_QUEUE');
-        } else {
-            putenv('DB_QUEUE=' . $this->previousDbQueue);
-        }
-
-        AppPaths::resetInstance();
-        DatabaseConnectionManager::resetInstance();
 
         parent::tearDown();
     }

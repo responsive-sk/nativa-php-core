@@ -379,13 +379,39 @@ which is exactly the split `SchedulerServices::run()` keeps for `schedule:run`:
 the module test asserts what the command does, and what the suite proves and
 what the operator runs cannot drift apart.
 
-It also joined the timetable — **wired in `bin/cms`, not in the Scheduler
-module.** Scheduler stays queue-agnostic: a module naming `QueueServices` would
-be a `Scheduler → Queue` edge in `module:show`, and not every deployment has a
-queue. The entry is `everyMinute()` with a five-minute overlap guard, and it is
-**skipped while `queue.db` has no `jobs` table**, printing one line that names
-the real path (`DB_QUEUE` when the deployment set one, `storage/data/queue.db`
-otherwise). Measured:
+It also joins the timetable — **in the Scheduler module, which is the one
+place the first attempt at this could not go.** It was written in `bin/cms`
+first, and the kernel-only PHPStan gate said no:
+
+```
+Parameter $schedule of function withQueueWork() has invalid type
+  Modules\Scheduler\Scheduling\Schedule.
+  🪪 class.notFound
+Call to method call() on an unknown class
+  Modules\Scheduler\Scheduling\Schedule.
+  🪪 class.notFound
+```
+
+`bin/cms` is analysed in a tree with no module installed, so annotating that
+parameter — or calling a method on the value — is `class.notFound` at level 9.
+That is the trap this tree's own comments keep naming: **a type position is
+resolved REGARDLESS of the guard**, which is what a kernel-only checkout with
+no `Modules\Scheduler` on disk catches. `cmdScheduleRun()` had been surviving it
+only by never touching `$schedule` beyond handing it straight back to
+`SchedulerServices::run()`.
+
+So the entry moved to `SchedulerServices::withQueueWork()`, and the two
+remaining reasons it costs the closure nothing are the ones Boot 26 already
+measured:
+
+- the scan counts `use Modules\…` lines only, so `QueueServices` is named
+  inline and never imported — the same escape hatch as the Cardboard bulk
+  actions. Measured after: `module:show Scheduler` → `closure: Cardboard,
+  Outbox`, **Queue absent**;
+- `$report` is a `callable(string): void`, so the one line the skip prints goes
+  to `bin/cms`'s `out()` and the module itself prints nothing.
+
+Measured:
 
 ```
 $ php bin/cms schedule:run                      # migrated
@@ -399,7 +425,14 @@ No scheduled tasks are due.                      # exit 0
 
 Without that guard a cron firing before the first `bin/cms migrate` would fail
 a task every minute and redden every run, for a reason the failure line does
-not carry.
+not carry. The entry is `everyMinute()` with a five-minute overlap guard, so a
+slow batch is not landed on by the next tick.
+
+Writing the test for the skip also corrected a second mistake of the same kind:
+`putenv('DB_QUEUE=…')` is not enough on its own. `DatabaseConnectionManager`
+**caches the open PDO per name**, so the "the entry must not register" case
+passed anyway — it was asking the previous test's migrated handle. Both
+singletons are reset now, with the reason written at the call.
 
 ### The parity fix, which is the part that mattered
 

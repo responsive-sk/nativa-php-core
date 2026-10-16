@@ -393,16 +393,31 @@ php bin/cms queue:work [<name>] [--limit=N]     # default: any queue, 10 jobs
   `SchedulerServices::run()`; the CLI only prints, and the module test asserts
   what the command does.
 
-It also joins the timetable, **wired in `bin/cms` rather than in the
-Scheduler module** — Scheduler stays queue-agnostic (a module naming
-`QueueServices` would be a Scheduler → Queue edge in `module:show`, and not
-every deployment has a queue):
+It also joins the timetable, registered by
+`SchedulerServices::withQueueWork()` — which is where the first attempt could
+NOT go. Wiring it in `bin/cms` reads better (the kernel owns the composition)
+and fails the kernel-only PHPStan gate outright:
+
+```
+Parameter $schedule of function withQueueWork() has invalid type
+  Modules\Scheduler\Scheduling\Schedule.      🪪 class.notFound
+Call to method call() on an unknown class
+  Modules\Scheduler\Scheduling\Schedule.      🪪 class.notFound
+```
+
+`bin/cms` is analysed in a tree with no module installed, and annotating that
+parameter — or calling a method on the value — resolves regardless of the
+guard. In the module the cost to the closure scan is zero, because the scan
+counts `use Modules\…` lines only and `QueueServices` is named inline and never
+imported. Measured: `module:show Scheduler` → `closure: Cardboard, Outbox` —
+**Queue absent**.
 
 | | |
 |---|---|
 | entry | `queue:work`, every minute, `withoutOverlapping(5)` |
-| where | appended to the schedule `bin/cms schedule:run` builds |
-| skipped when | `queue.db` has no `jobs` table yet — one line printed naming `bin/cms migrate`, because a cron that fires before the first migrate would otherwise fail a task every minute and redden every run for a reason the failure line does not carry |
+| where | `SchedulerServices::withQueueWork($schedule, $report)`, called by `schedule:run` |
+| the skip line | a `callable(string): void`, so the module prints nothing and `bin/cms`'s `out()` does |
+| skipped when | the queue's database has no `jobs` table — one line quoting the REAL path (`DB_QUEUE` when the deployment set one), because a cron that fires before the first migrate would otherwise fail a task every minute and redden every run for a reason the failure line does not carry |
 
 Either surface works: an operator who wants the queue drained by one cron line
 gets it from `schedule:run`, and one who wants it isolated runs `queue:work`
