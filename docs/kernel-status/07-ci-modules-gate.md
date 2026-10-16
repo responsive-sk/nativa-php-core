@@ -181,19 +181,62 @@ Drift cured by the trip: `module:remove Outbox --force` + `module:add Outbox`
 re-installed the slice verbatim from the catalogue, so the two stale test files
 noted above now match it.
 
+## Boot 28 — the panel, booted, as a gate
+
+Boot 27's matrix was measured by hand, and a measurement nobody re-runs is a
+memory. It is now `bin/build/admin-smoke.sh`, run by a fifth CI job
+(`admin-smoke`) and by `make admin-smoke`: the script migrates its own temp
+databases, seeds an admin and an author through the modules' own repositories
+(the Users migrator seeds **no roles** — measured, so the seed lives here),
+starts `php -S` with opcache off, walks the flows, reads the outbox rows back,
+stops the server and cleans the temp directory. 29 checks, all of them fatal.
+
+| group | checks |
+|---|---|
+| guest | `/` 200, `/login` 200, `/docs` 200, `/nope` 404, `/mark` **302**, `/mark/users` **302** |
+| admin | login 302; `/mark`, `/mark/users`, `/mark/roles` 200; `POST /mark/users/create` then `…/{id}/delete` 302 with the **row** asserted present and gone; `POST /mark/roles/create` then `…/{id}/delete` 302, same |
+| the guarded call sites | `security.user.changed` ≥ 2 and `security.role.changed` ≥ 2 in the outbox |
+| CSRF | no token → 403; valid token + cross-site `Origin` → 403 |
+| the refusal branch | author (no `users.manage`) `entity=users` → 403, body names the reason, `security.authz.denied` recorded |
+| the log | no `PHP Fatal` / `[KERNEL] Error` |
+
+The job deliberately carries **no `composer install`**: the modules come from
+the committed catalogue and the kernel runtime has zero Composer dependencies,
+so this is one more place that claim is either true or not (measured: the whole
+job runs in a fresh clone with no `vendor/`).
+
+The install loop the `modules` job used is now `bin/build/install-catalogue.sh`,
+shared by both jobs and by `make modules-install` — two copies of a topological
+sort is one copy too many. Two things changed in the move: the expected count is
+derived from the catalogue (18 entries + `KernelTheme`) instead of the literal
+19, and a module that is already installed is skipped so the target is
+re-runnable on a workstation. Neither weakens the check: the count still
+demands the whole catalogue, so a tree that cannot install an entry still fails
+here rather than in the suite.
+
+Verified by replaying both jobs' `run` blocks in order against a fresh
+`git worktree` of this commit:
+
+| | result |
+|---|---|
+| `admin-smoke`, no `vendor/` in the tree | **exit 0**, 29 checks, `storage/data/` still empty afterwards — the job never writes to the checkout |
+| `modules` (build → install → migrate → theme → suite → assert) | **exit 0**: `Installed (19)` from 18 catalogue entries in four rounds, `active theme: mono (bundle available: yes)`, `318 tests, 1339 assertions, 1 skip`, assertion `318 tests ran, 1 skipped, 38 catalogue test classes expected` |
+| `shellcheck` on both scripts / `actionlint` on the workflow | clean |
+
 ## What this round did not close
 
 - **CI `Extract-check` is still NOT RUN** (Boot 20): the upstream checkout is
   private. Unchanged by this round.
-- **The live sweep is a WORKSTATION step, not a gate.** The `curl` matrix above
-  is this round's evidence, run by hand against a temp-DB server; CI still
-  proves only that every catalogue test class executed. A job that boots the
-  server and walks the flows is the obvious next gate, and it is not in this
-  round.
 - **The rest of the catalogue's live surfaces** — Blog's article writes, Pages,
-  Comments' public submit, the Queue worker — are not swept. The sweep covers
-  the flows this round touched (users, roles, bulk actions) plus the login and
-  dashboard around them.
+  Comments' public submit, the Queue worker — are still not swept. The gate
+  covers the flows Boot 26 touched (users, roles, bulk actions) plus the login
+  and dashboard around them; the other modules' own surfaces are the next
+  round's work, and the script is where they go.
+- **The refusals that need a forged client address** (the register and reset
+  throttles, the rate-limit 429) are not in the gate: loopback is exempt from
+  throttling by design, and a `php -S` probe cannot forge `REMOTE_ADDR`. Those
+  stay pinned by `AuthServiceTest` / `PasswordResetServiceTest` /
+  `RateLimitMiddlewareTest` under the `modules` job.
 
 ### Measured drift, and its cure
 
