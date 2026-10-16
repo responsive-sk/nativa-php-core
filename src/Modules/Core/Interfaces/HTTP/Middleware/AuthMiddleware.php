@@ -18,10 +18,12 @@ use Modules\Core\Infrastructure\Http\Response;
  * unloadable without two feature modules it does not own. Now it asks an
  * `AuthProvider` and nothing else: who the request is (mapped to a
  * kernel-owned identity by whoever owns the session), which paths are
- * protected and what they require, which paths are guest-only, and a
- * `noteEvent()` sink the provider forwards to the outbox — or drops when
- * none is installed, so without the outbox the event is dropped, not the
- * request.
+ * protected and what they require, and which paths are guest-only.
+ *
+ * The refusal itself is recorded as `SecurityEvents::AUTHZ_DENIED` — named
+ * inline, never imported, behind a `class_exists` guard, exactly the way
+ * `RateLimitMiddleware` records its 429s. Without the outbox the event is
+ * dropped, not the refusal.
  *
  * The middleware is wired only when a provider exists (no provider → no admin
  * surface to protect → `/mark` is 404, never 403). Session handling,
@@ -118,24 +120,40 @@ final readonly class AuthMiddleware implements MiddlewareInterface
     }
 
     /**
-     * Record the refusal as a security event through the provider, and log it
-     * at DEBUG.
+     * Record the refusal as a security event, then log it at DEBUG.
      *
      * The event is unconditional: a DEBUG line is a development aid that
      * disappears in production, but a refused authorization is the one class
      * of thing the application most needs to reconstruct after the fact.
-     * Whether the provider forwards it to a durable outbox or drops it for
-     * want of one is the provider's answer, not the middleware's.
+     *
+     * The type is NAMED, not spelled. Measured 2026-10-16: this call used to
+     * hand the bare string `authz.denied` to the provider, which forwards what
+     * it is given — so every refused admin path wrote an outbox message under a
+     * type no handler in `SecurityEvents::all()` claims, the processor failed it
+     * with `No handler registered for event type: authz.denied`, and NO audit
+     * row was ever written for a refusal. The `roles` key is empty because the
+     * kernel identity carries permissions rather than role names: the audit line
+     * names no roles, the shape the bulk gate's refusals already write.
      */
     private function recordDenial(string $path, AuthIdentity $identity, string $required): void
     {
-        $this->auth->noteEvent('authz.denied', [
-            'path'     => $path,
-            'required' => $required,
-            'userId'   => $identity->id,
-            'ip'       => (string) (getenv('REMOTE_ADDR') ?: ''),
-        ]);
-
         $this->logDenial($path, $identity, $required);
+
+        if (!class_exists(\Modules\Outbox\Interfaces\HTTP\OutboxServices::class)
+            || !class_exists(\Modules\Outbox\Domain\SecurityEvents::class)
+        ) {
+            return;
+        }
+
+        \Modules\Outbox\Interfaces\HTTP\OutboxServices::securityEvent(
+            \Modules\Outbox\Domain\SecurityEvents::AUTHZ_DENIED,
+            [
+                'path'     => $path,
+                'required' => $required,
+                'userId'   => $identity->id,
+                'roles'    => [],
+                'ip'       => (string) (getenv('REMOTE_ADDR') ?: ''),
+            ],
+        );
     }
 }

@@ -195,28 +195,46 @@ when there are some.
    `LEK-AUTH-009 authorization.effect-unprotected` (protected effects with no
    authorization declaration) and reports no `LEK-AUTH-005` at all.
 
-   **What naming a real event then measured, and did NOT fix: the middleware's
-   denial reaches no audit row.** The refs had to name something that is really
-   raised, so both emit sites were read and then run — each emit into a throwaway
-   outbox, the real `OutboxProcessor` over both:
+   **Naming a real event is what exposed the next defect, and the round went on to
+   fix it: the middleware's denial reached no audit row.** The refs had to name
+   something that is really raised, so both emit sites were read and then run — each
+   emit into a throwaway outbox, the real `OutboxProcessor` over both:
 
-   | emit site | outbox `event_type` | outcome |
+   | emit site (before) | outbox `event_type` | outcome |
    |---|---|---|
    | `BulkPublishAction` → `SecurityEventServices::bulkRefused()` | `security.authz.denied` | `processed`, **one `audit_log` row** (`Refused /mark/bulk-publish (needs users.manage…)`) |
    | `AuthMiddleware::recordDenial()` → `AuthProvider::noteEvent('authz.denied', …)` | `authz.denied` | **`failed`** — `No handler registered for event type: authz.denied` — **no audit row** |
 
    `SecurityEventHandler::register()` binds one handler per type in
    `SecurityEvents::all()`, which holds `security.authz.denied` and not the bare
-   `authz.denied` that the middleware passes through `noteEvent()` verbatim — so
-   every refused admin path writes an outbox message no handler can ever claim.
-   That is the opposite of what the middleware's own docblock promises ("a refused
-   authorization is the one class of thing the application most needs to
-   reconstruct after the fact") and of what `SecurityEvents` says about itself
-   ("no emit site … spells an event type … of its own"). **Recorded here, not
-   fixed:** whether the middleware should emit the owned name or the bare name
-   should get its own binding is a security-audit decision, and the payloads differ
-   too — the middleware sends no `roles`, a field `SecurityEvents` lists as required
-   for that type.
+   `authz.denied` the middleware passed through `noteEvent()` verbatim — so every
+   refused admin path wrote an outbox message no handler could ever claim: five
+   retries, then parked, with no row. The dilemma (name the owned type, or bind the
+   bare one) had already been answered twice in code nobody had read:
+
+   - **`RateLimitMiddleware`, the same directory, emits the owned constant** —
+     `OutboxServices::securityEvent(SecurityEvents::RATELIMIT_TRIPPED, …)`, inline
+     behind a `class_exists` guard. The auth middleware was the only refusal site
+     that spelled a name instead of naming one.
+   - **`SecurityEvents::isSecurityEvent()` exists for exactly this and had zero
+     callers**, its docblock describing what happened here: "an unregistered type
+     throws — so this is what keeps a typo from becoming a message that retries five
+     times and then fails". `payloadKeys()` was unwired too, and it omitted `ip`
+     although the Audit handler reads it and every emit site sends it.
+
+   **Fixed 2026-10-16:** the middleware names `SecurityEvents::AUTHZ_DENIED` the way
+   its neighbour does; `payloadKeys()` declares `ip` for both refusal types; and the
+   provider seam — the one boundary that still takes a string — refuses a name
+   outside the vocabulary loudly instead of parking it, which is `isSecurityEvent()`'s
+   first caller. `AuthMiddlewareDenialTest` pins the outcome end to end: a 403 from
+   the middleware leaves one `processed` outbox message and one `audit_log` row with
+   the actor, the target and the missing permission in it; the emitted payload keys
+   equal the declared ones; an owned name is still recorded while `authz.denied` is
+   refused; and an inactive identity is refused with no event at all — the one
+   refusal decided before any policy. Four negative controls, each reverted with the
+   tree verified by digest: the bare name back → the delivery test red; the guard
+   removed → red; `ip` dropped from the declaration → red; the inactive branch made
+   to record → red.
 5. **A test reads the model's module set — and nothing else.**
    `ModelCatalogueContractTest`
    (2026-10-16) compares the model's *module set* against the catalogue: every

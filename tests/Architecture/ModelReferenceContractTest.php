@@ -30,8 +30,9 @@ use PHPUnit\Framework\TestCase;
  * target-binding, value-object), so the symbols those refs named could not have
  * been created. They now name the event the code actually raises —
  * `users.authorization_denied`, the one denial path in
- * `Modules\Core\Interfaces\HTTP\Middleware\AuthMiddleware` (runtime name
- * `authz.denied`, HTTP 403) — and this test is what keeps them honest.
+ * `Modules\Core\Interfaces\HTTP\Middleware\AuthMiddleware` (recorded as
+ * `SecurityEvents::AUTHZ_DENIED`, `security.authz.denied`, HTTP 403) — and this
+ * test is what keeps them honest.
  *
  * Deliberately dumb, like its neighbours: a line regex over the one YAML file in
  * `lekalo/` (there is no YAML parser in this project — the same reason

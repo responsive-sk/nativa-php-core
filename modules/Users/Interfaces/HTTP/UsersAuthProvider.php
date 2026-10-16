@@ -152,10 +152,42 @@ final readonly class UsersAuthProvider implements AuthProvider
     {
         // Inline FQCN on purpose: no `use Modules\Outbox\…` import exists to
         // enter Users' install closure (see the class docblock).
-        if (!class_exists(\Modules\Outbox\Interfaces\HTTP\OutboxServices::class)) {
+        if (!class_exists(\Modules\Outbox\Interfaces\HTTP\OutboxServices::class)
+            || !class_exists(\Modules\Outbox\Domain\SecurityEvents::class)
+        ) {
             $this->debug(sprintf('[auth] event=%s dropped (no outbox)', $event));
 
             return;
+        }
+
+        // A name outside the outbox's vocabulary is refused HERE rather than
+        // written — `SecurityEvents::isSecurityEvent()`'s stated purpose, and
+        // this is its caller. Measured 2026-10-16: `authz.denied` went through
+        // this method for every refused admin path, and because the drain
+        // dispatches by type while `SecurityEvents::all()` holds
+        // `security.authz.denied`, each one became a message the processor failed
+        // with `No handler registered for event type` — retried five times, then
+        // parked, with no audit row. Refused loudly rather than parked quietly:
+        // a fact that cannot be recorded must not look like one that was.
+        if (!\Modules\Outbox\Domain\SecurityEvents::isSecurityEvent($event)) {
+            error_log(sprintf('[auth] event=%s refused (not a security event type)', $event));
+
+            return;
+        }
+
+        // The keys a handler reads are declared in one place; a context that
+        // invents another is a fact the audit viewer would silently drop.
+        $unknown = array_diff(
+            array_keys($context),
+            \Modules\Outbox\Domain\SecurityEvents::payloadKeys($event),
+        );
+
+        if ([] !== $unknown) {
+            error_log(sprintf(
+                '[auth] event=%s carries keys no handler reads: %s',
+                $event,
+                implode(', ', array_values($unknown)),
+            ));
         }
 
         \Modules\Outbox\Interfaces\HTTP\OutboxServices::securityEvent($event, $context);

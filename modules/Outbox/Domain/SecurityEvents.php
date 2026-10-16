@@ -93,11 +93,15 @@ final class SecurityEvents
     public static function payloadKeys(string $eventType): array
     {
         return match ($eventType) {
-            self::AUTHZ_DENIED      => ['path', 'required', 'userId', 'roles'],
+            // `ip` is declared for both refusal types because the Audit handler
+            // reads it (`SecurityEventHandler::ip()`) and every emit site sends
+            // it — it was missing from this list while both were true, measured
+            // 2026-10-16.
+            self::AUTHZ_DENIED      => ['path', 'required', 'userId', 'roles', 'ip'],
             self::USER_CHANGED      => ['userId', 'operation'],
             self::ROLE_CHANGED      => ['roleId', 'operation'],
             self::AUTH_ATTEMPT      => ['email', 'outcome', 'ip'],
-            self::RATELIMIT_TRIPPED => ['key', 'scope'],
+            self::RATELIMIT_TRIPPED => ['key', 'scope', 'ip'],
             default                 => [],
         };
     }
