@@ -5,8 +5,11 @@ declare(strict_types = 1);
 namespace Modules\Locales\Tests;
 
 use Modules\Core\Application\Services\ShellContextProviderRegistry;
+use Modules\Core\Interfaces\CLI\CliOutput;
+use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Locales\Application\Services\LocaleService;
 use Modules\Locales\Domain\Model\Locale;
+use Modules\Locales\Infrastructure\Persistence\Migrations\LocalesDatabaseMigrator;
 use Modules\Locales\Interfaces\HTTP\LocalesServices;
 use Modules\Locales\Interfaces\HTTP\LocalesShellContextProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -93,6 +96,168 @@ final class LocalesShellContextProviderTest extends TestCase
         $this->assertIsInt($settings, 'The Settings provider must be installed for the ordering pin.');
         $this->assertIsInt($locales);
         $this->assertLessThan($locales, $settings, 'Settings (-100) votes first; Locales is the backstop, never the override.');
+    }
+
+    /**
+     * The copy answers the `home` group out of `locales.db`, PER LOCALE — the
+     * defect this method was added for, pinned against the module's own schema
+     * and seed.
+     *
+     * Measured 2026-10-17, before `copy()` existed: a `sk_SK` site rendered
+     * `<h1>Minimal PHP 8.5 Starter Kit</h1>` while `home.hero_title` sat
+     * translated in `locales.db` — because the only thing that knew the Slovak
+     * row was this module, and the kernel rendering the page had no way to ask.
+     */
+    #[Test]
+    public function copyAnswersTheHomeGroupInTheRequestedLocale(): void
+    {
+        $this->withSeededLocalesDatabase(function (LocalesShellContextProvider $provider): void {
+            $sk = $provider->copy('home', 'sk_SK');
+            $en = $provider->copy('home', 'en_US');
+
+            $this->assertSame(
+                'Minimálny PHP 8.5 starter kit',
+                $sk['home.hero_title'] ?? null,
+                'The seeded Slovak row must reach the port — this is the string a Slovak visitor was not getting.',
+            );
+
+            $this->assertSame(
+                'Minimal PHP 8.5 Starter Kit',
+                $en['home.hero_title'] ?? null,
+                'The same key in en_US must answer English: the locale is an input, not decoration.',
+            );
+
+            $this->assertNotSame(
+                $sk['home.hero_title'] ?? null,
+                $en['home.hero_title'] ?? null,
+                'Two locales answering one string means the locale was dropped on the way through.',
+            );
+        });
+    }
+
+    /**
+     * Both locales carry the SAME keys. A key seeded for one and not the other
+     * is a mixed-language page — `Menej vrstiev` above an English heading — and
+     * it is invisible to every gate, because a missing row is not an error in
+     * any of them: it is a fallback in the theme.
+     */
+    #[Test]
+    public function bothLocalesAnswerTheSameKeySet(): void
+    {
+        $this->withSeededLocalesDatabase(function (LocalesShellContextProvider $provider): void {
+            $sk = array_keys($provider->copy('home', 'sk_SK'));
+            $en = array_keys($provider->copy('home', 'en_US'));
+
+            $this->assertNotSame([], $sk, 'The seeded group must not be empty — an empty answer makes every assertion below vacuous.');
+
+            $this->assertSame(
+                [],
+                array_values(array_diff($sk, $en)),
+                'These keys are seeded for sk_SK and missing for en_US: the English page renders a Slovak string.',
+            );
+
+            $this->assertSame(
+                [],
+                array_values(array_diff($en, $sk)),
+                'These keys are seeded for en_US and missing for sk_SK: the Slovak page renders an English string.',
+            );
+        });
+    }
+
+    /**
+     * The pair that failed: the theme renders `home.*` keys, and the group has
+     * to carry every one of them. The rows were there on 2026-10-17 and the page
+     * was still English — nothing compared the two lists.
+     */
+    #[Test]
+    public function theSeededGroupCoversEveryKeyTheInstalledThemeRenders(): void
+    {
+        if (!class_exists(\Modules\Jednotka\Theme\JednotkaTheme::class)) {
+            $this->markTestSkipped('jednotka is not installed — this asserts the seam between the copy and the theme that renders it.');
+        }
+
+        $constant = (new \ReflectionClass(\Modules\Jednotka\Theme\JednotkaTheme::class))->getReflectionConstant('DEFAULT_COPY');
+        $this->assertNotFalse($constant, 'The theme\'s default copy is what this compares against.');
+
+        /** @var array<string, string> $rendered */
+        $rendered = (array) $constant->getValue();
+
+        $this->withSeededLocalesDatabase(function (LocalesShellContextProvider $provider) use ($rendered): void {
+            foreach (['sk_SK', 'en_US'] as $locale) {
+                $missing = array_values(array_diff(array_keys($rendered), array_keys($provider->copy('home', $locale))));
+
+                $this->assertSame(
+                    [],
+                    $missing,
+                    sprintf(
+                        'The theme renders these keys and %s has no seeded row for them, so it falls back to its English default: %s',
+                        $locale,
+                        implode(', ', $missing),
+                    ),
+                );
+            }
+        });
+    }
+
+    /**
+     * An unseeded locale, an empty locale and an unknown group all answer
+     * nothing rather than the default locale's copy. Substituting silently is
+     * how a site renders the wrong language with no way to tell.
+     */
+    #[Test]
+    public function anUnknownLocaleGroupOrEmptyInputAnswersNothing(): void
+    {
+        $this->withSeededLocalesDatabase(function (LocalesShellContextProvider $provider): void {
+            $this->assertSame([], $provider->copy('home', 'de_DE'), 'A locale with no rows must abstain, not fall back to sk_SK.');
+            $this->assertSame([], $provider->copy('home', ''), 'An empty locale means the kernel did not resolve one; guessing is not the provider\'s call.');
+            $this->assertSame([], $provider->copy('', 'sk_SK'), 'An empty group is not the home group.');
+            $this->assertSame([], $provider->copy('nobody.owns.this', 'sk_SK'), 'An unanswered group answers an empty map — the theme\'s own floor covers it.');
+        });
+    }
+
+    /**
+     * Run assertions against a throwaway `locales.db` built by the module's own
+     * migrator: same schema, same seed, no shared state. The Settings provider
+     * test points `DB_CONFIG` at a temp file for the same reason — the working
+     * tree's database is operator state, not a fixture, and a test that reads it
+     * passes on this machine and fails on a fresh checkout.
+     *
+     * @param \Closure(LocalesShellContextProvider): void $run
+     */
+    private function withSeededLocalesDatabase(\Closure $run): void
+    {
+        $tmpDir = sys_get_temp_dir() . '/nativa-locales-copy-' . bin2hex(random_bytes(6));
+        mkdir($tmpDir, 0o775, true);
+
+        putenv('DB_LOCALES=' . $tmpDir . '/locales.db');
+        DatabaseConnectionManager::resetInstance();
+        LocalesServices::reset();
+
+        try {
+            $pdo = new \PDO('sqlite:' . $tmpDir . '/locales.db');
+            (new LocalesDatabaseMigrator($pdo))->run(self::quietOutput());
+
+            $run(new LocalesShellContextProvider());
+        } finally {
+            putenv('DB_LOCALES');
+            DatabaseConnectionManager::resetInstance();
+            LocalesServices::reset();
+
+            foreach (glob($tmpDir . '/*') ?: [] as $file) {
+                @unlink($file);
+            }
+
+            @rmdir($tmpDir);
+        }
+    }
+
+    private static function quietOutput(): CliOutput
+    {
+        return new class implements CliOutput {
+            public function writeln(string $message): void
+            {
+            }
+        };
     }
 
     /**

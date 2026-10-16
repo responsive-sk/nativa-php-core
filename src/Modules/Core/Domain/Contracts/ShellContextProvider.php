@@ -11,11 +11,21 @@ use Modules\Core\Domain\ShellNavItem;
  * reaching into a module.
  *
  * The kernel renders a document for every public surface, and a document needs
- * five facts that belong to whoever owns the site: its name, the active theme,
- * the default locale, the language list, and the navigation menu. Before this
- * port, `FrontendLayout`, `ThemeResolver` and `ContentServices` reached for
- * `SettingsServices` and `LocalesServices` directly, which made the shared
- * kernel unbuildable without two feature modules it does not own.
+ * six facts that belong to whoever owns the site: its name, the active theme,
+ * the default locale, the language list, the navigation menu, and the copy a
+ * surface renders. Before this port, `FrontendLayout`, `ThemeResolver` and
+ * `ContentServices` reached for `SettingsServices` and `LocalesServices`
+ * directly, which made the shared kernel unbuildable without two feature
+ * modules it does not own.
+ *
+ * `copy()` is the last of the six and arrived the same way the other five did:
+ * the kernel held a surface whose words it could not resolve. `HomepageAction`
+ * passed `['title' => $siteName]` and nothing else, so a theme rendering a
+ * translated home had to carry the strings itself — measured on `jednotka`,
+ * whose English defaults answered a `sk_SK` site. The translations were ALREADY
+ * in `locales.db` (25 `home.*` rows in both locales, seeded by the Locales
+ * migrator); nothing in the tree could ask for them without a `Locale` import,
+ * so the page came out English on a Slovak site with every gate green.
  *
  * **Absence is a first-class answer, not an error.** Every method may answer
  * null (or an empty list), and a kernel with no provider installed is a kernel
@@ -61,6 +71,22 @@ interface ShellContextProvider
      * The language code for `<html lang>`, or null to follow the default locale.
      */
     public function htmlLang(): ?string;
+
+    /**
+     * The copy one surface renders, in one locale, keyed by FULL translation
+     * key (`home.hero_title`).
+     *
+     * The group is the surface's name (`home`), and the provider answers the
+     * whole group rather than a list of keys the kernel would have to know: a
+     * theme reading `home.layer2_card3_text` is the only thing that knows it
+     * wants that key, and a key nobody renders (`home.eyebrow`) costs nothing.
+     *
+     * **A key the provider does not hold is ABSENT, never empty.** That is what
+     * lets a theme carry its own floor and be overridden key by key.
+     *
+     * @return array<string, string>
+     */
+    public function copy(string $group, string $locale): array;
 
     /**
      * Navigation for one slot ('header' or 'footer'), already marked active

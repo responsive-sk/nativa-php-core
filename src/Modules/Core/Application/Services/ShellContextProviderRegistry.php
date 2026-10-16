@@ -33,6 +33,7 @@ use Modules\Core\Infrastructure\Paths\AppPaths;
  * |---|---|
  * | `siteName`, `theme`, `defaultLocale`, `htmlLang` | first non-null wins (priority, then discovery order) |
  * | `languages` | union, in provider order, de-duplicated |
+ * | `copy` | union PER KEY — the first provider that holds a key wins it |
  * | `navigation` | first provider that returns a non-empty list for that slot |
  *
  * A tie at the winning priority keeps the first answer and LOGS the rest
@@ -145,6 +146,48 @@ final class ShellContextProviderRegistry
         }
 
         return $languages;
+    }
+
+    /**
+     * The union of every provider's copy for a group, in priority order, with
+     * the FIRST provider to hold a key winning it — the rule `copy` gets in the
+     * table above.
+     *
+     * Per key, not per provider, because the two are genuinely independent: a
+     * site module translating its own three strings must not have to re-answer
+     * the twenty its locale already carries, and a provider that answers a group
+     * another one also answers should not blank it out wholesale.
+     *
+     * Two details that are deliberate and not accidents of the loop:
+     *
+     * - **A priority win is silent.** Answering a key the winner did not hold is
+     *   normal, so this is the one merge here that does NOT log contention: two
+     *   providers naming the SAME key is a real disagreement worth a line, but
+     *   telling them apart from the ordinary case costs a pass over the whole
+     *   union for every key. Navigation takes the other trade and logs, because
+     *   a lost menu is visible; a lost string is not.
+     * - **An empty string is not an answer.** A stored row with a blank value
+     *   does not mask the provider behind it, for the same reason every other
+     *   method treats `''` as absent: the theme's own floor is better copy than
+     *   a blank, and a blank is what a half-filled translation table looks like.
+     *
+     * @return array<string, string>
+     */
+    public static function copy(string $group, string $locale): array
+    {
+        $copy = [];
+
+        foreach (self::all() as $provider) {
+            foreach ($provider->copy($group, $locale) as $key => $value) {
+                if ('' === $value || array_key_exists($key, $copy)) {
+                    continue;
+                }
+
+                $copy[$key] = $value;
+            }
+        }
+
+        return $copy;
     }
 
     /**

@@ -24,6 +24,18 @@ use Modules\Locales\Domain\Model\Locale;
  * source of truth) — the union the theme switchers render. It travels with
  * the slice like every provider, so removing the module removes the answers
  * and the switchers hide again instead of pointing at dead locales.
+ *
+ * ## The copy
+ *
+ * `copy()` is a third kind of answer here, and it closed the last hole in this
+ * port: a `sk_SK` site rendered English home copy because the only thing in the
+ * tree that knew what `home.hero_title` says in Slovak was THIS module, and the
+ * kernel rendering the page had no way to ask it. It answers the group straight
+ * out of `locales.db` — the same rows the translation admin edits and the
+ * migrator seeds — so the page and the admin screen cannot disagree about which
+ * strings a locale has. Keys come back whole (`home.hero_title`), because the
+ * group IS the surface's name and a stripped prefix would let `home.title`
+ * collide with the shell's own `title`.
  */
 #[AsShellContextProvider(priority: 0)]
 final class LocalesShellContextProvider implements ShellContextProvider
@@ -54,6 +66,32 @@ final class LocalesShellContextProvider implements ShellContextProvider
     public function htmlLang(): ?string
     {
         return LocalesServices::locale()->default()->language();
+    }
+
+    /**
+     * The copy one surface renders, in one locale — the `locales.db` rows for
+     * that group.
+     *
+     * An unknown or empty locale answers `[]` rather than falling back to the
+     * default: the kernel asked for a locale it has, and a provider that quietly
+     * substitutes another is how a Slovak site ends up rendering English with
+     * no way to tell. The theme's own floor covers the gap, visibly.
+     *
+     * @return array<string, string>
+     */
+    public function copy(string $group, string $locale): array
+    {
+        if ('' === $group || '' === $locale) {
+            return [];
+        }
+
+        $copy = [];
+
+        foreach (LocalesServices::translations()->getByGroup($group, $locale) as $translation) {
+            $copy[$translation->key] = $translation->value;
+        }
+
+        return $copy;
     }
 
     /**

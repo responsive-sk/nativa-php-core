@@ -117,6 +117,12 @@ final class PreferenceContentionTest extends TestCase
                         return [];
                     }
 
+                    /** @return array<string, string> */
+                    public function copy(string $group, string $locale): array
+                    {
+                        return [];
+                    }
+
                     /** @return list<ShellNavItem> */
                     public function navigation(string $slot, string $currentPath): array
                     {

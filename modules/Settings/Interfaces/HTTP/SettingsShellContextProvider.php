@@ -130,6 +130,20 @@ final class SettingsShellContextProvider implements ShellContextProvider
     }
 
     /**
+     * No copy here, and `[]` is the answer rather than an oversight: this
+     * module owns the `menu_items` table and the stored admin choices, not a
+     * single translated string. `copy()` is answered by Locales, whose rows are
+     * the ones the translation admin edits — a second answer from Settings
+     * would be a second source for the same words.
+     *
+     * @return array<string, string>
+     */
+    public function copy(string $group, string $locale): array
+    {
+        return [];
+    }
+
+    /**
      * The language part of the voted default locale ('sk_SK' → 'sk') —
      * null when there is no vote, so the kernel fallback still applies.
      */
