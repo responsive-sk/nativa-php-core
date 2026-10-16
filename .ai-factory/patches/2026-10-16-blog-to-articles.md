@@ -1,8 +1,20 @@
 # rename blog → articles (prepared, NOT applied)
 
-Status: **prepared.** Nothing in this tree and nothing in `../nativa-minimal` has
-been changed. Upstream is a **dirty** working tree (see below), so the rename
-must not be applied there until that is resolved.
+Status: **prepared, not applied.** Nothing in this tree and nothing in
+`../nativa-minimal` has been changed. Upstream is a **dirty** working tree, so the
+rename must not be applied there until that is resolved.
+
+Measured on the second pass (2026-10-16): upstream is still dirty — **26 entries**
+(20 modified, 6 untracked, counted by `git status --porcelain`), and **four of them
+carry `Modules\Blog` themselves**:
+`tests/Support/KernelCoupling.php`, `tests/Architecture/KernelCouplingTest.php`,
+`tests/Integration/ThemeModuleContractTest.php`,
+`openspec/changes/nativa-php-kernel.md`. The rename edits those same files, so
+applying it now would interleave the operator's uncommitted work with the sweep and
+leave neither separable nor reviewable. The gate is not decoration.
+
+Nothing dirty lives inside `src/Modules/Blog/` itself, so the gate is about
+*reviewability*, not about a merge conflict.
 
 ## Why upstream first, measured 2026-10-16
 
@@ -35,13 +47,70 @@ adaptation, not a byte-copy.
 Applied to a scratch copy of the catalogue slice (`cp -a modules/Blog /tmp/ren/Articles`):
 
 - `Modules\Blog` → `Modules\Articles` across the slice → **47 php files, 0 syntax
-  failures (`php -l`), 0 leftovers**.
+  failures (`php -l`), 0 leftovers**. **This number is slice-scoped**: it is 47 of
+  this tree's 53 catalogue files. It is NOT the size of the job upstream, which is
+  the scope correction below.
 - Route names are referenced **only in their own `#[Route(name: …)]`** — all 16
   grep hits are declarations, no call site — so renaming them is free.
 - The URLs do not move: `/blog`, `/blog/{slug}`, `/blog/tags`, `/blog/categories`,
   `/blog/feed.atom`, `/blog/feed.xml`, `/blog/{slug}/inline`,
   `/blog/series/security-infra/feed.*`, `/authors/{slug}`, `/mark/articles`,
   `/mark/categories`, `/mark/tags`, `/storage/blog-images/{path*}`.
+
+## Scope correction — measured 2026-10-16 (second pass)
+
+The "47 php files" above verifies the **catalogue slice only**. It says nothing
+about a consuming tree, and a consuming tree is far larger. Fixed-string
+measurement (`grep -rlF 'Modules\Blog'`, whole repo upstream):
+
+| where | files carrying the name | note |
+|---|---|---|
+| `src/Modules/Blog/` | 40 php (of 46 files) | the slice itself |
+| `src/Themes/**` | **34 php** | six themes: moonshine 9, magazine 7, erik 6, basic 4, jednotka 4, starter 4 |
+| `src/Modules/Core` | 3 php | the kernel edges the catalogue does not have |
+| `src/Modules/Cardboard` | 4 php | |
+| `src/Modules/Questions` | 2 php | |
+| `src/Modules/Comments` | 1 php | |
+| `tests/**` | **49 php** | |
+| **total php to rewrite** | **133** | not 46, and not 47 |
+
+So upstream step 1 is not "the module plus Core ×3": the **themes are the largest
+consumer by far** — 34 files, more than Core, Cardboard, Questions and Comments
+combined — and the tests are 49 more. Neither surface is named in the class-name
+map or the order below, so a run that follows this file literally would leave a
+broken tree in six themes and 49 tests.
+
+### The module name is *data* in one place
+
+`tests/Architecture/KernelCouplingTest.php` does not merely import the namespace —
+it holds the name as **ledger data**, keyed on exact strings and carrying the
+module label as the entry's subject:
+
+```
+'src/Modules/Core/Interfaces/HTTP/Actions/HomepageAction.php::Modules\Blog\Application\BlogServices'
+    => ['Blog', 'M', 'the plan moves the home surface out of the kernel; …'],
+```
+
+That ledger is the tree's record of *deliberate* kernel coupling. The rename
+rewrites its vocabulary without deleting its entries — the coupling is still
+deliberate after the rename, only renamed. It is also one of the four dirty files,
+which is the sharpest reason for the gate above.
+
+### Never hand-edit these (they carry the name but are not source)
+
+| path | why | instead |
+|---|---|---|
+| `dist/**` | 95 php files carry the name; `/dist/` is in `.gitignore` with **0 tracked files** — it is build output | rebuild |
+| `storage/blog/**` | the operator's **article content** | rename only with the operator, or not at all |
+| `storage/logs`, `storage/cache/coverage.xml` | logs, an old coverage report | nothing |
+| `openspec/changes/archive/**` | historical records | leave — a record that said `Blog` in September said `Blog` |
+| `.ai-factory/rules/generated/**` | generated rules | regenerate |
+| `docs/lekalo/trace/*.json` | generated traces, and currently dirty | regenerate after the rename |
+
+`docs/dex/**` (12 php) is a copy of theme code living under `docs/`; no script was
+found that generates it, so it needs a human decision rather than a sweep.
+`bin/cms` and the live (non-archive) `openspec/` documents carry the name too and
+are source-ish: they take the map by hand.
 
 ## What needs a decision: 18 class names
 
@@ -103,9 +172,11 @@ Route names: `blog.index` → `articles.index`, `blog.article` → `articles.art
 
 ## Order
 
-1. Upstream (`../nativa-minimal`) — **only when its tree is clean**: apply the map
-   above (its Blog has 46 files and **Core imports it ×3**, which this tree's
-   kernel does not — those Core edges move too), run its own gates, commit.
+1. Upstream (`../nativa-minimal`) — **only when its tree is clean**: sweep the
+   namespace across the **133 php files** in the scope correction above (the map
+   handles the 18 class names; the sweep is namespace-only), including the 34 theme
+   files and the 49 test files, plus `bin/cms` and the live `openspec/` documents.
+   Then rebuild `dist/`, regenerate the traces, run its own gates, commit.
 2. This tree: `git mv modules/Blog modules/Articles`, the same map (53 files),
    then the importers in the catalogue — `Cardboard/{BulkDeleteAction,
    BulkPublishAction, UsersAction, CardboardServices}.php`,
