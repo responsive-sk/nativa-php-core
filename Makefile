@@ -51,6 +51,15 @@ kernel-size: ## Measure the kernel shape (bytes, files, layers, interface/concre
 extract-check: ## Verify this tree against the upstream kernel slice
 	bin/build/extract-kernel.sh --check --minimal-root $(MINIMAL_ROOT)
 
+##@ Catalogue
+# The same two steps the `modules` and `admin-smoke` CI jobs run, so a red job
+# can be reproduced here in one command instead of by reading the workflow.
+modules-install: ## Install every catalogued module (closure order; refuses a cycle)
+	bin/build/install-catalogue.sh
+
+admin-smoke: ## Boot the panel with temp DBs and walk the admin flows over HTTP
+	bin/build/admin-smoke.sh
+
 ##@ Assets
 assets: ## Build the theme bundles in-tree (pnpm workspace under Frontend/packages)
 	@command -v pnpm >/dev/null 2>&1 || { \

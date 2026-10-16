@@ -44,16 +44,23 @@ The scan reads files as TEXT and never loads a class it describes, so a module
 whose dependencies are absent is still describable. A scanner that fatals on a
 missing class cannot report the very closure that is missing.
 
-Two pipeline stages are NOT picked up this way, on purpose: `AuthMiddleware`
-and `RateLimitMiddleware` need constructor arguments the zero-argument scan
-cannot supply, so the composition root wires them behind `class_exists` — a
-module shipping an `AuthProvider` (Users ships `UsersAuthProvider` plus the
-`AuthWiring::wire()` entry point) is noticed by that guard in
-`public/index.php`, never by a list held in the kernel. Install the module and
-the gate exists; a tree with the admin router but no provider module answers
-200 (there is nothing to gate with — a route is not a guard), and a
-kernel-only tree answers 404. The measured states are recorded in
-`docs/kernel-status.md` §6.
+The admin gate is picked up the same way, one level down: a module ships an
+`AuthProvider` marked `#[AsAuthProvider]`, and `AuthProviderRegistry` (Core)
+finds it by file name — `*AuthProvider.php` in the module's `Interfaces/HTTP`.
+The composition root asks that registry and wraps `AuthMiddleware` around what
+it gets, so `public/index.php` names no module class for auth at all. Install
+the module and the gate exists; a tree with the admin router but no provider
+module answers 200 (there is nothing to gate with — a route is not a guard),
+and a kernel-only tree answers 404. (`Users` used to ship an `AuthWiring::wire()`
+entry point for this; it was deleted when discovery landed — see
+`docs/kernel-status/04-kernel-contracts.md` §6 and
+`docs/kernel-status/06-auth-discovery-and-mail-transport.md` §10 for the
+measured states, with `docs/kernel-status.md` as the index over the parts.)
+
+`RateLimitMiddleware` is the one stage still wired explicitly in
+`public/index.php`, behind `class_exists`: it needs a limiter FACTORY in its
+constructor, which the zero-argument scan cannot supply, and its product is a
+service holding a PDO rather than a zero-argument port implementation.
 
 ## The closure rule
 
@@ -106,8 +113,8 @@ the lifecycle fixture:
 Restart the server between phases: the built-in server is one long-lived
 process, and a class it already declared outlives the file it came from. A
 check run against a removed-but-remembered class is a green run of a file that
-no longer exists — the same stale-bytecode lesson `docs/kernel-status.md`
-records for edits.
+no longer exists — the same stale-bytecode lesson
+`docs/kernel-status/01-import-and-edge-cuts.md` records for edits.
 
 ## Themes travel as modules (measured 2026-10-11)
 

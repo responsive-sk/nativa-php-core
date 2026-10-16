@@ -12,6 +12,7 @@ use Modules\Security\Application\Services\RateLimiter;
 use Modules\Users\Application\Services\PasswordResetService;
 use Modules\Users\Domain\Contracts\PasswordResetMailer;
 use Modules\Users\Infrastructure\Mail\DevLogPasswordResetMailer;
+use Modules\Users\Infrastructure\Mail\HttpPasswordResetMailer;
 use Modules\Users\Infrastructure\Mail\NullPasswordResetMailer;
 use Modules\Users\Infrastructure\Mail\PasswordResetMailerFactory;
 use Modules\Users\Infrastructure\Persistence\Migrations\UsersDatabaseMigrator;
@@ -67,6 +68,12 @@ final class PasswordResetMailerTest extends TestCase
     /** The APP_ENV value before the test, or null when it was unset. */
     private ?string $appEnvBefore = null;
 
+    /** The mail-transport keys before the test, by key, null when unset. */
+    private array $mailEnvBefore = [];
+
+    /** The keys the HTTP transport is configured from (`PasswordResetMailerFactory::http()`). */
+    private const array MAIL_ENV_KEYS = ['MAIL_API_URL', 'MAIL_API_KEY', 'MAIL_FROM', 'APP_URL'];
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -92,6 +99,11 @@ final class PasswordResetMailerTest extends TestCase
 
         $appEnv = getenv('APP_ENV');
         $this->appEnvBefore = false === $appEnv ? null : $appEnv;
+
+        foreach (self::MAIL_ENV_KEYS as $key) {
+            $value = getenv($key);
+            $this->mailEnvBefore[$key] = false === $value ? null : $value;
+        }
     }
 
     protected function tearDown(): void
@@ -107,6 +119,11 @@ final class PasswordResetMailerTest extends TestCase
                 putenv('APP_ENV');
             } else {
                 putenv('APP_ENV=' . $this->appEnvBefore);
+            }
+
+            foreach (self::MAIL_ENV_KEYS as $key) {
+                $before = $this->mailEnvBefore[$key] ?? null;
+                putenv(null === $before ? $key : $key . '=' . $before);
             }
 
             DatabaseConnectionManager::resetInstance();
@@ -302,6 +319,140 @@ final class PasswordResetMailerTest extends TestCase
             $this->logBefore,
             self::logContents($this->logFile),
             'the service must not write a log of its own — that was the finding',
+        );
+    }
+
+    /**
+     * The way out of the state §7 left: a deployment that configures the three
+     * keys gets a REAL transport in production — and one that configures only
+     * part of them is refused loudly rather than delivering a link built on a
+     * missing base URL.
+     */
+    #[Test]
+    public function productionUsesTheConfiguredHttpTransportAndRefusesAHalfConfiguredOne(): void
+    {
+        putenv('APP_ENV=production');
+        putenv('MAIL_API_URL=https://mail.example.test/send');
+        putenv('MAIL_API_KEY=secret-key');
+        putenv('MAIL_FROM=no-reply@example.test');
+        putenv('APP_URL=https://app.example.test');
+
+        self::assertInstanceOf(
+            HttpPasswordResetMailer::class,
+            PasswordResetMailerFactory::create(),
+            'a fully configured production transport must be the mailer the service receives',
+        );
+
+        // Half a transport: the endpoint and the sender are there, the base URL
+        // the link needs is not. A link nobody can follow is not a delivery, so
+        // this must resolve to "nothing is delivered", not to a guessed host.
+        putenv('APP_URL');
+
+        $logFile = $this->tmpDir . '/factory.log';
+        $logBefore = ini_get('error_log');
+        ini_set('error_log', $logFile);
+
+        try {
+            self::assertNull(
+                PasswordResetMailerFactory::http(),
+                'a transport missing APP_URL must not be used — the link would point at a host this tree does not own',
+            );
+            self::assertInstanceOf(
+                NullPasswordResetMailer::class,
+                PasswordResetMailerFactory::create(),
+                'a half-configured deployment gets the null mailer, not a broken link',
+            );
+        } finally {
+            ini_set('error_log', false === $logBefore ? '' : $logBefore);
+        }
+
+        self::assertStringContainsString(
+            'missing APP_URL',
+            (string) file_get_contents($logFile),
+            'the refusal must name the missing key — otherwise "mail is configured, why is nothing arriving" is unanswerable',
+        );
+    }
+
+    /**
+     * The transport's documented contract, asserted without network egress: the
+     * endpoint, the bearer header, the JSON shape, and the link a reader can
+     * actually click.
+     */
+    #[Test]
+    public function theHttpTransportPostsTheDocumentedContractWithAClickableLink(): void
+    {
+        $token = str_repeat('b', 64);
+        $seen = [];
+
+        $mailer = new HttpPasswordResetMailer(
+            'https://mail.example.test/send',
+            'secret-key',
+            'no-reply@example.test',
+            'https://app.example.test/',
+            static function (string $endpoint, array $headers, string $body) use (&$seen): array {
+                $seen = ['endpoint' => $endpoint, 'headers' => $headers, 'body' => $body];
+
+                return ['status' => 202, 'body' => '{}'];
+            },
+        );
+
+        $mailer->sendResetLink(self::EMAIL, $token, 1);
+
+        self::assertSame('https://mail.example.test/send', $seen['endpoint'] ?? null);
+        self::assertContains('Authorization: Bearer secret-key', $seen['headers'] ?? []);
+        self::assertContains('Content-Type: application/json', $seen['headers'] ?? []);
+
+        /** @var array{from: string, to: string, subject: string, text: string} $payload */
+        $payload = json_decode((string) ($seen['body'] ?? ''), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame('no-reply@example.test', $payload['from']);
+        self::assertSame(self::EMAIL, $payload['to']);
+        self::assertNotSame('', $payload['subject']);
+        self::assertStringContainsString(
+            'https://app.example.test/reset-password?token=' . $token,
+            $payload['text'],
+            'the mail must carry the link the reset page reads, built from APP_URL (a trailing slash on the base must not double up)',
+        );
+        self::assertStringContainsString('expires in 1 hour(s)', $payload['text']);
+    }
+
+    /**
+     * The failure path, through the REAL route: a transport that cannot deliver
+     * must not break the flow, must not change the answer, and — the point of
+     * §7 — must NEVER fall back to writing the token into the log.
+     *
+     * `MAIL_API_URL` points at a port nothing listens on, so the connection is
+     * refused for real instead of being faked.
+     */
+    #[Test]
+    public function aFailingTransportKeepsTheFlowNeutralAndNeverFallsBackToTheLog(): void
+    {
+        putenv('APP_ENV=production');
+        putenv('MAIL_API_URL=http://127.0.0.1:9/nowhere');
+        putenv('MAIL_FROM=no-reply@example.test');
+        putenv('APP_URL=https://app.example.test');
+        AuthServices::reset();
+
+        self::assertInstanceOf(
+            HttpPasswordResetMailer::class,
+            PasswordResetMailerFactory::create(),
+            'the configured transport is the one under test here',
+        );
+
+        $response = (new PasswordResetRequestAction())->submit(
+            Request::create('POST', '/forgot-password', [], ['email' => self::EMAIL]),
+        );
+
+        self::assertSame(200, $response->getStatusCode(), 'a dead transport must not turn into a 500');
+        self::assertSame(
+            1,
+            self::resetTokenCount(),
+            'the token row is still written — delivery failing does not un-request the reset',
+        );
+        self::assertSame(
+            $this->logBefore,
+            self::logContents($this->logFile),
+            'an undeliverable reset link must never be parked in storage/logs/app.log as a fallback — that fallback IS audit finding #1',
         );
     }
 

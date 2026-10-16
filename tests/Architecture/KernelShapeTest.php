@@ -56,13 +56,16 @@ final class KernelShapeTest extends TestCase
      * The three `tooling` classes (ModuleCatalog, ModuleInstaller,
      * ModuleManifest) left for `src/Modules/Tooling` in Phase 4 and the five
      * `dead` / dead-CLI files were deleted in Phase 3, which is where this list
-     * got its 67 → 59 movement. An interface, enum or trait needs no row: the
+     * got its 67 → 59 movement (60 since the auth-provider discovery round
+     * resurrected one runtime file — see `docs/kernel-shape.md`, Movement). An
+     * interface, enum or trait needs no row: the
      * shape wants them, so they are free.
      *
      * @var list<string>
      */
     private const array ALLOW_LIST = [
         'src/Modules/Core/Application/Services/AssetManager.php',
+        'src/Modules/Core/Application/Services/AuthProviderRegistry.php',
         'src/Modules/Core/Application/Services/CacheInvalidator.php',
         'src/Modules/Core/Application/Services/ContentLocaleMapper.php',
         'src/Modules/Core/Application/Services/DiscoveryCache.php',
@@ -129,11 +132,12 @@ final class KernelShapeTest extends TestCase
      * Not `count(self::ALLOW_LIST)` — that would assert the list equals itself
      * and guard nothing. This constant is the ceiling the refactor reached
      * (67 concrete at the baseline → 59 after the dead code left and the
-     * tooling moved), so it is written down as a number a reviewer can argue
-     * with: lowering it is the work, raising it is a deliberate edit with its
-     * own red line.
+     * tooling moved, **60** once `AuthProviderRegistry` came back for the
+     * auth-provider discovery round), so it is written down as a number a
+     * reviewer can argue with: lowering it is the work, raising it is a
+     * deliberate edit with its own red line.
      */
-    private const int MAX_APPROVED = 59;
+    private const int MAX_APPROVED = 60;
 
     /**
      * Rule 1: every `.php` file under `src/Modules/Core` is an interface, enum
@@ -150,7 +154,8 @@ final class KernelShapeTest extends TestCase
         // true, and this guard asserting nothing while the suite stayed green —
         // the failure mode KernelCouplingTest's scanner check exists for, and
         // the same reason it reads a signal that cannot go quiet. Core carries
-        // 69 files (67 → 59 concrete + 10 interfaces after Phases 3-4).
+        // 70 files (67 → 60 concrete + 10 interfaces: Phases 3-4, then the
+        // resurrected AuthProviderRegistry).
         self::assertGreaterThan(
             50,
             \count($files),

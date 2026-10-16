@@ -4,10 +4,11 @@ declare(strict_types = 1);
 
 namespace Tests\Boot;
 
+use Modules\Core\Application\Services\AuthProviderRegistry;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Interfaces\HTTP\Kernel;
+use Modules\Core\Interfaces\HTTP\Middleware\AuthMiddleware;
 use Modules\Core\Interfaces\HTTP\Router;
-use Modules\Users\Interfaces\HTTP\AuthWiring;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -22,9 +23,10 @@ use PHPUnit\Framework\TestCase;
  * `/mark` is the one path whose expected status depends on operator state,
  * and the dependency is written down instead of assumed. Two things must be
  * present for the admin surface to exist: a module that ROUTES it (Cardboard)
- * and a module that PROVIDES the auth port (Users — its `AuthWiring` puts
- * `AuthMiddleware` on the pipeline, the same guarded call `public/index.php`
- * makes). Neither → 404 (no route — not 403, not 500). Router but no
+ * and a module that PROVIDES the auth port (Users — its `#[AsAuthProvider]`
+ * `UsersAuthProvider` is DISCOVERED by `AuthProviderRegistry`, and the
+ * middleware is wrapped around what it finds, which is the same call
+ * `public/index.php` makes). Neither → 404 (no route — not 403, not 500). Router but no
  * provider → 200, which is the unauthenticated admin serving this file was
  * written to rule out. Both → 302 to the login: the gate answers before
  * dispatch, so a guest never reaches a route at all. The kernel rule below
@@ -41,7 +43,7 @@ final class KernelOnlyBootTest extends TestCase
     public static function surfaces(): iterable
     {
         $adminInstalled = is_dir(APP_BASE_PATH . '/src/Modules/' . self::ADMIN_MODULE);
-        $gated = class_exists(AuthWiring::class);
+        $gated = null !== AuthProviderRegistry::first();
 
         yield 'homepage'   => ['GET', '/',            200];
 
@@ -66,10 +68,15 @@ final class KernelOnlyBootTest extends TestCase
     {
         $kernel = new Kernel(new Router([APP_BASE_PATH . '/src/Modules']));
 
-        // Mirror public/index.php's guarded wiring — the pipeline under test
-        // is the pipeline the composition root builds, not a test-only one.
-        if (class_exists(AuthWiring::class)) {
-            AuthWiring::wire($kernel);
+        // Mirror public/index.php's wiring — the pipeline under test is the
+        // pipeline the composition root builds, not a test-only one. Two
+        // Core-only lines, and they cannot drift from production: both sides
+        // ask the same registry the same question ("does any module ship a
+        // provider?"), so there is no module-specific copy left to diverge.
+        $provider = AuthProviderRegistry::first();
+
+        if (null !== $provider) {
+            $kernel->addMiddleware(new AuthMiddleware($provider));
         }
 
         $response = $kernel->handle(Request::create($method, $uri));

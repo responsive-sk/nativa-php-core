@@ -20,18 +20,20 @@ unset($_earlyLogDir);
  * Public entry point — the KERNEL composition root.
  *
  * This file is the kernel's half of what nativa-minimal's public/index.php
- * does. Most of the pipeline assembles itself; the two stages that need a
- * dependency discovery cannot supply are wired below, each behind one
+ * does. Most of the pipeline assembles itself; the ONE stage left that needs
+ * a dependency discovery cannot supply is wired below, behind one
  * `class_exists` guard.
  *
  *   - The kernel discovers its own middleware (security headers, CSRF)
- *     through #[AsMiddleware] — no call is needed for those.
- *   - Rate limiting and auth take constructor arguments (`RateLimitMiddleware`
- *     a limiter factory, `AuthMiddleware` a provider), so the composition
- *     root adds them explicitly: present when their module is installed,
- *     inert when it is not. Each block prints one line ([rate] … / [auth] …),
- *     always exactly one, so a deployment can tell "not installed" from
- *     "broken" without reading code. In a kernel-only tree both guards fail,
+ *     through #[AsMiddleware], and the admin gate through #[AsAuthProvider]
+ *     (`AuthProviderRegistry`) — no call is needed for those, and no module
+ *     class is named here for auth.
+ *   - Rate limiting takes a constructor argument (`RateLimitMiddleware` a
+ *     limiter factory), so the composition root adds it explicitly: present
+ *     when its module is installed, inert when it is not. Each block prints
+ *     one line ([rate] … / [auth] …), always exactly one, so a deployment can
+ *     tell "not installed" from "broken" without reading code. In a
+ *     kernel-only tree the guard fails and the registry finds no provider,
  *     nothing is wired, and /mark answers 404 — never an unguarded 200.
  *   - Locale prefixes and the page cache remain a module's job; a module is
  *     added through `bin/cms module:add`.
@@ -48,18 +50,19 @@ unset($_earlyLogDir);
 
 use Modules\Audit\Application\Services\SecurityEventHandler;
 use Modules\Audit\Interfaces\HTTP\AuditServices;
+use Modules\Core\Application\Services\AuthProviderRegistry;
 use Modules\Core\Application\Services\DiscoveryCache;
 use Modules\Core\Application\Services\DisposalRegistry;
 use Modules\Core\Infrastructure\Bootstrap\Bootstrapper;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Interfaces\HTTP\Kernel;
+use Modules\Core\Interfaces\HTTP\Middleware\AuthMiddleware;
 use Modules\Core\Interfaces\HTTP\Middleware\MiddlewareRegistry;
 use Modules\Core\Interfaces\HTTP\Middleware\RateLimitMiddleware;
 use Modules\Core\Interfaces\HTTP\Router;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Outbox\Interfaces\HTTP\OutboxServices;
 use Modules\Security\Application\Services\RateLimiter as SecurityRateLimiter;
-use Modules\Users\Interfaces\HTTP\AuthWiring;
 
 // ============================================================================
 // BOOTSTRAP — autoloaders (Composer + PSR-4 fallback), environment,
@@ -163,12 +166,18 @@ if (class_exists(SecurityRateLimiter::class)) {
     error_log('[rate] absent — no Security module');
 }
 
-// The admin gate: one address for the wiring, shared with the kernel-level
-// tests (modules/Users/Interfaces/HTTP/AuthWiring) so the pipeline the suite
-// proves and the pipeline this file runs cannot drift apart.
-if (class_exists(AuthWiring::class)) {
-    AuthWiring::wire($kernel);
-    error_log('[auth] wired UsersProvider');
+// The admin gate: the provider is DISCOVERED (`#[AsAuthProvider]`), so this
+// file names no module class for auth at all. `first()` returns null in a tree
+// with no provider module, and null wires nothing — absence removes the
+// middleware, not the request (the port's own rule), which is what keeps /mark
+// a 404 kernel-only instead of an unguarded 200. The kernel-level tests ask the
+// same registry the same question, so the pipeline the suite proves and the
+// pipeline this file runs cannot drift apart.
+$authProvider = AuthProviderRegistry::first();
+
+if (null !== $authProvider) {
+    $kernel->addMiddleware(new AuthMiddleware($authProvider));
+    error_log('[auth] wired ' . $authProvider::class);
 } else {
     error_log('[auth] absent — no provider module');
 }

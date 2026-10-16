@@ -249,8 +249,16 @@ final class AdminAccessControlTest extends TestCase
     {
         $kernel = new Kernel(new Router([APP_BASE_PATH . '/src/Modules']));
 
-        if (class_exists(\Modules\Users\Interfaces\HTTP\AuthWiring::class)) {
-            \Modules\Users\Interfaces\HTTP\AuthWiring::wire($kernel);
+        // The same two Core-only lines `public/index.php` runs: ask the
+        // provider registry, wire the middleware around what it finds. Inline
+        // FQCNs so the mirror needs no imports and cannot silently keep
+        // compiling against a moved class.
+        $provider = \Modules\Core\Application\Services\AuthProviderRegistry::first();
+
+        if (null !== $provider) {
+            $kernel->addMiddleware(
+                new \Modules\Core\Interfaces\HTTP\Middleware\AuthMiddleware($provider),
+            );
         }
 
         return $kernel;

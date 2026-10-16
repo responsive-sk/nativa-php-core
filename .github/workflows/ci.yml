@@ -24,17 +24,38 @@
 #                         names an optional module's class cannot fail the
 #                         analyser of a tree where that module is absent. That
 #                         is exactly how run #1 went red here.
-#   4. Assets           — the pnpm workspace is committed, so the bundles that
+#   4. Modules          — the SAME suite with the catalogue INSTALLED. Job 3
+#                         proves the kernel-only shape, and that shape SKIPS
+#                         the guards the catalogue owns: measured on a fresh
+#                         checkout, 243 of 318 tests skip, and the reset-token
+#                         port, the comment honeypot, the password policy, the
+#                         submit throttles, the admin access control and the
+#                         rate limiter are all in that skipped set. (The CSRF
+#                         origin check is not among them: `CsrfMiddlewareTest`
+#                         lives in `tests/`, so job 3 already runs it.) A pull
+#                         request could have deleted any of the others and this
+#                         workflow stayed green — the one thing a gate may not
+#                         do. This job installs the catalogue the way an
+#                         operator does, migrates, picks a built theme, and
+#                         fails on any test that did not run.
+#   5. Admin flows      — the panel, BOOTED: a real server, a real session and
+#                         a real CSRF token, a user and a role created and
+#                         deleted through the panel, the CSRF refusals, and an
+#                         author's refused bulk post with its security event
+#                         read back out of the outbox. Job 4 proves the guards a
+#                         class at a time; this proves the deployment, which is
+#                         the only place a 500 in the panel shows up.
+#   6. Assets           — the pnpm workspace is committed, so the bundles that
 #                         /mark's stylesheet comes from are built HERE and the
 #                         manifest the PHP reader probes is asserted, not
 #                         assumed.
-#   5. Boot             — the six kernel surfaces over real HTTP, a module
+#   7. Boot             — the six kernel surfaces over real HTTP, a module
 #                         installed → served → removed → 404, and `bin/cms
 #                         migrate`. No `composer install` in this job,
 #                         deliberately: the kernel runtime has zero Composer
 #                         dependencies, and this is where that claim is either
 #                         true or not.
-#   6. Extract-check    — NOT run: `bin/build/extract-kernel.sh --check` needs
+#   8. Extract-check    — NOT run: `bin/build/extract-kernel.sh --check` needs
 #                         a checkout of upstream, which is PRIVATE, and the
 #                         run's GITHUB_TOKEN cannot read it. The job records
 #                         that (with the measured evidence and how to enable
@@ -186,6 +207,222 @@ jobs:
       # contract, and skips the catalogue tests it cannot run (Blog's).
       - name: Run PHPUnit
         run: composer test
+
+  # ---------------------------------------------------------------------------
+  # MODULES — the same suite with the catalogue INSTALLED
+  # ---------------------------------------------------------------------------
+  # `tests` above proves the kernel-only shape, and that shape SKIPS the guards
+  # the catalogue owns (see the header: on a fresh checkout 243 of 318 tests
+  # skip). This job never skips one it can run:
+  #
+  #   - the catalogue is installed through `bin/cms module:add`, one refusal at
+  #     a time — the refusal names the missing closure, so the retry IS the
+  #     topological sort. That sort only terminates on an ACYCLIC closure graph:
+  #     Boot 26 measured the loop stalling on `Cardboard → Security → Outbox →
+  #     Cardboard`, and the two observability edges are now guarded (the
+  #     catalogue installs in four rounds);
+  #   - the migrators run, because a module test that reads a module database
+  #     skips when the file is absent (Blog's AdminEscapeTest on locales.db);
+  #   - the bundles are built, because `public/dist/*` is gitignored and
+  #     ErikThemeTest skips when its manifest is not on disk;
+  #   - and the run is ASSERTED, not eyeballed: every test file the catalogue
+  #     ships must appear in the JUnit log, and the one test allowed to skip is
+  #     the kernel-only contract that this install makes unreachable.
+  modules:
+    name: Modules (catalogue installed)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: json, mbstring, pdo, pdo_sqlite, sqlite3
+          tools: composer:v2
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v5
+        with:
+          path: vendor/
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+            composer-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6.0.10
+        with:
+          version: 12
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: Frontend/packages/pnpm-lock.yaml
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: Frontend/packages
+
+      # Built here rather than tolerated as a skip: `public/dist/` is gitignored
+      # (except the frozen griffe and mono manifests), and a module test that
+      # guards on the file — never on `AssetManager::isAvailable()`, which is
+      # what the defect breaks — skips without it.
+      - name: Build every theme bundle
+        run: pnpm build
+        working-directory: Frontend/packages
+
+      # The loop lives in bin/build/install-catalogue.sh, not here: the
+      # `admin-smoke` job below needs the same installed tree, and two copies of
+      # a topological sort is one copy too many. `make modules-install` runs the
+      # same script, so a red job is reproducible in one command.
+      - name: Install every catalogue module
+        run: bin/build/install-catalogue.sh
+
+      # The same idempotent run the HTTP bootstrap does on its first request,
+      # forced. A module test that reads a module database skips when the file is
+      # missing, and a skip is exactly what this job exists to remove.
+      - name: Run the migrators the module tests read
+        run: |
+          set -euo pipefail
+          php bin/cms migrate | tee /tmp/migrate.log
+          grep -q 'Migrated:' /tmp/migrate.log || { echo "::error::no migrators ran in a tree with the catalogue installed"; exit 1; }
+          for db in audit blog comments config locales media outbox questions users; do
+            test -f "storage/data/$db.db" || { echo "::error::storage/data/$db.db was not created"; exit 1; }
+          done
+          echo "ok  the module databases exist"
+
+      # The suite renders the homepage with the ACTIVE theme and asserts that
+      # theme's own build is inlined — and the migrators seed `theme=kernel`,
+      # whose bundle does not exist by design (the kernel theme is hand-written
+      # critical CSS). Measured on a fresh checkout without this step: 2 tests
+      # skip, and the assertion below fails on
+      # `ErikThemeTest::liveSurfacesInlineTheActiveThemesOwnBuild` — a skip that
+      # is the SEED talking, not a defect. An operator picks a theme in
+      # `/mark` → Design; this is that pick, through the module's own
+      # repository, so the test has a build to inline. A stored name nothing
+      # can render would resolve back to the kernel theme and the assertion
+      # would fail loudly — which is the point.
+      - name: Pick the theme the suite renders with (the operator's Design pick)
+        run: |
+          set -euo pipefail
+          php <<'PHP'
+          <?php
+          require 'src/init.php';
+          $pdo = \Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager::instance()->connection('config');
+          (new \Modules\Settings\Infrastructure\Persistence\Repositories\SettingsRepository($pdo))->set('theme', 'mono', 'design');
+          PHP
+          php <<'PHP'
+          <?php
+          require 'src/init.php';
+          $theme = \Modules\Core\Interfaces\HTTP\ThemeKernel::for(\Modules\Core\Interfaces\HTTP\ThemeResolver::resolvePath('/'));
+          $assets = new \Modules\Core\Application\Services\AssetManager($theme->name());
+          printf("active theme: %s (bundle available: %s)\n", $theme->name(), $assets->isAvailable() ? 'yes' : 'no');
+
+          if (!$assets->isAvailable()) {
+              exit(1);
+          }
+          PHP
+
+      - name: Run the full suite (kernel + catalogue)
+        run: composer test -- --log-junit /tmp/modules-junit.xml
+
+      # The assertion this job exists for. "OK, but some tests were skipped" is
+      # how a deleted guard looks from here, so the JUnit log is read instead of
+      # the summary: every `modules/<Name>/tests/<Class>Test.php` the catalogue
+      # ships must have run, and the only testcase allowed to be skipped is
+      # KernelOnlyBootTest::unroutedAdminPathIsNeverForbidden — its subject is
+      # the kernel-only tree, and Cardboard is installed here, so its own reason
+      # string says why. (Every other skip was removed rather than listed: the
+      # modules are installed, the migrators ran, the bundles are built and the
+      # theme above is a built one.)
+      - name: Assert the suite ran instead of skipping
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import glob, os, sys, xml.etree.ElementTree as ET
+
+          ALLOWED_SKIPS = {('Tests.Boot.KernelOnlyBootTest', 'unroutedAdminPathIsNeverForbidden')}
+
+          cases = list(ET.parse('/tmp/modules-junit.xml').iter('testcase'))
+          ran = {c.get('classname') for c in cases}
+          skipped = {(c.get('classname'), c.get('name')) for c in cases
+                     if any(child.tag == 'skipped' for child in c)}
+
+          expected = set()
+          for path in glob.glob('modules/*/tests/*Test.php'):
+              _, name, _, file = path.split(os.sep)
+              expected.add('Modules.%s.Tests.%s' % (name, file[:-len('.php')]))
+
+          print('%d tests ran, %d skipped, %d catalogue test classes expected'
+                % (len(cases), len(skipped), len(expected)))
+
+          failed = False
+          for cls in sorted(expected - ran):
+              print('::error::%s never ran — the catalogue is installed, so it has no reason to skip' % cls)
+              failed = True
+          for cls, name in sorted(skipped - ALLOWED_SKIPS):
+              print('::error::%s::%s skipped in a tree with the catalogue installed' % (cls, name))
+              failed = True
+          for cls, name in sorted(ALLOWED_SKIPS - skipped):
+              print('note: %s::%s no longer skips — remove it from ALLOWED_SKIPS' % (cls, name))
+          sys.exit(1 if failed else 0)
+          PY
+
+  # ---------------------------------------------------------------------------
+  # ADMIN-SMOKE — the panel, booted, with a real session and a real token
+  # ---------------------------------------------------------------------------
+  # The suite above proves the guards a class at a time. This job boots the
+  # server the way a deployment does and walks the flows an operator walks:
+  # guest surfaces, admin login, a user created and deleted, a role created and
+  # deleted, the CSRF refusals, and an author's REFUSED bulk post with the
+  # security event read back out of the outbox. Boot 27 measured that matrix by
+  # hand; `bin/build/admin-smoke.sh` makes it enforceable — a change that 500s
+  # the panel or silently drops a security event now fails a job.
+  #
+  # No `composer install` here, deliberately, for the same reason the `boot` job
+  # skips it: the kernel runtime has zero Composer dependencies and the modules
+  # are installed from the committed catalogue. Every DB_* points at a temp
+  # directory inside the script, and the server starts and stops there, so the
+  # job never writes to the checkout's storage/data/.
+  #
+  # What it does NOT do: sweep the other modules' own surfaces (Blog's article
+  # writes, Pages, the public comment submit, the queue worker). That is the
+  # next gate, not this one.
+  admin-smoke:
+    name: Admin flows (booted server)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: json, mbstring, pdo, pdo_sqlite, sqlite3
+          coverage: none
+
+      - name: Install every catalogue module
+        run: bin/build/install-catalogue.sh
+
+      # The script migrates, seeds its own accounts through the modules'
+      # repositories, starts `php -S` with opcache off, runs the matrix, asserts
+      # the outbox rows, and stops the server — one entry point, so a red job is
+      # `make admin-smoke` on a workstation.
+      - name: The admin flows over HTTP
+        run: bin/build/admin-smoke.sh
 
   # ---------------------------------------------------------------------------
   # ASSETS — the committed pnpm workspace builds here

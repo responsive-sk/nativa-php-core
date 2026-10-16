@@ -12,7 +12,6 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Infrastructure\Storage\LocalStorageProvider;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
-use Modules\Outbox\Interfaces\HTTP\SecurityEventServices;
 use Modules\Security\Application\Services\PasswordHasher;
 use Modules\Security\Domain\PasswordPolicy;
 use Modules\Validation\Validation\Validator;
@@ -31,6 +30,15 @@ use Modules\Validation\Validation\Validator;
  * Avatar upload (phase 2): both forms accept an image file stored via
  * LocalStorageProvider; the relative path persists into users.avatar and the
  * edit form can also remove it.
+ *
+ * Every security event the user mutations emit rides the Outbox when it is
+ * installed, behind a `class_exists` guard and never a `use` statement: an
+ * import here puts Outbox back in this module's closure, and Outbox imports
+ * Cardboard in turn (its metric provider does), so with Security also on the
+ * path the graph is `Cardboard → Security → Outbox → Cardboard` — a cycle no
+ * install order can satisfy, measured on a fresh tree in part 07. Without the
+ * Outbox the mutation still happens — only the event is missing, the trade the
+ * Users module's own login and logout actions make.
  */
 #[Route(path: '/mark/users', method: 'GET', name: 'mark.users')]
 #[Route(path: '/mark/users/create', method: 'GET', name: 'mark.users.create', handlerMethod: 'createForm')]
@@ -156,7 +164,10 @@ final class UsersAction
 
         CacheInvalidator::flush();
         \Modules\Audit\Interfaces\HTTP\AuditServices::log('users.create', 'user:' . $user->id(), 'Created user ' . $email, $request->getClientIp());
-        SecurityEventServices::userChanged($user->id(), SecurityEventServices::OP_CREATE, $request->getClientIp());
+        if (class_exists('Modules\\Outbox\\Interfaces\\HTTP\\SecurityEventServices')) {
+            $events = \Modules\Outbox\Interfaces\HTTP\SecurityEventServices::class;
+            $events::userChanged($user->id(), $events::OP_CREATE, $request->getClientIp());
+        }
 
         if (AdminLayout::isHtmx($request)) {
             $response = Response::html('');
@@ -232,7 +243,10 @@ final class UsersAction
 
         CacheInvalidator::flush();
         \Modules\Audit\Interfaces\HTTP\AuditServices::log('users.update', 'user:' . $user->id(), 'Updated user ' . $email, $request->getClientIp());
-        SecurityEventServices::userChanged($user->id(), SecurityEventServices::OP_UPDATE, $request->getClientIp());
+        if (class_exists('Modules\\Outbox\\Interfaces\\HTTP\\SecurityEventServices')) {
+            $events = \Modules\Outbox\Interfaces\HTTP\SecurityEventServices::class;
+            $events::userChanged($user->id(), $events::OP_UPDATE, $request->getClientIp());
+        }
 
         if (AdminLayout::isHtmx($request)) {
             $response = Response::html('');
@@ -257,7 +271,10 @@ final class UsersAction
                 $users->delete($id);
                 CacheInvalidator::flush();
                 \Modules\Audit\Interfaces\HTTP\AuditServices::log('users.delete', 'user:' . $user->id(), 'Deleted user ' . $user->email(), $request->getClientIp());
-                SecurityEventServices::userChanged($user->id(), SecurityEventServices::OP_DELETE, $request->getClientIp());
+                if (class_exists('Modules\\Outbox\\Interfaces\\HTTP\\SecurityEventServices')) {
+                    $events = \Modules\Outbox\Interfaces\HTTP\SecurityEventServices::class;
+                    $events::userChanged($user->id(), $events::OP_DELETE, $request->getClientIp());
+                }
             }
         }
 

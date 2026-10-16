@@ -2,13 +2,14 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Users\Domain;
+namespace Modules\Users\Interfaces\HTTP;
 
 use Modules\Core\Domain\AuthIdentity;
 use Modules\Core\Domain\Contracts\AuthProvider;
 use Modules\Core\Infrastructure\Attributes\AsAuthProvider;
 use Modules\Core\Infrastructure\Http\Request;
-use Modules\Users\Interfaces\HTTP\AuthServices;
+use Modules\Users\Domain\AdminRoutePolicy;
+use Modules\Users\Domain\Permissions;
 
 /**
  * UsersAuthProvider — the `AuthProvider` the kernel's auth port has been
@@ -44,10 +45,23 @@ use Modules\Users\Interfaces\HTTP\AuthServices;
  *   event is dropped when nobody is listening; the dependency is not created.
  *   (Adding the `use` back is an install-time regression, not a style gain.)
  *
- * Zero constructor arguments on purpose: the composition root wires it as
- * `new AuthMiddleware(new UsersAuthProvider())` behind one `class_exists`
- * guard, and `AuthServices::auth()` owns the service wiring this class would
- * otherwise have to repeat.
+ * **It lives in `Interfaces/HTTP`, and that is load-bearing.**
+ * `AuthProviderRegistry` discovers providers by the file name it publishes —
+ * a `*AuthProvider.php` inside a module's `Interfaces/HTTP` — so a provider
+ * that sits anywhere else is invisible to discovery: it has to be named for
+ * the surface it answers for. The move also inverts a layer smell: this class
+ * asks `AuthServices::auth()` on every request, so as a `Domain` class it
+ * reached UPWARD into `Interfaces\HTTP` for its own wiring. `AdminRoutePolicy`
+ * and `Permissions` stay where they are — they answer policy questions for the
+ * module, not for the surface.
+ *
+ * **Zero constructor arguments, and now that is enforced.** Discovery
+ * instantiates providers while it scans, so a provider whose constructor took
+ * a dependency would capture an instance from the wrong moment — the test
+ * harness swaps `DB_*` env between cases, and a connection captured at boot
+ * would point at the previous database. `AuthProviderRegistry` refuses a
+ * provider with required constructor parameters rather than passing one, and
+ * this class takes its services lazily instead (`AuthServices::auth()`).
  *
  * @internal
  *

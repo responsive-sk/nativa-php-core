@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Tests\Discovery;
 
+use Modules\Core\Application\Services\AuthProviderRegistry;
 use Modules\Core\Application\Services\ShellContextProviderRegistry;
 use Modules\Core\Interfaces\HTTP\Markdown\MarkdownBlockRegistry;
 use Modules\Core\Interfaces\HTTP\Middleware\MiddlewareRegistry;
@@ -26,15 +27,16 @@ use PHPUnit\Framework\TestCase;
  * type named `says`; the class did not exist, the file was SKIPPED, and the
  * provider / theme / middleware simply disappeared — no error, no log line.
  * Measured on the Settings shell provider, whose nav menu vanished exactly that
- * way (docs/kernel-status.md, Boot 23).
+ * way (docs/kernel-status/03-content-themes-and-the-admin-merge.md, Boot 23).
  *
  * The rule these tests pin is the one the resolver now follows: a declaration
  * is a line that begins with optional modifiers and the keyword — prose cannot
  * be one, because prose has something else first.
  *
- * One test file for all four registries on purpose: they hold four copies of the
+ * One test file for all five registries on purpose: they hold five copies of the
  * same resolver, and this is what keeps a future edit from fixing one and
- * leaving the other three behind.
+ * leaving the other four behind — the fifth (`AuthProviderRegistry`) was
+ * rebuilt on this very shape when attribute discovery returned.
  */
 final class TextFirstFqcnTest extends TestCase
 {
@@ -44,6 +46,7 @@ final class TextFirstFqcnTest extends TestCase
         ThemeRegistry::class,
         MiddlewareRegistry::class,
         MarkdownBlockRegistry::class,
+        AuthProviderRegistry::class,
     ];
 
     /**
