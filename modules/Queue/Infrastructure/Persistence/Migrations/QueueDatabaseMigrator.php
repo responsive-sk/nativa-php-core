@@ -7,7 +7,6 @@ namespace Modules\Queue\Infrastructure\Persistence\Migrations;
 use Modules\Core\Infrastructure\Attributes\AsMigrator;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Core\Interfaces\CLI\MigratorInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Queue Database Migrator — creates the queue.db schema.
@@ -28,7 +27,7 @@ final readonly class QueueDatabaseMigrator implements MigratorInterface
     {
     }
 
-    public function run(CliOutput | OutputInterface $output): void
+    public function run(CliOutput $output): void
     {
         $output->writeln('<info>Migrating queue.db...</info>');
 

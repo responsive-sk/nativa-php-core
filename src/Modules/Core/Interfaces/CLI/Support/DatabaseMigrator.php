@@ -9,7 +9,6 @@ use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Core\Interfaces\CLI\MigratorInterface;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
-use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * DatabaseMigrator — runs every module migrator against its own database.
@@ -38,7 +37,7 @@ final readonly class DatabaseMigrator
      *
      * @return list<string> module names migrated (empty when none found)
      */
-    public function run(CliOutput | OutputInterface $output): array
+    public function run(CliOutput $output): array
     {
         $migrated = [];
 
@@ -121,17 +120,17 @@ final readonly class DatabaseMigrator
         return $found;
     }
 
-    private function writeInfo(CliOutput | OutputInterface $output, string $message): void
+    private function writeInfo(CliOutput $output, string $message): void
     {
         $output->writeln('<info>' . $message . '</info>');
     }
 
-    private function writeSuccess(CliOutput | OutputInterface $output, string $message): void
+    private function writeSuccess(CliOutput $output, string $message): void
     {
         $output->writeln('<info>' . $message . '</info>');
     }
 
-    private function writeError(CliOutput | OutputInterface $output, string $message): void
+    private function writeError(CliOutput $output, string $message): void
     {
         $output->writeln('<error>' . $message . '</error>');
     }

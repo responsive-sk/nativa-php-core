@@ -7,7 +7,6 @@ namespace Modules\Outbox\Infrastructure\Persistence\Migrations;
 use Modules\Core\Infrastructure\Attributes\AsMigrator;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Core\Interfaces\CLI\MigratorInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Outbox Database Migrator — creates the outbox.db schema.
@@ -23,7 +22,7 @@ final readonly class OutboxDatabaseMigrator implements MigratorInterface
     {
     }
 
-    public function run(CliOutput|OutputInterface $output): void
+    public function run(CliOutput $output): void
     {
         $output->writeln('<info>Migrating outbox.db...</info>');
 

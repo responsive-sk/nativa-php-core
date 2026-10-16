@@ -13,9 +13,9 @@ use Modules\Settings\Infrastructure\Persistence\Migrations\SettingsDatabaseMigra
 use Modules\Settings\Infrastructure\Persistence\Repositories\SettingsRepository;
 use Modules\Settings\Interfaces\HTTP\SettingsServices;
 use Modules\Settings\Interfaces\HTTP\SettingsShellContextProvider;
+use Modules\Core\Interfaces\CLI\CliOutput;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Console\Output\NullOutput;
 
 /**
  * SettingsShellContextProviderTest (Boot 23) — the menu the shell port asks for
@@ -74,7 +74,7 @@ final class SettingsShellContextProviderTest extends TestCase
 
         // The migrator the kernel would run, against a database of our own —
         // same schema, same seeded menu, no shared state.
-        (new SettingsDatabaseMigrator($this->pdo))->run(new NullOutput());
+        (new SettingsDatabaseMigrator($this->pdo))->run($this->quietOutput());
     }
 
     protected function tearDown(): void
@@ -468,5 +468,22 @@ final class SettingsShellContextProviderTest extends TestCase
             ':icon' => '',
             ':parent' => $parent,
         ]);
+    }
+
+    /**
+     * A `CliOutput` that swallows every line.
+     *
+     * This was a `Symfony\...\NullOutput` until the migrator contract stopped
+     * accepting a dev-only union arm (Boot 32): the kernel's runtime has no
+     * Composer dependencies, so a test asserting a kernel contract should not
+     * need one to satisfy it either.
+     */
+    private function quietOutput(): CliOutput
+    {
+        return new class implements CliOutput {
+            public function writeln(string $message): void
+            {
+            }
+        };
     }
 }

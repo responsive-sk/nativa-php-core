@@ -7,7 +7,6 @@ namespace Modules\Questions\Infrastructure\Persistence\Migrations;
 use Modules\Core\Infrastructure\Attributes\AsMigrator;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Core\Interfaces\CLI\MigratorInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Questions Database Migrator — creates the questions.db schema.
@@ -32,7 +31,7 @@ final readonly class QuestionsDatabaseMigrator implements MigratorInterface
     {
     }
 
-    public function run(CliOutput | OutputInterface $output): void
+    public function run(CliOutput $output): void
     {
         $output->writeln('<info>Migrating questions.db...</info>');
 

@@ -7,7 +7,6 @@ namespace Modules\Comments\Infrastructure\Persistence\Migrations;
 use Modules\Core\Infrastructure\Attributes\AsMigrator;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Core\Interfaces\CLI\MigratorInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Comments Database Migrator — creates the comments.db schema.
@@ -24,7 +23,7 @@ final readonly class CommentsDatabaseMigrator implements MigratorInterface
     {
     }
 
-    public function run(CliOutput | OutputInterface $output): void
+    public function run(CliOutput $output): void
     {
         $output->writeln('<info>Migrating comments.db...</info>');
 

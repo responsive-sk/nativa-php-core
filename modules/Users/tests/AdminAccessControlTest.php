@@ -14,9 +14,9 @@ use Modules\Users\Domain\Permissions;
 use Modules\Users\Infrastructure\Persistence\Migrations\UsersDatabaseMigrator;
 use Modules\Users\Interfaces\HTTP\AuthServices;
 use PDO;
+use Modules\Core\Interfaces\CLI\CliOutput;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Console\Output\NullOutput;
 
 /**
  * AdminAccessControlTest — the five answers `/mark` must give, dispatched
@@ -75,10 +75,10 @@ final class AdminAccessControlTest extends TestCase
         AuthServices::reset();
         OutboxServices::reset();
 
-        (new UsersDatabaseMigrator(new PDO('sqlite:' . $this->tmpDir . '/users.db')))->run(new NullOutput());
+        (new UsersDatabaseMigrator(new PDO('sqlite:' . $this->tmpDir . '/users.db')))->run($this->quietOutput());
 
         if (is_dir(APP_BASE_PATH . '/src/Modules/Outbox')) {
-            (new OutboxDatabaseMigrator(new PDO('sqlite:' . $this->tmpDir . '/outbox.db')))->run(new NullOutput());
+            (new OutboxDatabaseMigrator(new PDO('sqlite:' . $this->tmpDir . '/outbox.db')))->run($this->quietOutput());
         }
 
         $this->seed();
@@ -323,5 +323,22 @@ final class AdminAccessControlTest extends TestCase
     private function signOut(): void
     {
         $_SESSION = [];
+    }
+
+    /**
+     * A `CliOutput` that swallows every line.
+     *
+     * This was a `Symfony\...\NullOutput` until the migrator contract stopped
+     * accepting a dev-only union arm (Boot 32): the kernel's runtime has no
+     * Composer dependencies, so a test asserting a kernel contract should not
+     * need one to satisfy it either.
+     */
+    private function quietOutput(): CliOutput
+    {
+        return new class implements CliOutput {
+            public function writeln(string $message): void
+            {
+            }
+        };
     }
 }

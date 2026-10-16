@@ -9,7 +9,7 @@ use Modules\Core\Interfaces\CLI\Support\DatabaseMigrator;
 /**
  * Marks a class as a database migrator.
  *
- * The migrator class must expose run(CliOutput|OutputInterface $output): void
+ * The migrator class must expose run(CliOutput $output): void
  * and build its schema with idempotent CREATE TABLE IF NOT EXISTS statements.
  *
  * @see DatabaseMigrator

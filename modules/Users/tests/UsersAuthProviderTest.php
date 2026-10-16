@@ -12,9 +12,9 @@ use Modules\Users\Interfaces\HTTP\UsersAuthProvider;
 use Modules\Users\Infrastructure\Persistence\Migrations\UsersDatabaseMigrator;
 use Modules\Users\Interfaces\HTTP\AuthServices;
 use PDO;
+use Modules\Core\Interfaces\CLI\CliOutput;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Console\Output\NullOutput;
 
 /**
  * UsersAuthProviderTest — the mapping half of the gate, in isolation.
@@ -64,7 +64,7 @@ final class UsersAuthProviderTest extends TestCase
         AuthServices::reset();
         OutboxServices::reset();
 
-        (new UsersDatabaseMigrator(new PDO('sqlite:' . $this->tmpDir . '/users.db')))->run(new NullOutput());
+        (new UsersDatabaseMigrator(new PDO('sqlite:' . $this->tmpDir . '/users.db')))->run($this->quietOutput());
 
         $_SESSION = [];
     }
@@ -303,5 +303,22 @@ final class UsersAuthProviderTest extends TestCase
         }
 
         $_SESSION = ['auth' => ['user_id' => $userId, 'last_activity' => time()]];
+    }
+
+    /**
+     * A `CliOutput` that swallows every line.
+     *
+     * This was a `Symfony\...\NullOutput` until the migrator contract stopped
+     * accepting a dev-only union arm (Boot 32): the kernel's runtime has no
+     * Composer dependencies, so a test asserting a kernel contract should not
+     * need one to satisfy it either.
+     */
+    private function quietOutput(): CliOutput
+    {
+        return new class implements CliOutput {
+            public function writeln(string $message): void
+            {
+            }
+        };
     }
 }
