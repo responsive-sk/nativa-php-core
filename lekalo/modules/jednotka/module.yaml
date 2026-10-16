@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "jednotka",
+      "kind": "module",
+      "version": 1,
+      "description": "Jednotka — paper-and-ink public theme with the je- vocabulary, dark-first, ported from the showcase."
+    }
+  ]
+}
