@@ -384,10 +384,14 @@ jobs:
   # The suite above proves the guards a class at a time. This job boots the
   # server the way a deployment does and walks the flows an operator walks:
   # guest surfaces, admin login, a user created and deleted, a role created and
-  # deleted, the CSRF refusals, and an author's REFUSED bulk post with the
-  # security event read back out of the outbox. Boot 27 measured that matrix by
-  # hand; `bin/build/admin-smoke.sh` makes it enforceable — a change that 500s
-  # the panel or silently drops a security event now fails a job.
+  # deleted, the CSRF refusals, an author's REFUSED bulk post with the security
+  # event read back out of the outbox, the article and page editors (asserted on
+  # the FILE, not the status), the public comment form (honeypot, pending,
+  # moderation, publication) and both queues — the outbox drain that delivers the
+  # events the run records, and the Queue worker over a job nobody can route,
+  # retried and dropped through the panel. Boot 27 measured that matrix by hand;
+  # `bin/build/admin-smoke.sh` makes it enforceable — a change that 500s the
+  # panel or silently drops a security event now fails a job.
   #
   # No `composer install` here, deliberately, for the same reason the `boot` job
   # skips it: the kernel runtime has zero Composer dependencies and the modules
@@ -401,8 +405,10 @@ jobs:
   # runner the checkout is disposable; the assertion is what makes the same
   # script safe to run on a workstation.
   #
-  # What it does NOT do: the public comment submit and the queue worker. Those
-  # are the next round's checks, and this script is where they go.
+  # What it does NOT do: the refusals that need a forged client address. Loopback
+  # is exempt from throttling by design and a `php -S` probe cannot set
+  # REMOTE_ADDR, so the register/reset throttles and the rate-limit 429 stay
+  # pinned by unit tests under the `modules` job.
   admin-smoke:
     name: Admin flows (booted server)
     runs-on: ubuntu-latest
