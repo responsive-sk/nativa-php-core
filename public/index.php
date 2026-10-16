@@ -43,13 +43,12 @@ unset($_earlyLogDir);
  * module, the surface belongs to a module (docs/kernel-status.md lists what
  * moved and why).
  *
- * The one exception below is a PAIRING, not a dependency: two installed modules
- * that must not know about each other, declared under class_exists guards so a
- * tree without either of them boots exactly as before.
+ * The one exception is a PAIRING, not a dependency: two installed modules that
+ * must not know about each other. It lives in `src/composition.php` and is
+ * CALLED from here, because a pairing declared in this file existed only in
+ * this process — see the note at the call.
  */
 
-use Modules\Audit\Application\Services\SecurityEventHandler;
-use Modules\Audit\Interfaces\HTTP\AuditServices;
 use Modules\Core\Application\Services\AuthProviderRegistry;
 use Modules\Core\Application\Services\DiscoveryCache;
 use Modules\Core\Application\Services\DisposalRegistry;
@@ -61,15 +60,15 @@ use Modules\Core\Interfaces\HTTP\Middleware\MiddlewareRegistry;
 use Modules\Core\Interfaces\HTTP\Middleware\RateLimitMiddleware;
 use Modules\Core\Interfaces\HTTP\Router;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
-use Modules\Outbox\Interfaces\HTTP\OutboxServices;
 use Modules\Security\Application\Services\RateLimiter as SecurityRateLimiter;
 
 // ============================================================================
 // BOOTSTRAP — autoloaders (Composer + PSR-4 fallback), environment,
-// error/exception handlers, session, timezone
+// error/exception handlers, session, timezone, module composition
 // ============================================================================
 
 require_once __DIR__ . '/../src/init.php';
+require_once __DIR__ . '/../src/composition.php';
 
 // Migrations — every module that ships an #[AsMigrator] runs it here,
 // idempotently. With no feature module installed this creates the kernel's own
@@ -79,32 +78,15 @@ require_once __DIR__ . '/../src/init.php';
 // ============================================================================
 // OUTBOX HANDLERS — the one pairing discovery cannot express.
 //
-// `OutboxDrain::drain()` (end of request) registers only the handler the Outbox
-// module can see — the article-publish cache flush. The security handler lives
-// in the Audit module, because its output IS an audit row, and Outbox reaching
-// into Audit would be a module dependency ModuleIsolationTest refuses. Neither
-// module may know about the other, so the pairing is declared here.
-//
-// Registered on the cached `OutboxServices::processor()` — the same instance
-// drain() uses. Register it anywhere else and the handler is silently dropped,
-// which is exactly what happened: sign-in recorded its `security.auth.attempt`
-// and then logged `No handler registered for event type` on every drain
-// (Boot 16), while the response looked fine.
-//
-// Guarded rather than `use`d: the kernel-only tree (no Audit, no Outbox) has to
-// boot with no classes to wire, and a tree with only one of the two must not
-// fatal on the other.
-// ============================================================================
-
-if (class_exists(SecurityEventHandler::class)
-    && class_exists(OutboxServices::class)
-    && class_exists(AuditServices::class)
-) {
-    SecurityEventHandler::register(
-        OutboxServices::processor(),
-        AuditServices::audit(),
-    );
-}
+// The Audit↔Outbox pairing is declared in `src/composition.php`, not here, and
+// this file CALLS it rather than repeating it. It used to live inline below,
+// which meant it existed in exactly one process — the one serving HTTP — while
+// every CLI boot (`bin/cms`, a worker) drained an empty handler map and parked
+// each message as `No handler registered for event type` with the HTTP
+// responses still looking perfectly healthy (Boot 16). The pairing is the same
+// line of code either way; what changed is that it now has ONE home, which the
+// worker shares.
+wire_module_handlers();
 
 // ============================================================================
 // ROUTER — scan module action directories for #[Route] attributes
