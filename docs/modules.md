@@ -172,19 +172,51 @@ when there are some.
    `queue.job`'s `available_at` description to claim "a CONSTANT 30 second
    delay, never growing" — the opposite of the doubling, capped backoff that
    ships — leaves `make lekalo-check` at exit 0.
-4. **`authorization.yaml` references resolve only as far as the module.**
-   `lekalo/authorization.yaml` carries **15** `error_ref` values, **2** of them
-   distinct: `users.error.forbidden` (8) and `users.error.unauthorized` (7).
-   **Neither exists anywhere in the model** — `users` models no error symbols,
-   and the model has no `error` kind at all (its kinds are command, effect,
-   endpoint, entity, enum, event, policy, query, scalar, scenario, target-binding
-   and value-object) — and `make lekalo-check` reports 23 rules, 0 errors, exit 0.
-   Those refs *do* fail when the referenced MODULE is missing from the model
-   (`LEK-AUTH-005`), which makes this a granularity limit rather than a missing
-   check: module-level resolution is enforced, symbol-level is not. `--strict`
-   does not close it either; measured the same day, strict is red on
+4. **`error_ref` is resolved by nothing the tool ships — a test does it instead.**
+   The tool resolves the referenced MODULE and denies with `LEK-AUTH-005` when it
+   is missing from the model; it never resolves the SYMBOL, and it accepts any
+   string in the field. Measured 2026-10-16, that is how `lekalo/authorization.yaml`
+   came to carry **15** `error_ref` values naming **2** symbols —
+   `users.error.forbidden` (8) and `users.error.unauthorized` (7) — **neither of
+   which existed anywhere in the model**, behind a gate reporting 23 rules,
+   0 errors, exit 0. `lekalo inspect` on either ref answers
+   `exit 1 [LEK-INS-001] inspect.symbol-unknown`. The model has no `error` kind at
+   all (its vocabulary is closed — command, effect, endpoint, entity, enum, event,
+   policy, query, scalar, scenario, target-binding, value-object; `kind: error` in a
+   slice is refused with `LEK-IR-003`), so no such symbol could have been created.
+   **Fixed 2026-10-16:** all 15 now name `users.authorization_denied`, the event the
+   one denial path in `Modules\Core\Interfaces\HTTP\Middleware\AuthMiddleware`
+   raises, and `ModelReferenceContractTest` — new the same day — resolves every ref
+   against the model's definition ids and refuses one that names a non-`event`.
+   The model gained one definition doing so (`lekalo load --json`: 250 → 251), so
+   the source-map counts in the route table above are one behind today's tree. The
+   tool-side gap is unchanged; the hole it left is closed by a test. `--strict` does
+   not close it either — measured the same day, strict is red on
    `LEK-AUTH-009 authorization.effect-unprotected` (protected effects with no
    authorization declaration) and reports no `LEK-AUTH-005` at all.
+
+   **What naming a real event then measured, and did NOT fix: the middleware's
+   denial reaches no audit row.** The refs had to name something that is really
+   raised, so both emit sites were read and then run — each emit into a throwaway
+   outbox, the real `OutboxProcessor` over both:
+
+   | emit site | outbox `event_type` | outcome |
+   |---|---|---|
+   | `BulkPublishAction` → `SecurityEventServices::bulkRefused()` | `security.authz.denied` | `processed`, **one `audit_log` row** (`Refused /mark/bulk-publish (needs users.manage…)`) |
+   | `AuthMiddleware::recordDenial()` → `AuthProvider::noteEvent('authz.denied', …)` | `authz.denied` | **`failed`** — `No handler registered for event type: authz.denied` — **no audit row** |
+
+   `SecurityEventHandler::register()` binds one handler per type in
+   `SecurityEvents::all()`, which holds `security.authz.denied` and not the bare
+   `authz.denied` that the middleware passes through `noteEvent()` verbatim — so
+   every refused admin path writes an outbox message no handler can ever claim.
+   That is the opposite of what the middleware's own docblock promises ("a refused
+   authorization is the one class of thing the application most needs to
+   reconstruct after the fact") and of what `SecurityEvents` says about itself
+   ("no emit site … spells an event type … of its own"). **Recorded here, not
+   fixed:** whether the middleware should emit the owned name or the bare name
+   should get its own binding is a security-audit decision, and the payloads differ
+   too — the middleware sends no `roles`, a field `SecurityEvents` lists as required
+   for that type.
 5. **A test reads the model's module set — and nothing else.**
    `ModelCatalogueContractTest`
    (2026-10-16) compares the model's *module set* against the catalogue: every
@@ -193,7 +225,8 @@ when there are some.
    pattern. That catches a slice left behind by `module:remove` or a module
    nobody wrote down — measured, by deleting the slice directory and watching
    the test fail. It says nothing about whether any *description* matches the
-   code, which is item 1; before this test, `grep -rl lekalo tests/` was empty.
+   code, which is item 1; before this test, `grep -rl lekalo tests/` was empty —
+   there are two such tests now, this one and the reference guard in item 4.
 
 So: **the model is documentation with a schema, and the gate keeps the
 documentation well-formed.** It does not make the documentation true. Nothing

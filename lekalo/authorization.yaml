@@ -16,7 +16,7 @@ policies:
   - id: users.policy.public_auth_flow
     actor: public
     decision: allow
-    error_ref: "users.error.unauthorized"
+    error_ref: "users.authorization_denied"
     applies_to:
       - "users.register"
       - "users.login"
@@ -25,7 +25,7 @@ policies:
   - id: users.policy.member_session
     actor: identity.user
     decision: allow
-    error_ref: "users.error.unauthorized"
+    error_ref: "users.authorization_denied"
     applies_to:
       - "users.logout"
       - "users.current_user"
@@ -34,7 +34,7 @@ policies:
   - id: users.policy.admin_role_management
     actor: identity.user
     decision: allow
-    error_ref: "users.error.forbidden"
+    error_ref: "users.authorization_denied"
     applies_to:
       - "users.create_role"
       - "users.delete_role"
@@ -45,14 +45,14 @@ policies:
   - id: users.policy.internal_runtime_lookup
     actor: internal
     decision: allow
-    error_ref: "users.error.forbidden"
+    error_ref: "users.authorization_denied"
     applies_to:
       - "users.find_user_by_email"
       - "users.find_user_by_id"
   - id: users.policy.admin_user_management
     actor: identity.user
     decision: allow
-    error_ref: "users.error.forbidden"
+    error_ref: "users.authorization_denied"
     applies_to:
       - "users.update_user"
     roles:
@@ -60,7 +60,7 @@ policies:
   - id: comments.policy.admin_moderation
     actor: identity.user
     decision: allow
-    error_ref: "users.error.forbidden"
+    error_ref: "users.authorization_denied"
     applies_to:
       - "comments.approve"
       - "comments.reject"
@@ -73,7 +73,7 @@ policies:
   - id: comments.policy.public_submit
     actor: public
     decision: allow
-    error_ref: "users.error.unauthorized"
+    error_ref: "users.authorization_denied"
     applies_to:
       - "comments.submit"
     fields:
@@ -87,7 +87,7 @@ policies:
   - id: questions.policy.admin_moderation
     actor: identity.user
     decision: allow
-    error_ref: "users.error.forbidden"
+    error_ref: "users.authorization_denied"
     applies_to:
       - "questions.approve"
       - "questions.reject"
@@ -101,7 +101,7 @@ policies:
   - id: questions.policy.public_submit
     actor: public
     decision: allow
-    error_ref: "users.error.unauthorized"
+    error_ref: "users.authorization_denied"
     applies_to:
       - "questions.submit"
     fields:
@@ -117,7 +117,7 @@ policies:
   - id: questions.policy.public_read_approved
     actor: public
     decision: allow
-    error_ref: "users.error.unauthorized"
+    error_ref: "users.authorization_denied"
     applies_to:
       - "questions.find_by_subject"
       - "questions.find_approved_by_subject"
@@ -130,7 +130,7 @@ policies:
   - id: blog.policy.public_read
     actor: public
     decision: allow
-    error_ref: "users.error.unauthorized"
+    error_ref: "users.authorization_denied"
     applies_to:
       - "blog.article_index"
       - "blog.article_by_slug"
@@ -156,7 +156,7 @@ policies:
   - id: blog.policy.admin_editing
     actor: identity.user
     decision: allow
-    error_ref: "users.error.forbidden"
+    error_ref: "users.authorization_denied"
     applies_to:
       - "blog.create_article"
       - "blog.update_article"
@@ -195,13 +195,13 @@ policies:
   - id: audit.policy.internal_append
     actor: internal
     decision: allow
-    error_ref: "users.error.forbidden"
+    error_ref: "users.authorization_denied"
     applies_to:
       - "audit.append"
   - id: pages.policy.admin_editing
     actor: identity.user
     decision: allow
-    error_ref: "users.error.forbidden"
+    error_ref: "users.authorization_denied"
     applies_to:
       - "pages.create_page"
       - "pages.update_page"
@@ -213,7 +213,7 @@ policies:
   - id: pages.policy.public_read
     actor: public
     decision: allow
-    error_ref: "users.error.unauthorized"
+    error_ref: "users.authorization_denied"
     applies_to:
       - "pages.page_index"
       - "pages.rendered_page"

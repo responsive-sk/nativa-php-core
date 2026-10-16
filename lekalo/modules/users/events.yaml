@@ -66,6 +66,42 @@
           "required": true
         }
       ]
+    },
+    {
+      "id": "users.authorization_denied",
+      "kind": "event",
+      "version": 1,
+      "description": "A request was refused because the acting identity was not allowed to do what it asked — the event the authorization policies in this model name as what they raise when they deny (error_ref). Recorded through the Outbox, measured 2026-10-16 under two emit sites and two type strings: the bulk gate writes SecurityEvents::AUTHZ_DENIED, security.authz.denied, while the kernel's auth middleware writes the bare authz.denied, which no handler in SecurityEvents::all() claims — the processor fails that message and it reaches no audit row (measurement in docs/modules.md). Payload: path, required (the missing permission, or the literal no-policy on the middleware path and unclassified entity on the bulk one), the acting user (bulk:<entity> on the bulk path) and ip; the bulk path also carries roles. One refusal records nothing at all: an inactive identity is refused before the policy is consulted.",
+      "payload": [
+        {
+          "name": "required",
+          "type": {
+            "ref": "users.text"
+          },
+          "required": true
+        },
+        {
+          "name": "path",
+          "type": {
+            "ref": "users.text"
+          },
+          "required": true
+        },
+        {
+          "name": "user_id",
+          "type": {
+            "ref": "users.identifier"
+          },
+          "required": true
+        },
+        {
+          "name": "ip",
+          "type": {
+            "ref": "users.ip_address"
+          },
+          "required": true
+        }
+      ]
     }
   ]
 }
