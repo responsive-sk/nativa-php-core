@@ -1,0 +1,33 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "queue.deliver_queued_cover",
+      "kind": "scenario",
+      "version": 1,
+      "description": "A write to an article queues its cover, and a worker renders it",
+      "summary": "Given an author who edited an article, the write flushes the cache and queues a blog.cover job carrying only the slug and locale; a worker reserves it, the handler renders the cover through the same command an operator runs by hand, and the row is deleted on success.",
+      "covers": [
+        "queue.push",
+        "queue.work",
+        "queue.effect_job_queued",
+        "queue.effect_job_reserved",
+        "queue.effect_job_completed"
+      ]
+    },
+    {
+      "id": "queue.retry_then_park",
+      "kind": "scenario",
+      "version": 1,
+      "description": "A handler that keeps throwing is retried with a backoff and then parked",
+      "summary": "Given a queued job whose handler throws, each attempt releases the row with a doubling backoff capped at an hour, so the run stays green while attempts remain; once they are spent the job is parked in failed_jobs with the error, the run exits 1, and an operator retries or drops it from the panel.",
+      "covers": [
+        "queue.work",
+        "queue.effect_job_released",
+        "queue.effect_job_parked",
+        "queue.retry_failed",
+        "queue.delete_failed"
+      ]
+    }
+  ]
+}

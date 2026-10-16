@@ -1,0 +1,194 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "queue.push",
+      "kind": "command",
+      "version": 1,
+      "description": "Enqueue work for a handler (DatabaseQueue::push). Fire-and-forget by contract: the write that triggered it has already happened, so a failure to queue returns false and logs rather than surfacing as a failed write",
+      "input": [
+        {
+          "name": "handler",
+          "type": {
+            "ref": "queue.handler_name"
+          },
+          "required": true
+        },
+        {
+          "name": "payload",
+          "type": {
+            "ref": "queue.payload"
+          },
+          "required": true
+        },
+        {
+          "name": "queue",
+          "type": {
+            "optional": {
+              "ref": "queue.queue_name"
+            }
+          }
+        },
+        {
+          "name": "max_attempts",
+          "type": {
+            "optional": {
+              "ref": "queue.attempt_count"
+            }
+          }
+        }
+      ],
+      "effects": [
+        "queue.effect_job_queued"
+      ]
+    },
+    {
+      "id": "queue.effect_job_queued",
+      "kind": "effect",
+      "version": 1,
+      "description": "Insert the job row with available_at = now + delay (0 unless a producer schedules ahead)",
+      "operation": "create",
+      "entity": "queue.job"
+    },
+    {
+      "id": "queue.work",
+      "kind": "command",
+      "version": 1,
+      "description": "Work one batch: reserve each available job under BEGIN IMMEDIATE with a guarded UPDATE, run its handler, delete it on success, or release it with a capped exponential backoff (30s doubling to 3600s) while attempts remain. Driven by `bin/cms queue:work` and by the queue:work timetable entry; never from a request",
+      "input": [
+        {
+          "name": "queue",
+          "type": {
+            "optional": {
+              "ref": "queue.queue_name"
+            }
+          }
+        },
+        {
+          "name": "limit",
+          "type": {
+            "optional": {
+              "ref": "queue.attempt_count"
+            }
+          }
+        }
+      ],
+      "effects": [
+        "queue.effect_job_reserved",
+        "queue.effect_job_completed",
+        "queue.effect_job_released",
+        "queue.effect_job_parked"
+      ]
+    },
+    {
+      "id": "queue.effect_job_reserved",
+      "kind": "effect",
+      "version": 1,
+      "description": "Claim the row: set reserved_at and increment attempts. The guarded UPDATE under BEGIN IMMEDIATE is what makes a lost race return zero rows instead of double-delivering — SQLite has no SKIP LOCKED",
+      "operation": "update",
+      "entity": "queue.job"
+    },
+    {
+      "id": "queue.effect_job_completed",
+      "kind": "effect",
+      "version": 1,
+      "description": "Delete the row the handler finished",
+      "operation": "delete",
+      "entity": "queue.job"
+    },
+    {
+      "id": "queue.effect_job_released",
+      "kind": "effect",
+      "version": 1,
+      "description": "Clear reserved_at and push available_at into the future by the backoff, so the row drops out of this batch and every tick until the delay passes",
+      "operation": "update",
+      "entity": "queue.job"
+    },
+    {
+      "id": "queue.effect_job_parked",
+      "kind": "effect",
+      "version": 1,
+      "description": "Move the job to failed_jobs with the error that sank it, and remove it from jobs — the state `failed` counts, the exit code reports, and the panel lists",
+      "operation": "create",
+      "entity": "queue.failed_job"
+    },
+    {
+      "id": "queue.retry_failed",
+      "kind": "command",
+      "version": 1,
+      "description": "Re-queue a parked job under the SAME id with attempts reset (admin panel /mark/queue/failed/{id}/retry). Takes the ceiling as an argument: failed_jobs carries no max_attempts column, which is the module's one schema asymmetry",
+      "input": [
+        {
+          "name": "id",
+          "type": {
+            "ref": "queue.identifier"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "queue.effect_failed_job_retried"
+      ]
+    },
+    {
+      "id": "queue.effect_failed_job_retried",
+      "kind": "effect",
+      "version": 1,
+      "description": "Insert the row back into jobs and delete it from failed_jobs",
+      "operation": "delete",
+      "entity": "queue.failed_job"
+    },
+    {
+      "id": "queue.delete_failed",
+      "kind": "command",
+      "version": 1,
+      "description": "Drop a parked job (admin panel /mark/queue/failed/{id}/delete)",
+      "input": [
+        {
+          "name": "id",
+          "type": {
+            "ref": "queue.identifier"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "queue.effect_failed_job_dropped"
+      ]
+    },
+    {
+      "id": "queue.effect_failed_job_dropped",
+      "kind": "effect",
+      "version": 1,
+      "description": "Delete the parked row for good",
+      "operation": "delete",
+      "entity": "queue.failed_job"
+    },
+    {
+      "id": "queue.delete",
+      "kind": "command",
+      "version": 1,
+      "description": "Drop a queued job without working it (admin panel /mark/queue/{id}/delete)",
+      "input": [
+        {
+          "name": "id",
+          "type": {
+            "ref": "queue.identifier"
+          },
+          "required": true
+        }
+      ],
+      "effects": [
+        "queue.effect_job_dropped"
+      ]
+    },
+    {
+      "id": "queue.effect_job_dropped",
+      "kind": "effect",
+      "version": 1,
+      "description": "Delete the queued row for good",
+      "operation": "delete",
+      "entity": "queue.job"
+    }
+  ]
+}

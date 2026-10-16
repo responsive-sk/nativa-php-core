@@ -1,0 +1,57 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "queue.endpoint_list",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "GET /mark/queue \u2014 QueueAdminAction::handle: live jobs and parked jobs",
+      "method": "GET",
+      "path": "/mark/queue",
+      "invokes": "queue.list_jobs"
+    },
+    {
+      "id": "queue.endpoint_detail",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "GET /mark/queue/{id} \u2014 QueueAdminAction::detail: the one page that shows a payload, pretty-printed and poison-tolerant",
+      "method": "GET",
+      "path": "/mark/queue/{id}",
+      "invokes": "queue.find_job"
+    },
+    {
+      "id": "queue.endpoint_delete",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "POST /mark/queue/{id}/delete \u2014 drop a queued job (audited as queue.delete)",
+      "method": "POST",
+      "path": "/mark/queue/{id}/delete",
+      "invokes": "queue.delete"
+    },
+    {
+      "id": "queue.endpoint_retry",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "POST /mark/queue/failed/{id}/retry \u2014 re-queue a parked job (audited as queue.retry)",
+      "method": "POST",
+      "path": "/mark/queue/failed/{id}/retry",
+      "invokes": "queue.retry_failed"
+    },
+    {
+      "id": "queue.endpoint_failed_delete",
+      "kind": "endpoint",
+      "version": 1,
+      "description": "POST /mark/queue/failed/{id}/delete \u2014 drop a parked job (audited as queue.failed.delete)",
+      "method": "POST",
+      "path": "/mark/queue/failed/{id}/delete",
+      "invokes": "queue.delete_failed"
+    },
+    {
+      "id": "queue.binding_php",
+      "kind": "target-binding",
+      "version": 1,
+      "description": "Bind the queue module to the Nativa PHP runtime target",
+      "target": "php-nativa"
+    }
+  ]
+}

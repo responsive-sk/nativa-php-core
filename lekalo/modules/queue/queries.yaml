@@ -1,0 +1,69 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "queue.list_jobs",
+      "kind": "query",
+      "version": 1,
+      "description": "Newest-first job rows, optionally one queue, with a derived state (pending / reserved / delayed) — the admin list and /mark/queue",
+      "reads": [
+        "queue.job"
+      ],
+      "returns": {
+        "list": {
+          "ref": "queue.job"
+        }
+      }
+    },
+    {
+      "id": "queue.find_job",
+      "kind": "query",
+      "version": 1,
+      "description": "One job row INCLUDING its raw payload — the only surface that renders a payload on screen, and the reason payloads carry identifiers rather than credentials",
+      "reads": [
+        "queue.job"
+      ],
+      "returns": {
+        "ref": "queue.job"
+      }
+    },
+    {
+      "id": "queue.list_failed",
+      "kind": "query",
+      "version": 1,
+      "description": "Parked jobs newest-first, with the error that sank each",
+      "reads": [
+        "queue.failed_job"
+      ],
+      "returns": {
+        "list": {
+          "ref": "queue.failed_job"
+        }
+      }
+    },
+    {
+      "id": "queue.find_failed",
+      "kind": "query",
+      "version": 1,
+      "description": "One parked job by id",
+      "reads": [
+        "queue.failed_job"
+      ],
+      "returns": {
+        "ref": "queue.failed_job"
+      }
+    },
+    {
+      "id": "queue.count_reservable",
+      "kind": "query",
+      "version": 1,
+      "description": "Jobs a worker could pick up right now (reserved_at IS NULL AND available_at <= now) — the dashboard card, and the same predicate `work()` reserves against, so the card cannot promise work the worker will not do",
+      "reads": [
+        "queue.job"
+      ],
+      "returns": {
+        "ref": "queue.attempt_count"
+      }
+    }
+  ]
+}
