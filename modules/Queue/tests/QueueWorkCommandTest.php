@@ -122,14 +122,15 @@ final class QueueWorkCommandTest extends TestCase
     }
 
     #[Test]
-    public function aFailingJobBurnsItsAttemptsInsideOneBatchAndIsThenParked(): void
+    public function aFailingJobWaitsOutItsBackoffAndTheRunExitsZero(): void
     {
-        // Measured, and the reason this reads the way it does: `release()`
-        // writes `available_at = now`, so the row is available again the next
-        // loop iteration. A throwing handler is therefore retried WITHIN the
-        // batch — not once per cron tick — until it exhausts max_attempts, and
-        // then parked. What reaches `failed` is "parked in failed_jobs", which
-        // is why the exit code is still the number an operator has to look at.
+        // A handler that throws while attempts remain is a RETRY, not a
+        // failure, and the two are told apart by the backoff: the row is
+        // released into the future, so it drops out of this batch and the run
+        // stays green. Before the backoff the same row was re-reserved by the
+        // NEXT LOOP ITERATION of the same `work()` call — three attempts in one
+        // batch, then parked, exit 1, for a handler that would have succeeded
+        // on a later tick.
         QueueServices::handlers()->register('smoke.flaky', static function (array $args): void {
             throw new \RuntimeException('not yet');
         });
@@ -139,39 +140,39 @@ final class QueueWorkCommandTest extends TestCase
         $result = QueueServices::work();
 
         $this->assertSame(0, $result['processed']);
-        $this->assertSame(1, $result['failed']);
-        $this->assertSame(1, QueueServices::exitCode($result));
+        $this->assertSame(0, $result['failed'], 'a retry is not a failure — reddening every tick for one would train an operator to ignore the number that means something.');
+        $this->assertSame(0, QueueServices::exitCode($result));
+        $this->assertNull(QueueServices::queue()->findFailed($id), 'nothing is parked yet.');
 
-        $parked = QueueServices::queue()->findFailed($id);
-        $this->assertNotNull($parked);
-        $this->assertSame(3, (int) $parked['attempts'], 'every attempt was spent, none silently skipped.');
-        $this->assertSame('not yet', $parked['error']);
+        $job = QueueServices::queue()->findJob($id);
+        $this->assertNotNull($job, 'the job is still queued for another attempt.');
+        $this->assertSame(1, (int) $job['attempts'], 'exactly one attempt was spent, not all three.');
+        $this->assertNull($job['reserved_at'], 'and it is released, not left reserved by a worker that is gone.');
+        $this->assertGreaterThan(
+            date('Y-m-d H:i:s'),
+            $job['available_at'],
+            'the next attempt is in the future: this is what the backoff means.',
+        );
     }
 
     #[Test]
-    public function aJobReleasedWithinTheBatchLimitStaysQueuedAndExitsZero(): void
+    public function theBatchLimitDoesNotChangeThatARetryStaysARetry(): void
     {
-        // The counterpart, and the one the exit code turns on: while attempts
-        // remain, a throwing job is a RETRY, not a failure. Reaching that state
-        // needs a batch smaller than max_attempts, because the release is
-        // immediate (see above) — so a red cron every tick for a retry would
-        // train an operator to ignore the number that means something.
+        // `--limit` used to be the only thing that could stop a batch from
+        // burning every attempt, because the release was immediate. With a real
+        // backoff the limit is about throughput, not about retries: a batch of
+        // one still leaves the same green result.
         QueueServices::handlers()->register('smoke.flaky', static function (array $args): void {
             throw new \RuntimeException('not yet');
         });
 
-        $id = QueueServices::queue()->push('smoke.flaky', [], maxAttempts: 3);
+        QueueServices::queue()->push('smoke.flaky', [], maxAttempts: 3);
 
         $result = QueueServices::work(null, 1);
 
-        $this->assertSame(0, $result['processed']);
         $this->assertSame(0, $result['failed']);
         $this->assertSame(0, QueueServices::exitCode($result));
-
-        $job = QueueServices::queue()->findJob($id);
-        $this->assertNotNull($job, 'the job is still queued for another attempt.');
-        $this->assertNull($job['reserved_at'], 'and it is released, not left reserved by a worker that is gone.');
-        $this->assertSame(1, (int) $job['attempts'], 'exactly one attempt was spent.');
+        $this->assertCount(1, QueueServices::queue()->listJobs());
     }
 
     #[Test]
