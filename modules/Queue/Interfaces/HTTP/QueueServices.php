@@ -14,6 +14,12 @@ use Modules\Queue\Application\Services\HandlerRegistry;
  * Actions never `new` the queue: the handler registry is shared process-
  * wide (handlers register once, the worker and the admin see the same
  * map), and `reset()` keeps tests isolated.
+ *
+ * `work()` and `exitCode()` are the seam `bin/cms queue:work` drives, shaped
+ * like `SchedulerServices::run()`: the module owns the semantics and the exit
+ * code, the CLI owns the printing, and the tests assert the same contract the
+ * command does — so what the suite proves and what the operator runs cannot
+ * drift apart.
  */
 final class QueueServices
 {
@@ -32,6 +38,35 @@ final class QueueServices
     public static function handlers(): HandlerRegistry
     {
         return self::$handlers ??= new HandlerRegistry();
+    }
+
+    /**
+     * Work one batch — up to $limit jobs from $queue (null = any queue).
+     *
+     * A job whose handler throws is RELEASED for retry until it exhausts
+     * max_attempts and is parked in failed_jobs; a handler nobody registered,
+     * or a payload that will not decode, travels that same path. `failed`
+     * counts only what ended up parked, so it is the number an operator has to
+     * look at, not the number that happened.
+     *
+     * @return array{processed: int, failed: int}
+     */
+    public static function work(?string $queue = null, int $limit = 10): array
+    {
+        return self::queue()->work($queue, max(1, $limit));
+    }
+
+    /**
+     * The exit code a worker run reports: 1 when anything is parked in
+     * failed_jobs, so a cron entry or a CI probe notices a poison job instead
+     * of silently rotating past it. A job released for another attempt is not
+     * a failure and does not redden the run.
+     *
+     * @param array{processed: int, failed: int} $result
+     */
+    public static function exitCode(array $result): int
+    {
+        return $result['failed'] > 0 ? 1 : 0;
     }
 
     /**

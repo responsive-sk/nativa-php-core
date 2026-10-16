@@ -7,6 +7,7 @@ namespace Modules\Scheduler\Interfaces\HTTP;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Modules\Core\Infrastructure\Paths\AppPaths;
+use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Outbox\Application\Services\OutboxDrain;
 use Modules\Outbox\Interfaces\HTTP\OutboxServices;
 use Modules\Scheduler\Scheduling\FileTaskMutex;
@@ -60,6 +61,77 @@ final class SchedulerServices
         return self::$mutex ??= new FileTaskMutex(
             AppPaths::instance()->storage('cache/scheduler-mutexes/'),
         );
+    }
+
+/**
+     * Add the queue's worker to $schedule — every minute, with a five-minute
+     * overlap guard, so a slow batch is not landed on by the next tick.
+     *
+     * This lives HERE rather than in `bin/cms` for a measured reason, and the
+     * placement is not arbitrary:
+     *
+     *  - `bin/cms` is analysed by PHPStan in a tree with no module installed,
+     *    where the class $schedule belongs to does not exist. Annotating that
+     *    parameter, or calling a method on the value, is `class.notFound` at
+     *    level 9 — the trap the kernel's own comments keep naming: a type
+     *    position is resolved REGARDLESS of the guard.
+     *  - Registering it here costs the closure scan nothing. That scan counts
+     *    `use Modules\…` lines only (Boot 26), so `QueueServices` is named
+     *    inline and never imported — the same escape hatch Boot 26 used for the
+     *    Cardboard bulk actions.
+     *
+     * The entry is skipped while the queue's database has no `jobs` table,
+     * because the table comes from a migrator: a cron that fires before the
+     * first `bin/cms migrate` would otherwise fail a task every minute and
+     * redden every run, for a reason the failure line does not carry. $report
+     * is where that one line goes; the module prints nothing itself.
+     *
+     * @param callable(string): void|null $report
+     */
+    public static function withQueueWork(Schedule $schedule, ?callable $report = null): void
+    {
+        if (!class_exists('Modules\Queue\Interfaces\HTTP\QueueServices')) {
+            return;
+        }
+
+        if (!self::queueDatabaseReady()) {
+            if (null !== $report) {
+                $report(sprintf(
+                    'queue:work skipped — %s has no `jobs` table yet (run: php bin/cms migrate).',
+                    AppPaths::instance()->database('queue'),
+                ));
+            }
+
+            return;
+        }
+
+        $schedule->call(static function (): void {
+            \Modules\Queue\Interfaces\HTTP\QueueServices::work();
+        })->everyMinute()->description('queue:work')->withoutOverlapping(5);
+    }
+
+    /**
+     * Whether the queue's database carries the `jobs` table.
+     *
+     * A table lookup, not a file check: an operator who removed and reinstalled
+     * the module has the file and no schema, and a file check would call that
+     * ready and hand the cron a missing-table error every minute.
+     */
+    private static function queueDatabaseReady(): bool
+    {
+        try {
+            $statement = DatabaseConnectionManager::instance()
+                ->connection('queue')
+                ->query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'jobs'");
+        } catch (\Throwable) {
+            return false;
+        }
+
+        if (false === $statement) {
+            return false;
+        }
+
+        return false !== $statement->fetchColumn();
     }
 
     public static function runner(?Schedule $schedule = null, ?FileTaskMutex $mutex = null): ScheduleRunner

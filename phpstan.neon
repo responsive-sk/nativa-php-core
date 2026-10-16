@@ -14,12 +14,17 @@ parameters:
         # drop 26 KB of shipped code from the gate.
         - src/Modules/Tooling
         - src/Themes
+        - src/composition.php
         - public/index.php
         - bin/cms
         - tests/
     # src/init.php defines APP_BASE_PATH and loads the autoloaders, so
     # analysed files resolve runtime constants and class metadata exactly
-    # as the application would.
+    # as the application would. `src/composition.php` joins the paths because
+    # both entry points call its `wire_module_handlers()`: a function this
+    # kernel file owns that nothing analysed is "Class not found" for — the
+    # error would name the CALLER (public/index.php, bin/cms), never the file
+    # that has to be added here.
     bootstrapFiles:
         - src/init.php
     reportUnmatchedIgnoredErrors: false

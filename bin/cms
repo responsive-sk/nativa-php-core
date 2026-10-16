@@ -8,7 +8,7 @@ declare(strict_types = 1);
  *
  * The kernel runtime has no Composer packages, so this tool cannot be a
  * symfony/console application the way the showcase's bin/cms is: what manages
- * modules must run in a tree whose vendor/ directory may not exist. Six
+ * modules must run in a tree whose vendor/ directory may not exist. Nine
  * commands, argv-parsed, exit 0 on success and 1 on refusal or error:
  *
  *   module:list              installed + catalogued modules
@@ -17,11 +17,22 @@ declare(strict_types = 1);
  *   module:remove <Name>     delete the slice (refuses while another module imports it)
  *   migrate                  run every module migrator (the first-request run, forced)
  *   schedule:run             run the Scheduler timetable entries due now (needs the Scheduler module)
+ *   queue:work               work one batch of queued jobs (needs the Queue module)
+ *   discovery:clear          delete the discovery cache (rebuilt on the next request)
+ *   discovery:status         whether the discovery cache exists and is fresh
  *
  * The lifecycle itself lives in ModuleInstaller (a service the test harness
  * drives in-process); this script only prints results and maps refusals to
  * exit codes. The wording of every message is owned by the service — what
  * the CLI prints and what the tests assert is the same string.
+ *
+ * Two of the commands DELIVER rather than manage — `schedule:run` and
+ * `queue:work` — so both call `wire_module_handlers()` from
+ * `src/composition.php` first. A handler pairing that only the web process
+ * registers leaves a CLI drain with an empty handler map, and every message
+ * lands as `No handler registered for event type` while the HTTP responses
+ * still look healthy (Boot 16). The pairing lives in one file; this script is
+ * one of the processes that has to run it.
  */
 
 use Modules\Core\Interfaces\CLI\CliOutput;
@@ -31,6 +42,7 @@ use Modules\Tooling\ModuleInstaller;
 use Modules\Tooling\ModuleManifest;
 
 require_once __DIR__ . '/../src/init.php';
+require_once __DIR__ . '/../src/composition.php';
 
 /** @return never */
 function fail(string $message): void
@@ -166,6 +178,7 @@ function usage(): void
     out('  module:remove <Name> [--force]  remove a module (refuses while imported)');
     out('  migrate                  run every module migrator (the first-request run, forced)');
     out('  schedule:run             run due Scheduler timetable entries (exit 1 on any failure)');
+    out('  queue:work [<name>] [--limit=N]  work one batch of queued jobs (exit 1 on a parked job)');
     out('  discovery:clear          delete the discovery cache (rebuilt on the next request)');
     out('  discovery:status         whether the discovery cache exists and is fresh');
 }
@@ -204,6 +217,9 @@ function cmdScheduleRun(): void
         fail('schedule:run needs the Scheduler module (bin/cms module:add Scheduler).');
     }
 
+    // Delivery in this process, so the handler map is the one the tasks use.
+    wire_module_handlers();
+
     $output = \Modules\Scheduler\Interfaces\HTTP\SchedulerServices::output(
         static function (string $message): void {
             out($message);
@@ -211,8 +227,69 @@ function cmdScheduleRun(): void
     );
 
     $schedule = \Modules\Scheduler\Interfaces\HTTP\SchedulerServices::schedule();
+    \Modules\Scheduler\Interfaces\HTTP\SchedulerServices::withQueueWork(
+        $schedule,
+        static function (string $message): void {
+            out($message);
+        },
+    );
 
     exit(\Modules\Scheduler\Interfaces\HTTP\SchedulerServices::run($schedule, $output));
+}
+
+/**
+ * Work one batch of queued jobs — the queue's operator surface.
+ *
+ * `DatabaseQueue::work()` shipped with exactly one call site in the whole tree:
+ * an inline `php` heredoc inside `bin/build/admin-smoke.sh`. So the queue had a
+ * worker that no operator could put in crontab, no support answer could point
+ * at, and no documentation could describe — the gate was the only place on the
+ * planet that could run it. (The end-of-request drain that ships today is the
+ * OUTBOX's: a different mechanism, a different database, an idempotent handler.
+ * No producer pushes a Queue job yet either, so this command has nothing to
+ * deliver until one does — stated rather than papered over.)
+ *
+ * The handler pairing is wired first, for the reason in the file header.
+ *
+ * @param list<string> $argv the full argv; options start at index 2
+ */
+function cmdQueueWork(array $argv): void
+{
+    if (!class_exists(\Modules\Queue\Interfaces\HTTP\QueueServices::class)) {
+        fail('queue:work needs the Queue module (bin/cms module:add Queue).');
+    }
+
+    wire_module_handlers();
+
+    $queue = null;
+    $limit = 10;
+
+    foreach (array_slice($argv, 2) as $argument) {
+        if (str_starts_with($argument, '--limit=')) {
+            $limit = max(1, (int) substr($argument, strlen('--limit=')));
+        } elseif (!str_starts_with($argument, '--')) {
+            $queue = $argument;
+        }
+    }
+
+    $result = \Modules\Queue\Interfaces\HTTP\QueueServices::work($queue, $limit);
+
+    out(sprintf(
+        'Queue: processed=%d failed=%d (queue: %s, limit %d)',
+        $result['processed'],
+        $result['failed'],
+        $queue ?? '(any)',
+        $limit,
+    ));
+
+    if ($result['failed'] > 0) {
+        out(sprintf(
+            'Failed jobs are parked in failed_jobs — retry or drop them at /mark/queue%s.',
+            null === $queue ? '' : ' (queue: ' . $queue . ')',
+        ));
+    }
+
+    exit(\Modules\Queue\Interfaces\HTTP\QueueServices::exitCode($result));
 }
 
 /**
@@ -290,6 +367,11 @@ function main(array $argv): void
 
         case 'schedule:run':
             cmdScheduleRun();
+
+            break;
+
+        case 'queue:work':
+            cmdQueueWork($argv);
 
             break;
 

@@ -56,6 +56,15 @@ baseline; it ships no interfaces and no buckets — it is all runtime.
   gitignored operator state, so counting them would double every catalogue edge.
   They break all the same when an FQCN moves — that is why Constraint 3 of the
   plan forbids moving published names.
+- **`src/composition.php` is not in this table, and that is deliberate.**
+  It is kernel-owned (`wire_module_handlers()`, the one place the module
+  pairings are declared — `public/index.php` and `bin/cms` both call it) but it
+  lives in `src/`, not in `src/Modules/Core`, and it declares **no class**, so
+  it has no `Bucket` to be approved into and `KernelShapeTest` cannot see it.
+  This inventory measures `Core` + `Database`; a file outside those trees needs
+  a row somewhere else or it is in none. Recorded here so the gap is a
+  decision on the page rather than an omission somebody re-discovers. If the
+  measurement is ever widened to `src/`, this is the first row.
 - **`DiscoveryCache` is `runtime`, not `tooling`.** `public/index.php` boots with
   it, unlike the three `tooling` classes only `bin/cms` calls. This settles open
   question 2 of the plan.
