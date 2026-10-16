@@ -520,11 +520,30 @@ else
     bad 'schedule:run printed no outcome line'
 fi
 
+# The queue's own operator command, on the path a cron takes: an empty queue
+# must exit 0 and report zeroes. A worker that reddened every tick because it
+# had nothing to do is a worker whose "1" means nothing, and this is the line
+# that says so.
+if php bin/cms queue:work > "$TMP/queue-empty.log" 2>&1; then
+    ok 'bin/cms queue:work exits 0 on an empty queue'
+else
+    cat "$TMP/queue-empty.log"
+    bad 'bin/cms queue:work failed on an empty queue'
+fi
+
+if grep -q 'processed=0 failed=0' "$TMP/queue-empty.log"; then
+    ok 'bin/cms queue:work reports its counts'
+else
+    cat "$TMP/queue-empty.log"
+    bad 'bin/cms queue:work printed no counts'
+fi
+
 # The Queue module's worker. This tree ships no producer (measured: `push()` has
 # no call site outside the module's own tests), so the job is pushed through the
 # module's own API — the way the seed block above builds its accounts — and then
-# worked by `DatabaseQueue::work()` in its own process, which is what a worker
-# is. The handler is deliberately unregistered, so the job travels the real
+# worked by the OPERATOR'S COMMAND, not by an inline heredoc: a gate that proves
+# the worker by calling the module's API proves a worker nobody can put in
+# crontab. The handler is deliberately unregistered, so the job travels the real
 # failure path: UnknownHandlerException → `failed_jobs` with the error, where
 # the panel retries it.
 QUEUE_JOB="$(php <<'PHP'
@@ -539,16 +558,19 @@ echo \Modules\Queue\Interfaces\HTTP\QueueServices::queue()->push(
 PHP
 )"
 
-worked="$(php <<'PHP'
-<?php
-require 'src/init.php';
+if php bin/cms queue:work > "$TMP/queue-work.log" 2>&1; then
+    cat "$TMP/queue-work.log"
+    bad 'bin/cms queue:work exited 0 with an unroutable job in the queue'
+else
+    ok 'bin/cms queue:work exits 1 on a parked job'
+fi
 
-$result = \Modules\Queue\Interfaces\HTTP\QueueServices::queue()->work();
-
-echo $result['processed'] . ' processed, ' . $result['failed'] . " failed";
-PHP
-)"
-want 'the worker fails the job nobody can route' '0 processed, 1 failed' "$worked"
+if grep -q 'failed=1' "$TMP/queue-work.log"; then
+    ok 'bin/cms queue:work counts the parked job'
+else
+    cat "$TMP/queue-work.log"
+    bad 'bin/cms queue:work reported no failure for a job it could not route'
+fi
 
 parked="$(dbq DB_QUEUE "SELECT COUNT(*) FROM failed_jobs WHERE id = '$QUEUE_JOB'")"
 want 'the unroutable job is parked in failed_jobs' 1 "$parked"
