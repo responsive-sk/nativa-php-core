@@ -1509,3 +1509,82 @@ style changes), because a repair invalidates the run before it: red, restored, g
 - The standing items are unchanged: no Lekalo adapter (Boot 36), the module owning
   its slice (Boot 38), the reset link deliberately not queued (Boot 35), and
   Griffe's hero correct and green but not chosen (Boot 33).
+
+## Boot 42 — the copy port, and the English homepage on a Slovak site
+
+### Measured before anything changed
+
+```
+settings    locale = sk_SK, theme = jednotka          (config.db)
+rendered    <h1 class="je-hero__title">Minimal PHP 8.5 Starter Kit</h1>
+locales.db  home.hero_title / sk_SK = "Minimálny PHP 8.5 starter kit"
+```
+
+All 25 `home.*` rows were already seeded in **both** locales by the Locales
+migrator (`SeedData`), and nothing in the tree that renders a page could ask for
+them: `HomepageAction` passed `copy: ['title' => $siteName]` and nothing else, so
+a theme rendering translated copy had to carry it itself — `jednotka` rendered
+its own English `DEFAULT_COPY` floor on a Slovak site. Every gate was green,
+because a translation row that is absent is not an error anywhere in the chain:
+it is a fallback inside a theme.
+
+This is the failure the `ShellContextProvider` port exists to make impossible —
+the kernel may not import the module that owns the words — and it is the shape
+the port had already fixed five times (site name, theme, default locale,
+languages, navigation). The copy was the sixth fact, and the only one still
+reaching a renderer as a kernel string.
+
+### What changed
+
+| Piece | Change |
+|---|---|
+| `ShellContextProvider` | `copy(string $group, string $locale): array` — keyed by FULL translation key; a key the provider does not hold is absent, never empty |
+| `ShellContextProviderRegistry` | `copy()` — the union of every provider's answer PER KEY, first provider to hold a key wins; a blank value is not an answer |
+| `LocalesShellContextProvider` | answers the group straight out of `locales.db` (the rows the translation admin edits); an unseeded locale abstains rather than falling back |
+| `SettingsShellContextProvider` | answers `[]` — it owns the menu table and no translated string |
+| `HomepageAction` | `['title' => $siteName] + copy('home', $locale)` — still no module import |
+
+No new kernel class: `KernelShapeTest` makes a new concrete kernel type an
+approval decision (`ALLOW_LIST` + `MAX_APPROVED` + a row in
+`docs/kernel-shape.md`), and the method belongs on the port that already answers
+the other five facts. The merge is per key rather than per provider so a site
+module can translate three strings without re-answering the twenty its locale
+already carries.
+
+### Negative controls
+
+| control | result |
+|---|---|
+| the registry's first-wins guard dropped (the later provider overwrites) | red — `home.merge_probe_b` came back as the later provider's value |
+| the registry stops treating `''` as absent | red — the blank masked the provider behind it |
+| the provider's database made the source (a `MARKER-SK` written over the seed row) | `MARKER-SK` — the port reads the table, it does not reproduce a memorised seed |
+| all restored | byte-identical; green again |
+
+### Verified (2026-10-17, all exit 0)
+
+| Gate | Result |
+|---|---|
+| `composer test` | **400 → 408 tests**, 4391 → 4410 assertions, 1 skip (pre-existing) |
+| `make analyze` | phpstan L9 no errors · rector clean · cs-fixer 0 of 102 |
+| `make lekalo-check` | 22 modules valid on their own, whole project valid |
+| `make lint` | clean |
+| live `GET /` | 200 — `<h1>Minimálny PHP 8.5 starter kit</h1>`, both `je-section__title` headings (*Menej vrstiev*, *Super rýchle PHP*), 6 cards with Slovak titles and bodies, action buttons *Prejsť na blog* / *Otvoriť admin*, and `<title>` still the site name |
+
+### What this round did not close
+
+- **Three Slovak card TITLES are English in the seed itself.**
+  `home.layer1_card1_title`, `home.layer1_card3_title` and
+  `home.layer2_card1_title` hold `Zero dependencies`, `Per-module SQLite` and
+  `PHP 8.5 + OPcache/JIT` in **both** locales. That is the translation table's
+  content, not the port's behaviour: the page now renders what the table holds,
+  and making those three Slovak is a translator's edit.
+- **`ErikTheme` and `MonoTheme` read short keys** (`title`, `lede`,
+  `hero_eyebrow`) that the `home` group does not carry, so they still render
+  their own defaults. The port is in place for them the day their strings move
+  into a group — today `title` is answered by the kernel itself, which is what
+  keeps this round from changing them.
+- **The copy reaches the homepage only.** The blog index, article and search
+  surfaces still take no copy from the port.
+- The standing items are unchanged: upstream owns the `Blog` name (the rename is
+  prepared in `.ai-factory/patches/2026-10-16-blog-to-articles.md`), no Lekalo
+  adapter, and the module-owns-its-slice attempt still reverted.
