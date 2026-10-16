@@ -16,6 +16,13 @@
 # Every DB_* points at a temp directory and the server is started and stopped
 # here, so the working tree's storage/data/ is never opened (Boot 27's rule).
 #
+# CONTENT is the one exception, and it is stated rather than hidden: articles
+# and pages live under `storage/` with no root override the way the databases
+# have one, so the content section writes there — and then fails the run if the
+# tree does not come back exactly as it found it (tree_files, compared before
+# and after). On a workstation that means a `smoke-*` post exists for the
+# duration of the run; in CI the checkout is disposable anyway.
+#
 # Usage: bin/build/admin-smoke.sh          (needs the catalogue installed)
 #        SMOKE_PORT=8399 bin/build/admin-smoke.sh
 set -euo pipefail
@@ -68,6 +75,20 @@ want_at_least() {
     else
         bad "$1 expected ≥ $2, got $3"
     fi
+}
+
+# Every content file the checkout carries, minus the volatile trees. Content has
+# no root override the way the databases do (AppPaths::storage() is the checkout),
+# so the content section below WRITES into storage/ and this is how it proves it
+# left the tree exactly as it found it — a leftover fails the run instead of
+# quietly surviving it.
+tree_files() {
+    find storage -type f \
+        -not -path 'storage/data/*' \
+        -not -path 'storage/logs/*' \
+        -not -path 'storage/cache/*' \
+        -not -path 'storage/sessions/*' \
+        | sort
 }
 
 check() {
@@ -303,6 +324,67 @@ if grep -q 'not permitted' "$TMP/last.out"; then ok 'the refusal names the reaso
 
 denied="$(dbq DB_OUTBOX "SELECT COUNT(*) FROM outbox_messages WHERE event_type = 'security.authz.denied'")"
 want_at_least 'security.authz.denied events' 1 "$denied"
+
+# ---------------------------------------------------------------------------
+# Content: an ARTICLE is written, served and deleted through the panel
+# ---------------------------------------------------------------------------
+tree_files > "$TMP/tree-before.txt"
+RAND="$RANDOM$RANDOM"
+ARTICLE="smoke-article-$RAND"
+
+check 'admin GET /mark/articles' '/mark/articles' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+ADMIN_TOKEN="$(token)"
+
+# `date` is required alongside title and body (ArticlesCreateAction::validate),
+# and its absence is a 400 with the form re-rendered — measured.
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/articles/create?locale=sk" \
+    --data-urlencode "title=Smoke article $RAND" \
+    --data-urlencode "slug=$ARTICLE" \
+    --data-urlencode "date=$(date +%Y-%m-%d)" \
+    --data-urlencode 'body=Written by the admin smoke gate.' \
+    --data-urlencode 'published=1' --data-urlencode 'locale=sk_SK' \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/articles/create' 302 "$got"
+
+if find storage -name "$ARTICLE.md" | grep -q .; then ok 'the article file exists'; else bad 'no article file was written'; fi
+check 'the published article is served' "/blog/$ARTICLE" 200
+check 'the article list is served' '/blog' 200
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/articles/$ARTICLE/delete" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/articles/{slug}/delete' 302 "$got"
+if find storage -name "$ARTICLE.md" | grep -q .; then bad 'the article file survived the delete'; else ok 'the article file is gone'; fi
+check 'the deleted article is 404' "/blog/$ARTICLE" 404
+
+# ---------------------------------------------------------------------------
+# Content: a PAGE, the same way — and then the tree is put back
+# ---------------------------------------------------------------------------
+PAGE="smoke-page-$RAND"
+check 'admin GET /mark/pages' '/mark/pages' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+ADMIN_TOKEN="$(token)"
+
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/pages/create?locale=sk" \
+    --data-urlencode "title=Smoke page $RAND" \
+    --data-urlencode "slug=$PAGE" \
+    --data-urlencode 'body=A page written by the admin smoke gate.' \
+    --data-urlencode 'published=1' --data-urlencode 'locale=sk_SK' \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/pages/create' 302 "$got"
+
+if find storage -name "$PAGE.md" | grep -q .; then ok 'the page file exists'; else bad 'no page file was written'; fi
+check 'the published page is served' "/$PAGE" 200
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/pages/$PAGE/delete" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/pages/{slug}/delete' 302 "$got"
+if find storage -name "$PAGE.md" | grep -q .; then bad 'the page file survived the delete'; else ok 'the page file is gone'; fi
+check 'the deleted page is 404' "/$PAGE" 404
+
+tree_files > "$TMP/tree-after.txt"
+if diff -q "$TMP/tree-before.txt" "$TMP/tree-after.txt" > /dev/null; then
+    ok 'the checkout storage came back exactly as it was'
+else
+    diff "$TMP/tree-before.txt" "$TMP/tree-after.txt" | head -10
+    bad 'the content flows left files behind in the checkout storage'
+fi
 
 # ---------------------------------------------------------------------------
 # Nothing fatal behind it all

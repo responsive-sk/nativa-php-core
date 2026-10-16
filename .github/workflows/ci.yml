@@ -395,9 +395,14 @@ jobs:
   # directory inside the script, and the server starts and stops there, so the
   # job never writes to the checkout's storage/data/.
   #
-  # What it does NOT do: sweep the other modules' own surfaces (Blog's article
-  # writes, Pages, the public comment submit, the queue worker). That is the
-  # next gate, not this one.
+  # CONTENT is the one thing it writes into the checkout — an article and a page
+  # have no root override the way the databases do — so the script snapshots
+  # `storage/` and FAILS if it does not come back exactly as it found it. On a
+  # runner the checkout is disposable; the assertion is what makes the same
+  # script safe to run on a workstation.
+  #
+  # What it does NOT do: the public comment submit and the queue worker. Those
+  # are the next round's checks, and this script is where they go.
   admin-smoke:
     name: Admin flows (booted server)
     runs-on: ubuntu-latest
