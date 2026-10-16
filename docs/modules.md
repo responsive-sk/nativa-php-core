@@ -29,6 +29,7 @@ that changed.
 | `php bin/cms migrate` | run every module migrator (the first-request run, forced) |
 | `php bin/cms schedule:run` | run the due timetable entries (the outbox drain, and the queue worker — see below) |
 | `php bin/cms queue:work [<name>] [--limit=N]` | work one batch of queued jobs; exit 1 on a parked one (see below) |
+| `php bin/cms queue:prune [--interval="30 days"] [--dry-run]` | drop failed jobs older than the interval — never part of `queue:work` (see below) |
 | `php bin/cms discovery:clear` | delete the discovery cache (`storage/cache/discovery.php`); the next request rescans |
 | `php bin/cms discovery:status` | whether the discovery cache exists, is fresh, and how many routes it holds |
 
@@ -525,6 +526,41 @@ one that has parked something exits **1**. That distinction is the contract
 `outbox:process` already stated, and before the backoff a single retry could
 make a queue:work run red — training an operator to ignore the number that
 means something.
+
+## The queue's retention — `bin/cms queue:prune` (measured 2026-10-16)
+
+`failed_jobs` had no retention of any kind. Measured before changing anything:
+four parked rows spanning two hours to a year, and every one of them survived a
+worker run — `DatabaseQueue` had **no method that pruned, cleaned, purged or
+expired anything**. The only way a row ever left that table was an operator
+clicking "drop this job" in the panel, so the table could only ever grow.
+
+```bash
+php bin/cms queue:prune [--interval="30 days"] [--dry-run]
+```
+
+**It is a separate command on purpose, and that is a deliberate deviation from
+the Outbox precedent.** `outbox:process` drains *and* prunes processed messages
+in one run. `failed_jobs` is not the same thing: a parked row is the only record
+that a job failed **and why**, and the panel puts "retry" and "drop" on it. It
+is a work queue, not a log. Pruning it as a side effect of a cron entry would
+remove evidence nobody had looked at yet, and the run that did it would report
+success. So retention is something an operator asks for **by name**.
+
+The SQL is deliberately the same shape as `SqliteOutboxRepository::cleanProcessed()`
+so the tree's two retention stories read alike — what differs is what is being
+retained, not how.
+
+| | |
+|---|---|
+| default interval | 30 days — long enough to diagnose a failure reported this month, bounded enough that the table is not a second log |
+| `--dry-run` | reports what **would** go and deletes nothing; the count runs the same comparison the DELETE does, so it cannot flatter itself |
+| empty interval | refused (exit 1) — SQLite would otherwise compare against `now` and remove every row |
+| scheduled? | **no** — an unattended process emptying an operator's work queue is the thing this avoids |
+
+A worker run never prunes. `workingTheQueueNeverPrunesAFailedJob()` says so, and
+the gate asserts the command through `bin/cms` rather than the service: if the
+dispatch case went away, every module test would still pass.
 
 ## Dashboard stat cards for Queue / Outbox / Schedule (measured 2026-10-13)
 

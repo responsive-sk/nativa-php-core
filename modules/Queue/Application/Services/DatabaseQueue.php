@@ -227,6 +227,53 @@ final class DatabaseQueue
     }
 
     /**
+     * How many failed jobs are older than $interval — what `pruneFailed()`
+     * would remove. The preview half of the pair, so a destructive command can
+     * say what it is about to do without doing it.
+     */
+    public function countFailedOlderThan(string $interval = '30 days'): int
+    {
+        $statement = $this->pdo->prepare(
+            "SELECT COUNT(*) FROM failed_jobs WHERE failed_at < datetime('now', '-' || ?)",
+        );
+        $statement->execute([$interval]);
+
+        return (int) $statement->fetchColumn();
+    }
+
+    /**
+     * Remove failed jobs parked longer ago than $interval. Returns how many
+     * went.
+     *
+     * The shape follows `SqliteOutboxRepository::cleanProcessed()` exactly —
+     * same `datetime('now', '-' || ?)` comparison, same returned rowCount — so
+     * the two retention stories in this tree read alike. What differs is
+     * WHAT gets retained, and why this is not folded into `work()`:
+     *
+     * `outbox_messages` rows that are `processed` are finished work whose only
+     * remaining value is historical, so the Outbox prunes them in the same
+     * command that drains the queue. **`failed_jobs` is not that.** A parked
+     * row is the only record that a job failed AND why — it is an operator's
+     * work queue, with "retry" and "drop" on it in the panel. Deleting it on a
+     * schedule would remove evidence nobody had looked at yet, and the run
+     * that did it would report success.
+     *
+     * So retention here is an explicit command, not a side effect. The default
+     * is a month: long enough that a failure reported on Monday is still
+     * diagnosable the following month, bounded enough that the table is not a
+     * second log.
+     */
+    public function pruneFailed(string $interval = '30 days'): int
+    {
+        $statement = $this->pdo->prepare(
+            "DELETE FROM failed_jobs WHERE failed_at < datetime('now', '-' || ?)",
+        );
+        $statement->execute([$interval]);
+
+        return $statement->rowCount();
+    }
+
+    /**
      * List failed jobs newest-first.
      *
      * @return list<array{id: string, queue: string, handler: string, attempts: int, error: ?string, failed_at: ?string, payload: string}>

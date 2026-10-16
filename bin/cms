@@ -18,6 +18,7 @@ declare(strict_types = 1);
  *   migrate                  run every module migrator (the first-request run, forced)
  *   schedule:run             run the Scheduler timetable entries due now (needs the Scheduler module)
  *   queue:work               work one batch of queued jobs (needs the Queue module)
+ *   queue:prune              drop failed jobs older than an interval (needs the Queue module)
  *   outbox:process           deliver pending outbox messages and prune them (needs the Outbox module)
  *   generate-images          render article preview images (needs the Blog module)
  *   discovery:clear          delete the discovery cache (rebuilt on the next request)
@@ -188,6 +189,8 @@ function usage(): void
     out('  migrate                  run every module migrator (the first-request run, forced)');
     out('  schedule:run             run due Scheduler timetable entries (exit 1 on any failure)');
     out('  queue:work [<name>] [--limit=N]  work one batch of queued jobs (exit 1 on a parked job)');
+    out('  queue:prune [--interval="30 days"] [--dry-run]');
+    out('                            drop failed jobs older than the interval');
     out('  outbox:process [--limit=N] [--prune-interval="7 days"] [--no-prune]');
     out('                            deliver pending outbox messages and prune processed ones');
     out('  generate-images [-s|--slug S] [-f|--format FMT]  render article preview images');
@@ -373,6 +376,67 @@ function cmdQueueWork(array $argv): void
 }
 
 /**
+ * Drop failed jobs older than an interval — the retention `failed_jobs` never
+ * had. Measured on 2026-10-16: four parked rows spanning two hours to a year
+ * all survived a worker run, and DatabaseQueue had no prune/clean/purge/expire
+ * method at all. The only removal was an operator clicking "drop this job".
+ *
+ * NOT wired through `wire_module_handlers()`, unlike the two commands above:
+ * pruning delivers nothing, and registering a handler map this run will never
+ * read would be a lie about what it does — the same line `generate-images`
+ * sits on.
+ *
+ * `--dry-run` reports what WOULD go and deletes nothing, because the thing
+ * being deleted is a work queue rather than a log: there is a retry button on
+ * each row, and an unattended run that emptied it would report success.
+ *
+ * @param list<string> $argv
+ */
+function cmdQueuePrune(array $argv): void
+{
+    if (!class_exists(\Modules\Queue\Interfaces\HTTP\QueueServices::class)) {
+        fail('queue:prune needs the Queue module (bin/cms module:add Queue).');
+    }
+
+    $interval = '30 days';
+    $dryRun = false;
+
+    foreach (array_slice($argv, 2) as $argument) {
+        if (str_starts_with($argument, '--interval=')) {
+            $interval = substr($argument, strlen('--interval='));
+        } elseif ('--dry-run' === $argument) {
+            $dryRun = true;
+        } elseif (str_starts_with($argument, '--')) {
+            fail('unknown option "' . $argument . '" for queue:prune; known: --interval=, --dry-run');
+        } else {
+            fail('queue:prune takes options only, got "' . $argument . '"');
+        }
+    }
+
+    if ('' === trim($interval)) {
+        fail('--interval= must not be empty; SQLite would compare against now.');
+    }
+
+    $result = \Modules\Queue\Interfaces\HTTP\QueueServices::prune($interval, $dryRun);
+
+    if ($dryRun) {
+        out(sprintf(
+            'queue:prune --dry-run: %d failed job(s) older than %s would be removed; nothing was.',
+            $result['wouldRemove'],
+            $result['interval'],
+        ));
+
+        return;
+    }
+
+    out(sprintf(
+        'queue:prune: removed %d failed job(s) older than %s.',
+        $result['removed'],
+        $result['interval'],
+    ));
+}
+
+/**
  * Delete the discovery cache — the next request rescans and rebuilds it.
  * The file is derived state (like the migration marker), so clearing it is
  * always safe; a missing file only costs one scan.
@@ -452,6 +516,11 @@ function main(array $argv): void
 
         case 'queue:work':
             cmdQueueWork($argv);
+
+            break;
+
+        case 'queue:prune':
+            cmdQueuePrune($argv);
 
             break;
 

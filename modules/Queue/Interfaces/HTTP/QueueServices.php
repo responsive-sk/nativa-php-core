@@ -70,6 +70,38 @@ final class QueueServices
     }
 
     /**
+     * Remove failed jobs parked longer ago than $interval.
+     *
+     * Deliberately NOT part of `work()`: a parked job is the only record that
+     * something failed and why, so retention is something an operator asks for
+     * by name rather than something a cron entry does on its way past. See
+     * `DatabaseQueue::pruneFailed()` for the full reasoning.
+     *
+     * With $dryRun the count is reported and nothing is deleted, so the answer
+     * to "what would this remove" costs nothing to ask.
+     *
+     * @return array{removed: int, wouldRemove: int, interval: string}
+     */
+    public static function prune(string $interval = '30 days', bool $dryRun = false): array
+    {
+        $queue = self::queue();
+
+        if ($dryRun) {
+            return [
+                'removed' => 0,
+                'wouldRemove' => $queue->countFailedOlderThan($interval),
+                'interval' => $interval,
+            ];
+        }
+
+        return [
+            'removed' => $queue->pruneFailed($interval),
+            'wouldRemove' => 0,
+            'interval' => $interval,
+        ];
+    }
+
+    /**
      * Reset cached instances (test isolation).
      */
     public static function reset(): void
