@@ -9,12 +9,25 @@
 # that 500s the panel or drops a security event fails a job instead of a
 # reviewer's memory.
 #
+# What it walks, in order: the guest surfaces, the admin account surfaces (users,
+# roles, bulk refusal), the content editors (an article and a page, with the FILE
+# as the assertion), the public comment form (honeypot, moderation, publication)
+# and the two queues (the outbox drain that delivers the events this run records,
+# and the Queue module's worker over a job nobody can route).
+#
 # It is deliberately NOT a substitute for the suite: it asserts the statuses,
 # the rows and the recorded events, and it seeds its own accounts through the
 # modules' own repositories because the Users migrator seeds no roles.
 #
 # Every DB_* points at a temp directory and the server is started and stopped
 # here, so the working tree's storage/data/ is never opened (Boot 27's rule).
+#
+# CONTENT is the one exception, and it is stated rather than hidden: articles
+# and pages live under `storage/` with no root override the way the databases
+# have one, so the content section writes there — and then fails the run if the
+# tree does not come back exactly as it found it (tree_files, compared before
+# and after). On a workstation that means a `smoke-*` post exists for the
+# duration of the run; in CI the checkout is disposable anyway.
 #
 # Usage: bin/build/admin-smoke.sh          (needs the catalogue installed)
 #        SMOKE_PORT=8399 bin/build/admin-smoke.sh
@@ -70,6 +83,20 @@ want_at_least() {
     fi
 }
 
+# Every content file the checkout carries, minus the volatile trees. Content has
+# no root override the way the databases do (AppPaths::storage() is the checkout),
+# so the content section below WRITES into storage/ and this is how it proves it
+# left the tree exactly as it found it — a leftover fails the run instead of
+# quietly surviving it.
+tree_files() {
+    find storage -type f \
+        -not -path 'storage/data/*' \
+        -not -path 'storage/logs/*' \
+        -not -path 'storage/cache/*' \
+        -not -path 'storage/sessions/*' \
+        | sort
+}
+
 check() {
     local label="$1" path="$2" want="$3"
     shift 3
@@ -95,7 +122,10 @@ trap cleanup EXIT
 # ---------------------------------------------------------------------------
 # Preconditions — this gate runs against a tree with the catalogue installed
 # ---------------------------------------------------------------------------
-for module in Cardboard Outbox Users Security; do
+# The modules every section below needs. Deliberately not "whatever is
+# installed": a tree missing one of these would silently skip checks instead of
+# failing, and a gate that skips is the thing this job replaced.
+for module in Audit Cardboard Comments Outbox Queue Scheduler Security Users; do
     [ -d "src/Modules/$module" ] || {
         echo "::error::$module is not installed — run bin/build/install-catalogue.sh first"
         exit 1
@@ -303,6 +333,261 @@ if grep -q 'not permitted' "$TMP/last.out"; then ok 'the refusal names the reaso
 
 denied="$(dbq DB_OUTBOX "SELECT COUNT(*) FROM outbox_messages WHERE event_type = 'security.authz.denied'")"
 want_at_least 'security.authz.denied events' 1 "$denied"
+
+# ---------------------------------------------------------------------------
+# Content: an ARTICLE is written, served and deleted through the panel
+# ---------------------------------------------------------------------------
+tree_files > "$TMP/tree-before.txt"
+RAND="$RANDOM$RANDOM"
+ARTICLE="smoke-article-$RAND"
+
+check 'admin GET /mark/articles' '/mark/articles' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+ADMIN_TOKEN="$(token)"
+
+# `date` is required alongside title and body (ArticlesCreateAction::validate),
+# and its absence is a 400 with the form re-rendered — measured.
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/articles/create?locale=sk" \
+    --data-urlencode "title=Smoke article $RAND" \
+    --data-urlencode "slug=$ARTICLE" \
+    --data-urlencode "date=$(date +%Y-%m-%d)" \
+    --data-urlencode 'body=Written by the admin smoke gate.' \
+    --data-urlencode 'published=1' --data-urlencode 'locale=sk_SK' \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/articles/create' 302 "$got"
+
+if find storage -name "$ARTICLE.md" | grep -q .; then ok 'the article file exists'; else bad 'no article file was written'; fi
+check 'the published article is served' "/blog/$ARTICLE" 200
+check 'the article list is served' '/blog' 200
+
+# ---------------------------------------------------------------------------
+# The PUBLIC COMMENT FORM — the one mutation a stranger can make, and the
+# moderation gate in front of it. The article from the section above is the
+# host, so this runs before it is deleted.
+# ---------------------------------------------------------------------------
+GUEST_JAR="$TMP/guest.jar"
+status -c "$GUEST_JAR" -b "$GUEST_JAR" "$BASE/blog/$ARTICLE" > /dev/null
+GUEST_TOKEN="$(token)"
+COMMENT_BODY="Smoke gate comment $RAND"
+
+# The honeypot first: the field a bot fills in because it completes every field
+# it finds. The answer is the very redirect a real submission gets — the
+# assertion is the row that never appears, because the status cannot tell the
+# two apart by design.
+got="$(status -b "$GUEST_JAR" -c "$GUEST_JAR" -X POST "$BASE/blog/$ARTICLE/comments" \
+    --data-urlencode 'guest_name=Spam Bot' \
+    --data-urlencode 'guest_email=bot@example.test' \
+    --data-urlencode "body=$COMMENT_BODY, honeypot" \
+    --data-urlencode 'comment_website=https://spam.example' \
+    --data-urlencode "_token=$GUEST_TOKEN" -H "Origin: $BASE")"
+want 'honeypot POST /blog/{slug}/comments' 302 "$got"
+
+trapped="$(dbq DB_COMMENTS "SELECT COUNT(*) FROM comments WHERE article_slug = '$ARTICLE'")"
+want 'a honeypot submission stores no row' 0 "$trapped"
+
+# A real guest comment: 302 back to the article, one row — and 'pending', which
+# is what makes the next two checks mean something.
+got="$(status -b "$GUEST_JAR" -c "$GUEST_JAR" -X POST "$BASE/blog/$ARTICLE/comments" \
+    --data-urlencode 'guest_name=Smoke Guest' \
+    --data-urlencode 'guest_email=guest@example.test' \
+    --data-urlencode "body=$COMMENT_BODY" \
+    --data-urlencode "_token=$GUEST_TOKEN" -H "Origin: $BASE")"
+want 'guest POST /blog/{slug}/comments' 302 "$got"
+
+state="$(dbq DB_COMMENTS "SELECT status FROM comments WHERE article_slug = '$ARTICLE'")"
+want 'the submitted comment starts pending' 'pending' "$state"
+COMMENT_ID="$(dbq DB_COMMENTS "SELECT id FROM comments WHERE article_slug = '$ARTICLE'")"
+
+# The article page is the assertion: the row exists and the reader cannot see
+# it. Nothing in the status distinguishes this from a comment that was never
+# submitted at all, which is exactly the point.
+status "$BASE/blog/$ARTICLE" > /dev/null
+if grep -q "$COMMENT_BODY" "$TMP/last.out"; then
+    bad 'a pending comment is visible on the article'
+else
+    ok 'a pending comment stays out of the article'
+fi
+
+# The moderation queue lists it; approving it publishes it.
+check 'admin GET /mark/comments' '/mark/comments' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+ADMIN_TOKEN="$(token)"
+
+if grep -q "$COMMENT_BODY" "$TMP/last.out"; then
+    ok 'the moderation queue lists the submitted comment'
+else
+    bad 'the moderation queue does not list the submitted comment'
+fi
+
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/comments/$COMMENT_ID/approve" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/comments/{id}/approve' 302 "$got"
+
+state="$(dbq DB_COMMENTS "SELECT status FROM comments WHERE id = '$COMMENT_ID'")"
+want 'the moderated comment is approved' 'approved' "$state"
+
+status "$BASE/blog/$ARTICLE" > /dev/null
+if grep -q "$COMMENT_BODY" "$TMP/last.out"; then
+    ok 'the approved comment is served on the article'
+else
+    bad 'the approved comment is not served on the article'
+fi
+
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/comments/$COMMENT_ID/delete" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/comments/{id}/delete' 302 "$got"
+
+gone="$(dbq DB_COMMENTS "SELECT COUNT(*) FROM comments WHERE id = '$COMMENT_ID'")"
+want 'the deleted comment row is gone' 0 "$gone"
+
+status "$BASE/blog/$ARTICLE" > /dev/null
+if grep -q "$COMMENT_BODY" "$TMP/last.out"; then
+    bad 'the deleted comment is still served'
+else
+    ok 'the deleted comment is no longer served'
+fi
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/articles/$ARTICLE/delete" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/articles/{slug}/delete' 302 "$got"
+if find storage -name "$ARTICLE.md" | grep -q .; then bad 'the article file survived the delete'; else ok 'the article file is gone'; fi
+check 'the deleted article is 404' "/blog/$ARTICLE" 404
+
+# ---------------------------------------------------------------------------
+# Content: a PAGE, the same way — and then the tree is put back
+# ---------------------------------------------------------------------------
+PAGE="smoke-page-$RAND"
+check 'admin GET /mark/pages' '/mark/pages' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+ADMIN_TOKEN="$(token)"
+
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/pages/create?locale=sk" \
+    --data-urlencode "title=Smoke page $RAND" \
+    --data-urlencode "slug=$PAGE" \
+    --data-urlencode 'body=A page written by the admin smoke gate.' \
+    --data-urlencode 'published=1' --data-urlencode 'locale=sk_SK' \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/pages/create' 302 "$got"
+
+if find storage -name "$PAGE.md" | grep -q .; then ok 'the page file exists'; else bad 'no page file was written'; fi
+check 'the published page is served' "/$PAGE" 200
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/pages/$PAGE/delete" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/pages/{slug}/delete' 302 "$got"
+if find storage -name "$PAGE.md" | grep -q .; then bad 'the page file survived the delete'; else ok 'the page file is gone'; fi
+check 'the deleted page is 404' "/$PAGE" 404
+
+tree_files > "$TMP/tree-after.txt"
+if diff -q "$TMP/tree-before.txt" "$TMP/tree-after.txt" > /dev/null; then
+    ok 'the checkout storage came back exactly as it was'
+else
+    diff "$TMP/tree-before.txt" "$TMP/tree-after.txt" | head -10
+    bad 'the content flows left files behind in the checkout storage'
+fi
+
+# ---------------------------------------------------------------------------
+# The WORKER side. Two queues are exercised here: the outbox, whose drain runs
+# at the end of every request above, and the Queue module's own worker over a
+# job nobody can route.
+# ---------------------------------------------------------------------------
+# Delivery is the assertion, not the row count. Every security event recorded
+# above has to have been consumed by the end-of-request drain, and the audit row
+# is the proof: the handler that consumes exactly those events IS the audit
+# writer (registered in the composition root, `public/index.php`).
+pending="$(dbq DB_OUTBOX "SELECT COUNT(*) FROM outbox_messages WHERE status = 'pending'")"
+want 'outbox messages left pending' 0 "$pending"
+
+queued_failed="$(dbq DB_OUTBOX "SELECT COUNT(*) FROM outbox_messages WHERE status = 'failed'")"
+want 'outbox messages failed' 0 "$queued_failed"
+
+delivered="$(dbq DB_OUTBOX "SELECT COUNT(*) FROM outbox_messages WHERE status = 'processed' AND processed_at IS NOT NULL")"
+want_at_least 'outbox messages delivered' 4 "$delivered"
+
+audited="$(dbq DB_AUDIT "SELECT COUNT(*) FROM audit_log WHERE action LIKE 'security.%'")"
+want_at_least 'security events that became audit rows' 4 "$audited"
+
+# The operator's own worker command. The shipped timetable is stateless cron
+# (`*/5` matches, at most, one minute in five), so what is asserted is that it
+# runs clean against this queue and reports its outcome — the delivery itself is
+# asserted above, where it is deterministic instead of minute-dependent.
+if php bin/cms schedule:run > "$TMP/schedule.log" 2>&1; then
+    ok 'bin/cms schedule:run exits 0'
+else
+    cat "$TMP/schedule.log"
+    bad 'bin/cms schedule:run failed'
+fi
+
+if grep -q 'scheduled task' "$TMP/schedule.log"; then
+    ok 'schedule:run reported its outcome'
+else
+    cat "$TMP/schedule.log"
+    bad 'schedule:run printed no outcome line'
+fi
+
+# The Queue module's worker. This tree ships no producer (measured: `push()` has
+# no call site outside the module's own tests), so the job is pushed through the
+# module's own API — the way the seed block above builds its accounts — and then
+# worked by `DatabaseQueue::work()` in its own process, which is what a worker
+# is. The handler is deliberately unregistered, so the job travels the real
+# failure path: UnknownHandlerException → `failed_jobs` with the error, where
+# the panel retries it.
+QUEUE_JOB="$(php <<'PHP'
+<?php
+require 'src/init.php';
+
+echo \Modules\Queue\Interfaces\HTTP\QueueServices::queue()->push(
+    'smoke.unregistered',
+    ['from' => 'admin-smoke'],
+    maxAttempts: 1,
+);
+PHP
+)"
+
+worked="$(php <<'PHP'
+<?php
+require 'src/init.php';
+
+$result = \Modules\Queue\Interfaces\HTTP\QueueServices::queue()->work();
+
+echo $result['processed'] . ' processed, ' . $result['failed'] . " failed";
+PHP
+)"
+want 'the worker fails the job nobody can route' '0 processed, 1 failed' "$worked"
+
+parked="$(dbq DB_QUEUE "SELECT COUNT(*) FROM failed_jobs WHERE id = '$QUEUE_JOB'")"
+want 'the unroutable job is parked in failed_jobs' 1 "$parked"
+
+check 'admin GET /mark/queue' '/mark/queue' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+ADMIN_TOKEN="$(token)"
+
+if grep -q 'smoke.unregistered' "$TMP/last.out"; then
+    ok 'the panel lists the failed job'
+else
+    bad 'the panel does not list the failed job'
+fi
+
+# Retry is the reversible half: the row leaves failed_jobs and is queued again
+# under its own id (failed_jobs carries no max_attempts, so a retried job gets
+# the default — documented in DatabaseQueue, not hidden).
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/queue/failed/$QUEUE_JOB/retry" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/queue/failed/{id}/retry' 302 "$got"
+
+requeued="$(dbq DB_QUEUE "SELECT COUNT(*) FROM jobs WHERE id = '$QUEUE_JOB'")"
+want 'the retried job is queued again' 1 "$requeued"
+
+left_failed="$(dbq DB_QUEUE "SELECT COUNT(*) FROM failed_jobs WHERE id = '$QUEUE_JOB'")"
+want 'the retried job left failed_jobs' 0 "$left_failed"
+
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/queue/$QUEUE_JOB/delete" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/queue/{id}/delete' 302 "$got"
+
+dropped="$(dbq DB_QUEUE "SELECT COUNT(*) FROM jobs WHERE id = '$QUEUE_JOB'")"
+want 'the dropped job row is gone' 0 "$dropped"
+
+# Both state changes are audit rows with an actor — the panel's write path, not
+# just the row it moved.
+queue_audited="$(dbq DB_AUDIT "SELECT COUNT(*) FROM audit_log WHERE action LIKE 'queue.%'")"
+want_at_least 'audit rows for the queue state changes' 2 "$queue_audited"
+
+check 'admin GET /mark/outbox' '/mark/outbox' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
 
 # ---------------------------------------------------------------------------
 # Nothing fatal behind it all
