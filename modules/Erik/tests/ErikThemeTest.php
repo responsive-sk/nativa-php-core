@@ -8,6 +8,7 @@ use Modules\Core\Application\Services\AssetManager;
 use Modules\Core\Application\Services\View\InlineCss;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Paths\AppPaths;
+use Modules\Core\Interfaces\HTTP\PageContext;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\Kernel;
 use Modules\Core\Interfaces\HTTP\Router;
@@ -196,6 +197,170 @@ final class ErikThemeTest extends TestCase
     }
 
     /**
+     * The minimal home: hero with eyebrow, title, lede and both actions,
+     * four eyebrowed sections in order, the proof quote and the closing CTA.
+     * Copy-driven (showcase strings by default), actions pointing at the
+     * blog and the kernel admin surface.
+     */
+    #[Test]
+    public function homepageRendersTheMinimalSectionsInOrder(): void
+    {
+        $html = (new ErikTheme())->homepage(self::homepageContext());
+
+        $this->assertStringContainsString('<section class="er-hero">', $html);
+        $this->assertStringContainsString('er-hero__eyebrow', $html);
+        $this->assertStringContainsString('<h1 class="er-hero__title">Tailored start</h1>', $html);
+        $this->assertStringContainsString('er-hero__visual', $html, 'The line-art visual is inline SVG, no external asset.');
+        $this->assertStringNotContainsString('.webp', $html, 'The showcase WebP underlay stays out of the kernel port.');
+        $this->assertStringContainsString('href="/blog">Read the blog</a>', $html);
+        $this->assertStringContainsString('href="/mark">Open admin</a>', $html);
+
+        foreach (['er-section--features', 'er-section--steps', 'er-section--news', 'er-section--comparison'] as $modifier) {
+            $this->assertStringContainsString($modifier, $html);
+        }
+
+        $features = strpos($html, 'er-section--features');
+        $steps = strpos($html, 'er-section--steps');
+        $news = strpos($html, 'er-section--news');
+        $comparison = strpos($html, 'er-section--comparison');
+        $cta = strpos($html, 'er-closing-cta');
+        $this->assertIsInt($features);
+        $this->assertLessThan($steps, $features);
+        $this->assertLessThan($news, $steps);
+        $this->assertLessThan($comparison, $news);
+        $this->assertLessThan($cta, $comparison);
+
+        $this->assertSame(3, substr_count($html, 'er-feature-card">'), 'Three feature cards.');
+        $this->assertSame(3, substr_count($html, '<article class="er-step">'), 'Three steps.');
+        $this->assertStringContainsString('er-proof__quote', $html);
+        $this->assertSame(3, substr_count($html, 'er-comparison__row">'), 'Three comparison rows.');
+        $this->assertStringContainsString('Explore the blog', $html);
+    }
+
+    /**
+     * News cards map slug+title (required) and excerpt/date/category/author
+     * image (optional) — the kernel HomepageAction passes no articles, so
+     * every field beyond the pair must degrade, never fatal.
+     */
+    #[Test]
+    public function homepageNewsMapsTheArticleShape(): void
+    {
+        $full = new \stdClass();
+        $full->slug = 'alpha';
+        $full->title = 'Alpha';
+        $full->excerpt = 'First words.';
+        $full->date = '2026-10-12';
+        $full->category = 'Architektúra';
+        $full->author = 'Nativa Dev';
+        $full->image = '/img/alpha.svg';
+
+        $html = (new ErikTheme())->homepage(self::homepageContext([$full, self::article('beta', 'Beta')]));
+
+        $this->assertSame(2, substr_count($html, '<article class="er-news-card">'));
+        $this->assertStringContainsString('src="/img/alpha.svg"', $html);
+        $this->assertStringContainsString('Architektúra · 12. 10. 2026 · Nativa Dev', $html, 'Meta bits join with middots, date numeric.');
+        $this->assertStringContainsString('First words.', $html);
+        $this->assertStringContainsString('er-news-card__placeholder', $html, 'No image, placeholder span.');
+        $this->assertStringContainsString('href="/blog/beta">Beta</a>', $html);
+    }
+
+    #[Test]
+    public function homepageNewsEmptyStateKeepsTheSections(): void
+    {
+        // Articles without slug+title are skipped, never fatal — and an
+        // all-skipped list must still render the placeholder, not an empty
+        // grid. (Passing [] would take the latestFallback path into the real
+        // Blog, so emptiness is forced with shapes the mapper rejects.)
+        $html = (new ErikTheme())->homepage(self::homepageContext([new \stdClass()]));
+
+        $this->assertStringContainsString('Nothing published yet.', $html);
+        $this->assertStringNotContainsString('er-news-card">', $html);
+        $this->assertStringContainsString('er-section--news', $html, 'The section survives an empty grid.');
+        $this->assertStringContainsString('er-section--features', $html);
+    }
+
+    /**
+     * Surfaces return bare sections: FrontendLayout owns the single wrap,
+     * so a homepage that wraps itself nests <main> (the double-wrap the
+     * older surfaces still carry — this one must not).
+     */
+    #[Test]
+    public function homepageDoesNotWrapItself(): void
+    {
+        $html = (new ErikTheme())->homepage(self::homepageContext());
+
+        $this->assertStringNotContainsString('<main', $html, 'One wrap, owned by FrontendLayout — never two.');
+        $this->assertStringContainsString('<section class="er-hero">', $html);
+    }
+
+    #[Test]
+    public function homepageEscapesUntrustedCopy(): void
+    {
+        $context = PageContext::forHomepage(
+            Request::create('GET', '/'),
+            'erik',
+            'en',
+            copy: ['title' => 'A & B <script>', 'lede' => '"quoted"'],
+        );
+
+        $html = (new ErikTheme())->homepage($context);
+
+        $this->assertStringContainsString('A &amp; B &lt;script&gt;', $html);
+        $this->assertStringContainsString('&quot;quoted&quot;', $html);
+        $this->assertStringNotContainsString('<script>A', $html);
+    }
+
+    /**
+     * Every er-* class the home surface emits has a rule in the vendored
+     * stylesheet — the Mono article-view audit as a standing assertion, so
+     * the next markup addition without its rule fails here, not in a
+     * browser. Structural element selectors (h3, p, span) need none.
+     */
+    #[Test]
+    public function homepageVocabularyIsCoveredByTheStylesheet(): void
+    {
+        $html = (new ErikTheme())->homepage(self::homepageContext());
+        $css = InlineCss::file('Modules/Erik/assets/critical/erik.css');
+
+        // Class attributes only: the hero SVG carries an id="er-glow"
+        // gradient reference, which is an identifier, not a class needing
+        // a rule — a bare er- scan would cry wolf on it.
+        preg_match_all('/class="([^"]*)"/', $html, $matches);
+
+        $classes = [];
+
+        foreach ($matches[1] as $list) {
+            foreach (preg_split('/\s+/', $list) ?: [] as $token) {
+                if (str_starts_with($token, 'er-')) {
+                    $classes[] = $token;
+                }
+            }
+        }
+
+        $classes = array_unique($classes);
+
+        $this->assertNotEmpty($classes);
+
+        foreach ($classes as $class) {
+            $this->assertStringContainsString(
+                '.' . $class,
+                $css,
+                sprintf('Homepage emits `%s` with no rule — unstyled markup.', $class),
+            );
+        }
+    }
+
+    #[Test]
+    public function homepageLeaksNoForeignVocabulary(): void
+    {
+        $html = (new ErikTheme())->homepage(self::homepageContext());
+
+        foreach (['mo-', 'st-', 'gr-', 'k-header', 'k-footer'] as $foreign) {
+            $this->assertStringNotContainsString($foreign, $html, sprintf('Foreign vocabulary `%s` in erik output.', $foreign));
+        }
+    }
+
+    /**
      * A missing manifest on DISK is a build that has not run, not a defect —
      * `public/dist/` is gitignored. Skips with the command to run.
      *
@@ -231,6 +396,30 @@ final class ErikThemeTest extends TestCase
     private function assetPath(string $url): string
     {
         return AppPaths::instance()->public(ltrim($url, '/'));
+    }
+
+    private static function article(string $slug, string $title): object
+    {
+        $article = new \stdClass();
+        $article->slug = $slug;
+        $article->title = $title;
+
+        return $article;
+    }
+
+    /**
+     * @param list<object> $articles
+     */
+    private static function homepageContext(array $articles = []): PageContext
+    {
+        return PageContext::forHomepage(
+            Request::create('GET', '/'),
+            'erik',
+            'en',
+            copy: ['title' => 'Tailored start', 'lede' => 'Begin small.', 'hero_eyebrow' => 'PROOF'],
+            blogHref: '/blog',
+            latestArticles: $articles,
+        );
     }
 
     /** The body of the single `<style>` the layout emits, without its trailing newline. */
