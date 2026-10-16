@@ -26,6 +26,9 @@ that changed.
 | `php bin/cms module:show <Name>` | the manifest — what WOULD be installed, before anything is copied |
 | `php bin/cms module:add <Name>` | copy the slice in; flush the page cache |
 | `php bin/cms module:remove <Name> [--force]` | delete the slice; flush the page cache; report (never delete) the data |
+| `php bin/cms migrate` | run every module migrator (the first-request run, forced) |
+| `php bin/cms schedule:run` | run the due timetable entries (the outbox drain, and the queue worker — see below) |
+| `php bin/cms queue:work [<name>] [--limit=N]` | work one batch of queued jobs; exit 1 on a parked one (see below) |
 | `php bin/cms discovery:clear` | delete the discovery cache (`storage/cache/discovery.php`); the next request rescans |
 | `php bin/cms discovery:status` | whether the discovery cache exists, is fresh, and how many routes it holds |
 
@@ -361,6 +364,70 @@ the scan still reports the closure, which is the honest dependency).
 - `schedule:run` live twice in a row: nothing due, exit 0 both times; the
 due path driven at a fixed 13:00 against the real outbox.db —
 `Executed: outbox:drain`, exit 0.
+
+## The queue's worker — `bin/cms queue:work` (measured 2026-10-16)
+
+`DatabaseQueue::work()` shipped with no caller at all. The only thing that
+invoked it was an inline `php` heredoc inside `bin/build/admin-smoke.sh` — a
+fact the tree documented rather than hid ("the Queue module still has no
+producer"), but an operator had nothing to put in crontab and a support
+answer had nothing to point at. So the worker got the surface it should have
+had from the start:
+
+```
+php bin/cms queue:work [<name>] [--limit=N]     # default: any queue, 10 jobs
+```
+
+- **Refuses** with exit 1 when the Queue module is not installed, the same
+  shape as `schedule:run`'s refusal;
+- **wires the handler pairings first** — `wire_module_handlers()` from
+  `src/composition.php`. A worker that delivers without wiring finds an empty
+  handler map and parks every job as unroutable, which is the Boot 16 lesson
+  reproduced in a new process;
+- prints `Queue: processed=N failed=M (queue: …, limit …)` and, when anything
+  is parked, where to deal with it (`/mark/queue`);
+- **exits 1 when anything is parked in `failed_jobs`, else 0** — the same
+  contract `outbox:process` states, so a cron entry or a CI probe notices a
+  poison job instead of silently rotating past it. The semantics live on
+  `QueueServices::work()` / `::exitCode()`, exactly as `schedule:run`'s live on
+  `SchedulerServices::run()`; the CLI only prints, and the module test asserts
+  what the command does.
+
+It also joins the timetable, **wired in `bin/cms` rather than in the
+Scheduler module** — Scheduler stays queue-agnostic (a module naming
+`QueueServices` would be a Scheduler → Queue edge in `module:show`, and not
+every deployment has a queue):
+
+| | |
+|---|---|
+| entry | `queue:work`, every minute, `withoutOverlapping(5)` |
+| where | appended to the schedule `bin/cms schedule:run` builds |
+| skipped when | `queue.db` has no `jobs` table yet — one line printed naming `bin/cms migrate`, because a cron that fires before the first migrate would otherwise fail a task every minute and redden every run for a reason the failure line does not carry |
+
+Either surface works: an operator who wants the queue drained by one cron line
+gets it from `schedule:run`, and one who wants it isolated runs `queue:work`
+on its own line.
+
+### Measured while writing it: a retry is not spread over time
+
+`work()` catches a throwing handler, and the row goes back through
+`release($id)` — which writes `available_at = now`. The next loop iteration
+finds it available again, so **a failing job burns every attempt inside ONE
+batch**, not one per cron tick:
+
+```
+$ php bin/cms queue:work            # a handler that throws, max_attempts 3
+Queue: processed=0 failed=1 (queue: (any), limit 10)
+                                   # the row is parked with attempts = 3
+```
+
+`release()` takes a `$delaySeconds` precisely to allow a backoff, and
+`work()` never passes one. Stated rather than changed: a backoff is a
+behaviour decision for the module (what delay, per attempt), not a side
+effect of shipping a command, and until then the practical consequence is
+that `max_attempts` bounds *retries*, not *minutes*. The tests pin the
+measured behaviour on both sides of the boundary — a parked run exits 1, a
+batch smaller than `max_attempts` leaves the job queued and exits 0.
 
 ## Dashboard stat cards for Queue / Outbox / Schedule (measured 2026-10-13)
 

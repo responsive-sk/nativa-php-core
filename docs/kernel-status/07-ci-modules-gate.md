@@ -333,3 +333,172 @@ installs verbatim — a fresh tree cannot be in this state. `module:add` never
 overwrites an installed slice, so the cure is a remove-and-add, not an edit —
 and the degraded-tree probe needed exactly that, so it left the tree cured:
 `diff -rq modules/Outbox src/Modules/Outbox` is empty again.
+
+## Boot 31 — the worker an operator can actually run
+
+Boot 30 closed with a note it promised to **delete rather than reword** when a
+producer landed. The producer did not land — but the measurement behind the
+note turned out to be hiding a second, worse gap, and this round is about that.
+
+### The gap: a worker only the gate could run
+
+Boot 30 wrote it plainly: "`DatabaseQueue::push()` has no call site outside the
+module's own tests", so the gate pushes a job through the module's own API and
+works it through `work()`. Reading the same file again, the honest half of that
+sentence is one level down: **`work()` itself had no call site outside a `php`
+heredoc inside `bin/build/admin-smoke.sh`.** So the queue shipped a worker that
+
+- no operator could put in crontab (it is not a command),
+- no support answer could point at (there is nothing to point at),
+- and no documentation could tell you how to run (there was nothing to tell).
+
+A module with a worker and no way to run the worker is half a module, and the
+gap had been documented as a *producer* problem when it was also a *surface*
+problem — one that a producer landing would not have fixed.
+
+### What changed
+
+`bin/cms queue:work [<name>] [--limit=N]`, shaped on the command that already
+existed next door:
+
+```
+$ php bin/cms queue:work
+Queue: processed=0 failed=0 (queue: (any), limit 10)
+$ php bin/cms queue:work --limit=3 mail
+Queue: processed=0 failed=0 (queue: mail, limit 3)
+```
+
+- refuses with exit 1 when Queue is not installed, like `schedule:run`;
+- prints its counts, and when anything is parked, where to deal with it;
+- **exit 1 when something is parked in `failed_jobs`, else 0** — the contract
+  `outbox:process` already states, so a cron or a CI probe notices a poison job
+  instead of silently rotating past it.
+
+The semantics live on `QueueServices::work()` / `::exitCode()`, not in the CLI,
+which is exactly the split `SchedulerServices::run()` keeps for `schedule:run`:
+the module test asserts what the command does, and what the suite proves and
+what the operator runs cannot drift apart.
+
+It also joined the timetable — **wired in `bin/cms`, not in the Scheduler
+module.** Scheduler stays queue-agnostic: a module naming `QueueServices` would
+be a `Scheduler → Queue` edge in `module:show`, and not every deployment has a
+queue. The entry is `everyMinute()` with a five-minute overlap guard, and it is
+**skipped while `queue.db` has no `jobs` table**, printing one line that names
+the real path (`DB_QUEUE` when the deployment set one, `storage/data/queue.db`
+otherwise). Measured:
+
+```
+$ php bin/cms schedule:run                      # migrated
+Executed: queue:work
+Executed 1 scheduled tasks.                      # exit 0
+
+$ DB_QUEUE=/tmp/fresh.db php bin/cms schedule:run
+queue:work skipped — /tmp/fresh.db has no `jobs` table yet (run: php bin/cms migrate).
+No scheduled tasks are due.                      # exit 0
+```
+
+Without that guard a cron firing before the first `bin/cms migrate` would fail
+a task every minute and redden every run, for a reason the failure line does
+not carry.
+
+### The parity fix, which is the part that mattered
+
+Writing the command ran into something the Boot 16 write-up had described but
+not finished. The Audit↔Outbox handler pairing was declared **inline in
+`public/index.php`**, which means it existed in exactly one process — the one
+serving HTTP. A worker in any CLI boot would have drained an empty handler map
+and parked every message as `No handler registered for event type`, while the
+HTTP responses kept looking perfectly healthy. That is the Boot 16 failure
+verbatim, one process over, and it was still live.
+
+So the pairing moved to **`src/composition.php`**, a file with no class in it
+(KernelShapeTest's allow-list is untouched, and the closure scan never counts
+`src/`), and **both** entry points call it:
+
+| entry point | before | after |
+|---|---|---|
+| `public/index.php` | declared the pairing inline | calls `wire_module_handlers()` |
+| `bin/cms` (`queue:work`, `schedule:run`) | nothing | calls `wire_module_handlers()` |
+
+Module classes appear fully qualified and inline there, never in a `use` and
+never in a type position — both are load-bearing: the `use` line is what the
+closure scan counts, and a type position is resolved *regardless of the guard*,
+which is what a kernel-only checkout with no `Modules\Audit` on disk catches.
+
+### A claim in the note was wrong, and the tests now pin the truth
+
+Boot 30's note says the gate pushes through the module's API "because nothing
+in this tree enqueues a job" — still true. But writing a test for the exit
+code exposed a second thing nobody had written down: **`work()` does not spread
+retries over time.** A throwing handler is caught and the row goes back through
+`release($id)`, which writes `available_at = now`; the next loop iteration finds
+it available again. Measured, with `max_attempts = 3` and the default limit of
+10:
+
+```
+Queue: processed=0 failed=1     # one call, three attempts spent, row parked with attempts = 3
+```
+
+`release()` takes a `$delaySeconds` exactly to allow a backoff and `work()`
+never passes one. So `max_attempts` bounds *retries*, not *minutes*. Stated
+rather than changed — a backoff is a behaviour decision for the module (what
+delay, per attempt), not a side effect of shipping a command — and the tests
+pin the measured behaviour on **both** sides of the boundary: a parked run
+exits 1, and a batch smaller than `max_attempts` leaves the job queued, its
+`reserved_at` cleared, and exits 0.
+
+### The gate now runs the command an operator runs
+
+The queue section of `admin-smoke.sh` called `work()` through an inline heredoc.
+It now runs `php bin/cms queue:work`, because **a gate that proves the worker by
+calling the module's API proves a worker nobody can run.** Four checks, 79
+total:
+
+| check | asserts |
+|---|---|
+| exits 0 on an empty queue | the cron path — a worker that reddened every tick with nothing to do is a worker whose `1` means nothing |
+| reports its counts | `processed=0 failed=0` reaches stdout |
+| exits 1 on a parked job | the poison-job contract |
+| counts the parked job | `failed=1`, and the row is really in `failed_jobs` |
+
+### Verified (2026-10-16, all exit 0)
+
+| Gate | Result |
+|---|---|
+| `make admin-smoke` | **79 checks**, exit 0; `storage/` back byte-for-byte |
+| `composer test` | 331 tests, 1384 assertions, **1 skip** (the kernel-only one) |
+| `make lint` | clean |
+| `phpstan` (L9) / `rector-dry` / `cs-fix-dry` | no errors; OK; 0 of 95 |
+| `shellcheck` (both scripts) / `actionlint` (workflow) | clean |
+| `bin/cms queue:work` live: empty queue / poisoned job / named queue + limit | `0/0` exit 0; `0/1` exit 1 with the parked-job hint; `queue: mail, limit 3` |
+| `schedule:run` migrated / unmigrated | `Executed: queue:work` exit 0; skip line naming the real path, exit 0 |
+| a CLI-only boot (`src/init.php` + `src/composition.php` only) | `wire_module_handlers()` exits 0 with no modules on disk |
+| `module:remove Queue --force` + `module:add Queue` | 15 files, slice re-synced from the catalogue |
+
+## What this round did not close
+
+- **The Queue module still has no producer.** Nothing in this tree enqueues a
+  job; `push()` is still called by tests and by nothing else. Boot 30's note
+  stands as written and is still deleted-when-a-producer-lands.
+- **The obvious producer is a security decision, not a feature.** Making the
+  reset link a job would put the plaintext token in `queue.db/jobs.payload`,
+  again in `failed_jobs.payload` on exhaustion, and on screen at
+  `/mark/queue/{id}` — the second copy of a credential in a second database
+  that `PasswordResetService`'s port was written to make impossible (audit
+  finding #1 was the same token in a log). The token cannot be reconstructed
+  from the stored `sha256`, so the options are "accept and document", "redact
+  sensitive payloads in the panel", or "don't" — an operator decision, not one
+  to smuggle in with a worker command.
+- **Comments and Media have nothing to defer.** Comments have a `pending` flag
+  and no notification fan-out; Media has no image variants. Queueing either
+  would mean inventing the feature first.
+- **Audit must not be queued.** `logWithId()` keyed on the outbox message id is
+  the only reason the async audit path is idempotent; the queue has no dedupe,
+  so a deferred audit write duplicates rows in an append-only log — and it
+  would break the gate's own synchronous `audit_log` counts.
+- **`work()` has no backoff** (above), and `#[AsCommand]` commands a module
+  ships — `outbox:process`, `generate-images` — are still **not dispatched by
+  `bin/cms`**: the switch has no case for them, so `php bin/cms
+  outbox:process` prints the usage text. Out of scope here; recorded because
+  `docs/modules.md` quotes `outbox:process`'s exit contract as if it were
+  reachable.
