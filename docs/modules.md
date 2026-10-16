@@ -119,6 +119,65 @@ check run against a removed-but-remembered class is a green run of a file that
 no longer exists — the same stale-bytecode lesson
 `docs/kernel-status/01-import-and-edge-cuts.md` records for edits.
 
+## The Lekalo model — what it is, and what it does not check
+
+`lekalo/` is a **semantic model of this codebase**: entities, commands, effects,
+queries, events, policies, endpoints and scenarios, described in Lekalo's
+grammar. It is the one place where the shape of the system is written down as
+data rather than as prose, and it is worth knowing exactly how much standing it
+has, because the gate in front of it is easy to over-read.
+
+| | |
+|---|---|
+| what runs | `make lekalo-check` = `lekalo lock --check` + `lekalo validate`, in the `Lint + PHPStan + Lekalo model` CI job |
+| the CLI | pinned to release `v0.6.5` with a sha256-verified archive — the same pin and checksum `nativa-minimal` uses, so the two projects cannot drift into validating against different binaries |
+| measured | run 38933437965: the install step and the gate step both green on a real runner |
+
+**What it verifies:** the model is well-formed and self-consistent — every `ref`
+resolves (`LEK-SEM-019`), every value matches the grammar (`LEK-IR-006`), ids
+are unique, the CLI's contract versions match the lock. Both halves are real
+gates, measured without a pipe so the exit code was the tool's and not `tail`'s:
+a `ref` pointing at a symbol that does not exist gives `lekalo validate` exit 1
+and `make lekalo-check` exit 2.
+
+**What it does NOT verify, and this is the half that matters:**
+
+1. **Nothing compares the model to the code.** `lekalo.lock` reports
+   `adapters 0` — there is no PHP adapter — so there is no code extraction step
+   to compare against. A model whose every statement had gone stale would still
+   validate cleanly.
+2. **`lock --check` does not pin the model.** The digest it reports,
+   `sha256:e77647f7…`, is the same one recorded in
+   `docs/kernel-status/05-security-findings-7-to-9.md` — across the whole §7–§11
+   security remediation and two Boot rounds since. Editing a description leaves
+   it untouched; adding six files and forty-three definitions leaves it
+   untouched. The lock covers the CLI's contract versions, not the project's
+   model content.
+3. **A description can be false and pass.** Measured: changing
+   `queue.job`'s `available_at` description to claim "a CONSTANT 30 second
+   delay, never growing" — the opposite of the doubling, capped backoff that
+   ships — leaves `make lekalo-check` at exit 0.
+4. **No test reads it.** `grep -rl lekalo tests/ modules/*/tests/` is empty, and
+   it was not in CI at all until the gate above was added.
+
+So: **the model is documentation with a schema, and the gate keeps the
+documentation well-formed.** It does not make the documentation true. Nothing
+below should be read as "the model is enforced against the implementation".
+
+What it HAS been good for is the other half of the job — as a checklist a human
+reads. The §7 audit found the password minimum stated as 8 in three code
+places *and* in `lekalo/modules/users/policies.yaml`
+(`docs/kernel-status/05-security-findings-7-to-9.md`); the model did not catch
+it, but naming it in four places is what made the fourth one findable.
+
+**Coverage, measured 2026-10-16: seven of twenty-one modules modelled** —
+`audit`, `blog`, `comments`, `pages`, `questions`, `queue`, `users`. The other
+fourteen are stubs holding a `module.yaml` and nothing else, including `core`
+and `database`. A facet is optional (`audit` has no policies, no queries and no
+bindings), which is why `queue` has no `policies.yaml`: the queue has no
+authorization or validation rule to state, and inventing one to fill the gap
+would put the first uncheckable claim in the model.
+
 ## Themes travel as modules (measured 2026-10-11)
 
 A theme arrives with the module that ships it: `ThemeRegistry` discovers every
