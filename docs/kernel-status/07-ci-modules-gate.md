@@ -141,19 +141,67 @@ Negative control: with `Mono` removed, the step prints `active theme: kernel
 | `make lint` / `make lekalo-check` / `make extract-check` | clean; 23 rules, 0 errors; OK (222 identical, 66 recorded — unchanged, the slice does not carry the catalogue) |
 | `module:show` over all 19 catalogue entries | acyclic; the loop converges |
 
+## Boot 27 — the live sweep the suite cannot do
+
+`php -S 127.0.0.1:8301`, `APP_ENV=production`, a real session and a real CSRF
+token scraped from the real forms, and **every database a temp file**
+(`DB_USERS`, `DB_OUTBOX`, `DB_CONFIG`, … → `/tmp/boot27/`): the working tree's
+`storage/data/` was never opened (mtimes unchanged, no probe rows). The admin
+account and the five permission rows came from the module's own repositories.
+
+The call sites this round re-pointed at the Outbox are the bulk actions and the
+user/role mutations, so the sweep drives exactly those and then reads the outbox
+rows back:
+
+| | result |
+|---|---|
+| admin login → `/mark`, `/mark/users` | 302 → 200, 200 |
+| `POST /mark/users/create` → `…/{id}/delete` | 302 / 302, the row written then **gone** |
+| `POST /mark/roles/create` → `…/{id}/delete` | 302 / 302, the row written then gone |
+| outbox after the CRUD | `security.user.changed` ×2, `security.role.changed` ×2 — the guarded call sites, over HTTP |
+| create with no token / cross-site `Origin` + valid token | 403 / 403 |
+| **author** (`content.manage`, no `users.manage`) posting `entity=users` | 403 naming the missing permission, and `security.authz.denied` recorded — the refusal branch this round guarded |
+| **admin** posting the same | 302 and **no** denial: the branch is reachable only without `users.manage` (worth pinning as the contrast) |
+| the same flows with the Outbox **removed** (`module:remove Outbox --force`, server restarted) | login 302, `/mark` **200** (the dashboard degrades, no 500), user create/delete and role create/delete 302 with the rows really written and really deleted, the refusal still 403, **0 outbox rows added**, and no `PHP Fatal` / `[KERNEL] Error` in the log |
+| `module:add Outbox` back | the next refused post records again (18 → 20 rows), which is the guard flipping both ways |
+
+Two things the sweep taught that are worth keeping:
+
+- **A green status is not a green effect.** The first run of the degraded probe
+  checked a delete on a bogus id — `UID` is read-only in bash, so the id was
+  empty, and `POST /mark/users//delete` still answers 302 because it redirects
+  for an id it cannot find. Re-run with a real id, the row is gone and the
+  check means what it says.
+- **Three call sites still hard-import the Outbox** — Blog's publish toggle,
+  Blog's inline edit, Audit's event handler. That is the declared graph, not a
+  defect (the edges are acyclic), and it is why removing Outbox at all needs
+  `--force`. The sweep claims only the flows this round touched.
+
+Drift cured by the trip: `module:remove Outbox --force` + `module:add Outbox`
+re-installed the slice verbatim from the catalogue, so the two stale test files
+noted above now match it.
+
 ## What this round did not close
 
 - **CI `Extract-check` is still NOT RUN** (Boot 20): the upstream checkout is
   private. Unchanged by this round.
-- **The catalogue's tests now run; its live surfaces still are not swept.**
-  The job proves every catalogue test class executed, not that the admin CRUD
-  flows answer the right status codes — that stays the boot records' `curl`
-  work.
-- **Measured drift, left alone:** on this workstation
-  `src/Modules/Outbox/tests/OutboxAdminListTest.php` and
-  `OutboxMetricTest.php` are OLDER than the catalogue's copies (the catalogue
-  guards on `class_exists(CardboardRegistry::class)`, the installed copies do
-  not). The suite reads the catalogue's tests, so nothing fails, and the new
-  job installs verbatim — a fresh tree cannot be in this state. `module:add`
-  never overwrites an installed slice, so the cure is
-  `module:remove Outbox --force` + `module:add Outbox`, not an edit.
+- **The live sweep is a WORKSTATION step, not a gate.** The `curl` matrix above
+  is this round's evidence, run by hand against a temp-DB server; CI still
+  proves only that every catalogue test class executed. A job that boots the
+  server and walks the flows is the obvious next gate, and it is not in this
+  round.
+- **The rest of the catalogue's live surfaces** — Blog's article writes, Pages,
+  Comments' public submit, the Queue worker — are not swept. The sweep covers
+  the flows this round touched (users, roles, bulk actions) plus the login and
+  dashboard around them.
+
+### Measured drift, and its cure
+
+On this workstation `src/Modules/Outbox/tests/OutboxAdminListTest.php` and
+`OutboxMetricTest.php` were OLDER than the catalogue's copies (the catalogue
+guards on `class_exists(CardboardRegistry::class)`, the installed copies did
+not). The suite reads the catalogue's tests, so nothing failed, and the new job
+installs verbatim — a fresh tree cannot be in this state. `module:add` never
+overwrites an installed slice, so the cure is a remove-and-add, not an edit —
+and the degraded-tree probe needed exactly that, so it left the tree cured:
+`diff -rq modules/Outbox src/Modules/Outbox` is empty again.
