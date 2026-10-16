@@ -1332,3 +1332,102 @@ Each mutation reverted, both edited files compared by sha256 rather than by
 - The standing items are unchanged: no Lekalo adapter (Boot 36), the module
   owning its slice (Boot 38), the reset link deliberately not queued (Boot 35),
   and Griffe's hero correct and green but not chosen (Boot 33).
+
+---
+
+## Boot 40 — the vocabulary half-fixed, and the arm-by-arm check it was missing
+
+Boot 39's own docstring gave this away and nobody re-read it as a claim to test:
+`ip` was put back on the two refusal arms *because "the Audit handler reads it
+and every emit site sends it"* — a sentence true of the two ACCOUNT arms as
+well. It was never re-run across the match.
+
+### Measured before anything changed
+
+All three sides at once, for all five arms:
+
+| arm | emit site sends | `payloadKeys()` declared | |
+|---|---|---|---|
+| `AUTHZ_DENIED` | `path, required, userId, roles, ip` | same | ok |
+| `USER_CHANGED` | `userId, operation, ip` | `userId, operation` | **ip missing** |
+| `ROLE_CHANGED` | `roleId, operation, ip` | `roleId, operation` | **ip missing** |
+| `AUTH_ATTEMPT` | `email, outcome, ip` | same | ok |
+| `RATELIMIT_TRIPPED` | `key, scope, ip` | same | ok |
+
+The third side is what makes it a defect rather than a taste: the Audit handler
+calls `SecurityEventHandler::ip()` for EVERY message, not per type
+(`$payload['ip'] ?? null`, stored on the row). So two arms declared a payload
+smaller than both the site sends and the handler reads. The declaration is not
+inert either — `UsersAuthProvider::noteEvent()` diffs a context against it and
+logs `event=… carries keys no handler reads: ip`, which is a warning about a key
+the handler reads.
+
+### The fix, and the check under it
+
+`ip` is declared on both account arms — every one of the five now carries it — and
+`tests/Architecture/SecurityEventPayloadContractTest.php` compares each arm to the
+emit sites that must obey it.
+
+**Why an architecture test and not a behavioural one:** the five arms have four
+owners. Four are the `SecurityEventServices` helpers, but `AUTHZ_DENIED` is also
+emitted inline by `AuthMiddleware`, and `RATELIMIT_TRIPPED` only by
+`RateLimitMiddleware` — whose own test points `DB_OUTBOX` at a directory that does
+not exist **on purpose** (it proves a failing outbox never breaks the request), so
+no behavioural sweep can reach that arm at all. Every file is read as TEXT, like
+its neighbours, so no class is loaded and the kernel-only gate is unaffected. Two
+tests: every site's keys equal its arm, and the set of types in `all()` equals the
+set of arms equals the set of types some site actually sends — which is what
+notices a new type with no arm, an arm with no site, or a site whose literal moved
+out of the pattern's reach.
+
+### The round's own defect, which the test found by failing
+
+The first version sliced each payload with `::CONST, [([^\]]*)]` — a flat run to the
+first `]`. `bulkRefused()` sends `'roles' => []`, so the run ended inside that
+empty array and the check read four keys where five are sent. It reported
+`security.authz.denied` as short `ip` **when it was not**, and the fix is bracket
+matching rather than a wider character class. The failure was caught because the
+first run was read rather than trusted: a check whose parser can truncate a
+literal is a check that can invent the defect it is looking for.
+
+### Negative controls
+
+Each mutation reverted, every file compared by sha256:
+
+| control | result |
+|---|---|
+| `ip` removed from the `USER_CHANGED` arm | red |
+| `ip` removed from the `roleChanged()` emit site | red — `sends [roleId, operation] … declares [ip, operation, roleId]` |
+| `ip` removed from the rate-limit emit site | red |
+| all three restored | byte-identical; green again |
+
+One control is worth its own line, because it is the same lesson one level up:
+the FIRST attempt at the `roleChanged()` mutation used a `perl` pattern that did
+not match, so **the file never changed and the control reported green**. A
+mutation that did not land is indistinguishable from a check that does not work.
+The re-run printed its own diff first (`'ip' => $ip ?? ''` gone from line 111) and
+then failed as it should.
+
+### Verified (2026-10-16, all exit 0)
+
+| Gate | Result |
+|---|---|
+| `composer test` | **384 → 386 tests, 3778 → 3844 assertions**, 1 skip |
+| `make analyze` | phpstan L9 no errors · rector clean · cs-fixer 0 of 101 (the new file took four style fixes — `fn (` spacing and post-increment — then passed) |
+| `make lekalo-check` | not re-run: no model file changed this round (Boot 39's tree is the last one it saw) |
+| catalogue vs installed | the two `SecurityEvents.php` copies carry identical `payloadKeys()` arms — the installed one is operator state and gitignored |
+
+## What this round did not close
+
+- **`actor()` has the same shape, unmeasured.** `SecurityEventHandler::actor()`
+  reads `userId`, then `email`, then the message metadata, then `'system'` — and
+  `ROLE_CHANGED` sends neither `userId` nor `email`, so a role change is attributed
+  from metadata or falls back. Whether that is right is a question about who a role
+  change is BY, and nothing declares an `actorKey()` for an emit site to obey.
+- **The other payloads are still unbound.** `OutboxServices::articleEvent()` shapes
+  `{slug, locale}` inline with `{actor}` as metadata, and the model's
+  `blog.article_published` declares `slug, locale, published_at` — the modelling
+  question Boot 39 named, still open, still not a binding.
+- The standing items are unchanged: no Lekalo adapter (Boot 36), the module owning
+  its slice (Boot 38), the reset link deliberately not queued (Boot 35), and
+  Griffe's hero correct and green but not chosen (Boot 33).

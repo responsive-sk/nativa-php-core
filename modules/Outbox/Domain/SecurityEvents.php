@@ -93,13 +93,20 @@ final class SecurityEvents
     public static function payloadKeys(string $eventType): array
     {
         return match ($eventType) {
-            // `ip` is declared for both refusal types because the Audit handler
-            // reads it (`SecurityEventHandler::ip()`) and every emit site sends
-            // it — it was missing from this list while both were true, measured
-            // 2026-10-16.
+            // `ip` is a key of EVERY type here, and it took two passes to say
+            // so. The Audit handler reads it unconditionally —
+            // `SecurityEventHandler::ip()` runs for every message, not per type
+            // — and every emit site sends it. The two refusal arms were missing
+            // it; once those were fixed (measured 2026-10-16) the two account
+            // arms were still short, while `SecurityEventServices::userChanged()`
+            // and `::roleChanged()` both send `'ip' => $ip ?? ''`. Each arm is
+            // now compared against the emit sites by
+            // tests/Architecture/SecurityEventPayloadContractTest.php, which is
+            // what "every emit site sends it" needed to become checkable rather
+            // than rememberable.
             self::AUTHZ_DENIED      => ['path', 'required', 'userId', 'roles', 'ip'],
-            self::USER_CHANGED      => ['userId', 'operation'],
-            self::ROLE_CHANGED      => ['roleId', 'operation'],
+            self::USER_CHANGED      => ['userId', 'operation', 'ip'],
+            self::ROLE_CHANGED      => ['roleId', 'operation', 'ip'],
             self::AUTH_ATTEMPT      => ['email', 'outcome', 'ip'],
             self::RATELIMIT_TRIPPED => ['key', 'scope', 'ip'],
             default                 => [],
