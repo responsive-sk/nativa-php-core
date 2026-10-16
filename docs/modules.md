@@ -130,7 +130,7 @@ has, because the gate in front of it is easy to over-read.
 
 | | |
 |---|---|
-| what runs | `make lekalo-check` = `lekalo lock --check` + `lekalo validate`, in the `Lint + PHPStan + Lekalo model` CI job |
+| what runs | `make lekalo-check` = `lekalo lock --check` + the whole model + **every module on its own** (`bin/build/lekalo-modules.sh`), in the `Lint + PHPStan + Lekalo model` CI job |
 | the CLI | pinned to release `v0.6.5` with a sha256-verified archive — the same pin and checksum `nativa-minimal` uses, so the two projects cannot drift into validating against different binaries |
 | measured | run 38933437965: the install step and the gate step both green on a real runner |
 
@@ -140,6 +140,20 @@ are unique, the CLI's contract versions match the lock. Both halves are real
 gates, measured without a pipe so the exit code was the tool's and not `tail`'s:
 a `ref` pointing at a symbol that does not exist gives `lekalo validate` exit 1
 and `make lekalo-check` exit 2.
+
+**Each module on its own** is a command (`make lekalo-module MODULE=blog`) and the
+gate runs all of them, but the tool's per-module answer is weaker than it looks,
+measured 2026-10-16: `--module` scopes the **report**, not the validation, so a
+healthy module exits 1 while another module is red — with a dangling ref in
+`blog`, `lekalo validate --module media` prints *blog's* diagnostic and fails.
+What the gate gets per module, then, is **attribution by source path**: a
+`blog` diagnostic names `lekalo/modules/blog/commands.yaml`, so the gate prints
+`FAIL blog` once instead of failing all twenty-one. Building that surfaced two
+tool quirks worth knowing: the text output of a structural refusal
+(`LEK-STR-004`, `LEK-STR-015`) names **no path at all** while `validate --json`
+carries one for the same diagnostic, and on an INVALID model that JSON arrives on
+**stderr** with stdout empty — a reader of stdout alone sees no diagnostics exactly
+when there are some.
 
 **What it does NOT verify, and this is the half that matters:**
 
@@ -158,7 +172,20 @@ and `make lekalo-check` exit 2.
    `queue.job`'s `available_at` description to claim "a CONSTANT 30 second
    delay, never growing" — the opposite of the doubling, capped backoff that
    ships — leaves `make lekalo-check` at exit 0.
-4. **A test reads the model's module set — and nothing else.**
+4. **`authorization.yaml` references resolve only as far as the module.**
+   `lekalo/authorization.yaml` carries **15** `error_ref` values, **2** of them
+   distinct: `users.error.forbidden` (8) and `users.error.unauthorized` (7).
+   **Neither exists anywhere in the model** — `users` models no error symbols,
+   and the model has no `error` kind at all (its kinds are command, effect,
+   endpoint, entity, enum, event, policy, query, scalar, scenario, target-binding
+   and value-object) — and `make lekalo-check` reports 23 rules, 0 errors, exit 0.
+   Those refs *do* fail when the referenced MODULE is missing from the model
+   (`LEK-AUTH-005`), which makes this a granularity limit rather than a missing
+   check: module-level resolution is enforced, symbol-level is not. `--strict`
+   does not close it either; measured the same day, strict is red on
+   `LEK-AUTH-009 authorization.effect-unprotected` (protected effects with no
+   authorization declaration) and reports no `LEK-AUTH-005` at all.
+5. **A test reads the model's module set — and nothing else.**
    `ModelCatalogueContractTest`
    (2026-10-16) compares the model's *module set* against the catalogue: every
    slice names a module the catalogue knows, every catalogued module has a

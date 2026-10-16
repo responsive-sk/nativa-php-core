@@ -149,8 +149,17 @@ jobs:
       # 2026-10-16, `lock --check` stays at exit 0 when a slice is moved out of
       # `lekalo/` and drops out of the model.
       #
-      # `--strict` is deliberately NOT run: it demands adapter evidence, and this
-      # tree installs no php-nativa adapter. Re-add it when one exists.
+      # `make lekalo-check` runs the whole model AND every module on its own
+      # (bin/build/lekalo-modules.sh), because `lekalo validate --module <id>`
+      # scopes the REPORT and not the validation: a healthy module exits 1 while
+      # another module is red, so the per-module answer here is attribution by
+      # source path rather than twenty-one exit codes.
+      #
+      # `--strict` is deliberately NOT run, and the reason is not only the missing
+      # adapter: measured 2026-10-16, strict is red on
+      # `LEK-AUTH-009 authorization.effect-unprotected` — protected effects with no
+      # authorization declaration. Turning it on is a coverage decision about the
+      # model, not a switch waiting for an adapter to exist.
       # -------------------------------------------------------------------------
 
       - name: Install lekalo CLI (pinned v0.6.5, checksum-verified)

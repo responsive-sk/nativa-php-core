@@ -81,13 +81,25 @@ assets-import: ## Fallback: copy the showcase's built bundles when pnpm is not a
 ##@ Lekalo
 # Gates assert and exit 1 on drift. Reports are informational: the advisory
 # states they print are expected today, and a crash is the only failure.
-# `validate --strict` is deliberately NOT run here: strict review requires
-# adapter evidence for authorization mappings, and this tree installs no
-# php-nativa adapter (`lock --check` reports adapters 0). Re-add the strict line
-# once an adapter exists.
-lekalo-check: ## Lekalo gate: lock --check + validate (default profile)
+#
+# `validate --strict` is deliberately NOT run here, and the reason is not only
+# the missing adapter (`lock --check` reports adapters 0). Measured 2026-10-16:
+# strict is red on `LEK-AUTH-009 authorization.effect-unprotected` — protected
+# effects with no authorization declaration — so turning it on is a model
+# decision about coverage, not a switch waiting for an adapter.
+#
+# The whole model AND every module on its own: `lekalo validate` covers the
+# project, and bin/build/lekalo-modules.sh adds the per-module pass with the
+# diagnostics attributed to the module that owns them. `--module` alone cannot do
+# that — it scopes the report, not the validation, so a healthy module exits 1
+# while another module is red.
+lekalo-check: ## Lekalo gate: lock --check, the whole model, and every module on its own
 	@$(LEKALO) lock --check
-	@$(LEKALO) validate
+	@bin/build/lekalo-modules.sh
+
+lekalo-module: ## Lekalo: one module's own report (MODULE=<id>, e.g. blog)
+	@test -n "$(MODULE)" || { echo "usage: make lekalo-module MODULE=<id>   (ids: ls lekalo/modules/)" >&2; exit 1; }
+	@$(LEKALO) validate --module $(MODULE)
 
 workspace-audit: ## Lekalo gate: pnpm workspace root at Frontend/packages, no monorepo tooling
 	@command -v "$(LEKALO)" > /dev/null 2>&1 || { echo "workspace-audit: FAILED — no lekalo CLI at '$(LEKALO)'; install it or pass LEKALO=<path>" >&2; exit 1; }
