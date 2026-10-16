@@ -17,6 +17,10 @@ skill-context/  0 súborov     ← prázdne
 
 Päťdesiatšesťdesiat riadkov, štyri plány, štyri patche — a **dve priečinky sú úplne prázdne**.
 
+*(Tento blok je stav v okamihu písania. Neskôr, keď sa to rozhodnutie zavrelo, je
+`patches/` 5 a `evolutions/` 1 — beh `$aif-evolve` sa uskutočnil. `skill-context/` je
+**stále 0**, a to je tá polovica, na ktorej stojí celá point.)*
+
 Toto nie je zanedbanie náhody. `$aif-evolve` je v tomto projekte **nainštalovaný** — je
 v `.agents/skills/aif-evolve/` a má vlastný SKILL.md. A tento SKILL.md hovorí presne to,
 čo tie dve priečinky majú byť:
@@ -34,7 +38,7 @@ to isté. Dnešné kolo stálo dosť času (pozri Časť II), a každá z tých 
 ktorú mal jeden `SKILL.md` zachytiť navždy a nikto to nenapísal.
 
 Najbližším skutočným artefaktom je preto nie evolúcia, ale **posledný patch** —
-`2026-10-16-theme-branch-reconciliation.md`, 01:22 včera.
+`2026-10-16-theme-branch-reconciliation.md`, 01:22 dnes.
 
 ---
 
@@ -76,6 +80,70 @@ som **nesmazal** — hoci „uprac" znelo jednoznačne. Overil som ich stromy a 
 po jednom nemergnutom commitu a 58 commitov za sebou. Zmazanie by stálo 904 riadkov práce,
 na ktoré sa nikto nepozrel. Vetvy, ktoré **pravidelne mažem**, mali stromy identické
 s masterom (overené porovnaním tree SHA, nie odhadom) — to boli bezpečné. Tieto dve nie.
+
+### Ako sa to zavrelo
+
+Vetvy som **znova zmeral**, najprv. Vrcholy vetiev sú z 12. októbra a samotný patch je
+z dnešnej 01:22 — meral proti `masteru`, ktorý je dnes **o 13 commitov starý**. Staré
+meranie je hádanka oblečená do citácie.
+
+| | erik (#8) | griffe (#9) |
+|---|---|---|
+| `merge-tree` | **exit 0**, 0 konfliktov | exit 1, **1** konflikt |
+| merge v worktree | automatický, bez zásahov | vyriešený, iný konflikt žiadny |
+| testy modulu | **11 / 91 asercí** | **30 / 126 asercí** |
+| diff do mastera | **+802** | **+108** |
+
+**Obidve čísla asercí sedia na patchi presne** — 91 a 126. To je tá kontrola, ktorá
+hovorí, že ranné meranie proti `masteru` o 13 commitov staršiemu ešte platí na dnešnom.
+
+Rezolúcia konfliktu nebola mince: **větev skladá scénu, master argument.**
+Větev pridáva `heroVisual()` a eyebrow kicker; master zmenil `revealLines()` tak, že
+si berie druhý argument a hero sa dopredu odhalí. Vzát větvovou jednoargumentovú
+volbu by sa **čistě zmergovalo a potichu vrátilo masterovu zmenu animácie** — a právě
+to ten konflikt spôsobuje. Rozdiel je teraz komentár v kóde, nie tvrdenie v patchi,
+ktorý nikto nečíta.
+
+Riziká boli rôzne a boli zmerané:
+
+| | erik | griffe |
+|---|---|---|
+| `*Theme.php` na masteri | **0 commitov** | **+68 / −44** |
+| `*ThemeTest.php` na masteri | 1 commit | **7 commitov** |
+
+Erik je čisté přičtenie do souboru, který nikdo nesahal. Griffe přistupuje k hero,
+které si master mezitím přepsal. Obě suite jsou zelené — a **„suite prochází" je tvrzení
+o správnosti, ne o designu.** Proto to má aj tělo PR #9 napsané, a ne až ako překvapení
+po mergi.
+
+### A past, kterou jsem si přiváděl tentýž den
+
+První přeměření vyrobilo **zelenou suite z rozbitého prostředí**. Worktree jsem osadil
+`cp -a "$MAIN/src/Modules" .` — a čerstvý `git worktree add` repozitáře, jehož modulové
+řezy jsou v `.gitignore`, už `src/Modules` **má**. Takže `cp -a` adresář zkopíroval do
+sebe ako `src/Modules/Modules`. Pět instalovaných modulů místo 22, **267 testů
+přeskočilo**, a každý modulový test hlásil OK, protože většina jich vůbec nespustila.
+
+Vypovídal o tom `git status` s necommitovaným `Modules/`, ne výstup suite. Fix je
+koncová `/.`, která kopíruje obsah.
+
+To je **tretia** past v téže rodině jako ty dvě, co patch zaplatil — symlink na
+`vendor/` láme tree hash v `ModuleLifecycleTest`, a reinstalace všech modulů v pořadí
+`ls` zničí instalovanou sadu, protože Cardboard ↔ Outbox sú kruhové. Ale tahle je
+horší než obě předchozí, lebo **právě ju patch doporučoval**: jeho blok `Reproduce`
+predpisoval `cp -a <main>/src/Modules .` doslova. Nasledovať patch presne je ten
+jediný krok, ktorý ťa nenechá chytiť, že sa mýliš. Patch teraz nesie všetky tri,
+aj kontrolu `ls src/Modules | wc -l`, ktorú reproducer nemal. Zelená suite bola po
+celý čas najmenej informatívny signál, aký bol po ruke.
+
+A štvrtá, menšia: na masteri ležal commit s týmto článkom, napísaný o 19:21 a stále
+lokálny, zatiaľ čo sa toto rozhodnutie uzatváralo. Záznam o tom, že sa uzavrelo
+posledné nezavreté rozhodnutie, bol čitateľný len na stroji, ktorý ho napísal. Rovnaká
+chyba ako prázdna `evolutions/` a gitignorovaná `patches/` — len v mierke jedného
+commitu.
+
+Výsledok: **360 testů / 1557 asercí**, admin-smoke **85 kontrol** (témy nepridávajú
+adminovú plochu), lint, PHPStan L9 aj Lekalo exit 0. Oba PR zelené 8/8.
 
 ---
 
@@ -163,10 +231,14 @@ Log má teraz na mieste vetu, prečo sa to stalo. Oprava čísla bez dôvodu by 
 
 ---
 
-## Časť V — dve veci, ktoré zostali otvorené
+## Časť V — tri veci, ktoré zostali otvorené
 
-Keďže Časť II hovorila o vetvách, ktoré nikto neuzavrel, nech je súladné, aby aj toto
-bolo napísané:
+Časť II hovorila o vetvách, ktoré nikto neuzavrel; odvtedy sú zavreté. Nech je ale
+súladné, aby aj toto bolo napísané:
+
+- **Griffe hero je správny a zelený, nie zvolený.** Žiadny test nerozhodne, či
+  dekoratívna scéna patrí vedľa animácie, ktorú si `master` prepísal. Ten hlas
+  zostáva otvorený a je hlasom reviewera, nie suite.
 
 - **Mazanie článku neuklízí obálku.** `BlogCrudService::delete()` je jeden `unlink()`
   markdownu. Brána to v skripte uklízi, produkt nie. A Lekalo model to popisuje **opačne** —

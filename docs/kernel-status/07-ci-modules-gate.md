@@ -680,3 +680,104 @@ second measured instance of the failure it describes.
   seven of twenty-one modules are modelled at all (14 are stubs, including
   `core` and `database`). `docs/modules.md` now says what the gate buys and what
   it does not; the adapter is the thing that would close the gap.
+
+---
+
+## Boot 33 — two branches the reconciliation never closed
+
+The 2026-10-16 01:22 theme-branch reconciliation ended with a measured merge
+attempt and one sentence: *"Verdicts are the user's."* The attempt was made, the
+numbers were taken, and no verdict was ever given — 904 rows sat unmerged across
+two branches whose tips date from 2026-10-12, while every other branch in the repo
+got swept.
+
+They are closed here. Re-measured against today's `master` first: the patch was
+**13 commits stale**, and a stale measurement is a guess wearing a citation.
+
+| | erik (#8) | griffe (#9) |
+|---|---|---|
+| `git merge-tree --write-tree master <branch>` | **exit 0**, 0 conflicted paths | exit 1, **1** conflicted path |
+| real merge in a worktree | automatic, no edits | resolved, no other conflict |
+| the module's own tests | **11 tests / 91 assertions** | **30 tests / 126 assertions** |
+| full suite on the merged tree | 359 / 1535, exit 0 | 353 / 1473, exit 0 |
+| rows into `master` | **+802** | **+108** |
+
+**Both assertion counts match the reconciliation patch exactly** — 91 and 126.
+That is the check that a measurement taken the same morning, against a `master`
+13 commits older, still holds today — and it is the only reason the patch's
+numbers were worth re-running rather than re-typing.
+
+### The conflict resolution, and why it is not a coin flip
+
+`GriffeTheme::heroSlide()` was the single conflicted path. The two sides are not
+two answers to one question, so there was nothing to choose between:
+
+- the **branch** adds a decorative stage — `heroVisual()` and an eyebrow kicker;
+- **master** changed `revealLines()` to take a second argument so the hero can
+  pre-paint revealed.
+
+The merge takes both: the branch's composition with **master's argument**
+(`revealLines($title, true)`). Taking the branch's one-argument call would have
+merged cleanly and **silently undone master's animation change** — which is
+precisely why the conflict exists at all. That asymmetry is now a comment in
+the code, not a claim in a patch nobody reads.
+
+### The risk profile differed, and it was measured rather than felt
+
+| | erik | griffe |
+|---|---|---|
+| `*Theme.php` on `master` since the branch point | **0 commits** (untouched) | **+68 / −44** |
+| `*ThemeTest.php` on `master` | 1 commit | **7 commits** |
+| `*.css` on `master` | 2 commits | 4 commits |
+
+Erik is additive into a file nobody edited. Griffe lands a hero next to an
+animation `master` had since rewritten. Both suites are green, and **"the suite
+passes" is a claim about correctness, not about design** — so the Griffe PR says
+so in its own body rather than leaving it as a surprise after the merge.
+
+### The round's own defect, which is the reason this entry is longer
+
+The first re-measurement produced a **green suite from a broken environment**.
+The probe worktree was seeded with `cp -a "$MAIN/src/Modules" .`, and a fresh
+`git worktree add` of a repo whose module slices are gitignored already *has* a
+`src/Modules` — so `cp -a` copied the directory into itself as
+`src/Modules/Modules`. Five installed modules instead of 22, **267 tests
+skipped**, and every module test reporting as OK because most of them never ran.
+
+The tell was not the suite output; it was `git status` showing an untracked
+`Modules/`. The fix is the trailing `/.`, which copies contents.
+
+This is the **third** trap in the same family as the two the reconciliation
+patch paid for — symlinked `vendor/` breaking `ModuleLifecycleTest`'s tree hash,
+and reinstalling every module in `ls` order, which destroys the install set
+because Cardboard ↔ Outbox are circular. What makes this one worth more than the
+other two is that **the patch recommended it**: its `Reproduce` block prescribed
+`cp -a <main>/src/Modules .`, verbatim, and following a patch exactly is the one
+move that cannot catch you being wrong. The patch now carries all three, with the
+`ls src/Modules | wc -l` check the reproducer lacks. The suite being green was
+the least informative signal available throughout.
+
+A fourth, smaller one: `master` had an unpushed commit — this retrospective,
+written at 19:21 and still local while the round it describes was closing. The
+record of the round that closed the last round's open decision was readable only
+on the machine that wrote it — the same failure as `evolutions/` being empty and
+`patches/` being gitignored, at a scale of one commit.
+
+### Verified (2026-10-16, all exit 0)
+
+| Gate | Result |
+|---|---|
+| `composer test` | **360 tests, 1557 assertions**, 1 skip (theme bundle, built in CI) |
+| `make admin-smoke` | **85 checks** — unchanged; the themes add no admin surface |
+| `make lint` / `phpstan` (L9) | clean / no errors |
+| `make lekalo-check` | 23 rules, 0 errors |
+| CI on both PRs, and on `master` after the merges | 8/8 green each; `master` run `38942306768` green |
+
+## What this round did not close
+
+- **Griffe's hero is correct and green, not chosen.** No test can decide whether
+  the decorative stage belongs beside the animation `master` rewrote. That call
+  is still open, and it is the reviewer's, not the suite's.
+- The three items Boot 32 did not close are unchanged and still open: the
+  orphaned cover on delete, the queued reset link's security decision, and the
+  model's missing adapter.
