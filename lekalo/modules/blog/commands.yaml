@@ -69,7 +69,7 @@
       "id": "blog.delete_article",
       "kind": "command",
       "version": 1,
-      "description": "Delete an article file (and its tracked cover if owned)",
+      "description": "Delete an article file, and its generated cover unless another article still points at that cover through an explicit image field",
       "input": [
         {
           "name": "slug",

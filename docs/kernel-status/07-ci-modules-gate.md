@@ -781,3 +781,108 @@ on the machine that wrote it — the same failure as `evolutions/` being empty a
 - The three items Boot 32 did not close are unchanged and still open: the
   orphaned cover on delete, the queued reset link's security decision, and the
   model's missing adapter.
+
+---
+
+## Boot 34 — the delete the model described, performed
+
+Boot 32 closed this round's record by naming a defect and refusing to fix it in
+the same breath: *"Deleting an article orphans its cover … the model's own
+description says that is what it already does, so the model and the code have
+to be reconciled either way. Not done here: it is not this round's change to
+make silently."*
+
+Making the code true was the right direction. A description nobody can check is
+documentation; an orphan nobody notices is a leak.
+
+### What it was, measured before anything changed
+
+Reproduced through `BlogCrudService::delete()` — the call the admin action
+makes — with a real article and both cover shapes on disk:
+
+```
+clanok              false          <- gone
+flat obalka         true           <- orphaned
+kvalifikovana       true           <- orphaned
+delete() vratil     true
+```
+
+Not a stale file on a developer's disk. `ServeBlogImageAction` serves
+`/storage/blog-images/*` with `max-age=31536000`, so every article ever deleted
+left an image reachable at a URL nothing links to any more.
+
+### A fix that unlinks harder would have broken two things
+
+The obvious repair — unlink the cover in `delete()` — passes "the cover is
+gone" and breaks live articles. Both of these are real, not hypothetical:
+
+- **The flat `blog-images/{slug}.svg` carries no locale.** It is written for a
+  slug only one locale holds, but a locale that gains an article *afterwards*
+  owns a file that is not its own. Removing it on that article's delete blanks
+  the other article's image.
+- **`resolveCover()` ranks an explicit `image:` above the generated file.** An
+  author can deliberately point one article at another's cover, and generation
+  being slug-keyed, that reference is the only way two articles can share one.
+
+So `CoverPathResolver::existingCovers()` treats the two shapes unequally — the
+locale-qualified path is unambiguous and always removable, the flat one is a
+candidate only while `collides()` says no other locale holds the slug — and
+`BlogCrudService::delete()` scans the surviving articles for `image:` before
+unlinking anything. `lekalo/modules/blog/commands.yaml` now says so.
+
+### The gate caught a defect the tests could not
+
+The unit tests passed from the first run. The **admin-smoke gate failed**, and
+the reason is worth more than the fix:
+
+```
+:::error::the cover outlived the article it belongs to
+> storage/blog-images/smoke-article-2144512940.svg
+```
+
+Every test passed the locale as `sk`, because that is what the generator's
+`localeFor()` returns. The admin delete goes through `AdminLocale::canonical()`,
+which returns **`sk_SK`**. Handed `sk_SK`, `collides()` compares by language
+code, its `continue` never fires, the article matches **itself** as "another
+locale's", and the flat cover is excluded from its own delete. The article
+vanished, its cover stayed, and the whole module suite was green.
+
+This is the same defect `CoverPathResolver::localeFor()`'s own docblock warns
+about — *"the mapper's locale codes and the code of the article being written
+have to mean the same thing, or the article matches itself"* — reached through
+the other door. `existingCovers()` now normalises through `codeFor()`, so no
+caller has to know which spelling it is holding, and a test asserts through
+`AdminLocale::canonical()` rather than through the spelling that happens to
+work.
+
+### The gate stopped tidying up after the code
+
+`admin-smoke.sh` carried a `rm -f "storage/blog-images/$ARTICLE.svg"` and a
+`KNOWN GAP` comment explaining why the gate was cleaning up after the product.
+The product now does it, so the `rm` is gone and the assertion sits where the
+delete happens. A gate that removes the evidence is a gate that would have
+hidden this fix as readily as the regression.
+
+`coverRemovalIsNotLoadBearingWithoutTheReferenceScan()` in the new test is not a
+behaviour test either: it pins the shape, so the next simplification has to
+delete a test on purpose rather than quietly reintroduce the over-delete.
+
+### Verified (2026-10-16, all exit 0)
+
+| Gate | Result |
+|---|---|
+| `composer test` | **367 tests, 1581 assertions**, 1 skip — `ArticleCoverDeletionTest`, 7 tests / 24 assertions |
+| `make admin-smoke` | **86 checks** (85 + the cover assertion), exit 0 |
+| `make lint` / `phpstan` (L9) / `shellcheck` | clean / no errors / clean |
+| `make lekalo-check` | 23 rules, 0 errors; lock digest unchanged, as measured — descriptions do not enter it |
+| Negative control, old `delete()` restored | **3 of 7 fail** — the test is load-bearing |
+| Negative control, reference scan disabled | the borrowed-cover case fails — the scan is load-bearing |
+
+## What this round did not close
+
+- **The model still has no adapter.** Boot 34 made this one description true by
+  changing the code, which is the right direction and still not a check: the
+  other twenty-odd definitions are verified for well-formedness only. The
+  adapter is what would close it.
+- **The queued reset link stays an operator decision**, unchanged.
+- **Griffe's hero is still correct and green, not chosen** (Boot 33).

@@ -391,17 +391,16 @@ fi
 want 'the queue is empty again — the job is deleted on success' 0 \
     "$(dbq DB_QUEUE "SELECT COUNT(*) FROM jobs WHERE handler = 'blog.cover'")"
 
-# KNOWN GAP, cleaned up here on purpose. `POST /mark/articles/{slug}/delete`
-# unlinks the markdown file and NOTHING else — `BlogCrudService::delete()` is a
-# single `unlink()` — so the cover this section just rendered is orphaned when
-# the article goes. The gate removes it, because the storage snapshot below
-# exists to prove THAT THIS SCRIPT leaves no trace, and folding a product gap
-# into that check would make it mean two things at once.
+# The gate does NOT tidy the cover up here any more, and that is the change.
+# It used to: `rm -f "storage/blog-images/$ARTICLE.svg"`, with a KNOWN GAP
+# comment explaining that `BlogCrudService::delete()` was a single `unlink()`
+# and therefore orphaned every cover it should have removed. The product now
+# removes the cover itself, so the assertion belongs BELOW, next to the delete
+# that causes it — and a gate that cleans up after the code it is gating can
+# only ever prove that the SCRIPT is tidy.
 #
-# Note that `lekalo/modules/blog/commands.yaml` describes that delete as
-# removing "its tracked cover if owned", which the code does not do. Nothing
-# catches it: the model has no adapter (docs/modules.md, "The Lekalo model").
-rm -f "storage/blog-images/$ARTICLE.svg"
+# The gate assertion for it is at the article delete, further down. Leaving the
+# `rm` in place would have hidden the fix as well as the regression.
 
 # ---------------------------------------------------------------------------
 # The PUBLIC COMMENT FORM — the one mutation a stranger can make, and the
@@ -492,6 +491,21 @@ got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/articles/$ARTI
     --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
 want 'admin POST /mark/articles/{slug}/delete' 302 "$got"
 if find storage -name "$ARTICLE.md" | grep -q .; then bad 'the article file survived the delete'; else ok 'the article file is gone'; fi
+
+# The cover the queue worker rendered for this article goes WITH it. This is
+# the check that used to be an `rm -f` two hundred lines up, because
+# `BlogCrudService::delete()` was a single `unlink()` of the markdown and left
+# the SVG behind — still on disk, still served by `ServeBlogImageAction` under
+# `max-age=31536000`, at a URL nothing links to any more.
+#
+# The file is the assertion for the same reason the article's own is: the 302
+# cannot tell a cover that was removed from a cover that was never there.
+if [ -s "storage/blog-images/$ARTICLE.svg" ]; then
+    bad 'the cover outlived the article it belongs to'
+else
+    ok 'the generated cover is removed with the article'
+fi
+
 check 'the deleted article is 404' "/blog/$ARTICLE" 404
 
 # ---------------------------------------------------------------------------

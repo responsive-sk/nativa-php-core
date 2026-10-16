@@ -102,4 +102,81 @@ final class CoverPathResolver
             str_replace('/', DIRECTORY_SEPARATOR, ContentServices::mapper()->directory('blog', $locale)),
         );
     }
+
+    /**
+     * Every generated cover that belongs to one article, in whichever of the
+     * two shapes it was written.
+     *
+     * The two shapes are NOT equally safe to remove, which is the reason this
+     * method exists rather than a call to `pathFor()` at delete time:
+     *
+     *  - `blog-images/{locale}/{slug}.svg` carries the locale in its path, so
+     *    it can only ever have been generated for THIS locale's article. Safe.
+     *
+     *  - `blog-images/{slug}.svg` does not. It is written for a slug only one
+     *    locale holds, but a locale can gain an article afterwards — and then
+     *    that flat file is the OTHER locale's cover, not this one's. Removing
+     *    it on that article's delete would blank a live article's image.
+     *
+     * So the flat file is a candidate only while no other locale holds the
+     * slug, which is exactly `collides()` — the same question `pathFor()` asks,
+     * asked in the safe direction.
+     *
+     * @return list<string>
+     */
+    public function existingCovers(string $fileSlug, string $locale): array
+    {
+        $code = $this->codeFor($locale);
+        $root = AppPaths::instance()->storage('blog-images');
+
+        $candidates = [$root . DIRECTORY_SEPARATOR . $code . DIRECTORY_SEPARATOR . $fileSlug . '.svg'];
+
+        if (!$this->collides($fileSlug, $code)) {
+            $candidates[] = $root . DIRECTORY_SEPARATOR . $fileSlug . '.svg';
+        }
+
+        return array_values(array_filter($candidates, is_file(...)));
+    }
+
+    /**
+     * The language CODE (`sk`) for a locale named either way (`sk` or
+     * `sk_SK`), and the default when the name is neither.
+     *
+     * `existingCovers()` is reached from the admin delete, which passes what
+     * `AdminLocale::canonical()` returns — `sk_SK` — while the generator gets
+     * its locale from `localeFor()`, which returns `sk`. Handing `sk_SK`
+     * straight to `collides()` makes the article match **itself**: the
+     * comparison there is by language code, so the `continue` never fires, the
+     * caller sees its own slug as "another locale's", and the flat cover is
+     * excluded as if it were a neighbour's. That is the same defect
+     * `localeFor()`'s own docblock names, reached through the other door.
+     *
+     * Normalising here means no caller has to know which spelling it holds.
+     */
+    private function codeFor(string $locale): string
+    {
+        $mapper = ContentServices::mapper();
+
+        foreach ($mapper->locales() as $candidate) {
+            if ($candidate === $locale || $mapper->languageCode($candidate) === $locale) {
+                return $mapper->languageCode($candidate);
+            }
+        }
+
+        return $mapper->languageCode($mapper->defaultLocale());
+    }
+
+    /**
+     * The public URL of a cover file — the form an article's `image` front
+     * matter carries it in, which is what makes two covers comparable.
+     */
+    public function urlFor(string $coverPath): string
+    {
+        $root = AppPaths::instance()->storage('blog-images') . DIRECTORY_SEPARATOR;
+        $relative = str_starts_with($coverPath, $root)
+            ? substr($coverPath, strlen($root))
+            : basename($coverPath);
+
+        return '/storage/blog-images/' . str_replace(DIRECTORY_SEPARATOR, '/', $relative);
+    }
 }
