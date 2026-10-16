@@ -884,5 +884,65 @@ delete a test on purpose rather than quietly reintroduce the over-delete.
   changing the code, which is the right direction and still not a check: the
   other twenty-odd definitions are verified for well-formedness only. The
   adapter is what would close it.
-- **The queued reset link stays an operator decision**, unchanged.
+- **The queued reset link was measured in Boot 35** — it is still a decision,
+  but now with its costs measured rather than assumed.
 - **Griffe's hero is still correct and green, not chosen** (Boot 33).
+
+---
+
+## Boot 35 — the queued reset link, measured instead of parked
+
+Boot 32 recorded this as *"the queued reset link stays an operator decision …
+the options remain 'accept and document', 'redact sensitive payloads in the
+panel', or 'don't'"*, and two boots carried it forward unchanged. A decision
+nobody can act on is an open item that has stopped looking, so this round
+measured what queuing it would actually cost.
+
+### Where the token lives, today
+
+| | retention | plaintext? |
+|---|---|---|
+| `password_reset_tokens.token` | 1 h TTL | **no** — `hash('sha256', $token)` |
+| the recipient's mailbox | forever | yes, by design |
+| `storage/logs/app.log` | — | **no**; this was audit finding #1, and the mailers log the address and the endpoint, never the token |
+| `jobs.payload` | until success or attempts exhausted | would be **yes** |
+| `failed_jobs.payload` | **until an admin clicks "Drop this job"** | would be **yes** |
+| `/mark/queue/{id}` | rendered verbatim, pretty-printed | would be visible to every admin |
+| `/mark/queue` (the list) | payload not among the columns | not exposed |
+
+The invariant the audit established is therefore: **the plaintext token exists
+only in transit to the recipient.** Queuing the reset link breaks it in three
+places at once, and the third has no bound — `failed_jobs` is only ever emptied
+by `DatabaseQueue::forget()`, an explicit admin action. There is no reaper, no
+TTL and no retention policy; measured, not assumed.
+
+### The handler cannot look it up instead
+
+Queuing the *token row* instead of the token does not work either, and this is
+deliberate rather than an oversight: `password_reset_tokens` stores only the
+SHA-256, so a handler running an hour later cannot reconstruct the plaintext
+that belongs in the link. Any design that retries delivery has to carry the
+secret across the delay.
+
+### And the cost is not only risk — the gain is smaller than it looks
+
+`HttpPasswordResetMailer::sendResetLink()` sends synchronously, **catches
+`\Throwable`, logs, and returns**. A non-2xx is logged, not raised. So a
+transient mail failure today means the user sees the usual "if that was not
+you, ignore this" response and simply never receives the mail — which is the
+real argument for queuing, and it is a genuine one.
+
+### What this is, then
+
+Not an open question with three options. A measured conflict between a
+guarantee an operator can buy (retry on transient failure) and an invariant
+the audit already established (the plaintext token is not at rest anywhere).
+Whether to relax the second is a security posture call, and it is the
+operator's — but it should be made knowing that `failed_jobs` has no retention
+and that the panel renders payloads verbatim.
+
+**Not done here, deliberately:** relaxing the invariant, encrypting queue
+payloads, adding panel redaction, and adding a `failed_jobs` retention sweep.
+The last one is worth doing on its own merits — payloads accumulate forever
+regardless of what is in them — and is a change to a queue that currently has
+one producer, so it should be a deliberate round rather than a rider here.

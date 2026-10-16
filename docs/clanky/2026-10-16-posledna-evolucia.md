@@ -254,7 +254,15 @@ súladné, aby aj toto bolo napísané:
   `sk_SK`, a `collides()` porovnáva jazykový kód — článok sa pri `sk_SK` zhodol **sám so
   sebou** a vlastnú obálku preskočil. Celá modulová suite bola zelená a produkt
   stále uklížal.
-- **Queued reset link** zostáva bezpečnostné rozhodnutie pre operátora.
+- **Queued reset link** je bezpečnostné rozhodnutie pre operátora — ale odmerané
+  (Boot 35), nie odložené. Front by daroval záruku opakovania pri dočasnom výpadku
+  mailera (dnes `HttpPasswordResetMailer` výnimku chytí, zapíše a vráti), a kúpil by
+  ju proti invariantu, ktorý audit už zavedol: **plaintext token existuje len na ceste
+  k príjemcovi.** `password_reset_tokens` drží `sha256`, `app.log` token nikdy, a
+  `failed_jobs.payload` by držal plaintext **bez obmedzenia** — maže ho len kliknutie
+  admina „Drop this job", žiadny reaper ani retencia. Handler si token nedokáže
+  načítať, lebo z hashu sa nedá. Osloviť ten invariant alebo nie je volanie operátora,
+  ktoré má vidieť cenu.
 
 ---
 
