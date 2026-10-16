@@ -495,7 +495,7 @@ that has parked something exits **1**. Before, a single retry could redden a run
 
 The queue section of `admin-smoke.sh` called `work()` through an inline heredoc.
 It now runs `php bin/cms queue:work`, because **a gate that proves the worker by
-calling the module's API proves a worker nobody can run.** Four checks, 79
+calling the module's API proves a worker nobody can run.** Four checks, 78
 total:
 
 | check | asserts |
@@ -509,7 +509,7 @@ total:
 
 | Gate | Result |
 |---|---|
-| `make admin-smoke` | **79 checks**, exit 0; `storage/` back byte-for-byte |
+| `make admin-smoke` | **78 checks**, exit 0; `storage/` back byte-for-byte |
 | `composer test` | 331 tests, 1384 assertions, **1 skip** (the kernel-only one) |
 | `make lint` | clean |
 | `phpstan` (L9) / `rector-dry` / `cs-fix-dry` | no errors; OK; 0 of 95 |
@@ -554,6 +554,16 @@ total:
 
 Boot 30 wrote a note to be **deleted rather than reworded** when a producer
 landed. This is that round.
+
+> **One number above is corrected rather than appended.** Boot 31 recorded **79**
+> checks; the gate as it stands in `master` emits **78**, measured by replaying
+> it from a worktree at `75d50a9` — whose `bin/build/admin-smoke.sh` is
+> byte-identical to `master`'s, so the count is the merged one and not a
+> worktree artefact. The whole chain is now measured rather than assumed:
+> **78** (master) → **81** (Boot 32's backoff checks) → **85** (the cover
+> checks). A log whose subject is measured states cannot carry an off-by-one
+> that nobody re-counted, and the reason is worth naming: the number was taken
+> from a filtered run rather than by counting what the script emits.
 
 ### The trigger was measured, and the measurement overruled the plan
 
@@ -613,7 +623,7 @@ copy nobody runs by hand is the one that quietly stops matching.
 Four checks, where they had to go: in the **content section**, because that is
 the last point in the script where the article exists — the handler renders from
 the markdown file, so a cover job worked after the delete would be asserting on
-a slug that is gone. 78 → **85** checks.
+a slug that is gone. 81 → **85** checks.
 
 | check | asserts |
 |---|---|
