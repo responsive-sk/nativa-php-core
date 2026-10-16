@@ -880,12 +880,11 @@ delete a test on purpose rather than quietly reintroduce the over-delete.
 
 ## What this round did not close
 
-- **The model still has no adapter.** Boot 34 made this one description true by
-  changing the code, which is the right direction and still not a check: the
-  other twenty-odd definitions are verified for well-formedness only. The
-  adapter is what would close it.
-- **The queued reset link was measured in Boot 35** — it is still a decision,
-  but now with its costs measured rather than assumed.
+- **The model still has no adapter.** Boot 36 measured what one would cost —
+  ~700 KB of PHP against a protocol upstream calls experimental — and
+  recommended against building it. Boot 34 made one description true by
+  changing the code; the other twenty-odd stay verified for well-formedness
+  only. That is a stated cost, not an oversight.
 - **Griffe's hero is still correct and green, not chosen** (Boot 33).
 
 ---
@@ -946,3 +945,83 @@ payloads, adding panel redaction, and adding a `failed_jobs` retention sweep.
 The last one is worth doing on its own merits — payloads accumulate forever
 regardless of what is in them — and is a change to a queue that currently has
 one producer, so it should be a deliberate round rather than a rider here.
+
+**Decided 2026-10-16: the invariant stands.** The reset link is not queued. What
+is lost is named rather than hidden: a transient mail failure means the user
+sees the ordinary "if that was not you, ignore this" response and the mail never
+arrives. That is the honest cost, and it is the smaller of the two.
+
+---
+
+## Boot 36 — what a Lekalo adapter would actually cost
+
+`lekalo doctor` reports two **blocked** checks, both `nextAction:
+resolve-adapters`: `adapters.inventory` (`targets-without-adapters`) and
+`capabilities.profiles` (`targets-without-profile`). The target is declared —
+`lekalo/targets/php-nativa.yaml` — and has no adapter. Boot 32 recorded the
+consequence and Boot 34 hit it in the flesh. This round measured the fix
+instead of estimating it.
+
+### The API exists, and it is published
+
+`lekalo --help` carries `adapter`, `scan`, `bindings`, `observe`, `contract`,
+`generate`, `verify`. An adapter is **a spawnable program**, not a library —
+`lekalo adapter test` and `lekalo scan` both take `[PROGRAM_ARGS]...` and pass
+them through with no shell.
+
+`lekalo adapter install` sounds like a package registry, but
+`lekalo adapter discover --help` states that **`release` and `registry` records
+do not exist in v1** — only `path:` and `exec:`. So an adapter is not something
+Lekalo ships; it is something a project builds. The protocol is documented at
+`ichinya/lekalo` → `docs/target-protocol.md`.
+
+### A reference PHP adapter exists — and it is not a starting point
+
+`adapters/php-laravel`, and it sizes the work exactly:
+
+| | |
+|---|---|
+| source | **20 files, 644 KB**, `kernel.php` alone 162 KB |
+| tests | **56 KB** (protocol, analyzer, process) |
+| built artefact | `adapter.php`, **661 KB**, via `build.php` + Mago |
+| operations | **10** — `bind`, `clean`, `describe`, `generate`, `lint`, `plan-clean`, `plan-native`, `scan`, `validate`, `verify` |
+| named capabilities | **14** — incl. `generate.openapi`, `generate.ui`, `generate.zod`, `generate.routes`, `verify.scenarios`, `verify.transport-http` |
+| conformance | protocol `0.3.2`/`0.6.4`, IR `0.2.16` |
+
+Two of those named capabilities are Vue and Zod. **`php-laravel` is a
+Laravel-plus-Vue adapter** — it maps Eloquent models, Laravel routes,
+migrations and generated screens. This tree has none of those: plain PHP
+services, markdown content files, one SQLite per module, and a runtime with no
+Composer dependency at all. So `php-nativa` is not an adaptation of the Laravel
+adapter; it is a **second PHP adapter written from scratch against the same
+protocol**, and it would have to stay conformant as the protocol versions move.
+
+The battery does test only the *declared* surface — which is the one piece of
+good news: a minimal adapter claiming `describe`, `bind` and `validate` faces a
+much smaller battery than the 24 checks this binary names.
+
+### And upstream calls the path we would plug into experimental
+
+The project's own README: *"**Experimental** brownfield scan integration and
+partial target capabilities have explicit limits."* Binding existing code is the
+brownfield path. Building ~700 KB of PHP to plug into an integration upstream
+labels experimental is a bet on a moving protocol.
+
+### The recommendation, and what it costs to ignore
+
+**Do not build it now.** The cheaper route is the one Boot 34 already took:
+make the code true, so a model's falsehood is visible in review rather than
+caught by a gate. `lekalo validate` keeps the 23 structural rules; what remains
+unchecked is the ~20 descriptions, and the one that was *demonstrably* wrong is
+now correct because the code changed.
+
+What that leaves, stated plainly:
+
+- the model remains documentation with a schema, and `docs/modules.md` says so;
+- a description can still drift from the code without anything failing;
+- the Makefile comment — *"Re-add the strict line once an adapter exists"* —
+  stays accurate, and nothing waits on it.
+
+**This is a cost, not a free choice.** If the tree's value ever comes to
+depending on the model being enforced rather than reviewed, the adapter stops
+being optional and this round's recommendation is wrong.

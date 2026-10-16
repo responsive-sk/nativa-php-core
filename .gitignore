@@ -92,12 +92,27 @@ src/Modules/*
 .DS_Store
 *.swp
 
-# Internal agent tooling (never committed, never pushed to GitHub).
+# Internal agent tooling (never committed, never pushed to GitHub) — with ONE
+# exception, decided 2026-10-16: /.ai-factory/patches/ IS committed.
+#
+# Why the exception: docs/clanky/2026-10-16-posledna-evolucia.md cites a patch
+# file by name, and that record was unreadable to anyone but the machine that
+# wrote it — the same failure as `evolutions/` being empty, at a scale of one
+# document. A patch is a post-mortem of a defect that cost time; keeping it out
+# of the repository means the next occurrence is re-diagnosed from scratch.
+#
+# The other three stay ignored, and the listing is by SUBDIRECTORY rather than
+# `/.ai-factory/` plus a negation, because git does not descend into an ignored
+# directory: a `!` pattern inside one never matches. So `/.ai-factory/` would
+# have kept every patch invisible no matter what followed it.
 /.agents/
-/.ai-factory/
 /.ai-factory.json
+/.ai-factory/PLAN.md
+/.ai-factory/plans/
+/.ai-factory/evolutions/
+/.ai-factory/skill-context/
 # OpenSpec plans and specs are our internal tooling too (decision 2026-10-14):
-# they stay local like .ai-factory/ and never go to GitHub.
+# they stay local and never go to GitHub.
 /openspec/
 # Deployable build output (bin/build/build-dist.sh). An artifact, exactly like
 # /public/dist/ above: produced by a script, never committed. A trailing

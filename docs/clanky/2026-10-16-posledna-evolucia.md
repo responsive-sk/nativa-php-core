@@ -38,7 +38,7 @@ to isté. Dnešné kolo stálo dosť času (pozri Časť II), a každá z tých 
 ktorú mal jeden `SKILL.md` zachytiť navždy a nikto to nenapísal.
 
 Najbližším skutočným artefaktom je preto nie evolúcia, ale **posledný patch** —
-`2026-10-16-theme-branch-reconciliation.md`, 01:22 dnes.
+`.ai-factory/patches/2026-10-16-theme-branch-reconciliation.md`, 01:22 dnes.
 
 ---
 
