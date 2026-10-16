@@ -56,13 +56,15 @@ use Themes\ThemeModule;
  *    port would answer 200 with an empty page. The hero renders without its
  *    media plate instead — the same move `ErikTheme` makes when it drops the
  *    WebP underlay the kernel must never fetch.
- * 2. **A unit whose copy has not arrived is omitted, not emptied.** The
- *    showcase's `Support::t()` resolved through a copy map the showcase filled;
- *    here the map holds the site name until the home copy moves out of the
- *    kernel (`HomepageAction`'s own docblock calls that the `M` answer). An
- *    empty `<h2>` with an empty paragraph is a heading a screen reader
- *    announces and no reader can use — the same rule the showcase's own CTA
- *    applied when it rendered no button rather than an unlabelled one.
+ * 2. **The home copy is the theme's, as a default.** This kernel's
+ *    `HomepageAction` passes `copy: ['title' => $siteName]` — no home copy at
+ *    all — so a faithful port would render headings with nothing under them.
+ *    The showcase's own strings (its `COPY_DEFAULTS` and seed rows for exactly
+ *    these keys) therefore live here as `DEFAULT_COPY`, and the card LAYOUT as
+ *    `DEFAULT_LAYERS`, because this kernel passes no `cards` map either. The
+ *    kernel's copy wins the moment it resolves some; the theme is the floor,
+ *    the same shape `ErikTheme` and `MonoTheme` use for their sections. A unit
+ *    with genuinely no heading is still omitted rather than emptied.
  * 3. **No avatar service.** The showcase called `BlogServices::avatar()->img()`;
  *    there is no kernel equivalent, so the profile renders an image only when
  *    the kernel hands a URL over, and otherwise renders no image at all.
@@ -100,6 +102,56 @@ final class JednotkaTheme implements ThemeModule
 
     /** How many series the index rail lists before it hands over to /blog/tags. */
     private const int RAIL_LIMIT = 8;
+
+    /**
+     * The home copy, in the showcase's own words.
+     *
+     * These are NOT invented: they are the strings the showcase's
+     * `HomepageAction::COPY_DEFAULTS` and its `locales.db` seed carry for the
+     * same keys, so this theme's home reads as the design it was ported from.
+     *
+     * They are DEFAULTS, not a second source of truth — `t()` reads
+     * `PageContext::$copy` first, so the moment this kernel resolves home copy
+     * (the move `HomepageAction`'s docblock calls the `M` answer) the kernel's
+     * wording wins and these stay as the floor. That is the same shape
+     * `ErikTheme` uses for its sections and `MonoTheme` for its slides.
+     *
+     * @var array<string, string>
+     */
+    private const array DEFAULT_COPY = [
+        'home.hero_title' => 'Minimal PHP 8.5 Starter Kit',
+        'home.hero_subtitle' => 'A tiny, auditable foundation: modular monolith, per-module SQLite, attribute-based routing and strict security — built from scratch.',
+        'home.layer1_title' => 'Fewer Layers',
+        'home.layer1_card1_title' => 'Zero dependencies',
+        'home.layer1_card1_text' => 'No Composer runtime, no framework. A hand-rolled PSR-4 autoloader boots the app even without vendor/ — the whole production runtime is 5 PHP extensions.',
+        'home.layer1_card2_title' => 'Readable surface',
+        'home.layer1_card2_text' => 'C-pattern: no magic methods, no service locators, no generated maps. Every line is readable and auditable — no black box.',
+        'home.layer1_card3_title' => 'Per-module SQLite',
+        'home.layer1_card3_text' => 'One database file per module — users.db, config.db, locales.db. No infrastructure, no ORM, no migration maze.',
+        'home.layer2_title' => 'Super Fast PHP',
+        'home.layer2_card1_title' => 'PHP 8.5 + OPcache/JIT',
+        'home.layer2_card1_text' => 'Language-level precompilation: OPcache keeps opcodes in memory, JIT compiles hot paths to native machine code.',
+        'home.layer2_card2_title' => 'Data through C',
+        'home.layer2_card2_text' => 'SQLite is pure C — the fastest path to data with no ORM layer. PHP built-ins are precompiled C libraries.',
+        'home.layer2_card3_title' => 'No cache layer',
+        'home.layer2_card3_text' => 'We dropped the cache layer and hit 100/100 PageSpeed. Speed comes from removing layers, not from caching.',
+        'home.ratio_value' => '215 MB dev → 1.7 MB prod',
+        'home.ratio_label' => '~126:1 — the entire production runtime is smaller than one phone photo.',
+        'home.read_article' => 'Read article',
+        'home.cta_blog' => 'Read the blog',
+        'home.cta_admin' => 'Open admin',
+    ];
+
+    /**
+     * The two feature layers and their cards, again as the showcase laid them
+     * out. `PageContext::$cards` wins when the kernel fills it.
+     *
+     * @var array<string, list<string>>
+     */
+    private const array DEFAULT_LAYERS = [
+        'layer1' => ['layer1_card1', 'layer1_card2', 'layer1_card3'],
+        'layer2' => ['layer2_card1', 'layer2_card2', 'layer2_card3'],
+    ];
 
     public function name(): string
     {
@@ -238,16 +290,13 @@ HTML;
         $title = self::t($context, 'home.hero_title');
 
         if ('' === $title) {
-            // The kernel's home copy map carries the site name today; falling
-            // back to it keeps the surface a page instead of a blank column.
+            // A tree whose copy map is empty still has a page: the kernel's own
+            // site name is the honest heading, and it is what
+            // `HomepageAction` passes today.
             $title = self::t($context, 'title');
         }
 
         if ('' === $title) {
-            // Nothing to say and nothing to invent: the surface renders empty
-            // rather than under a heading made of a machine name. In this
-            // kernel `HomepageAction` always hands over `copy['title']`, so
-            // this is the synthetic-page case, not the live one.
             return '';
         }
 
@@ -278,7 +327,7 @@ HTML;
             . self::searchBox($context, '')
             . self::feedLinks($context)
             . '<div class="je-blog-index__layout">'
-            . self::blogMain($pageArticles, $counts, self::pagination(count($articles), $page, $perPage, $context->locale, '', 'Blog pages'), 1 === $page)
+            . self::blogMain($pageArticles, $counts, self::pagination(count($articles), $page, $perPage, $context->locale, '', 'Blog pages'), 1 === $page, $context->locale)
             . self::seriesAside($articles)
             . '</div>'
             . '</section>';
@@ -291,7 +340,7 @@ HTML;
 
         $list = [] === $results
             ? '<div class="je-blog-index__empty"><p>No articles match "' . self::e($query) . '".</p></div>'
-            : self::grid($results, $context->viewCounts);
+            : self::grid($results, $context->viewCounts, $context->locale);
 
         $perPage = $context->perPage > 0 ? $context->perPage : 9;
         $totalPages = max(1, (int) ceil(count($results) / $perPage));
@@ -407,7 +456,7 @@ HTML;
 
         $grid = [] === $context->articles
             ? '<p class="je-blog-index__empty">No articles yet.</p>'
-            : self::grid($context->articles, $context->viewCounts);
+            : self::grid($context->articles, $context->viewCounts, $context->locale);
 
         return '<section class="je-unit">'
             . '<header class="je-author">'
@@ -501,8 +550,8 @@ HTML;
     }
 
     /**
-     * One feature unit. Omitted entirely when its heading copy has not arrived,
-     * so the page never announces an empty heading.
+     * One feature unit. Omitted only when there is genuinely no heading to
+     * give it — the default copy supplies one, so this is the degraded case.
      */
     private static function featureSection(PageContext $context, string $layer): string
     {
@@ -512,9 +561,11 @@ HTML;
             return '';
         }
 
+        // The kernel's layout when it hands one over, the showcase's own when
+        // it does not — this kernel's `HomepageAction` passes no `cards`.
         $cards = '';
 
-        foreach ($context->cards[$layer] ?? [] as $cardKey) {
+        foreach ($context->cards[$layer] ?? self::DEFAULT_LAYERS[$layer] ?? [] as $cardKey) {
             $cards .= self::featureCard($context, (string) $cardKey);
         }
 
@@ -581,7 +632,7 @@ HTML;
      * @param array<array-key, mixed> $articles
      * @param array<string, int>      $viewCounts
      */
-    private static function blogMain(array $articles, array $viewCounts, string $pagination, bool $featured): string
+    private static function blogMain(array $articles, array $viewCounts, string $pagination, bool $featured, string $locale): string
     {
         if ([] === $articles) {
             return '<p class="je-blog-index__empty">No articles yet — drop a .md file into storage/blog.</p>';
@@ -590,7 +641,7 @@ HTML;
         $wrapper = $featured ? ' je-blog-index__main--lead' : '';
 
         return '<div class="je-blog-index__main' . $wrapper . '">'
-            . self::grid($articles, $viewCounts)
+            . self::grid($articles, $viewCounts, $locale)
             . $pagination
             . '</div>';
     }
@@ -643,12 +694,13 @@ HTML;
 
     /**
      * Article cards through Blog's own renderer when it is installed — the
-     * showcase's grid, byte for byte — and a plain link list when it is not.
+     * showcase's grid, byte for byte — and the same grid built here from the
+     * shapes the kernel handed over when it is not.
      *
      * @param array<array-key, mixed> $articles
      * @param array<string, int>      $viewCounts
      */
-    private static function grid(array $articles, array $viewCounts = []): string
+    private static function grid(array $articles, array $viewCounts, string $locale): string
     {
         if (class_exists(self::BLOG_FACADE) && self::isBlogPayload($articles)) {
             $facade = self::BLOG_FACADE;
@@ -660,7 +712,7 @@ HTML;
             }
         }
 
-        return self::linkList($articles);
+        return self::cardGrid($articles, $locale);
     }
 
     /**
@@ -679,13 +731,24 @@ HTML;
     }
 
     /**
-     * The Blog-free grid: whatever the kernel handed over, read by shape.
+     * The Blog-free grid — Blog's own markup contract, built from the shapes
+     * the kernel handed over.
+     *
+     * Written class-for-class as `BlogArticlesService::renderCard()` writes it
+     * (`st-grid` + `st-blog-index__card…`), NOT with this theme's `je-card`
+     * vocabulary: that class is the HOMEPAGE feature card, a different
+     * component, and a theme-invented class here would be markup nothing
+     * styles. Those `st-` grid classes are what every theme's stylesheet
+     * carries for the blog grid, so a Blog-less tree still gets cards that look
+     * like cards. Only the fields the kernel actually sent are emitted — no
+     * invented date, author or cover.
      *
      * @param array<array-key, mixed> $articles
      */
-    private static function linkList(array $articles): string
+    private static function cardGrid(array $articles, string $locale): string
     {
-        $items = '';
+        $prefix = 'en_US' === $locale ? '/en' : '';
+        $cards = '';
 
         foreach ($articles as $article) {
             if (!is_object($article)) {
@@ -700,15 +763,39 @@ HTML;
                 continue;
             }
 
-            $items .= '<li class="je-blog-list__item"><a class="je-blog-list__link" href="/blog/'
-                . self::e($slug) . '">' . self::e($title) . '</a></li>';
+            $text = static function (string $key) use ($fields): string {
+                $value = $fields[$key] ?? '';
+
+                return is_string($value) ? $value : '';
+            };
+
+            $meta = implode(' · ', array_filter([
+                $text('date'),
+                $text('category'),
+                $text('author'),
+            ], static fn (string $bit): bool => '' !== $bit));
+
+            $image = $text('image');
+            $cover = '' !== $image
+                ? '<img class="st-blog-index__card-image" src="' . self::e($image) . '" alt="'
+                    . self::e($title) . '" loading="lazy" decoding="async" width="720" height="360">'
+                : '';
+            $excerpt = $text('excerpt');
+
+            $cards .= '<article class="st-blog-index__card">'
+                . $cover
+                . '<h2 class="st-blog-index__card-title"><a href="' . $prefix . '/blog/'
+                . self::e($slug) . '">' . self::e($title) . '</a></h2>'
+                . ('' === $meta ? '' : '<p class="st-blog-index__card-meta">' . $meta . '</p>')
+                . ('' === $excerpt ? '' : '<p class="st-blog-index__card-text">' . self::e($excerpt) . '</p>')
+                . '</article>';
         }
 
-        if ('' === $items) {
+        if ('' === $cards) {
             return '<p class="je-blog-index__empty">No articles yet — drop a .md file into storage/blog.</p>';
         }
 
-        return '<ul class="je-blog-list">' . $items . '</ul>';
+        return '<div class="st-blog-index__list st-grid">' . $cards . '</div>';
     }
 
     /**
@@ -822,7 +909,7 @@ HTML;
             . (1 === $count ? '' : 's') . ' found.</p>'
             . '</header>'
             . ('' === $chips ? '' : '<p class="je-article__tags">' . $chips . '</p>')
-            . self::grid($context->articles, $context->viewCounts)
+            . self::grid($context->articles, $context->viewCounts, $context->locale)
             . self::taxonomyPagination($context, $path)
             . '</section>';
     }
@@ -1267,11 +1354,12 @@ HTML;
     }
 
     /**
-     * Translation lookup through the payload copy map the kernel resolved.
+     * Copy lookup: the kernel's resolved map first, the theme's own defaults
+     * second. See `DEFAULT_COPY` for why both exist.
      */
     private static function t(PageContext $context, string $key): string
     {
-        $value = $context->copy[$key] ?? '';
+        $value = $context->copy[$key] ?? self::DEFAULT_COPY[$key] ?? '';
 
         return is_string($value) ? $value : '';
     }

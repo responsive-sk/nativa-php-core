@@ -6,10 +6,12 @@ namespace Modules\Jednotka\Tests;
 
 use Modules\Core\Application\Services\AssetManager;
 use Modules\Core\Application\Services\View\InlineJs;
+use Modules\Core\Domain\ShellNavItem;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\PageContext;
+use Modules\Core\Interfaces\HTTP\ShellContext;
 use Modules\Core\Interfaces\HTTP\ThemeRegistry;
 use Modules\Jednotka\Theme\JednotkaTheme;
 use PHPUnit\Framework\Attributes\Test;
@@ -226,83 +228,91 @@ final class JednotkaThemeTest extends TestCase
 
     /**
      * The home surface as this kernel actually calls it: `HomepageAction`
-     * passes `copy: ['title' => $siteName]` and no hero image.
+     * passes `copy: ['title' => $siteName]`, no cards and no hero image.
      *
-     * So the hero renders with the copy it got, the units whose copy has not
-     * arrived are omitted rather than emptied, and no media plate is emitted
-     * for a hero the kernel never configured — the divergence the class
-     * docblock records, pinned here so it cannot regress into an empty page.
+     * The theme's own defaults are what make that a page instead of four
+     * headings over nothing — the showcase's strings and its card layout,
+     * ported. This is the assertion that caught the port rendering a bare hero.
      */
     #[Test]
-    public function homepageRendersTheHeroAndOmitsUnitsWhoseCopyHasNotArrived(): void
+    public function homepageRendersEveryUnitFromTheThemesOwnDefaults(): void
     {
         $html = (new JednotkaTheme())->homepage(self::homepageContext('Tailored start'));
 
         $this->assertStringContainsString('<section class="je-unit je-hero">', $html);
-        $this->assertStringContainsString('<h1 class="je-hero__title">Tailored start</h1>', $html);
+        $this->assertStringContainsString('<h1 class="je-hero__title">Minimal PHP 8.5 Starter Kit</h1>', $html);
+        $this->assertStringContainsString('A tiny, auditable foundation', $html);
         $this->assertStringContainsString('Unit 01 — Premise', $html);
+        $this->assertStringContainsString('href="/blog">Read the blog</a>', $html);
+        $this->assertStringContainsString('href="/mark">Open admin</a>', $html);
 
+        // Both feature layers, three cards each, in the showcase's own words.
+        $this->assertStringContainsString('<h2 class="je-section__title">Fewer Layers</h2>', $html);
+        $this->assertStringContainsString('<h2 class="je-section__title">Super Fast PHP</h2>', $html);
+        $this->assertSame(6, substr_count($html, 'class="je-card"'), 'Two layers of three cards.');
+        $this->assertStringContainsString('<h3 class="je-card__title">Zero dependencies</h3>', $html);
+        $this->assertStringContainsString('SQLite is pure C', $html);
+
+        // The measure unit — and no invented link, because no href was handed over.
+        $this->assertStringContainsString('je-stat__value', $html);
+        $this->assertStringContainsString('215 MB dev', $html);
+        $this->assertStringNotContainsString('je-card__link', $html, 'An href nobody provided is not invented.');
+
+        // No heroSrc in this kernel: no media plate, and never a second <main>.
         $this->assertStringNotContainsString('je-hero__visual', $html, 'No heroSrc was configured — no media plate.');
         $this->assertStringNotContainsString('<img', $html);
-        $this->assertStringNotContainsString('je-section__title', $html, 'An empty heading is worse than no section.');
-        $this->assertStringNotContainsString('je-stat__value', $html);
-
         $this->assertStringNotContainsString('<main', $html, 'One wrap, owned by FrontendLayout — never two.');
+
+        // Order is the document's argument: premise, feature, feature, measure.
+        $hero = strpos($html, 'je-hero');
+        $layer1 = strpos($html, 'Fewer Layers');
+        $layer2 = strpos($html, 'Super Fast PHP');
+        $stats = strpos($html, 'je-stat__value');
+        $this->assertIsInt($hero);
+        $this->assertIsInt($layer1);
+        $this->assertIsInt($layer2);
+        $this->assertIsInt($stats);
+        $this->assertLessThan($layer1, $hero);
+        $this->assertLessThan($layer2, $layer1);
+        $this->assertLessThan($stats, $layer2);
     }
 
     /**
-     * And with the copy map filled — the shape the showcase ran on — every unit
-     * appears, in order, with the media plate its heroSrc earns.
+     * The kernel's copy map wins over the defaults, KEY BY KEY — so when home
+     * copy moves out of the kernel (the `M` answer `HomepageAction` records),
+     * this theme follows it without an edit, and the keys the kernel does not
+     * send keep their defaults.
      */
     #[Test]
-    public function homepageRendersEveryUnitWhenItsCopyArrives(): void
+    public function kernelCopyAndLayoutOverrideTheThemesDefaults(): void
     {
         $context = PageContext::forHomepage(
             Request::create('GET', '/'),
             self::THEME,
             'en',
-            copy: [
-                'title' => 'Nativa',
-                'home.hero_title' => 'Fewer layers',
-                'home.hero_subtitle' => 'A minimal PHP foundation.',
-                'home.cta_blog' => 'Read the blog',
-                'home.cta_admin' => 'Open admin',
-                'home.layer1_title' => 'What you get',
-                'home.layer1_a_title' => 'Fewer layers',
-                'home.layer1_a_text' => 'Explicit seams.',
-                'home.read_article' => 'Read on',
-                'home.ratio_value' => '4.6×',
-            ],
-            // The card key is the copy key's middle segment: the theme reads
-            // `home.<key>_title`, so `layer1_a` addresses the pair above.
-            links: ['layer1_a' => '/blog/minimal'],
-            cards: ['layer1' => ['layer1_a']],
+            copy: ['home.hero_title' => 'Kernel wins', 'home.layer1_title' => 'Kernel layer'],
+            links: ['layer1_card1' => '/blog/minimal'],
+            cards: ['layer1' => ['layer1_card1']],
             heroSrc: '/img/hero.webp',
             heroSrcset: '/img/hero-800.webp 800w',
         );
 
         $html = (new JednotkaTheme())->homepage($context);
 
-        $this->assertStringContainsString('<h1 class="je-hero__title">Fewer layers</h1>', $html);
-        $this->assertStringContainsString('je-hero__subtitle', $html);
-        $this->assertStringContainsString('href="/blog">Read the blog</a>', $html);
-        $this->assertStringContainsString('href="/mark">Open admin</a>', $html);
+        $this->assertStringContainsString('<h1 class="je-hero__title">Kernel wins</h1>', $html);
+        $this->assertStringContainsString('<h2 class="je-section__title">Kernel layer</h2>', $html);
         $this->assertStringContainsString('src="/img/hero.webp"', $html);
         $this->assertStringContainsString('srcset="/img/hero-800.webp 800w"', $html);
-        $this->assertStringContainsString('<h2 class="je-section__title">What you get</h2>', $html);
-        $this->assertStringContainsString('<h3 class="je-card__title">Fewer layers</h3>', $html);
-        $this->assertStringContainsString('href="/blog/minimal">Read on</a>', $html);
-        $this->assertStringContainsString('je-stat__value', $html);
+        $this->assertStringContainsString('href="/blog/minimal">Read article</a>', $html);
 
-        // Order is the document's argument: premise, feature, measure.
-        $hero = strpos($html, 'je-hero');
-        $section = strpos($html, 'je-section__title');
-        $stats = strpos($html, 'je-stat__value');
-        $this->assertIsInt($hero);
-        $this->assertIsInt($section);
-        $this->assertIsInt($stats);
-        $this->assertLessThan($section, $hero);
-        $this->assertLessThan($stats, $section);
+        // Overridden keys come from the kernel; the keys it did not send keep
+        // the theme's own copy, and its layer2 layout is untouched.
+        $this->assertStringContainsString('<h2 class="je-section__title">Super Fast PHP</h2>', $html);
+        $this->assertSame(
+            4,
+            substr_count($html, 'class="je-card"'),
+            'The kernel sent one layer1 card; layer2 still comes from the theme.',
+        );
     }
 
     /**
@@ -411,6 +421,189 @@ final class JednotkaThemeTest extends TestCase
         foreach (['er-', 'mo-', 'st-'] as $foreign) {
             $this->assertStringNotContainsString($foreign, $html, 'Foreign vocabulary in an error page.');
         }
+    }
+
+    /**
+     * The design comparison, as a standing gate: every class this theme emits
+     * has a rule in its own build — or is named below with the reason.
+     *
+     * All six are INHERITED from the showcase, none invented here: each one is
+     * markup the original emitted while the stylesheet keys on something else
+     * (an attribute, an inner element). The comparison that produced this list
+     * is why the Blog-free card fallback no longer invents `je-blog-list` —
+     * three classes with no rule anywhere, in a theme whose whole point is that
+     * its markup is styled.
+     *
+     * @var array<string, string> class => why the design does not style it
+     */
+    private const array UNSTYLED_BY_DESIGN = [
+        'je-nav__link--active' => 'the stylesheet keys the active state on aria-current="page"; the class variant is kept for the DOM-parity contract',
+        'je-footer__nav' => 'the showcase wrapper; the design styles the inner list, item and link instead',
+        'je-login-btn__text' => 'the design styles .je-login-btn; the label span is showcase markup',
+        'je-blog-feed__link' => 'the design styles .je-blog-feed; the per-link class is showcase markup',
+        'je-article-toc__item--sub' => 'showcase markup for a level-3 heading; the design styles the base item',
+        'st-blog-index__list' => "Blog's own grid wrapper; the design styles .st-grid and the cards, not the grouping hook",
+    ];
+
+    #[Test]
+    public function everyClassTheThemeEmitsIsStyledOrDeclared(): void
+    {
+        $css = $this->builtStylesheet();
+        $emitted = [];
+
+        foreach ($this->renderedSurfaces() as $name => $html) {
+            foreach (self::classesOf($html) as $class) {
+                $emitted[$class] = $name;
+            }
+        }
+
+        $this->assertGreaterThan(80, count($emitted), 'Eleven surfaces, one vocabulary — a smaller set means a surface stopped rendering.');
+
+        // The declared exemptions are checked in BOTH directions: an entry that
+        // is no longer emitted, or that the design now styles, is a stale
+        // exemption and must be dropped rather than left to rot.
+        foreach (self::UNSTYLED_BY_DESIGN as $class => $reason) {
+            $this->assertArrayHasKey($class, $emitted, sprintf('`%s` is declared unstyled but no longer emitted (%s) — drop the entry.', $class, $reason));
+            $this->assertFalse(self::designStyles($css, $class), sprintf('`%s` is styled by the build now (%s) — drop the stale exemption.', $class, $reason));
+        }
+
+        $undeclared = [];
+
+        foreach ($emitted as $class => $surface) {
+            if (!self::designStyles($css, $class) && !isset(self::UNSTYLED_BY_DESIGN[$class])) {
+                $undeclared[] = sprintf('%s (on %s)', $class, $surface);
+            }
+        }
+
+        $this->assertSame(
+            [],
+            $undeclared,
+            'Markup with no rule in the theme\'s own build — a class the design never learned: ' . implode(', ', $undeclared),
+        );
+    }
+
+    /**
+     * The Blog-free card grid is Blog's OWN markup contract, not this theme's
+     * `je-card` (the homepage feature card — a different component) and not an
+     * invented list. Pinned because the design comparison above is only as good
+     * as the vocabulary it is comparing.
+     */
+    #[Test]
+    public function blogGridFallsBackToTheDesignsGridVocabulary(): void
+    {
+        $html = (new JednotkaTheme())->blogIndex(
+            PageContext::forBlogIndex(Request::create('GET', '/blog'), self::THEME, 'en', [self::article('a', 'A')], page: 1, perPage: 9),
+        );
+
+        // Shapes the kernel handed over, not Blog entities — so the fallback drew it.
+        $this->assertStringContainsString('class="st-blog-index__list st-grid"', $html);
+        $this->assertStringContainsString('class="st-blog-index__card"', $html);
+        $this->assertStringContainsString('class="st-blog-index__card-title"', $html);
+        $this->assertStringContainsString('href="/blog/a">A</a>', $html);
+
+        // The English locale keeps its own prefix, and no invented class survives.
+        $en = (new JednotkaTheme())->blogIndex(
+            PageContext::forBlogIndex(Request::create('GET', '/en/blog'), self::THEME, 'en_US', [self::article('a', 'A')], page: 1, perPage: 9),
+        );
+        $this->assertStringContainsString('href="/en/blog/a"', $en);
+        $this->assertStringNotContainsString('je-blog-list', $html);
+    }
+
+    /**
+     * Every surface, rendered from the same shapes the kernel hands them.
+     *
+     * @return array<string, string>
+     */
+    private function renderedSurfaces(): array
+    {
+        $theme = new JednotkaTheme();
+        $shell = static fn (bool $signedIn): ShellContext => ShellContext::from(
+            'Nativa PHP Core',
+            [new ShellNavItem('Blog', '/blog', true)],
+            [new ShellNavItem('Blog', '/blog')],
+            '/blog',
+            null,
+            'en_US',
+            ['sk_SK', 'en_US'],
+            $signedIn,
+        );
+
+        return [
+            'homepage' => $theme->homepage(self::homepageContext('Nativa PHP Core')),
+            'blogIndex' => $theme->blogIndex(PageContext::forBlogIndex(Request::create('GET', '/blog'), self::THEME, 'en', [self::article('a', 'A')], page: 1, perPage: 1)),
+            'blogSearch' => $theme->blogSearch(PageContext::forBlogSearch(Request::create('GET', '/blog?q=x'), self::THEME, 'en', 'sqlite', [self::article('a', 'A')])),
+            'blogArticle' => $theme->blogArticle(PageContext::forBlogArticle(
+                Request::create('GET', '/blog/a'),
+                self::THEME,
+                'en',
+                'a',
+                'A title',
+                '<p>body</p>',
+                '12. 10. 2026',
+                '',
+                '',
+                '',
+                [['level' => 2, 'text' => 'Intro', 'anchor' => 'intro'], ['level' => 3, 'text' => 'Sub', 'anchor' => 'sub']],
+                [],
+                42,
+                editUrl: '/mark/articles/a',
+            )),
+            'blogTags' => $theme->blogTags(PageContext::forBlogTags(Request::create('GET', '/blog/tags'), self::THEME, 'en', ['security'], ['security' => 2], null, [self::article('a', 'A')], totalArticles: 2, totalPages: 1)),
+            'blogTagsFiltered' => $theme->blogTags(PageContext::forBlogTags(Request::create('GET', '/blog/tags/security'), self::THEME, 'en', ['security'], ['security' => 2], 'security', [self::article('a', 'A')], totalArticles: 2, totalPages: 3)),
+            'blogCategories' => $theme->blogCategories(PageContext::forBlogCategories(Request::create('GET', '/blog/categories'), self::THEME, 'en', ['php'], ['php' => 1], null, [self::article('a', 'A')])),
+            'authorProfile' => $theme->authorProfile(PageContext::forAuthorProfile(Request::create('GET', '/authors/x'), self::THEME, 'en', ['name' => 'Nataša', 'avatar' => '/img/a.png'], [self::article('a', 'A')], '2026-01-01', totalArticles: 2, totalPages: 2)),
+            'errorContent' => $theme->errorContent(404, 'Not found', 'No such page.'),
+            'header' => $theme->header($shell(true)),
+            'footer' => $theme->footer($shell(false)),
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function classesOf(string $html): array
+    {
+        preg_match_all('/class="([^"]*)"/', $html, $matches);
+        $classes = [];
+
+        foreach ($matches[1] as $list) {
+            foreach (preg_split('/\s+/', $list) ?: [] as $token) {
+                if ('' !== $token) {
+                    $classes[$token] = true;
+                }
+            }
+        }
+
+        return array_keys($classes);
+    }
+
+    /**
+     * Does the build carry a rule for this class?
+     *
+     * A TIGHT match: `.je-card` must not pass merely because `.je-card__title`
+     * exists, which a plain `str_contains` would accept.
+     */
+    private static function designStyles(string $css, string $class): bool
+    {
+        return 1 === preg_match('/\.' . preg_quote($class, '/') . '(?![a-zA-Z0-9_-])/', $css);
+    }
+
+    private function builtStylesheet(): string
+    {
+        $manifest = AppPaths::instance()->public('dist/' . self::THEME . '/manifest.json');
+
+        if (!is_file($manifest)) {
+            $this->markTestSkipped('No `jednotka` build in public/dist/jednotka — run `make assets`.');
+        }
+
+        $entries = json_decode((string) file_get_contents($manifest), true);
+        $file = is_array($entries) ? ($entries['src/' . self::ENTRY . '.ts']['css'][0] ?? null) : null;
+
+        if (!is_string($file)) {
+            $this->markTestSkipped(sprintf('The `jednotka` build declares no CSS for entry `%s`.', self::ENTRY));
+        }
+
+        return (string) file_get_contents(AppPaths::instance()->public('dist/' . self::THEME . '/' . $file));
     }
 
     /**
