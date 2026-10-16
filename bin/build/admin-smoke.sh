@@ -65,6 +65,16 @@ token() { sed -n 's/.*name="_token" value="\([^"]*\)".*/\1/p' "$TMP/last.out" | 
 # code) is a shell-injection shape for no gain.
 dbq() { php -r 'echo (new PDO("sqlite:" . getenv($argv[1])))->query($argv[2])->fetchColumn();' "$1" "$2"; }
 
+# The ONE exception to this script writing nothing to a database directly:
+# everything else here is created through the product, because the point of the
+# gate is that the product creates it. Retention cannot be reached that way —
+# ageing a row by 400 days through the product would take 400 days — so the
+# retention section backdates `failed_at` itself. It is the only INSERT in the
+# file and it says so, because an unexplained one would be the first thing
+# somebody deletes.
+# shellcheck disable=SC2016 # the same reason as dbq above: php -r's own quoting
+db_exec() { php -r 'exec((new PDO("sqlite:" . getenv($argv[1])))->exec($argv[2]));' "$1" "$2"; }
+
 # One assertion, one report line: `want <label> <expected> <actual>`.
 want() {
     if [ "$3" = "$2" ]; then
@@ -695,6 +705,73 @@ want 'the retried job is queued again' 1 "$requeued"
 left_failed="$(dbq DB_QUEUE "SELECT COUNT(*) FROM failed_jobs WHERE id = '$QUEUE_JOB'")"
 want 'the retried job left failed_jobs' 0 "$left_failed"
 
+# ---------------------------------------------------------------------------
+# RETENTION — `queue:prune`, the command `failed_jobs` never had.
+#
+# Measured 2026-10-16: four parked rows spanning two hours to a year all
+# survived a worker run, and DatabaseQueue had no prune/clean/purge/expire
+# method at all — the only removal was an operator clicking "drop this job",
+# so the table could only ever grow.
+#
+# The module tests cover `DatabaseQueue`, not this script. If the dispatch case
+# in bin/cms went away, every one of them would still pass, which is why the
+# operator's own command is asserted HERE rather than left to the suite.
+# ---------------------------------------------------------------------------
+OLD_JOB="smoke-stale-$RANDOM"
+FRESH_JOB="smoke-fresh-$RANDOM"
+
+# failed_at is the retention clock, so if this went wrong the backdated rows
+# would become the OLDEST rows in the table and every count below would read as
+# if retention had removed far more than it did. Emptied first, deliberately.
+db_exec DB_QUEUE "DELETE FROM failed_jobs"
+
+db_exec DB_QUEUE "INSERT INTO failed_jobs (id, queue, handler, payload, attempts, failed_at, error)
+    VALUES ('$OLD_JOB', 'default', 'smoke.stale', '{}', 3, datetime('now', '-400 days'), 'smoke: backdated'),
+           ('$FRESH_JOB', 'default', 'smoke.fresh', '{}', 3, datetime('now', '-2 hours'), 'smoke: recent')"
+
+want 'two jobs are parked for the retention checks' 2 \
+    "$(dbq DB_QUEUE "SELECT COUNT(*) FROM failed_jobs")"
+
+if php bin/cms queue:prune --dry-run > "$TMP/prune-dry.log" 2>&1; then
+    ok 'bin/cms queue:prune --dry-run exits 0'
+else
+    cat "$TMP/prune-dry.log"
+    bad 'bin/cms queue:prune --dry-run failed'
+fi
+
+# The preview has to be honest about WHICH rows, or it is decoration: the fresh
+# row is two hours old and must not appear in a 30-day prune.
+if grep -q '1 failed job(s) older than 30 days would be removed' "$TMP/prune-dry.log"; then
+    ok 'the preview counts only the stale job'
+else
+    cat "$TMP/prune-dry.log"
+    bad 'the preview did not report exactly the stale job'
+fi
+
+want 'the dry run deleted nothing' 2 \
+    "$(dbq DB_QUEUE "SELECT COUNT(*) FROM failed_jobs WHERE id IN ('$OLD_JOB', '$FRESH_JOB')")"
+
+if php bin/cms queue:prune > "$TMP/prune.log" 2>&1; then
+    ok 'bin/cms queue:prune exits 0'
+else
+    cat "$TMP/prune.log"
+    bad 'bin/cms queue:prune failed'
+fi
+
+want 'the stale job is pruned' 0 \
+    "$(dbq DB_QUEUE "SELECT COUNT(*) FROM failed_jobs WHERE id = '$OLD_JOB'")"
+
+want 'the recent job is kept' 1 \
+    "$(dbq DB_QUEUE "SELECT COUNT(*) FROM failed_jobs WHERE id = '$FRESH_JOB'")"
+
+# A destructive command that empties an operator's work queue has to refuse a
+# malformed interval rather than compare against "now" and remove everything.
+if php bin/cms queue:prune --interval=" " > "$TMP/prune-bad.log" 2>&1; then
+    bad 'queue:prune accepted an empty interval'
+else
+    ok 'queue:prune refuses an empty interval'
+fi
+
 got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/queue/$QUEUE_JOB/delete" \
     --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
 want 'admin POST /mark/queue/{id}/delete' 302 "$got"
@@ -708,6 +785,14 @@ queue_audited="$(dbq DB_AUDIT "SELECT COUNT(*) FROM audit_log WHERE action LIKE 
 want_at_least 'audit rows for the queue state changes' 2 "$queue_audited"
 
 check 'admin GET /mark/outbox' '/mark/outbox' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+
+# The freshness job is what the retention checks deliberately did NOT remove.
+# Emptying it here is what makes the command's own output above falsifiable —
+# an age wrongly stored would have pruned it and the "kept" assertion would
+# never have run.
+db_exec DB_QUEUE "DELETE FROM failed_jobs"
+want 'the retention checks left no failed job behind' 0 \
+    "$(dbq DB_QUEUE "SELECT COUNT(*) FROM failed_jobs")"
 
 # ---------------------------------------------------------------------------
 # Nothing fatal behind it all

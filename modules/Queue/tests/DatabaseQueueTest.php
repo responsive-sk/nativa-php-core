@@ -285,6 +285,81 @@ final class DatabaseQueueTest extends TestCase
         $this->assertStringContainsString('Corrupt payload', (string) $failed['error']);
     }
 
+    /**
+     * Retention: `failed_jobs` grows unless something removes it, and the only
+     * removal used to be an operator clicking "drop this job".
+     */
+    #[Test]
+    public function pruneFailedRemovesOnlyTheRowsOlderThanTheInterval(): void
+    {
+        $this->park('recent', '-2 hours');
+        $this->park('thisWeek', '-3 days');
+        $this->park('lastMonth', '-30 days');
+        $this->park('lastYear', '-365 days');
+
+        // 29 days, not 30: the '-30 days' row sits exactly on the default's
+        // boundary, and `<` is strict, so the default would make the expected
+        // set depend on which side of "exactly one month" the clock falls.
+        $this->assertSame(2, $this->queue->countFailedOlderThan('29 days'));
+
+        $this->assertSame(2, $this->queue->pruneFailed('29 days'));
+        $this->assertSame(2, $this->countRows('failed_jobs'));
+
+        $survivors = array_column($this->queue->listFailed(10), 'id');
+        $this->assertContains('recent', $survivors);
+        $this->assertContains('thisWeek', $survivors);
+        $this->assertNotContains('lastMonth', $survivors);
+        $this->assertNotContains('lastYear', $survivors);
+    }
+
+    #[Test]
+    public function aFailedJobYoungerThanTheIntervalIsNotPruned(): void
+    {
+        $this->park('recent', '-2 hours');
+
+        $this->assertSame(0, $this->queue->pruneFailed('30 days'));
+        $this->assertSame(1, $this->countRows('failed_jobs'));
+    }
+
+    #[Test]
+    public function thePreviewCountMatchesWhatThePruneActuallyRemoves(): void
+    {
+        // The preview is only worth having if it does not flatter itself: it
+        // runs the same comparison the DELETE does, so a count that disagreed
+        // with the delete would make `--dry-run` a lie.
+        foreach (['-2 hours', '-3 days', '-30 days', '-365 days'] as $offset) {
+            $this->park('probe-' . $offset, $offset);
+        }
+
+        $preview = $this->queue->countFailedOlderThan('29 days');
+        $removed = $this->queue->pruneFailed('29 days');
+
+        $this->assertSame($preview, $removed);
+        $this->assertSame(0, $this->queue->countFailedOlderThan('29 days'));
+    }
+
+    #[Test]
+    public function workingTheQueueNeverPrunesAFailedJob(): void
+    {
+        // The whole point of retention being its own command: a worker run
+        // leaves the evidence it parked. An operator who has not looked yet
+        // keeps it, and the run that parked it still reports success.
+        $this->park('old', '-365 days');
+
+        $result = $this->queue->work(limit: 10);
+
+        $this->assertSame(0, $result['failed']);
+        $this->assertSame(1, $this->countRows('failed_jobs'));
+    }
+
+    private function park(string $id, string $failedAtOffset): void
+    {
+        $this->pdo->prepare(
+            "INSERT INTO failed_jobs (id, queue, handler, payload, attempts, failed_at, error)"
+            . " VALUES (:id, 'default', 'probe.handler', '{}', 3, datetime('now', :offset), 'probe')",
+        )->execute([':id' => $id, ':offset' => $failedAtOffset]);
+    }
+
     private function countRows(string $table): int
     {
         return (int) $this->pdo->query("SELECT COUNT(*) FROM {$table}")->fetchColumn();

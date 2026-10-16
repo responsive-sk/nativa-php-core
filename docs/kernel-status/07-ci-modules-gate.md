@@ -1025,3 +1025,92 @@ What that leaves, stated plainly:
 **This is a cost, not a free choice.** If the tree's value ever comes to
 depending on the model being enforced rather than reviewed, the adapter stops
 being optional and this round's recommendation is wrong.
+
+---
+
+## Boot 37 — the retention `failed_jobs` never had
+
+Boot 35 found that `failed_jobs` is emptied only by `DatabaseQueue::forget()` —
+an explicit admin action — and named a retention sweep as worth doing "on its
+own merits, because payloads accumulate forever regardless of what is in them".
+This is that round.
+
+### Measured before anything changed
+
+Four rows parked at four ages, then the only things the tree offers:
+
+```
+parked 4 failed job(s):  2 hours · 3 days · 30 days · 1 year
+failed_jobs rows now:            4
+after queue->work():             4 row(s), result {"processed":0,"failed":0}
+listFailed() still returns:      4
+DatabaseQueue methods that prune/clean/purge/expire: NONE
+```
+
+The table could only ever grow. `jobs` does not accumulate — a successful row
+is deleted — so this was the one place where the queue leaked.
+
+### A separate command, deviating from the Outbox precedent on purpose
+
+`outbox:process` drains **and** prunes in one run, and the obvious move was to
+copy that shape. `failed_jobs` is not the same kind of table, and the difference
+is the whole design:
+
+| | `outbox_messages` (processed) | `failed_jobs` |
+|---|---|---|
+| what a row is | finished work | the only record that a job failed **and why** |
+| remaining value | historical | an operator's **work queue** — the panel puts "retry" and "drop" on it |
+| pruning unattended | fine | **removes evidence nobody has looked at**, in a run that reports success |
+
+So retention is a command an operator asks for **by name**, not a side effect of
+their cron entry. It is deliberately **not** in the timetable. The SQL itself
+mirrors `SqliteOutboxRepository::cleanProcessed()` exactly — same
+`datetime('now', '-' || ?)`, same returned `rowCount` — so the tree's two
+retention stories read alike while differing in what they retain.
+
+Default 30 days; `--dry-run` runs the same comparison the DELETE does, so the
+preview cannot flatter itself; an empty `--interval=` is refused (exit 1),
+because SQLite would otherwise compare against `now` and remove everything.
+
+### The gate writes to a database for the first time, and says why
+
+Retention cannot be reached through the product — ageing a row by 400 days
+through the product would take 400 days. So the gate backdates `failed_at`
+itself, which is the **only** direct INSERT in `admin-smoke.sh` and the only
+exception to "everything here is created through the product". It is written
+that way on purpose: an unexplained one would be the first thing somebody
+deletes.
+
+And it empties `failed_jobs` **before** parking the two rows. `failed_at` is
+the retention clock, so a wrong value would make the backdated rows the oldest
+in the table and every count below would read as if retention had removed far
+more than it did. The same reasoning empties the table again at the end, which
+is what makes the command's own output falsifiable: the recent row is what the
+prune deliberately did **not** remove, and the "kept" assertion only runs if the
+prune behaved.
+
+### Verified (2026-10-16, all exit 0)
+
+| Gate | Result |
+|---|---|
+| `composer test` | **371 tests, 1594 assertions**, 1 skip — `DatabaseQueueTest` 12 (was 8) |
+| `make admin-smoke` | **95 checks** (86 + 9), exit 0 |
+| `make analyze` | phpstan L9 no errors · Rector done · cs-fixer 0 of 96 |
+| `make lint` / `shellcheck bin/build/admin-smoke.sh` / `make lekalo-check` | clean / clean / 23 rules, 0 errors |
+| `php bin/cms queue:prune` end to end | dry-run reports 2 and removes 0; `--interval="60 days"` reports **1**, so the interval is not cosmetic; real run removes 2, keeps 2; empty interval exit 1 |
+| Negative control, `pruneFailed()` neutered | **2 of 12 fail** |
+| Negative control, dispatch case removed from `bin/cms` | gate goes **red, exit 2** |
+
+The second control is the one that matters for the claim this round makes: the
+module tests drive `DatabaseQueue`, not `bin/cms`, so removing the dispatch case
+leaves all twelve green. That gap is why the command is asserted through the
+CLI in the gate at all.
+
+## What this round did not close
+
+- **`failed_jobs` retention is manual, and now says so.** Nothing runs
+  `queue:prune` for you, on purpose — but an operator who never runs it is back
+  to a growing table, with a command rather than a mechanism as the difference.
+- The three standing items are unchanged: no Lekalo adapter (Boot 36, cost
+  measured, recommendation against), the reset link deliberately not queued
+  (Boot 35), and Griffe's hero correct and green but not chosen (Boot 33).
