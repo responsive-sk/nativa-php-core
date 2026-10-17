@@ -80,6 +80,38 @@ constant, and converting it would be worse rather than better.
 So the only legal direction is down. Every consolidation in Phase 2 lowers the
 number, and the gate refuses the 534th.
 
+### Places that are counted on purpose and must stay counted
+
+Seven of the 533 are test literals that **look** like duplication and are not.
+They are `assertSame()` calls whose subject is the exact string that has to
+arrive in the database row:
+
+| place | value |
+|---|---|
+| `modules/Outbox/tests/OutboxAdminListTest.php:93` | `'article.published'` |
+| `modules/Outbox/tests/OutboxMetricTest.php:110` | `'article.published'` |
+| `modules/Outbox/tests/ProcessOutboxCommandTest.php:114,186` | `'article.published'` |
+| `modules/Outbox/tests/ProcessOutboxCommandTest.php:115` | `'article.unpublished'` |
+| `tests/Http/AuthMiddlewareDenialTest.php:169,175` | `'security.authz.denied'` |
+
+Writing `assertSame(SecurityEvents::ARTICLE_PUBLISHED, $row['event_type'])`
+instead would make the test **tautological**: it would pass even if the constant
+had been changed to the wrong value, which is the one thing this tree cares
+about. An assertion that cannot fail is not an assertion.
+
+They stay in the ceiling on purpose. Removing them from the count would make the
+number look better while the code gets weaker, which is the opposite of what a
+ratchet is for.
+
+### The bigger number is mostly data
+
+The largest single value is `'sk_SK'` on **132** places, then `'en'` (48) and
+`'home'` (36). These are a locale code, a default language and a route slug —
+data that appears in seed data, translations and URL tests. Turning `sk_SK`
+into `LocaleService::SK_SK` would be a tautology dressed as a refactor. The
+ceiling counts them because counting them is honest; the consolidation work in
+Phase 2 does not touch them, and should not.
+
 ## Rule 3 — the declaration count does not rise · ratchet at 241 / 203
 
 This is the rule that catches the cheapest wrong fix: *"there are two names for
