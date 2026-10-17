@@ -36,4 +36,25 @@ return RectorConfig::configure()
     ->withPhpSets(php83: true)
     ->withTypeCoverageLevel(0)
     ->withDeadCodeLevel(0)
-    ->withCodeQualityLevel(0);
+    ->withCodeQualityLevel(0)
+    /**
+     * `ReturnNeverTypeRector` wants `'Some\Class'` turned into `Some\Class::class`
+     * anywhere it can see a class-shaped string. In `tests/` that is a downgrade:
+     * `::class` is a static reference for PHPStan, so a test that names an
+     * OPTIONAL module's class by `::class` fails `composer phpstan` on every
+     * kernel-only checkout — the analyser resolves the constant whether or not
+     * the tree loaded that module.
+     *
+     * Measured 2026-10-17: `MetricRegistryResolutionTest` written with the
+     * string form was green on both shapes; rewritten to `::class` because
+     * Rector asked, it produced
+     * `Class Modules\Cardboard\Infrastructure\Registry\MetricRegistry not found`
+     * and a red `analysis` job. The same shape `AuthMiddlewareDenialTest`
+     * carried until task 0.2.
+     *
+     * The rule stays on outside `tests/`, where a class-shaped string is a
+     * mistake worth rewriting.
+     */
+    ->withSkip([
+        __DIR__ . '/tests',
+    ]);

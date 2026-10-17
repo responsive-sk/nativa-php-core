@@ -57,8 +57,19 @@ use ReflectionMethod;
  */
 final class MetricRegistryResolutionTest extends TestCase
 {
-    /** `::class` on a module class the kernel-only tree may not have loaded. */
-    private const string REGISTRY = \Modules\Cardboard\Infrastructure\Registry\MetricRegistry::class;
+    /**
+     * Spelled as a string, NOT `::class`, and Rector's ReturnNeverTypeRector
+     * suggestion is declined on purpose.
+     *
+     * `::class` is a static reference for PHPStan: written in `tests/`, it
+     * reads as a kernel file naming Cardboard, and `composer phpstan` failed
+     * with `Class Modules\Cardboard\Infrastructure\Registry\MetricRegistry not
+     * found` on every kernel-only run — the analyser resolves the constant
+     * whether or not the tree loaded it. The string form is the same value with
+     * no reference in it, which is what this test needs in order to skip on a
+     * checkout without Cardboard.
+     */
+    private const string REGISTRY = 'Modules\Cardboard\Infrastructure\Registry\MetricRegistry';
 
     #[Test]
     public function everyDeclaredMetricProviderIsRegistered(): void
