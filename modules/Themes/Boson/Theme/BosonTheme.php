@@ -183,7 +183,7 @@ final class BosonTheme implements ThemeModule
             . '<div class="bo-header__bar">' . "\n"
             . '<span class="bo-header__dots" aria-hidden="true"></span>' . "\n"
             . '<a class="bo-header__brand" href="/">'
-            . '<span class="bo-header__mark" aria-hidden="true">N</span>'
+            . '<span class="bo-header__mark" aria-hidden="true">' . self::e(self::brandMark($context->siteName)) . '</span>'
             . '<span class="bo-header__wordmark">' . self::e($context->siteName) . '</span>'
             . '</a>' . "\n"
             . $this->nav($context->headerNav)
@@ -466,7 +466,7 @@ final class BosonTheme implements ThemeModule
             . '<div class="bo-orbit">'
             . '<span class="bo-orbit__ring"></span>'
             . '<span class="bo-orbit__ring bo-orbit__ring--inner"></span>'
-            . '<span class="bo-orbit__core"><span class="bo-orbit__mark">N</span></span>'
+            . '<span class="bo-orbit__core"><span class="bo-orbit__mark">' . self::e(self::brandMark(self::t($context, 'title'))) . '</span></span>'
             . '<span class="bo-orbit__dot"></span>'
             . '<span class="bo-orbit__dot bo-orbit__dot--tail"></span>'
             . '</div>'
@@ -675,7 +675,7 @@ final class BosonTheme implements ThemeModule
 
         $blog = null !== $context->blogHref && '' !== $context->blogHref
             ? $context->blogHref
-            : $this->blogBase($context->locale);
+            : self::blogBaseFor($context->locale);
 
         return '<section class="bo-split">'
             . '<div class="bo-split__left">'
@@ -722,7 +722,7 @@ final class BosonTheme implements ThemeModule
     {
         $blog = null !== $context->blogHref && '' !== $context->blogHref
             ? $context->blogHref
-            : $this->blogBase($context->locale);
+            : self::blogBaseFor($context->locale);
 
         return '<section class="bo-cta">'
             . '<div class="bo-cta__inner">'
@@ -1130,6 +1130,20 @@ final class BosonTheme implements ThemeModule
         }
 
         return self::DEFAULT_COPY[$key] ?? '';
+    }
+
+    /**
+     * The monogram the header and the hero orbit draw: the site name's first
+     * letter, uppercased. It used to be a literal `N`, which was the reference
+     * site's initial — on `responsive.sk` the wordmark said one thing and the
+     * mark beside it another. An empty name falls back to `N`, the kernel's
+     * own default, so the mark is never a blank square.
+     */
+    private static function brandMark(string $siteName): string
+    {
+        $trimmed = trim($siteName);
+
+        return '' === $trimmed ? 'N' : mb_strtoupper(mb_substr($trimmed, 0, 1));
     }
 
     private static function e(mixed $value): string

@@ -24,10 +24,14 @@ use Modules\Settings\Application\DTOs\MenuItemDTO;
  * Measured on the Mono theme, whose navbar has no links of its own to fall back
  * on: `mo-navbar__menu` was absent from the document entirely.
  *
- * Besides `navigation()` this provider also answers the two stored admin
- * choices nothing else in the tree says: the public `theme()` and the
- * default locale (`defaultLocale()` + `htmlLang()`). The site name stays
- * unanswered by design — a second answer would be a second source.
+ * Besides `navigation()` this provider also answers the stored admin choices
+ * nothing else in the tree says: the site name, the public `theme()` and the
+ * default locale (`defaultLocale()` + `htmlLang()`). The name belongs here
+ * because `settings.site_name` is this module's row and the admin's General
+ * screen is the only thing that writes it — while every public surface asks
+ * the port. With no answer, a site renamed to `responsive.sk` still shipped
+ * `<title>Nativa PHP Core</title>`, the kernel's literal, on every page: the
+ * stored name reached the admin chrome and nowhere else.
  *
  * ## What a visitor may see
  *
@@ -72,9 +76,23 @@ use Modules\Settings\Application\DTOs\MenuItemDTO;
 #[AsShellContextProvider(priority: -100)]
 final class SettingsShellContextProvider implements ShellContextProvider
 {
+    /**
+     * The stored site name — the row the admin edits under General.
+     *
+     * A missing or blank value abstains (null), keeping whatever the caller
+     * passed instead of rendering an empty `<title>`/brand. The value is
+     * trimmed but otherwise taken as stored: names like `responsive.sk` are
+     * legitimate and must not be "normalised" into something else.
+     */
     public function siteName(): ?string
     {
-        return null;
+        $stored = SettingsServices::settings()->get('site_name');
+
+        if (!is_string($stored) || '' === trim($stored)) {
+            return null;
+        }
+
+        return trim($stored);
     }
 
     /**

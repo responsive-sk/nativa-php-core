@@ -118,6 +118,49 @@ final class BosonThemeTest extends TestCase
         $this->assertStringContainsString('bo-mobile__link', $header);
     }
 
+    /**
+     * The monogram follows the configured site name. It used to be a literal
+     * `N` carried over from the reference site, so a site called
+     * `responsive.sk` wore someone else's initial beside its own wordmark.
+     */
+    #[Test]
+    public function theMonogramFollowsTheSiteName(): void
+    {
+        $header = (new BosonTheme())->header(
+            ShellContext::from('responsive.sk', [], [], '/', null, 'sk', [], false),
+        );
+
+        $this->assertStringContainsString(
+            '<span class="bo-header__mark" aria-hidden="true">R</span>',
+            $header,
+        );
+    }
+
+    /**
+     * The split/closing bands derive the blog URL when the context carries
+     * none (`$context->blogHref === ''`). They were declared static and reached
+     * for `$this->blogBase()` — a latent `Using $this when not in object
+     * context` 500 that stayed hidden only because the homepage always passes
+     * a blog href, so PHP never evaluated the fallback branch.
+     */
+    #[Test]
+    public function theBandsWithoutABlogHrefFallBackToTheLocalePrefix(): void
+    {
+        $context = PageContext::forHomepage(
+            Request::create('GET', '/'),
+            self::THEME,
+            'sk',
+            copy: ['title' => 'Boson Test'],
+            blogHref: '',
+        );
+
+        $html = (new BosonTheme())->homepage($context);
+
+        $this->assertStringContainsString('bo-split', $html);
+        $this->assertStringContainsString('bo-cta', $html);
+        $this->assertStringContainsString('href="/blog"', $html, 'The fallback resolves through the locale prefix, not a literal.');
+    }
+
     #[Test]
     public function aHeaderWithoutNavStillRendersTheBrandAndNoToggle(): void
     {

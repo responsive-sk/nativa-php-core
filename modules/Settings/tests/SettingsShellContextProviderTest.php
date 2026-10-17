@@ -6,6 +6,7 @@ namespace Modules\Settings\Tests;
 
 use Modules\Core\Application\Services\ShellContextProviderRegistry;
 use Modules\Core\Domain\ShellNavItem;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\ThemeRegistry;
 use Modules\Core\Interfaces\HTTP\ThemeResolver;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
@@ -217,11 +218,18 @@ final class SettingsShellContextProviderTest extends TestCase
     }
 
     #[Test]
-    public function theProviderAnswersTheMenuAndAbstainsFromEverythingButTheStoredTheme(): void
+    public function theProviderAnswersTheMenuAndTheStoredAdminChoices(): void
     {
         $provider = new SettingsShellContextProvider();
 
-        $this->assertNull($provider->siteName(), 'A theme fixture answers the name; a second answer is a second source.');
+        // The site name is the fourth stored admin choice. Without this answer
+        // the port had none, and every public surface shipped the kernel's
+        // `Nativa PHP Core` literal — on a site the admin had renamed.
+        $this->assertSame(
+            FrontendLayout::DEFAULT_SITE_NAME,
+            $provider->siteName(),
+            'The migrator seeds site_name; the provider must echo it, not abstain.',
+        );
         // Narrowed, not deleted: the admin theme vote REQUIRES theme() to answer
         // a valid stored value (fix-settings-theme-switch). The seed stores
         // `kernel`, so the seeded answer is the kernel theme — not null.
@@ -240,6 +248,27 @@ final class SettingsShellContextProviderTest extends TestCase
         );
         $this->assertSame('sk', $provider->htmlLang(), 'The language part of the voted default, not the kernel fallback.');
         $this->assertSame([], $provider->languages());
+    }
+
+    #[Test]
+    public function aStoredSiteNameIsAnswered(): void
+    {
+        $this->storeSiteName('responsive.sk');
+
+        $this->assertSame('responsive.sk', (new SettingsShellContextProvider())->siteName());
+    }
+
+    /**
+     * The admin field is free text. A blank name must abstain so the caller's
+     * fallback still titles the document — an empty `<title>` is worse than the
+     * kernel's default.
+     */
+    #[Test]
+    public function aBlankSiteNameAbstains(): void
+    {
+        $this->storeSiteName("   ");
+
+        $this->assertNull((new SettingsShellContextProvider())->siteName());
     }
 
     #[Test]
@@ -445,6 +474,16 @@ final class SettingsShellContextProviderTest extends TestCase
     private function storeTheme(string $value): void
     {
         (new SettingsRepository($this->pdo))->set('theme', $value, 'design', false);
+        SettingsServices::reset();
+    }
+
+    /**
+     * Write the `site_name` key the way `saveSite()` does, then drop the cached
+     * service so the provider reads the new row, not the old snapshot.
+     */
+    private function storeSiteName(string $value): void
+    {
+        (new SettingsRepository($this->pdo))->set('site_name', $value, 'general', false);
         SettingsServices::reset();
     }
 
