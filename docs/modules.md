@@ -106,9 +106,10 @@ Themes (4): Erik, Griffe, Jednotka, Mono — modules/Themes/
 ```
 
 One resolver, `ModuleCatalog::cataloguePath()`, is the only place that knows
-the shapes: `bin/cms`, both build scripts, `ModuleTreeState` (the
-`/mark/settings/modules` page and the `modules` stat card) and the two
-architecture gates read it instead of rebuilding the path. That matters
+the shapes: `bin/cms`, both build scripts and `ModuleTreeState` (the
+`/mark/settings/modules` page and the `modules` stat card) read it, and the
+gates that guard the catalogue ask the catalogue rather than spelling a path
+themselves. That matters
 because the admin page compares the catalogue with the slice, and a
 hand-built `modules/<Name>/` would fail `is_dir()` there, return "no
 differences" and report every theme as `identical` — a false green that
