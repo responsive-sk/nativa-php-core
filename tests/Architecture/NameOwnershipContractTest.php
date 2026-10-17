@@ -176,10 +176,18 @@ final class NameOwnershipContractTest extends TestCase
      * only the bare `/mark` occurrences are visible to this rule. The rest of
      * that work is held by `AdminRouteUrlNamesTest`, which scans `href`,
      * `action` and HTMX URLs as well.
+     * Now 507: the boson theme is a whole new module, so it adds places
+     * without duplicating an existing one — six in `BosonTheme` (`boson` three
+     * times because name, bundle and jsKey are three declarations that happen
+     * to share a spelling, and `Blog` in the chrome's labels and page heads)
+     * and five in its test (`en` fixtures and a `Blog` assertion). The
+     * direction stays down for existing code; a new surface is measured, not
+     * exempted.
+     *
      * The number is measured, the direction is down, and the gate files' own
      * literals (the exemption reasons) are excluded from it.
      */
-    private const int MAX_LITERAL_PLACES = 496;
+    private const int MAX_LITERAL_PLACES = 507;
 
     /**
      * Rule 3 — measured 2026-10-17 on the tracked scope.
@@ -194,8 +202,13 @@ final class NameOwnershipContractTest extends TestCase
      * Now 238: task 0.3 deleted `ADMIN_PATH` from the Settings provider (and
      * its installed slice) and `AdminRoutePolicy` added `DEFAULT_PREFIX` in
      * its place — one default for one panel, not two spellings of one name.
+     *
+     * 242 with the boson theme: `BosonTheme::DEFAULT_COPY` and `::WORKS` are
+     * the theme's two tables (copy and reading order), and `MODULE`/`THEME`
+     * are the module-test idiom every theme test already declares. Four
+     * declarations for a new theme, not four spellings of an existing value.
      */
-    private const int MAX_DECLARATIONS = 238;
+    private const int MAX_DECLARATIONS = 242;
 
     /**
      * 203 → 204 with MAX_DECLARATIONS: `ModuleTreeState::IGNORED` is a name as
@@ -203,8 +216,11 @@ final class NameOwnershipContractTest extends TestCase
      * Then 202: deleting `UNPREFIXED_ALLOWED` took a name with it. It stays 202
      * after task 0.3 — `ADMIN_PATH` left and `DEFAULT_PREFIX` arrived, so the
      * declaration count fell while the distinct-name count did not.
+     *
+     * 203 with boson: only `WORKS` is a new name — `DEFAULT_COPY` already
+     * names Jednotka's table, and `MODULE`/`THEME` are the shared test idiom.
      */
-    private const int MAX_NAMES = 202;
+    private const int MAX_NAMES = 203;
 
     /**
      * `name => modules/<Name>` or `modules/<Group>/<Name>`, resolved once. A

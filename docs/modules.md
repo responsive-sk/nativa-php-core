@@ -629,6 +629,69 @@ The slice used to carry the same one-question fixture provider (`theme()` →
 `griffe`) — removed together with the Erik/Mono fixtures once the Settings
 vote became the only theme answer (see above).
 
+## A fourth theme: Boson (measured 2026-10-17)
+
+`modules/Themes/Boson/` carries the boson-php marketing design as `BosonTheme`:
+a fixed 100 px header that shrinks to 70 px on scroll, dotted rails framing
+ruled full-bleed bands, Roboto Condensed display type over Inter body copy,
+and one brand red (`#f93904`) on near-black (`#0d1119`). The reference
+(`Frontend/boson`) is a Symfony/Twig site whose body is entirely Lit web
+components with the styles inside shadow roots and the artwork in `/images`.
+
+**What the port keeps and what it drops.** The markup is server-rendered PHP
+and the stylesheet is one `bo-` prefixed file
+(`assets/critical/boson.css`), so the theme ships no framework, no Twig and
+no build. The reference's twelve elements become one vendored script
+(`assets/scripts/boson.js`: header shrink, checkbox menu, horizontal
+accordion, TOC scrollspy, syntax highlighting and copy buttons) — each init
+self-gates on its markup, and the page is complete with the script absent.
+The reference's artwork (`/images/logo.svg`, the platform icons, the
+screenshots) is not in this repository, so the hero orbit, the platform marks
+and the dotted rails are CSS drawings; the remote font stylesheet is replaced
+by the local webfonts the tree already ships.
+
+**Nativa copy, Boson structure.** The sections are the reference's: hero,
+premise, the surfaces matrix, starting points, the three-column band, the
+"under the hood" horizontal accordion, the comparison, the API split, the
+principles band and the closing call. Their text is this project's, read from
+`PageContext::$copy` first with a `DEFAULT_COPY` floor (the same shape Erik,
+Mono and Jednotka use), and the links point at `/blog` and the
+`AdminRoutePolicy` prefix, never at boson-php. The testimonials band survives
+as three unattributed principles: the reference's named endorsements cannot
+be ported without inventing quotes.
+
+**Blog surfaces.** Index, search, article, tags, categories, author and error
+share the ruled vocabulary: hairline-bordered card grid, chevron pager,
+prose styles for `pre`/`code`/`table`/`blockquote`, a contents rail that
+ships `open` (a closed `<details>` cannot be forced open from CSS), and the
+shared `tok-*` highlighter markers that `ThemeAssetCompletenessTest` looks
+for.
+
+Measured 2026-10-17 on the installed tree (`module:add Boson`, catalogue 21,
+installed 21 + `KernelTheme`):
+
+- `phpunit` 513 tests / 4 836 assertions, 1 skipped; `phpstan`, Rector dry-run
+  and CS fixer dry-run green (the module itself is outside the kernel
+  analyzer's 117-file scope, as every module is);
+- served `/`, `/blog`, `/blog/tags`, `/blog/categories` and
+  `/blog/<slug>` all **200** in `boson-shell` with the stylesheet inlined and
+  the behaviour script after `</main>`;
+- Chromium over CDP: body `rgb(13, 17, 25)`, hero line `rgb(249, 57, 4)`,
+  120 px display type, header 100 px → 70 px with `bo-header--scrolled` after
+  a scroll, accordion item 3 opens and item 1 closes with `aria-expanded`
+  synced, the phone menu opens from the checkbox, locks scroll, closes on
+  Escape, and horizontal overflow is **0** at 390 px;
+- article page: 39 `tok-*` spans, 2 copy buttons, 2 language badges, prose
+  `pre` background `rgb(15, 19, 28)`, contents rail open with its scrollspy
+  marking the current heading; zero console errors.
+
+The three ownership ratchets moved for the new module, not for a duplicate:
+literal places 496 → **507** (three `boson` contract spellings and eight
+`Blog`/`en` labels), declarations 238 → **242** (`DEFAULT_COPY`, `WORKS`,
+and the test's `MODULE`/`THEME`), names 202 → **203** (`WORKS` is the only new
+name). The reasons are recorded beside each ceiling in
+`NameOwnershipContractTest`.
+
 ## Scheduler + Queue (measured 2026-10-13)
 
 `modules/Scheduler/` is the cron half of the Marko scheduler/queue pair,

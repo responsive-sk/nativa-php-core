@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "boson",
+      "kind": "module",
+      "version": 1,
+      "description": "Boson — dark, ruled public theme with the bo- vocabulary, ported from the boson-php marketing site."
+    }
+  ]
+}

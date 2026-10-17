@@ -201,20 +201,24 @@ returns from `criticalCss()` and fails when one class is defined by two themes,
 or when an own class does not carry that theme's `prefix()`.
 
 The plan named four themes (`mo-`, `je-`, `er-`, `gr-`). Discovery found
-**five** — the kernel theme carries `k-` and would have gone unmeasured:
+**five** — the kernel theme carries `k-` and would have gone unmeasured — and
+`boson` (`bo-`) joined later, which is why the table is measured rather than
+maintained:
 
 | theme | prefix | bundle | classes | files |
 |---|---|---|---|---|
+| `boson` | `bo-` | `boson` | 198 | 1 |
 | `erik` | `er-` | `erik` | 46 | 1 |
-| `griffe` | `gr-` | `griffe` | 78 | 1 |
+| `griffe` | `gr-` | `griffe` | 49 | 1 |
 | `jednotka` | `je-` | `jednotka` | 106 | 9 (kernel `BASE_CRITICAL_CSS`) |
 | `kernel` | `k-` | `kernel` | 17 | 1 |
 | `mono` | `mo-` | `mono` | 196 | 2 |
 
-443 class definitions (437 distinct names — the six markers are counted in
-both sheets), and exactly **one** shared family: the syntax-highlight markers.
-Griffe defines 6 `.tok-*` classes and Mono defines 12; the 6 overlap, with
-different colours on purpose (`.tok-comment` is `#8b8fa3` against `#94a3b8`).
+617 class definitions (595 distinct names — the syntax-highlight markers are
+counted in every sheet that defines them), and exactly **one** shared family:
+the syntax-highlight markers. Griffe defines 6 `.tok-*` classes, Mono 12 and
+Boson 11; the families overlap, with different colours on purpose
+(`.tok-comment` is `#8b8fa3` against `#94a3b8`).
 They stay because the emitter is `code-highlight.ts`, which is not in this
 repository — renaming the markers would break the highlighter, not fix a
 collision. The exception is named in `SHARED_CONTRACT['tok']` with that reason,
