@@ -183,7 +183,7 @@ final class FrontendLayout
         return $noindex ? '<meta name="robots" content="noindex, nofollow">' . "\n" : '';
     }
 
-    /** Built-stylesheet <style> tag with the CSP nonce placeholder (critical-CSS fallback when the build is missing).
+    /** Built-stylesheet and font-preload <head> tags (critical-CSS fallback when the build is missing).
      *
      * @param list<string> $criticalCss
      */
@@ -195,7 +195,44 @@ final class FrontendLayout
             $inlineCss = InlineCss::files($criticalCss);
         }
 
-        return '<style nonce="__CSP_NONCE_PLACEHOLDER__">' . "\n" . $inlineCss . "\n" . '</style>' . "\n";
+        return self::fontPreloads($inlineCss)
+            . '<style nonce="__CSP_NONCE_PLACEHOLDER__">' . "\n" . $inlineCss . "\n" . '</style>' . "\n";
+    }
+
+    /**
+     * <link rel="preload"> for every webfont the inlined stylesheet declares.
+     *
+     * The stylesheet is inline, so the browser reaches the @font-face rules
+     * only after it has parsed up to them; the preload starts the same request
+     * at the first byte of <head> instead. That is exactly the "network
+     * dependency tree" audit: `HTML → stylesheet → font` is a chain, and the
+     * preload is what takes the font out of it. It does not add a download
+     * that would not otherwise happen — the faces are used by text that is
+     * already in the first viewport, so a preload only moves it earlier.
+     *
+     * Same-origin paths only, each URL once (a family may declare two weights
+     * that share one file), and `crossorigin` is mandatory: fonts are fetched
+     * in CORS mode, and a preload without the attribute is a second, wasted
+     * download rather than a head start.
+     */
+    private static function fontPreloads(string $css): string
+    {
+        if ('' === $css) {
+            return '';
+        }
+
+        preg_match_all('/@font-face\s*\{[^}]*?url\(\s*[\'"]?([^\'")]+\.woff2)[\'"]?\s*\)/i', $css, $matches);
+
+        $tags = '';
+        foreach (array_unique($matches[1]) as $url) {
+            if (!str_starts_with($url, '/')) {
+                continue;
+            }
+
+            $tags .= '<link rel="preload" href="' . self::e($url) . '" as="font" type="font/woff2" crossorigin>' . "\n";
+        }
+
+        return $tags;
     }
 
     /** Manifest-resolved deferred JS tag (empty when no entry resolves). */

@@ -30,12 +30,15 @@
   src: url("/fonts/roboto-condensed-400.woff2") format("woff2");
 }
 
+/* The 600 face is the same Regular file as the 400 face (the shipped
+ * asset is a single static instance), and pointing both at one URL keeps
+ * that true for the cache too: the second face costs no extra bytes. */
 @font-face {
   font-family: "Roboto Condensed";
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url("/fonts/roboto-condensed-600.woff2") format("woff2");
+  src: url("/fonts/roboto-condensed-400.woff2") format("woff2");
 }
 
 @font-face {
@@ -44,6 +47,54 @@
   font-weight: 500;
   font-display: swap;
   src: url("/fonts/jetbrains-mono-500.woff2") format("woff2");
+}
+
+/* Metric-matched fallbacks (CLS). `font-display: swap` paints text at once
+ * in the local fallback and swaps the webfont in later — a reflow unless the
+ * fallback occupies the same box. Each face is a local font scaled and
+ * re-metriced onto the webfont it stands in for, so the swap changes glyph
+ * shapes but neither a line break nor a line box. Values come from the
+ * shipped woff2 metrics (ascent/descent/lineGap of hhea, average advance of
+ * `The quick brown fox… 0123456789`) against the local fallback it names —
+ * Arial/Liberation Sans (2.048 em) for the two proportional families,
+ * Courier New/Liberation Mono for the mono one:
+ *
+ *   size-adjust       = (webfont avg/upm) / (fallback avg/upm)
+ *   ascent-override   = (webfont ascent/upm) / size-adjust
+ *   descent-override  = (|webfont descent|/upm) / size-adjust
+ *   line-gap-override = (webfont lineGap/upm) / size-adjust
+ *
+ * These four numbers belong to the font, not to taste: swapping the woff2
+ * without recomputing them restores the reflow this block exists to remove. */
+@font-face {
+  font-family: "Inter Fallback";
+  src: local("Arial"), local("Liberation Sans"), local("Helvetica Neue"), local("Helvetica");
+  size-adjust: 107.6%;
+  ascent-override: 90.03%;
+  descent-override: 22.42%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Roboto Condensed Fallback";
+  src: local("Arial"), local("Liberation Sans"), local("Helvetica Neue"), local("Helvetica");
+  size-adjust: 88.61%;
+  ascent-override: 104.7%;
+  descent-override: 27.55%;
+  line-gap-override: 0%;
+}
+
+/* Mono stands in for a monospaced local face, never Arial: both JetBrains
+ * Mono and Courier New advance every glyph by 0.6 em, so the widths line up
+ * per character instead of on average (Arial would need 126% and still drift
+ * up to 7% on a sentence). */
+@font-face {
+  font-family: "JetBrains Mono Fallback";
+  src: local("Courier New"), local("Liberation Mono"), local("Menlo"), local("DejaVu Sans Mono");
+  size-adjust: 100%;
+  ascent-override: 102%;
+  descent-override: 30%;
+  line-gap-override: 0%;
 }
 
 :root {
@@ -60,9 +111,9 @@
   --bo-btn-hover: #601a08;
   --bo-line: rgba(255, 255, 255, 0.05);
   --bo-line-strong: rgba(255, 255, 255, 0.14);
-  --bo-font-main: Inter, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-  --bo-font-title: "Roboto Condensed", "Segoe UI", Roboto, sans-serif;
-  --bo-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --bo-font-main: Inter, "Inter Fallback", BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --bo-font-title: "Roboto Condensed", "Roboto Condensed Fallback", "Segoe UI", Roboto, sans-serif;
+  --bo-font-mono: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --bo-ui: 56px;
   --bo-header: 100px;
   --bo-header-small: 70px;
