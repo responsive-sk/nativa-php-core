@@ -758,8 +758,25 @@ final class MonoTheme implements ThemeModule
     }
 
     /**
-     * Locale links in the navbar idiom — designed, not ported: the preview
-     * page has no switcher, so its languages render as plain navbar links.
+     * Locale links as a segmented switch — the idiom this tree already uses for
+     * a stateful control (Erik's `.er-locale.m-pubswitch__track`, repeated for
+     * its theme toggle), in mono's own class name.
+     *
+     * Measured 2026-10-17: this rendered `<a class="mo-navbar__link mo-btn--sm">`
+     * — a nav link plus a SIZE MODIFIER whose base class (`mo-btn`) was never
+     * applied. `mo-btn--sm` carries padding and font-size only, so the control
+     * had no track, no border and no state: the language you are already
+     * reading was indistinguishable from the other one, on the one control whose
+     * whole job is to say where you are.
+     *
+     * The active segment is marked from `$activeLocale` — server-side, like
+     * every other state in this theme, so the track is correct on first paint
+     * and the navbar still ships no JavaScript.
+     *
+     * `lang.switch` and `lang.<code>` rows already exist in `locales.db`
+     * (`SeedData`, group `lang`) and nothing reads them yet; the visible label
+     * stays the locale code, because the other three themes label it that way
+     * and changing what a theme prints is a content decision, not styling.
      */
     private function localeLinks(ShellContext $context): string
     {
@@ -767,16 +784,20 @@ final class MonoTheme implements ThemeModule
             return '';
         }
 
-        $links = '';
+        $options = '';
 
         foreach ($context->availableLocales as $language) {
             $href = $context->localeLinks[$language] ?? '/' . $language . $context->currentPath;
+            $active = $language === $context->activeLocale;
 
-            $links .= '<a class="mo-navbar__link mo-btn--sm" href="' . self::e($href) . '">'
-                . self::e($language) . '</a>';
+            $options .= '<a class="mo-lang-switch__option'
+                . ($active ? ' mo-lang-switch__option--active' : '')
+                . '" href="' . self::e($href) . '"'
+                . ($active ? ' aria-current="true"' : '')
+                . '>' . self::e($language) . '</a>';
         }
 
-        return $links;
+        return '<div class="mo-lang-switch">' . $options . '</div>';
     }
 
     /**

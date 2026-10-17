@@ -149,3 +149,17 @@ main pre .mo-code-badge{position:absolute;top:8px;left:8px;font-family:var(--fon
 .mo-slider__arrow--next{right:1rem}
 .mo-slide--hero{background:radial-gradient(60% 50% at 50% 38%,rgba(212,175,55,.16),transparent 70%),repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 56px),var(--mo-slide-bg-dark,#0a0a0a)}
 [data-theme=light] .mo-slide--hero{background:radial-gradient(60% 50% at 50% 38%,rgba(146,111,0,.14),transparent 70%),repeating-linear-gradient(0deg,rgba(30,41,59,.035) 0 1px,transparent 1px 56px),var(--mo-slide-bg,#faf7f0)}
+
+/* --- Locale switch: the pill track the navbar language control never had.
+   Measured 2026-10-17: the switcher rendered `mo-navbar__link mo-btn--sm` — a
+   size modifier with no `mo-btn` base under it — so it had no track, no border
+   and no active state. The idiom is Erik's `.er-locale.m-pubswitch__track`,
+   in mono's own tokens and mono's own class name: a second owner of
+   `m-pubswitch__*` would be exactly the naming defect the const audit exists to
+   stop. The active segment is marked server-side from
+   ShellContext::$activeLocale, so the track is correct on first paint. --- */
+.mo-lang-switch{align-items:center;background-color:var(--color-bg-alt);border:1px solid var(--color-border);border-radius:var(--radius-full);gap:var(--space-1);padding:2px;display:inline-flex}
+.mo-lang-switch__option{border-radius:var(--radius-full);color:var(--color-text-muted);font-size:var(--text-xs);font-weight:var(--font-bold);letter-spacing:.08em;padding:var(--space-1) var(--space-2);text-decoration:none;transition:background-color var(--transition-fast),color var(--transition-fast)}
+.mo-lang-switch__option:hover{color:var(--color-text)}
+.mo-lang-switch__option:focus-visible{box-shadow:var(--focus-ring)}
+.mo-lang-switch__option--active{background-color:var(--brand-gold);color:var(--color-text-inverse)}

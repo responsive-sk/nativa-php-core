@@ -613,6 +613,62 @@ final class MonoThemeTest extends TestCase
         );
     }
 
+    /**
+     * The locale switcher is a SWITCH, not two nav links: one pill track with the
+     * active locale filled. Measured 2026-10-17 — it rendered
+     * `class="mo-navbar__link mo-btn--sm"`, a nav link plus a SIZE MODIFIER whose
+     * base class (`mo-btn`) was never applied, so the track had no state at all
+     * and the language the visitor was already reading looked like the other one.
+     *
+     * The active segment is the option whose code equals `$activeLocale`, and
+     * this asserts WHICH one that is — a track that fills the first option
+     * regardless of the active locale would pass a count-only assertion.
+     */
+    #[Test]
+    public function theLocaleSwitcherIsASwitchWithTheActiveSegmentMarked(): void
+    {
+        $header = (new MonoTheme())->header(ShellContext::from(
+            'Mono',
+            [],
+            [],
+            '/blog',
+            null,
+            'en_US',
+            ['sk_SK', 'en_US'],
+            false,
+        ));
+
+        $this->assertStringContainsString('<div class="mo-lang-switch">', $header);
+        // Counted with the opening quote on purpose: `--active` CONTAINS
+        // `mo-lang-switch__option`, so a bare substring count reports two for
+        // the active segment alone and would read as "three options".
+        $this->assertSame(
+            2,
+            substr_count($header, 'class="mo-lang-switch__option'),
+            'One segment per available locale.',
+        );
+        $this->assertSame(
+            1,
+            substr_count($header, 'mo-lang-switch__option--active'),
+            'Exactly one segment is the current locale.',
+        );
+        $this->assertMatchesRegularExpression(
+            '/mo-lang-switch__option mo-lang-switch__option--active" href="\/en_US\/blog" aria-current="true">en_US</',
+            $header,
+            'The ACTIVE segment must be the active locale, not the first option — and it carries aria-current.',
+        );
+        $this->assertStringContainsString(
+            'href="/sk_SK/blog"',
+            $header,
+            'The other locale keeps its own href — the switcher links to the same path in that language.',
+        );
+        $this->assertStringNotContainsString(
+            'mo-btn--sm',
+            $header,
+            'A size modifier without its `mo-btn` base is exactly what this replaced.',
+        );
+    }
+
     private static function headerWithItems(): string
     {
         $context = ShellContext::from(

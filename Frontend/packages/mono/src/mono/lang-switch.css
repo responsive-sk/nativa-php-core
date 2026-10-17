@@ -1,0 +1,29 @@
+/**
+ * lang-switch.css — the locale switcher as a segmented switch.
+ *
+ * Measured 2026-10-17: the switcher rendered as `<a class="mo-navbar__link
+ * mo-btn--sm">` — a nav-link plus a SIZE MODIFIER, with no `mo-btn` base under
+ * it. `mo-btn--sm` carries only padding and font-size, so the control had no
+ * track, no border and nothing marking the active locale: two muted words in
+ * the navbar, one of them the language you are already reading. Erik has had
+ * the pill-track idiom since its shell landed (`.er-locale.m-pubswitch__track`,
+ * repeated for its theme toggle), so this is that idiom in mono's own tokens
+ * and mono's own class name — a second owner of `m-pubswitch__*` would be
+ * exactly the naming defect the const audit exists to stop.
+ *
+ * The active segment is server-side: `MonoTheme::localeLinks()` marks the option
+ * whose code equals `ShellContext::$activeLocale`, so the track is correct on
+ * first paint and needs no JavaScript (this theme ships none for the navbar).
+ *
+ * `--radius-full` / `.08em` rather than Erik's literal `999px`: mono's tokens
+ * already carry the pill radius, and a literal here would be a second spelling
+ * of a value the tokens own.
+ */
+.mo-lang-switch{align-items:center;background-color:var(--color-bg-alt);border:1px solid var(--color-border);border-radius:var(--radius-full);gap:var(--space-1);padding:2px;display:inline-flex}
+.mo-lang-switch__option{border-radius:var(--radius-full);color:var(--color-text-muted);font-size:var(--text-xs);font-weight:var(--font-bold);letter-spacing:.08em;padding:var(--space-1) var(--space-2);text-decoration:none;transition:background-color var(--transition-fast),color var(--transition-fast)}
+.mo-lang-switch__option:hover{color:var(--color-text)}
+.mo-lang-switch__option:focus-visible{box-shadow:var(--focus-ring)}
+/* The active segment is a filled pill, not a brighter word: on a dark track the
+   gold fill is the only state visible from across the room, and it keeps the
+   contrast pair (brand gold on the inverse ink) that `.mo-btn` already uses. */
+.mo-lang-switch__option--active{background-color:var(--brand-gold);color:var(--color-text-inverse)}
