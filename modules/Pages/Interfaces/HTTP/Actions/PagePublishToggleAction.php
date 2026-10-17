@@ -10,6 +10,7 @@ use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Pages\Application\Services\PageCrudService;
 use Modules\Pages\Interfaces\HTTP\PagesTableRenderer;
@@ -26,6 +27,8 @@ use Modules\Pages\Interfaces\HTTP\PagesTableRenderer;
 #[Route(path: '/mark/pages/{slug}/publish', method: 'POST', name: 'pages.publish-toggle')]
 final class PagePublishToggleAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         $slug = (string) ($request->routeParam('slug') ?? '');
@@ -66,6 +69,6 @@ final class PagePublishToggleAction
             ? ($to ? 'Page+published' : 'Page+unpublished')
             : 'Page+not+found';
 
-        return Response::redirect('/mark/pages?locale=' . $localeParam . '&toast=' . $toast);
+        return Response::redirect($this->url('pages.index') . '?locale=' . $localeParam . '&toast=' . $toast);
     }
 }

@@ -11,6 +11,7 @@ use Modules\Cardboard\Interfaces\HTTP\CardboardServices;
 use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 
 /**
@@ -31,6 +32,8 @@ use Modules\Core\Interfaces\HTTP\Attributes\Route;
 #[Route(path: '/mark/bulk-publish', method: 'POST', name: 'mark.bulk-publish')]
 final class BulkPublishAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         $entity = is_string($request->body('entity')) ? $request->body('entity') : '';
@@ -169,7 +172,7 @@ final class BulkPublishAction
 
         $type = $isError ? 'err' : 'ok';
 
-        return Response::redirect('/mark/' . $this->indexSegment($entity) . '?locale=' . AdminLocale::raw($localeRaw)
+        return Response::redirect($this->url('mark.' . $this->indexSegment($entity)) . '?locale=' . AdminLocale::raw($localeRaw)
             . '&toast=' . urlencode($message));
     }
 

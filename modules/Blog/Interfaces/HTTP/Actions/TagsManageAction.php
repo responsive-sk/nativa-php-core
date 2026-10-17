@@ -10,6 +10,7 @@ use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\ContentServices;
 
@@ -28,6 +29,8 @@ use Modules\Core\Interfaces\HTTP\ContentServices;
 #[Route(path: '/mark/tags/delete', method: 'POST', name: 'tags.delete', handlerMethod: 'delete')]
 final class TagsManageAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         $counts = $this->buildTagIndex();
@@ -65,7 +68,7 @@ final class TagsManageAction
         $tag = is_string($request->body('tag')) ? trim($request->body('tag')) : '';
 
         if ('' === $tag) {
-            return Response::redirect('/mark/tags');
+            return Response::redirect($this->url('tags.manage'));
         }
 
         $created = BlogServices::taxonomy()->createTag($tag);
@@ -80,7 +83,7 @@ final class TagsManageAction
             );
         }
 
-        return Response::redirect('/mark/tags?toast=' . ($created ? 'Tag+created' : 'Tag+already+exists'));
+        return Response::redirect($this->url('tags.manage') . '?toast=' . ($created ? 'Tag+created' : 'Tag+already+exists'));
     }
 
     public function rename(Request $request): Response
@@ -89,7 +92,7 @@ final class TagsManageAction
         $newTag = is_string($request->body('new_tag')) ? trim($request->body('new_tag')) : '';
 
         if ('' === $oldTag || '' === $newTag || $oldTag === $newTag) {
-            return Response::redirect('/mark/tags');
+            return Response::redirect($this->url('tags.manage'));
         }
 
         $count = $this->replaceTagInAllArticles($oldTag, $newTag);
@@ -102,7 +105,7 @@ final class TagsManageAction
             $request->getClientIp(),
         );
 
-        return Response::redirect('/mark/tags');
+        return Response::redirect($this->url('tags.manage'));
     }
 
     public function delete(Request $request): Response
@@ -110,7 +113,7 @@ final class TagsManageAction
         $tag = is_string($request->body('tag')) ? trim($request->body('tag')) : '';
 
         if ('' === $tag) {
-            return Response::redirect('/mark/tags');
+            return Response::redirect($this->url('tags.manage'));
         }
 
         $count = $this->removeTagFromAllArticles($tag);
@@ -123,7 +126,7 @@ final class TagsManageAction
             $request->getClientIp(),
         );
 
-        return Response::redirect('/mark/tags');
+        return Response::redirect($this->url('tags.manage'));
     }
 
     /**

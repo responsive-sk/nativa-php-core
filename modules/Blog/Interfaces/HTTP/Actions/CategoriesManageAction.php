@@ -10,6 +10,7 @@ use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\ContentServices;
 
@@ -28,6 +29,8 @@ use Modules\Core\Interfaces\HTTP\ContentServices;
 #[Route(path: '/mark/categories/delete', method: 'POST', name: 'categories.delete', handlerMethod: 'delete')]
 final class CategoriesManageAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         $counts = $this->buildCategoryIndex();
@@ -65,7 +68,7 @@ final class CategoriesManageAction
         $category = is_string($request->body('category')) ? trim($request->body('category')) : '';
 
         if ('' === $category) {
-            return Response::redirect('/mark/categories');
+            return Response::redirect($this->url('categories.manage'));
         }
 
         $created = BlogServices::taxonomy()->createCategory($category);
@@ -80,7 +83,7 @@ final class CategoriesManageAction
             );
         }
 
-        return Response::redirect('/mark/categories?toast=' . ($created ? 'Category+created' : 'Category+already+exists'));
+        return Response::redirect($this->url('categories.manage') . '?toast=' . ($created ? 'Category+created' : 'Category+already+exists'));
     }
 
     public function rename(Request $request): Response
@@ -89,7 +92,7 @@ final class CategoriesManageAction
         $newCategory = is_string($request->body('new_category')) ? trim($request->body('new_category')) : '';
 
         if ('' === $oldCategory || '' === $newCategory || $oldCategory === $newCategory) {
-            return Response::redirect('/mark/categories');
+            return Response::redirect($this->url('categories.manage'));
         }
 
         // Both halves matter, and neither implies the other: the registry holds
@@ -113,7 +116,7 @@ final class CategoriesManageAction
             $request->getClientIp(),
         );
 
-        return Response::redirect('/mark/categories');
+        return Response::redirect($this->url('categories.manage'));
     }
 
     public function delete(Request $request): Response
@@ -121,7 +124,7 @@ final class CategoriesManageAction
         $category = is_string($request->body('category')) ? trim($request->body('category')) : '';
 
         if ('' === $category) {
-            return Response::redirect('/mark/categories');
+            return Response::redirect($this->url('categories.manage'));
         }
 
         // Same two halves as rename(): without the registry edit a pre-created
@@ -142,7 +145,7 @@ final class CategoriesManageAction
             $request->getClientIp(),
         );
 
-        return Response::redirect('/mark/categories');
+        return Response::redirect($this->url('categories.manage'));
     }
 
     /**

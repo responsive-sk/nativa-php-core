@@ -129,7 +129,7 @@ final class Kernel
     private function runAction(Request $request, array $match): Response
     {
         $actionClass = $match['action'];
-        $action = new $actionClass();
+        $action = $this->instantiateAction($actionClass);
 
         $handlerMethod = $match['route']->handlerMethod ?? 'handle';
         if (!method_exists($action, $handlerMethod)) {
@@ -142,6 +142,57 @@ final class Kernel
         }
 
         return $this->normalizeResult($action->{$handlerMethod}($request));
+    }
+
+    /**
+     * Instantiate the action, injecting the Router where it asks for one.
+     *
+     * Actions navigate by route NAME (task 2.8), which they can only do if
+     * they hold the router. The parameter is optional in the action's own
+     * signature — a test can build one by hand — and the Kernel fills it by
+     * TYPE, the same way it recognises `RouterInterface` here. Every other
+     * optional parameter keeps its default (`?CloudinaryApi`, `?DocsCatalog`),
+     * so an action without a router is constructed exactly as before.
+     *
+     * @param class-string $actionClass
+     */
+    private function instantiateAction(string $actionClass): object
+    {
+        $reflection = new \ReflectionClass($actionClass);
+        $constructor = $reflection->getConstructor();
+
+        if (null === $constructor || 0 === $constructor->getNumberOfParameters()) {
+            return $reflection->newInstance();
+        }
+
+        $arguments = [];
+
+        foreach ($constructor->getParameters() as $parameter) {
+            $type = $parameter->getType();
+
+            if ($type instanceof \ReflectionNamedType
+                && !$type->isBuiltin()
+                && is_a($this->router, $type->getName())
+            ) {
+                $arguments[] = $this->router;
+
+                continue;
+            }
+
+            if ($parameter->isDefaultValueAvailable()) {
+                $arguments[] = $parameter->getDefaultValue();
+
+                continue;
+            }
+
+            throw new \RuntimeException(sprintf(
+                'Action %s needs a %s the Kernel cannot supply.',
+                $actionClass,
+                $type instanceof \ReflectionNamedType ? $type->getName() : 'dependency',
+            ));
+        }
+
+        return $reflection->newInstanceArgs($arguments);
     }
 
     /**

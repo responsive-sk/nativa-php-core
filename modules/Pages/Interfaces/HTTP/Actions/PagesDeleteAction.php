@@ -9,6 +9,7 @@ use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Pages\Application\Services\PageCrudService;
@@ -22,6 +23,8 @@ use Modules\Pages\Application\Services\PageCrudService;
 #[Route(path: '/mark/pages/{slug}/delete', method: 'POST', name: 'pages.delete')]
 final class PagesDeleteAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         $slug = (string) ($request->routeParam('slug') ?? '');
@@ -48,6 +51,6 @@ final class PagesDeleteAction
             return Response::html('');
         }
 
-        return Response::redirect('/mark/pages?locale=' . $localeParam . '&toast=Page+deleted');
+        return Response::redirect($this->url('pages.index') . '?locale=' . $localeParam . '&toast=Page+deleted');
     }
 }

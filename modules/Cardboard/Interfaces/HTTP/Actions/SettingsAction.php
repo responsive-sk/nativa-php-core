@@ -11,6 +11,7 @@ use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\ThemeRegistry;
 use Modules\Core\Interfaces\HTTP\ThemeResolver;
@@ -43,6 +44,8 @@ use Modules\Settings\Application\DTOs\MenuItemDTO;
 #[Route(path: '/mark/settings/admin-nav/{id}/icon', method: 'POST', name: 'mark.settings.admin-nav.icon', handlerMethod: 'updateAdminNavIcon')]
 final class SettingsAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         return Response::html($this->settingsPage());
@@ -354,7 +357,7 @@ final class SettingsAction
         CacheInvalidator::flush();
         \Modules\Audit\Interfaces\HTTP\AuditServices::log('settings.save', 'settings', 'Saved site settings', $request->getClientIp());
 
-        return Response::redirect('/mark/settings');
+        return Response::redirect($this->url('mark.settings'));
     }
 
     public function saveTokens(Request $request): Response
@@ -368,7 +371,7 @@ final class SettingsAction
             \Modules\Audit\Interfaces\HTTP\AuditServices::log('settings.tokens', 'settings', 'Saved design token ' . $key, $request->getClientIp());
         }
 
-        return Response::redirect('/mark/settings');
+        return Response::redirect($this->url('mark.settings'));
     }
 
     public function saveNav(Request $request): Response
@@ -393,7 +396,7 @@ final class SettingsAction
             \Modules\Audit\Interfaces\HTTP\AuditServices::log('settings.nav', 'settings', 'Added nav item ' . $label, $request->getClientIp());
         }
 
-        return Response::redirect('/mark/settings');
+        return Response::redirect($this->url('mark.settings'));
     }
 
     public function deleteNav(Request $request): Response
@@ -406,7 +409,7 @@ final class SettingsAction
             \Modules\Audit\Interfaces\HTTP\AuditServices::log('settings.nav.delete', 'settings', 'Deleted nav item ' . $id, $request->getClientIp());
         }
 
-        return Response::redirect('/mark/settings');
+        return Response::redirect($this->url('mark.settings'));
     }
 
     public function flushCache(Request $request): Response
@@ -414,7 +417,7 @@ final class SettingsAction
         $deleted = CacheInvalidator::flush();
         \Modules\Audit\Interfaces\HTTP\AuditServices::log('settings.flush-cache', 'settings', 'Flushed page cache (' . $deleted . ' files)', $request->getClientIp());
 
-        return Response::redirect('/mark/settings');
+        return Response::redirect($this->url('mark.settings'));
     }
 
     public function saveAdminNav(Request $request): Response
@@ -442,7 +445,7 @@ final class SettingsAction
             \Modules\Audit\Interfaces\HTTP\AuditServices::log('settings.admin-nav', 'settings', 'Added admin nav item ' . $label, $request->getClientIp());
         }
 
-        return Response::redirect('/mark/settings');
+        return Response::redirect($this->url('mark.settings'));
     }
 
     public function toggleAdminNav(Request $request): Response
@@ -455,7 +458,7 @@ final class SettingsAction
             \Modules\Audit\Interfaces\HTTP\AuditServices::log('settings.admin-nav.toggle', 'settings', 'Toggled admin nav item ' . $id, $request->getClientIp());
         }
 
-        return Response::redirect('/mark/settings');
+        return Response::redirect($this->url('mark.settings'));
     }
 
     public function sortAdminNav(Request $request): Response
@@ -470,7 +473,7 @@ final class SettingsAction
             \Modules\Audit\Interfaces\HTTP\AuditServices::log('settings.admin-nav.sort', 'settings', 'Reordered admin nav item ' . $id . ' to ' . $sort, $request->getClientIp());
         }
 
-        return Response::redirect('/mark/settings');
+        return Response::redirect($this->url('mark.settings'));
     }
 
     public function deleteAdminNav(Request $request): Response
@@ -483,7 +486,7 @@ final class SettingsAction
             \Modules\Audit\Interfaces\HTTP\AuditServices::log('settings.admin-nav.delete', 'settings', 'Deleted admin nav item ' . $id, $request->getClientIp());
         }
 
-        return Response::redirect('/mark/settings');
+        return Response::redirect($this->url('mark.settings'));
     }
 
     public function reorderAdminNav(Request $request): Response
@@ -566,6 +569,6 @@ final class SettingsAction
             \Modules\Audit\Interfaces\HTTP\AuditServices::log('settings.admin-nav.icon', 'settings', 'Updated icon for admin nav item ' . $id, $request->getClientIp());
         }
 
-        return Response::redirect('/mark/settings');
+        return Response::redirect($this->url('mark.settings'));
     }
 }

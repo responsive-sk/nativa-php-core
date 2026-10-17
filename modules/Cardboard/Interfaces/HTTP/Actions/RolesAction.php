@@ -10,6 +10,7 @@ use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 
 /**
@@ -41,6 +42,8 @@ use Modules\Core\Interfaces\HTTP\Attributes\Route;
 #[Route(path: '/mark/permissions', method: 'GET', name: 'mark.permissions', handlerMethod: 'permissionsList')]
 final class RolesAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         $search = is_string($request->query('q')) ? $request->query('q') : '';
@@ -127,12 +130,12 @@ final class RolesAction
 
         if (AdminLayout::isHtmx($request)) {
             $response = Response::html('');
-            $response->setHeader('HX-Redirect', '/mark/roles?toast=Role+created+successfully');
+            $response->setHeader('HX-Redirect', $this->url('mark.roles') . '?toast=Role+created+successfully');
 
             return $response;
         }
 
-        return Response::redirect('/mark/roles');
+        return Response::redirect($this->url('mark.roles'));
     }
 
     public function deleteRole(Request $request): Response
@@ -158,7 +161,7 @@ final class RolesAction
             return Response::html('');
         }
 
-        return Response::redirect('/mark/roles');
+        return Response::redirect($this->url('mark.roles'));
     }
 
     public function permissionsForm(Request $request): Response
@@ -167,12 +170,12 @@ final class RolesAction
         $roles = CardboardServices::roles();
 
         if (null === $id) {
-            return Response::redirect('/mark/roles');
+            return Response::redirect($this->url('mark.roles'));
         }
 
         $role = $this->findRole($id);
         if (null === $role) {
-            return Response::redirect('/mark/roles');
+            return Response::redirect($this->url('mark.roles'));
         }
 
         $assigned = $roles->permissionIdsForRole($id);
@@ -214,7 +217,7 @@ final class RolesAction
         $id = $request->routeParam('id');
 
         if (null === $id) {
-            return Response::redirect('/mark/roles');
+            return Response::redirect($this->url('mark.roles'));
         }
 
         $submitted = $request->body('permissions');
@@ -248,7 +251,7 @@ final class RolesAction
             );
         }
 
-        return Response::redirect('/mark/roles');
+        return Response::redirect($this->url('mark.roles'));
     }
 
     public function permissionsList(Request $request): Response

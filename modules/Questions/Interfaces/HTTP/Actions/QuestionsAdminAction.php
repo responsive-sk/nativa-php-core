@@ -9,6 +9,7 @@ use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Questions\Application\QuestionsServices;
@@ -40,6 +41,8 @@ use Modules\Questions\Domain\Entities\Question;
 #[Route(path: '/mark/questions/{id}/delete', method: 'POST', name: 'mark.questions.delete', handlerMethod: 'delete')]
 final class QuestionsAdminAction
 {
+    use ResolvesRouteUrls;
+
     /** @var list<string> The statuses the `?status=` filter accepts. */
     private const array STATUSES = [
         Question::STATUS_PENDING,
@@ -58,7 +61,7 @@ final class QuestionsAdminAction
             QuestionsServices::repository()->setStatus($id, Question::STATUS_APPROVED);
         });
 
-        return Response::redirect('/mark/questions');
+        return Response::redirect($this->url('mark.questions'));
     }
 
     public function reject(Request $request): Response
@@ -67,7 +70,7 @@ final class QuestionsAdminAction
             QuestionsServices::repository()->setStatus($id, Question::STATUS_REJECTED);
         });
 
-        return Response::redirect('/mark/questions');
+        return Response::redirect($this->url('mark.questions'));
     }
 
     public function delete(Request $request): Response
@@ -76,7 +79,7 @@ final class QuestionsAdminAction
             QuestionsServices::repository()->delete($id);
         });
 
-        return Response::redirect('/mark/questions');
+        return Response::redirect($this->url('mark.questions'));
     }
 
     /**

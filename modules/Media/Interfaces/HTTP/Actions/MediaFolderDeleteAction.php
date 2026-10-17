@@ -9,6 +9,7 @@ use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Database\Infrastructure\Persistence\UnitOfWork;
 use Modules\Media\Interfaces\HTTP\MediaFolderResponses;
@@ -31,6 +32,8 @@ use Modules\Media\Interfaces\HTTP\MediaServices;
 #[Route(path: '/mark/media/folders/delete', method: 'POST', name: 'media.folder-delete')]
 final class MediaFolderDeleteAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         $rawPath = $request->body('path');
@@ -47,7 +50,7 @@ final class MediaFolderDeleteAction
         );
 
         if (!$outcome['ok']) {
-            return MediaFolderResponses::refusal($request, $outcome['error'], $path);
+            return MediaFolderResponses::refusal($this->router(), $request, $outcome['error'], $path);
         }
 
         CacheInvalidator::flush();
@@ -65,6 +68,7 @@ final class MediaFolderDeleteAction
         );
 
         return MediaFolderResponses::success(
+            $this->router(),
             $request,
             sprintf('Folder %s deleted (%d file(s)).', $path, $outcome['deleted']),
         );

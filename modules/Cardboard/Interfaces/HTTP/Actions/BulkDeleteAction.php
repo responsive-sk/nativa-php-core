@@ -11,6 +11,7 @@ use Modules\Cardboard\Interfaces\HTTP\CardboardServices;
 use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Database\Infrastructure\Persistence\UnitOfWork;
@@ -34,6 +35,8 @@ use Modules\Database\Infrastructure\Persistence\UnitOfWork;
 #[Route(path: '/mark/bulk-delete', method: 'POST', name: 'mark.bulk-delete')]
 final class BulkDeleteAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         $entity = is_string($request->body('entity')) ? $request->body('entity') : '';
@@ -130,7 +133,7 @@ final class BulkDeleteAction
     private function respond(Request $request, string $entity, string $localeRaw, string $locale, string $toast): Response
     {
         if (!AdminLayout::isHtmx($request)) {
-            return Response::redirect('/mark/' . $this->indexSegment($entity) . '?locale=' . AdminLocale::raw($localeRaw)
+            return Response::redirect($this->url('mark.' . $this->indexSegment($entity)) . '?locale=' . AdminLocale::raw($localeRaw)
                 . '&toast=' . urlencode($toast));
         }
 
@@ -177,7 +180,7 @@ final class BulkDeleteAction
             return Response::html(AdminLayout::toast($message, $isError ? 'err' : 'ok'));
         }
 
-        return Response::redirect('/mark/' . $this->indexSegment($entity)
+        return Response::redirect($this->url('mark.' . $this->indexSegment($entity))
             . '?locale=' . AdminLocale::raw($localeRaw) . '&toast=' . urlencode($message));
     }
 

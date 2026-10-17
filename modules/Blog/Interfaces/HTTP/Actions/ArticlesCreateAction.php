@@ -13,6 +13,7 @@ use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Users\Interfaces\HTTP\AuthServices;
@@ -30,6 +31,8 @@ use Modules\Validation\Validation\Validator;
 #[Route(path: '/mark/articles/create', method: 'GET|POST', name: 'articles.create')]
 final class ArticlesCreateAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         if ($request->isMethod('POST')) {
@@ -87,12 +90,12 @@ final class ArticlesCreateAction
 
         if (AdminLayout::isHtmx($request)) {
             $response = Response::html('');
-            $response->setHeader('HX-Redirect', '/mark/articles?locale=' . $locale . '&toast=Article+created+successfully');
+            $response->setHeader('HX-Redirect', $this->url('articles.index') . '?locale=' . $locale . '&toast=Article+created+successfully');
 
             return $response;
         }
 
-        return Response::redirect('/mark/articles?locale=' . $locale . '&toast=Article+created+successfully');
+        return Response::redirect($this->url('articles.index') . '?locale=' . $locale . '&toast=Article+created+successfully');
     }
 
     /**

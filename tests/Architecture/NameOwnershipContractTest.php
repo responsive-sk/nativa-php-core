@@ -29,12 +29,12 @@ use RecursiveIteratorIterator;
  *    when an entry stops applying, so it cannot rot.
  * 2. **A value must not be spelled as a raw literal outside its owner.**
  *    A RATCHET, not a prohibition, and that is the measured conclusion rather
- *    than a compromise. 52 owned string values appear as literals on 502
+ *    than a compromise. 52 owned string values appear as literals on 499
  *    places across the tree. `'sk_SK'` alone is 132 of them and `'en'` 48:
  *    a locale code, the default language, spelled in seed data, translations
- *    and URL tests, which is data and not a second owner. A gate with 502
- *    exemptions is not a gate. 502 is a CEILING: every consolidation lowers it,
- *    and the gate refuses the 503rd.
+ *    and URL tests, which is data and not a second owner. A gate with 499
+ *    exemptions is not a gate. 499 is a CEILING: every consolidation lowers it,
+ *    and the gate refuses the 500th.
  * 3. **The declaration count must not rise.** Ratchet at 238/202. This is the
  *    rule that catches the cheapest wrong fix — "there are two names for this,
  *    let me add a third" — which is the complaint that started all of this.
@@ -149,15 +149,20 @@ final class NameOwnershipContractTest extends TestCase
      * and `CommentsMetric` plus `CommentsAdminAction` read
      * `Comment::STATUS_*`, retiring 18 owned literals.
      *
-     * Now 502: task 0.3 removed the two `ADMIN_PATH` constants and the three
+     * Then 502: task 0.3 removed the two `ADMIN_PATH` constants and the three
      * call sites that retyped `'/mark'` beside them. `AdminRoutePolicy` still
      * declares the default (`DEFAULT_PREFIX`), so the value stays owned and
-     * the 31 remaining `/mark` literals are still counted — the gate must not
+     * the remaining `/mark` literals are still counted — the gate must not
      * lose sight of a value just because its owner became configurable.
+     *
+     * Now 499: task 2.8 moved 130 admin redirects from path literals to route
+     * names. Most of those spelled `/mark/<section>`, not the bare `/mark`
+     * this rule owns, so the ceiling fell by the three that did spell it —
+     * the rest of that work is held by `AdminRedirectRouteNamesTest`.
      * The number is measured, the direction is down, and the gate files' own
      * literals (the exemption reasons) are excluded from it.
      */
-    private const int MAX_LITERAL_PLACES = 502;
+    private const int MAX_LITERAL_PLACES = 499;
 
     /**
      * Rule 3 — measured 2026-10-17 on the tracked scope.
@@ -277,7 +282,7 @@ final class NameOwnershipContractTest extends TestCase
     /**
      * Rule 2. Every place an owned string value is spelled out as a literal
      * somewhere it does not own. The ceiling is what makes this a gate rather
-     * than a wish: 502 today, and the only legal direction is down.
+     * than a wish: 499 today, and the only legal direction is down.
      */
     #[Test]
     public function ownedValuesAreNotSpelledAsLiteralsMoreOftenThanTheCeiling(): void

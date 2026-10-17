@@ -9,6 +9,7 @@ use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Tooling\ModuleCatalog;
 use Modules\Tooling\ModuleInstaller;
@@ -55,6 +56,8 @@ use Modules\Tooling\ModuleInstaller;
 )]
 final class ModulesAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         $catalogued = ModuleCatalog::fromAppPaths()->catalogued();
@@ -75,7 +78,7 @@ final class ModulesAction
 
         // Unknown name: refuse rather than echo it into a command.
         if (!in_array($name, $catalogued, true) || !ModuleCatalog::isValidName($name)) {
-            return Response::redirect('/mark/settings/modules');
+            return Response::redirect($this->url('mark.settings.modules'));
         }
 
         $errors = [];
@@ -94,7 +97,7 @@ final class ModulesAction
             $errors[] = $name . ': ' . $e->getMessage();
         }
 
-        return Response::redirect('/mark/settings/modules' . ([] === $errors ? '' : '?error=' . rawurlencode(implode(' / ', $errors))));
+        return Response::redirect($this->url('mark.settings.modules') . ([] === $errors ? '' : '?error=' . rawurlencode(implode(' / ', $errors))));
     }
 
     private function page(string $csrf): string

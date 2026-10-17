@@ -8,6 +8,7 @@ use Modules\Audit\Interfaces\HTTP\AuditServices;
 use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Media\Interfaces\HTTP\MediaServices;
 
@@ -20,6 +21,8 @@ use Modules\Media\Interfaces\HTTP\MediaServices;
 #[Route(path: '/mark/media/{id}/delete', method: 'POST', name: 'media.delete')]
 final class MediaDeleteAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         $id = $request->routeParam('id');
@@ -42,6 +45,6 @@ final class MediaDeleteAction
             }
         }
 
-        return Response::redirect('/mark/media');
+        return Response::redirect($this->url('media.index'));
     }
 }

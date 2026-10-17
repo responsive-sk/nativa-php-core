@@ -9,6 +9,7 @@ use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Media\Interfaces\HTTP\MediaFolderResponses;
 use Modules\Media\Interfaces\HTTP\MediaServices;
 
@@ -26,13 +27,15 @@ use Modules\Media\Interfaces\HTTP\MediaServices;
 #[Route(path: '/mark/media/folders/create', method: 'POST', name: 'media.folder-create')]
 final class MediaFolderCreateAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         $raw = $request->body('path');
         $result = MediaServices::folders()->create(is_string($raw) ? $raw : '');
 
         if (!$result['ok']) {
-            return MediaFolderResponses::refusal($request, $result['error']);
+            return MediaFolderResponses::refusal($this->router(), $request, $result['error']);
         }
 
         CacheInvalidator::flush();
@@ -43,6 +46,6 @@ final class MediaFolderCreateAction
             $request->getClientIp(),
         );
 
-        return MediaFolderResponses::success($request, 'Folder ' . $result['path'] . ' created.', $result['path']);
+        return MediaFolderResponses::success($this->router(), $request, 'Folder ' . $result['path'] . ' created.', $result['path']);
     }
 }

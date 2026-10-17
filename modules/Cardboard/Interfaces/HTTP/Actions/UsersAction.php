@@ -10,6 +10,7 @@ use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Infrastructure\Storage\LocalStorageProvider;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Security\Application\Services\PasswordHasher;
@@ -48,6 +49,8 @@ use Modules\Validation\Validation\Validator;
 #[Route(path: '/mark/users/{id}/delete', method: 'POST|DELETE', name: 'mark.users.delete', handlerMethod: 'delete')]
 final class UsersAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         $search = is_string($request->query('q')) ? $request->query('q') : '';
@@ -171,12 +174,12 @@ final class UsersAction
 
         if (AdminLayout::isHtmx($request)) {
             $response = Response::html('');
-            $response->setHeader('HX-Redirect', '/mark/users?toast=User+created+successfully');
+            $response->setHeader('HX-Redirect', $this->url('mark.users') . '?toast=User+created+successfully');
 
             return $response;
         }
 
-        return Response::redirect('/mark/users');
+        return Response::redirect($this->url('mark.users'));
     }
 
     public function editForm(Request $request): Response
@@ -185,7 +188,7 @@ final class UsersAction
         $user = null === $id ? null : CardboardServices::users()->findById($id);
 
         if (null === $user) {
-            return Response::redirect('/mark/users');
+            return Response::redirect($this->url('mark.users'));
         }
 
         return Response::html($this->form(
@@ -207,7 +210,7 @@ final class UsersAction
         $user = null === $id ? null : $users->findById($id);
 
         if (null === $user) {
-            return Response::redirect('/mark/users');
+            return Response::redirect($this->url('mark.users'));
         }
 
         $name = is_string($request->body('name')) ? $request->body('name') : '';
@@ -250,12 +253,12 @@ final class UsersAction
 
         if (AdminLayout::isHtmx($request)) {
             $response = Response::html('');
-            $response->setHeader('HX-Redirect', '/mark/users?toast=User+saved+successfully');
+            $response->setHeader('HX-Redirect', $this->url('mark.users') . '?toast=User+saved+successfully');
 
             return $response;
         }
 
-        return Response::redirect('/mark/users');
+        return Response::redirect($this->url('mark.users'));
     }
 
     public function delete(Request $request): Response
@@ -282,7 +285,7 @@ final class UsersAction
             return Response::html('');
         }
 
-        return Response::redirect('/mark/users');
+        return Response::redirect($this->url('mark.users'));
     }
 
     /**

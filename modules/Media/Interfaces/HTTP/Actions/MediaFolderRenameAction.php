@@ -9,6 +9,7 @@ use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Media\Interfaces\HTTP\MediaFolderResponses;
 use Modules\Media\Interfaces\HTTP\MediaServices;
 
@@ -27,6 +28,8 @@ use Modules\Media\Interfaces\HTTP\MediaServices;
 #[Route(path: '/mark/media/folders/rename', method: 'POST', name: 'media.folder-rename')]
 final class MediaFolderRenameAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         $fromRaw = $request->body('from');
@@ -37,7 +40,7 @@ final class MediaFolderRenameAction
         $result = MediaServices::folders()->rename($from, $to);
 
         if (!$result['ok']) {
-            return MediaFolderResponses::refusal($request, $result['error'], $from);
+            return MediaFolderResponses::refusal($this->router(), $request, $result['error'], $from);
         }
 
         CacheInvalidator::flush();
@@ -56,6 +59,7 @@ final class MediaFolderRenameAction
         );
 
         return MediaFolderResponses::success(
+            $this->router(),
             $request,
             sprintf('Renamed to %s — %d folder(s), %d file(s).', $to, $result['folders'], $result['assets']),
             $to,

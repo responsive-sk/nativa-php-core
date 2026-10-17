@@ -9,6 +9,7 @@ use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Queue\Interfaces\HTTP\QueueServices;
 
@@ -28,6 +29,8 @@ use Modules\Queue\Interfaces\HTTP\QueueServices;
 #[Route(path: '/mark/queue/failed/{id}/delete', method: 'POST', name: 'mark.queue.failed.delete', handlerMethod: 'deleteFailed')]
 final class QueueAdminAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         return Response::html($this->listPage($request));
@@ -58,7 +61,7 @@ final class QueueAdminAction
             AuditServices::log('queue.delete', 'job:' . $id, 'Deleted job ' . $id, $request->getClientIp());
         }
 
-        return Response::redirect('/mark/queue');
+        return Response::redirect($this->url('mark.queue'));
     }
 
     public function retryFailed(Request $request): Response
@@ -70,7 +73,7 @@ final class QueueAdminAction
             AuditServices::log('queue.retry', 'job:' . $id, 'Re-queued failed job ' . $id, $request->getClientIp());
         }
 
-        return Response::redirect('/mark/queue#failed');
+        return Response::redirect($this->url('mark.queue') . '#failed');
     }
 
     public function deleteFailed(Request $request): Response
@@ -82,7 +85,7 @@ final class QueueAdminAction
             AuditServices::log('queue.failed.delete', 'job:' . $id, 'Deleted failed job ' . $id, $request->getClientIp());
         }
 
-        return Response::redirect('/mark/queue#failed');
+        return Response::redirect($this->url('mark.queue') . '#failed');
     }
 
     private function listPage(Request $request): string

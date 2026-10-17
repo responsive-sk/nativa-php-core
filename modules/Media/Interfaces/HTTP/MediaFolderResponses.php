@@ -7,6 +7,7 @@ namespace Modules\Media\Interfaces\HTTP;
 use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Kernel\Contracts\RouterInterface;
 
 /**
  * MediaFolderResponses — how a folder operation answers, in one place.
@@ -26,21 +27,21 @@ final class MediaFolderResponses
     /**
      * The operation succeeded: say so and return to the folder it affects.
      */
-    public static function success(Request $request, string $message, string $folder = ''): Response
+    public static function success(RouterInterface $router, Request $request, string $message, string $folder = ''): Response
     {
-        return self::answer($request, $message, 'ok', $folder);
+        return self::answer($router, $request, $message, 'ok', $folder);
     }
 
     /**
      * The operation was refused: the message names the problem, and nothing
      * was written.
      */
-    public static function refusal(Request $request, string $message, string $folder = ''): Response
+    public static function refusal(RouterInterface $router, Request $request, string $message, string $folder = ''): Response
     {
-        return self::answer($request, $message, 'err', $folder);
+        return self::answer($router, $request, $message, 'err', $folder);
     }
 
-    private static function answer(Request $request, string $message, string $type, string $folder): Response
+    private static function answer(RouterInterface $router, Request $request, string $message, string $type, string $folder): Response
     {
         if (AdminLayout::isHtmx($request)) {
             return Response::html(AdminLayout::toast($message, $type));
@@ -52,6 +53,6 @@ final class MediaFolderResponses
             $query .= 'toast-type=error&';
         }
 
-        return Response::redirect('/mark/media?' . $query . 'toast=' . urlencode($message));
+        return Response::redirect($router->url('media.index') . '?' . $query . 'toast=' . urlencode($message));
     }
 }

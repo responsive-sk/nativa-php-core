@@ -11,6 +11,7 @@ use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Env;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Media\Interfaces\HTTP\MediaServices;
 use Modules\Media\Interfaces\HTTP\MediaUploadLimits;
@@ -26,6 +27,8 @@ use Modules\Media\Interfaces\HTTP\MediaUploadPayload;
 #[Route(path: '/mark/media/upload', method: 'GET|POST', name: 'media.upload')]
 final class MediaUploadAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         if ($request->isMethod('POST')) {
@@ -87,7 +90,7 @@ final class MediaUploadAction
                 $request->getClientIp(),
             );
 
-            return Response::redirect('/mark/media');
+            return Response::redirect($this->url('media.index'));
         } catch (\RuntimeException $e) {
             return Response::html($this->uploadForm([$e->getMessage()]), 400);
         }

@@ -12,6 +12,7 @@ use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Users\Interfaces\HTTP\AuthServices;
 
@@ -24,6 +25,8 @@ use Modules\Users\Interfaces\HTTP\AuthServices;
 #[Route(path: '/mark/articles/{slug}/delete', method: 'POST|DELETE', name: 'articles.delete')]
 final class ArticlesDeleteAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         $slug = (string) ($request->routeParam('slug') ?? '');
@@ -66,6 +69,6 @@ final class ArticlesDeleteAction
             return Response::html('');
         }
 
-        return Response::redirect('/mark/articles?locale=' . $localeParam . '&toast=Article+deleted');
+        return Response::redirect($this->url('articles.index') . '?locale=' . $localeParam . '&toast=Article+deleted');
     }
 }

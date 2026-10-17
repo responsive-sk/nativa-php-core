@@ -9,6 +9,7 @@ use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Locales\Application\DTOs\TranslationDTO;
 use Modules\Locales\Domain\Model\Locale;
@@ -39,6 +40,8 @@ use Modules\Validation\Validation\Validator;
 #[Route(path: '/mark/locales/import', method: 'POST', name: 'mark.locales.import', handlerMethod: 'import')]
 final class LocalesAction
 {
+    use ResolvesRouteUrls;
+
     /**
      * Audit emission guarded by class_exists, never imported: translations
      * are manageable without the Audit module; with it installed every
@@ -106,7 +109,7 @@ final class LocalesAction
             CacheInvalidator::flush();
             self::audit('locales.create', 'translation:' . $key, 'Created translation ' . $key, $request->getClientIp());
 
-            return Response::redirect('/mark/locales?locale=' . urlencode($localeCode));
+            return Response::redirect($this->url('mark.locales') . '?locale=' . urlencode($localeCode));
         }
 
         return Response::html($this->form(
@@ -124,7 +127,7 @@ final class LocalesAction
         $translation = null === $id ? null : LocalesServices::translations()->findById($id);
 
         if (null === $translation) {
-            return Response::redirect('/mark/locales');
+            return Response::redirect($this->url('mark.locales'));
         }
 
         return Response::html($this->form(
@@ -149,7 +152,7 @@ final class LocalesAction
         $translation = null === $id ? null : $service->findById($id);
 
         if (null === $translation) {
-            return Response::redirect('/mark/locales');
+            return Response::redirect($this->url('mark.locales'));
         }
 
         $value = $this->stringParam($request->body('value', ''));
@@ -179,7 +182,7 @@ final class LocalesAction
         CacheInvalidator::flush();
         self::audit('locales.update', 'translation:' . $translation->key(), 'Updated translation ' . $translation->key(), $request->getClientIp());
 
-        return Response::redirect('/mark/locales?locale=' . urlencode($translation->locale()->code()));
+        return Response::redirect($this->url('mark.locales') . '?locale=' . urlencode($translation->locale()->code()));
     }
 
     public function delete(Request $request): Response
@@ -194,10 +197,10 @@ final class LocalesAction
             CacheInvalidator::flush();
             self::audit('locales.delete', 'translation:' . $translation->key(), 'Deleted translation ' . $translation->key(), $request->getClientIp());
 
-            return Response::redirect('/mark/locales?locale=' . urlencode($locale));
+            return Response::redirect($this->url('mark.locales') . '?locale=' . urlencode($locale));
         }
 
-        return Response::redirect('/mark/locales');
+        return Response::redirect($this->url('mark.locales'));
     }
 
     /**
@@ -250,7 +253,7 @@ final class LocalesAction
         CacheInvalidator::flush();
         self::audit('locales.import', 'locale:' . $locale, 'Imported ' . $imported . ' translations', $request->getClientIp());
 
-        return Response::redirect('/mark/locales?locale=' . urlencode($locale) . '&imported=' . $imported);
+        return Response::redirect($this->url('mark.locales') . '?locale=' . urlencode($locale) . '&imported=' . $imported);
     }
 
     /**

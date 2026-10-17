@@ -10,6 +10,7 @@ use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Media\Application\Services\MediaService;
 use Modules\Media\Domain\Model\MediaAsset;
@@ -23,19 +24,21 @@ use Modules\Media\Interfaces\HTTP\MediaServices;
 #[Route(path: '/mark/media/{id}/edit', method: 'GET|POST', name: 'media.edit')]
 final class MediaEditAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         $id = $request->routeParam('id');
 
         if (null === $id || '' === $id) {
-            return Response::redirect('/mark/media');
+            return Response::redirect($this->url('media.index'));
         }
 
         $service = MediaServices::media();
         $asset = $service->findById($id);
 
         if (null === $asset) {
-            return Response::redirect('/mark/media');
+            return Response::redirect($this->url('media.index'));
         }
 
         // Handle POST (save).
@@ -72,7 +75,7 @@ final class MediaEditAction
             detail: "Updated metadata for asset {$id}",
         );
 
-        return Response::redirect('/mark/media');
+        return Response::redirect($this->url('media.index'));
     }
 
     private function renderForm(MediaAsset $asset): Response

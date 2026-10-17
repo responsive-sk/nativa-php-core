@@ -11,6 +11,7 @@ use Modules\Comments\Interfaces\HTTP\CommentsServices;
 use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 
 /**
@@ -26,6 +27,8 @@ use Modules\Core\Interfaces\HTTP\Attributes\Route;
 #[Route(path: '/mark/comments/{id}/delete', method: 'POST', name: 'mark.comments.delete', handlerMethod: 'delete')]
 final class CommentsAdminAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         return Response::html($this->page());
@@ -35,21 +38,21 @@ final class CommentsAdminAction
     {
         $this->moderate($request, 'comments.approve', 'Approved comment', fn (string $id): bool => CommentsServices::comments()->approve($id));
 
-        return Response::redirect('/mark/comments');
+        return Response::redirect($this->url('mark.comments'));
     }
 
     public function reject(Request $request): Response
     {
         $this->moderate($request, 'comments.reject', 'Rejected comment', fn (string $id): bool => CommentsServices::comments()->reject($id));
 
-        return Response::redirect('/mark/comments');
+        return Response::redirect($this->url('mark.comments'));
     }
 
     public function delete(Request $request): Response
     {
         $this->moderate($request, 'comments.delete', 'Deleted comment', fn (string $id): bool => CommentsServices::comments()->delete($id));
 
-        return Response::redirect('/mark/comments');
+        return Response::redirect($this->url('mark.comments'));
     }
 
     /**
