@@ -1570,6 +1570,63 @@ already carries.
 | `make lint` | clean |
 | live `GET /` | 200 — `<h1>Minimálny PHP 8.5 starter kit</h1>`, both `je-section__title` headings (*Menej vrstiev*, *Super rýchle PHP*), 6 cards with Slovak titles and bodies, action buttons *Prejsť na blog* / *Otvoriť admin*, and `<title>` still the site name |
 
+### The same round, continued an hour later — the two themes that still read short keys
+
+`config.db` was written at **01:31** (settings `updated_at` 23:31 UTC): `theme`
+went from `jednotka` to `mono` and `admin_layout` to `compact`. Not by this
+session — it has never written to that database — and the measurement is what
+matters, not who typed it. `/` came back as `mono`, **English again**:
+
+```
+GET /                200 · 58 288 B · <body class="mono-shell">
+<h1>                 Nativa PHP Core          ← the kernel's `title` (site name)
+hero button          Discover more
+case slide link      Read More →
+
+and in the same database, translated in BOTH locales:
+  home.title         Postavte Niečo Skvelé / Build Something Great
+  home.message       Minimálny PHP 8.5 starter kit s modulárnou architektúrou…
+  home.cta_start     Začať / Get Started
+  home.read_article  Čítať článok / Read article
+```
+
+The same defect as the top of this record, one theme over: the rows existed, and
+of the two themes that render a hero from `PageContext::$copy`, neither read the
+keys the rows live under. Both now do, by the rule the merge already follows —
+**the group's key first, the bare key behind it, the theme's own string as the
+floor**:
+
+| Theme | Slot | Reads |
+|---|---|---|
+| `erik` | hero eyebrow / title / lede | `home.eyebrow`, `home.title`, `home.message` |
+| `erik` | hero primary + secondary action, closing CTA button | `home.cta_blog`, `home.cta_admin` (one link, one label — the closing CTA read a second English string for the same destination) |
+| `mono` | hero title / lede / button | `home.title`, `home.message`, `home.cta_start` |
+| `mono` | case slide link label | `home.read_article` (the arrow stays markup, not part of the translated string) |
+
+With the site on `mono`, live:`<h1>Postavte Niečo Skvelé</h1>`, the Slovak lede,
+`>Začať</a>`, and `Čítať článok →` on both case slides — `Discover more` and
+`Read More` down to **0** occurrences. `erik` has no route to the front page in
+this configuration, so it was verified by rendering its homepage through the
+REAL port copy (`ShellContextProviderRegistry::copy('home', 'sk_SK')` merged the
+way `HomepageAction` merges it): eyebrow `Nativa Minimal`, title `Postavte Niečo
+Skvelé`, both buttons `Prejsť na blog` / `Otvoriť admin`, and **0** of its four
+English defaults left.
+
+### Negative control — the continuation
+
+| control | result |
+|---|---|
+| the group key dropped from erik's and mono's title chain | red — 4 failures across both suites, restored byte-identical |
+
+### Verified — the continuation (2026-10-17, all exit 0)
+
+| Gate | Result |
+|---|---|
+| `composer test` | **408 → 413 tests**, 4410 → 4441 assertions, 1 skip (pre-existing) |
+| `make analyze` | phpstan L9 `[OK] No errors` · rector clean · cs-fixer 0 of 102 |
+| `make lint` | clean |
+| `make lekalo-check` | 22 modules valid on their own, whole project valid |
+
 ### What this round did not close
 
 - **Three Slovak card TITLES are English in the seed itself.**
@@ -1582,9 +1639,111 @@ already carries.
   `hero_eyebrow`) that the `home` group does not carry, so they still render
   their own defaults. The port is in place for them the day their strings move
   into a group — today `title` is answered by the kernel itself, which is what
-  keeps this round from changing them.
+  keeps this round from changing them. *(Closed an hour later in the same
+  round — see the continuation below.)*
 - **The copy reaches the homepage only.** The blog index, article and search
   surfaces still take no copy from the port.
+- **What has no translation row stays English, and that is a content decision,
+  not a wiring one.** `mono`'s `case_service` (`Case study`) has no key at all,
+  and both themes carry their own section copy — *Why is Mono the right choice
+  for you?*, *Your site, on every device*, *Stage 01 …*, *Start simple*, *Build
+  the part that matters.* No port can answer what nobody translated; writing
+  Slovak marketing copy here would be authoring content, not wiring copy.
+- **`modules/Mono` is BEHIND `src/Modules/Mono` — measured while editing it.**
+  The installed copy carries `choiceSection`, `stepsSection`, `quotesSection`,
+  the `mo-brand-dots` mark and an animated hero title (`mo-anim__line`, which is
+  why the new mono test asserts the title by VALUE and matches its floor either
+  way round) that the committed catalogue does not have. `ModuleCatalog` copies
+  the catalogue (`modules/<Name>/`) into `src/Modules/<Name>` and
+  `install-catalogue.sh` SKIPS an already-installed module — so **a fresh clone
+  installs the older mono**, missing the choice, steps and quotes sections
+  entirely. This round edited both copies by hand and left the drift exactly
+  where it was: which copy is the source is a decision, not a fix.
 - The standing items are unchanged: upstream owns the `Blog` name (the rename is
   prepared in `.ai-factory/patches/2026-10-16-blog-to-articles.md`), no Lekalo
+  adapter, and the module-owns-its-slice attempt still reverted.
+
+---
+
+## Boot 43 — the prefix every theme links to, and the article a deployment could not see
+
+### Measured before anything changed
+
+```
+GET /blog            200
+GET /sk_SK/blog      404      ← a link the locale switcher renders itself
+GET /sk/docs         404      ← linked from the /docs index
+GET /en/blog         404
+fresh registry       SecurityHeadersMiddleware, CsrfMiddleware
+```
+
+`LocaleMiddleware` implemented the whole contract — the short→full map (`sk` →
+`sk_SK`), `tryParse` for `ll_CC`, the prefix stripped from the path before
+routing, and the `locale_explicit` flag the blog tells `/blog` apart from
+`/en/blog` by — and reached the pipeline **nowhere**. `MiddlewareRegistry`
+scans every module's `Interfaces/HTTP/Middleware` directory but accepts only
+classes carrying `#[AsMiddleware]` that it can build with `new $class()`; this
+one had neither the attribute nor a zero-arg constructor. No test in the suite
+had ever requested a prefixed URL, so a documented URL contract was served by
+dead code and every gate stayed green.
+
+### What changed
+
+| Piece | Change |
+|---|---|
+| `LocaleMiddleware` | `#[AsMiddleware(priority: 10)]` — between `SecurityHeaders` (0) and `Csrf` (20), the order its own docblock documents; and `?LocaleService $localeService = null` defaulting through `LocalesServices::locale()`, so discovery can construct it |
+| `modules/Locales/tests/LocaleUrlPrefixTest.php` | new — the prefix is stripped and `locale`/`locale_explicit` are recorded, an unknown prefix is left ALONE, the registry's discovery and order, the `prime()` cache path, and dispatch through the Kernel for `/sk/docs`, `/sk_SK/docs` and `/en/docs` |
+
+Both copies of the module file were edited (`modules/…` and the installed
+`src/Modules/…`) and are byte-identical.
+
+### Negative control
+
+| control | result |
+|---|---|
+| the `#[AsMiddleware]` attribute removed from the installed copy | red — **5 failures**, every one `404 is not 200`, which is the defect this record is about; restored byte-identical |
+
+### Verified (2026-10-17, all exit 0)
+
+| Gate | Result |
+|---|---|
+| `composer test` | **413 → 429 tests**, 4 444 → 4 495 assertions, 1 skip (pre-existing) |
+| `make analyze` | phpstan L9 no errors · rector clean · cs-fixer 0 of 102 |
+| `make lint` | clean |
+| `make lekalo-check` | 22 modules valid on their own, whole project valid |
+| registry, fresh process | `SecurityHeaders` → **`LocaleMiddleware`** → `Csrf` |
+| live, on this checkout's own server | `/sk_SK/blog` **404 → 200**, 50 376 B — byte-identical to `/blog`; `/sk/docs`, `/sk_SK/docs` and `/en/docs` all 200 |
+| headless Chrome | `GET /sk_SK/blog` renders the Blog page with the new article linked in the DOM, and the article renders 6 tables / 18 `th` / 60 `td` with 0 lines of leaked markdown |
+
+One number needs saying rather than inheriting: the continuation above records
+**4 441** assertions, and this suite measures **4 444** with the new file removed
+— a three-assertion drift from its own last edit. The 413 → 429 and 4 444 →
+4 495 pairs were re-measured on this checkout by removing the new file and
+running the suite twice, not remembered from a previous run.
+
+### The article, and the corpus nothing renders
+
+The other half of the same report. The deployed instance listed exactly the two
+articles `git ls-files storage/blog` names, and the third existed only as an
+untracked file in the working tree — so no checkout, and therefore no
+deployment, could see it. It had first been written to `docs/clanky/`, which is
+an **archive nothing renders**: the blog's corpus is `storage/blog/*.md`
+(`BlogArticlesService` reads that directory for the default locale and
+`storage/blog/<lang>` otherwise), and the only other reference to `docs/clanky/`
+in the tree is the note about it in `.gitignore`. Two sibling corpora, one of
+them served.
+
+### What this round did not close
+
+- **Two spellings of the same prefix are in use.** The switcher renders the FULL
+  code (`'/' . $language . $context->currentPath` → `/sk_SK/blog`), while
+  `ContentLocaleMapper::urlPrefix()` documents the short one (`sk` → `/sk`). Both
+  resolve and both are tested now, so nothing is broken — but a tree carrying two
+  spellings of one URL keeps open which of them is the contract.
+- **CI still has no deploy job.** `ci.yml` is lint, phpstan, style, phpunit and
+  the Lekalo gate; what reaches the host is not in this tree, so "committed" and
+  "deployed" are two events and only the first is observable from here.
+- **`docs/clanky/` remains an archive.** Nothing renders it; whether it should be
+  served, seeded from, or deleted is a decision, not a wiring change.
+- The standing items are unchanged: upstream owns the `Blog` name, no Lekalo
   adapter, and the module-owns-its-slice attempt still reverted.

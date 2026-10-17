@@ -211,6 +211,62 @@ tak, ako to pomenoval predošlý článok, a presne to sa ani týmto kolom nezme
 
 ---
 
+## Dodatok, ten istý deň neskôr — ten istý defekt, o jednu tému ďalej
+
+Medzi písaním tohto článku a jeho dodatkom bola `config.db` zapísaná o **01:31**
+(`updated_at` 23:31 UTC): `theme` sa prepol z `jednotka` na `mono` a `admin_layout`
+na `compact`. Nie touto session — tá do tej databázy nikdy nezapisovala — a dôležité
+je meranie, nie to, kto ho vyvolal. `GET /` sa vrátilo ako `mono` a **znova po anglicky**:
+
+```
+GET /                200 · 58 288 B · <body class="mono-shell">
+<h1>                 Nativa PHP Core          ← jadrom poslané `title` (meno webu)
+tlačidlo v hero      Discover more
+odkaz na case slide  Read More →
+
+v tej istej databáze, preložené v OBOCH jazykoch:
+  home.title         Postavte Niečo Skvelé / Build Something Great
+  home.message       Minimálny PHP 8.5 starter kit s modulárnou architektúrou…
+  home.cta_start     Začať / Get Started
+  home.read_article  Čítať článok / Read article
+```
+
+Presne ten istý defekt ako na začiatku tohto článku, len o jednu tému ďalej: riadky
+existovali a **ani jedna z dvoch tém, ktoré hero vykresľujú z `PageContext::$copy`,
+nečítala kľúče, pod ktorými tie riadky ležia**. `jednotka` ich čítala odjakživa, `erik`
+a `mono` mali vlastné krátke kľúče a vlastné anglické texty. Obe teraz čítajú skupinu,
+rovnakým pravidlom aké má už zjednotenie: **kľúč skupiny prvý, krátky kľúč za ním,
+vlastný reťazec témy ako podlaha**.
+
+| Téma | Slot | Číta |
+|---|---|---|
+| `erik` | hero eyebrow / titulok / lede | `home.eyebrow`, `home.title`, `home.message` |
+| `erik` | obe akcie v hero a tlačidlo záverečnej výzvy | `home.cta_blog`, `home.cta_admin` (jeden odkaz, jeden popis — záverečná výzva mala na ten istý odkaz druhý anglický reťazec) |
+| `mono` | titulok v hero / lede / tlačidlo | `home.title`, `home.message`, `home.cta_start` |
+| `mono` | popis odkazu na case slide | `home.read_article` (šípka zostáva v markupe, nie v prekladanom reťazci) |
+
+Na živo, s webom na `mono`: `<h1>Postavte Niečo Skvelé</h1>`, slovenský lede,
+`>Začať</a>` a na oboch case slidoch `Čítať článok →` — `Discover more` aj `Read More`
+sú na **nule**. `erik` sa na front dostane len prepnutím témy, takže sa overoval
+renderovaním jeho domovskej stránky **skutočnou kopiou z portu** (to isté zloženie,
+ktoré robí `HomepageAction`): eyebrow `Nativa Minimal`, titulok `Postavte Niečo Skvelé`,
+tlačidlá `Prejsť na blog` / `Otvoriť admin` a **0** z jeho štyroch anglických
+defaultov. Päť nových testov (dva v `ErikThemeTest`, tri v `MonoThemeTest`) a rozšírený
+existujúci escaped test padnú, keď sa kľúč skupiny z reťazca vyhodí — 4 zlyhania, po
+návrate bajt na bajt to isté. Suita je **413 testov / 4441 asercií**, všetky štyri brány
+zelené.
+
+A jeden nález, ktorý s tým súvisí len preto, že sa naň prišlo pri úprave: **`modules/Mono`
+je pozadu za `src/Modules/Mono`**. Nainštalovaná kópia má `choiceSection`, `stepsSection`,
+`quotesSection`, značku `mo-brand-dots` a animovaný titulok (`mo-anim__line`) — commitnutý
+katalóg nič z toho. `ModuleCatalog` kopíruje katalóg do `src/Modules/` a
+`install-catalogue.sh` už nainštalovaný modul **preskočí**, takže *čerstvý klon dostane
+staršie mono* — bez sekcií „Why is Mono the right choice for you?", krokov aj citátov.
+Toto kolo upravilo obe kópie ručne a drift nechal presne tam, kde bol: ktorá kópia je
+zdroj, je rozhodnutie, nie oprava.
+
+---
+
 *Článok bol napísaný v tej istej session, v ktorej sa kolo meralo a opravovalo — na rozdiel
 od predošlého, ktorý písala session nasledujúca, pretože tú predošlú prerušil limit.
 Všetky čísla boli odmerané pri písaní: 25 kľúčov skupiny `home` v dvoch jazykoch, 408
