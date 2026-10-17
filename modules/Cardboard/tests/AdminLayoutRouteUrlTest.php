@@ -49,6 +49,43 @@ final class AdminLayoutRouteUrlTest extends TestCase
     }
 
     /**
+     * The module list is a separate page (`mark.settings.modules`), so its
+     * entry in the settings tab bar must be a LINK rendered with the same
+     * `m-tabs__btn` class — not a JS panel button that has no panel.
+     */
+    #[Test]
+    public function theSettingsTabsLinkToTheModulesScreen(): void
+    {
+        $html = ViewRenderer::render(
+            'Modules/Cardboard/Interfaces/HTTP/templates/settings-form.phtml',
+            [
+                'url'            => static fn (string $name): string => 'mark.settings.modules' === $name ? '/mark/settings/modules' : '/route/' . $name,
+                'errorHtml'      => '',
+                'csrf'           => '',
+                'siteName'       => '',
+                'siteDescription' => '',
+                'adminEmail'     => '',
+                'timezone'       => '',
+                'locale'         => '',
+                'layoutSelect'   => '',
+                'themeSelect'    => '',
+                'regChecked'     => '',
+                'tokenTable'     => '',
+                'navTable'       => '',
+                'adminNavTable'  => '',
+                'iconOptions'    => '',
+                'parentOptions'  => '',
+            ],
+        );
+
+        self::assertMatchesRegularExpression(
+            '/<a class="m-tabs__btn" href="\/mark\/settings\/modules">Modules<\/a>/',
+            $html,
+            'The Modules entry must be a tab-styled link to its own route.',
+        );
+    }
+
+    /**
      * Task 2.9: the bulk bar is rendered by an Application-layer service but
      * its form targets are admin navigation — the caller's Router-owned URLs
      * must reach the markup unchanged, with nothing left to spell /mark.
