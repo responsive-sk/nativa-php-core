@@ -31,7 +31,7 @@ identical:
 | declarations (rule 3, excluding this gate) | 241 | 241 |
 | distinct names (rule 3) | 203 | 203 |
 | values with 2+ names (rule 1) | 5 | 5 |
-| literal places (rule 2) | 532 | 532 |
+| literal places (rule 2) | 531 | 531 |
 
 ## Rule 1 — one string value, one name · absolute, 5 exemptions
 
@@ -57,15 +57,15 @@ page, 60 rows). The difference is whether two matches name **the same thing**.
 The list also fails **when an entry stops applying** — an exemption that
 stopped being a collision is rot in the ledger, not a free pass.
 
-## Rule 2 — a value spelled as a literal outside its owner · ratchet at 532
+## Rule 2 — a value spelled as a literal outside its owner · ratchet at 531
 
 A **ceiling, not a list.** 54 owned string values appear as raw literals on
-**532 places** across the tree. An absolute rule here would need 532
-exemptions, and a gate with 532 exemptions is not a gate:
+**531 places** across the tree. An absolute rule here would need 531
+exemptions, and a gate with 531 exemptions is not a gate:
 
 | filter | values | places | files |
 |---|---|---|---|
-| none | 54 | 532 | 200 |
+| none | 54 | 531 | 200 |
 | length ≥ 4 | 50 | 456 | 194 |
 | length ≥ 8 | 30 | 228 | 88 |
 | contains `/` or `.` | 14 | 168 | 52 |
@@ -78,11 +78,11 @@ and belongs in no constant anyone would name. The largest single source is
 constant, and converting it would be worse rather than better.
 
 So the only legal direction is down. Every consolidation in Phase 2 lowers the
-number, and the gate refuses the 534th.
+number, and the gate refuses the 532nd.
 
 ### Places that are counted on purpose and must stay counted
 
-Seven of the 532 are test literals that **look** like duplication and are not.
+Seven of the 531 are test literals that **look** like duplication and are not.
 They are `assertSame()` calls whose subject is the exact string that has to
 arrive in the database row:
 

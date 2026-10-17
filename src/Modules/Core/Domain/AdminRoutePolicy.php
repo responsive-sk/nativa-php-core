@@ -2,12 +2,35 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Users\Domain;
-
-use Modules\Users\Domain\Entities\User;
+namespace Modules\Core\Domain;
 
 /**
  * AdminRoutePolicy — which permission each `/mark` path needs.
+ *
+ * ## Why this lives in the kernel and not in `Modules\Users`
+ *
+ * Measured 2026-10-17, while auditing who owned a name. This was
+ * `Modules\Core\Domain\AdminRoutePolicy`, and it turned out no single module
+ * could own it:
+ *
+ *   - `Cardboard` kept a **local copy** of this table to avoid importing Users,
+ *     documented in `AdminNavService.php:219–223` as *"no Users import —
+ *     Cardboard stays a leaf for the install-closure scanner"*;
+ *   - the kernel's `ThemeResolver::resolvePath()` **duplicated**
+ *     `isAdminPath()` line for line, because Core may not import a feature
+ *     module;
+ *   - `Outbox` and `Questions` both reached across for it.
+ *
+ * The kernel already knows the admin area exists — `ThemeResolver::ADMIN_THEME`,
+ * `AuthMiddleware`'s redirect and `PageCacheService`'s bypass list all carry
+ * `/mark` — so it had the fact three times over without owning it once. A route
+ * table is a property of the ROUTES, not of the module that happens to hold the
+ * accounts, so it belongs beside them in Core.
+ *
+ * `permits()` used to take a `User` entity, which is the one thing that could
+ * not cross this line. It now duck-types the session object the same way
+ * `Cardboard`'s gate already did — `BulkEntityGate::hasPermission()` uses
+ * `method_exists($user, 'hasPermission')` for exactly this reason.
  *
  * `/mark` was one gate on one hardcoded role name, which meant the whole
  * permission graph — five permissions, a roles UI, per-role assignment — was
@@ -117,8 +140,14 @@ final class AdminRoutePolicy
      *
      * An unmapped admin path is refused, so adding a route without
      * classifying it is a 403 rather than an accidental hole.
+     *
+     * The user is duck-typed, not a `User`: while this lived in
+     * `Modules\Users\Domain` it took the entity, and that parameter was the one
+     * thing keeping the table out of the kernel. The session object already
+     * answers `hasPermission()`, and `Cardboard`'s gate has typed it as `object`
+     * for the same reason.
      */
-    public static function permits(string $path, User $user): bool
+    public static function permits(string $path, object $user): bool
     {
         $permission = self::requiredPermission($path);
 
@@ -126,7 +155,7 @@ final class AdminRoutePolicy
             return false;
         }
 
-        return $user->hasPermission($permission);
+        return method_exists($user, 'hasPermission') && true === $user->hasPermission($permission);
     }
 
     /**

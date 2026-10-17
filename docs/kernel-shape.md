@@ -113,11 +113,13 @@ exactly the movement the table exists to record.
 | `src/Modules/Core/Application/Services/View/InlineJs.php` | 1373 | Application | concrete | 2 | runtime |
 | `src/Modules/Core/Application/Services/View/Paths.php` | 1121 | Application | concrete | 0 | runtime |
 | `src/Modules/Core/Application/Services/View/ViewRenderer.php` | 2074 | Application | concrete | 16 | runtime |
+| `src/Modules/Core/Domain/AdminRoutePolicy.php` | 8285 | Domain | concrete | 0 | contract |
 | `src/Modules/Core/Domain/AuthIdentity.php` | 989 | Domain | concrete | 0 | contract |
 | `src/Modules/Core/Domain/Contracts/AuthProvider.php` | 3280 | Domain | interface | 0 | contract |
 | `src/Modules/Core/Domain/Contracts/NavBadgeContract.php` | 2374 | Domain | interface | 1 | contract |
 | `src/Modules/Core/Domain/Contracts/RateLimiter.php` | 1042 | Domain | interface | 0 | contract |
 | `src/Modules/Core/Domain/Contracts/ShellContextProvider.php` | 2700 | Domain | interface | 3 | contract |
+| `src/Modules/Core/Domain/Permissions.php` | 2724 | Domain | concrete | 0 | contract |
 | `src/Modules/Core/Domain/ShellNavItem.php` | 1048 | Domain | concrete | 9 | contract |
 | `src/Modules/Core/Domain/ThemePreference.php` | 1536 | Domain | concrete | 2 | contract |
 | `src/Modules/Core/Infrastructure/Attributes/AsAuthProvider.php` | 766 | Infrastructure | concrete | 0 | contract |

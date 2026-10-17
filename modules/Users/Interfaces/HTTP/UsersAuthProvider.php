@@ -8,8 +8,8 @@ use Modules\Core\Domain\AuthIdentity;
 use Modules\Core\Domain\Contracts\AuthProvider;
 use Modules\Core\Infrastructure\Attributes\AsAuthProvider;
 use Modules\Core\Infrastructure\Http\Request;
-use Modules\Users\Domain\AdminRoutePolicy;
-use Modules\Users\Domain\Permissions;
+use Modules\Core\Domain\AdminRoutePolicy;
+use Modules\Core\Domain\Permissions;
 
 /**
  * UsersAuthProvider — the `AuthProvider` the kernel's auth port has been

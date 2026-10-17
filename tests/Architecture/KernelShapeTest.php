@@ -80,7 +80,9 @@ final class KernelShapeTest extends TestCase
         'src/Modules/Core/Application/Services/View/InlineJs.php',
         'src/Modules/Core/Application/Services/View/Paths.php',
         'src/Modules/Core/Application/Services/View/ViewRenderer.php',
+        'src/Modules/Core/Domain/AdminRoutePolicy.php',
         'src/Modules/Core/Domain/AuthIdentity.php',
+        'src/Modules/Core/Domain/Permissions.php',
         'src/Modules/Core/Domain/ShellNavItem.php',
         'src/Modules/Core/Domain/ThemePreference.php',
         'src/Modules/Core/Infrastructure/Attributes/AsAuthProvider.php',
@@ -137,7 +139,7 @@ final class KernelShapeTest extends TestCase
      * reviewer can argue with: lowering it is the work, raising it is a
      * deliberate edit with its own red line.
      */
-    private const int MAX_APPROVED = 60;
+    private const int MAX_APPROVED = 62;
 
     /**
      * Rule 1: every `.php` file under `src/Modules/Core` is an interface, enum

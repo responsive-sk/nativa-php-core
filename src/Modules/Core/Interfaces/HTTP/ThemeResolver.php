@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Core\Interfaces\HTTP;
 
 use Modules\Core\Application\Services\ShellContextProviderRegistry;
+use Modules\Core\Domain\AdminRoutePolicy;
 use Modules\Core\Domain\ThemePreference;
 use Modules\Core\Infrastructure\Http\Request;
 
@@ -65,7 +66,7 @@ final class ThemeResolver
      */
     public static function resolvePath(string $path): string
     {
-        if ($path === '/mark' || str_starts_with($path, '/mark/')) {
+        if (AdminRoutePolicy::isAdminPath($path)) {
             return self::ADMIN_THEME;
         }
 

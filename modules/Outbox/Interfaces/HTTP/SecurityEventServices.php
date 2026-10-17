@@ -84,7 +84,7 @@ final class SecurityEventServices
             return null;
         }
 
-        return \Modules\Users\Domain\AdminRoutePolicy::permissionForEntity($entity);
+        return \Modules\Core\Domain\AdminRoutePolicy::permissionForEntity($entity);
     }
 
     /**

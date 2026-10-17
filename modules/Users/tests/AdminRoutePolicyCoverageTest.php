@@ -5,8 +5,8 @@ declare(strict_types = 1);
 namespace Modules\Users\Tests;
 
 use Modules\Core\Interfaces\HTTP\Router;
-use Modules\Users\Domain\AdminRoutePolicy;
-use Modules\Users\Domain\Permissions;
+use Modules\Core\Domain\AdminRoutePolicy;
+use Modules\Core\Domain\Permissions;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 

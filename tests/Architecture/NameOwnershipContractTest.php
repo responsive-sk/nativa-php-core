@@ -29,12 +29,12 @@ use RecursiveIteratorIterator;
  *    when an entry stops applying, so it cannot rot.
  * 2. **A value must not be spelled as a raw literal outside its owner.**
  *    A RATCHET, not a prohibition, and that is the measured conclusion rather
- *    than a compromise. 54 owned string values appear as literals on 532
+ *    than a compromise. 54 owned string values appear as literals on 531
  *    places across the tree. `'en'` alone is 62 of them: it is the default
  *    language code, it belongs in no constant anyone would name, and
- *    `Locales/…/SeedData.php` alone accounts for 112. A gate with 532
- *    exemptions is not a gate. 532 is a CEILING: every consolidation lowers it,
- *    and the gate refuses the 533rd.
+ *    `Locales/…/SeedData.php` alone accounts for 112. A gate with 531
+ *    exemptions is not a gate. 531 is a CEILING: every consolidation lowers it,
+ *    and the gate refuses the 532nd.
  * 3. **The declaration count must not rise.** Ratchet at 241/203. This is the
  *    rule that catches the cheapest wrong fix — "there are two names for this,
  *    let me add a third" — which is the complaint that started all of this.
@@ -61,7 +61,7 @@ use RecursiveIteratorIterator;
  * tree would make its result depend on which modules this checkout happens to
  * have installed — the exact defect `ModelCatalogueContractTest` was fixed for
  * two commits ago. So the roots below are the tracked surface, and the result
- * is verified identical on both shapes: 403 files, 54 values, 532 places.
+ * is verified identical on both shapes: 403 files, 54 values, 531 places.
  *
  * Deliberately cheap and deliberately dumb, like `KernelShapeTest` beside it:
  * file listings and a tokeniser, compared. What it protects is narrower than
@@ -116,12 +116,13 @@ final class NameOwnershipContractTest extends TestCase
     /**
      * Rule 2 — measured 2026-10-17 on the tracked scope. A ceiling, not a list.
      *
-     * Was 533. One consolidation later it is 532: `AdminLayout::markCssLinks()`
-     * was building an `AssetManager('moonshine')` while `ThemeResolver::ADMIN_THEME`
-     * owned the name, and Cardboard already imports Core. Lowering this number
-     * is the work; raising it is a reviewable edit.
+     * Was 533. Then 532, when `AdminLayout::markCssLinks()` started reading
+     * `ThemeResolver::ADMIN_THEME` instead of `'moonshine'`. Now 531: moving
+     * `AdminRoutePolicy` and `Permissions` into `Modules\Core\Domain` deleted
+     * Cardboard's local copy of the admin permission table outright, which is
+     * what this ceiling was invented to make possible.
      */
-    private const int MAX_LITERAL_PLACES = 532;
+    private const int MAX_LITERAL_PLACES = 531;
 
     /** Rule 3 — measured 2026-10-17 on the tracked scope. */
     private const int MAX_DECLARATIONS = 241;
@@ -221,7 +222,7 @@ final class NameOwnershipContractTest extends TestCase
     /**
      * Rule 2. Every place an owned string value is spelled out as a literal
      * somewhere it does not own. The ceiling is what makes this a gate rather
-     * than a wish: 532 today, and the only legal direction is down.
+     * than a wish: 531 today, and the only legal direction is down.
      */
     #[Test]
     public function ownedValuesAreNotSpelledAsLiteralsMoreOftenThanTheCeiling(): void

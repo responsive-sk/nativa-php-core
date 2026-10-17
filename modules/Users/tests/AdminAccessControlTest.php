@@ -10,7 +10,7 @@ use Modules\Core\Interfaces\HTTP\Router;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Outbox\Infrastructure\Persistence\Migrations\OutboxDatabaseMigrator;
 use Modules\Outbox\Interfaces\HTTP\OutboxServices;
-use Modules\Users\Domain\Permissions;
+use Modules\Core\Domain\Permissions;
 use Modules\Users\Infrastructure\Persistence\Migrations\UsersDatabaseMigrator;
 use Modules\Users\Interfaces\HTTP\AuthServices;
 use PDO;

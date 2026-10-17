@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Users\Domain;
+namespace Modules\Core\Domain;
 
 /**
  * Permissions — the vocabulary of what a user may do in `/mark`.
@@ -14,6 +14,21 @@ namespace Modules\Users\Domain;
  *
  * The five names match the rows the `permissions` table is seeded with; the
  * seed reads them from here so the two cannot fall apart.
+ *
+ * ## Why this lives in the kernel and not in `Modules\Users`
+ *
+ * Measured 2026-10-17, while auditing who owned a name. This was
+ * `Modules\Core\Domain\Permissions`, and three consumers could not reach it:
+ * `Cardboard` kept a **local copy** of the admin permission table to stay a leaf
+ * for the install-closure scanner, `Outbox` named it in a docblock only, and
+ * the kernel's own `ThemeResolver` duplicated `AdminRoutePolicy::isAdminPath()`
+ * because Core may not import a feature module.
+ *
+ * A vocabulary that every layer needs is not one module's business. It is data
+ * with no behaviour — five constants and two list builders — and moving it to
+ * Core costs nothing except the import that the consumers already had. The
+ * seed in `Users\DatabaseMigrator` still reads from here, so the rows and the
+ * names remain one thing.
  *
  * @internal
  *
