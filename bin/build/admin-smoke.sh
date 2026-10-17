@@ -107,6 +107,20 @@ tree_files() {
         | sort
 }
 
+# One assertion on the BODY `status` just wrote, for the pages where a 200 is
+# not the claim. `APP_ENV=production` sets display_errors=0, so a template
+# reading a key the row does not have renders an EMPTY table and still answers
+# 200 — the failure mode a status check cannot see, and the reason the module
+# list is asserted on a module name rather than on its status alone.
+body_has() {
+    local label="$1" needle="$2"
+    if grep -qF -- "$needle" "$TMP/last.out"; then
+        ok "$label"
+    else
+        bad "$label — '$needle' is not in the page"
+    fi
+}
+
 check() {
     local label="$1" path="$2" want="$3"
     shift 3
@@ -257,6 +271,24 @@ want 'admin POST /login' 302 "$got"
 check 'admin GET /mark' '/mark' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
 check 'admin GET /mark/users' '/mark/users' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
 check 'admin GET /mark/roles' '/mark/roles' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+
+# The module list answers 200 through a BOOTED server, and that is the whole
+# reason this line exists. The page was written with its #[Route] attributes on
+# `handle()` instead of on the class: `Router::discover()` reads
+# `$reflection->getAttributes(Route::class)` — the class's own, one level up —
+# and a method's attributes are never looked at. Every static gate passed: it
+# compiles, the `use` resolves, phpstan infers the attribute, cs-fixer has
+# nothing to say, and the suite never dispatches a route. `/mark/settings/modules`
+# answered 404 with eight CI jobs green (Boot 44).
+#
+# `check` is the only assertion in this file that can catch that class of
+# defect, so a new admin page that does not answer 200 fails here rather than in
+# a browser. The status is the assertion — the page rendering at all is the
+# thing being proven, and `last.out` is the body if it does not.
+check 'admin GET /mark/settings/modules' '/mark/settings/modules' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+body_has 'the module list names an installed module' 'Cardboard'
+body_has 'the module list has a drifted-files column' 'Drifted files'
+
 ADMIN_TOKEN="$(token)"
 
 # A user is created and deleted through the panel: the row is the assertion, not

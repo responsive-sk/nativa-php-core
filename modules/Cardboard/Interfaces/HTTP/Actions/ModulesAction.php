@@ -38,14 +38,23 @@ use Modules\Tooling\ModuleInstaller;
  * copy landed: the card and this page both read `ModuleTreeState`, and a green
  * row here is the same green the card counts.
  */
+// The attributes sit on the CLASS, not on `handle()`.
+//
+// That is not a style choice: `Router::discover()` reads
+// `$reflection->getAttributes(Route::class)` — the class's own attributes, one
+// level up — and the method's attributes are never looked at. Written on
+// `handle()` they compile, they import cleanly, `phpstan` and `cs-fixer` pass,
+// and the route simply does not exist: `/mark/settings/modules` answered 404 with
+// eight CI jobs green. Every other action in this directory puts them on the
+// class, which is the tell.
+#[Route(path: '/mark/settings/modules', method: 'GET', name: 'mark.settings.modules')]
+#[Route(
+    path: '/mark/settings/modules/{name}/reinstall',
+    method: 'POST',
+    name: 'mark.settings.modules.reinstall',
+)]
 final class ModulesAction
 {
-    #[Route(path: '/mark/settings/modules', method: 'GET', name: 'mark.settings.modules')]
-    #[Route(
-        path: '/mark/settings/modules/{name}/reinstall',
-        method: 'POST',
-        name: 'mark.settings.modules.reinstall',
-    )]
     public function handle(Request $request): Response
     {
         $catalogued = ModuleCatalog::fromAppPaths()->catalogued();

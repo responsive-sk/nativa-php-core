@@ -1889,6 +1889,62 @@ asked the question directly.
    So the assertion was red on every kernel-only checkout — which is the whole
    point of a kernel-only checkout — and green in the full tree by coincidence.
 
+### A fifth, found by the person who went to look for it
+
+The four above were found by gates asking a question. This one was found by
+someone opening the URL the round had just added, and it is the same defect
+class as number 1 — a thing that exists, and nothing asks whether it works.
+
+`/mark/settings/modules` answered **404**.
+
+The cause is one line of convention, and it is invisible from inside the file:
+
+```php
+final class ModulesAction
+{
+    #[Route(path: '/mark/settings/modules', method: 'GET', …)]   // wrong
+    public function handle(Request $request): Response
+```
+
+`Router::discover()` reads `$reflection->getAttributes(Route::class)` — **the
+class's own attributes**, one level up — and a method's attributes are never
+looked at. Written on `handle()` they compile, the `use` resolves, PHPStan
+infers the attribute correctly, cs-fixer has nothing to say, and the suite never
+dispatches a route. Every other action in that directory puts them on the class,
+which is the tell, and `SettingsAction` right beside it does.
+
+What makes this worth writing down rather than just fixing: the round shipped
+this page and the mistake survived **the entire remaining plan**, thirteen
+commits, five of them gates. A test asserting the route exists would not have
+caught it — `class_exists()` returns true, the attribute is in the file, the
+reflection reports zero. The thing that catches it is a booted server, an
+admin session, and a GET. That is a property of the page, not of the code.
+
+So it became one:
+
+```
+ok    admin GET /mark/settings/modules → 200
+ok    the module list names an installed module
+ok    the module list has a drifted-files column
+```
+
+with the negative control measured, not assumed:
+
+```
+::error::admin GET /mark/settings/modules expected 200, got 404
+admin-smoke: FAILURES present
+```
+
+The two body assertions exist because `APP_ENV=production` sets
+`display_errors=0`. A template reading a key the row does not have renders an
+**empty table** and still answers 200 — a status check cannot see it, so
+"200" was never going to be enough on its own. `body_has` was itself controlled
+three ways before it was trusted: present needle passes, absent needle fails,
+empty body fails.
+
+`bin/build/admin-smoke.sh` was the only thing in this repository able to see
+any of it, and it existed. Nothing had asked it to.
+
 ### The measurement that killed the plan's biggest task
 
 Task 2.1 named four path values with owners. `/mark` turned out to appear in
