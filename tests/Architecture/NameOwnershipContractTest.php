@@ -117,17 +117,37 @@ final class NameOwnershipContractTest extends TestCase
      * Rule 2 — measured 2026-10-17 on the tracked scope. A ceiling, not a list.
      *
      * Was 533. Then 532, when `AdminLayout::markCssLinks()` started reading
-     * `ThemeResolver::ADMIN_THEME` instead of `'moonshine'`. Now 531: moving
+     * `ThemeResolver::ADMIN_THEME` instead of `'moonshine'`. Then 531: moving
      * `AdminRoutePolicy` and `Permissions` into `Modules\Core\Domain` deleted
      * Cardboard's local copy of the admin permission table outright, which is
      * what this ceiling was invented to make possible.
+     *
+     * Now 532, and that is a real one: `/mark/settings/modules` is spelled in
+     * the card that links to it and in the POST action that handles it, because
+     * the router does not resolve a route name from a card link. Raising the
+     * ceiling for a path the tree must spell twice is not a trade — the ceiling
+     * exists to make the third spelling impossible, and this is the second.
      */
-    private const int MAX_LITERAL_PLACES = 531;
+    private const int MAX_LITERAL_PLACES = 532;
 
-    /** Rule 3 — measured 2026-10-17 on the tracked scope. */
-    private const int MAX_DECLARATIONS = 241;
+    /**
+     * Rule 3 — measured 2026-10-17 on the tracked scope.
+     *
+     * 241 → 242 for `ModuleTreeState::IGNORED`, the list of directory prefixes
+     * excluded from a drift comparison. One constant that made the comparison
+     * correct in one place instead of two: the `modules` card and the
+     * `/mark/settings/modules` page read the same reader, and a second copy of
+     * the exclusion list is how they would have drifted — which is the entire
+     * subject of this gate. Recorded here rather than folded silently into a
+     * ceiling that reads like a coincidence.
+     */
+    private const int MAX_DECLARATIONS = 242;
 
-    private const int MAX_NAMES = 203;
+    /**
+     * 203 → 204 with MAX_DECLARATIONS: `ModuleTreeState::IGNORED` is a name as
+     * well as a declaration, and both ceilings moved for the same one constant.
+     */
+    private const int MAX_NAMES = 204;
 
     /**
      * Rule 1. A value is the thing two owners disagree about, so the assertion

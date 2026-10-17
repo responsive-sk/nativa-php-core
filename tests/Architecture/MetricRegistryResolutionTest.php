@@ -57,7 +57,8 @@ use ReflectionMethod;
  */
 final class MetricRegistryResolutionTest extends TestCase
 {
-    private const string REGISTRY = 'Modules\Cardboard\Infrastructure\Registry\MetricRegistry';
+    /** `::class` on a module class the kernel-only tree may not have loaded. */
+    private const string REGISTRY = \Modules\Cardboard\Infrastructure\Registry\MetricRegistry::class;
 
     #[Test]
     public function everyDeclaredMetricProviderIsRegistered(): void
