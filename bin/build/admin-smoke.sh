@@ -154,9 +154,9 @@ php <<'PHP'
 <?php
 require 'src/init.php';
 
+use Modules\Core\Domain\Permissions;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Security\Application\Services\PasswordHasher;
-use Modules\Users\Domain\Permissions;
 use Modules\Users\Infrastructure\Persistence\Repositories\RoleRepository;
 use Modules\Users\Infrastructure\Persistence\Repositories\UserRepository;
 
