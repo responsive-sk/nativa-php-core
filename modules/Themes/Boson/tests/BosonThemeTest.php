@@ -119,21 +119,91 @@ final class BosonThemeTest extends TestCase
     }
 
     /**
-     * The monogram follows the configured site name. It used to be a literal
-     * `N` carried over from the reference site, so a site called
-     * `responsive.sk` wore someone else's initial beside its own wordmark.
+     * The mark is the site's own logo, not a letter drawn from its name: the
+     * header ships an `<img>` pointing at the file the head already declares as
+     * the tab icon, so the tab, the touch icon and the brand cannot drift
+     * apart. The artwork is a public asset, so it must exist as one.
      */
     #[Test]
-    public function theMonogramFollowsTheSiteName(): void
+    public function theBrandMarkIsTheSitesOwnLogo(): void
     {
         $header = (new BosonTheme())->header(
             ShellContext::from('responsive.sk', [], [], '/', null, 'sk', [], false),
         );
 
-        $this->assertStringContainsString(
-            '<span class="bo-header__mark" aria-hidden="true">R</span>',
-            $header,
+        $this->assertStringContainsString('class="bo-header__mark-img"', $header);
+        $this->assertStringContainsString('src="/favicon.svg"', $header);
+        $this->assertStringContainsString('bo-header__wordmark">responsive.sk<', $header, 'The name stays text; the mark is the logo.');
+        $this->assertFileExists(APP_BASE_PATH . '/public/favicon.svg', 'The mark points at a public asset that must be shipped.');
+        $this->assertFileExists(APP_BASE_PATH . '/public/favicon.ico');
+        $this->assertFileExists(APP_BASE_PATH . '/public/apple-touch-icon.png');
+    }
+
+    /**
+     * The icon files are ONE artwork, and the vector is measured against the
+     * bitmap it redraws rather than trusted.
+     *
+     * The first redraw sampled its palette from anti-aliased pixels (#a90000,
+     * #fe5353) and grew the light band by a third to hide seams, so the header
+     * mark and the tab icon were visibly two different logos. What a test can
+     * hold without a rasteriser is the part that made it wrong: the palette
+     * must be the ICO frame's own fully opaque colours, the viewBox must be
+     * the frame it redraws, the touch icon must be the size iOS asks for, and
+     * the ICO's hand-hinted small sizes must survive the redraw.
+     */
+    #[Test]
+    public function theIconSetIsOneArtwork(): void
+    {
+        $svg = (string) file_get_contents(APP_BASE_PATH . '/public/favicon.svg');
+
+        $this->assertStringContainsString('viewBox="0 0 48 48"', $svg, 'The redraw is of the ICO\'s 48px frame.');
+
+        preg_match_all('/fill="(#[0-9a-f]{6})"/', $svg, $matches);
+
+        $this->assertSame(
+            ['#aa0000', '#d40000', '#ff5555'],
+            array_values(array_unique($matches[1])),
+            'Fills must be the ICO frame\'s own opaque colours, in paint order (silhouette first), never sampled from its anti-aliased edges.',
         );
+
+        $touch = getimagesize(APP_BASE_PATH . '/public/apple-touch-icon.png');
+
+        $this->assertIsArray($touch);
+        $this->assertSame([180, 180], [$touch[0], $touch[1]], 'iOS wants a 180x180 touch icon.');
+
+        $ico = (string) file_get_contents(APP_BASE_PATH . '/public/favicon.ico');
+        $directories = unpack('v', substr($ico, 4, 2));
+
+        $this->assertIsArray($directories);
+        $this->assertSame(3, $directories[1], 'The .ico carries three entries.');
+
+        $sizes = [];
+
+        for ($entry = 0; $entry < 3; $entry++) {
+            $sizes[] = ord($ico[6 + ($entry * 16)]);
+        }
+
+        $this->assertSame([16, 32, 48], $sizes, 'The hand-hinted small sizes are the authoritative artwork; they must not be replaced by downscales.');
+    }
+
+    /**
+     * The hero orbit's core is the same logo, and the CSS must not draw a
+     * letter any more: a theme that left the old rules behind would render a
+     * 22px image on a font-size that outranks it.
+     */
+    #[Test]
+    public function theHeroOrbitCarriesTheSameLogo(): void
+    {
+        $html = (new BosonTheme())->homepage(self::homepageContext());
+
+        $this->assertStringContainsString('<img class="bo-orbit__mark" src="/favicon.svg"', $html);
+        $this->assertStringNotContainsString('bo-orbit__mark">', $html, 'The orbit mark is an image, not a text node.');
+
+        $css = InlineCss::file('Modules/Boson/assets/critical/boson.css');
+
+        $this->assertStringContainsString('.bo-orbit__mark {', $css);
+        $this->assertStringContainsString('.bo-header__mark-img {', $css);
+        $this->assertStringContainsString('.bo-header__brand:hover .bo-header__mark-img {', $css, 'The mark must invert on the brand fill it sits on.');
     }
 
     /**

@@ -41,11 +41,14 @@ use Themes\ThemeModule;
  *    (`assets/scripts/boson.js`: header shrink, checkbox menu, accordion,
  *    code highlighting) replaces all of them; the page is complete with the
  *    script absent, and nothing downloads a framework to toggle a class.
- * 2. **No vendored artwork.** `/images/logo.svg`, `/images/icon.svg`, the
- *    platform icons and the screenshots are not in this repository. The
- *    orbit in the hero, the platform marks and the dotted rails are CSS
- *    drawings; the reference's photographic backgrounds are gone rather than
- *    fetched from a remote host at runtime.
+ * 2. **No artwork vendored from the reference.** `/images/logo.svg`,
+ *    `/images/icon.svg`, the platform icons and the screenshots are not in
+ *    this repository. The orbit rings, the platform marks and the dotted
+ *    rails are CSS drawings; the reference's photographic backgrounds are
+ *    gone rather than fetched from a remote host at runtime. The one image
+ *    the pages DO load is the site's own mark (`/favicon.svg`, the file the
+ *    head already declares as the icon) — the brand does not depend on the
+ *    reference's asset set.
  * 3. **Nativa copy, Boson structure.** Headlines, section labels and the
  *    accordion are this project's, with `PageContext::$copy` read first and
  *    the defaults below as the floor — the same shape Erik, Mono and
@@ -183,7 +186,7 @@ final class BosonTheme implements ThemeModule
             . '<div class="bo-header__bar">' . "\n"
             . '<span class="bo-header__dots" aria-hidden="true"></span>' . "\n"
             . '<a class="bo-header__brand" href="/">'
-            . '<span class="bo-header__mark" aria-hidden="true">' . self::e(self::brandMark($context->siteName)) . '</span>'
+            . '<span class="bo-header__mark"><img class="bo-header__mark-img" src="' . self::e(self::logo()) . '" alt="" width="22" height="22"></span>'
             . '<span class="bo-header__wordmark">' . self::e($context->siteName) . '</span>'
             . '</a>' . "\n"
             . $this->nav($context->headerNav)
@@ -466,7 +469,7 @@ final class BosonTheme implements ThemeModule
             . '<div class="bo-orbit">'
             . '<span class="bo-orbit__ring"></span>'
             . '<span class="bo-orbit__ring bo-orbit__ring--inner"></span>'
-            . '<span class="bo-orbit__core"><span class="bo-orbit__mark">' . self::e(self::brandMark(self::t($context, 'title'))) . '</span></span>'
+            . '<span class="bo-orbit__core"><img class="bo-orbit__mark" src="' . self::e(self::logo()) . '" alt="" width="72" height="72"></span>'
             . '<span class="bo-orbit__dot"></span>'
             . '<span class="bo-orbit__dot bo-orbit__dot--tail"></span>'
             . '</div>'
@@ -1133,17 +1136,14 @@ final class BosonTheme implements ThemeModule
     }
 
     /**
-     * The monogram the header and the hero orbit draw: the site name's first
-     * letter, uppercased. It used to be a literal `N`, which was the reference
-     * site's initial — on `responsive.sk` the wordmark said one thing and the
-     * mark beside it another. An empty name falls back to `N`, the kernel's
-     * own default, so the mark is never a blank square.
+     * The brand mark: the site's own icon file, the same artwork the head
+     * declares as `<link rel="icon">` and `apple-touch-icon`. One logo, one
+     * place — a deployment that rebrands replaces `public/favicon.svg` and
+     * the tab, the touch icon and the header all change together.
      */
-    private static function brandMark(string $siteName): string
+    private static function logo(): string
     {
-        $trimmed = trim($siteName);
-
-        return '' === $trimmed ? 'N' : mb_strtoupper(mb_substr($trimmed, 0, 1));
+        return '/favicon.svg';
     }
 
     private static function e(mixed $value): string
