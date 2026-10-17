@@ -53,61 +53,58 @@ final class GriffeThemeTest extends TestCase
         $this->assertSame('griffe', $theme->bundle());
         $this->assertSame('gr', $theme->prefix());
 
-        // The colour-mode restore stays verbatim (Mono precedent); the
-        // override only appends the sync `gr-js` staging signal.
+        // The colour-mode restore stays verbatim (Mono precedent) — and it is
+        // now the ONLY pre-paint script: the `gr-js` staging signal went away
+        // with the griffe slider surface it staged.
         $init = $theme->themeInitScript();
 
         $this->assertStringContainsString("localStorage.getItem('nativa-theme')", $init);
         $this->assertStringContainsString("setAttribute('data-theme', theme)", $init);
-        $this->assertStringContainsString("classList.add('gr-js')", $init, 'The multi-slider stages pre-paint — without gr-js the opening frame stacks.');
-        $this->assertStringContainsString('prefers-reduced-motion', $init, 'Reduced motion keeps the stacked calm fallback.');
+        $this->assertStringNotContainsString('gr-js', $init, 'The staging signal is gone with the slider it staged — it must not creep back.');
+        $this->assertSame(1, substr_count($init, '<script'), 'One pre-paint script in <head>, not two.');
     }
 
     #[Test]
-    public function theRenderedDocumentSignalsJsBeforeFirstPaint(): void
+    public function theHeadShipsExactlyOnePrePaintScript(): void
     {
         $html = FrontendLayout::render('Test', '<p>x</p>', theme: self::THEME);
         $head = substr($html, 0, (int) strpos($html, '</head>'));
 
-        $this->assertStringContainsString("classList.add('gr-js')", $head, 'The staging signal must run synchronously in <head>, before first paint.');
+        $this->assertStringContainsString("setAttribute('data-theme', theme)", $head, 'The colour-mode restore still runs before first paint.');
+        $this->assertStringNotContainsString('gr-js', $head, 'No staging signal in the rendered head.');
 
         $style = (int) strpos($head, '<style');
-        $signal = (int) strpos($head, "classList.add('gr-js')");
-        $this->assertLessThan($signal, $style, 'The <style> paints first — the signal after it still precedes the body.');
+        $script = (int) strpos($head, 'setAttribute(');
+        $this->assertLessThan($script, $style, 'The <style> paints first — the restore still precedes the body.');
     }
 
     #[Test]
-    public function theMultiSliderOptsIntoPrePaintStaging(): void
+    public function theLandingIsTheRespFrontHorizontalHero(): void
     {
-        $multi = (new GriffeTheme())->homepage(self::homepageContext());
+        $html = (new GriffeTheme())->homepage(self::homepageContext());
 
-        $this->assertStringContainsString(
-            '<section class="gr-hero-slider gr-hero-slider--multi"',
-            $multi,
-            '2+ slides stage before first paint; without --multi the opening frame stacks.',
-        );
+        $this->assertStringContainsString('<hero-layout', $html);
+        $this->assertStringContainsString('<horizontal-scroll-hero', $html);
+        $this->assertStringContainsString('autoplay-interval="6000"', $html);
+        $this->assertStringContainsString('show-navigation show-scroll-hint', $html);
+        $this->assertSame(3, count(self::slidesOf($html)), 'Hero slide + one slide per article.');
     }
 
+    /**
+     * The landing component owns its fixed header/footer, so the theme must
+     * not stack the griffe chrome above them on `/` — while every other path
+     * keeps it.
+     */
     #[Test]
-    public function stagingOptInFollowsTheSlideCount(): void
+    public function theLandingOwnsItsChrome(): void
     {
-        // No articles passed: the theme falls back to published ones, so the
-        // count — and therefore the opt-in — follows whatever storage holds.
-        $context = PageContext::forHomepage(
-            Request::create('GET', '/'),
-            'griffe',
-            'en',
-            copy: ['title' => 'Hero'],
-        );
+        $theme = new GriffeTheme();
 
-        $html = (new GriffeTheme())->homepage($context);
-        $count = substr_count($html, '<li class="gr-slide');
+        $this->assertSame('', $theme->header(self::shellWithItems('/')), 'hero-layout supplies the only header on /.');
+        $this->assertSame('', $theme->footer(self::shellWithItems('/')), 'hero-layout supplies the only footer on /.');
 
-        if ($count >= 2) {
-            $this->assertStringContainsString('gr-hero-slider--multi', $html);
-        } else {
-            $this->assertStringNotContainsString('gr-hero-slider--multi', $html, 'One slide reads the same stacked or staged — no opt-in, no surprise.');
-        }
+        $this->assertStringContainsString('gr-header__brand', $theme->header(self::shellWithItems('/blog')), 'Every other path keeps the griffe chrome.');
+        $this->assertStringContainsString('gr-footer__inner', $theme->footer(self::shellWithItems('/blog')));
     }
 
     #[Test]
@@ -141,7 +138,9 @@ final class GriffeThemeTest extends TestCase
     #[Test]
     public function aHeaderWithoutItemsRendersNoToggleAtAll(): void
     {
-        $context = ShellContext::from('Griffe', [], [], '/', null, 'sk', [], false);
+        // A non-landing path: `/` renders no griffe header at all (the landing
+        // component owns its chrome), so this contract belongs to /blog.
+        $context = ShellContext::from('Griffe', [], [], '/blog', null, 'sk', [], false);
 
         $header = (new GriffeTheme())->header($context);
 
@@ -177,17 +176,13 @@ final class GriffeThemeTest extends TestCase
     }
 
     #[Test]
-    public function theHomepageIsASliderWithOneSlidePerArticlePlusHero(): void
+    public function theHomepageIsTheRespFrontHorizontalHero(): void
     {
-        $html = self::bodyOf((new GriffeTheme())->homepage(self::homepageContext()));
+        $slides = self::slidesOf((new GriffeTheme())->homepage(self::homepageContext()));
 
-        $this->assertSame(3, substr_count($html, '<li class="gr-slide'), 'Hero slide + 2 case slides.');
-        $this->assertSame(1, substr_count($html, 'gr-slide--active'), 'Slide 1 is active server-side.');
-        $this->assertSame(3, substr_count($html, '<button type="button" class="gr-pag'), 'One pagination button per slide.');
-        $this->assertStringContainsString('aria-current="true"', $html);
-        $this->assertSame(1, substr_count($html, 'gr-slider__arrow--prev'));
-        $this->assertSame(1, substr_count($html, 'gr-slider__arrow--next'));
-        $this->assertStringContainsString('data-gr-autoplay="6000"', $html);
+        $this->assertSame('hero', $slides[0]['id'], 'The copy hero opens the deck.');
+        $this->assertSame('/blog/alpha', $slides[1]['link']);
+        $this->assertSame('/blog/beta', $slides[2]['link']);
     }
 
     /**
@@ -205,42 +200,31 @@ final class GriffeThemeTest extends TestCase
         $locale = ContentServices::mapper()->defaultLocale();
         $context = PageContext::forHomepage(Request::create('GET', '/'), 'griffe', $locale);
 
-        $html = self::bodyOf((new GriffeTheme())->homepage($context));
+        $slides = self::slidesOf((new GriffeTheme())->homepage($context));
 
         if (!class_exists($facade)) {
-            $this->assertSame(1, substr_count($html, '<li class="gr-slide'), 'The hero slide renders with no articles.');
-            $this->assertStringNotContainsString('gr-slider__pag', $html, 'No pagination for a single slide.');
-            $this->assertStringNotContainsString('gr-slider__arrow', $html, 'No arrows for a single slide.');
-            $this->assertStringContainsString('Nothing published yet.', $html);
+            $this->assertCount(1, $slides, 'The hero slide renders with no articles.');
 
             return;
         }
 
         $expected = $facade::articles()->latestCards(6, $locale);
 
-        $this->assertSame(1 + count($expected), substr_count($html, '<li class="gr-slide'), 'Hero slide plus one case slide per published article.');
+        $this->assertCount(1 + count($expected), $slides, 'Hero slide plus one slide per published article.');
 
-        if ([] === $expected) {
-            $this->assertStringContainsString('Nothing published yet.', $html);
-
-            return;
+        foreach (array_values($expected) as $i => $card) {
+            $this->assertSame('/blog/' . $card['slug'], $slides[$i + 1]['link']);
+            $this->assertSame($card['image'], $slides[$i + 1]['backgroundImage'], 'Selected work is illustrated — every fallback article ships its cover.');
         }
-
-        foreach ($expected as $card) {
-            $this->assertStringContainsString('/blog/' . $card['slug'], $html);
-            $this->assertStringContainsString($card['image'], $html, 'Selected work is illustrated — every fallback article ships its cover.');
-        }
-
-        $this->assertStringContainsString('gr-case__img', $html, 'The grid cards carry illustrations, not just headlines.');
     }
 
     /**
-     * Slide 1 is the Erik hero shape: eyebrow kicker, title, lede, two
-     * actions, inline line-art visual — and only slide 1 (case slides keep
-     * their single Read More link).
+     * Slide 1 carries the copy hero: eyebrow kicker, resolved title, lede and
+     * the blog CTA. The component renders the text, so the contract is the
+     * JSON payload it receives rather than server-side markup.
      */
     #[Test]
-    public function theHeroSlideHasTheErikShape(): void
+    public function theHeroSlideCarriesTheCopy(): void
     {
         $context = PageContext::forHomepage(
             Request::create('GET', '/'),
@@ -251,53 +235,13 @@ final class GriffeThemeTest extends TestCase
             latestArticles: [self::article('a', 'A')],
         );
 
-        $html = self::bodyOf((new GriffeTheme())->homepage($context));
+        $hero = self::slidesOf((new GriffeTheme())->homepage($context))[0];
 
-        $this->assertStringContainsString('<p class="gr-slide__kicker">Proof &amp; Co</p>', $html);
-        $this->assertStringContainsString('<a class="gr-btn" href="/blog">Go</a>', $html);
-        $this->assertStringContainsString('<a class="gr-btn gr-btn--link" href="/mark">Open admin</a>', $html);
-        $this->assertStringContainsString('class="gr-slide__actions"', $html);
-        $this->assertSame(1, substr_count($html, 'gr-slide__actions'), 'Actions row lives on the hero slide only.');
-        $this->assertStringContainsString('gr-slide__visual', $html);
-        $this->assertStringContainsString('id="gr-glow"', $html);
-        $this->assertStringContainsString('aria-hidden="true">', $html);
-        $this->assertStringNotContainsString('.webp', $html, 'The showcase WebP underlay stays out of the kernel port.');
-
-        $css = InlineCss::file('Modules/Griffe/assets/critical/griffe.css');
-
-        foreach (['gr-slide__actions', 'gr-slide__visual', 'gr-slide__svg'] as $class) {
-            $this->assertStringContainsString('.' . $class, $css, sprintf('Hero emits `%s` with no rule.', $class));
-        }
-    }
-
-    #[Test]
-    public function headingsShipMaskedLinesForTheReveal(): void
-    {
-        $html = self::bodyOf((new GriffeTheme())->homepage(self::homepageContext()));
-
-        $this->assertStringContainsString('class="gr-anim"><span class="gr-anim__line"', $html);
-    }
-
-    /**
-     * The opening hero ships revealed: its slide is already on stage in the
-     * first paint, so its lines carry `gr-in` from the server and never wait
-     * on the bundle, the observer, or any script position. Case slides keep
-     * the mask — they unmask on activation, exactly as before.
-     */
-    #[Test]
-    public function theHeroSlideShipsRevealedWhileCaseSlidesStayMasked(): void
-    {
-        $html = self::bodyOf((new GriffeTheme())->homepage(self::homepageContext()));
-
-        $hero = substr($html, 0, (int) strpos($html, '<li class="gr-slide"'));
-
-        $this->assertStringContainsString('gr-slide--active', $hero);
-        $this->assertStringContainsString('class="gr-anim gr-in"><span class="gr-anim__line"', $hero, 'The hero must not depend on script timing for its visibility.');
-        $this->assertStringNotContainsString('class="gr-anim"><span class="gr-anim__line"', $hero, 'No masked line may survive on the opening slide.');
-
-        $cases = substr($html, (int) strpos($html, '<li class="gr-slide"'));
-
-        $this->assertStringContainsString('class="gr-anim"><span class="gr-anim__line"', $cases, 'Hidden slides keep the mask until the slider reveals them.');
+        $this->assertSame('Proof & Co', $hero['tag']);
+        $this->assertSame('Hero', $hero['titleLine1']);
+        $this->assertSame('Lede.', $hero['subtitle']);
+        $this->assertSame('/blog', $hero['link']);
+        $this->assertSame('Go', $hero['buttonText']);
     }
 
     /**
@@ -341,15 +285,20 @@ final class GriffeThemeTest extends TestCase
     #[Test]
     public function maskedLineUnitsStaySeparatedByWhitespace(): void
     {
-        $context = PageContext::forHomepage(
-            Request::create('GET', '/'),
-            'griffe',
+        $html = (new GriffeTheme())->blogArticle(PageContext::forBlogArticle(
+            Request::create('GET', '/blog/hello'),
+            self::THEME,
             'en',
-            copy: ['title' => 'One two three four five six'],
-            blogHref: '/blog',
-        );
-
-        $html = (new GriffeTheme())->homepage($context);
+            'hello',
+            'One two three four five six',
+            '<p>Body.</p>',
+            '',
+            '',
+            '',
+            '',
+            [],
+            [],
+        ));
 
         $this->assertStringContainsString(
             '</span></span>' . "\n" . '<span class="gr-anim gr-in">',
@@ -456,17 +405,11 @@ final class GriffeThemeTest extends TestCase
             latestArticles: [$imaged, self::article('plain', 'Plain Client')],
         );
 
-        $html = self::bodyOf((new GriffeTheme())->homepage($context));
+        $slides = self::slidesOf((new GriffeTheme())->homepage($context));
 
-        $this->assertStringContainsString('src="/img/hero.jpg"', $html);
-        $this->assertStringContainsString('srcset="/img/hero-800.jpg 800w"', $html);
-        $this->assertStringContainsString('src="/img/case.jpg"', $html);
-        $this->assertStringContainsString('gr-slide__shade', $html, 'Imagery ships its legibility shade.');
-        $this->assertSame(3, substr_count($html, '--gr-slide-bg:'), 'Every slide carries its tint.');
-
-        $bare = self::bodyOf((new GriffeTheme())->homepage(self::homepageContext()));
-
-        $this->assertStringNotContainsString('gr-slide__bg', $bare, 'No source, no <img> — the tint carries the slide.');
+        $this->assertSame('/img/hero.jpg', $slides[0]['backgroundImage']);
+        $this->assertSame('/img/case.jpg', $slides[1]['backgroundImage']);
+        $this->assertSame('', $slides[2]['backgroundImage'], 'A source-less article keeps the theme-colour background.');
     }
 
     #[Test]
@@ -549,17 +492,43 @@ final class GriffeThemeTest extends TestCase
         return (new GriffeTheme())->header(self::shellWithItems());
     }
 
-    private static function shellWithItems(): ShellContext
+    private static function shellWithItems(string $currentPath = '/blog'): ShellContext
     {
         return ShellContext::from(
             'Griffe',
             [new ShellNavItem('Work', '/work', active: true), new ShellNavItem('Blog', '/blog')],
             [new ShellNavItem('Privacy', '/privacy')],
-            '/',
+            $currentPath,
             null,
             'en',
             ['en', 'it'],
             false,
         );
+    }
+
+    /**
+     * Decode the landing's `slides` attribute back into the array the custom
+     * element parses. The attribute is HTML-escaped on purpose, so undo that
+     * first — the assertions should read values, not `&quot;`.
+     *
+     * @return list<array<string, string>>
+     */
+    private static function slidesOf(string $html): array
+    {
+        $matched = preg_match('/<horizontal-scroll-hero[^>]* slides="([^"]*)"/', $html, $m);
+
+        self::assertSame(1, $matched, 'The hero must declare a slides attribute.');
+
+        $slides = json_decode(
+            html_entity_decode($m[1], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+            true,
+            512,
+            JSON_THROW_ON_ERROR,
+        );
+
+        self::assertIsArray($slides);
+
+        /** @var list<array<string, string>> $slides */
+        return $slides;
     }
 }

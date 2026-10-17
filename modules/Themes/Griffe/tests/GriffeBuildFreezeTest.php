@@ -25,8 +25,27 @@ use PHPUnit\Framework\TestCase;
  */
 final class GriffeBuildFreezeTest extends TestCase
 {
-    /** Raw-byte budgets with ~30% headroom over the freezing build (JS 10 798, CSS 9 261). */
-    private const int JS_BUDGET = 14000;
+    /**
+     * Raw-byte budgets with ~30% headroom over the freezing build
+     * (JS 28 806, CSS 17 996 — measured after the component layer was pruned
+     * to what the PHP theme actually renders: `hero-layout`,
+     * `horizontal-scroll-hero` and the three self-gating behaviours). The
+     * previous freeze was JS 44 830 / CSS 17 996; before that JS 221 385 /
+     * CSS 21 140, which shipped the whole resp-front library and the dead
+     * griffe slider rules on every page.
+     *
+     * The 16 KB between those two freezes is the NET saving of dropping the
+     * framework: the Lit runtime alone measured ~35 KB on a probe build, and
+     * the native elements' own code is correspondingly larger than the five
+     * template lines it replaced (see
+     * `Frontend/packages/griffe/src/layout/hero-layout.ts`). The budget still
+     * guards against the runtime creeping back — re-importing `lit` alone would
+     * not fit under it.
+     *
+     * `theFrozenScriptIsASingleFileWithNoModuleSyntax` still proves one file,
+     * and the deferred `<script>` keeps it off the critical path.
+     */
+    private const int JS_BUDGET = 38000;
 
     /**
      * The bundle name, read from its owner.
@@ -49,7 +68,7 @@ final class GriffeBuildFreezeTest extends TestCase
         return (new GriffeTheme())->name();
     }
 
-    private const int CSS_BUDGET = 12000;
+    private const int CSS_BUDGET = 23000;
 
     protected function setUp(): void
     {
@@ -177,26 +196,47 @@ final class GriffeBuildFreezeTest extends TestCase
     }
 
     /**
-     * The opening frame must not stack: the sync `gr-js` signal
-     * (GriffeTheme::themeInitScript) stages a `--multi` hero before first
-     * paint, so the deferred bundle never reflows it. If this selector goes
-     * missing from the build, every load flashes the stacked slides again.
+     * The griffe slider surface is gone (the homepage is the resp-front
+     * landing), so its rules and the `gr-js` staging signal that gated them are
+     * gone with it. This is the inverse of the assertion that used to live
+     * here: it fails if the dead CSS creeps back into the frozen bundle, which
+     * is bytes every page inlines for markup nothing renders.
      */
     #[Test]
-    public function theFrozenStylesheetStagesTheMultiSliderPrePaint(): void
+    public function theFrozenStylesheetCarriesNoDeadSliderRules(): void
     {
         $css = $this->frozenCss();
 
-        $this->assertStringContainsString(
-            '.gr-js .gr-hero-slider--multi .gr-slide',
-            $css,
-            'Built CSS lost the pre-paint staging — the hero flashes stacked on every load.',
-        );
-        $this->assertStringContainsString(
-            '.gr-js .gr-hero-slider--multi .gr-slide--active',
-            $css,
-            'Staging without a visible active slide ships an empty hero.',
-        );
+        foreach (['gr-hero-slider', 'gr-slide', 'gr-pag', 'gr-slider__arrow', 'gr-case'] as $dead) {
+            $this->assertStringNotContainsString(
+                $dead,
+                $css,
+                sprintf('Frozen griffe CSS still carries `%s` — no surface renders it.', $dead),
+            );
+        }
+    }
+
+    /**
+     * The landing elements are native custom elements. The bundle carried the
+     * Lit runtime once (~35 KB of 44 830 B) for two elements whose only
+     * reactive state is a boolean and a slide index; these markers are what a
+     * reintroduced `import 'lit'` (or a Lit-based component) drags back in.
+     */
+    #[Test]
+    public function theFrozenScriptShipsNoFrameworkRuntime(): void
+    {
+        $js = $this->frozenJs();
+
+        foreach (['lit-html', 'reactive-element', 'litElementVersions', '$litType$', 'CSSResult'] as $marker) {
+            $this->assertStringNotContainsString(
+                $marker,
+                $js,
+                sprintf(
+                    'The frozen griffe bundle carries `%s` — the landing elements are plain HTMLElement subclasses and must stay that way.',
+                    $marker,
+                ),
+            );
+        }
     }
 
     #[Test]

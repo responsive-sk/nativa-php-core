@@ -76,8 +76,11 @@ src/Modules/*
 
 # pnpm workspace dependencies (Frontend/packages). The theme SOURCES are
 # tracked — they are what `make assets` builds; node_modules and pnpm's
-# virtual store are not.
+# virtual store are not. The second rule is load-bearing: a package with its
+# own dependencies (griffe's `lit`) gets a package-local `node_modules/` full
+# of symlinks, and the root-level pattern does not reach into it.
 /Frontend/packages/node_modules/
+/Frontend/packages/*/node_modules/
 
 # PHPUnit result cache (written on every run, never committed)
 .phpunit.result.cache

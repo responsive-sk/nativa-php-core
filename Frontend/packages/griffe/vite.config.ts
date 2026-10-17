@@ -1,15 +1,46 @@
 /**
  * vite.config.ts — the griffe theme bundle (public, selectable).
  *
- * Single entry, like erik: one self-contained file, no shared chunks —
- * the deferred `<script>` on the Chrome 70 baseline cannot execute
- * ES module imports. The four behaviours (header, slider, reveal,
- * highlight) are self-gating inits inside the entry, which replaces the
- * per-surface PHP gating GriffeTheme::pageWrap() used to do.
+ * Single entry, like erik: one self-contained file, no shared chunks — the
+ * deferred `<script>` on the Chrome 70 baseline cannot execute ES module
+ * imports. The entry keeps the three griffe behaviours (header, reveal,
+ * highlight) self-gating and registers the two landing custom elements
+ * adopted from `Frontend/resp-front` (`hero-layout`, `horizontal-scroll-hero`),
+ * which are plain `HTMLElement` subclasses with no framework runtime.
+ *
+ * The `@/` alias mirrors the source's own convention (`tsconfig.json`
+ * `paths`), so the unused opt-in components (`src/app.ts`) still resolve
+ * without a rewrite.
  */
+import { mergeConfig } from 'vite';
+import type { Plugin } from 'vite';
+import { createRequire } from 'node:module';
+import { fileURLToPath } from 'url';
 import { createThemeConfig } from '../build/vite-theme-factory.ts';
 
-export default createThemeConfig({
-  theme: 'griffe',
-  inputs: { griffe: 'src/griffe.ts' },
-});
+const src = fileURLToPath(new URL('./src', import.meta.url));
+
+// CJS-only package: `import` hands back `{ default: fn }`, so require it (the
+// shape the plugin's own typings describe) and keep the plugin type explicit.
+const minifyHtmlLiterals = (createRequire(import.meta.url)(
+  'rollup-plugin-minify-html-literals',
+) as { default: () => Plugin }).default;
+
+export default mergeConfig(
+  createThemeConfig({
+    theme: 'griffe',
+    inputs: { griffe: 'src/griffe.ts' },
+  }),
+  {
+    resolve: {
+      alias: { '@': src },
+    },
+    // The two shipped components keep their stylesheets in `css` tagged
+    // template literals, which the JS minifier copies verbatim: the comments
+    // and indentation that make those stylesheets readable would otherwise be
+    // shipped bytes. This plugin runs a real CSS/HTML minifier over literals
+    // with those tags only, so the whitespace goes away without touching any
+    // other string. The tag outlived Lit (`src/utils/css.ts`).
+    plugins: [minifyHtmlLiterals()],
+  },
+);

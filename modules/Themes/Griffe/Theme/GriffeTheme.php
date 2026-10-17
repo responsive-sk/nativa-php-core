@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Themes\Griffe\Theme;
 
+use Modules\Core\Domain\AdminRoutePolicy;
 use Modules\Core\Domain\ShellNavItem;
 use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Core\Interfaces\HTTP\PageContext;
@@ -51,17 +52,13 @@ final class GriffeTheme implements ThemeModule
 
     /**
      * Pre-paint colour-mode resolution (the shared dark/light restore,
-     * verbatim) plus the `gr-js` staging signal.
+     * verbatim).
      *
-     * The deferred `griffe` bundle adds `.gr-slider--live` only after it
-     * downloads, parses and runs — on a slow load the browser paints first,
-     * and the multi-slide hero flashes fully stacked before collapsing onto
-     * one stage. `gr-js` on `<html>` (set here, synchronously in `<head>`)
-     * lets the stylesheet stage the multi-slider before first paint, so the
-     * opening frame already shows the hero alone. Reduced motion is honoured
-     * up front: without `gr-js` the slider keeps its stacked calm fallback
-     * and the bundle never goes live — the no-JS shape doubles as the calm
-     * one, exactly as before. Only griffe pages move (Mono precedent).
+     * The second script used to add the `gr-js` staging signal for the griffe
+     * multi-slide hero. That surface is gone — the homepage is the resp-front
+     * landing, whose own component stages itself — so the signal, the stylesheet
+     * rules it gated and the pre-paint script are all removed with it: one fewer
+     * render-blocking `<script>` in `<head>` on every griffe page.
      */
     public function themeInitScript(): string
     {
@@ -77,22 +74,6 @@ final class GriffeTheme implements ThemeModule
                             theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
                         }
                         document.documentElement.setAttribute('data-theme', theme);
-                    } catch (e) {}
-                })();
-            </script>
-            <!-- Sync slider staging signal — same pre-paint contract as above:
-                 the stylesheet stages a multi-slide hero the moment `gr-js`
-                 is present, so the deferred bundle never reflows a stacked
-                 opening frame. Skipped under reduced motion (the calm
-                 fallback stays stacked) — `classList` and `matchMedia` are
-                 both older than the Chrome 70 baseline. -->
-            <script nonce="__CSP_NONCE_PLACEHOLDER__">
-                (function() {
-                    try {
-                        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                            return;
-                        }
-                        document.documentElement.classList.add('gr-js');
                     } catch (e) {}
                 })();
             </script>
@@ -116,6 +97,14 @@ final class GriffeTheme implements ThemeModule
      */
     public function header(ShellContext $context): string
     {
+        // The landing surface is the resp-front `hero-layout`, which owns its
+        // own fixed header. Rendering the griffe header too would stack two
+        // navigation bars above the same hero, so the homepage opts out
+        // (same for the footer below). Every other path keeps the chrome.
+        if ('/' === $context->currentPath) {
+            return '';
+        }
+
         $hasMenu = [] !== $context->headerNav;
 
         return '<header class="gr-header">' . "\n"
@@ -138,6 +127,11 @@ final class GriffeTheme implements ThemeModule
      */
     public function footer(ShellContext $context): string
     {
+        // `hero-layout` ships its own fixed footer on the landing surface.
+        if ('/' === $context->currentPath) {
+            return '';
+        }
+
         return '<footer class="gr-footer"><div class="gr-container gr-footer__inner">'
             . '<span>© ' . self::e($context->year) . ' ' . self::e($context->siteName) . '</span>'
             . $this->footerLinks($context->footerNav)
@@ -157,12 +151,19 @@ final class GriffeTheme implements ThemeModule
     }
 
     /**
-     * Fullscreen home slider: slide 1 is the editorial hero (H1 + lede + CTA
-     * from `$copy`), slides 2+ are case slides from `$latestArticles` (falling
-     * back to `$articles`). The article shape carries slug + title only, so the
-     * title headlines the case and the service line falls back to copy — the
-     * same mapping the grid below reuses. Slide 1 is active server-side, so a
-     * static render (no JS, reduced motion) still opens on the hero.
+     * The landing page adopted from `Frontend/resp-front`: a fullscreen
+     * horizontal-scroll hero (`hero-layout` + `horizontal-scroll-hero`).
+     *
+     * These are the page's only chrome: `header()` and `footer()` return ''
+     * on `/` because the component ships a fixed header and footer of its own.
+     *
+     * Slides are content-driven — slide 1 is the copy hero, slides 2+ are the
+     * latest articles (falling back to published ones), exactly the payload
+     * the old griffe slider consumed. They travel as the component's `slides`
+     * JSON attribute; the element's own reader turns the string into the
+     * array (the attributes are its public contract, not a framework's).
+     * Each value is escaped for the double-quoted attribute, so copy
+     * containing quotes or `<` cannot break out of it.
      */
     public function homepage(PageContext $context): string
     {
@@ -171,24 +172,64 @@ final class GriffeTheme implements ThemeModule
         if ([] === $articles) {
             $articles = self::latestFallback($context->locale);
         }
-        $slides = $this->heroSlide($context) . $this->caseSlides($context, $articles);
-        $count = substr_count($slides, '<li class="gr-slide');
 
-        // `gr-hero-slider--multi` lets the stylesheet stage the hero before
-        // first paint (see themeInitScript): a lone hero needs no staging —
-        // it reads the same stacked or staged — so only 2+ slides opt in.
-        $multi = $count >= 2 ? ' gr-hero-slider--multi' : '';
+        $siteName = $context->copy['title'] ?? 'Nativa';
+        $service = $context->copy['case_service'] ?? 'Case study';
 
-        $slider = '<section class="gr-hero-slider' . $multi . '" data-gr-autoplay="6000" aria-roledescription="carousel">'
-            . '<ul class="gr-slides">' . $slides . '</ul>'
-            . $this->sliderPag($count)
-            . $this->sliderArrows($count)
-            . '</section>';
+        $slides = [[
+            'id' => 'hero',
+            'tag' => $context->copy['home.eyebrow'] ?? $context->copy['hero_eyebrow'] ?? '',
+            'titleLine1' => $context->copy['home.hero_title'] ?? $context->copy['hero_title'] ?? $siteName,
+            'subtitle' => $context->copy['home.hero_subtitle'] ?? $context->copy['lede'] ?? '',
+            'link' => $context->blogHref ?? '/blog',
+            'backgroundImage' => $context->heroSrc ?? '',
+            'themeColor' => '#0d1119',
+            'buttonText' => $context->copy['home.cta_blog'] ?? $context->copy['cta'] ?? 'Read the blog',
+        ]];
 
-        // No pageWrap here: FrontendLayout owns the single wrap (it calls
-        // pageWrap($content) itself) — wrapping here nests <main> and ships
-        // every gated script twice. Mono precedent, not Erik's.
-        return $slider . $this->caseGrid($context, $articles);
+        foreach (self::pairs($articles) as $pair) {
+            $slides[] = [
+                'id' => $pair['slug'],
+                'tag' => $service,
+                'titleLine1' => $pair['title'],
+                'link' => '/blog/' . $pair['slug'],
+                'backgroundImage' => $pair['image'] ?? '',
+                'themeColor' => '#0d1119',
+                'buttonText' => $context->copy['home.read_article'] ?? 'Read article',
+            ];
+        }
+
+        // The admin prefix is a policy answer, never a literal: `/mark` is
+        // `AdminRoutePolicy`'s to spell (`ADMIN_PATH` can move it).
+        $navigation = [
+            ['label' => 'Home', 'href' => '/'],
+            ['label' => 'Blog', 'href' => '/blog'],
+            ['label' => 'Admin', 'href' => AdminRoutePolicy::prefix()],
+        ];
+
+        return '<hero-layout'
+            . ' logo-text="' . self::e($siteName) . '"'
+            . ' logo-link="/"'
+            . ' navigation="' . self::e(self::json($navigation)) . '"'
+            . ' social-links="' . self::e(self::json([])) . '"'
+            . ' copyright="' . self::e('© ' . date('Y') . ' ' . $siteName) . '">'
+            . '<horizontal-scroll-hero'
+            . ' slides="' . self::e(self::json($slides)) . '"'
+            . ' autoplay-interval="6000" show-navigation show-scroll-hint>'
+            . '</horizontal-scroll-hero>'
+            . '</hero-layout>';
+    }
+
+    /**
+     * JSON for a custom-element attribute. Slashes and unicode stay readable;
+     * the caller still runs it through `e()` so `"` becomes `&quot;` inside the
+     * attribute.
+     *
+     * @param array<array-key, mixed> $value
+     */
+    private static function json(array $value): string
+    {
+        return json_encode($value, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     }
 
     /**

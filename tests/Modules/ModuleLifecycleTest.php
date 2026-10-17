@@ -306,9 +306,12 @@ final class ModuleLifecycleTest extends TestCase
             return true;
         }
 
-        // pnpm's dependency store: gitignored state, and full of symlinks the
-        // hash walk would try to read as files. Not part of the tree.
-        if (str_starts_with($rel, 'Frontend/packages/node_modules/')) {
+        // pnpm's dependency store and every package-local `node_modules/`:
+        // gitignored state, and full of symlinks the hash walk would report as
+        // leaves and then try to read as files (`file_get_contents(): ... Is a
+        // directory`, measured on `Frontend/packages/griffe/node_modules/lit`
+        // after griffe gained the `lit` dependency). Not part of the tree.
+        if (1 === preg_match('#^Frontend/packages/(?:[^/]+/)?node_modules(/|$)#', $rel)) {
             return true;
         }
 

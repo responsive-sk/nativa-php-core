@@ -168,121 +168,6 @@
     .gr-nav__toggle-input:checked ~ .gr-header__inner .gr-nav { display: flex; }
 }
 
-/* ------------------------------------------------------------ hero slider */
-
-.gr-hero-slider {
-    position: relative;
-    overflow: hidden;
-    border-bottom: 1px solid var(--gr-line);
-}
-
-.gr-slides { list-style: none; margin: 0; padding: 0; }
-
-/* No-JS: slides stack, all readable, controls hidden (see --live below).
-   With JS the sync `gr-js` signal (GriffeTheme::themeInitScript, skipped
-   under reduced motion) stages a `--multi` hero before first paint, so the
-   deferred bundle never reflows a stacked opening frame. */
-.gr-slide { position: relative; padding: clamp(3rem, 9vh, 6rem) 0; border-top: 1px solid var(--gr-line); }
-.gr-slide:first-child { border-top: 0; }
-
-.gr-slider--live .gr-slide,
-.gr-js .gr-hero-slider--multi .gr-slide {
-    border-top: 0;
-    min-height: 92svh;
-    display: flex;
-    align-items: center;
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateX(4%);
-    transition: opacity .6s var(--gr-ease), transform .6s var(--gr-ease), visibility 0s .6s;
-    padding: 0;
-}
-
-.gr-slider--live .gr-slide--active,
-.gr-js .gr-hero-slider--multi .gr-slide--active {
-    opacity: 1;
-    visibility: visible;
-    transform: none;
-    transition: opacity .6s var(--gr-ease), transform .6s var(--gr-ease);
-    position: relative;
-}
-
-.gr-slide { background: var(--gr-slide-bg, transparent); }
-[data-theme="dark"] .gr-slide { background: var(--gr-slide-bg-dark, var(--gr-slide-bg, transparent)); }
-
-/* Full-bleed slide imagery (reference slides are photographic): the <img>
-   covers the stage, a legibility shade sits above it, content on top. No
-   image → the per-slide tint (or paper) carries the slide alone. */
-.gr-slide__bg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: 0;
-}
-
-.gr-slide__shade {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    background: linear-gradient(100deg, color-mix(in srgb, var(--gr-paper) 82%, transparent) 20%, transparent 65%);
-}
-
-.gr-slide .gr-container { position: relative; z-index: 2; }
-
-/* Hero line-art visual (the Erik hero shape): full-stage line composition
-   behind the copy, tinted with the slide accent. Decorative — the copy
-   stays in .gr-container above it, readable with no image at all. */
-.gr-slide__visual {
-    color: var(--gr-accent);
-    inset: 0;
-    opacity: .9;
-    pointer-events: none;
-    position: absolute;
-    z-index: 1;
-}
-
-.gr-slide__svg {
-    height: 100%;
-    object-fit: cover;
-    object-position: center right;
-    width: 100%;
-}
-
-.gr-slide__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .75rem;
-    align-items: center;
-}
-
-.gr-slide__kicker {
-    color: var(--gr-accent);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .14em;
-    font-size: .8rem;
-    margin: 0 0 1rem;
-}
-
-.gr-slide__title {
-    font-size: var(--gr-display);
-    line-height: 1.02;
-    letter-spacing: -.03em;
-    margin: 0 0 1.25rem;
-    text-wrap: balance;
-}
-
-.gr-slide__lede {
-    font-size: 1.15rem;
-    color: var(--gr-muted);
-    max-width: 44rem;
-    margin: 0 0 2rem;
-}
-
 .gr-btn {
     display: inline-block;
     padding: .8rem 1.6rem;
@@ -303,46 +188,6 @@
 
 .gr-btn--link:hover { background: none; text-decoration: underline; }
 
-/* Pagination + arrows appear only once the slider is live. */
-.gr-slider__pag, .gr-slider__arrow { display: none; }
-.gr-slider--live .gr-slider__pag, .gr-slider--live .gr-slider__arrow { display: flex; }
-
-.gr-slider__pag {
-    position: absolute;
-    left: 0; right: 0; bottom: 1.5rem;
-    justify-content: center;
-    gap: .6rem;
-    z-index: 2;
-}
-
-.gr-pag {
-    width: 2.75rem;
-    height: .3rem;
-    border: 0;
-    border-radius: 999px;
-    background: var(--gr-line);
-    padding: 0;
-    cursor: pointer;
-    overflow: hidden;
-}
-
-.gr-pag__fill { display: block; height: 100%; width: 0; background: var(--gr-accent); transition: width linear; }
-.gr-pag--active .gr-pag__fill { width: 100%; }
-/* Duration comes from the slider (data-gr-autoplay); without JS the filler
-   never runs and the transition above is inert. */
-
-.gr-slider__arrow {
-    position: absolute;
-    top: 50%;
-    translate: 0 -50%;
-    z-index: 2;
-    background: var(--gr-paper);
-    border: 1px solid var(--gr-line);
-}
-
-.gr-slider__arrow--prev { left: 1rem; }
-.gr-slider__arrow--next { right: 1rem; }
-
 /* ---------------------------------------------------------- scroll reveal */
 
 /* Lines are visible by default; the script arms the masked state first
@@ -355,10 +200,6 @@
 }
 .gr-reveal-armed .gr-in .gr-anim__line, .gr-reveal-armed.gr-in .gr-anim__line { transform: none; }
 
-/* ------------------------------------------------------------- case grid */
-
-.gr-cases { padding: clamp(3rem, 8vh, 5.5rem) 0; }
-
 .gr-section__title {
     font-size: clamp(1.75rem, 4vw, 2.75rem);
     letter-spacing: -.02em;
@@ -366,32 +207,6 @@
 }
 
 .gr-section__sub { color: var(--gr-muted); margin: 0 0 2.5rem; }
-
-.gr-case-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--gr-gap);
-}
-
-@media (max-width: 900px) { .gr-case-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 600px) { .gr-case-grid { grid-template-columns: 1fr; } }
-
-.gr-case {
-    border: 1px solid var(--gr-line);
-    border-radius: var(--gr-radius);
-    padding: 1.75rem;
-    display: flex;
-    flex-direction: column;
-    gap: .6rem;
-}
-
-.gr-case:hover { border-color: var(--gr-accent); }
-
-.gr-case__img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: calc(var(--gr-radius) - 6px); }
-.gr-case__client { font-size: 1.4rem; margin: 0; letter-spacing: -.01em; }
-.gr-case__service { color: var(--gr-muted); margin: 0; flex: 1; }
-.gr-case__more { color: var(--gr-accent); font-weight: 700; text-decoration: none; }
-.gr-case__more:hover { text-decoration: underline; }
 
 .gr-empty { color: var(--gr-muted); }
 

@@ -1,7 +1,7 @@
 {
   "name": "@nativa/theme-griffe",
   "version": "0.1.0",
-  "description": "Nativa griffe theme — vanilla TypeScript + Vite, ES2015 / Chrome 70 baseline.",
+  "description": "Nativa griffe theme — framework-free custom elements + Vite, ES2015 / Chrome 70 baseline.",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,5 +9,10 @@
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "chart.js": "^4.5.1",
+    "lit": "^3.3.2",
+    "rollup-plugin-minify-html-literals": "^1.2.6"
   }
 }
