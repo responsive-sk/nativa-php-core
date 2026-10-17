@@ -523,7 +523,7 @@ final class ThemeClassOwnershipTest extends TestCase
      * A DEAD_CLASSES entry must still be dead.
      *
      * The list is not a permission slip. If someone wires an emitter up — a
-     * template starts writing `class="copy-btn"`, a highlighter lands in this
+     * template starts emitting `copy-btn`, a highlighter lands in this
      * repository — the class is LIVE and belongs to the prefix rule, so the
      * test fails until the entry is deleted. That is the same direction the
      * exemption list in `NameOwnershipContractTest` fails: rot is not a pass.
