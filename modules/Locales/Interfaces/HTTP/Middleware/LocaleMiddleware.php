@@ -4,11 +4,13 @@ declare(strict_types = 1);
 
 namespace Modules\Locales\Interfaces\HTTP\Middleware;
 
+use Modules\Core\Infrastructure\Attributes\AsMiddleware;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Middleware\MiddlewareInterface;
 use Modules\Locales\Application\Services\LocaleService;
 use Modules\Locales\Domain\Model\Locale;
+use Modules\Locales\Interfaces\HTTP\LocalesServices;
 
 /**
  * LocaleMiddleware — detects and sets the active locale on every request.
@@ -26,11 +28,33 @@ use Modules\Locales\Domain\Model\Locale;
  * and on LocaleService::set() for templates/layouts.
  *
  * Registered before CSRF in the kernel pipeline so the URL prefix is
- * stripped before routing (and before CSRF path matching).
+ * stripped before routing (and before CSRF path matching) — `#[AsMiddleware]`
+ * at priority 10, between the security headers (0) and CSRF (20).
+ *
+ * ## Why the attribute IS the wiring
+ *
+ * Measured 2026-10-17: every prefixed URL answered 404 — `/sk_SK/blog` (a link
+ * the locale switcher renders itself), `/sk/docs` (linked from the `/docs`
+ * index) and `/en/blog` alike. This class reached the pipeline NOWHERE. The
+ * registry scans every module's `Interfaces/HTTP/Middleware` directory but
+ * accepts only `#[AsMiddleware]` classes with a ZERO-ARG constructor, and this one had
+ * neither the attribute nor a way to build itself: "not annotated" plus "needs a
+ * LocaleService" is a documented prefix contract that nothing served. It carries
+ * the attribute now and defaults its own service through the module's factory,
+ * so it joins the pipeline by existing like every other discovered stage — and a
+ * tree without this module has no prefix, which is the right answer for a tree
+ * with no locales either.
  */
+#[AsMiddleware(priority: 10)]
 final readonly class LocaleMiddleware implements MiddlewareInterface
 {
-    public function __construct(private LocaleService $localeService)
+    /**
+     * The service is OPTIONAL so discovery can construct this class: the
+     * registry builds middleware with `new $class()` and skips (with a log line)
+     * anything whose constructor demands an argument. The module's own factory is
+     * the default, which is also what a hand-written wiring wants.
+     */
+    public function __construct(private ?LocaleService $localeService = null)
     {
     }
 
@@ -41,8 +65,10 @@ final readonly class LocaleMiddleware implements MiddlewareInterface
         // would make the second call see the already-stripped path and
         // report the locale as not explicit. The blog relies on the flag to
         // tell /blog (default) apart from /en/blog (explicit choice).
+        $localeService = $this->localeService ?? LocalesServices::locale();
+
         $explicit = $this->explicitLocale($request);
-        $locale = $explicit ?? $this->localeService->default();
+        $locale = $explicit ?? $localeService->default();
 
         $request->setAttribute('locale', $locale->code());
         // Whether the locale was explicitly selected (URL prefix, header,
@@ -51,7 +77,7 @@ final readonly class LocaleMiddleware implements MiddlewareInterface
         // an explicit language choice (/en/blog): blog content lives under
         // the default locale's directory (sk), translations under /en/...
         $request->setAttribute('locale_explicit', $explicit !== null);
-        $this->localeService->set($locale);
+        $localeService->set($locale);
 
         return $next($request);
     }
