@@ -120,6 +120,80 @@ final readonly class ModuleCatalog
     }
 
     /**
+     * How far the installed slice has drifted from the catalogue entry.
+     *
+     * The catalogue (`modules/<Name>/`) is the SOURCE: it is tracked in git,
+     * it is what `module:add` copies, and it is the side an author edits. The
+     * slice (`src/Modules/<Name>/`) is generated and untracked, so nobody
+     * compares them — which is exactly how a fix lands in the catalogue and
+     * never reaches the running tree, or the other way round. This returns
+     * the file-level answer, with counts and names, so `module:show` can
+     * report it instead of an operator remembering.
+     *
+     * Compare CONTENT, not timestamps: a reinstall touches every mtime and a
+     * checkout rewrites them, while the question is "is it the same code?".
+     *
+     * @return array{status: 'identical'|'drifted'|'not-installed'|'not-catalogued', testsOnly: bool, catalog: int, installed: int, onlyInCatalog: list<string>, onlyInInstalled: list<string>, changed: list<string>}
+     *
+     * @throws \RuntimeException when the name cannot be a namespace segment
+     */
+    public function drift(string $name): array
+    {
+        $this->assertValidName($name);
+
+        $catalogued = $this->isCatalogued($name);
+        $installed = $this->isInstalled($name);
+
+        $catalog = $catalogued ? $this->relativeFiles($this->catalogDir . DIRECTORY_SEPARATOR . $name) : [];
+        $slice = $installed ? $this->relativeFiles($this->modulesDir . DIRECTORY_SEPARATOR . $name) : [];
+
+        $onlyInCatalog = array_keys(array_diff_key($catalog, $slice));
+        $onlyInInstalled = array_keys(array_diff_key($slice, $catalog));
+        $changed = [];
+
+        foreach (array_intersect_key($catalog, $slice) as $relative => $hash) {
+            if ($hash !== $slice[$relative]) {
+                $changed[] = $relative;
+            }
+        }
+
+        sort($onlyInCatalog);
+        sort($onlyInInstalled);
+        sort($changed);
+
+        if (!$catalogued) {
+            $status = 'not-catalogued';
+        } elseif (!$installed) {
+            $status = 'not-installed';
+        } elseif ([] === $onlyInCatalog && [] === $onlyInInstalled && [] === $changed) {
+            $status = 'identical';
+        } else {
+            $status = 'drifted';
+        }
+
+        $differences = [...$onlyInCatalog, ...$onlyInInstalled, ...$changed];
+
+        // A catalogue entry's tests are run from modules/ (phpunit.xml's
+        // module suite); the slice never needs them, so a slice that predates
+        // a test-only addition is not a runtime divergence. Anything else
+        // under src/Modules is code the page loads, and it must match.
+        $testsOnly = [] !== $differences && [] === array_filter(
+            $differences,
+            static fn (string $file): bool => !str_starts_with($file, 'tests/'),
+        );
+
+        return [
+            'status'          => $status,
+            'testsOnly'       => $testsOnly,
+            'catalog'         => count($catalog),
+            'installed'       => count($slice),
+            'onlyInCatalog'   => $onlyInCatalog,
+            'onlyInInstalled' => $onlyInInstalled,
+            'changed'         => $changed,
+        ];
+    }
+
+    /**
      * Closure members with no installed slice — the missing names a refusal
      * must carry. Empty means the module may be installed.
      *
@@ -233,6 +307,42 @@ final readonly class ModuleCatalog
         }
 
         sort($files);
+
+        return $files;
+    }
+
+    /**
+     * Every regular file under `$dir`, keyed by its relative path and valued
+     * by a content hash. Hidden files count too: a `.gitignore` copied into a
+     * slice is still part of the slice.
+     *
+     * @return array<string, string>
+     */
+    private function relativeFiles(string $dir): array
+    {
+        if (!is_dir($dir)) {
+            return [];
+        }
+
+        $files = [];
+        $prefix = rtrim($dir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS),
+        );
+
+        foreach ($iterator as $file) {
+            /** @var \SplFileInfo $file */
+            if (!$file->isFile()) {
+                continue;
+            }
+
+            $path = $file->getPathname();
+            $relative = str_starts_with($path, $prefix) ? substr($path, strlen($prefix)) : $path;
+            $files[str_replace(DIRECTORY_SEPARATOR, '/', $relative)] = (string) md5_file($path);
+        }
+
+        ksort($files);
 
         return $files;
     }

@@ -23,7 +23,8 @@ that changed.
 | Command | What it does |
 |---|---|
 | `php bin/cms module:list` | installed + catalogued modules |
-| `php bin/cms module:show <Name>` | the manifest — what WOULD be installed, before anything is copied |
+| `php bin/cms module:show` | the catalogue → slice drift for every module, with file counts |
+| `php bin/cms module:show <Name>` | that module's manifest plus the same drift answer |
 | `php bin/cms module:add <Name>` | copy the slice in; flush the page cache |
 | `php bin/cms module:remove <Name> [--force]` | delete the slice; flush the page cache; report (never delete) the data |
 | `php bin/cms migrate` | run every module migrator (the first-request run, forced) |
@@ -32,6 +33,48 @@ that changed.
 | `php bin/cms queue:prune [--interval="30 days"] [--dry-run]` | drop failed jobs older than the interval — never part of `queue:work` (see below) |
 | `php bin/cms discovery:clear` | delete the discovery cache (`storage/cache/discovery.php`); the next request rescans |
 | `php bin/cms discovery:status` | whether the discovery cache exists, is fresh, and how many routes it holds |
+
+## Catalogue vs slice: drift, measured (task 4.1, 2026-10-17)
+
+`modules/<Name>/` is the **source**: it is tracked in git, an author edits it,
+and `module:add` copies it. `src/Modules/<Name>/` is the **installed slice**:
+generated, untracked, and the copy the running app loads. Nothing in git
+compares the two, so a fix can land on one side only while `git status` stays
+clean and the page keeps serving the old code. `module:show` with no name
+answers that question by content hash, per relative path:
+
+```
+Catalogue → installed slice (the catalogue in modules/ is the source):
+  Audit          identical       8/8
+  Locales        drifted         18/17 (1 only in catalog, 0 only in installed, 0 changed) — tests only
+  Scratch        not-installed   1/0
+  KernelTheme    not-catalogued  0/2
+...
+13 identical, 6 drifted, 1 not installed, 1 not catalogued.
+```
+
+Four states, each with a count on both sides:
+
+| status | meaning |
+|---|---|
+| `identical` | every file matches by content (not mtime — a reinstall touches every timestamp) |
+| `drifted` | at least one file is only on one side or has different bytes; `module:show <Name>` lists each by name |
+| `not-installed` | the catalogue entry exists and the slice does not |
+| `not-catalogued` | the slice exists with no catalogue entry — `KernelTheme` is this by design, it ships inside `src/` |
+
+**Expected drift: test files only.** Module tests run from `modules/`
+(`phpunit.xml`'s module suite), and the app never loads them, so a slice that
+predates a test-only addition is harmless. The report names that case
+`— tests only`; every other difference is followed by `— RUNTIME` and the
+reinstall command, because that is code the page loads. Measured on
+2026-10-17, all six drifted modules were tests-only (`Blog`, `Cardboard`,
+`Comments`, `Locales`, `Questions`, `Queue`); `Mono` had a stale built
+`assets/critical/mono.css` and was reinstalled, after which it read
+`identical`.
+
+A test file is never a reason to reinstall, and a runtime file is never a
+reason not to: the point of the report is that neither answer depends on
+someone remembering which copy was edited.
 
 ## What the scan sees
 

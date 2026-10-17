@@ -12,7 +12,7 @@ declare(strict_types = 1);
  * commands, argv-parsed, exit 0 on success and 1 on refusal or error:
  *
  *   module:list              installed + catalogued modules
- *   module:show <Name>       the manifest — what WOULD be installed, before anything is copied
+ *   module:show [<Name>]     the catalogue → slice drift, or one module's manifest
  *   module:add <Name>        copy the slice in (refuses an incomplete closure by name)
  *   module:remove <Name>     delete the slice (refuses while another module imports it)
  *   migrate                  run every module migrator (the first-request run, forced)
@@ -120,18 +120,147 @@ function cmdList(ModuleCatalog $catalog): void
     out('Catalogued (' . count($catalogued) . '): ' . ([] === $catalogued ? '(empty catalog)' : implode(', ', $catalogued)));
 }
 
-function cmdShow(ModuleCatalog $catalog, string $name): void
+/**
+ * `module:show` with no name reports the catalogue → slice drift for every
+ * module; with a name it prints that module's manifest plus the same answer.
+ *
+ * The catalogue (`modules/<Name>/`) is the SOURCE — tracked, authored, and
+ * what `module:add` copies. The slice (`src/Modules/<Name>/`) is generated and
+ * untracked. Nothing in git compares them, so a fix can land on one side only
+ * and the tree still looks green; this is the measurement that makes the gap
+ * visible, with the file counts and the file names.
+ */
+function cmdShow(ModuleCatalog $catalog, ?string $name): void
 {
+    if (null === $name) {
+        cmdDrift($catalog);
+
+        return;
+    }
+
     try {
+        $drift = $catalog->drift($name);
+
         if ($catalog->isInstalled($name)) {
             printManifest($catalog->installedManifest($name), 'installed');
-
-            return;
+        } else {
+            printManifest($catalog->manifest($name), 'catalog — not installed');
         }
 
-        printManifest($catalog->manifest($name), 'catalog — not installed');
+        printDrift($name, $drift);
     } catch (RuntimeException $e) {
         fail($e->getMessage());
+    }
+}
+
+function cmdDrift(ModuleCatalog $catalog): void
+{
+    $names = array_values(array_unique([...$catalog->catalogued(), ...$catalog->installed()]));
+    sort($names);
+
+    out('Catalogue → installed slice (the catalogue in modules/ is the source):');
+
+    $counts = ['identical' => 0, 'drifted' => 0, 'not-installed' => 0, 'not-catalogued' => 0];
+
+    foreach ($names as $name) {
+        $drift = $catalog->drift($name);
+        $counts[$drift['status']]++;
+
+        out(sprintf(
+            '  %-14s %-15s %s',
+            $name,
+            $drift['status'],
+            driftCounts($drift),
+        ));
+    }
+
+    out(sprintf(
+        '%d identical, %d drifted, %d not installed, %d not catalogued.',
+        $counts['identical'],
+        $counts['drifted'],
+        $counts['not-installed'],
+        $counts['not-catalogued'],
+    ));
+}
+
+/**
+ * The counts half of a drift line — files on each side plus what differs.
+ *
+ * @param array{status: string, testsOnly: bool, catalog: int, installed: int, onlyInCatalog: list<string>, onlyInInstalled: list<string>, changed: list<string>} $drift
+ */
+function driftCounts(array $drift): string
+{
+    $counts = $drift['catalog'] . '/' . $drift['installed'];
+
+    if ('drifted' !== $drift['status']) {
+        return $counts;
+    }
+
+    return sprintf(
+        '%s (%d only in catalog, %d only in installed, %d changed)%s',
+        $counts,
+        count($drift['onlyInCatalog']),
+        count($drift['onlyInInstalled']),
+        count($drift['changed']),
+        $drift['testsOnly'] ? ' — tests only' : ' — RUNTIME',
+    );
+}
+
+/**
+ * @param array{status: string, testsOnly: bool, catalog: int, installed: int, onlyInCatalog: list<string>, onlyInInstalled: list<string>, changed: list<string>} $drift
+ */
+function printDrift(string $name, array $drift): void
+{
+    $source = 'modules/' . $name . '/';
+
+    switch ($drift['status']) {
+        case 'identical':
+            out(sprintf('  drift:       identical to %s (%d file(s) on both sides)', $source, $drift['catalog']));
+
+            return;
+
+        case 'not-installed':
+            out(sprintf('  drift:       not installed — %d file(s) in %s', $drift['catalog'], $source));
+
+            return;
+
+        case 'not-catalogued':
+            out(sprintf(
+                '  drift:       installed but not catalogued — %d file(s) in src/Modules/%s/, no source in modules/',
+                $drift['installed'],
+                $name,
+            ));
+
+            return;
+
+        default:
+            out(sprintf(
+                '  drift:       drifted from %s — catalog %d, installed %d (only in catalog: %d, only in installed: %d, changed: %d)',
+                $source,
+                $drift['catalog'],
+                $drift['installed'],
+                count($drift['onlyInCatalog']),
+                count($drift['onlyInInstalled']),
+                count($drift['changed']),
+            ));
+    }
+
+    if ($drift['testsOnly']) {
+        out('               expected: test files only — run from modules/, never loaded by the app');
+    } else {
+        out('               RUNTIME drift: reinstall the module (`php bin/cms module:remove <Name> --force && php bin/cms module:add <Name>`)');
+    }
+
+    foreach ($drift['onlyInCatalog'] as $file) {
+        out('    only in catalog:   ' . $file);
+    }
+
+    foreach ($drift['onlyInInstalled'] as $file) {
+        out('    only in installed: ' . $file);
+    }
+
+    foreach ($drift['changed'] as $file) {
+        out('    changed:           ' . $file);
     }
 }
 
@@ -183,7 +312,7 @@ function usage(): void
     out('Usage: php bin/cms <command> [args]');
     out('');
     out('  module:list              installed + catalogued modules');
-    out('  module:show <Name>       the manifest before anything is copied');
+    out('  module:show [<Name>]     drift report, or one module\'s manifest');
     out('  module:add <Name>        install a module (refuses an incomplete closure)');
     out('  module:remove <Name> [--force]  remove a module (refuses while imported)');
     out('  migrate                  run every module migrator (the first-request run, forced)');
@@ -478,11 +607,7 @@ function main(array $argv): void
             break;
 
         case 'module:show':
-            if (!isset($argv[2])) {
-                fail('module:show needs a module name.');
-            }
-
-            cmdShow($catalog, $argv[2]);
+            cmdShow($catalog, $argv[2] ?? null);
 
             break;
 
