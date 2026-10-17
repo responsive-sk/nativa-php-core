@@ -30,14 +30,15 @@ final class MonoBuildFreezeTest extends TestCase
     /**
      * Raw-byte budgets. JS 18 000 covers the Boson-style choice section, the
      * mask reveal and the navbar dot-grid mark (measured 16 777, ~7% headroom).
-     * CSS 41 500 covers the same sections plus the steps accordion and the
-     * hero-art double ring (measured 40 382, ~2.7% headroom); the earlier
-     * freeze was JS 10 370 / CSS 29 200, then CSS 40 000 at 38 624 measured
-     * before the hero art and the animated slider transition landed.
+     * CSS 42 000 covers the same sections plus the steps accordion, the
+     * hero-art double ring and the locale switch's phone rules (measured
+     * 41 725, ~0.7% headroom). The earlier freeze was JS 10 370 / CSS 29 200,
+     * then CSS 40 000 at 38 624, then CSS 41 500 when the switch landed with
+     * 259 B spare — the phone rules are what crossed that line deliberately.
      */
     private const int JS_BUDGET = 18000;
 
-    private const int CSS_BUDGET = 41500;
+    private const int CSS_BUDGET = 42000;
 
     protected function setUp(): void
     {

@@ -123,8 +123,10 @@ final class MonoTheme implements ThemeModule
             . self::themeToggle()
             . self::variantToggle('ember', 'dev-theme-switcher', 'Toggle Ember variant', self::flameIcon())
             . self::variantToggle('glacier', 'dev-variant-switcher-2', 'Toggle Glacier variant', self::snowflakeIcon())
-            . $this->menuToggleLabel($hasMenu)
             . $this->localeLinks($context)
+            // The menu toggle is the last control on a phone, where it is the
+            // actionable one; the switcher sits before it rather than after.
+            . $this->menuToggleLabel($hasMenu)
             . '</div>'
             . '</div>'
             . '</nav>' . "\n";
@@ -762,21 +764,21 @@ final class MonoTheme implements ThemeModule
      * a stateful control (Erik's `.er-locale.m-pubswitch__track`, repeated for
      * its theme toggle), in mono's own class name.
      *
-     * Measured 2026-10-17: this rendered `<a class="mo-navbar__link mo-btn--sm">`
-     * — a nav link plus a SIZE MODIFIER whose base class (`mo-btn`) was never
-     * applied. `mo-btn--sm` carries padding and font-size only, so the control
-     * had no track, no border and no state: the language you are already
-     * reading was indistinguishable from the other one, on the one control whose
-     * whole job is to say where you are.
+     * The segment label is the SHORT language code (`sk_SK` → `SK`), the form
+     * Jednotka ships. The full code made the track 120 px wide, and on a 390 px
+     * phone that pushed the control past the right edge of the viewport —
+     * measured 2026-10-17 at x 377–497 inside 390 px, clipped by
+     * `body{overflow-x:hidden}`, so the language could not be changed at all.
+     * `lang` / `hreflang` carry the BCP-47 form (`sk`, not `sk_SK`), so assistive
+     * tech pronounces each option in its own language even though the visible
+     * word is a code.
      *
      * The active segment is marked from `$activeLocale` — server-side, like
      * every other state in this theme, so the track is correct on first paint
-     * and the navbar still ships no JavaScript.
-     *
-     * `lang.switch` and `lang.<code>` rows already exist in `locales.db`
-     * (`SeedData`, group `lang`) and nothing reads them yet; the visible label
-     * stays the locale code, because the other three themes label it that way
-     * and changing what a theme prints is a content decision, not styling.
+     * and the navbar still ships no JavaScript. The group is a labelled `<nav>`
+     * rather than an unlabelled div; `lang.switch` has no path into a theme's
+     * shell context (the kernel hands over `availableLocales`, not copy), so the
+     * label is the same literal "Language" Jednotka uses.
      */
     private function localeLinks(ShellContext $context): string
     {
@@ -789,15 +791,23 @@ final class MonoTheme implements ThemeModule
         foreach ($context->availableLocales as $language) {
             $href = $context->localeLinks[$language] ?? '/' . $language . $context->currentPath;
             $active = $language === $context->activeLocale;
+            $tag = self::languageTag($language);
 
             $options .= '<a class="mo-lang-switch__option'
                 . ($active ? ' mo-lang-switch__option--active' : '')
                 . '" href="' . self::e($href) . '"'
+                . ' hreflang="' . self::e($tag) . '" lang="' . self::e($tag) . '"'
                 . ($active ? ' aria-current="true"' : '')
-                . '>' . self::e($language) . '</a>';
+                . '>' . self::e(strtoupper($tag)) . '</a>';
         }
 
-        return '<div class="mo-lang-switch">' . $options . '</div>';
+        return '<nav class="mo-lang-switch" aria-label="Language">' . $options . '</nav>';
+    }
+
+    /** `sk_SK` → `sk` — the kernel's locale convention, and a valid `hreflang`. */
+    private static function languageTag(string $code): string
+    {
+        return strtolower((string) explode('_', $code)[0]);
     }
 
     /**

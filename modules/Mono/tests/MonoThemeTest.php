@@ -614,11 +614,14 @@ final class MonoThemeTest extends TestCase
     }
 
     /**
-     * The locale switcher is a SWITCH, not two nav links: one pill track with the
-     * active locale filled. Measured 2026-10-17 — it rendered
-     * `class="mo-navbar__link mo-btn--sm"`, a nav link plus a SIZE MODIFIER whose
-     * base class (`mo-btn`) was never applied, so the track had no state at all
-     * and the language the visitor was already reading looked like the other one.
+     * The locale switcher is a SWITCH, not two nav links: one labelled pill
+     * track with the active locale filled. Measured 2026-10-17 — it rendered
+     * `class="mo-navbar__link mo-btn--sm"`, a nav link plus a SIZE MODIFIER
+     * whose base class (`mo-btn`) was never applied, so the track had no state
+     * at all and the language the visitor was already reading looked like the
+     * other one. The label is the short code (`SK`), because the full `sk_SK`
+     * track was clipped off a 390 px phone; `lang` / `hreflang` carry the
+     * BCP-47 form so each link is still announced in its own language.
      *
      * The active segment is the option whose code equals `$activeLocale`, and
      * this asserts WHICH one that is — a track that fills the first option
@@ -627,6 +630,7 @@ final class MonoThemeTest extends TestCase
     #[Test]
     public function theLocaleSwitcherIsASwitchWithTheActiveSegmentMarked(): void
     {
+        $locales = ['sk_SK', 'en_US'];
         $header = (new MonoTheme())->header(ShellContext::from(
             'Mono',
             [],
@@ -634,11 +638,15 @@ final class MonoThemeTest extends TestCase
             '/blog',
             null,
             'en_US',
-            ['sk_SK', 'en_US'],
+            $locales,
             false,
         ));
 
-        $this->assertStringContainsString('<div class="mo-lang-switch">', $header);
+        $this->assertStringContainsString(
+            '<nav class="mo-lang-switch" aria-label="Language">',
+            $header,
+            'The links form a labelled group, not an unlabelled div.',
+        );
         // Counted with the opening quote on purpose: `--active` CONTAINS
         // `mo-lang-switch__option`, so a bare substring count reports two for
         // the active segment alone and would read as "three options".
@@ -653,19 +661,55 @@ final class MonoThemeTest extends TestCase
             'Exactly one segment is the current locale.',
         );
         $this->assertMatchesRegularExpression(
-            '/mo-lang-switch__option mo-lang-switch__option--active" href="\/en_US\/blog" aria-current="true">en_US</',
+            '/mo-lang-switch__option mo-lang-switch__option--active" href="\/en_US\/blog" hreflang="en" lang="en" aria-current="true">EN</',
             $header,
-            'The ACTIVE segment must be the active locale, not the first option — and it carries aria-current.',
+            'The ACTIVE segment must be the active locale, not the first option — with BCP-47 lang/hreflang and aria-current.',
         );
         $this->assertStringContainsString(
-            'href="/sk_SK/blog"',
+            'href="/sk_SK/blog" hreflang="sk" lang="sk">SK</a>',
             $header,
-            'The other locale keeps its own href — the switcher links to the same path in that language.',
+            'The other locale keeps its own href and prints the short code.',
+        );
+        $this->assertStringNotContainsString(
+            '>en_US</a>',
+            $header,
+            'The segment prints SK/EN, not the underscore locale that widened the track off a phone.',
         );
         $this->assertStringNotContainsString(
             'mo-btn--sm',
             $header,
             'A size modifier without its `mo-btn` base is exactly what this replaced.',
+        );
+
+        // With a menu and two locales, the meatball is the LAST control: on a
+        // phone it is the one a visitor needs at the edge of the row.
+        $full = (new MonoTheme())->header(ShellContext::from(
+            'Mono',
+            [new ShellNavItem('Home', '/', active: true)],
+            [],
+            '/blog',
+            null,
+            'en_US',
+            $locales,
+            false,
+        ));
+        $this->assertLessThan(
+            (int) strpos($full, 'mo-navbar__toggle-icon--meatball'),
+            (int) strpos($full, 'mo-lang-switch'),
+            'The meatball stays the final control — the switch sits before it, not after.',
+        );
+
+        $css = InlineCss::file('Modules/Mono/assets/critical/mono.css');
+
+        $this->assertStringContainsString(
+            '.mo-navbar__dev-toggle{display:none}',
+            $css,
+            'The dev variant buttons leave no room for the switch on a phone.',
+        );
+        $this->assertStringContainsString(
+            '.mo-navbar__brand{font-size:var(--text-lg);flex-shrink:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+            $css,
+            'A long site name must shrink instead of pushing the row past the viewport.',
         );
     }
 
