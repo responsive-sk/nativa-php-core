@@ -11,6 +11,7 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Core\Infrastructure\Registry\NavBadgeRegistry;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
+use Modules\Core\Interfaces\HTTP\ThemeResolver;
 use Modules\Core\Application\Services\ShellContextProviderRegistry;
 
 /**
@@ -361,13 +362,18 @@ final class AdminLayout
      * mark.css carries the shared admin components; mark-switch.css the
      * Publish/Draft switch (separate entry because mark.css is a
      * shrink-only legacy baseline in ThemeFileSizeTest). Both entries live
-     * in the moonshine theme package and resolve from its manifest. Missing
+     * in the admin theme package and resolve from its manifest. Missing
      * entries (before a build) degrade to no tag — the layout still shows
      * the critical tokens inlined in the template.
+     *
+     * The theme name is read from the owner rather than repeated here. It was
+     * `'moonshine'` in this line while `ThemeResolver::ADMIN_THEME` owned it,
+     * and Cardboard importing Core is allowed (every module already does), so
+     * the duplicate cost one line and nothing gained by carrying it.
      */
     public static function markCssLinks(): string
     {
-        $assets = new AssetManager('moonshine');
+        $assets = new AssetManager(ThemeResolver::ADMIN_THEME);
         $links = [];
 
         foreach (['mark', 'mark-switch'] as $entry) {
