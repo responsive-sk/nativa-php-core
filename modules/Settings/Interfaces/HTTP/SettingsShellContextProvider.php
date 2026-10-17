@@ -142,6 +142,16 @@ final class SettingsShellContextProvider implements ShellContextProvider
     }
 
     /**
+     * Settings holds the stored DEFAULT vote, not the locale a request
+     * resolved — that answer belongs to the module that owns locales. Null
+     * here keeps this provider out of the vote instead of outranking it.
+     */
+    public function activeLocale(): ?string
+    {
+        return null;
+    }
+
+    /**
      * The language part of the voted default locale ('sk_SK' → 'sk') —
      * null when there is no vote, so the kernel fallback still applies.
      */

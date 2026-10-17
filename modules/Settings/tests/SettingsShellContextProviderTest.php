@@ -253,6 +253,20 @@ final class SettingsShellContextProviderTest extends TestCase
         $this->assertSame('en', $provider->htmlLang());
     }
 
+    /**
+     * Settings votes on the stored DEFAULT only. If it answered the request
+     * locale it would outrank the module that actually resolves one, which
+     * is how the switcher ended up pinned to the default entry.
+     */
+    #[Test]
+    public function theRequestLocaleIsNotSettingsToAnswer(): void
+    {
+        $this->assertNull(
+            (new SettingsShellContextProvider())->activeLocale(),
+            'The resolved request locale belongs to the module that owns locales; Settings answers the stored default only.',
+        );
+    }
+
     #[Test]
     public function aStoredGarbageLocaleAbstains(): void
     {

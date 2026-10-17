@@ -69,6 +69,20 @@ final class LocalesShellContextProvider implements ShellContextProvider
     }
 
     /**
+     * The locale the middleware resolved for THIS request — the entry every
+     * theme's switcher marks as current.
+     *
+     * Not `defaultLocale()`: that fact answers which locale owns the content
+     * root, and the kernel used it for both, so `/en/blog` rendered English
+     * with Slovak marked active. `current()` is the middleware's answer and
+     * falls back to the default when nothing has resolved.
+     */
+    public function activeLocale(): ?string
+    {
+        return LocalesServices::locale()->current()->code();
+    }
+
+    /**
      * The copy one surface renders, in one locale — the `locales.db` rows for
      * that group.
      *

@@ -129,13 +129,22 @@ final class FrontendLayout
         $htmlLang = $lang ?? ShellContextProviderRegistry::htmlLang() ?? 'en';
 
         [$headerNav, $footerNav] = self::navData($currentPath);
+        // The ACTIVE locale, not the default one. `defaultLocale()` answers
+        // which locale owns the content root; passing it as the active value
+        // pinned every theme's language switcher to the default entry, so an
+        // English page showed Slovak as current. A tree without a locale
+        // provider has no active answer, and the default is then the only
+        // honest fallback.
+        $activeLocale = ShellContextProviderRegistry::activeLocale()
+            ?? ShellContextProviderRegistry::defaultLocale()
+            ?? '';
         $shellContext = self::shellContext(
             $siteName,
             $headerNav,
             $footerNav,
             $currentPath,
             $localeLinks,
-            ShellContextProviderRegistry::defaultLocale() ?? '',
+            $activeLocale,
             ShellContextProviderRegistry::languages(),
         );
 

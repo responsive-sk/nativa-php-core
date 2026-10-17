@@ -61,6 +61,29 @@ final class LocalesShellContextProviderTest extends TestCase
         $this->assertContains('sk_SK', (new LocalesShellContextProvider())->languages());
     }
 
+    /**
+     * The shell marks a switcher entry from this answer. The default locale
+     * is a different fact, and substituting it here is what pinned every
+     * theme's switcher to the default entry on an English page.
+     */
+    #[Test]
+    public function activeLocaleFollowsTheRequestResolutionNotTheDefault(): void
+    {
+        $provider = new LocalesShellContextProvider();
+        $default = $provider->defaultLocale();
+        $codes = array_keys(Locale::available());
+        $other = $codes[0] === $default ? $codes[1] : $codes[0];
+
+        LocalesServices::locale()->set($other);
+
+        $this->assertSame($other, $provider->activeLocale());
+        $this->assertSame(
+            $default,
+            $provider->defaultLocale(),
+            'resolving a request locale must not rewrite the stored default — the two facts are independent',
+        );
+    }
+
     #[Test]
     public function htmlLangIsTheLanguageOfTheAnsweredDefault(): void
     {

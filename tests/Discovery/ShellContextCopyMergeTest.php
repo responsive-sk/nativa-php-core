@@ -191,6 +191,11 @@ final class ShellContextCopyMergeTest extends TestCase
                     return null;
                 }
 
+                public function activeLocale(): ?string
+                {
+                    return null;
+                }
+
                 public function htmlLang(): ?string
                 {
                     return null;
@@ -248,6 +253,11 @@ final class ShellContextCopyMergeTest extends TestCase
                 }
 
                 public function defaultLocale(): ?string
+                {
+                    return null;
+                }
+
+                public function activeLocale(): ?string
                 {
                     return null;
                 }

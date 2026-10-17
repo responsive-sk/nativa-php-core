@@ -73,6 +73,18 @@ interface ShellContextProvider
     public function htmlLang(): ?string;
 
     /**
+     * The locale resolved for THIS request — URL prefix, header, cookie,
+     * session, or the site default — or null when the provider has no opinion.
+     *
+     * This is a different fact from `defaultLocale()`: the default says which
+     * locale owns the content root, while this says which language the visitor
+     * is reading right now. Using the default for both pinned every theme's
+     * language switcher to the default entry, so `/en/blog` rendered English
+     * copy with Slovak marked current and clicking it changed nothing visible.
+     */
+    public function activeLocale(): ?string;
+
+    /**
      * The copy one surface renders, in one locale, keyed by FULL translation
      * key (`home.hero_title`).
      *

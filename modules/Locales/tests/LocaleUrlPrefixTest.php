@@ -8,7 +8,10 @@ use Modules\Core\Application\Services\AuthProviderRegistry;
 use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Application\Services\ShellContextProviderRegistry;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\Kernel;
+use Modules\Core\Interfaces\HTTP\ThemeResolver;
 use Modules\Core\Interfaces\HTTP\Middleware\AuthMiddleware;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
 use Modules\Core\Interfaces\HTTP\Middleware\MiddlewareRegistry;
@@ -61,6 +64,7 @@ final class LocaleUrlPrefixTest extends TestCase
 
         LocalesServices::reset();
         MiddlewareRegistry::reset();
+        ShellContextProviderRegistry::reset();
 
         // The URL prefix is checked FIRST, but cookie and session are the next
         // two sources in the same priority list. A value left behind by another
@@ -84,6 +88,7 @@ final class LocaleUrlPrefixTest extends TestCase
         // setUp: the module has to be there for its own teardown.
         if (class_exists(LocalesServices::class)) {
             LocalesServices::reset();
+            ShellContextProviderRegistry::reset();
         }
     }
 
@@ -257,6 +262,45 @@ final class LocaleUrlPrefixTest extends TestCase
                 sprintf('%s is what the switcher puts in href; it must reach the docs route, not 404', $path),
             );
         }
+    }
+
+    /**
+     * The visible half of the prefix contract (measured 2026-10-17): after a
+     * request resolves `/en/blog`, the theme's switcher must mark ENGLISH as
+     * current. `FrontendLayout` used to hand the shell the DEFAULT locale as
+     * the active one, so the track stayed on Slovak and clicking it looked
+     * like a no-op even though the page content had switched.
+     */
+    #[Test]
+    public function theRenderedSwitcherMarksTheLocaleTheRequestResolved(): void
+    {
+        // The module's own factory, exactly what the discovered middleware
+        // uses — a hand-built service would not be the one the provider reads.
+        $this->throughMiddleware(new LocaleMiddleware(), '/en/blog');
+
+        $service = LocalesServices::locale();
+        $resolved = $service->current()->code();
+        $default = $service->default()->code();
+
+        $this->assertNotSame($default, $resolved, 'the fixture must actually resolve a NON-default locale');
+        $this->assertSame(
+            $resolved,
+            ShellContextProviderRegistry::activeLocale(),
+            'the shell port must answer the request locale, not the stored default',
+        );
+
+        $html = FrontendLayout::render('T', 'C', theme: ThemeResolver::KERNEL_THEME);
+
+        $this->assertStringContainsString(
+            'aria-current="true">' . $resolved . '</a>',
+            $html,
+            'the switcher must mark the language the visitor is reading',
+        );
+        $this->assertStringNotContainsString(
+            'aria-current="true">' . $default . '</a>',
+            $html,
+            'the default locale must not stay marked active on an English page',
+        );
     }
 
     /**

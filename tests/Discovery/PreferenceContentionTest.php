@@ -106,6 +106,11 @@ final class PreferenceContentionTest extends TestCase
                         return null;
                     }
 
+                    public function activeLocale(): ?string
+                    {
+                        return null;
+                    }
+
                     public function htmlLang(): ?string
                     {
                         return null;

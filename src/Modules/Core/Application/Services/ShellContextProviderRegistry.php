@@ -31,7 +31,7 @@ use Modules\Core\Infrastructure\Paths\AppPaths;
  *
  * | Question | Rule |
  * |---|---|
- * | `siteName`, `theme`, `defaultLocale`, `htmlLang` | first non-null wins (priority, then discovery order) |
+ * | `siteName`, `theme`, `defaultLocale`, `activeLocale`, `htmlLang` | first non-null wins (priority, then discovery order) |
  * | `languages` | union, in provider order, de-duplicated |
  * | `copy` | union PER KEY — the first provider that holds a key wins it |
  * | `navigation` | first provider that returns a non-empty list for that slot |
@@ -120,6 +120,17 @@ final class ShellContextProviderRegistry
     public static function defaultLocale(): ?string
     {
         return self::firstString(static fn (ShellContextProvider $p): ?string => $p->defaultLocale(), 'defaultLocale');
+    }
+
+    /**
+     * First provider that names the locale RESOLVED FOR THIS REQUEST, or null.
+     *
+     * Null is not an error: a tree without a locale module renders with the
+     * kernel fallback. The caller decides what that fallback is.
+     */
+    public static function activeLocale(): ?string
+    {
+        return self::firstString(static fn (ShellContextProvider $p): ?string => $p->activeLocale(), 'activeLocale');
     }
 
     /** First provider that names a `<html lang>`, or null to follow the locale. */
