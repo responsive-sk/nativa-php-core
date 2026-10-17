@@ -9,11 +9,21 @@ use Modules\Core\Infrastructure\Paths\AppPaths;
 /**
  * ModuleCatalog — given a name and the `modules/` catalogue, a ModuleManifest.
  *
- * Two roots, two directions: the CATALOGUE (`<root>/modules/<Name>/`) is where
- * a module waits to be installed; the TREE (`<root>/src/Modules/<Name>/`) is
- * where an installed module lives. `manifest()` reads either side — the scan
+ * Two roots, two directions: the CATALOGUE (`<root>/modules/<Name>/`, or
+ * `<root>/modules/<Group>/<Name>/` once a module is filed under a group) is
+ * where a module waits to be installed; the TREE (`<root>/src/Modules/<Name>/`)
+ * is where an installed module lives. `manifest()` reads either side — the scan
  * is identical, only the root differs — so `module:show` reports what WOULD be
  * installed before anything is copied.
+ *
+ * A GROUP is a catalogue directory whose children are modules (`Themes/`): it
+ * is shape, not a module. `Themes` passes `isValidName()`, so it cannot be
+ * excluded by syntax — `cataloguePath()` returns `null` for it, which is what
+ * keeps `catalogued()` from listing it and `module:add Themes` from copying it.
+ *
+ * The install target never moves with the catalogue: a grouped module still
+ * installs to `src/Modules/<Name>/` and still owns `Modules\<Name>`, so nothing
+ * downstream (discovery, ThemeRegistry, `lekalo/modules/<name>/`) can tell.
  *
  * The kernel's own modules (`Core`, `Database`) are never catalogue entries
  * and never install targets: they are the tree, not something in it.
@@ -49,13 +59,74 @@ final readonly class ModuleCatalog
     }
 
     /**
-     * Catalogue entries: every subdirectory, installed or not.
+     * Catalogue directories that GROUP modules instead of being one.
+     *
+     * A method rather than a constant because the name-ownership ratchet counts
+     * every named constant in the tree; a group is not a value worth spending one
+     * of those on, and the list is read in one place.
+     *
+     * @return list<string>
+     */
+    public static function catalogueGroups(): array
+    {
+        return ['Themes'];
+    }
+
+    /**
+     * Where a catalogued module lives: `modules/<Name>/`, or the grouped
+     * `modules/<Group>/<Name>/`. `null` means "not catalogued" — and a group
+     * name is always `null`, because a group is not a module.
+     *
+     * The flat location wins if both exist: a module carried twice is the
+     * shape `ModuleCatalogueShapeTest` refuses, and resolving the old one keeps
+     * the drift report honest until it is fixed.
+     */
+    public function cataloguePath(string $name): ?string
+    {
+        if (in_array($name, self::catalogueGroups(), true)) {
+            return null;
+        }
+
+        $flat = $this->catalogDir . DIRECTORY_SEPARATOR . $name;
+
+        if (is_dir($flat)) {
+            return $flat;
+        }
+
+        foreach (self::catalogueGroups() as $group) {
+            $grouped = $this->catalogDir . DIRECTORY_SEPARATOR . $group . DIRECTORY_SEPARATOR . $name;
+
+            if (is_dir($grouped)) {
+                return $grouped;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Catalogue entries: every module, installed or not, wherever it is filed.
+     * Group directories are not entries; their children are.
      *
      * @return list<string>
      */
     public function catalogued(): array
     {
-        return $this->childDirs($this->catalogDir);
+        $names = array_values(array_filter(
+            $this->childDirs($this->catalogDir),
+            static fn (string $name): bool => !in_array($name, self::catalogueGroups(), true),
+        ));
+
+        foreach (self::catalogueGroups() as $group) {
+            foreach ($this->childDirs($this->catalogDir . DIRECTORY_SEPARATOR . $group) as $name) {
+                $names[] = $name;
+            }
+        }
+
+        $names = array_values(array_unique($names));
+        sort($names);
+
+        return $names;
     }
 
     /**
@@ -74,7 +145,7 @@ final readonly class ModuleCatalog
 
     public function isCatalogued(string $name): bool
     {
-        return is_dir($this->catalogDir . DIRECTORY_SEPARATOR . $name);
+        return null !== $this->cataloguePath($name);
     }
 
     public function isInstalled(string $name): bool
@@ -92,9 +163,17 @@ final readonly class ModuleCatalog
     {
         $this->assertValidName($name);
 
-        $dir = $this->catalogDir . DIRECTORY_SEPARATOR . $name;
+        if (in_array($name, self::catalogueGroups(), true)) {
+            throw new \RuntimeException(sprintf(
+                "'%s' is a catalogue GROUP (modules/%s/), not a module — it groups modules, so it cannot be installed or shown as one.",
+                $name,
+                $name,
+            ));
+        }
 
-        if (!is_dir($dir)) {
+        $dir = $this->cataloguePath($name);
+
+        if (null === $dir) {
             throw new \RuntimeException(sprintf("Module '%s' is not in the catalog (modules/%s/).", $name, $name));
         }
 
@@ -122,7 +201,7 @@ final readonly class ModuleCatalog
     /**
      * How far the installed slice has drifted from the catalogue entry.
      *
-     * The catalogue (`modules/<Name>/`) is the SOURCE: it is tracked in git,
+     * The catalogue (`modules/<Name>/`, or `modules/<Group>/<Name>/`) is the SOURCE: it is tracked in git,
      * it is what `module:add` copies, and it is the side an author edits. The
      * slice (`src/Modules/<Name>/`) is generated and untracked, so nobody
      * compares them — which is exactly how a fix lands in the catalogue and
@@ -141,10 +220,11 @@ final readonly class ModuleCatalog
     {
         $this->assertValidName($name);
 
-        $catalogued = $this->isCatalogued($name);
+        $cataloguePath = $this->cataloguePath($name);
+        $catalogued = null !== $cataloguePath;
         $installed = $this->isInstalled($name);
 
-        $catalog = $catalogued ? $this->relativeFiles($this->catalogDir . DIRECTORY_SEPARATOR . $name) : [];
+        $catalog = null !== $cataloguePath ? $this->relativeFiles($cataloguePath) : [];
         $slice = $installed ? $this->relativeFiles($this->modulesDir . DIRECTORY_SEPARATOR . $name) : [];
 
         $onlyInCatalog = array_keys(array_diff_key($catalog, $slice));

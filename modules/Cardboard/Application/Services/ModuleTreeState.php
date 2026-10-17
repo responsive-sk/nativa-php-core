@@ -14,7 +14,9 @@ use Modules\Tooling\ModuleCatalog;
  * `src/Modules/<Name>` is gitignored operator state: a clone carries Core +
  * Database, and `module:add` copies the catalogue in. So the running tree and
  * the committed catalogue are allowed to disagree, and they do without saying
- * so. Measured 2026-10-17: after `AdminRoutePolicy` and `Permissions` moved to
+ * so. The catalogue itself has two shapes (`modules/<Name>/` and
+ * `modules/<Group>/<Name>/`); both are resolved by `ModuleCatalog`, so this
+ * class holds no path rule of its own. Measured 2026-10-17: after `AdminRoutePolicy` and `Permissions` moved to
  * `Modules\Core\Domain` and Cardboard's two local copies of the permission table
  * were deleted, every gate was green and the installed slice still carried the
  * old code. `git status` cannot see it and `module:show` asks `isInstalled()`,
@@ -41,8 +43,14 @@ final readonly class ModuleTreeState
     /** Compared on both sides, so tests running from the catalogue are not drift. */
     private const array IGNORED = ['/tests/', '/assets/', '/dist/', '/node_modules/'];
 
+    /**
+     * @param ?string $installedRoot root of the installed tree; `null` means
+     *                              `src/Modules` from AppPaths. Tests point it at
+     *                              a temp tree so a drift case needs no real slice.
+     */
     public function __construct(
         private ?ModuleCatalog $catalogue = null,
+        private ?string $installedRoot = null,
     ) {
     }
 
@@ -120,10 +128,14 @@ final readonly class ModuleTreeState
      */
     public function differences(ModuleCatalog $catalogue, string $name): array
     {
-        $catalogued = AppPaths::instance()->base() . '/modules/' . $name;
-        $installed = AppPaths::instance()->src('Modules/' . $name);
+        // The catalogue path is the catalogue's answer, never this class's:
+        // themes live under `modules/Themes/<Name>/`, and a hand-built
+        // `modules/<Name>/` would fail `is_dir()` and read as "identical" —
+        // the page would report peace for a slice that never matched.
+        $catalogued = $catalogue->cataloguePath($name);
+        $installed = ($this->installedRoot ?? AppPaths::instance()->src('Modules')) . '/' . $name;
 
-        if (!is_dir($catalogued) || !is_dir($installed)) {
+        if (null === $catalogued || !is_dir($catalogued) || !is_dir($installed)) {
             return [];
         }
 

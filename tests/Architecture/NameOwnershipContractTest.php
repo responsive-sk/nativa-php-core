@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Tests\Architecture;
 
 use FilesystemIterator;
+use Modules\Tooling\ModuleCatalog;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
@@ -134,6 +135,18 @@ final class NameOwnershipContractTest extends TestCase
         // would let the next theme edit move a ceiling that exists to measure
         // PRODUCTION spellings. Rule 1 still reads this file.
         'tests/Theme/ThemeClassOwnershipTest.php',
+        // The catalogue-shape gate. It must spell the group name and the four
+        // theme names to measure where they live, and those spellings are the
+        // SUBJECT of the test rather than duplication it failed to notice.
+        // Counting them would let a theme move inflate a ceiling that exists to
+        // measure production spellings. Rule 1 still reads this file.
+        'tests/Architecture/ModuleCatalogueShapeTest.php',
+        // The drift gate beside the service it measures. It builds a fixture
+        // catalogue out of temp directories, so it spells a group name, a theme
+        // name and a flat module name — the layout it asserts, not a second
+        // owner for those strings. Its `MODULE` guard constant exists for the
+        // same reason every module test has one. Rule 1 still reads this file.
+        'modules/Cardboard/tests/ModuleTreeStateDriftTest.php',
     ];
 
     /**
@@ -192,6 +205,15 @@ final class NameOwnershipContractTest extends TestCase
      * declaration count fell while the distinct-name count did not.
      */
     private const int MAX_NAMES = 202;
+
+    /**
+     * `name => modules/<Name>` or `modules/<Group>/<Name>`, resolved once. A
+     * test property, not a constant: it is memoised state, and the declaration
+     * ratchet above counts what this file DECLARES.
+     *
+     * @var array<string, string>
+     */
+    private array $cataloguePaths = [];
 
     /**
      * Rule 1. A value is the thing two owners disagree about, so the assertion
@@ -418,14 +440,42 @@ final class NameOwnershipContractTest extends TestCase
      * Catalogue entry and installed slice are the same text twice: without
      * this, every constant in `src/Modules/X` reads as a second site for
      * `modules/X` and the ceiling doubles for no reason.
+     *
+     * The catalogue has two shapes: `modules/X/` and `modules/Themes/X/`. The
+     * grouped path is resolved through `ModuleCatalog`, not guessed here — a
+     * theme whose key still read `modules/X/` would look like a THIRD site for
+     * every constant it spells, and the ratchet would rise on a move that
+     * changed no code.
      */
     private function ownerKey(string $file): string
     {
-        if (str_starts_with($file, 'src/Modules/')) {
-            return 'modules/' . substr($file, strlen('src/Modules/'));
+        if (!str_starts_with($file, 'src/Modules/')) {
+            return $file;
         }
 
-        return $file;
+        $relative = substr($file, strlen('src/Modules/'));
+        $name = strstr($relative, '/', true) ?: $relative;
+        $rest = substr($relative, strlen($name));
+
+        return $this->catalogueRelative($name) . $rest;
+    }
+
+    /**
+     * `modules/<Name>` or `modules/<Group>/<Name>`, as the catalogue resolves
+     * it. Falls back to the flat path for a slice with no catalogue entry, so
+     * an installed-only module keeps its own key instead of colliding with one.
+     */
+    private function catalogueRelative(string $name): string
+    {
+        if (isset($this->cataloguePaths[$name])) {
+            return $this->cataloguePaths[$name];
+        }
+
+        $path = ModuleCatalog::fromAppPaths()->cataloguePath($name);
+
+        return $this->cataloguePaths[$name] = null === $path
+            ? 'modules/' . $name
+            : substr($path, strlen(APP_BASE_PATH) + 1);
     }
 
     /** @return list<string> */

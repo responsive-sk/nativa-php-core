@@ -118,6 +118,23 @@ function cmdList(ModuleCatalog $catalog): void
 
     out('Installed (' . count($installed) . '): ' . ([] === $installed ? '(none — kernel only)' : implode(', ', $installed)));
     out('Catalogued (' . count($catalogued) . '): ' . ([] === $catalogued ? '(empty catalog)' : implode(', ', $catalogued)));
+
+    // A grouped module is still one of the entries above; this line says WHERE
+    // it is filed, so a reader looking in `modules/` does not conclude it is
+    // missing. Group names are read from the catalogue, never listed here.
+    foreach (ModuleCatalog::catalogueGroups() as $group) {
+        $members = array_values(array_filter(
+            $catalogued,
+            static fn (string $name): bool => str_contains(
+                (string) $catalog->cataloguePath($name),
+                DIRECTORY_SEPARATOR . $group . DIRECTORY_SEPARATOR,
+            ),
+        ));
+
+        if ([] !== $members) {
+            out(sprintf('%s (%d): %s — modules/%s/', $group, count($members), implode(', ', $members), $group));
+        }
+    }
 }
 
 /**
@@ -147,7 +164,7 @@ function cmdShow(ModuleCatalog $catalog, ?string $name): void
             printManifest($catalog->manifest($name), 'catalog — not installed');
         }
 
-        printDrift($name, $drift);
+        printDrift($catalog, $name, $drift);
     } catch (RuntimeException $e) {
         fail($e->getMessage());
     }
@@ -209,9 +226,15 @@ function driftCounts(array $drift): string
 /**
  * @param array{status: string, testsOnly: bool, catalog: int, installed: int, onlyInCatalog: list<string>, onlyInInstalled: list<string>, changed: list<string>} $drift
  */
-function printDrift(string $name, array $drift): void
+function printDrift(ModuleCatalog $catalog, string $name, array $drift): void
 {
-    $source = 'modules/' . $name . '/';
+    // The catalogue path is the catalogue's answer, not the CLI's: a grouped
+    // module would otherwise be reported as `modules/Erik/`, which no longer
+    // exists — the same quiet lie the move is trying to avoid.
+    $path = $catalog->cataloguePath($name);
+    $source = null === $path
+        ? 'modules/' . $name . '/'
+        : substr($path, strlen(dirname(__DIR__)) + 1) . '/';
 
     switch ($drift['status']) {
         case 'identical':

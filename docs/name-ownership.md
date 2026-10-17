@@ -224,8 +224,8 @@ Three measurement traps were found the same way the constant count found its
 own, and each is written into the test:
 
 1. **`criticalCss()` is the only truth.** `jednotka` returns the kernel's nine
-   files, so grepping `modules/Jednotka/assets/` reports it as owning nothing;
-   it owns the kernel's 106 selectors instead.
+   files, so grepping `modules/Themes/Jednotka/assets/` reports it as owning
+   nothing; it owns the kernel's 106 selectors instead.
 2. **`bundle()` is not `prefix()`.** `FrontendLayout` writes
    `<body class="{$bundle}-shell">`. Griffe's bundle is `griffe`, so
    `.griffe-shell` is emitted and live. Erik's bundle is `erik` while its
@@ -233,7 +233,11 @@ own, and each is written into the test:
    a collision, left for the stylesheet's owner to rename or remove.
 3. **The tracked catalogue is read first.** `src/Modules/` is gitignored
    operator state; reading it first let an installed copy answer for the tree
-   and every assertion passed while the checkout disagreed with itself.
+   and every assertion passed while the checkout disagreed with itself. The
+   catalogue has two shapes now (`modules/<Name>/` and
+   `modules/Themes/<Name>/`), and both are tried before `src/`;
+   `ownerKey()` resolves them through `ModuleCatalog::cataloguePath()`, so the
+   same constant in the catalogue and its slice is one site, not two.
 
 Three classes in a theme stylesheet are **dead** — no emitter in this
 repository: `copy-btn` and `has-badge` (Mono, whose emitter is the absent

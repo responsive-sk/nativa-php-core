@@ -25,14 +25,18 @@ set -euo pipefail
 
 cd "$(dirname "$0")/../.."
 
+# The list comes from `module:list`, not from `modules/*/`: the catalogue has two
+# shapes now (modules/<Name>/ and modules/Themes/<Name>/), and a glob would
+# either count `Themes` as a module or silently skip the four themes inside it.
+# One enumerator, the one the CLI itself uses.
 pending=""
 catalogue=0
-for dir in modules/*/; do
-    name="$(basename "$dir")"
+while IFS= read -r name; do
+    [ -n "$name" ] || continue
     [ "$name" = "Scratch" ] && continue
     pending="$pending $name"
     catalogue=$((catalogue + 1))
-done
+done < <(php bin/cms module:list | sed -n 's/^Catalogued ([0-9]*): //p' | tr ',' '\n' | sed 's/^ *//;s/ *$//')
 
 expected=$((catalogue + 1)) # + KernelTheme
 echo "catalogue to install:$pending (${catalogue} entries, ${expected} expected installed)"

@@ -76,6 +76,44 @@ A test file is never a reason to reinstall, and a runtime file is never a
 reason not to: the point of the report is that neither answer depends on
 someone remembering which copy was edited.
 
+### Two shapes: `modules/<Name>/` and `modules/Themes/<Name>/` (measured 2026-10-17)
+
+The catalogue root holds modules that DO something: `Blog`, `Pages`, `Queue`.
+The four presentation modules (`Erik`, `Griffe`, `Jednotka`, `Mono`) are
+themes, so they are filed under `modules/Themes/<Name>/` and the root reads as
+a list of features rather than a mixed bag. Measured at the move: 15 files,
+0 insertions and 0 deletions — a `git mv`, not an edit.
+
+**The install target does not move.** `module:add Erik` still copies to
+`src/Modules/Erik/`, the namespace is still `Modules\Erik`, and
+`ThemeRegistry` still discovers it by scanning installed modules. Nothing
+downstream can tell where the catalogue keeps it: not discovery, not
+`lekalo/modules/erik/`, not the tests (`phpunit.xml`'s module suite is
+recursive). That is why the change is small — and why it needed a gate.
+
+`Themes` is a GROUP, not a module, and it is excluded by shape rather than by
+syntax: the name passes `isValidName()` (PascalCase), so
+`ModuleCatalog::cataloguePath('Themes')` returns `null`, `catalogued()` skips
+the directory and lists its children instead, and `module:add Themes` is
+refused with a message saying it is a group. `module:list` prints the grouped
+members on their own line so a reader looking in `modules/` does not conclude
+they are missing:
+
+```
+Installed (20): ...
+Catalogued (20): ...
+Themes (4): Erik, Griffe, Jednotka, Mono — modules/Themes/
+```
+
+One resolver, `ModuleCatalog::cataloguePath()`, is the only place that knows
+the shapes: `bin/cms`, both build scripts, `ModuleTreeState` (the
+`/mark/settings/modules` page and the `modules` stat card) and the two
+architecture gates read it instead of rebuilding the path. That matters
+because the admin page compares the catalogue with the slice, and a
+hand-built `modules/<Name>/` would fail `is_dir()` there, return "no
+differences" and report every theme as `identical` — a false green that
+testing the happy path cannot catch.
+
 ## What the scan sees
 
 Routes from `#[Route]`, migrators from `#[AsMigrator]`, middleware from
@@ -373,7 +411,7 @@ discovery, so no module can shadow the fallback), and `ThemeResolver` accepts
 a provider-named theme when it is whitelisted or discovered. A removed module
 takes its theme with it — nothing is edited, nothing lingers.
 
-`modules/Erik/` is the proof: a trimmed `ErikTheme` (er-* vocabulary,
+`modules/Themes/Erik/` is the proof: a trimmed `ErikTheme` (er-* vocabulary,
 dark-first, one critical CSS file) rendering from `ShellContext` +
 `PageContext` alone. The showcase Erik cannot live here — it imports
 Blog/Locales/Settings, modules this tree does not have — so this one is the
@@ -401,7 +439,7 @@ answer to a broken theme is the kernel theme, not a 500 on every surface.
 
 ## A second theme: Mono (measured 2026-10-11)
 
-`modules/Mono/` carries the evan70.github.io/mono vocabulary (navbar, hero,
+`modules/Themes/Mono/` carries the evan70.github.io/mono vocabulary (navbar, hero,
 feature cards, footer) as `MonoTheme`. The CSS is a vendored, prefixed
 snapshot of the live site's two stylesheets (2026-10-11, ~19 kB → `mo-`):
 the source classes are unprefixed and would collide, the `@font-face` webfonts
@@ -536,7 +574,7 @@ and the variants re-skin light mode too (`html[data-variant]` outranks
 
 ## A third theme: Griffe (measured 2026-10-12)
 
-`modules/Griffe/` renders the public surfaces in the webgriffe.com agency
+`modules/Themes/Griffe/` renders the public surfaces in the webgriffe.com agency
 idiom (sticky text-nav header, fullscreen home slider, line-mask scroll
 reveals, case-study grid, minimal legal footer). The reference runs on Xtend
 UI (Tailwind + vanilla JS); the port re-expresses only the USED behaviours in

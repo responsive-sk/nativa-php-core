@@ -232,18 +232,23 @@ if [ "$WITH_CATALOGUE" = true ]; then
     identical=0
     drifted=0
     uninstalled=0
-    for slice in "$DIST_DIR/modules"/*/; do
-        name="$(basename "$slice")"
+    # Names come from the artifact's own CLI, not a `modules/*/` glob: the
+    # catalogue groups themes under `modules/Themes/`, and a glob would count
+    # `Themes` as a slice that is "not installed" while skipping its four
+    # members. `find -maxdepth 2` locates either shape without naming a group.
+    while IFS= read -r name; do
+        [ -n "$name" ] || continue
+        slice="$(find "$DIST_DIR/modules" -mindepth 1 -maxdepth 2 -type d -name "$name" -print -quit)"
         installed="$DIST_DIR/src/Modules/$name"
         if [ ! -d "$installed" ]; then
             uninstalled=$((uninstalled + 1))
-        elif diff -rq "$slice" "$installed" >/dev/null 2>&1; then
+        elif [ -n "$slice" ] && diff -rq "$slice" "$installed" >/dev/null 2>&1; then
             identical=$((identical + 1))
         else
             drifted=$((drifted + 1))
             echo "    note: $name — installed copy DIFFERS from the catalogue"
         fi
-    done
+    done < <(php "$DIST_DIR/bin/cms" module:list | sed -n 's/^Catalogued ([0-9]*): //p' | tr ',' '\n' | sed 's/^ *//;s/ *$//')
     echo "    $identical slice(s) byte-identical to the installed copy (a second copy of what runs)"
     echo "    $drifted drifted, $uninstalled not installed"
 else

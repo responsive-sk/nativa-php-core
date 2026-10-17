@@ -195,7 +195,10 @@ final class ThemeClassOwnershipTest extends TestCase
 
     /**
      * `criticalCss()` returns `Modules/<Name>/…` paths. The TRACKED catalogue
-     * lives in `modules/<Name>/` and the installed slice in `src/Modules/<Name>/`.
+     * lives in `modules/<Name>/` — or `modules/Themes/<Name>/` for a theme —
+     * and the installed slice in `src/Modules/<Name>/`. Both catalogue shapes
+     * are tried before `src/`, which is the only order that measures the tree
+     * git actually carries.
      *
      * The catalogue is tried FIRST, and that order is the whole point. A first
      * pass read `src/` first and every assertion passed while the checkout
@@ -228,6 +231,7 @@ final class ThemeClassOwnershipTest extends TestCase
             $directory = preg_match('#^Modules/([^/]+)/#i', $relative, $m) ? $m[1] : $name;
 
             foreach ([
+                $base . '/modules/Themes/' . $directory . '/' . $tail,
                 $base . '/modules/' . $directory . '/' . $tail,
                 $base . '/src/Modules/' . $directory . '/' . $tail,
                 $base . '/src/' . $relative,
