@@ -19,12 +19,20 @@
 #      data — it has no seeders at all — and the developer's own `storage/data/`
 #      is local state that must not leak into an artifact. `php bin/cms migrate`
 #      runs INSIDE the dist, so the artifact leaves here with a real schema and
-#      with proof that it boots without `vendor/`.
+#      with proof that it boots without `vendor/`. What a migrated artifact does
+#      NOT have is the SITE: measured 2026-10-17, a rebuilt responsive.sk dist
+#      came up on `theme=kernel` / `site_name=Nativa PHP Core`, and its copy
+#      looked deleted. `config/deploy.php` is the missing half — a committed
+#      profile applied with `bin/cms settings:profile` right after `migrate`, so
+#      a build cannot silently rebrand a deployment. `--no-profile` ships the
+#      kernel defaults on purpose, and a deployment changes anything afterwards
+#      in /mark → Settings.
 #
 # Usage:
 #   bin/build/build-dist.sh                    # assets if missing → assemble → migrate → smoke
 #   bin/build/build-dist.sh --skip-assets      # use the existing public/dist
 #   bin/build/build-dist.sh --skip-migrate     # ship the storage skeleton, no databases
+#   bin/build/build-dist.sh --no-profile       # keep the kernel defaults (no config/deploy.php applied)
 #   bin/build/build-dist.sh --skip-smoke       # skip the HTTP smoke test
 #   bin/build/build-dist.sh --with-env         # copy .env.example to dist/.env
 #   bin/build/build-dist.sh --with-catalogue  # also ship modules/ (module:add works in the artifact)
@@ -66,6 +74,7 @@ SKIP_MIGRATE=false
 SKIP_SMOKE=false
 WITH_ENV=false
 WITH_CATALOGUE=false
+APPLY_PROFILE=true
 
 # Paths tar must not carry. Deliberately a deny-list with a reason per line,
 # because each of these would be a bug in the artifact rather than clutter:
@@ -173,6 +182,7 @@ while [ $# -gt 0 ]; do
         --skip-smoke)   SKIP_SMOKE=true ;;
         --with-env)     WITH_ENV=true ;;
         --with-catalogue) WITH_CATALOGUE=true ;;
+        --no-profile)   APPLY_PROFILE=false ;;
         --to)           DIST_DIR="${2:-}"; [ -n "$DIST_DIR" ] || fail "--to needs a directory"; shift ;;
         --help|-h)      usage; exit 0 ;;
         *) fail "unknown argument: $1 (see --help)" ;;
@@ -294,6 +304,28 @@ else
     fi
 fi
 
+# --- Deployment identity ------------------------------------------------------
+# Migrate seeds the KERNEL defaults (theme=kernel, site_name=Nativa PHP Core) and
+# nothing copies the developer's config.db, so without this step every artifact
+# is born as the kernel's own site. The profile names what it starts as; the
+# settings it writes are still the operator's to change in /mark → Settings.
+if [ "$SKIP_MIGRATE" = true ]; then
+    step "Skipping the deployment profile (--skip-migrate): there is no settings table to write"
+elif [ "$APPLY_PROFILE" = false ]; then
+    step "Skipping the deployment profile (--no-profile): the artifact keeps the kernel defaults"
+elif [ -f "$DIST_DIR/config/deploy.php" ]; then
+    step "Applying the deployment profile (config/deploy.php)"
+    # The path is absolute and the binary is selected BY PATH, so this writes the
+    # ARTIFACT's config.db whatever the working directory is — the same rule the
+    # migrate step above keeps. A refusal here is fatal: a build that prints the
+    # site's name while shipping the kernel theme is worse than a failed build.
+    if ! php "$DIST_DIR/bin/cms" settings:profile --file="$DIST_DIR/config/deploy.php"; then
+        fail "the deployment profile could not be applied — the artifact would ship with the kernel defaults" 1
+    fi
+else
+    step "No config/deploy.php — the artifact keeps the kernel defaults"
+fi
+
 # --- Build metadata ----------------------------------------------------------
 step "Writing build metadata"
 {
@@ -401,6 +433,11 @@ echo "  Version:    $VERSION ($COMMIT)"
 echo "  Build time: $BUILD_TIME"
 echo "  Output:     $DIST_DIR  ($size, $files files)"
 echo "  vendor/:    absent — the runtime has zero Composer packages"
+if [ "$APPLY_PROFILE" = true ] && [ -f "$DIST_DIR/config/deploy.php" ] && [ "$SKIP_MIGRATE" = false ]; then
+    echo "  identity:   config/deploy.php applied (theme, site name — see the step above)"
+else
+    echo "  identity:   kernel defaults (theme=kernel, site_name=Nativa PHP Core)"
+fi
 if [ "$WITH_CATALOGUE" = true ]; then
     echo "  modules/:   catalogue INCLUDED (--with-catalogue) — slices exist twice, see above"
 else

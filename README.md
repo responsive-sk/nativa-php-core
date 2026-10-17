@@ -68,6 +68,15 @@ PHPUnit). It is not a prerequisite: `src/init.php` installs a PSR-4 fallback
 loader for the tree that has none, and the CI job called "Boot (kernel-only, no
 vendor)" exists precisely to keep that claim honest.
 
+The first request (or `php bin/cms migrate`) builds the databases EMPTY, so a
+fresh tree has no account and `/mark` answers 403. Create the first
+administrator — the admin role and the five permissions with it — in one line:
+
+```sh
+php bin/cms user:admin                                  # admin@example.test / admin1234
+php bin/cms user:admin you@example.com 'your-password'  # your own credentials
+```
+
 Commit messages carry no agent footer (the nativa-minimal convention) —
 after cloning, enable the enforcer: `cp bin/git-hooks/commit-msg .git/hooks/commit-msg`.
 
@@ -85,3 +94,11 @@ itself). It keeps `bin/cms`: that is the production tool for `migrate` and
 `module:remove`, and it is plain PHP by design. The script migrates the artifact
 in place and then boots it over HTTP, so a broken build fails where it is built
 rather than on the server.
+
+The artifact's identity comes from `config/deploy.php` — the settings a build
+STARTS as (`theme`, `site_name`, …), applied by `bin/cms settings:profile` right
+after `migrate`. Migrating alone seeds the kernel defaults and copies none of
+the developer's `storage/data/`, so without the profile a rebuilt responsive.sk
+dist came up as the kernel's own site (the theme's copy looked deleted). Build
+with `--no-profile` to ship the kernel defaults on purpose; afterwards every
+value is still the operator's to change in `/mark` → Settings.

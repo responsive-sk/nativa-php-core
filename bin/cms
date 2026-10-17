@@ -8,7 +8,7 @@ declare(strict_types = 1);
  *
  * The kernel runtime has no Composer packages, so this tool cannot be a
  * symfony/console application the way the showcase's bin/cms is: what manages
- * modules must run in a tree whose vendor/ directory may not exist. Eleven
+ * modules must run in a tree whose vendor/ directory may not exist. Thirteen
  * commands, argv-parsed, exit 0 on success and 1 on refusal or error:
  *
  *   module:list              installed + catalogued modules
@@ -16,11 +16,13 @@ declare(strict_types = 1);
  *   module:add <Name>        copy the slice in (refuses an incomplete closure by name)
  *   module:remove <Name>     delete the slice (refuses while another module imports it)
  *   migrate                  run every module migrator (the first-request run, forced)
+ *   settings:profile [--file=PATH]  apply a committed deployment profile (needs the Settings module)
  *   schedule:run             run the Scheduler timetable entries due now (needs the Scheduler module)
  *   queue:work               work one batch of queued jobs (needs the Queue module)
  *   queue:prune              drop failed jobs older than an interval (needs the Queue module)
  *   outbox:process           deliver pending outbox messages and prune them (needs the Outbox module)
  *   generate-images          render article preview images (needs the Blog module)
+ *   user:admin [email] [password]  create or repair an administrator (needs the Users module)
  *   discovery:clear          delete the discovery cache (rebuilt on the next request)
  *   discovery:status         whether the discovery cache exists and is fresh
  *
@@ -346,6 +348,10 @@ function usage(): void
     out('  outbox:process [--limit=N] [--prune-interval="7 days"] [--no-prune]');
     out('                            deliver pending outbox messages and prune processed ones');
     out('  generate-images [-s|--slug S] [-f|--format FMT]  render article preview images');
+    out('  user:admin [email] [password] [--name=NAME]');
+    out('                            create or repair an administrator (defaults admin@example.test / admin1234)');
+    out('  settings:profile [--file=PATH]');
+    out('                            apply a committed deployment profile (default: config/deploy.php)');
     out('  discovery:clear          delete the discovery cache (rebuilt on the next request)');
     out('  discovery:status         whether the discovery cache exists and is fresh');
 }
@@ -362,6 +368,51 @@ function usage(): void
 function cmdMigrate(): void
 {
     (new DatabaseMigrator())->run(output());
+}
+
+/**
+ * Create (or repair) an administrator account — the supported way out of the
+ * fresh-install dead end: `migrate` builds the schema empty, and a registered
+ * account holds no permission, so every `/mark` page answers 403.
+ *
+ * The behaviour lives in the Users module; this function only supplies the
+ * connection and the output, the same split every other module command keeps.
+ *
+ * @param list<string> $argv the full argv; options start at index 2
+ */
+function cmdUserAdmin(array $argv): void
+{
+    if (!class_exists(\Modules\Users\Interfaces\CLI\Command\EnsureAdminCommand::class)) {
+        fail('user:admin needs the Users module (bin/cms module:add Users).');
+    }
+
+    $pdo = \Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager::instance()->connection('users');
+    $command = new \Modules\Users\Interfaces\CLI\Command\EnsureAdminCommand($pdo);
+
+    exit($command->run(array_merge(['user:admin'], array_slice($argv, 2)), output()));
+}
+
+/**
+ * Apply a committed deployment profile to the settings table.
+ *
+ * The ARTIFACT's identity, not the developer's: `build-dist.sh` runs this right
+ * after `migrate`, so a rebuilt dist boots with the theme and the site name the
+ * profile names instead of the kernel defaults. Measured 2026-10-17 — a rebuilt
+ * responsive.sk artifact came up on the kernel theme, which reads as "the copy
+ * is gone".
+ *
+ * @param list<string> $argv the full argv; the profile starts at index 2
+ */
+function cmdSettingsProfile(array $argv): void
+{
+    if (!class_exists(\Modules\Settings\Interfaces\CLI\Command\ApplyDeploymentProfileCommand::class)) {
+        fail('settings:profile needs the Settings module (bin/cms module:add Settings).');
+    }
+
+    $pdo = \Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager::instance()->connection('config');
+    $command = new \Modules\Settings\Interfaces\CLI\Command\ApplyDeploymentProfileCommand($pdo);
+
+    exit($command->run(array_merge(['settings:profile'], array_slice($argv, 2)), output()));
 }
 
 /**
@@ -654,6 +705,16 @@ function main(array $argv): void
 
         case 'migrate':
             cmdMigrate();
+
+            break;
+
+        case 'user:admin':
+            cmdUserAdmin($argv);
+
+            break;
+
+        case 'settings:profile':
+            cmdSettingsProfile($argv);
 
             break;
 
