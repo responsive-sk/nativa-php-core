@@ -7,6 +7,7 @@ namespace Modules\Jednotka\Theme;
 use Modules\Core\Application\Services\MarkdownRenderer;
 use Modules\Core\Application\Services\View\InlineJs;
 use Modules\Core\Domain\ShellNavItem;
+use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\PageContext;
 use Modules\Core\Interfaces\HTTP\ShellContext;
@@ -1267,7 +1268,7 @@ HTML;
 
             $href = null !== $context->localeLinks
                 ? ($context->localeLinks[$code] ?? null)
-                : '/' . self::language($code) . ('/' === $context->currentPath ? '/' : $context->currentPath);
+                : ContentServices::mapper()->urlPrefix($code) . ('/' === $context->currentPath ? '/' : $context->currentPath);
 
             if (!is_string($href) || '' === $href) {
                 continue;

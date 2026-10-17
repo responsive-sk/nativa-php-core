@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Locales\Tests;
 
 use Modules\Core\Application\Services\AuthProviderRegistry;
+use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Kernel;
@@ -221,6 +222,41 @@ final class LocaleUrlPrefixTest extends TestCase
             $response->getStatusCode(),
             sprintf('%s must reach the docs route — before 2026-10-17 every prefixed URL answered 404', $uri),
         );
+    }
+
+    /**
+     * Task 3.1/3.2: the href a theme renders for another language is the
+     * owner's prefix plus the UNPREFIXED path — `/docs` for the default
+     * locale, `/en/docs` for the other one. The raw prefix contract above
+     * being green says nothing about this: the switcher used to prepend the
+     * full code (`/sk_SK/docs`), so the link was a second spelling of the
+     * same URL. Each shape is followed through the kernel, because a
+     * switcher href that 404s is dead navigation.
+     */
+    #[Test]
+    public function theLocaleLinkAThemeBuildsReachesARoute(): void
+    {
+        $mapper = ContentServices::mapper();
+        $paths = array_map(
+            static fn (string $code): string => $mapper->urlPrefix($code) . '/docs',
+            $mapper->locales(),
+        );
+
+        $this->assertSame(
+            ['/docs', '/en/docs'],
+            $paths,
+            'the default locale owns the bare path; the other locale gets its short code — never the full sk_SK.',
+        );
+
+        foreach ($paths as $path) {
+            $response = $this->kernelAsTheCompositionRootWiresIt()->handle(Request::create('GET', $path));
+
+            $this->assertSame(
+                200,
+                $response->getStatusCode(),
+                sprintf('%s is what the switcher puts in href; it must reach the docs route, not 404', $path),
+            );
+        }
     }
 
     /**

@@ -661,12 +661,12 @@ final class MonoThemeTest extends TestCase
             'Exactly one segment is the current locale.',
         );
         $this->assertMatchesRegularExpression(
-            '/mo-lang-switch__option mo-lang-switch__option--active" href="\/en_US\/blog" hreflang="en" lang="en" aria-current="true">EN</',
+            '/mo-lang-switch__option mo-lang-switch__option--active" href="\/en\/blog" hreflang="en" lang="en" aria-current="true">EN</',
             $header,
             'The ACTIVE segment must be the active locale, not the first option — with BCP-47 lang/hreflang and aria-current.',
         );
         $this->assertStringContainsString(
-            'href="/sk_SK/blog" hreflang="sk" lang="sk">SK</a>',
+            'href="/blog" hreflang="sk" lang="sk">SK</a>',
             $header,
             'The other locale keeps its own href and prints the short code.',
         );

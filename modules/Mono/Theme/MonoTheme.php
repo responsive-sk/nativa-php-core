@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Mono\Theme;
 
 use Modules\Core\Domain\ShellNavItem;
+use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Core\Interfaces\HTTP\PageContext;
 use Modules\Core\Interfaces\HTTP\ShellContext;
 use Themes\ThemeModule;
@@ -789,7 +790,7 @@ final class MonoTheme implements ThemeModule
         $options = '';
 
         foreach ($context->availableLocales as $language) {
-            $href = $context->localeLinks[$language] ?? '/' . $language . $context->currentPath;
+            $href = $context->localeLinks[$language] ?? ContentServices::mapper()->urlPrefix($language) . $context->currentPath;
             $active = $language === $context->activeLocale;
             $tag = self::languageTag($language);
 

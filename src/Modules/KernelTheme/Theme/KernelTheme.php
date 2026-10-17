@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Modules\KernelTheme\Theme;
 
 use Modules\Core\Domain\ShellNavItem;
+use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Core\Interfaces\HTTP\PageContext;
 use Modules\Core\Interfaces\HTTP\ShellContext;
 use Themes\ThemeModule;
@@ -297,7 +298,7 @@ final class KernelTheme implements ThemeModule
         $links = '';
 
         foreach ($context->availableLocales as $language) {
-            $href = $context->localeLinks[$language] ?? '/' . $language . $context->currentPath;
+            $href = $context->localeLinks[$language] ?? ContentServices::mapper()->urlPrefix($language) . $context->currentPath;
 
             $links .= '<a class="k-locale__link" href="' . self::e($href) . '"'
                 . ($language === $context->activeLocale ? ' aria-current="true"' : '')
