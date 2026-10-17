@@ -228,7 +228,16 @@ final class MonoTheme implements ThemeModule
      */
     private function caseSlides(PageContext $context, array $articles): string
     {
+        // `case_service` has no row in the `home` group — nobody translated a
+        // "case study" label — so it keeps the theme's own string. Writing a
+        // Slovak one here would be authoring content, not wiring copy.
         $service = $context->copy['case_service'] ?? 'Case study';
+
+        // The link label DOES have a row: `home.read_article` is the same slot
+        // jednotka's card link reads. The arrow stays in the markup, not in the
+        // translated string.
+        $readMore = $context->copy['home.read_article'] ?? 'Read More';
+
         $html = '';
         $i = 1;
 
@@ -242,7 +251,7 @@ final class MonoTheme implements ThemeModule
                 . '<div class="mo-container">'
                 . '<p class="mo-slide__kicker">' . self::e($service) . '</p>'
                 . '<h2 class="mo-slide__title mo-is-visible">' . self::e($pair['title']) . '</h2>'
-                . '<a class="mo-btn mo-btn--outline" href="/blog/' . self::e($pair['slug']) . '">Read More →</a>'
+                . '<a class="mo-btn mo-btn--outline" href="/blog/' . self::e($pair['slug']) . '">' . self::e($readMore) . ' →</a>'
                 . '</div>'
                 . '</li>';
         }
@@ -250,11 +259,31 @@ final class MonoTheme implements ThemeModule
         return $html;
     }
 
+    /**
+     * The opening slide.
+     *
+     * ## Which key each slot reads
+     *
+     * The home surface's own keys come FIRST: `home.title`, `home.message` and
+     * `home.cta_start` are the rows the translation admin edits, so a `sk_SK`
+     * site renders `Postavte Niečo Skvelé` / `Začať` here. The bare keys
+     * (`title`, `lede`, `cta`) stay behind them — this theme read those first
+     * and a caller may still pass one — and the strings below are the floor,
+     * so a tree with no translation module renders what it always rendered.
+     *
+     * Measured 2026-10-17: with the site switched to `mono`, this slide
+     * answered the SITE NAME as its `<h1>` and `Discover more` for its button
+     * while `home.title` and `home.cta_start` held Slovak in the same
+     * database. The site name still arrives as `title`, so it remains the
+     * answer on a tree where the group carries nothing.
+     */
     private function heroSlide(PageContext $context): string
     {
-        $title = $context->copy['title'] ?? 'Home';
-        $lede = $context->copy['lede'] ?? '';
-        $cta = $context->copy['cta'] ?? 'Discover more';
+        $copy = $context->copy;
+
+        $title = $copy['home.title'] ?? $copy['title'] ?? 'Home';
+        $lede = $copy['home.message'] ?? $copy['lede'] ?? '';
+        $cta = $copy['home.cta_start'] ?? $copy['cta'] ?? 'Discover more';
         $href = $context->blogHref ?? '/blog';
 
         // The action's explicit hero still wins — that is the action asking

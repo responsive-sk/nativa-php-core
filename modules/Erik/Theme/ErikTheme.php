@@ -108,19 +108,36 @@ final class ErikTheme implements ThemeModule
 
     /**
      * Showcase hero: eyebrow + display title + lede + two actions over the
-     * line-art visual. Text is copy-driven (`$copy`, showcase strings by
-     * default); the primary action goes to the blog, the secondary to the
-     * admin surface the kernel owns.
+     * line-art visual; the primary action goes to the blog, the secondary to
+     * the admin surface the kernel owns.
+     *
+     * ## Which key each slot reads
+     *
+     * The home surface's own keys come FIRST: `home.eyebrow`, `home.title`,
+     * `home.message`, `home.cta_blog` and `home.cta_admin` are the rows the
+     * translation admin edits, and they are what makes a `sk_SK` site render
+     * Slovak here. The bare keys (`hero_eyebrow`, `title`, `lede`) stay in the
+     * chain behind them — this theme read those first and a caller may still
+     * pass one — and the showcase strings are the floor, so a tree with no
+     * translation module renders exactly what it rendered before.
+     *
+     * Measured 2026-10-17: on a `sk_SK` site this hero answered `NATIVA
+     * MINIMAL` / the site name / the English lede, while `home.title` held
+     * `Postavte Niečo Skvelé` in the same database, unread by every theme.
      */
     private function hero(PageContext $context): string
     {
-        $eyebrow = $context->copy['hero_eyebrow'] ?? 'NATIVA MINIMAL';
-        $title = $context->copy['title'] ?? 'Fewer layers. More control.';
-        $lede = $context->copy['lede'] ?? 'A minimal PHP foundation for products that should stay understandable as they grow.';
+        $copy = $context->copy;
+
+        $eyebrow = $copy['home.eyebrow'] ?? $copy['hero_eyebrow'] ?? 'NATIVA MINIMAL';
+        $title = $copy['home.title'] ?? $copy['title'] ?? 'Fewer layers. More control.';
+        $lede = $copy['home.message'] ?? $copy['lede'] ?? 'A minimal PHP foundation for products that should stay understandable as they grow.';
         $href = $context->blogHref ?? '/blog';
 
-        $actions = '<a class="er-button er-button--primary" href="' . self::e($href) . '">Read the blog</a>'
-            . '<a class="er-button er-button--outline" href="/mark">Open admin</a>';
+        $actions = '<a class="er-button er-button--primary" href="' . self::e($href) . '">'
+            . self::e($copy['home.cta_blog'] ?? 'Read the blog') . '</a>'
+            . '<a class="er-button er-button--outline" href="/mark">'
+            . self::e($copy['home.cta_admin'] ?? 'Open admin') . '</a>';
 
         return '<section class="er-hero"><div class="er-container">'
             . '<p class="er-hero__eyebrow">' . self::e($eyebrow) . '</p>'
@@ -366,14 +383,21 @@ final class ErikTheme implements ThemeModule
             . $rows . '</div>';
     }
 
+    /**
+     * The closing CTA. Its eyebrow, headline and paragraph are the theme's own
+     * design copy and have no rows in the `home` group, so they stay as written;
+     * the BUTTON is the same slot the hero's primary action reads, so it reads
+     * `home.cta_blog` too rather than a second English label for one link.
+     */
     private function closingCta(PageContext $context): string
     {
         $href = $context->blogHref ?? '/blog';
+        $label = $context->copy['home.cta_blog'] ?? 'Explore the blog';
 
         return '<section class="er-closing-cta"><div><p class="er-section__eyebrow">Start simple</p>'
             . '<h2>Build the part that matters.</h2>'
             . '<p>Start with a small runtime and let the product earn every extra layer.</p></div>'
-            . '<a class="er-button er-button--primary" href="' . self::e($href) . '">Explore the blog</a></section>';
+            . '<a class="er-button er-button--primary" href="' . self::e($href) . '">' . self::e($label) . '</a></section>';
     }
 
     private function homeSection(string $eyebrow, string $title, string $content, string $modifier): string

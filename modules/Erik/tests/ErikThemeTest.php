@@ -293,6 +293,69 @@ final class ErikThemeTest extends TestCase
         $this->assertStringContainsString('<section class="er-hero">', $html);
     }
 
+    /**
+     * The home surface's OWN keys win — over the bare keys AND over the theme's
+     * defaults — because those are the rows the translation admin edits.
+     *
+     * Measured 2026-10-17, with the site switched to `mono`: on a `sk_SK` site
+     * this hero answered `NATIVA MINIMAL`, the SITE NAME as its `<h1>` and the
+     * English lede, while `home.title` held `Postavte Niečo Skvelé` in the same
+     * database. Nothing failed; the rows were simply unread by every theme.
+     */
+    #[Test]
+    public function theHomeGroupKeysBeatTheBareKeysAndTheDefaults(): void
+    {
+        $context = PageContext::forHomepage(
+            Request::create('GET', '/'),
+            'erik',
+            'sk_SK',
+            copy: [
+                'title'          => 'the site name',
+                'lede'           => 'bare lede',
+                'hero_eyebrow'   => 'BARE EYEBROW',
+                'home.eyebrow'   => 'Nativa Minimal',
+                'home.title'     => 'Postavte Niečo Skvelé',
+                'home.message'   => 'Malý a čitateľný základ.',
+                'home.cta_blog'  => 'Prejsť na blog',
+                'home.cta_admin' => 'Otvoriť admin',
+            ],
+            blogHref: '/blog',
+        );
+
+        $html = (new ErikTheme())->homepage($context);
+
+        $this->assertStringContainsString('<p class="er-hero__eyebrow">Nativa Minimal</p>', $html);
+        $this->assertStringContainsString('<h1 class="er-hero__title">Postavte Niečo Skvelé</h1>', $html);
+        $this->assertStringContainsString('Malý a čitateľný základ.', $html);
+        $this->assertStringContainsString('>Prejsť na blog</a>', $html, 'The primary action reads home.cta_blog, not its own English label.');
+        $this->assertStringContainsString('>Otvoriť admin</a>', $html, 'The secondary action reads home.cta_admin.');
+        $this->assertStringNotContainsString('Explore the blog', $html, 'The closing CTA button reads the same key as the hero\'s primary action — one link, one label.');
+        $this->assertStringNotContainsString('BARE EYEBROW', $html, 'The bare key must be shadowed, not merged.');
+        $this->assertStringContainsString('Build the part that matters.', $html, 'The closing section\'s own design copy has no row and stays as written.');
+    }
+
+    /**
+     * ...and the floor is intact: with no row for a key the theme answers
+     * exactly what it answered before this change — the bare key if the caller
+     * passed one (the kernel passes the site name as `title`), the showcase
+     * string if it did not.
+     */
+    #[Test]
+    public function withoutTheGroupTheBareKeysAndTheDefaultsStillAnswer(): void
+    {
+        $html = (new ErikTheme())->homepage(self::homepageContext());
+
+        $this->assertStringContainsString('<h1 class="er-hero__title">Tailored start</h1>', $html, 'The bare key still answers when the group carries nothing.');
+        $this->assertStringContainsString('>Read the blog</a>', $html, 'With no row for home.cta_blog the theme\'s own label stands.');
+
+        $bare = (new ErikTheme())->homepage(
+            PageContext::forHomepage(Request::create('GET', '/'), 'erik', 'en'),
+        );
+
+        $this->assertStringContainsString('<h1 class="er-hero__title">Fewer layers. More control.</h1>', $bare, 'With neither, the showcase string is the floor.');
+        $this->assertStringContainsString('<p class="er-hero__eyebrow">NATIVA MINIMAL</p>', $bare);
+    }
+
     #[Test]
     public function homepageEscapesUntrustedCopy(): void
     {
@@ -308,6 +371,21 @@ final class ErikThemeTest extends TestCase
         $this->assertStringContainsString('A &amp; B &lt;script&gt;', $html);
         $this->assertStringContainsString('&quot;quoted&quot;', $html);
         $this->assertStringNotContainsString('<script>A', $html);
+
+        // The group's rows travel the same path and are user input by
+        // definition — they are what the translation admin types.
+        $group = (new ErikTheme())->homepage(
+            PageContext::forHomepage(
+                Request::create('GET', '/'),
+                'erik',
+                'sk_SK',
+                copy: ['home.title' => 'A & B <script>', 'home.cta_blog' => '"quoted"'],
+            ),
+        );
+
+        $this->assertStringContainsString('A &amp; B &lt;script&gt;', $group);
+        $this->assertStringContainsString('&quot;quoted&quot;', $group);
+        $this->assertStringNotContainsString('<script>A', $group);
     }
 
     /**

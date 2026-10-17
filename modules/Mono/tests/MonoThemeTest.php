@@ -309,6 +309,102 @@ final class MonoThemeTest extends TestCase
     }
 
     /**
+     * The home surface's OWN keys win over the site name and over the theme's
+     * defaults, because those are the rows the translation admin edits.
+     *
+     * Measured 2026-10-17 with the site switched to `mono`: the hero `<h1>`
+     * answered the SITE NAME (the kernel's `title`) and the button `Discover
+     * more`, while the same database held `Postavte Niečo Skvelé` and `Začať`
+     * for `home.title` and `home.cta_start`. The case slide's link label went
+     * the same way — `home.read_article` (`Čítať článok`) sat unread beside a
+     * hardcoded `Read More`.
+     */
+    #[Test]
+    public function theHomeGroupKeysBeatTheSiteNameAndTheDefaults(): void
+    {
+        $context = PageContext::forHomepage(
+            Request::create('GET', '/'),
+            'mono',
+            'sk_SK',
+            copy: [
+                'title'             => 'the site name',
+                'home.title'        => 'Postavte Niečo Skvelé',
+                'home.message'      => 'Malý a čitateľný základ.',
+                'home.cta_start'    => 'Začať',
+                'home.read_article' => 'Čítať článok',
+            ],
+            blogHref: '/blog',
+            latestArticles: [self::article('alpha', 'Alpha Client')],
+        );
+
+        $html = (new MonoTheme())->homepage($context);
+
+        // Asserted by VALUE here, not by the wrapper around it: the title's
+        // markup is wrapped in `mo-anim__line` spans in the installed copy of
+        // this theme and not in the committed catalogue one, and that drift is
+        // not this test's subject. What it pins is the value the slot resolved
+        // to, so it holds in both.
+        $this->assertStringContainsString('Postavte Niečo Skvelé', $html, 'The hero title must resolve to home.title.');
+        $this->assertStringContainsString('Malý a čitateľný základ.', $html, 'The lede must resolve to home.message.');
+        $this->assertStringContainsString('>Začať</a>', $html, 'The hero button reads home.cta_start, not its own English label.');
+        $this->assertStringContainsString('>Čítať článok →</a>', $html, 'The case slide label comes from home.read_article; the arrow stays markup.');
+        $this->assertStringNotContainsString('Discover more', $html, 'The default must be shadowed, not merged with it.');
+        $this->assertStringNotContainsString('Read More', $html, 'And so must the hardcoded link label it replaced.');
+    }
+
+    /**
+     * ...and the floor is intact: no row for a key means the theme answers what
+     * it answered before — the bare key when the caller passed one (the kernel
+     * passes the site name as `title`), its own string when it did not.
+     */
+    #[Test]
+    public function withoutTheGroupTheBareKeysAndTheDefaultsStillAnswer(): void
+    {
+        $html = (new MonoTheme())->homepage(self::homepageContext());
+
+        $this->assertStringContainsString('Mono upstream', $html, 'The bare key still answers when the group carries nothing.');
+        $this->assertStringContainsString('Business first.', $html);
+        $this->assertStringContainsString('>Discover more</a>', $html, 'With no row for home.cta_start the theme\'s own label stands.');
+        $this->assertStringContainsString('>Read More →</a>', $html, 'The case slide keeps its own label with no home.read_article row.');
+
+        $bare = (new MonoTheme())->homepage(
+            PageContext::forHomepage(Request::create('GET', '/'), 'mono', 'en'),
+        );
+
+        // The title's wrapper differs between the two copies of this theme, so
+        // the floor is matched either way round: `>Home</h1>` in the committed
+        // catalogue, `>Home</span>` in the installed one.
+        $this->assertMatchesRegularExpression('~>Home</(?:span|h1)>~', $bare, 'With neither key, the theme\'s own string is the floor.');
+        $this->assertStringContainsString('>Discover more</a>', $bare);
+        $this->assertStringNotContainsString(
+            'mo-slide__lede',
+            $bare,
+            'The lede floor is the empty string, so the paragraph is omitted rather than rendered empty.',
+        );
+    }
+
+    /**
+     * The group's rows are what the translation admin types, so they are user
+     * input by definition and travel the same escaping path as the rest.
+     */
+    #[Test]
+    public function theHomeGroupCopyIsEscaped(): void
+    {
+        $html = (new MonoTheme())->homepage(
+            PageContext::forHomepage(
+                Request::create('GET', '/'),
+                'mono',
+                'sk_SK',
+                copy: ['home.title' => 'A & B <script>', 'home.read_article' => '"quoted"'],
+            ),
+        );
+
+        $this->assertStringContainsString('A &amp; B &lt;script&gt;', $html);
+        $this->assertStringContainsString('&quot;quoted&quot;', $html);
+        $this->assertStringNotContainsString('<script>A', $html);
+    }
+
+    /**
      * Every slide's text ships `mo-is-visible`: the slider cross-fades the
      * containers, never the titles — a stacked no-JS render stays fully
      * readable, and no bundle timing can leave an empty hero behind.
