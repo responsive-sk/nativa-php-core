@@ -239,7 +239,7 @@ final class MediaIndexAction
         // Type pills — HTMX links.
         $typeLinks = '';
         foreach ($filters as $key => $label) {
-            $href = self::buildFilterUrl($key, $currentSort, $currentCategory, $currentTag, $currentSource, $currentFolder);
+            $href = $this->buildFilterUrl($key, $currentSort, $currentCategory, $currentTag, $currentSource, $currentFolder);
             $isActive = $key === $currentType;
             $class = $isActive ? 'm-pill m-pill-active' : 'm-pill';
             $typeLinks .= "<a href=\"{$href}\" class=\"{$class}\" hx-get=\"{$href}\" hx-target=\"#media-content\" hx-swap=\"outerHTML\" hx-push-url=\"true\">" . AdminLayout::e($label) . '</a>';
@@ -269,7 +269,7 @@ final class MediaIndexAction
         if ([] !== $allTags) {
             $tagLinks = '<span class="m-media-filters__sep">·</span>';
             foreach ($allTags as $t) {
-                $href = self::buildFilterUrl($currentType, $currentSort, $currentCategory, $t, $currentSource, $currentFolder);
+                $href = $this->buildFilterUrl($currentType, $currentSort, $currentCategory, $t, $currentSource, $currentFolder);
                 $isActive = $t === $currentTag;
                 $class = $isActive ? 'm-pill m-pill-active' : 'm-pill';
                 $tagLinks .= "<a href=\"{$href}\" class=\"{$class}\" hx-get=\"{$href}\" hx-target=\"#media-content\" hx-swap=\"outerHTML\" hx-push-url=\"true\">" . AdminLayout::e($t) . '</a>';
@@ -277,8 +277,8 @@ final class MediaIndexAction
         }
 
         $hiddenFields = self::hiddenStateFields($currentType, $currentTag, $currentSource);
-        $sourcePills = self::sourcePills($currentSource, $currentType, $currentSort, $currentCategory, $currentTag, $currentFolder);
-        $folderSelect = self::folderSelect($currentFolder, $folders);
+        $sourcePills = $this->sourcePills($currentSource, $currentType, $currentSort, $currentCategory, $currentTag, $currentFolder);
+        $folderSelect = $this->folderSelect($currentFolder, $folders);
 
         return ViewRenderer::render('Modules/Media/Interfaces/HTTP/templates/media-bulkbar.phtml', ['url' => $this->urlBuilder(), 'catSelect' => $catSelect, 'folderSelect' => $folderSelect, 'hiddenFields' => $hiddenFields, 'sortSelect' => $sortSelect, 'sourcePills' => $sourcePills, 'tagLinks' => $tagLinks, 'typeLinks' => $typeLinks]);
     }
@@ -380,7 +380,7 @@ final class MediaIndexAction
 
         $tiles = '';
         foreach ($counts as $path => $count) {
-            $href = AdminLayout::e(self::buildFilterUrl($type, $sort, $category, $tag, $source, $path));
+            $href = AdminLayout::e($this->buildFilterUrl($type, $sort, $category, $tag, $source, $path));
             $class = $path === $currentFolder ? 'm-folder-card m-folder-card--active' : 'm-folder-card';
             $tiles .= '<a class="' . $class . '" href="' . $href . '" hx-get="' . $href . '" hx-target="#media-content" hx-swap="outerHTML" hx-push-url="true">'
                 . '<span class="m-folder-card__icon">' . MediaIcons::folder() . '</span>'
@@ -424,12 +424,12 @@ final class MediaIndexAction
      * carry every other active filter — a pill that dropped the folder the
      * visitor had open would look like a broken filter.
      */
-    private static function sourcePills(string $current, string $type, string $sort, string $category, string $tag, string $folder): string
+    private function sourcePills(string $current, string $type, string $sort, string $category, string $tag, string $folder): string
     {
         $pills = '<span class="m-media-filters__label m-muted">Source:</span>';
 
         foreach (['' => 'All', 'local' => 'Local', 'cloudinary' => 'Cloudinary'] as $key => $label) {
-            $href = self::buildFilterUrl($type, $sort, $category, $tag, $key, $folder);
+            $href = $this->buildFilterUrl($type, $sort, $category, $tag, $key, $folder);
             $isActive = $key === $current;
             $class = $isActive ? 'm-pill m-pill-active' : 'm-pill';
             $pills .= "<a href=\"{$href}\" class=\"{$class}\" hx-get=\"{$href}\" hx-target=\"#media-content\" hx-swap=\"outerHTML\" hx-push-url=\"true\">" . AdminLayout::e($label) . '</a>';
@@ -445,7 +445,7 @@ final class MediaIndexAction
      *
      * @param list<string> $folders
      */
-    private static function folderSelect(string $current, array $folders): string
+    private function folderSelect(string $current, array $folders): string
     {
         $hxCommon = 'hx-get="' . $this->url('media.index') . '" hx-target="#media-content" hx-swap="outerHTML" hx-trigger="change" hx-include="closest form"';
         $select = '<select name="folder" class="m-input m-input--compact" ' . $hxCommon . '>';
@@ -477,7 +477,13 @@ final class MediaIndexAction
         return '<span class="' . $class . '">' . AdminLayout::e($provider) . '</span>';
     }
 
-    private static function buildFilterUrl(string $type, string $sort, string $category, string $tag, string $source = '', string $folder = ''): string
+    /**
+     * A filter link, every other active filter carried along. NOT static: the
+     * href comes from `$this->url('media.index')`, and a static declaration
+     * made the whole index a 500 (`Using $this when not in object context`) the
+     * first time a type/tag/source/folder pill rendered — which is always.
+     */
+    private function buildFilterUrl(string $type, string $sort, string $category, string $tag, string $source = '', string $folder = ''): string
     {
         $params = [];
         if ('' !== $type) {
