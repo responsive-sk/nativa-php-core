@@ -166,12 +166,33 @@ final class ModelCatalogueContractTest extends TestCase
     {
         // The negative control, as a permanent assertion rather than a thing
         // done by hand once. `Media` is the module the round was measured on.
+        //
+        // Measured 2026-10-17, when this test was red on a kernel-only checkout
+        // and the tree was innocent. It compared `isInstalled('Media')` against
+        // `!modelled || isCatalogued('Media')`, and those answer two different
+        // questions:
+        //
+        //     lekalo/modules/media   true    tracked, describes a module
+        //     isCatalogued('Media')  true    modules/Media is in the catalogue
+        //     isInstalled('Media')   false   src/Modules/Media is operator state
+        //
+        // `module:remove` deletes the slice and leaves the catalogue entry, so
+        // "removed" and "never installed in this checkout" were the SAME state —
+        // and the assertion could not tell them apart. It went red on every
+        // checkout that had not installed Media, which is the whole point of
+        // kernel-only. The comparison the name promises is model-against-
+        // catalogue, because the catalogue is the tracked source of truth and
+        // the slice is gitignored operator state.
+        //
+        // `everyModelDirectoryNamesAModuleTheCatalogueKnows()` above is the
+        // general form of this, over every modelled slice. This one keeps the
+        // measured case named, so a regression here is recognisable rather than
+        // arriving as one anonymous entry in a loop over twenty directories.
         $catalogue = self::catalogue();
         $mediaModelled = is_dir(dirname(__DIR__, 2) . '/lekalo/modules/media');
 
-        self::assertSame(
-            $catalogue->isInstalled('Media'),
-            !$mediaModelled || $catalogue->isCatalogued('Media'),
+        self::assertFalse(
+            $mediaModelled && !$catalogue->isCatalogued('Media'),
             'lekalo/modules/media/ describes a module the catalogue no longer knows.'
             . ' This check is the only thing standing between module:remove and a'
             . ' silent lie.',
