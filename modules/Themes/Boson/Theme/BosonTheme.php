@@ -15,9 +15,9 @@ use Themes\ThemeModule;
 /**
  * BosonTheme — the boson-php marketing site's design as a kernel theme module.
  *
- * The reference (`Frontend/boson`) is a Symfony/Twig site whose entire body is
- * shipped as Lit web components, with the styles inside shadow roots and the
- * artwork in `/images`. This port keeps the DESIGN and drops the machinery:
+ * The upstream reference (the boson-php marketing site — Symfony/Twig with a
+ * Lit component body, styles inside shadow roots, artwork in `/images`) is
+ * not vendored here. This port keeps the DESIGN and drops the machinery:
  * the markup is server-rendered here, the vocabulary is `bo-` prefixed, and
  * every visual is CSS — no Lit runtime, no @font-face pointing at a vendor
  * path, no image request the tree does not have.

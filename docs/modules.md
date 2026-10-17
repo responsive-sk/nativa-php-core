@@ -634,9 +634,10 @@ vote became the only theme answer (see above).
 `modules/Themes/Boson/` carries the boson-php marketing design as `BosonTheme`:
 a fixed 100 px header that shrinks to 70 px on scroll, dotted rails framing
 ruled full-bleed bands, Roboto Condensed display type over Inter body copy,
-and one brand red (`#f93904`) on near-black (`#0d1119`). The reference
-(`Frontend/boson`) is a Symfony/Twig site whose body is entirely Lit web
-components with the styles inside shadow roots and the artwork in `/images`.
+and one brand red (`#f93904`) on near-black (`#0d1119`). The upstream
+reference — the boson-php marketing site, a Symfony/Twig project whose body
+is entirely Lit web components, styles inside shadow roots and artwork in
+`/images` — is not vendored in this tree.
 
 **What the port keeps and what it drops.** The markup is server-rendered PHP
 and the stylesheet is one `bo-` prefixed file

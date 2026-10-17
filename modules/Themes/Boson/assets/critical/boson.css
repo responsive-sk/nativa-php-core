@@ -1,7 +1,7 @@
 /**
  * boson.css — the boson-php marketing design, vendored for the boson theme.
  *
- * The reference (Frontend/boson/assets/app.css plus the shadow-root styles of
+ * The upstream reference (its app stylesheet plus the shadow-root styles of
  * every Lit component) is rewritten here as one server-rendered stylesheet:
  * the same tokens, the same ruled bands and dotted rails, the same 100 px
  * header, but every class carries the `bo-` prefix and every visual is CSS.
