@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Core\Interfaces\HTTP\Middleware;
 
+use Modules\Core\Domain\AdminRoutePolicy;
 use Modules\Core\Domain\AuthIdentity;
 use Modules\Core\Domain\Contracts\AuthProvider;
 use Modules\Core\Infrastructure\Http\Request;
@@ -64,7 +65,10 @@ final readonly class AuthMiddleware implements MiddlewareInterface
         if (in_array($path, $this->auth->guestOnlyPaths(), true)
             && null !== $this->auth->identity($request)
         ) {
-            return Response::redirect('/mark');
+            // The owner's spelling, not a literal: a deployment running
+            // /admin must not bounce a signed-in user back to the internal
+            // /mark alias and make them question the address.
+            return Response::redirect(AdminRoutePolicy::prefix());
         }
 
         return $next($request);

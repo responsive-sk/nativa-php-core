@@ -1,11 +1,12 @@
 # Name ownership — one name, one owner
 
-Ledger for `tests/Architecture/NameOwnershipContractTest.php`. Every number
-here is **measured**, and the test fails when a number and the tree disagree.
-A row that is not measured is a wish.
+Ledger for `tests/Architecture/NameOwnershipContractTest.php` and the theme
+half of the same rule in `tests/Theme/ThemeClassOwnershipTest.php`. Every
+number here is **measured**, and the test fails when a number and the tree
+disagree. A row that is not measured is a wish.
 
 The rule the gate cannot check is worth stating too: a class constant is a
-**good** tool for most of this tree. 240 declarations, and the large majority
+**good** tool for most of this tree. 238 declarations, and the large majority
 are private technical invariants — `CoverGenerator::WIDTH`, `MAX_RETRIES`,
 `IDLE_TIMEOUT` — which are facts about the code, not configuration and not
 identifiers. Those are correct as they are and the gate leaves them alone. The
@@ -15,7 +16,9 @@ it should not be.
 ## What is counted, and what is not
 
 Scope: `src/Modules/{Core,Database,KernelTheme,Tooling}`, `src/Themes`,
-`modules`, `tests`, `bin`, `public` (minus `public/dist`). 407 files.
+`modules`, `tests`, `bin`, `public` (minus `public/dist`). 409 non-gate files
+plus the three gate files — 412 scanned: rule 1 reads all of them, while the
+two counts exclude the gates for the reason below.
 
 `src/Modules/<Name>` for any other module is **gitignored operator state**. A
 kernel-only checkout carries Core + Database and nothing else, so a gate
@@ -27,11 +30,11 @@ identical:
 
 | | full tree | kernel-only |
 |---|---|---|
-| files | 407 | 407 |
-| declarations (rule 3, excluding the gates) | 240 | 240 |
-| distinct names (rule 3) | 203 | 203 |
+| files (rule 1 scan) | 412 | 412 |
+| declarations (rule 3, excluding the gates) | 238 | 238 |
+| distinct names (rule 3) | 202 | 202 |
 | values with 2+ names (rule 1) | **2** | **2** |
-| literal places (rule 2) | 532 | 532 |
+| literal places (rule 2) | 502 | 502 |
 
 ## Rule 1 — one string value, one name · absolute, 2 exemptions
 
@@ -86,32 +89,38 @@ writes down WHY.
 The list also fails **when an entry stops applying** — an exemption that
 stopped being a collision is rot in the ledger, not a free pass.
 
-## Rule 2 — a value spelled as a literal outside its owner · ratchet at 532
+## Rule 2 — a value spelled as a literal outside its owner · ratchet at 502
 
-A **ceiling, not a list.** 55 owned string values appear as raw literals on
-**532 places** across the tree. An absolute rule here would need 532
-exemptions, and a gate with 532 exemptions is not a gate:
+A **ceiling, not a list.** 52 owned string values appear as raw literals on
+**502 places** across the tree. An absolute rule here would need 502
+exemptions, and a gate with 502 exemptions is not a gate:
 
 | filter | values | places | files |
 |---|---|---|---|
-| none | 55 | 532 | 201 |
-| length ≥ 4 | 50 | 456 | 194 |
-| length ≥ 8 | 30 | 228 | 88 |
-| contains `/` or `.` | 14 | 168 | 52 |
-| contains `/` | 5 | 113 | 41 |
+| none | 52 | 502 | 112 |
+| length ≥ 4 | 48 | 450 | 108 |
+| length ≥ 8 | 26 | 91 | 42 |
+| contains `/` or `.` | 13 | 76 | 27 |
+| contains `/` | 4 | 47 | 21 |
 
-The leading values are `'en'` (62 places), `'home'` (54), `'sk_SK'` (49). `'en'`
-is the default language code; it is spelled as a literal 117 times in the tree
-and belongs in no constant anyone would name. The largest single source is
-`Locales/…/SeedData.php` with **112 places on its own** — seed data is not a
-constant, and converting it would be worse rather than better.
+The leading values are `'sk_SK'` (132 places), `'en'` (48) and `'home'` (36).
+A locale code, the default language and a route slug — data that appears in seed
+data, translations and URL tests, and belongs in no constant anyone would name.
+The largest single source is `Locales/…/SeedData.php` with **112 places on its
+own** — seed data is not a constant, and converting it would be worse rather
+than better.
 
-So the only legal direction is down. Every consolidation in Phase 2 lowers the
-number, and the gate refuses the 533rd.
+The ceiling moved 532 → 514 with task 2.2: reading `Question::STATUS_*` and
+`Comment::STATUS_*` in the admin actions and the comments metric retired 18
+owned literals. It moved 514 → 502 with task 0.3: the two `ADMIN_PATH`
+constants and the three call sites that retyped `'/mark'` beside them are gone,
+while `AdminRoutePolicy::DEFAULT_PREFIX` keeps the value owned — the remaining
+31 `/mark` literals are still counted. That is the only legal direction, and it
+moved as work rather than as an accounting change. The gate refuses the 503rd.
 
 ### Places that are counted on purpose and must stay counted
 
-Seven of the 532 are test literals that **look** like duplication and are not.
+Seven of the 502 are test literals that **look** like duplication and are not.
 They are `assertSame()` calls whose subject is the exact string that has to
 arrive in the database row:
 
@@ -141,7 +150,7 @@ into `LocaleService::SK_SK` would be a tautology dressed as a refactor. The
 ceiling counts them because counting them is honest; the consolidation work in
 Phase 2 does not touch them, and should not.
 
-## Rule 3 — the declaration count does not rise · ratchet at 240 / 203
+## Rule 3 — the declaration count does not rise · ratchet at 238 / 202
 
 This is the rule that catches the cheapest wrong fix: *"there are two names for
 this, let me add a third."* That is the complaint this whole ledger started
@@ -159,22 +168,92 @@ on the day it was written — one `REGISTRY` constant took the count from 241 to
 242, and the honest fix was to exempt the gates, not to raise the ceiling. The
 same move this rule exists to catch, wearing a different hat.
 
-Rules 1 and 2 still read all of those files, so a duplicated name in a gate is
-still caught. Only the count is exempt.
+Rule 1 still reads all of those files, so a duplicated value declared in a gate
+is still caught. The two counts — rule 2's literal places and rule 3's
+declarations — exclude them, because the exemption reasons are themselves
+literals spelled in the gate file.
 
-The ceilings moved together twice, and both numbers carry the reason at the
-constant in the test. Up, once: 241 → 243 and 203 → 205 for
+The ceilings moved together three times, and both numbers carry the reason at
+the constant in the test. Up, once: 241 → 243 and 203 → 205 for
 `ModuleTreeState::IGNORED`, the list of directory prefixes excluded from a drift
 comparison — one constant that made the comparison correct in one reader instead
-of two. Down, once, and further: 243 → 240 and 205 → 203, because task 2.6
-removed three declarations rather than adding one. That is the only direction
-this ratchet is ever supposed to move, and it moved on its own.
+of two. Down: 243 → 240 and 205 → 203, because task 2.6 removed three
+declarations rather than adding one. Down again: 240 → 239 and 203 → 202, when
+the theme gate's `UNPREFIXED_ALLOWED` list was deleted — PHPStan had proved the
+empty array could never match a class, so it was a constant guarding nothing.
+Down once more: 239 → 238 when task 0.3 deleted the Settings provider's
+`ADMIN_PATH` constant and `AdminRoutePolicy` gained `DEFAULT_PREFIX` in its
+place — one default for one panel, not two spellings of one name. The distinct
+name count stayed 202: one name left and one arrived.
+That is the only direction this ratchet is ever supposed to move, and it moved
+on its own.
+
+## Rule 4 — a CSS class belongs to one theme · measured 2026-10-17
+
+Same rule, different vocabulary: a class a theme defines is a name the theme
+owns. `tests/Theme/ThemeClassOwnershipTest.php` reads every stylesheet a theme
+returns from `criticalCss()` and fails when one class is defined by two themes,
+or when an own class does not carry that theme's `prefix()`.
+
+The plan named four themes (`mo-`, `je-`, `er-`, `gr-`). Discovery found
+**five** — the kernel theme carries `k-` and would have gone unmeasured:
+
+| theme | prefix | bundle | classes | files |
+|---|---|---|---|---|
+| `erik` | `er-` | `erik` | 46 | 1 |
+| `griffe` | `gr-` | `griffe` | 78 | 1 |
+| `jednotka` | `je-` | `jednotka` | 106 | 9 (kernel `BASE_CRITICAL_CSS`) |
+| `kernel` | `k-` | `kernel` | 17 | 1 |
+| `mono` | `mo-` | `mono` | 196 | 2 |
+
+443 class definitions (437 distinct names — the six markers are counted in
+both sheets), and exactly **one** shared family: the syntax-highlight markers.
+Griffe defines 6 `.tok-*` classes and Mono defines 12; the 6 overlap, with
+different colours on purpose (`.tok-comment` is `#8b8fa3` against `#94a3b8`).
+They stay because the emitter is `code-highlight.ts`, which is not in this
+repository — renaming the markers would break the highlighter, not fix a
+collision. The exception is named in `SHARED_CONTRACT['tok']` with that reason,
+and the test fails if the entry stops applying.
+
+Three measurement traps were found the same way the constant count found its
+own, and each is written into the test:
+
+1. **`criticalCss()` is the only truth.** `jednotka` returns the kernel's nine
+   files, so grepping `modules/Jednotka/assets/` reports it as owning nothing;
+   it owns the kernel's 106 selectors instead.
+2. **`bundle()` is not `prefix()`.** `FrontendLayout` writes
+   `<body class="{$bundle}-shell">`. Griffe's bundle is `griffe`, so
+   `.griffe-shell` is emitted and live. Erik's bundle is `erik` while its
+   stylesheet spells the same rule `.er-shell` — a measured name mismatch, not
+   a collision, left for the stylesheet's owner to rename or remove.
+3. **The tracked catalogue is read first.** `src/Modules/` is gitignored
+   operator state; reading it first let an installed copy answer for the tree
+   and every assertion passed while the checkout disagreed with itself.
+
+Three classes in a theme stylesheet are **dead** — no emitter in this
+repository: `copy-btn` and `has-badge` (Mono, whose emitter is the absent
+`code-highlight.ts`) and `navbar__actions` (the upstream name beside Mono's own
+`mo-navbar__actions`). They are listed in `DEAD_CLASSES` rather than deleted,
+because deleting visible-from-nowhere CSS is a product decision; the test fails
+if one comes back to life, so the list cannot rot into a permission slip.
+
+Negative control, run 2026-10-17: adding `.probe-collision` to `griffe.css` and
+`mono.css` failed both assertions (and the prefix rule), so the gate is known to
+fail for the tree it is measuring, not only to pass on it. Re-measure with:
+
+```
+vendor/bin/phpunit tests/Theme/ThemeClassOwnershipTest.php
+```
+
+On a kernel-only checkout the two collision assertions **skip** (one theme
+cannot collide with anything); the prefix and dead-class checks still run
+against whatever is installed.
 
 ## How the counting is done, and three ways to get it wrong
 
 The number is the test, not a comment in it. A regex over this tree finds **6**
 constants, not 414, because the tree writes typed ones
-(`private const string ADMIN_PATH = '/mark';`). Regex is also wrong in the
+(`private const string MARKER = '.migrations-applied';`). Regex is also wrong in the
 other direction: it matches constants inside comments, and this tree documents
 its constants at length. So the test tokenises.
 

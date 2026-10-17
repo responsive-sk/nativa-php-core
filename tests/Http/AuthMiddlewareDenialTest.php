@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Tests\Http;
 
+use Modules\Core\Domain\AdminRoutePolicy;
 use Modules\Core\Domain\AuthIdentity;
 use Modules\Core\Domain\Contracts\AuthProvider;
 use Modules\Core\Domain\Permissions;
@@ -61,8 +62,6 @@ use PHPUnit\Framework\TestCase;
 final class AuthMiddlewareDenialTest extends TestCase
 {
     private const string CLIENT_IP = '203.0.113.9';
-
-    private const string ADMIN_PATH = '/mark/users';
 
     private string $dir = '';
 
@@ -145,11 +144,21 @@ final class AuthMiddlewareDenialTest extends TestCase
         parent::tearDown();
     }
 
+    /**
+     * The path under test, read from the OWNER rather than declared here: the
+     * admin prefix is optional (`ADMIN_PATH`), and a second constant is exactly
+     * the collision task 0.3 removed.
+     */
+    private function adminPath(): string
+    {
+        return AdminRoutePolicy::prefix() . '/users';
+    }
+
     #[Test]
     public function aRefusedAdminPathReachesTheAuditLog(): void
     {
         $response = $this->middleware(new AuthIdentity('u-42', true, ['content.manage']))
-            ->handle(Request::create('GET', self::ADMIN_PATH), self::passThrough());
+            ->handle(Request::create('GET', $this->adminPath()), self::passThrough());
 
         self::assertSame(403, $response->getStatusCode(), 'An identity without the permission must be refused.');
 
@@ -172,7 +181,7 @@ final class AuthMiddlewareDenialTest extends TestCase
 
         self::assertCount(1, $audit, 'The handler pairing must turn the event into an audit row.');
         self::assertSame('security.authz.denied', $audit[0]['action']);
-        self::assertSame(self::ADMIN_PATH, $audit[0]['target']);
+        self::assertSame($this->adminPath(), $audit[0]['target']);
         self::assertSame('u-42', $audit[0]['actor_name']);
         self::assertSame(self::CLIENT_IP, $audit[0]['ip_address']);
 
@@ -185,7 +194,7 @@ final class AuthMiddlewareDenialTest extends TestCase
     public function theRecordedPayloadCarriesExactlyTheDeclaredKeys(): void
     {
         $this->middleware(new AuthIdentity('u-42', true, []))
-            ->handle(Request::create('GET', self::ADMIN_PATH), self::passThrough());
+            ->handle(Request::create('GET', $this->adminPath()), self::passThrough());
 
         $message = $this->outboxRows()[0] ?? null;
 
@@ -222,7 +231,7 @@ final class AuthMiddlewareDenialTest extends TestCase
         // The exact shape the defect took: the provider seam takes a string, so a
         // string that no handler claims must be refused at the seam.
         self::noteEvent('authz.denied', [
-            'path'     => self::ADMIN_PATH,
+            'path'     => $this->adminPath(),
             'required' => Permissions::USERS,
             'userId'   => 'u-42',
             'ip'       => self::CLIENT_IP,
@@ -238,7 +247,7 @@ final class AuthMiddlewareDenialTest extends TestCase
 
         // The other half: the guard must not refuse the events that ARE ours.
         self::noteEvent(self::authzDenied(), [
-            'path'     => self::ADMIN_PATH,
+            'path'     => $this->adminPath(),
             'required' => Permissions::USERS,
             'userId'   => 'u-42',
             'roles'    => [],
@@ -252,7 +261,7 @@ final class AuthMiddlewareDenialTest extends TestCase
     public function anInactiveIdentityIsRefusedWithoutASecurityEvent(): void
     {
         $response = $this->middleware(new AuthIdentity('u-42', false, [Permissions::USERS]))
-            ->handle(Request::create('GET', self::ADMIN_PATH), self::passThrough());
+            ->handle(Request::create('GET', $this->adminPath()), self::passThrough());
 
         self::assertSame(403, $response->getStatusCode());
         self::assertStringContainsString('not active', $response->getContent());

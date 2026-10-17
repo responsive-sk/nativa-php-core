@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Settings\Interfaces\HTTP;
 
+use Modules\Core\Domain\AdminRoutePolicy;
 use Modules\Core\Domain\Contracts\ShellContextProvider;
 use Modules\Core\Domain\ShellNavItem;
 use Modules\Core\Domain\ThemePreference;
@@ -46,9 +47,9 @@ use Modules\Settings\Application\DTOs\MenuItemDTO;
  * session started. Crucially that guard is kept: a public page must not hand a
  * session to a reader who never logged in.
  *
- * `/mark` is spelled here exactly as `ThemeResolver`, `AuthMiddleware` and
- * `PageCacheService` spell it; the kernel owns the surface, so the module reads
- * it the way the kernel does.
+ * The admin surface is not spelled here at all: `AdminRoutePolicy::isAdminPath()`
+ * is the one owner, reading the optional `ADMIN_PATH` prefix with `/mark` as
+ * the default, so a deployment that moves the panel moves this filter with it.
  *
  * ## The rest
  *
@@ -71,9 +72,6 @@ use Modules\Settings\Application\DTOs\MenuItemDTO;
 #[AsShellContextProvider(priority: -100)]
 final class SettingsShellContextProvider implements ShellContextProvider
 {
-    /** The admin surface the kernel protects; a visitor is never sent there. */
-    private const string ADMIN_PATH = '/mark';
-
     public function siteName(): ?string
     {
         return null;
@@ -195,7 +193,7 @@ final class SettingsShellContextProvider implements ShellContextProvider
 
     private static function isAdminHref(string $href): bool
     {
-        return self::ADMIN_PATH === $href || str_starts_with($href, self::ADMIN_PATH . '/');
+        return AdminRoutePolicy::isAdminPath($href);
     }
 
     /**

@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Modules\Core\Domain;
 
+use Modules\Core\Infrastructure\Env;
+
 /**
  * AdminRoutePolicy — which permission each `/mark` path needs.
  *
@@ -57,6 +59,17 @@ namespace Modules\Core\Domain;
 final class AdminRoutePolicy
 {
     /**
+     * The default admin prefix — the spelling every route attribute declares.
+     *
+     * `ADMIN_PATH` overrides the PUBLIC spelling, but `/mark` remains the
+     * INTERNAL one: routes, the table below and stored links are written in
+     * it. Keeping the default as a constant (rather than retyping the literal
+     * in each method here and at each call site) is what lets the ownership
+     * gate count the `/mark` literals the tree still carries.
+     */
+    private const string DEFAULT_PREFIX = '/mark';
+
+    /**
      * Path prefix => permission. NOT sorted: `permits()` picks the longest
      * matching prefix, so order here carries no meaning.
      *
@@ -95,24 +108,116 @@ final class AdminRoutePolicy
     ];
 
     /**
+     * The admin surface's URL prefix — one owner, optional value.
+     *
+     * `ADMIN_PATH` is read from the environment and defaults to `/mark`, the
+     * spelling every route attribute in this tree declares. The value is
+     * validated rather than trusted: an absolute path of plain segments, no
+     * trailing slash, no scheme, host, query or fragment. A typo falls back to
+     * the default — an admin area that disappears because of a mistyped env
+     * var is worse than a prefix nobody changed.
+     *
+     * This is the owner `SettingsShellContextProvider`, `AuthMiddleware`,
+     * `PageCacheService` and the HTTP tests read instead of each keeping an
+     * `ADMIN_PATH` constant (task 0.3: two constants, one name, two values).
+     */
+    public static function prefix(): string
+    {
+        $configured = Env::get('ADMIN_PATH', self::DEFAULT_PREFIX);
+        $prefix = is_string($configured) ? trim($configured) : '';
+
+        if (1 !== preg_match('~^/[A-Za-z0-9._\-]+(/[A-Za-z0-9._\-]+)*$~', $prefix)) {
+            return self::DEFAULT_PREFIX;
+        }
+
+        return $prefix;
+    }
+
+    /**
+     * The INTERNAL spelling of a path: the configured prefix is an alias for
+     * `/mark`, which is what the route attributes, the table and every link in
+     * this tree spell. `/admin/users` becomes `/mark/users`; an internal path
+     * passes through unchanged, so both spellings keep working and a hardcoded
+     * `/mark/...` link does not 404 on a deployment that chose another prefix.
+     */
+    public static function canonicalPath(string $path): string
+    {
+        $prefix = self::prefix();
+
+        if ($prefix === $path) {
+            return self::DEFAULT_PREFIX;
+        }
+
+        if (str_starts_with($path, $prefix . '/')) {
+            return self::DEFAULT_PREFIX . substr($path, strlen($prefix));
+        }
+
+        return $path;
+    }
+
+    /**
+     * The PUBLIC spelling of a path: the inverse of `canonicalPath()`.
+     *
+     * Routing happens on internal `/mark` paths, so a 301 the router builds
+     * (trailing-slash canonicalization) would otherwise send a visitor from
+     * `/admin/users/` to `/mark/users` — a working but leaking detour. The
+     * query string is preserved; a path outside the admin area is returned
+     * untouched.
+     */
+    public static function publicPath(string $path): string
+    {
+        $prefix = self::prefix();
+
+        if (self::DEFAULT_PREFIX === $prefix) {
+            return $path;
+        }
+
+        $query = '';
+        $mark = strpos($path, '?');
+
+        if (false !== $mark) {
+            $query = substr($path, $mark);
+            $path = substr($path, 0, $mark);
+        }
+
+        if (self::DEFAULT_PREFIX === $path) {
+            return $prefix . $query;
+        }
+
+        if (str_starts_with($path, self::DEFAULT_PREFIX . '/')) {
+            return $prefix . substr($path, \strlen(self::DEFAULT_PREFIX)) . $query;
+        }
+
+        return $path . $query;
+    }
+
+    /**
      * Is this path inside the admin area at all?
      *
-     * `/mark` exactly, or anything below it.
+     * Both spellings count: the configured prefix (`/admin` on a deployment
+     * that set `ADMIN_PATH`) and the internal `/mark` the routes declare. The
+     * middleware pipeline runs BEFORE the kernel canonicalizes, so
+     * `AuthMiddleware` asks this question about the URL the visitor typed.
      */
     public static function isAdminPath(string $path): bool
     {
-        return '/mark' === $path || str_starts_with($path, '/mark/');
+        return self::matches($path, self::DEFAULT_PREFIX) || self::matches($path, self::prefix());
     }
 
     /**
      * The permission this path requires, or null when it is an admin path no
      * table row classifies. Callers must treat null as DENY.
      *
+     * The path is canonicalized first, so a deployment running `/admin` gets
+     * the same answer as `/mark` without a second table.
+     *
      * @return string|null
      */
     public static function requiredPermission(string $path): ?string
     {
-        if (!self::isAdminPath($path)) {
+        $path = self::canonicalPath($path);
+
+        if (!self::matches($path, self::DEFAULT_PREFIX)) {
             return null;
         }
 

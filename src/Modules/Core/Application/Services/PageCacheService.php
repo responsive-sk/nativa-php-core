@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Core\Application\Services;
 
+use Modules\Core\Domain\AdminRoutePolicy;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 
@@ -41,9 +42,14 @@ final readonly class PageCacheService
      * file read, and an edit to a guide must be visible on the next reload. The
      * cache exists for the rate-limit fallback, not to shield the disk.
      *
+     * The admin surface is not listed: it is answered at runtime through
+     * `AdminRoutePolicy::isAdminPath()`, which knows both the configured
+     * prefix and the internal `/mark`, so a deployment running `/admin` cannot
+     * have an admin page cached for the next visitor.
+     *
      * @var list<string>
      */
-    private const array BYPASS_PREFIXES = ['/mark', '/debug', '/storage', '/docs'];
+    private const array BYPASS_PREFIXES = ['/debug', '/storage', '/docs'];
 
     /** @var list<string> */
     private const array BYPASS_PATHS = ['/login', '/register', '/forgot-password', '/reset-password'];
@@ -177,6 +183,10 @@ final readonly class PageCacheService
         }
 
         $path = $request->getPathInfo();
+
+        if (AdminRoutePolicy::isAdminPath($path)) {
+            return false;
+        }
 
         foreach (self::BYPASS_PREFIXES as $prefix) {
             if (str_starts_with($path, $prefix)) {

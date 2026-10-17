@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Core\Interfaces\HTTP;
 
+use Modules\Core\Domain\AdminRoutePolicy;
 use Modules\Core\Infrastructure\Env;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
@@ -88,10 +89,20 @@ final class Kernel
      */
     private function dispatchMatched(Request $request): Response
     {
+        // The admin surface answers under its configured prefix, optional via
+        // `ADMIN_PATH` (default `/mark`). Canonicalizing HERE means the router
+        // only ever sees the internal spelling the route attributes declare,
+        // the discovery cache stays valid, and no route declaration has to
+        // become dynamic. The middleware pipeline ran earlier, so
+        // AuthMiddleware still saw the URL the visitor typed and answers
+        // through AdminRoutePolicy, which accepts both spellings.
+        $publicPath = $request->getPathInfo();
+        $request->setPathInfo(AdminRoutePolicy::canonicalPath($publicPath));
+
         $match = $this->router->match($request);
 
         if (null === $match) {
-            return $this->renderError(404, 'Not Found', 'The requested page could not be found.', $request->getPathInfo());
+            return $this->renderError(404, 'Not Found', 'The requested page could not be found.', $publicPath);
         }
 
         $redirect = $this->resolveRedirect($match);
@@ -99,7 +110,7 @@ final class Kernel
             return $redirect;
         }
 
-        $methodError = $this->resolveMethodNotAllowed($match, $request->getPathInfo());
+        $methodError = $this->resolveMethodNotAllowed($match, $publicPath);
         if (null !== $methodError) {
             return $methodError;
         }
@@ -187,7 +198,10 @@ final class Kernel
     private function resolveRedirect(array $match): ?Response
     {
         if (isset($match['redirect'])) {
-            return Response::redirect($match['redirect'], 301);
+            // The router canonicalized an INTERNAL path; send the visitor back
+            // to the spelling they used (the configured prefix on a
+            // deployment that set `ADMIN_PATH`).
+            return Response::redirect(AdminRoutePolicy::publicPath($match['redirect']), 301);
         }
 
         return null;

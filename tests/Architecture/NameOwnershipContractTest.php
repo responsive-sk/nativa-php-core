@@ -22,27 +22,27 @@ use RecursiveIteratorIterator;
  * ## Three rules, and only one of them is absolute
  *
  * 1. **A string value must not be claimed by two names.** Absolute, with an
- *    allow-list of the five that exist today. A string is an identifier —
+ *    allow-list of the two that exist today. A string is an identifier —
  *    `'users.manage'` written as `REQUIRED` instead of `USERS` means two
- *    owners for one permission and nothing reports the rename. Five
+ *    owners for one permission and nothing reports the rename. Two
  *    exemptions is a list a person can hold in their head; the list also fails
  *    when an entry stops applying, so it cannot rot.
  * 2. **A value must not be spelled as a raw literal outside its owner.**
  *    A RATCHET, not a prohibition, and that is the measured conclusion rather
- *    than a compromise. 54 owned string values appear as literals on 531
- *    places across the tree. `'en'` alone is 62 of them: it is the default
- *    language code, it belongs in no constant anyone would name, and
- *    `Locales/…/SeedData.php` alone accounts for 112. A gate with 531
- *    exemptions is not a gate. 531 is a CEILING: every consolidation lowers it,
- *    and the gate refuses the 532nd.
- * 3. **The declaration count must not rise.** Ratchet at 241/203. This is the
+ *    than a compromise. 52 owned string values appear as literals on 502
+ *    places across the tree. `'sk_SK'` alone is 132 of them and `'en'` 48:
+ *    a locale code, the default language, spelled in seed data, translations
+ *    and URL tests, which is data and not a second owner. A gate with 502
+ *    exemptions is not a gate. 502 is a CEILING: every consolidation lowers it,
+ *    and the gate refuses the 503rd.
+ * 3. **The declaration count must not rise.** Ratchet at 238/202. This is the
  *    rule that catches the cheapest wrong fix — "there are two names for this,
  *    let me add a third" — which is the complaint that started all of this.
  *
  * ## The counting definition is the test, not a comment in it
  *
  * A regex over this tree finds 6 constants, not 414, because the tree writes
- * typed constants (`private const string ADMIN_PATH = '/mark';`). A regex is
+ * typed constants (`private const string MARKER = '.migrations-applied';`). A regex is
  * also wrong in the other direction: it matches constants inside comments,
  * which this tree is full of because it documents its constants at length. So
  * this test tokenises. Two traps are encoded in `constantDeclarations()` and
@@ -129,43 +129,60 @@ final class NameOwnershipContractTest extends TestCase
     private const array GATE_FILES = [
         'tests/Architecture/NameOwnershipContractTest.php',
         'tests/Architecture/MetricRegistryResolutionTest.php',
+        // Task 2.7's CSS gate. It needs the theme names to measure ownership
+        // and a handful of constants to hold its exceptions; counting those
+        // would let the next theme edit move a ceiling that exists to measure
+        // PRODUCTION spellings. Rule 1 still reads this file.
+        'tests/Theme/ThemeClassOwnershipTest.php',
     ];
 
     /**
      * Rule 2 — measured 2026-10-17 on the tracked scope. A ceiling, not a list.
      *
-     * Was 533. Then 532, when `AdminLayout::markCssLinks()` started reading
-     * `ThemeResolver::ADMIN_THEME` instead of `'moonshine'`. Then 531: moving
+     * Was 533, then 532 after `AdminLayout::markCssLinks()` started reading
+     * `ThemeResolver::ADMIN_THEME` instead of `'moonshine'` and moving
      * `AdminRoutePolicy` and `Permissions` into `Modules\Core\Domain` deleted
-     * Cardboard's local copy of the admin permission table outright, which is
-     * what this ceiling was invented to make possible.
+     * Cardboard's local copy of the admin permission table.
      *
-     * Now 532, and that is a real one: `/mark/settings/modules` is spelled in
-     * the card that links to it and in the POST action that handles it, because
-     * the router does not resolve a route name from a card link. Raising the
-     * ceiling for a path the tree must spell twice is not a trade — the ceiling
-     * exists to make the third spelling impossible, and this is the second.
+     * Then 514, and that is work rather than an accounting change: task 2.2
+     * made `QuestionsAdminAction` read `Question::STATUS_*` in both count maps
+     * and `CommentsMetric` plus `CommentsAdminAction` read
+     * `Comment::STATUS_*`, retiring 18 owned literals.
+     *
+     * Now 502: task 0.3 removed the two `ADMIN_PATH` constants and the three
+     * call sites that retyped `'/mark'` beside them. `AdminRoutePolicy` still
+     * declares the default (`DEFAULT_PREFIX`), so the value stays owned and
+     * the 31 remaining `/mark` literals are still counted — the gate must not
+     * lose sight of a value just because its owner became configurable.
+     * The number is measured, the direction is down, and the gate files' own
+     * literals (the exemption reasons) are excluded from it.
      */
-    private const int MAX_LITERAL_PLACES = 532;
+    private const int MAX_LITERAL_PLACES = 502;
 
     /**
      * Rule 3 — measured 2026-10-17 on the tracked scope.
      *
      * 241 → 242 for `ModuleTreeState::IGNORED`, the list of directory prefixes
-     * excluded from a drift comparison. One constant that made the comparison
-     * correct in one place instead of two: the `modules` card and the
-     * `/mark/settings/modules` page read the same reader, and a second copy of
-     * the exclusion list is how they would have drifted — which is the entire
-     * subject of this gate. Recorded here rather than folded silently into a
-     * ceiling that reads like a coincidence.
+     * excluded from a drift comparison; then down to 240 when the gate files
+     * left the count. Then 239: the theme gate's `UNPREFIXED_ALLOWED`
+     * list was deleted when PHPStan showed it was an empty array no value
+     * could ever match. Removing a constant that guarded nothing is the same
+     * direction this ratchet exists to enforce.
+     *
+     * Now 238: task 0.3 deleted `ADMIN_PATH` from the Settings provider (and
+     * its installed slice) and `AdminRoutePolicy` added `DEFAULT_PREFIX` in
+     * its place — one default for one panel, not two spellings of one name.
      */
-    private const int MAX_DECLARATIONS = 240;
+    private const int MAX_DECLARATIONS = 238;
 
     /**
      * 203 → 204 with MAX_DECLARATIONS: `ModuleTreeState::IGNORED` is a name as
      * well as a declaration, and both ceilings moved for the same one constant.
+     * Then 202: deleting `UNPREFIXED_ALLOWED` took a name with it. It stays 202
+     * after task 0.3 — `ADMIN_PATH` left and `DEFAULT_PREFIX` arrived, so the
+     * declaration count fell while the distinct-name count did not.
      */
-    private const int MAX_NAMES = 203;
+    private const int MAX_NAMES = 202;
 
     /**
      * Rule 1. A value is the thing two owners disagree about, so the assertion
@@ -260,7 +277,7 @@ final class NameOwnershipContractTest extends TestCase
     /**
      * Rule 2. Every place an owned string value is spelled out as a literal
      * somewhere it does not own. The ceiling is what makes this a gate rather
-     * than a wish: 531 today, and the only legal direction is down.
+     * than a wish: 502 today, and the only legal direction is down.
      */
     #[Test]
     public function ownedValuesAreNotSpelledAsLiteralsMoreOftenThanTheCeiling(): void
@@ -289,8 +306,8 @@ final class NameOwnershipContractTest extends TestCase
     {
         // A ruler does not measure itself. This file holds the ceilings, so
         // counting its own constants would mean the gate's next edit — including
-        // its own approval list — moves the number it is meant to hold. Rules 1
-        // and 2 still read it.
+        // its own approval list — moves the number it is meant to hold. Rule 1
+        // still reads it, so a duplicated value in a gate is still caught.
         //
         // The same exclusion covers every other file in this directory, and that
         // is a deliberate widening rather than a convenience: a gate that exempts
@@ -340,6 +357,14 @@ final class NameOwnershipContractTest extends TestCase
         $owners = [];
 
         foreach ($this->declarations() as $declaration) {
+            // Rule 1 reads the gates; the ceiling does not. A gate constant
+            // naming its own subject (`KERNEL_VOCABULARY = 'st'`) would
+            // otherwise turn every production default argument into a literal
+            // owned by the gate, and raise the ceiling for measuring the tree.
+            if (in_array($declaration['file'], self::GATE_FILES, true)) {
+                continue;
+            }
+
             if (null === $declaration['value'] || !$this->isQuotedString($declaration['value'])) {
                 continue;
             }
@@ -352,6 +377,19 @@ final class NameOwnershipContractTest extends TestCase
 
         foreach ($this->files() as $file) {
             $relative = $this->relative($file);
+
+            // The gates are excluded from the CEILING, not from rule 1. The
+            // remaining entries in MULTI_NAME_EXEMPTIONS are necessarily
+            // string literals spelled in this file, and a ceiling that the
+            // ledger's own reasons inflate can never fall again. Recording a
+            // reason is what makes a collision tolerated; counting the
+            // tolerance as duplication is a ratchet that tightens itself every
+            // time someone writes down WHY. Rule 1 still reads these files,
+            // so a duplicated value declared by a gate is still caught.
+            if (in_array($relative, self::GATE_FILES, true)) {
+                continue;
+            }
+
             $owner = $this->ownerKey($relative);
 
             foreach ($this->stringLiterals($file) as $literal) {
@@ -411,23 +449,6 @@ final class NameOwnershipContractTest extends TestCase
 
                 // Build output: copied bytes from the frontend, not declarations.
                 if (str_starts_with($path, APP_BASE_PATH . '/public/dist/')) {
-                    continue;
-                }
-
-                // The gates, for rule 2's ceiling. Same reasoning as rule 3's
-                // exemption and for the same reason it has to be this file: an
-                // exemption is keyed by the value it excuses, so the five
-                // remaining entries in MULTI_NAME_EXEMPTIONS are necessarily
-                // five string literals spelled in this file — and a ceiling
-                // that the ledger's own reasons inflate can never fall again.
-                // Recording a reason is what makes a collision tolerated;
-                // making the tolerance count as duplication is a ratchet that
-                // tightens itself every time someone writes down WHY.
-                if (in_array(
-                    $this->relative($path),
-                    self::GATE_FILES,
-                    true,
-                )) {
                     continue;
                 }
 
