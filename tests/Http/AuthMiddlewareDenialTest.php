@@ -4,8 +4,6 @@ declare(strict_types = 1);
 
 namespace Tests\Http;
 
-use Modules\Audit\Infrastructure\Persistence\Migrations\AuditDatabaseMigrator;
-use Modules\Audit\Interfaces\HTTP\AuditServices;
 use Modules\Core\Domain\AuthIdentity;
 use Modules\Core\Domain\Contracts\AuthProvider;
 use Modules\Core\Infrastructure\Http\Request;
@@ -14,10 +12,6 @@ use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Core\Interfaces\HTTP\Middleware\AuthMiddleware;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
-use Modules\Outbox\Domain\SecurityEvents;
-use Modules\Outbox\Infrastructure\Persistence\Migrations\OutboxDatabaseMigrator;
-use Modules\Outbox\Interfaces\HTTP\OutboxServices;
-use Modules\Users\Interfaces\HTTP\UsersAuthProvider;
 use PDO;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -102,17 +96,14 @@ final class AuthMiddlewareDenialTest extends TestCase
 
         AppPaths::resetInstance();
         DatabaseConnectionManager::resetInstance();
-        OutboxServices::reset();
-        AuditServices::reset();
+        self::resetOutboxServices();
+        self::resetAuditServices();
 
-        $null = new class () implements CliOutput {
-            public function writeln(string $message): void
-            {
-            }
-        };
+        $outbox = DatabaseConnectionManager::instance()->connection('outbox');
+        $audit = DatabaseConnectionManager::instance()->connection('audit');
 
-        (new OutboxDatabaseMigrator(DatabaseConnectionManager::instance()->connection('outbox')))->run($null);
-        (new AuditDatabaseMigrator(DatabaseConnectionManager::instance()->connection('audit')))->run($null);
+        self::migrateOutbox($outbox);
+        self::migrateAudit($audit);
 
         // The real pairing, from the one home that declares it. A handler map
         // assembled here by hand would prove the handler works and nothing about
@@ -126,17 +117,26 @@ final class AuthMiddlewareDenialTest extends TestCase
 
     protected function tearDown(): void
     {
-        OutboxServices::reset();
-        AuditServices::reset();
+        self::resetOutboxServices();
+        self::resetAuditServices();
         AppPaths::resetInstance();
         DatabaseConnectionManager::resetInstance();
 
-        foreach (glob($this->dir . '/*') ?: [] as $file) {
-            unlink($file);
-        }
+        // `setUp()` skips the class before it allocates the directory, so on a
+        // tree without the optional modules this runs with `$dir` still empty —
+        // and `glob('' . '/*')` is `/*`, the filesystem root. An unguarded
+        // teardown therefore asked `unlink()` to delete every entry at `/`,
+        // which failed loudly here (`unlink(/bin): Permission denied`) only
+        // because those entries are directories. Guard the cleanup by the
+        // thing it cleans: there is nothing to clean until the directory exists.
+        if ('' !== $this->dir) {
+            foreach (glob($this->dir . '/*') ?: [] as $file) {
+                unlink($file);
+            }
 
-        if (is_dir($this->dir)) {
-            rmdir($this->dir);
+            if (is_dir($this->dir)) {
+                rmdir($this->dir);
+            }
         }
 
         $this->restoreEnv('DB_OUTBOX', $this->previousDbOutbox);
@@ -154,7 +154,7 @@ final class AuthMiddlewareDenialTest extends TestCase
 
         self::assertSame(403, $response->getStatusCode(), 'An identity without the permission must be refused.');
 
-        $result = OutboxServices::processor()->process();
+        $result = self::processOutbox();
 
         self::assertSame(
             ['processed' => 1, 'failed' => 0],
@@ -200,7 +200,7 @@ final class AuthMiddlewareDenialTest extends TestCase
         $keys = array_keys($payload);
         sort($keys);
 
-        $declared = SecurityEvents::payloadKeys(SecurityEvents::AUTHZ_DENIED);
+        $declared = self::declaredPayloadKeys(self::authzDenied());
         sort($declared);
 
         // `SecurityEvents::payloadKeys()` exists so "an emit site cannot quietly
@@ -222,7 +222,7 @@ final class AuthMiddlewareDenialTest extends TestCase
     {
         // The exact shape the defect took: the provider seam takes a string, so a
         // string that no handler claims must be refused at the seam.
-        (new UsersAuthProvider())->noteEvent('authz.denied', [
+        self::noteEvent('authz.denied', [
             'path'     => self::ADMIN_PATH,
             'required' => self::REQUIRED,
             'userId'   => 'u-42',
@@ -238,7 +238,7 @@ final class AuthMiddlewareDenialTest extends TestCase
         );
 
         // The other half: the guard must not refuse the events that ARE ours.
-        (new UsersAuthProvider())->noteEvent(SecurityEvents::AUTHZ_DENIED, [
+        self::noteEvent(self::authzDenied(), [
             'path'     => self::ADMIN_PATH,
             'required' => self::REQUIRED,
             'userId'   => 'u-42',
@@ -262,6 +262,130 @@ final class AuthMiddlewareDenialTest extends TestCase
         // inactive identity before any policy is consulted, so there is no policy
         // decision to record. The model event says so in its own description.
         self::assertSame([], $this->outboxRows());
+    }
+
+    // ---------------------------------------------------------------------
+    // OWNERS OF THE OPTIONAL MODULES
+    //
+    // Outbox, Audit and Users are optional: `src/Modules/<Name>` is gitignored
+    // operator state, so a clone carries Core + Database and nothing else. A
+    // `use Modules\Outbox\…` here therefore made this file 16 `class.notFound`
+    // errors on every kernel-only checkout — the analyser cannot know the class
+    // is optional, it only knows the reference is unconditional.
+    //
+    // So these three modules are named inline behind `class_exists()` and never
+    // imported. That is the idiom the kernel middleware already uses for the
+    // same three classes (`AuthMiddleware::recordDenial()`,
+    // `RateLimitMiddleware::notifyTripped()`), it keeps every call site typed,
+    // and it costs nothing at runtime: `setUp()` already skips the whole class
+    // when a module is missing, so a guard that does not fire is the normal
+    // path and one that fires means the skip did not happen.
+    // ---------------------------------------------------------------------
+
+    private static function resetOutboxServices(): void
+    {
+        if (!class_exists(\Modules\Outbox\Interfaces\HTTP\OutboxServices::class)) {
+            return;
+        }
+
+        \Modules\Outbox\Interfaces\HTTP\OutboxServices::reset();
+    }
+
+    private static function resetAuditServices(): void
+    {
+        if (!class_exists(\Modules\Audit\Interfaces\HTTP\AuditServices::class)) {
+            return;
+        }
+
+        \Modules\Audit\Interfaces\HTTP\AuditServices::reset();
+    }
+
+    /** @return array{processed: int, failed: int} */
+    private static function processOutbox(): array
+    {
+        // The guard is written here, not in a helper, and that is load-bearing:
+        // PHPStan narrows "this class exists" only from a `class_exists()` call
+        // in the same scope. `self::assertInstalled(OutboxServices::class)` looks
+        // tidier and fails — the analyser still sees an unknown class on the
+        // next line. Same reason `AuthMiddleware::recordDenial()` inlines it.
+        if (!class_exists(\Modules\Outbox\Interfaces\HTTP\OutboxServices::class)) {
+            self::notInstalled('Outbox');
+        }
+
+        return \Modules\Outbox\Interfaces\HTTP\OutboxServices::processor()->process();
+    }
+
+    private static function migrateOutbox(PDO $connection): void
+    {
+        if (!class_exists(\Modules\Outbox\Infrastructure\Persistence\Migrations\OutboxDatabaseMigrator::class)) {
+            self::notInstalled('Outbox');
+        }
+
+        (new \Modules\Outbox\Infrastructure\Persistence\Migrations\OutboxDatabaseMigrator($connection))
+            ->run(self::nullOutput());
+    }
+
+    private static function migrateAudit(PDO $connection): void
+    {
+        if (!class_exists(\Modules\Audit\Infrastructure\Persistence\Migrations\AuditDatabaseMigrator::class)) {
+            self::notInstalled('Audit');
+        }
+
+        (new \Modules\Audit\Infrastructure\Persistence\Migrations\AuditDatabaseMigrator($connection))
+            ->run(self::nullOutput());
+    }
+
+    /** @param array<string, mixed> $context */
+    private static function noteEvent(string $event, array $context): void
+    {
+        if (!class_exists(\Modules\Users\Interfaces\HTTP\UsersAuthProvider::class)) {
+            self::notInstalled('Users');
+        }
+
+        (new \Modules\Users\Interfaces\HTTP\UsersAuthProvider())->noteEvent($event, $context);
+    }
+
+    private static function authzDenied(): string
+    {
+        if (!class_exists(\Modules\Outbox\Domain\SecurityEvents::class)) {
+            self::notInstalled('Outbox');
+        }
+
+        return \Modules\Outbox\Domain\SecurityEvents::AUTHZ_DENIED;
+    }
+
+    /** @return list<string> */
+    private static function declaredPayloadKeys(string $eventType): array
+    {
+        if (!class_exists(\Modules\Outbox\Domain\SecurityEvents::class)) {
+            self::notInstalled('Outbox');
+        }
+
+        return \Modules\Outbox\Domain\SecurityEvents::payloadKeys($eventType);
+    }
+
+    private static function nullOutput(): CliOutput
+    {
+        return new class () implements CliOutput {
+            public function writeln(string $message): void
+            {
+            }
+        };
+    }
+
+    /**
+     * @return never
+     *
+     * A module this class was supposed to be skipped without is a broken skip,
+     * not a reason to pass quietly: say which one, by name.
+     */
+    private static function notInstalled(string $module): void
+    {
+        throw new \RuntimeException(sprintf(
+            'The %s module is not installed, but setUp() did not skip this test — the module guard'
+            . ' and the module list have drifted apart.',
+            $module,
+        ));
     }
 
     private function middleware(AuthIdentity $identity): AuthMiddleware
