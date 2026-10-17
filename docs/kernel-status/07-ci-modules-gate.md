@@ -1747,3 +1747,185 @@ them served.
   served, seeded from, or deleted is a decision, not a wiring change.
 - The standing items are unchanged: upstream owns the `Blog` name, no Lekalo
   adapter, and the module-owns-its-slice attempt still reverted.
+
+---
+
+## Boot 44 — the question that began it, measured
+
+The request was four words long: *"mam vela CONST premennych a neviem ci je to
+OK pristup"*. This round answers it, and the answer is not the one the question
+assumed.
+
+### What the tree actually had
+
+414 `const` declarations across 698 files, 203 distinct names. Measured four
+ways, and three of them were wrong before they were right:
+
+| measurement | declarations | names |
+|---|---|---|
+| the plan's regex | 414 | 203 |
+| tokenizer, first attempt | 320 | 149 |
+| tokenizer, after fixing `T_ARRAY` | 408 | 201 |
+| tokenizer, after fixing untyped consts | **414** | **203** |
+
+The plan's numbers were correct and its counting method was not. A regex on this
+tree finds 6 constants, because the tree writes typed ones
+(`private const string ADMIN_PATH = '/mark';`), and it also matches constants
+inside docblocks, which a tree that documents its constants at length has many of.
+The tokenizer lost them the other way: `array` is `T_ARRAY` and not `T_STRING`,
+so every `const array` disappeared (88 of them), and an untyped `const NAME = …`
+has a name that is itself a `T_STRING`, so a loop consuming `T_STRING` as "a type"
+walks past the name onto the `=` (6 more).
+
+Every one of those three errors made the count **smaller**, which is the
+dangerous direction: a gate built on a wrong number is green on a tree that
+violates it.
+
+### The answer
+
+**Constants are not the problem, and 414 of them is not too many.** The large
+majority are private technical invariants — `CoverGenerator::WIDTH`,
+`CloudinaryProvider::MAX_RETRIES`, `AuthService::IDLE_TIMEOUT` — which are facts
+about the code, not configuration and not identifiers. Those are correct and were
+left alone. The count is a signal only if something behind it is wrong.
+
+What the round found instead, measured before anything was written:
+
+| family | places | verdict |
+|---|---|---|
+| `/mark` paths | 60 | **not duplicates** — mostly `#[Route(path: '/mark/…')]`, i.e. owners |
+| theme names | 313 | 257 of them are locale codes and slugs — data, not identifiers |
+| statuses | 60 | partly SQL DDL, where a constant cannot go; partly coincidence |
+| event names | 7 | **all seven are `assertSame` in tests** — the subject of the assertion |
+| permissions | 19 | **a deliberate local copy**, documented, guarding it changes the design |
+
+Of 533 places where an owned value is spelled as a literal, **the plan expected
+to consolidate 51 values. Four turned out to be consolidation work at all.** Two
+of those four were one line each. The rest were declarations, seed data, or test
+assertions — writing a constant there would make the code worse.
+
+### What was actually wrong, and fixed
+
+**Cardboard kept two copies of the access-control table.** `AdminRoutePolicy`
+and `Permissions` were `Modules\Users\Domain`, and no single module could reach
+them: `Cardboard` held a local copy of both tables to stay a leaf for the
+install-closure scanner, the kernel's `ThemeResolver` duplicated
+`isAdminPath()` line for line, and `Outbox` named the class inline behind
+`class_exists`. Both copies are gone. The constraint they existed to satisfy does
+not survive the fix: `ModuleCatalog::importsModule()` matches `^use
+Modules\<Name>\` and only ever counted FEATURE modules, Core is the kernel and is
+never installed or removed, and Cardboard already imported `Modules\Core\…` in
+ten files. The one thing that could not cross the line was `permits(User $user)`
+— zero callers, and a body that was already `$user->hasPermission($permission)`,
+so it duck-types the session object the way `BulkEntityGate` does.
+
+Cardboard is still a leaf: `importedBy('Users')` names 15 files and **none is
+Cardboard's**.
+
+| | before | after |
+|---|---|---|
+| duplicate access-control tables | 2 | **0** |
+| `ThemeResolver` duplicating `isAdminPath()` | yes | no |
+| `AdminLayout` hardcoding the admin theme | `'moonshine'` | `ThemeResolver::ADMIN_THEME` |
+| literal places (ratchet) | 533 | **532** |
+
+### The gate, and the two ceilings that moved
+
+`NameOwnershipContractTest` holds three rules, and only one is absolute:
+
+| rule | shape | exemptions |
+|---|---|---|
+| a string value must not have 2+ names | **absolute** | 5, each with a reason, and the list fails when an entry stops applying |
+| an owned value must not be spelled as a literal elsewhere | **ratchet at 532** | — |
+| declarations and names must not rise | **ratchet at 242 / 204** | — |
+
+Rule 2 is a ceiling and not a prohibition because the prohibition was measured
+and rejected: 55 owned values appear as literals on 532 places, and `'en'` alone
+is 62 of them — the default language code, spelled 117 times, belonging in no
+constant anyone would name. A gate with 532 exemptions is not a gate. Rule 1
+holds for strings only, because `60` is claimed by nine names and `5` by seven,
+and that is not a second owner but the same number meaning different things (60
+seconds, 60 per page, 60 rows).
+
+Negative controls, all red, all reverted:
+
+| control | message |
+|---|---|
+| two constants, one value | `'probe-shared-value' <- PROBE_A (…:9) / PROBE_B (…:11)` |
+| a value written as a literal | `534 places …; the ceiling is 533` |
+| one constant added | `declarations rose above 241 (now 244)` |
+| an exemption that stopped applying | `lists a value that no longer has two names` |
+| a docblock saying "class" | resolved to `…\Services\was` |
+
+Scope is git-tracked files only, verified identical on both shapes: 407 files,
+243 declarations, 205 names, 5 multi-name values, 532 places. A scope covering
+the whole tree would make the result depend on which modules a checkout happens
+to have installed — the defect `ModelCatalogueContractTest` was fixed for in this
+same round.
+
+### Four defects a green tree was hiding
+
+Each of these was invisible to every gate in this repository until something
+asked the question directly.
+
+1. **The tree ran code that had been deleted.** `src/Modules/*` is gitignored
+   operator state; the catalogue is committed and `module:add` copies it in.
+   Nothing compared them. After the permission table moved, Cardboard's and
+   Outbox's installed slices still carried the old code while phpstan, the suite,
+   the ratchet and the admin smoke were all green.
+2. **`tearDown()` reached for a module a skip had already disowned.** Two files,
+   one shape: a skipped test still runs `tearDown()`, and both touched classes
+   that do not exist on a kernel-only checkout. One of them globbed an empty
+   directory — which is `/*`, the filesystem root — and asked `unlink()` to delete
+   every entry there. It failed loudly only because `/bin` is a directory.
+3. **A metric provider vanished in silence.** `MetricRegistry::resolveFqcn()`
+   matched the word `class` anywhere in a file, docblocks included, so a provider
+   resolved to `…\Services\was`, `require_once` found nothing, and the caller
+   returns `void`. Ten cards registered, the eleventh missing, eight CI jobs
+   green. The card that found it was reporting on the drift from item 1 while
+   itself not being on the dashboard.
+4. **The model/catalogue check compared installed against catalogued.** The
+   catalogue is the tracked truth; `isInstalled()` asks whether a slice exists.
+   So the assertion was red on every kernel-only checkout — which is the whole
+   point of a kernel-only checkout — and green in the full tree by coincidence.
+
+### The measurement that killed the plan's biggest task
+
+Task 2.1 named four path values with owners. `/mark` turned out to appear in
+~50 production files, and the leading occurrences are route declarations:
+
+```php
+#[Route(path: '/mark/locales', method: 'GET', name: 'mark.locales')]
+```
+
+A screen **declares its own address**. That is not a duplicate — that file is
+the owner. Consolidating it would have meant adding nine module dependencies on
+`Users` and turning every route declaration into
+`AdminRoutePolicy::PREFIX . '/locales'`, to fix a defect that does not exist.
+
+The duplication that IS real is smaller and belongs to the router: a redirect or
+an href repeats the **route name the same file just declared**. `Router::url()`
+exists; actions cannot reach it, because they are constructed without it and
+there is no static accessor. That is an architectural decision, recorded as task
+2.8 and not done here.
+
+### What this round did not close
+
+- **The href/route-name duplication is unfixed.** It needs `Router` inside
+  actions, which is a decision about construction, not a rename. Recorded as 2.8.
+- **`Scratch` is permanently "not installed".** It is a lifecycle fixture the
+  tests install and remove, and the catalogue lists it, so the third slot of the
+  card's subtitle is always occupied. The number is true and the fixture is a
+  fixture; neither side is wrong, and the alternative was to special-case a
+  fixture into a gate.
+- **Reinstall drops operator edits inside `src/Modules/`.** That is why it is a
+  POST behind CSRF and a button on drifted rows only, but it is still a button
+  that deletes. No confirmation dialog exists.
+- **Locale codes and route slugs remain literals** — 257 of the 532. Measured
+  and deliberately left: `LocaleService::SK_SK` would be a tautology wearing a
+  refactor's coat.
+- **No PHP adapter exists for the Lekalo model.** Unchanged, and unchanged in
+  consequence: the model states things the code does not do, and nothing in
+  Lekalo notices. `lekalo doctor` still reports `adapters.inventory: blocked`.
+- The standing items are unchanged: upstream owns the `Blog` name, and the
+  module-owns-its-slice attempt is still reverted.
