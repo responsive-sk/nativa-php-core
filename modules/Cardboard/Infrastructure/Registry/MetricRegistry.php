@@ -94,10 +94,19 @@ final class MetricRegistry
         $namespace = '';
         $className = '';
 
-        if (preg_match('/namespace\s+([\w\\\\]+)/', $content, $nsMatch)) {
+        if (preg_match('/^\s*namespace\s+([\w\\\\]+)\s*;/m', $content, $nsMatch)) {
             $namespace = $nsMatch[1];
         }
-        if (preg_match('/class\s+(\w+)/', $content, $cnMatch)) {
+
+        // Anchored to a declaration line, and `final`/`readonly` optional.
+        //
+        // The unanchored `/class\s+(\w+)/` this replaces matched the word `class`
+        // ANYWHERE, including inside a docblock — a provider whose comment said
+        // "…under Tooling rather than Cardboard" resolved to the class `was`,
+        // `require_once` never found it, and `loadAndRegister` returned false.
+        // The provider was then dropped in silence: 10 cards registered, the
+        // tenth absent, and nothing said so. Measured 2026-10-17.
+        if (preg_match('/^\s*(?:final\s+)?(?:readonly\s+)?class\s+(\w+)/m', $content, $cnMatch)) {
             $className = $cnMatch[1];
         }
 
