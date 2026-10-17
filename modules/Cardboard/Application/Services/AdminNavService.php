@@ -220,14 +220,18 @@ final readonly class AdminNavService
      * Local copy of the admin-route permission table (permission strings
      * only, no Users import — see CardboardServices note about the single
      * admin module staying a leaf for the install-closure scanner).
+     *
+     * It is a COPY, not a second owner: `CardboardPermissionCopyTest` asks
+     * `AdminRoutePolicy` for every prefix's answer and fails when this table
+     * drifts, including a prefix the policy added and this copy never got.
+     * Kept as a method so the guard can read the whole table without inventing
+     * a public API or another permission constant.
+     *
+     * @return array<string, string>
      */
-    private static function requiredPermission(string $path): ?string
+    private static function permissionTable(): array
     {
-        if ('/mark' !== $path && !str_starts_with($path, '/mark/')) {
-            return null;
-        }
-
-        $table = [
+        return [
             '/mark' => 'mark.access',
             '/mark/articles' => 'content.manage',
             '/mark/pages' => 'content.manage',
@@ -246,7 +250,15 @@ final readonly class AdminNavService
             '/mark/permissions' => 'roles.manage',
             '/mark/audit' => 'roles.manage',
         ];
+    }
 
+    private static function requiredPermission(string $path): ?string
+    {
+        if ('/mark' !== $path && !str_starts_with($path, '/mark/')) {
+            return null;
+        }
+
+        $table = self::permissionTable();
         $best = null;
         $bestLength = -1;
 
