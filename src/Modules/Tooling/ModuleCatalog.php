@@ -11,7 +11,8 @@ use Modules\Core\Infrastructure\Paths\AppPaths;
  *
  * Two roots, two directions: the CATALOGUE (`<root>/modules/<Name>/`, or
  * `<root>/modules/<Group>/<Name>/` once a module is filed under a group) is
- * where a module waits to be installed; the TREE (`<root>/src/Modules/<Name>/`)
+ * where a module waits to be installed; the TREE (`<root>/src/Modules/<Name>/`,
+ * or `<root>/src/Modules/<Group>/<Name>/`)
  * is where an installed module lives. `manifest()` reads either side — the scan
  * is identical, only the root differs — so `module:show` reports what WOULD be
  * installed before anything is copied.
@@ -22,8 +23,9 @@ use Modules\Core\Infrastructure\Paths\AppPaths;
  * keeps `catalogued()` from listing it and `module:add Themes` from copying it.
  *
  * The install target never moves with the catalogue: a grouped module still
- * installs to `src/Modules/<Name>/` and still owns `Modules\<Name>`, so nothing
- * downstream (discovery, ThemeRegistry, `lekalo/modules/<name>/`) can tell.
+ * installs to `src/Modules/<Group>/<Name>/` and owns `Modules\<Group>\<Name>`, so
+ * the two trees always have the same shape. Names that are IDENTITIES rather
+ * than paths — the theme name `erik`, `lekalo/modules/erik/` — do not move.
  *
  * The kernel's own modules (`Core`, `Database`) are never catalogue entries
  * and never install targets: they are the tree, not something in it.
@@ -131,16 +133,62 @@ final readonly class ModuleCatalog
 
     /**
      * Installed feature modules: every subdirectory of src/Modules except the
-     * kernel's own.
+     * kernel's own, wherever it is filed. A group directory is not a module;
+     * its children are.
      *
      * @return list<string>
      */
     public function installed(): array
     {
-        return array_values(array_filter(
+        $names = array_values(array_filter(
             $this->childDirs($this->modulesDir),
-            static fn (string $name): bool => !in_array($name, self::KERNEL_MODULES, true),
+            static fn (string $name): bool => !in_array($name, self::KERNEL_MODULES, true)
+                && !in_array($name, self::catalogueGroups(), true),
         ));
+
+        foreach (self::catalogueGroups() as $group) {
+            foreach ($this->childDirs($this->modulesDir . DIRECTORY_SEPARATOR . $group) as $name) {
+                $names[] = $name;
+            }
+        }
+
+        $names = array_values(array_unique($names));
+        sort($names);
+
+        return $names;
+    }
+
+    /**
+     * Where an installed module lives: `src/Modules/<Name>/`, or the grouped
+     * `src/Modules/<Group>/<Name>/`.
+     *
+     * Constructive, not a check: a module that is not installed yet still
+     * resolves to the path `module:add` should copy to. The group comes from
+     * the catalogue (or from an already-installed grouped copy), so the two
+     * trees have the same shape and the installer never has to guess.
+     */
+    public function installedPath(string $name): string
+    {
+        $base = $this->modulesDir . DIRECTORY_SEPARATOR;
+        $group = $this->groupOf($name);
+
+        return null === $group
+            ? $base . $name
+            : $base . $group . DIRECTORY_SEPARATOR . $name;
+    }
+
+    /**
+     * The namespace an installed module owns — the part `importedBy()` looks
+     * for and the autoloader resolves: `Modules\<Name>` or
+     * `Modules\<Group>\<Name>`.
+     */
+    public function namespaceOf(string $name): string
+    {
+        $group = $this->groupOf($name);
+
+        return null === $group
+            ? 'Modules\\' . $name
+            : 'Modules\\' . $group . '\\' . $name;
     }
 
     public function isCatalogued(string $name): bool
@@ -150,7 +198,13 @@ final readonly class ModuleCatalog
 
     public function isInstalled(string $name): bool
     {
-        return is_dir($this->modulesDir . DIRECTORY_SEPARATOR . $name);
+        // A group directory exists in src/Modules too (`Themes/` holds four
+        // slices), so existence alone would report the GROUP as installed.
+        if (in_array($name, self::catalogueGroups(), true)) {
+            return false;
+        }
+
+        return is_dir($this->installedPath($name));
     }
 
     /**
@@ -189,7 +243,11 @@ final readonly class ModuleCatalog
     {
         $this->assertValidName($name);
 
-        $dir = $this->modulesDir . DIRECTORY_SEPARATOR . $name;
+        if (in_array($name, self::catalogueGroups(), true)) {
+            throw new \RuntimeException(sprintf("'%s' is a module GROUP, not an installed module.", $name));
+        }
+
+        $dir = $this->installedPath($name);
 
         if (!is_dir($dir)) {
             throw new \RuntimeException(sprintf("Module '%s' is not installed.", $name));
@@ -203,7 +261,7 @@ final readonly class ModuleCatalog
      *
      * The catalogue (`modules/<Name>/`, or `modules/<Group>/<Name>/`) is the SOURCE: it is tracked in git,
      * it is what `module:add` copies, and it is the side an author edits. The
-     * slice (`src/Modules/<Name>/`) is generated and untracked, so nobody
+     * slice (`src/Modules/<Name>/`, or `src/Modules/<Group>/<Name>/`) is generated and untracked, so nobody
      * compares them — which is exactly how a fix lands in the catalogue and
      * never reaches the running tree, or the other way round. This returns
      * the file-level answer, with counts and names, so `module:show` can
@@ -225,7 +283,7 @@ final readonly class ModuleCatalog
         $installed = $this->isInstalled($name);
 
         $catalog = null !== $cataloguePath ? $this->relativeFiles($cataloguePath) : [];
-        $slice = $installed ? $this->relativeFiles($this->modulesDir . DIRECTORY_SEPARATOR . $name) : [];
+        $slice = $installed ? $this->relativeFiles($this->installedPath($name)) : [];
 
         $onlyInCatalog = array_keys(array_diff_key($catalog, $slice));
         $onlyInInstalled = array_keys(array_diff_key($slice, $catalog));
@@ -311,7 +369,7 @@ final readonly class ModuleCatalog
                 continue;
             }
 
-            $dir = $this->modulesDir . DIRECTORY_SEPARATOR . $installed;
+            $dir = $this->installedPath($installed);
             foreach ($this->phpFiles($dir) as $file) {
                 $content = file_get_contents($file);
 
@@ -569,16 +627,58 @@ final readonly class ModuleCatalog
     {
         // preg_match_all returns the COUNT (or false), never 1 — compare
         // against false, not against 1, or every multi-import file scans clean.
-        if (false === preg_match_all('/^use\s+Modules\\\\(\w+)/m', $content, $matches)) {
+        //
+        // The second segment matters once a module is grouped: a theme's own
+        // files import `Modules\\Themes\\Erik\\…`, so reading only the first
+        // segment would turn its group into a dependency named `Themes` — a
+        // module that does not exist and can never be installed.
+        if (false === preg_match_all('/^use\s+Modules\\\\(\w+)(?:\\\\(\w+))?/m', $content, $matches)) {
             return [];
         }
 
-        return array_values(array_unique($matches[1]));
+        $modules = [];
+
+        foreach ($matches[1] as $index => $first) {
+            if (!in_array($first, self::catalogueGroups(), true)) {
+                $modules[] = $first;
+
+                continue;
+            }
+
+            $second = $matches[2][$index] ?? '';
+
+            if ('' !== $second) {
+                $modules[] = $second;
+            }
+        }
+
+        return array_values(array_unique($modules));
     }
 
     private function importsModule(string $content, string $name): bool
     {
-        return 1 === preg_match('/^use\s+Modules\\\\' . preg_quote($name, '/') . '\\\\/m', $content);
+        // `preg_quote()` already escapes the namespace separators; escaping
+        // them first would ask the regex for a double backslash.
+        return 1 === preg_match('/^use\s+' . preg_quote($this->namespaceOf($name), '/') . '\\\\/m', $content);
+    }
+
+    /**
+     * The group a module is filed under, or `null` for the flat layout. The
+     * catalogue wins; an installed grouped copy is enough for a module whose
+     * catalogue entry is gone (removal must still find its own files).
+     */
+    private function groupOf(string $name): ?string
+    {
+        foreach (self::catalogueGroups() as $group) {
+            $catalogued = $this->catalogDir . DIRECTORY_SEPARATOR . $group . DIRECTORY_SEPARATOR . $name;
+            $installed = $this->modulesDir . DIRECTORY_SEPARATOR . $group . DIRECTORY_SEPARATOR . $name;
+
+            if (is_dir($catalogued) || is_dir($installed)) {
+                return $group;
+            }
+        }
+
+        return null;
     }
 
     /**

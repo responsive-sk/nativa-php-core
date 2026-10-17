@@ -2,12 +2,12 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Griffe\Tests;
+namespace Modules\Themes\Griffe\Tests;
 
 use Modules\Core\Application\Services\AssetManager;
 use Modules\Core\Application\Services\View\InlineCss;
 use Modules\Core\Infrastructure\Paths\AppPaths;
-use Modules\Griffe\Theme\GriffeTheme;
+use Modules\Themes\Griffe\Theme\GriffeTheme;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -53,7 +53,7 @@ final class GriffeBuildFreezeTest extends TestCase
 
     protected function setUp(): void
     {
-        if (!is_dir(APP_BASE_PATH . '/src/Modules/Griffe')) {
+        if (!is_dir(APP_BASE_PATH . '/src/Modules/Themes/Griffe')) {
             $this->markTestSkipped('Griffe is not installed — the `griffe` theme ships with this module.');
         }
     }

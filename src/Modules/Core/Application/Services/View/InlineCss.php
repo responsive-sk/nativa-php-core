@@ -29,7 +29,7 @@ final class InlineCss
      */
     public static function file(string $srcRelative): string
     {
-        $path = Paths::src($srcRelative);
+        $path = Paths::moduleFile($srcRelative);
 
         if (\array_key_exists($path, self::$cache)) {
             return self::$cache[$path];

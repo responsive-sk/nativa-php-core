@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Modules\Cardboard\Application\Services;
 
-use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Tooling\ModuleCatalog;
 
 /**
@@ -133,7 +132,12 @@ final readonly class ModuleTreeState
         // `modules/<Name>/` would fail `is_dir()` and read as "identical" —
         // the page would report peace for a slice that never matched.
         $catalogued = $catalogue->cataloguePath($name);
-        $installed = ($this->installedRoot ?? AppPaths::instance()->src('Modules')) . '/' . $name;
+
+        // The installed path follows the same group as the catalogue; only a
+        // test-supplied root is joined flat, because its fixtures are flat.
+        $installed = null === $this->installedRoot
+            ? $catalogue->installedPath($name)
+            : $this->installedRoot . '/' . $name;
 
         if (null === $catalogued || !is_dir($catalogued) || !is_dir($installed)) {
             return [];

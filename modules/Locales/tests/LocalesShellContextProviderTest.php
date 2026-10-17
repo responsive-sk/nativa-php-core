@@ -195,11 +195,11 @@ final class LocalesShellContextProviderTest extends TestCase
     #[Test]
     public function theSeededGroupCoversEveryKeyTheInstalledThemeRenders(): void
     {
-        if (!class_exists(\Modules\Jednotka\Theme\JednotkaTheme::class)) {
+        if (!class_exists(\Modules\Themes\Jednotka\Theme\JednotkaTheme::class)) {
             $this->markTestSkipped('jednotka is not installed — this asserts the seam between the copy and the theme that renders it.');
         }
 
-        $constant = (new \ReflectionClass(\Modules\Jednotka\Theme\JednotkaTheme::class))->getReflectionConstant('DEFAULT_COPY');
+        $constant = (new \ReflectionClass(\Modules\Themes\Jednotka\Theme\JednotkaTheme::class))->getReflectionConstant('DEFAULT_COPY');
         $this->assertNotFalse($constant, 'The theme\'s default copy is what this compares against.');
 
         /** @var array<string, string> $rendered */

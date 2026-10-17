@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Mono\Tests;
+namespace Modules\Themes\Mono\Tests;
 
 use Modules\Core\Application\Services\AssetManager;
 use Modules\Core\Application\Services\View\InlineCss;
@@ -42,7 +42,7 @@ final class MonoBuildFreezeTest extends TestCase
 
     protected function setUp(): void
     {
-        if (!is_dir(APP_BASE_PATH . '/src/Modules/Mono')) {
+        if (!is_dir(APP_BASE_PATH . '/src/Modules/Themes/Mono')) {
             $this->markTestSkipped('Mono is not installed — the `mono` theme ships with this module.');
         }
     }

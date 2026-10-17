@@ -33,7 +33,8 @@
 # On `modules/` — and why the artifact carries the name "Modules" ONCE.
 #
 #   modules/<Name>/         the CATALOGUE: slices waiting to be installed
-#   src/Modules/<Name>/     the INSTALLED copies: what actually runs
+#   src/Modules/<Name>/     the INSTALLED copies: what actually runs (a
+#                           grouped module lives at src/Modules/<Group>/<Name>/)
 #
 # Both live in the repo; a deployment needs only the second one. Measured in
 # this tree: 12 of the 14 installed slices are BYTE-IDENTICAL to their catalogue
@@ -239,8 +240,8 @@ if [ "$WITH_CATALOGUE" = true ]; then
     while IFS= read -r name; do
         [ -n "$name" ] || continue
         slice="$(find "$DIST_DIR/modules" -mindepth 1 -maxdepth 2 -type d -name "$name" -print -quit)"
-        installed="$DIST_DIR/src/Modules/$name"
-        if [ ! -d "$installed" ]; then
+        installed="$(find "$DIST_DIR/src/Modules" -mindepth 1 -maxdepth 3 -type d -name "$name" -print -quit)"
+        if [ -z "$installed" ] || [ ! -d "$installed" ]; then
             uninstalled=$((uninstalled + 1))
         elif [ -n "$slice" ] && diff -rq "$slice" "$installed" >/dev/null 2>&1; then
             identical=$((identical + 1))

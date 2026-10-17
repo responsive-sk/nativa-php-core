@@ -34,4 +34,39 @@ final class Paths
 
         return $base . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $srcRelative);
     }
+
+    /**
+     * Absolute path of a module-declared asset (`Modules/<Name>/<tail>`),
+     * wherever the installed tree files that module — the layout may group it
+     * (`src/Modules/<Group>/<Name>/`). Delegates to `AppPaths::moduleFile()`
+     * so the view helpers and the app share one resolver; a sandbox override
+     * still answers first.
+     */
+    public static function moduleFile(string $srcRelative): string
+    {
+        if (null === self::$override) {
+            return AppPaths::instance()->moduleFile($srcRelative);
+        }
+
+        $direct = self::src($srcRelative);
+
+        if (is_file($direct) || !str_starts_with($srcRelative, 'Modules/')) {
+            return $direct;
+        }
+
+        $parts = explode('/', substr($srcRelative, strlen('Modules/')), 2);
+        $tail = $parts[1] ?? '';
+
+        if ('' === $tail) {
+            return $direct;
+        }
+
+        foreach (glob(self::src('Modules/*/' . $parts[0] . '/' . $tail)) ?: [] as $candidate) {
+            if (is_file($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return $direct;
+    }
 }

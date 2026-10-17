@@ -249,9 +249,9 @@ function printDrift(ModuleCatalog $catalog, string $name, array $drift): void
 
         case 'not-catalogued':
             out(sprintf(
-                '  drift:       installed but not catalogued — %d file(s) in src/Modules/%s/, no source in modules/',
+                '  drift:       installed but not catalogued — %d file(s) in %s/, no source in modules/',
                 $drift['installed'],
-                $name,
+                substr($catalog->installedPath($name), strlen(dirname(__DIR__)) + 1),
             ));
 
             return;

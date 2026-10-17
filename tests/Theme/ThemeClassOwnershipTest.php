@@ -233,6 +233,7 @@ final class ThemeClassOwnershipTest extends TestCase
             foreach ([
                 $base . '/modules/Themes/' . $directory . '/' . $tail,
                 $base . '/modules/' . $directory . '/' . $tail,
+                $base . '/src/Modules/Themes/' . $directory . '/' . $tail,
                 $base . '/src/Modules/' . $directory . '/' . $tail,
                 $base . '/src/' . $relative,
                 $base . '/' . $relative,

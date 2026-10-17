@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Mono\Theme;
+namespace Modules\Themes\Mono\Theme;
 
 use Modules\Core\Domain\ShellNavItem;
 use Modules\Core\Interfaces\HTTP\ContentServices;

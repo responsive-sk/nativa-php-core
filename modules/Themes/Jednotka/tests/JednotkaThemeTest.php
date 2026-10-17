@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Jednotka\Tests;
+namespace Modules\Themes\Jednotka\Tests;
 
 use Modules\Core\Application\Services\AssetManager;
 use Modules\Core\Application\Services\View\InlineJs;
@@ -13,7 +13,7 @@ use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\PageContext;
 use Modules\Core\Interfaces\HTTP\ShellContext;
 use Modules\Core\Interfaces\HTTP\ThemeRegistry;
-use Modules\Jednotka\Theme\JednotkaTheme;
+use Modules\Themes\Jednotka\Theme\JednotkaTheme;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -62,7 +62,7 @@ final class JednotkaThemeTest extends TestCase
 
     protected function setUp(): void
     {
-        if (!is_dir(APP_BASE_PATH . '/src/Modules/' . self::MODULE)) {
+        if (!is_dir(APP_BASE_PATH . '/src/Modules/Themes/' . self::MODULE)) {
             $this->markTestSkipped(self::MODULE . ' is not installed — the `jednotka` theme ships with this module.');
         }
 

@@ -41,6 +41,10 @@ done < <(php bin/cms module:list | sed -n 's/^Catalogued ([0-9]*): //p' | tr ','
 expected=$((catalogue + 1)) # + KernelTheme
 echo "catalogue to install:$pending (${catalogue} entries, ${expected} expected installed)"
 
+# Installed membership comes from the CLI: a module may live under a group
+# (`src/Modules/Themes/<Name>`), so `-d src/Modules/<Name>` is not the question.
+installed_names=" "$(php bin/cms module:list | sed -n 's/^Installed ([0-9]*): //p' | tr ',' ' ')" "
+
 for round in $(seq 1 20); do
     [ -n "${pending// /}" ] || break
 
@@ -52,11 +56,13 @@ for round in $(seq 1 20); do
         # (`make modules-install`). It does NOT weaken the check — the count at
         # the end still demands the whole catalogue, so a tree that cannot
         # install an entry still fails here.
-        if [ -d "src/Modules/$name" ]; then
-            echo "round $round: ok  $name already installed"
-            progressed=1
-            continue
-        fi
+        case "$installed_names" in
+            *" $name "*)
+                echo "round $round: ok  $name already installed"
+                progressed=1
+                continue
+                ;;
+        esac
 
         if out="$(php bin/cms module:add "$name" 2>&1)"; then
             echo "round $round: ok  installed $name"

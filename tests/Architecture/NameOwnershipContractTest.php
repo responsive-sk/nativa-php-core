@@ -454,10 +454,23 @@ final class NameOwnershipContractTest extends TestCase
         }
 
         $relative = substr($file, strlen('src/Modules/'));
-        $name = strstr($relative, '/', true) ?: $relative;
-        $rest = substr($relative, strlen($name));
 
-        return $this->catalogueRelative($name) . $rest;
+        // The tree has the catalogue's shape: a grouped module's slice is
+        // `src/Modules/<Group>/<Name>/…`, so the group segment is part of the
+        // key, not of the module's name.
+        $segments = explode('/', $relative, 2);
+        $first = $segments[0];
+        $rest = isset($segments[1]) ? '/' . $segments[1] : '';
+
+        if (in_array($first, ModuleCatalog::catalogueGroups(), true)) {
+            $nested = explode('/', $rest, 3);
+            $name = $nested[1] ?? '';
+            $rest = isset($nested[2]) ? '/' . $nested[2] : '';
+
+            return 'modules/' . $first . '/' . $name . $rest;
+        }
+
+        return $this->catalogueRelative($first) . $rest;
     }
 
     /**

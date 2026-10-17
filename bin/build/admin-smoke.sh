@@ -149,11 +149,18 @@ trap cleanup EXIT
 # The modules every section below needs. Deliberately not "whatever is
 # installed": a tree missing one of these would silently skip checks instead of
 # failing, and a gate that skips is the thing this job replaced.
+# Membership comes from the CLI, not from `src/Modules/$module`: a module may be
+# filed under a group (`src/Modules/Themes/<Name>`), and a path check would
+# report it missing while the tree is complete.
+installed_names=" $(php bin/cms module:list | sed -n 's/^Installed ([0-9]*): //p' | tr ',' ' ') "
 for module in Audit Cardboard Comments Outbox Queue Scheduler Security Users; do
-    [ -d "src/Modules/$module" ] || {
-        echo "::error::$module is not installed — run bin/build/install-catalogue.sh first"
-        exit 1
-    }
+    case "$installed_names" in
+        *" $module "*) ;;
+        *)
+            echo "::error::$module is not installed — run bin/build/install-catalogue.sh first"
+            exit 1
+            ;;
+    esac
 done
 
 # ---------------------------------------------------------------------------

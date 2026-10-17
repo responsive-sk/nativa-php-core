@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Griffe\Theme;
+namespace Modules\Themes\Griffe\Theme;
 
 use Modules\Core\Domain\ShellNavItem;
 use Modules\Core\Interfaces\HTTP\ContentServices;

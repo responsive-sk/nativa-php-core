@@ -2,7 +2,8 @@
 
 A module is a slice of the application that can be installed and, provably,
 removed again. The catalogue is `modules/<Name>/`; installation copies the
-slice to `src/Modules/<Name>/`, removal deletes it. Everything the tool knows
+slice to `src/Modules/<Name>/` (or `src/Modules/Themes/<Name>/` for a grouped
+module), removal deletes it. Everything the tool knows
 about a module it read from the module's own files — never from a list the
 kernel would have to keep.
 
@@ -37,7 +38,8 @@ that changed.
 ## Catalogue vs slice: drift, measured (task 4.1, 2026-10-17)
 
 `modules/<Name>/` is the **source**: it is tracked in git, an author edits it,
-and `module:add` copies it. `src/Modules/<Name>/` is the **installed slice**:
+and `module:add` copies it. `src/Modules/<Name>/` — or the grouped
+`src/Modules/Themes/<Name>/` — is the **installed slice**:
 generated, untracked, and the copy the running app loads. Nothing in git
 compares the two, so a fix can land on one side only while `git status` stays
 clean and the page keeps serving the old code. `module:show` with no name
@@ -84,12 +86,19 @@ themes, so they are filed under `modules/Themes/<Name>/` and the root reads as
 a list of features rather than a mixed bag. Measured at the move: 15 files,
 0 insertions and 0 deletions — a `git mv`, not an edit.
 
-**The install target does not move.** `module:add Erik` still copies to
-`src/Modules/Erik/`, the namespace is still `Modules\Erik`, and
-`ThemeRegistry` still discovers it by scanning installed modules. Nothing
-downstream can tell where the catalogue keeps it: not discovery, not
-`lekalo/modules/erik/`, not the tests (`phpunit.xml`'s module suite is
-recursive). That is why the change is small — and why it needed a gate.
+**The installed tree has the same shape.** `module:add Erik` copies to
+`src/Modules/Themes/Erik/`, and the theme therefore owns
+`Modules\Themes\Erik` — PSR-4 maps the namespace onto the path, so the two
+must agree. Discovery is recursive and reads each file's own `namespace`
+line, so `ThemeRegistry` needs no group knowledge; what does need it is every
+resolver of a module-declared path. Those are all `AppPaths::moduleFile()`:
+`InlineCss`/`InlineJs` (critical CSS, theme init script), the asset test, and
+`ModuleTreeState`. The declarations themselves stay group-agnostic
+(`Modules/Erik/assets/…` — the module, not the layout).
+
+Identities do not move: the theme NAME (`erik`, what the settings select
+stores) and `lekalo/modules/erik/` are unchanged, and `phpunit.xml`'s module
+suite is recursive, so the tests under `modules/Themes/Erik/tests/` still run.
 
 `Themes` is a GROUP, not a module, and it is excluded by shape rather than by
 syntax: the name passes `isValidName()` (PascalCase), so
@@ -105,11 +114,15 @@ Catalogued (20): ...
 Themes (4): Erik, Griffe, Jednotka, Mono — modules/Themes/
 ```
 
-One resolver, `ModuleCatalog::cataloguePath()`, is the only place that knows
-the shapes: `bin/cms`, both build scripts and `ModuleTreeState` (the
-`/mark/settings/modules` page and the `modules` stat card) read it, and the
-gates that guard the catalogue ask the catalogue rather than spelling a path
-themselves. That matters
+Two resolvers, each on its own side and each constructive:
+`ModuleCatalog::cataloguePath()` / `installedPath()` know where a module is
+filed (`catalogueGroups()` is the only list of group names), and
+`AppPaths::moduleFile()` resolves a module-declared asset against the
+installed tree. `bin/cms`, both build scripts, `ModuleTreeState` and the gates
+that guard the catalogue ask one of them rather than spelling a path
+themselves. `installedPath()` returns the grouped path even before anything is
+copied, which is what makes `module:add` land in the same shape the catalogue
+uses. That matters
 because the admin page compares the catalogue with the slice, and a
 hand-built `modules/<Name>/` would fail `is_dir()` there, return "no
 differences" and report every theme as `identical` — a false green that

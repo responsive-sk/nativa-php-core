@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Jednotka\Theme;
+namespace Modules\Themes\Jednotka\Theme;
 
 use Modules\Core\Application\Services\MarkdownRenderer;
 use Modules\Core\Application\Services\View\InlineJs;

@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Erik\Tests;
+namespace Modules\Themes\Erik\Tests;
 
 use Modules\Core\Application\Services\AssetManager;
 use Modules\Core\Application\Services\View\InlineCss;
@@ -15,7 +15,7 @@ use Modules\Core\Interfaces\HTTP\Router;
 use Modules\Core\Interfaces\HTTP\ThemeKernel;
 use Modules\Core\Interfaces\HTTP\ThemeRegistry;
 use Modules\Core\Interfaces\HTTP\ThemeResolver;
-use Modules\Erik\Theme\ErikTheme;
+use Modules\Themes\Erik\Theme\ErikTheme;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -57,7 +57,7 @@ final class ErikThemeTest extends TestCase
 
     protected function setUp(): void
     {
-        if (!is_dir(APP_BASE_PATH . '/src/Modules/' . self::MODULE)) {
+        if (!is_dir(APP_BASE_PATH . '/src/Modules/Themes/' . self::MODULE)) {
             $this->markTestSkipped(self::MODULE . ' is not installed — the `erik` theme ships with this module.');
         }
 

@@ -147,6 +147,45 @@ final class AppPaths
     }
 
     /**
+     * Resolve a module-declared asset path — `Modules/<Name>/<tail>` — against
+     * the installed tree.
+     *
+     * A module may be filed under a group (`src/Modules/<Group>/<Name>/`), and
+     * the declaration deliberately does not say so: `criticalCss()` and the
+     * inline scripts name the module, not the layout. The layout answers where
+     * the bytes are. A flat module, a kernel module and a missing file all
+     * resolve to `src(<path>)`, so the declared path is still what a failure
+     * reports.
+     */
+    public function moduleFile(string $srcRelative): string
+    {
+        $direct = $this->src($srcRelative);
+
+        if (is_file($direct) || !str_starts_with($srcRelative, 'Modules/')) {
+            return $direct;
+        }
+
+        $parts = explode('/', substr($srcRelative, strlen('Modules/')), 2);
+        $module = $parts[0];
+        $tail = $parts[1] ?? '';
+
+        if ('' === $tail || '' === $module || str_contains($module, '..')) {
+            return $direct;
+        }
+
+        // One level of group: `src/Modules/<Group>/<Name>/<tail>`. The glob is
+        // the generic form of "wherever the module is filed" — no group list
+        // to keep in sync with the catalogue.
+        foreach (glob($this->src('Modules/*/' . $module . '/' . $tail)) ?: [] as $candidate) {
+            if (is_file($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return $direct;
+    }
+
+    /**
      * Path under public/.
      */
     public function public(string $relative = ''): string

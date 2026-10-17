@@ -15,14 +15,15 @@ use PHPUnit\Framework\TestCase;
  *
  * The four presentation modules (`Erik`, `Griffe`, `Jednotka`, `Mono`) are
  * themes, not features, and they live under `modules/Themes/<Name>/` so the
- * catalogue root reads as a list of things that DO something. The install
- * target does not move: `module:add Erik` still copies to
- * `src/Modules/Erik/` and the namespace is still `Modules\Erik`, so nothing
- * downstream (ThemeRegistry, discovery, `lekalo/modules/erik/`) can tell the
- * difference. That is exactly why the catalogue needs this test: the only place
- * the move is visible is the place that enumerates `modules/`, and a missed
- * enumerator fails quietly — the theme simply disappears from `module:list`,
- * or `Themes` starts being treated as an installable module.
+ * catalogue root reads as a list of things that DO something. The installed
+ * tree has the SAME shape: `module:add Erik` copies to
+ * `src/Modules/Themes/Erik/` and the class owns `Modules\Themes\Erik`, so the
+ * two trees cannot drift into different layouts. `lekalo/modules/erik/` and
+ * the theme NAME (`erik`, what the settings select stores) do not move — those
+ * are identities, not paths. That is exactly why this needs a test: the only
+ * place the move is visible is whatever enumerates either tree, and a missed
+ * enumerator fails quietly — the theme disappears from `module:list`, or
+ * `Themes` starts being treated as an installable module.
  *
  * `Themes` passes `isValidName()` (PascalCase), so it cannot be excluded by
  * syntax. It is excluded by shape: a group is a directory whose children are
@@ -118,6 +119,56 @@ final class ModuleCatalogueShapeTest extends TestCase
                 self::base() . '/modules/' . $theme,
                 sprintf('`modules/%s/` is the OLD location; the catalogue must not carry both.', $theme),
             );
+
+            // Same shape on the installed side: `module:add` copies to the
+            // grouped path even before the directory exists, which is what
+            // keeps the two trees identical instead of drifting apart.
+            $this->assertSame(
+                self::base() . '/src/Modules/' . self::GROUP . '/' . $theme,
+                $catalogue->installedPath($theme),
+                sprintf('Theme `%s` must install under src/Modules/%s/.', $theme, self::GROUP),
+            );
+
+            $this->assertSame(
+                'Modules\\' . self::GROUP . '\\' . $theme,
+                $catalogue->namespaceOf($theme),
+                sprintf('A grouped theme owns `Modules\\%s\\%s`.', self::GROUP, $theme),
+            );
+        }
+
+        $this->assertSame('Modules\\Blog', $catalogue->namespaceOf('Blog'), 'A flat module keeps its flat namespace.');
+        $this->assertSame(self::base() . '/src/Modules/Blog', $catalogue->installedPath('Blog'));
+    }
+
+    /**
+     * A slice that kept the old namespace stops autoloading the moment it moves:
+     * PSR-4 maps `Modules\Themes\Erik` to `src/Modules/Themes/Erik`, so the
+     * class's own `namespace` line must agree with where the file sits.
+     */
+    #[Test]
+    public function aGroupedSliceDeclaresTheNamespaceTheAutoloaderResolves(): void
+    {
+        $catalogue = self::catalogue();
+        $checked = 0;
+
+        foreach (self::THEMES as $theme) {
+            $file = $catalogue->installedPath($theme) . '/Theme/' . $theme . 'Theme.php';
+
+            if (!is_file($file)) {
+                continue; // not installed in this checkout
+            }
+
+            $checked++;
+
+            $this->assertStringContainsString(
+                'namespace ' . $catalogue->namespaceOf($theme) . '\\Theme;',
+                (string) file_get_contents($file),
+                sprintf('`%s` must declare the namespace its path resolves to.', $theme),
+            );
+        }
+
+        if (0 === $checked) {
+            $this->markTestSkipped('No theme slice installed — a kernel-only checkout has no namespace to check.');
         }
     }
 
@@ -140,8 +191,19 @@ final class ModuleCatalogueShapeTest extends TestCase
             // The refusal is what matters; nothing may be copied.
         }
 
+        // The group directory exists in src/Modules because its members live
+        // there — that must not read as "the group is an installed module".
+        $this->assertFalse($catalogue->isInstalled(self::GROUP));
+
+        try {
+            $catalogue->installedManifest(self::GROUP);
+            $this->fail('`installedManifest()` scanned the group as if it were a module.');
+        } catch (\RuntimeException) {
+            // Expected: a group has no manifest on either side.
+        }
+
         $this->assertDirectoryDoesNotExist(
-            self::base() . '/src/Modules/' . self::GROUP,
+            self::base() . '/src/Modules/' . self::GROUP . '/' . self::GROUP,
             'A refused install must not leave a slice behind.',
         );
     }

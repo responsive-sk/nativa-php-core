@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Griffe\Tests;
+namespace Modules\Themes\Griffe\Tests;
 
 use Modules\Core\Application\Services\View\InlineCss;
 use Modules\Core\Domain\ShellNavItem;
@@ -12,7 +12,7 @@ use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\PageContext;
 use Modules\Core\Interfaces\HTTP\ShellContext;
 use Modules\Core\Interfaces\HTTP\ThemeRegistry;
-use Modules\Griffe\Theme\GriffeTheme;
+use Modules\Themes\Griffe\Theme\GriffeTheme;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -37,7 +37,7 @@ final class GriffeThemeTest extends TestCase
 
     protected function setUp(): void
     {
-        if (!is_dir(APP_BASE_PATH . '/src/Modules/' . self::MODULE)) {
+        if (!is_dir(APP_BASE_PATH . '/src/Modules/Themes/' . self::MODULE)) {
             $this->markTestSkipped(self::MODULE . ' is not installed — the `griffe` theme ships with this module.');
         }
     }

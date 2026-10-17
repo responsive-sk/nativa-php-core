@@ -66,7 +66,10 @@ final readonly class ModuleInstaller
             ));
         }
 
-        $target = AppPaths::instance()->src('Modules') . DIRECTORY_SEPARATOR . $name;
+        // The target follows the catalogue's shape: a grouped module installs
+        // into `src/Modules/<Group>/<Name>/` with the namespace to match, so
+        // `module:add` and `module:remove` never disagree with `catalogued()`.
+        $target = $this->catalog->installedPath($name);
         $copied = self::copyTree($manifest->sourceDir, $target);
 
         // The new slice may carry #[AsMigrator] classes, so the first-request
@@ -113,7 +116,7 @@ final readonly class ModuleInstaller
             ));
         }
 
-        self::deleteTree(AppPaths::instance()->src('Modules') . DIRECTORY_SEPARATOR . $name);
+        self::deleteTree($this->catalog->installedPath($name));
 
         // The remaining module set may differ from the one the marker was
         // written for — let the next request re-derive it. Same for the

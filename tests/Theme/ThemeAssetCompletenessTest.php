@@ -61,8 +61,11 @@ final class ThemeAssetCompletenessTest extends TestCase
             }
 
             foreach ($theme->criticalCss() as $path) {
+                // The declared path names the module, not its layout: a theme
+                // may be installed under a group, and `moduleFile()` is the
+                // resolver that knows (the same one `InlineCss` uses).
                 $this->assertFileExists(
-                    AppPaths::instance()->src($path),
+                    AppPaths::instance()->moduleFile($path),
                     sprintf('Theme `%s` declares critical CSS `%s` that is not on disk.', $name, $path),
                 );
             }
