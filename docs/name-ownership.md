@@ -235,9 +235,11 @@ own, and each is written into the test:
    operator state; reading it first let an installed copy answer for the tree
    and every assertion passed while the checkout disagreed with itself. The
    catalogue has two shapes now (`modules/<Name>/` and
-   `modules/Themes/<Name>/`), and both are tried before `src/`;
-   `ownerKey()` resolves them through `ModuleCatalog::cataloguePath()`, so the
-   same constant in the catalogue and its slice is one site, not two.
+   `modules/Themes/<Name>/`), and both are tried before `src/`. The installed
+   tree has the same two shapes (`src/Modules/<Name>/` and
+   `src/Modules/Themes/<Name>/`), and `ownerKey()` strips the group from both
+   sides, so the same constant in the catalogue and its slice is one site, not
+   two.
 
 Three classes in a theme stylesheet are **dead** — no emitter in this
 repository: `copy-btn` and `has-badge` (Mono, whose emitter is the absent
