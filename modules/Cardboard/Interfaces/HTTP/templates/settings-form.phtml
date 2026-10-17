@@ -13,15 +13,7 @@ if (!isset($viewRendererGuard)) {
 
 ?>    <?php echo $errorHtml . "\n"; ?>
     <div class="m-tabs" id="settings-tabs">
-        <div class="m-tabs__bar">
-            <button type="button" class="m-tabs__btn m-tabs__btn--active" data-tab="general">General</button>
-            <button type="button" class="m-tabs__btn" data-tab="design">Design</button>
-            <button type="button" class="m-tabs__btn" data-tab="cache">Cache</button>
-            <button type="button" class="m-tabs__btn" data-tab="nav">Navigation</button>
-            <button type="button" class="m-tabs__btn" data-tab="admin-nav">Admin Nav</button>
-            <?php // A real page, not a panel: the module list lives on its own route, so this entry navigates. ?>
-            <a class="m-tabs__btn" href="<?php echo $url('mark.settings.modules'); ?>">Modules</a>
-        </div>
+        <?php echo $settingsTabs . "\n"; ?>
 
         <div class="m-tab-panel m-tab-panel--active" id="panel-general" data-tab-panel="general">
             <div class="m-card">

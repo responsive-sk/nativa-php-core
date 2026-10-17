@@ -264,6 +264,50 @@ final class AdminLayout
     }
 
     /**
+     * The settings tab bar — one markup for both screens that show it.
+     *
+     * The five settings panels live on `/mark/settings` and switch in place;
+     * the module list is its own page (`mark.settings.modules`). Rendering them
+     * as anchors keeps the bar honest on the module page (where a button would
+     * have no panel) and still gives instant switching on the settings page:
+     * `settings-tabs.js` intercepts the anchors that carry `data-tab` and only
+     * navigates when JS is off. Each anchor's href is the no-JS fallback
+     * (`?tab=…`), which the script also honours on load.
+     *
+     * Labels live here once, so the two bars cannot drift apart.
+     *
+     * @param \Closure(string, array<string, string|int>): string $url
+     */
+    public static function settingsTabs(\Closure $url, string $active): string
+    {
+        $tabs = [
+            'general'   => 'General',
+            'design'    => 'Design',
+            'cache'     => 'Cache',
+            'nav'       => 'Navigation',
+            'admin-nav' => 'Admin Nav',
+            'modules'   => 'Modules',
+        ];
+
+        $html = '<div class="m-tabs__bar">';
+
+        foreach ($tabs as $tab => $label) {
+            $current = $tab === $active;
+            $href = 'modules' === $tab
+                ? $url('mark.settings.modules')
+                : $url('mark.settings') . '?tab=' . $tab;
+
+            $html .= '<a class="m-tabs__btn' . ($current ? ' m-tabs__btn--active' : '') . '"'
+                . ' href="' . self::e($href) . '"'
+                . ('modules' === $tab ? '' : ' data-tab="' . self::e($tab) . '"')
+                . ($current ? ' aria-current="page"' : '')
+                . '>' . $label . '</a>';
+        }
+
+        return $html . '</div>';
+    }
+
+    /**
      * Render skeleton placeholder blocks (shimmer animation).
      *
      * @param list<string> $types Skeleton types: 'title', 'text', 'card', 'avatar'.

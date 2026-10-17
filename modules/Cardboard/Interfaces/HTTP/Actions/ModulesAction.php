@@ -119,6 +119,9 @@ final class ModulesAction
         $content = ViewRenderer::render(
             'Modules/Cardboard/Interfaces/HTTP/templates/modules-list.phtml',
             [
+                // The same bar the settings screen renders, with this page's
+                // entry active — the two screens are one navigation.
+                'settingsTabs' => AdminLayout::settingsTabs($this->urlBuilder(), 'modules'),
                 'intro' => AdminLayout::e(sprintf(
                     '%d catalogued · %d match the installed slice · %d drifted · %d not installed.'
                     . ' The slice is copied from the catalogue by module:add and is not tracked by git,'

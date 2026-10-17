@@ -25,6 +25,19 @@ use PHPUnit\Framework\TestCase;
  */
 final class AdminLayoutRouteUrlTest extends TestCase
 {
+    /**
+     * Kernel-only checkouts run this file from the catalogue with no slice
+     * installed; naming a Cardboard class there is a fatal, not a skip.
+     * Every module test carries the same guard (PHPUnit runs tearDown even
+     * after setUp skipped, so nothing here assumes an installed module).
+     */
+    protected function setUp(): void
+    {
+        if (!is_dir(APP_BASE_PATH . '/src/Modules/Cardboard')) {
+            $this->markTestSkipped('Cardboard is not installed — the admin layout ships with this module.');
+        }
+    }
+
     #[Test]
     public function aTemplateResolvesLinksThroughTheInjectedUrlBuilder(): void
     {
@@ -50,39 +63,88 @@ final class AdminLayoutRouteUrlTest extends TestCase
 
     /**
      * The module list is a separate page (`mark.settings.modules`), so its
-     * entry in the settings tab bar must be a LINK rendered with the same
-     * `m-tabs__btn` class — not a JS panel button that has no panel.
+     * entry in the settings tab bar must be a LINK — not a JS panel button
+     * that has no panel — and the panel tabs must keep working as in-place
+     * switches while still carrying a `?tab=` href for the no-JS path.
      */
     #[Test]
     public function theSettingsTabsLinkToTheModulesScreen(): void
     {
-        $html = ViewRenderer::render(
-            'Modules/Cardboard/Interfaces/HTTP/templates/settings-form.phtml',
-            [
-                'url'            => static fn (string $name): string => 'mark.settings.modules' === $name ? '/mark/settings/modules' : '/route/' . $name,
-                'errorHtml'      => '',
-                'csrf'           => '',
-                'siteName'       => '',
-                'siteDescription' => '',
-                'adminEmail'     => '',
-                'timezone'       => '',
-                'locale'         => '',
-                'layoutSelect'   => '',
-                'themeSelect'    => '',
-                'regChecked'     => '',
-                'tokenTable'     => '',
-                'navTable'       => '',
-                'adminNavTable'  => '',
-                'iconOptions'    => '',
-                'parentOptions'  => '',
-            ],
-        );
+        $html = $this->settingsPage('general');
 
         self::assertMatchesRegularExpression(
             '/<a class="m-tabs__btn" href="\/mark\/settings\/modules">Modules<\/a>/',
             $html,
-            'The Modules entry must be a tab-styled link to its own route.',
+            'The Modules entry must be a tab-styled link to its own route, with no panel to switch to.',
         );
+        self::assertMatchesRegularExpression(
+            '/<a class="m-tabs__btn m-tabs__btn--active" href="\/mark\/settings\?tab=general" data-tab="general" aria-current="page">General<\/a>/',
+            $html,
+            'The active panel tab keeps its data-tab hook for in-place switching and a ?tab= fallback.',
+        );
+        self::assertStringContainsString('href="/mark/settings?tab=design" data-tab="design"', $html);
+    }
+
+    /**
+     * On the module list the same bar renders with Modules current. It is a
+     * separate page, so no JS intercepts these links: every panel entry is a
+     * plain navigation back to the settings screen.
+     */
+    #[Test]
+    public function theModuleScreenCarriesTheSameTabsWithModulesActive(): void
+    {
+        $html = ViewRenderer::render(
+            'Modules/Cardboard/Interfaces/HTTP/templates/modules-list.phtml',
+            [
+                'settingsTabs' => AdminLayout::settingsTabs($this->url(), 'modules'),
+                'intro'        => '',
+                'rows'         => '',
+                'fixableHtml'  => '',
+            ],
+        );
+
+        self::assertStringContainsString(
+            'class="m-tabs__btn m-tabs__btn--active" href="/mark/settings/modules" aria-current="page">Modules</a>',
+            $html,
+            'Modules must be the current entry on its own page.',
+        );
+        self::assertStringContainsString('href="/mark/settings?tab=nav" data-tab="nav"', $html);
+    }
+
+    private function settingsPage(string $active): string
+    {
+        return ViewRenderer::render(
+            'Modules/Cardboard/Interfaces/HTTP/templates/settings-form.phtml',
+            [
+                'url'          => $this->url(),
+                'settingsTabs' => AdminLayout::settingsTabs($this->url(), $active),
+                'errorHtml'    => '',
+                'csrf'         => '',
+                'siteName'     => '',
+                'siteDescription' => '',
+                'adminEmail'   => '',
+                'timezone'     => '',
+                'locale'       => '',
+                'layoutSelect' => '',
+                'themeSelect'  => '',
+                'regChecked'   => '',
+                'tokenTable'   => '',
+                'navTable'     => '',
+                'adminNavTable' => '',
+                'iconOptions'  => '',
+                'parentOptions' => '',
+            ],
+        );
+    }
+
+    /**
+     * @return \Closure(string): string
+     */
+    private function url(): \Closure
+    {
+        return static fn (string $name): string => 'mark.settings.modules' === $name
+            ? '/mark/settings/modules'
+            : ('mark.settings' === $name ? '/mark/settings' : '/route/' . $name);
     }
 
     /**
