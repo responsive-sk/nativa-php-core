@@ -6,6 +6,7 @@ namespace Tests\Http;
 
 use Modules\Core\Domain\AuthIdentity;
 use Modules\Core\Domain\Contracts\AuthProvider;
+use Modules\Core\Domain\Permissions;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Infrastructure\Paths\AppPaths;
@@ -62,8 +63,6 @@ final class AuthMiddlewareDenialTest extends TestCase
     private const string CLIENT_IP = '203.0.113.9';
 
     private const string ADMIN_PATH = '/mark/users';
-
-    private const string REQUIRED = 'users.manage';
 
     private string $dir = '';
 
@@ -179,7 +178,7 @@ final class AuthMiddlewareDenialTest extends TestCase
 
         $detail = $audit[0]['detail'];
         self::assertIsString($detail);
-        self::assertStringContainsString(self::REQUIRED, $detail);
+        self::assertStringContainsString(Permissions::USERS, $detail);
     }
 
     #[Test]
@@ -214,7 +213,7 @@ final class AuthMiddlewareDenialTest extends TestCase
             . ' is never sent is a contract nobody honours.',
         );
 
-        self::assertSame(self::REQUIRED, $payload['required']);
+        self::assertSame(Permissions::USERS, $payload['required']);
     }
 
     #[Test]
@@ -224,7 +223,7 @@ final class AuthMiddlewareDenialTest extends TestCase
         // string that no handler claims must be refused at the seam.
         self::noteEvent('authz.denied', [
             'path'     => self::ADMIN_PATH,
-            'required' => self::REQUIRED,
+            'required' => Permissions::USERS,
             'userId'   => 'u-42',
             'ip'       => self::CLIENT_IP,
         ]);
@@ -240,7 +239,7 @@ final class AuthMiddlewareDenialTest extends TestCase
         // The other half: the guard must not refuse the events that ARE ours.
         self::noteEvent(self::authzDenied(), [
             'path'     => self::ADMIN_PATH,
-            'required' => self::REQUIRED,
+            'required' => Permissions::USERS,
             'userId'   => 'u-42',
             'roles'    => [],
             'ip'       => self::CLIENT_IP,
@@ -252,7 +251,7 @@ final class AuthMiddlewareDenialTest extends TestCase
     #[Test]
     public function anInactiveIdentityIsRefusedWithoutASecurityEvent(): void
     {
-        $response = $this->middleware(new AuthIdentity('u-42', false, ['users.manage']))
+        $response = $this->middleware(new AuthIdentity('u-42', false, [Permissions::USERS]))
             ->handle(Request::create('GET', self::ADMIN_PATH), self::passThrough());
 
         self::assertSame(403, $response->getStatusCode());
@@ -388,7 +387,7 @@ final class AuthMiddlewareDenialTest extends TestCase
 
     private function middleware(AuthIdentity $identity): AuthMiddleware
     {
-        return new AuthMiddleware(new readonly class ($identity, self::REQUIRED) implements AuthProvider {
+        return new AuthMiddleware(new readonly class ($identity, Permissions::USERS) implements AuthProvider {
             public function __construct(
                 private AuthIdentity $identity,
                 private string $required,

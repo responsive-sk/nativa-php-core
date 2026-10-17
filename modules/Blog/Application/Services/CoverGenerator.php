@@ -92,6 +92,15 @@ final class CoverGenerator
 
     private const string DIFF_REMOVE_TINT = '#ef4444';
 
+    /**
+     * The muted slate both roles share: an unchanged diff row, and the version
+     * stamp on a dev build (LTS carries the accent instead). It is ONE colour in
+     * one palette, so it has one name — `VERSION_INK_MUTED` claimed a second
+     * name for this literal and used it once, which is the defect rule 1 of
+     * `NameOwnershipContractTest` exists to catch.
+     *
+     * Not to be confused with `TERMINAL_LABEL`, which is a different grey.
+     */
     private const string DIFF_CONTEXT_INK = '#94a3b8';
 
     private const string TERMINAL_BG = '#0b1222';
@@ -99,9 +108,6 @@ final class CoverGenerator
     private const string TERMINAL_HEADER = '#16213a';
 
     private const string TERMINAL_LABEL = '#64748b';
-
-    /** Version stamp ink for dev versions and drafts (LTS carries the accent). */
-    private const string VERSION_INK_MUTED = '#94a3b8';
 
     /**
      * Generate the cover SVG for one article. Byte-deterministic: identical
@@ -361,7 +367,7 @@ SVG;
 
         $lts = $this->isLtsVersion($version);
         $text = $lts ? 'v' . $version . ' · LTS' : 'v' . $version;
-        $ink = $lts ? $accent : self::VERSION_INK_MUTED;
+        $ink = $lts ? $accent : self::DIFF_CONTEXT_INK;
 
         return '  <text x="664" y="300" text-anchor="end" font-family="' . self::FONT_MONO . '" font-size="12" font-weight="bold" letter-spacing="1" fill="' . $ink . '" opacity="0.85">'
             . $this->esc($text) . '</text>' . "\n";

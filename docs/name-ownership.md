@@ -5,7 +5,7 @@ here is **measured**, and the test fails when a number and the tree disagree.
 A row that is not measured is a wish.
 
 The rule the gate cannot check is worth stating too: a class constant is a
-**good** tool for most of this tree. 243 declarations, and the large majority
+**good** tool for most of this tree. 240 declarations, and the large majority
 are private technical invariants — `CoverGenerator::WIDTH`, `MAX_RETRIES`,
 `IDLE_TIMEOUT` — which are facts about the code, not configuration and not
 identifiers. Those are correct as they are and the gate leaves them alone. The
@@ -28,12 +28,12 @@ identical:
 | | full tree | kernel-only |
 |---|---|---|
 | files | 407 | 407 |
-| declarations (rule 3, excluding the gates) | 243 | 243 |
-| distinct names (rule 3) | 205 | 205 |
-| values with 2+ names (rule 1) | 5 | 5 |
+| declarations (rule 3, excluding the gates) | 240 | 240 |
+| distinct names (rule 3) | 203 | 203 |
+| values with 2+ names (rule 1) | **2** | **2** |
 | literal places (rule 2) | 532 | 532 |
 
-## Rule 1 — one string value, one name · absolute, 5 exemptions
+## Rule 1 — one string value, one name · absolute, 2 exemptions
 
 Two names for one string value means two owners, and nothing reports the
 rename: one of them is a permission nobody can ever be granted, a theme
@@ -46,13 +46,42 @@ owner; it is the same number meaning different things (60 seconds, 60 per
 page, 60 rows). The difference is whether two matches name **the same thing**.
 `'users.manage'` is an identifier and does; `60` is a number and does not.
 
-| value | names | why it stays | removed by |
-|---|---|---|---|
-| `'users.manage'` | `USERS` (Users) · `REQUIRED` (tests/Http) | `AuthMiddlewareDenialTest` deliberately spells the value it asserts the seam receives | 2.6 |
-| `'griffe'` | `BUNDLE` · `THEME` | two tests asserting two different things about one theme | 2.6 |
-| `'Cardboard'` | `ADMIN_MODULE` · `MODULE` | two tests, two roles | 2.6 |
-| `'203.0.113.7'` | `CLIENT_IP` · `REMOTE` | one RFC 5737 address written by two tests | 2.6 |
-| `'#94a3b8'` | `DIFF_CONTEXT_INK` · `VERSION_INK_MUTED` | one colour, two roles in one palette | 2.6 |
+Task 2.6 took this from five to two, and the three that went are worth naming
+because **two of them were not what the exemption claimed**:
+
+| value | names before | verdict |
+|---|---|---|
+| `'users.manage'` | `USERS` (Users) · `REQUIRED` (tests/Http) | **gone.** `Permissions::USERS` is the owner and the kernel owns it. The test imported it — and while doing so a fourth spelling turned up in the same file (`new AuthIdentity('u-42', false, ['users.manage'])`, the one place that bypassed the constant the four others used), which is what a second owner produces |
+| `'#94a3b8'` | `DIFF_CONTEXT_INK` · `VERSION_INK_MUTED` | **gone.** Not "two roles in one palette" — one class declaring the same colour twice, and the alias used it ONCE (the dev-version stamp). `DIFF_CONTEXT_INK` is the member of the `DIFF_*` set, so the alias is gone |
+| `'griffe'` | `BUNDLE` · `THEME` | **gone.** `GriffeTheme::name()`/`::bundle()`/`::jsKey()` all return it; that class is the owner. `GriffeBuildFreezeTest` asked the owner instead of declaring it, which makes the freeze STRONGER: renaming the bundle without re-freezing now fails that test |
+| `'Cardboard'` | `ADMIN_MODULE` · `MODULE` | **stays.** See below |
+| `'203.0.113.7'` | `CLIENT_IP` · `REMOTE` | **stays**, and its old reason was simply false |
+
+**Why `'Cardboard'` stays.** Two tests that each guard their own skip, in
+different scopes: `KernelOnlyBootTest` is in `tests/Boot`, `SettingsThemeSelectTest`
+in `modules/Cardboard`. Zero of the module's tests import from `tests/`, and the
+first would set a precedent `KernelCouplingTest` would then have to know about.
+There is also no owner to consolidate onto — nothing outside `tests/` writes
+`'Cardboard'`.
+
+**Why `'203.0.113.7'` stays.** The exemption named
+`AuthMiddlewareDenialTest::REMOTE`, and that constant does not exist: the file
+owns `203.0.113.9`. The real second claimant is `AuthServiceTest::REMOTE`, in a
+different module. The value is an RFC 5737 documentation address used as a
+SCENARIO, not an identifier — `PasswordResetServiceTest` walks
+`203.0.113.1/.2/.3` precisely to prove one address gets three attempts, so the
+octet carries meaning. A shared `tests/Support` constant was measured and
+rejected: it would claim two runs are the same run, and cross a module boundary
+for zero runtime gain (`tests/` is `autoload-dev`; the objection is the
+dependency, not speed).
+
+**And one that had to stay inside the file that checks it.** Rule 2's ceiling
+excludes `GATE_FILES`, because an exemption is keyed by the value it excuses —
+so every remaining entry in `MULTI_NAME_EXEMPTIONS` is necessarily a literal in
+this test, and a ceiling that the ledger's own reasons inflate can never fall
+again. Recording a reason is what makes a collision tolerated; counting the
+tolerance as duplication is a ratchet that tightens itself every time somebody
+writes down WHY.
 
 The list also fails **when an entry stops applying** — an exemption that
 stopped being a collision is rot in the ledger, not a free pass.
@@ -112,7 +141,7 @@ into `LocaleService::SK_SK` would be a tautology dressed as a refactor. The
 ceiling counts them because counting them is honest; the consolidation work in
 Phase 2 does not touch them, and should not.
 
-## Rule 3 — the declaration count does not rise · ratchet at 243 / 205
+## Rule 3 — the declaration count does not rise · ratchet at 240 / 203
 
 This is the rule that catches the cheapest wrong fix: *"there are two names for
 this, let me add a third."* That is the complaint this whole ledger started
@@ -133,10 +162,13 @@ same move this rule exists to catch, wearing a different hat.
 Rules 1 and 2 still read all of those files, so a duplicated name in a gate is
 still caught. Only the count is exempt.
 
-The two ceilings moved together, once, and both numbers carry the reason at the
-constant in the test: 241 → 243 and 203 → 205 for `ModuleTreeState::IGNORED`,
-the list of directory prefixes excluded from a drift comparison. One constant
-that made the comparison correct in one reader instead of two.
+The ceilings moved together twice, and both numbers carry the reason at the
+constant in the test. Up, once: 241 → 243 and 203 → 205 for
+`ModuleTreeState::IGNORED`, the list of directory prefixes excluded from a drift
+comparison — one constant that made the comparison correct in one reader instead
+of two. Down, once, and further: 243 → 240 and 205 → 203, because task 2.6
+removed three declarations rather than adding one. That is the only direction
+this ratchet is ever supposed to move, and it moved on its own.
 
 ## How the counting is done, and three ways to get it wrong
 

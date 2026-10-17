@@ -100,17 +100,35 @@ final class NameOwnershipContractTest extends TestCase
 
     /** Rule 1 — string values that two names claim today, and why each stays. */
     private const array MULTI_NAME_EXEMPTIONS = [
-        "'users.manage'" => 'Permissions::USERS (Users) and AuthMiddlewareDenialTest::REQUIRED'
-            . ' (tests/Http). The test deliberately spells the value it asserts'
-            . ' the seam receives. Task 2.6.',
-        "'griffe'" => 'GriffeBuildFreezeTest::BUNDLE and GriffeThemeTest::THEME. Two tests'
-            . ' asserting two different things about one theme. Task 2.6.',
-        "'Cardboard'" => 'KernelOnlyBootTest::ADMIN_MODULE and SettingsThemeSelectTest::MODULE.'
-            . ' Two tests, two roles. Task 2.6.',
-        "'203.0.113.7'" => 'RateLimitMiddlewareTest::CLIENT_IP and AuthMiddlewareDenialTest::REMOTE.'
-            . ' The same RFC 5737 address written by two tests. Task 2.6.',
-        "'#94a3b8'" => 'CoverGenerator::DIFF_CONTEXT_INK and ::VERSION_INK_MUTED. One colour'
-            . ' used in two roles of one palette. Task 2.6.',
+        "'Cardboard'" => 'Two tests that each guard their OWN skip. KernelOnlyBootTest is in'
+            . ' tests/Boot and must not statically name an optional module;'
+            . ' SettingsThemeSelectTest lives in modules/Cardboard and imports nothing from'
+            . ' tests/ — zero of the module\'s tests do, and the first would set a precedent'
+            . ' KernelCouplingTest would then have to know about. Merging them would couple'
+            . ' two files that are deliberately independent, and the name has no production'
+            . ' owner to consolidate onto: nothing outside tests/ writes \'Cardboard\'.',
+        "'203.0.113.7'" => 'RateLimitMiddlewareTest::CLIENT_IP (Security) and AuthServiceTest::REMOTE'
+            . ' (Users) — TWO MODULES, and the earlier text naming'
+            . ' AuthMiddlewareDenialTest::REMOTE was simply wrong: that constant does not'
+            . ' exist, and this test file owns 203.0.113.9 instead. The value is an RFC 5737'
+            . ' documentation address and each test uses it as a SCENARIO, not an'
+            . ' identifier: PasswordResetServiceTest walks 203.0.113.1/.2/.3 to prove one'
+            . ' address gets three attempts, which is what the octet MEANS here. A shared'
+            . ' tests/Support constant would claim the two runs are the same run, and would'
+            . ' be a cross-module import — tests/Support costs nothing at runtime'
+            . ' (autoload-dev) so the argument against it is the dependency, not speed.',
+    ];
+
+    /**
+     * The gate files, which neither rule 2's ceiling nor rule 3's counts
+     * measure. One list, read by both: when they were separate the sibling
+     * entry lived inline in rule 3 while rule 2 filtered nothing, and the only
+     * way that shows up is a ceiling that rises while a reason is being
+     * written down.
+     */
+    private const array GATE_FILES = [
+        'tests/Architecture/NameOwnershipContractTest.php',
+        'tests/Architecture/MetricRegistryResolutionTest.php',
     ];
 
     /**
@@ -141,13 +159,13 @@ final class NameOwnershipContractTest extends TestCase
      * subject of this gate. Recorded here rather than folded silently into a
      * ceiling that reads like a coincidence.
      */
-    private const int MAX_DECLARATIONS = 242;
+    private const int MAX_DECLARATIONS = 240;
 
     /**
      * 203 → 204 with MAX_DECLARATIONS: `ModuleTreeState::IGNORED` is a name as
      * well as a declaration, and both ceilings moved for the same one constant.
      */
-    private const int MAX_NAMES = 204;
+    private const int MAX_NAMES = 203;
 
     /**
      * Rule 1. A value is the thing two owners disagree about, so the assertion
@@ -280,12 +298,9 @@ final class NameOwnershipContractTest extends TestCase
         // `MetricRegistryResolutionTest` did exactly that on the day it was
         // written — one `REGISTRY` constant took the count from 241 to 242, and
         // the honest fix was to exempt the gates, not to raise the ceiling.
-        $exempt = ['tests/Architecture/NameOwnershipContractTest.php'];
-        $exempt[] = 'tests/Architecture/MetricRegistryResolutionTest.php';
-
         $declarations = array_values(array_filter(
             $this->declarations(),
-            fn (array $declaration): bool => !in_array($declaration['file'], $exempt, true),
+            fn (array $declaration): bool => !in_array($declaration['file'], self::GATE_FILES, true),
         ));
 
         $count = count($declarations);
@@ -396,6 +411,23 @@ final class NameOwnershipContractTest extends TestCase
 
                 // Build output: copied bytes from the frontend, not declarations.
                 if (str_starts_with($path, APP_BASE_PATH . '/public/dist/')) {
+                    continue;
+                }
+
+                // The gates, for rule 2's ceiling. Same reasoning as rule 3's
+                // exemption and for the same reason it has to be this file: an
+                // exemption is keyed by the value it excuses, so the five
+                // remaining entries in MULTI_NAME_EXEMPTIONS are necessarily
+                // five string literals spelled in this file — and a ceiling
+                // that the ledger's own reasons inflate can never fall again.
+                // Recording a reason is what makes a collision tolerated;
+                // making the tolerance count as duplication is a ratchet that
+                // tightens itself every time someone writes down WHY.
+                if (in_array(
+                    $this->relative($path),
+                    self::GATE_FILES,
+                    true,
+                )) {
                     continue;
                 }
 

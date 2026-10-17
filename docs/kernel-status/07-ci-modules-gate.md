@@ -1627,6 +1627,62 @@ English defaults left.
 | `make lint` | clean |
 | `make lekalo-check` | 22 modules valid on their own, whole project valid |
 
+### Task 2.6 — five exemptions, three of them wrong
+
+The round's last task took rule 1's allow-list from five entries to two. The
+plan predicted all five would collapse into one owner; measurement said two, and
+that **two of the five exemptions had been describing code that does not exist**.
+
+| value | before | verdict |
+|---|---|---|
+| `'users.manage'` | `USERS` · `REQUIRED` | **gone** — the test imports the owner |
+| `'#94a3b8'` | `DIFF_CONTEXT_INK` · `VERSION_INK_MUTED` | **gone** — one class, two names, alias used once |
+| `'griffe'` | `BUNDLE` · `THEME` | **gone** — `GriffeTheme` is the owner and both tests can ask |
+| `'Cardboard'` | `ADMIN_MODULE` · `MODULE` | **stays** — no owner exists, and merging crosses a module boundary |
+| `'203.0.113.7'` | `CLIENT_IP` · `REMOTE` | **stays** — and the reason named a constant that does not exist |
+
+The exemption for `203.0.113.7` read *"RateLimitMiddlewareTest::CLIENT_IP and
+AuthMiddlewareDenialTest::REMOTE"*. There is no `AuthMiddlewareDenialTest::REMOTE`:
+that file declares `203.0.113.9`, and the second claimant is
+`AuthServiceTest::REMOTE`, in a different module. A ledger entry had been
+describing the wrong file for a day, and nothing could tell — the stale check
+asks whether a value still has two names, never whether the note about it is
+true.
+
+**The owner turned out to be a class that already existed.** `GriffeTheme::name()`,
+`::bundle()` and `::jsKey()` each return `'griffe'`, and `GriffeThemeTest` spelled
+the same literal thirteen more times. `GriffeBuildFreezeTest` declared its own
+copy for the bundle path. Both now ask the owner, and the freeze got stronger for
+it: rename the bundle without re-freezing and that test fails, because the
+committed `dist/<name>/` no longer resolves.
+
+**One alias had to be kept on purpose.** `GriffeThemeTest` still declares `THEME`,
+because the same test asserts the value with a literal —
+`assertSame('griffe', $theme->bundle())`. An assertion reading the owner would be
+`assertSame($x, $x)` and would catch nothing. That is not a second owner; it is a
+test that must be able to fail.
+
+**And the ceiling had to learn to ignore its own reasons.** Rule 2's ratchet now
+excludes the gate files, because an exemption is keyed by the value it excuses:
+every entry in the allow-list is necessarily a literal inside the file that holds
+the list, so the ledger's reasons inflate the very number the ledger exists to
+lower. Recording a reason is what makes a collision tolerated; counting the
+tolerance as duplication is a ratchet that tightens itself every time somebody
+writes down why.
+
+Measured: exemptions **5 → 2**, declarations **243 → 240**, names **205 → 203**,
+literal places **532 → 532** (the last held, and the number that did not move is
+recorded above the one that did).
+
+Three negative controls, all red, all reverted:
+
+```
+'probe-shared-value' <- PROBE_A (…:65) | PROBE_B (…:67)
+self::MULTI_NAME_EXEMPTIONS lists a value that no longer has two names.
+  + 0 => ''stale-probe-value''
+const declarations rose above 239 (now 240).
+```
+
 ### What this round did not close
 
 - **Three Slovak card TITLES are English in the seed itself.**

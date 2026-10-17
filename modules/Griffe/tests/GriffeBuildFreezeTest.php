@@ -7,6 +7,7 @@ namespace Modules\Griffe\Tests;
 use Modules\Core\Application\Services\AssetManager;
 use Modules\Core\Application\Services\View\InlineCss;
 use Modules\Core\Infrastructure\Paths\AppPaths;
+use Modules\Griffe\Theme\GriffeTheme;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -24,10 +25,29 @@ use PHPUnit\Framework\TestCase;
  */
 final class GriffeBuildFreezeTest extends TestCase
 {
-    private const string BUNDLE = 'griffe';
-
     /** Raw-byte budgets with ~30% headroom over the freezing build (JS 10 798, CSS 9 261). */
     private const int JS_BUDGET = 14000;
+
+    /**
+     * The bundle name, read from its owner.
+     *
+     * `GriffeTheme::name()` and `::bundle()` both return 'griffe', and this
+     * test used to declare a THIRD copy — rule 1 of
+     * `NameOwnershipContractTest` counted it as two owners of one value. It is
+     * not a copy worth keeping: nothing here asserts the name is 'griffe'
+     * (`discoveryFindsTheTheme` in the sibling test does, and there the literal
+     * must stay or the assertion becomes `assertSame($x, $x)`). Every use below
+     * is an OPERATION on the bundle — a manifest path, an AssetManager lookup —
+     * so the owner is the right place to ask.
+     *
+     * The freeze is what this test is for, and reading the owner makes that
+     * stronger rather than weaker: renaming the bundle without re-freezing fails
+     * here, because the committed `dist/<name>/` no longer resolves.
+     */
+    private static function bundle(): string
+    {
+        return (new GriffeTheme())->name();
+    }
 
     private const int CSS_BUDGET = 12000;
 
@@ -41,7 +61,7 @@ final class GriffeBuildFreezeTest extends TestCase
     #[Test]
     public function theFrozenManifestIsCommitted(): void
     {
-        $manifest = AppPaths::instance()->public('dist/' . self::BUNDLE . '/manifest.json');
+        $manifest = AppPaths::instance()->public('dist/' . self::bundle() . '/manifest.json');
 
         $this->assertFileExists(
             $manifest,
@@ -52,11 +72,11 @@ final class GriffeBuildFreezeTest extends TestCase
     #[Test]
     public function assetManagerResolvesTheFrozenEntry(): void
     {
-        $assets = new AssetManager(self::BUNDLE);
+        $assets = new AssetManager(self::bundle());
 
         $this->assertTrue($assets->isAvailable(), 'AssetManager did not resolve the committed griffe manifest.');
 
-        $jsUrl = $assets->jsUrl(self::BUNDLE);
+        $jsUrl = $assets->jsUrl(self::bundle());
 
         $this->assertNotNull($jsUrl, 'The frozen manifest names no `griffe` JS entry.');
         $this->assertFileExists(
@@ -64,7 +84,7 @@ final class GriffeBuildFreezeTest extends TestCase
             'The manifest points at a JS file that is not committed.',
         );
 
-        $cssUrls = $assets->cssUrls(self::BUNDLE);
+        $cssUrls = $assets->cssUrls(self::bundle());
 
         $this->assertNotSame([], $cssUrls, 'The frozen manifest names no `griffe` CSS.');
 
@@ -182,14 +202,14 @@ final class GriffeBuildFreezeTest extends TestCase
     #[Test]
     public function theFrozenBundleShipsNoSourcemaps(): void
     {
-        $maps = glob(AppPaths::instance()->public('dist/' . self::BUNDLE . '/assets/*.map') ?: []);
+        $maps = glob(AppPaths::instance()->public('dist/' . self::bundle() . '/assets/*.map') ?: []);
 
         $this->assertSame([], $maps, 'Sourcemaps are debug weight in a frozen production bundle.');
     }
 
     private function frozenJs(): string
     {
-        $url = (new AssetManager(self::BUNDLE))->jsUrl(self::BUNDLE);
+        $url = (new AssetManager(self::bundle()))->jsUrl(self::bundle());
 
         $this->assertNotNull($url, 'The frozen manifest names no `griffe` JS entry.');
 
@@ -202,7 +222,7 @@ final class GriffeBuildFreezeTest extends TestCase
 
     private function frozenCss(): string
     {
-        $urls = (new AssetManager(self::BUNDLE))->cssUrls(self::BUNDLE);
+        $urls = (new AssetManager(self::bundle()))->cssUrls(self::bundle());
 
         $this->assertNotSame([], $urls, 'The frozen manifest names no `griffe` CSS.');
 
