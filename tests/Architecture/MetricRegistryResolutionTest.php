@@ -6,7 +6,6 @@ namespace Tests\Architecture;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
 use ReflectionMethod;
 
 /**
@@ -37,25 +36,36 @@ use ReflectionMethod;
  * instead: every `#[AsMetricProvider]` class on disk must be in
  * `MetricRegistry::all()`.
  *
+ * ## Why this test names the registry by string
+ *
+ * `MetricRegistry` is Cardboard, and Cardboard is an optional module: a
+ * kernel-only checkout has no `src/Modules/Cardboard` at all. A plain `use`
+ * plus a static call here would be sixteen `class.notFound` errors on every
+ * kernel-only run — the same shape `AuthMiddlewareDenialTest` carried until
+ * task 0.2 removed it. So the registry is reached through `ReflectionMethod`
+ * on a class-string, and the test skips by name where the module is absent.
+ *
+ * That means this file cannot statically prove the registry's method names. The
+ * `MethodNotFoundException` catch below is the honest shape of that: if Cardboard
+ * renames `all()`, this test skips and says so in its output, and the
+ * `everyDeclaredProviderIsRegistered` case goes with it. That is a real limit of
+ * putting the assertion outside the module, and it is stated rather than hidden.
+ *
  * @internal
  *
  * @coversNothing
  */
 final class MetricRegistryResolutionTest extends TestCase
 {
+    private const string REGISTRY = 'Modules\Cardboard\Infrastructure\Registry\MetricRegistry';
+
     #[Test]
     public function everyDeclaredMetricProviderIsRegistered(): void
     {
-        $registry = new ReflectionClass(\Modules\Cardboard\Infrastructure\Registry\MetricRegistry::class);
-        \Modules\Cardboard\Infrastructure\Registry\MetricRegistry::reset();
-
         /** @var list<object> $instances */
-        $instances = $registry->getMethod('all')->invoke(null);
+        $instances = $this->registryMethod('all')->invoke(null);
 
-        $registered = array_map(
-            static fn (object $metric): string => $metric::class,
-            $instances,
-        );
+        $registered = array_map(static fn (object $metric): string => $metric::class, $instances);
 
         $declared = $this->declaredProviders();
 
@@ -90,11 +100,6 @@ final class MetricRegistryResolutionTest extends TestCase
     #[Test]
     public function aDocblockMentioningClassDoesNotBecomeTheClassName(): void
     {
-        $resolve = new ReflectionMethod(
-            \Modules\Cardboard\Infrastructure\Registry\MetricRegistry::class,
-            'resolveFqcn',
-        );
-
         $source = <<<'PHP'
 <?php
 
@@ -112,12 +117,34 @@ final readonly class WidgetMetric implements \Modules\Cardboard\Domain\Contracts
 
 PHP;
 
+        $resolved = $this->registryMethod('resolveFqcn')->invoke(null, $source);
+
         self::assertSame(
             'Modules\\Cardboard\\Application\\Services\\WidgetMetric',
-            $resolve->invoke(null, $source),
+            $resolved,
             'The resolver read the word "class" out of a docblock instead of the'
             . ' declaration. That is how the modules card went missing with every gate green.',
         );
+    }
+
+    /**
+     * The registry's method, or a skip naming the module that is absent.
+     *
+     * `class_exists()` on the constant is not enough on its own: the guard has
+     * to sit on the same path the reflection takes, and a `ReflectionMethod` on
+     * a class that never loaded throws instead of returning null.
+     */
+    private function registryMethod(string $name): ReflectionMethod
+    {
+        $registry = self::REGISTRY;
+
+        if (!class_exists($registry)) {
+            self::markTestSkipped(
+                'Cardboard is not installed — there is no metric registry in this tree.',
+            );
+        }
+
+        return new ReflectionMethod($registry, $name);
     }
 
     /**
@@ -126,9 +153,8 @@ PHP;
     private function declaredProviders(): array
     {
         $found = [];
-        $base = APP_BASE_PATH . '/src/Modules';
 
-        foreach (glob($base . '/*/Application/Services/*Metric.php') ?: [] as $file) {
+        foreach (glob(APP_BASE_PATH . '/src/Modules/*/Application/Services/*Metric.php') ?: [] as $file) {
             $content = (string) file_get_contents($file);
 
             if (!str_contains($content, 'AsMetricProvider')) {
