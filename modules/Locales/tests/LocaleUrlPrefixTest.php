@@ -74,7 +74,16 @@ final class LocaleUrlPrefixTest extends TestCase
     protected function tearDown(): void
     {
         MiddlewareRegistry::reset();
-        LocalesServices::reset();
+
+        // `setUp()` marks this class skipped when the module is not installed,
+        // and a skipped test still runs tearDown — so the unguarded reset below
+        // reached for `LocalesServices` on a kernel-only checkout and raised
+        // "Class ... not found" once per test, 16 times over, all of them from
+        // teardown rather than from any assertion. Same shape as the guard in
+        // setUp: the module has to be there for its own teardown.
+        if (class_exists(LocalesServices::class)) {
+            LocalesServices::reset();
+        }
     }
 
     /**

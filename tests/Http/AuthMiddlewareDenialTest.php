@@ -374,12 +374,10 @@ final class AuthMiddlewareDenialTest extends TestCase
     }
 
     /**
-     * @return never
-     *
      * A module this class was supposed to be skipped without is a broken skip,
      * not a reason to pass quietly: say which one, by name.
      */
-    private static function notInstalled(string $module): void
+    private static function notInstalled(string $module): never
     {
         throw new \RuntimeException(sprintf(
             'The %s module is not installed, but setUp() did not skip this test — the module guard'
