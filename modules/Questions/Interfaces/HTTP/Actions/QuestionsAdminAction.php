@@ -151,7 +151,7 @@ final class QuestionsAdminAction
     {
         $first = $questions[0];
         $key = $first->subjectKey();
-        $counts = ['pending' => 0, 'approved' => 0, 'rejected' => 0];
+        $counts = self::emptyStatusCounts();
 
         foreach ($questions as $question) {
             $counts[$question->status()] = ($counts[$question->status()] ?? 0) + 1;
@@ -196,6 +196,23 @@ final class QuestionsAdminAction
     /**
      * @param array<string, int> $counts
      */
+    /**
+     * The zeroed counters both headers start from, keyed by the OWNER of the
+     * status vocabulary. A hand-written key here is how a renamed status
+     * becomes a silently empty counter, and how a status added to `Question`
+     * disappears from the inbox without a failing test.
+     *
+     * @return array<string, int>
+     */
+    private static function emptyStatusCounts(): array
+    {
+        return [
+            Question::STATUS_PENDING => 0,
+            Question::STATUS_APPROVED => 0,
+            Question::STATUS_REJECTED => 0,
+        ];
+    }
+
     private function counts(array $counts): string
     {
         $parts = [];
@@ -267,7 +284,7 @@ final class QuestionsAdminAction
      */
     private function summary(array $all, ?string $status): string
     {
-        $counts = ['pending' => 0, 'approved' => 0, 'rejected' => 0];
+        $counts = self::emptyStatusCounts();
 
         foreach ($all as $question) {
             $counts[$question->status()] = ($counts[$question->status()] ?? 0) + 1;

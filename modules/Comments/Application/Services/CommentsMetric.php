@@ -12,6 +12,7 @@ use Modules\Cardboard\Domain\Model\Trend;
 use Modules\Cardboard\Domain\Contracts\MetricContract;
 use Modules\Cardboard\Infrastructure\Attributes\AsMetricProvider;
 use Modules\Cardboard\Infrastructure\Registry\CardboardRegistry;
+use Modules\Comments\Domain\Entities\Comment;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 
 /**
@@ -41,14 +42,14 @@ final readonly class CommentsMetric implements MetricContract
 
             $statusCounts = $this->countByStatus($pdo, $period->sqlInterval());
             $donut = new Donut([
-                ['value' => $statusCounts['pending'], 'color' => 'var(--m-warning)'],
-                ['value' => $statusCounts['approved'], 'color' => 'var(--m-success)'],
-                ['value' => $statusCounts['rejected'], 'color' => 'var(--m-error)'],
+                ['value' => $statusCounts[Comment::STATUS_PENDING], 'color' => 'var(--m-warning)'],
+                ['value' => $statusCounts[Comment::STATUS_APPROVED], 'color' => 'var(--m-success)'],
+                ['value' => $statusCounts[Comment::STATUS_REJECTED], 'color' => 'var(--m-error)'],
             ]);
 
-            $breakdown = $statusCounts['pending'] . ' pending · '
-                . $statusCounts['approved'] . ' approved · '
-                . $statusCounts['rejected'] . ' rejected';
+            $breakdown = $statusCounts[Comment::STATUS_PENDING] . ' ' . Comment::STATUS_PENDING . ' · '
+                . $statusCounts[Comment::STATUS_APPROVED] . ' ' . Comment::STATUS_APPROVED . ' · '
+                . $statusCounts[Comment::STATUS_REJECTED] . ' ' . Comment::STATUS_REJECTED;
 
             CardboardRegistry::register(
                 Card::make('comments', 'Comments', $total)
@@ -86,7 +87,7 @@ final readonly class CommentsMetric implements MetricContract
     }
 
     /**
-     * @return array{pending: int, approved: int, rejected: int}
+     * @return array<string, int>
      */
     private function countByStatus(\PDO $pdo, string $interval): array
     {
@@ -95,7 +96,12 @@ final readonly class CommentsMetric implements MetricContract
         );
         $stmt->execute([':interval' => $interval]);
 
-        $counts = ['pending' => 0, 'approved' => 0, 'rejected' => 0];
+        $counts = [
+            Comment::STATUS_PENDING => 0,
+            Comment::STATUS_APPROVED => 0,
+            Comment::STATUS_REJECTED => 0,
+        ];
+
         foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $row) {
             $status = (string) $row['status'];
             if (isset($counts[$status])) {

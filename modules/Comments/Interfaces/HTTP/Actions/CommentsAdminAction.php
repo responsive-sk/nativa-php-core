@@ -108,7 +108,7 @@ final class CommentsAdminAction
             . '<td>' . $article . '</td>'
             . '<td>' . $author . '</td>'
             . '<td>' . $body . '</td>'
-            . '<td><span class="m-badge ' . ('approved' === $comment->status() ? 'm-badge-success' : 'm-badge-error') . '">' . $status . '</span></td>'
+            . '<td><span class="m-badge ' . (Comment::STATUS_APPROVED === $comment->status() ? 'm-badge-success' : 'm-badge-error') . '">' . $status . '</span></td>'
             . '<td>' . $this->actions($id, $csrf, $comment->status()) . '</td>'
             . '</tr>';
     }
@@ -119,10 +119,10 @@ final class CommentsAdminAction
      */
     private function actions(string $id, string $csrf, string $status): string
     {
-        $approve = 'approved' !== $status
+        $approve = Comment::STATUS_APPROVED !== $status
             ? $this->form($id, $csrf, 'approve', 'Approve')
             : '';
-        $reject = 'rejected' !== $status
+        $reject = Comment::STATUS_REJECTED !== $status
             ? $this->form($id, $csrf, 'reject', 'Reject')
             : '';
         $delete = $this->form($id, $csrf, 'delete', 'Delete');
