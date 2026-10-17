@@ -17,8 +17,8 @@ if (!isset($viewRendererGuard)) {
         <td><?php echo $rowGroup; ?></td>
         <td>
             <div class="m-btn-group">
-                <a class="m-btn m-btn-sm m-btn-icon" href="/mark/locales/<?php echo $id; ?>/edit" title="Edit"><?php echo $iconEdit; ?></a>
-                <form method="POST" action="/mark/locales/<?php echo $id; ?>/delete" class="m-inline-form">
+                <a class="m-btn m-btn-sm m-btn-icon" href="<?php echo $url('mark.locales.edit', ['id' => $id]); ?>" title="Edit"><?php echo $iconEdit; ?></a>
+                <form method="POST" action="<?php echo $url('mark.locales.delete', ['id' => $id]); ?>" class="m-inline-form">
                     <?php echo $csrf . "\n"; ?>
                     <button class="m-btn m-btn-error m-btn-sm m-btn-icon"
                             data-confirm="Delete this translation?" title="Delete"><?php echo $iconDelete; ?></button>

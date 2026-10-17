@@ -95,7 +95,7 @@ final class CommentsAdminAction
         $summary = '<p class="m-muted">' . $pending . ' pending · ' . count($comments)
             . ' total</p>' . $content;
 
-        return AdminLayout::render('Comments', $summary, 'comments');
+        return AdminLayout::render('Comments', $summary, 'comments', router: $this->router());
     }
 
     private function row(Comment $comment, string $csrf): string
@@ -143,7 +143,7 @@ final class CommentsAdminAction
             default   => AdminLayout::iconDelete(),
         };
 
-        return '<form method="POST" action="' . AdminLayout::e('/mark/comments/' . $id . '/' . $action)
+        return '<form method="POST" action="' . AdminLayout::e($this->url('mark.comments.' . $action, ['id' => $id]))
             . '" class="m-inline-form"' . $confirm . '>' . $csrf
             . '<button class="m-btn m-btn-sm m-btn-icon ' . ('delete' === $action ? 'm-btn-error' : 'm-btn-ghost')
             . '" data-tooltip="' . $label . '" title="' . $label . '">' . $icon . '</button></form>';

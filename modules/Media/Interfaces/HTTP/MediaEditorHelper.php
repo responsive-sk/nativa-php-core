@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Media\Interfaces\HTTP;
 
 use Modules\Core\Application\Services\View\ViewRenderer;
+use Modules\Core\Kernel\Contracts\RouterInterface;
 
 /**
  * MediaEditorHelper — shared media UI components for all admin editors.
@@ -27,10 +28,13 @@ final class MediaEditorHelper
      *
      * @param string $textareaId The ID of the markdown textarea element
      */
-    public static function editorScript(string $textareaId = 'body'): string
+    public static function editorScript(RouterInterface $router, string $textareaId = 'body'): string
     {
         $escapedId = htmlspecialchars($textareaId, ENT_QUOTES);
 
-        return ViewRenderer::render('Modules/Media/Interfaces/HTTP/templates/media-picker.phtml', ['escapedId' => $escapedId]);
+        return ViewRenderer::render('Modules/Media/Interfaces/HTTP/templates/media-picker.phtml', [
+            'escapedId' => $escapedId,
+            'url'       => static fn (string $name, array $params = []): string => $router->url($name, $params),
+        ]);
     }
 }

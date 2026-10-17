@@ -133,7 +133,7 @@ final class ModulesAction
             ],
         );
 
-        return AdminLayout::render('Modules', $content, 'settings');
+        return AdminLayout::render('Modules', $content, 'settings', router: $this->router());
     }
 
     /**
@@ -152,9 +152,7 @@ final class ModulesAction
             : '<code>' . AdminLayout::e(implode('</code>, <code>', $module['drifted'])) . '</code>';
 
         $action = 'drifted' === $module['state']
-            ? '<form method="post" action="/mark/settings/modules/'
-                . AdminLayout::e($module['name'])
-                . '/reinstall" style="display:inline">'
+            ? '<form method="post" action="' . AdminLayout::e($this->url('mark.settings.modules.reinstall', ['name' => $module['name']])) . '" style="display:inline">'
                 . $csrf
                 . '<button type="submit" class="m-btn m-btn-sm">Reinstall</button></form>'
             : '';

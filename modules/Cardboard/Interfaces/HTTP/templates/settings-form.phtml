@@ -24,7 +24,7 @@ if (!isset($viewRendererGuard)) {
         <div class="m-tab-panel m-tab-panel--active" id="panel-general" data-tab-panel="general">
             <div class="m-card">
                 <h2 class="m-heading">Site settings</h2>
-                <form class="m-form" method="POST" action="/mark/settings/site">
+                <form class="m-form" method="POST" action="<?php echo $url('mark.settings.site'); ?>">
                     <?php echo $csrf . "\n"; ?>
                     <label for="site_name">Site name</label>
                     <input type="text" id="site_name" name="site_name" value="<?php echo $siteName; ?>">
@@ -55,7 +55,7 @@ if (!isset($viewRendererGuard)) {
             <div class="m-card">
                 <h2 class="m-heading">Design tokens</h2>
                 <?php echo $tokenTable . "\n"; ?>
-                <form class="m-form m-form--after-table" method="POST" action="/mark/settings/tokens">
+                <form class="m-form m-form--after-table" method="POST" action="<?php echo $url('mark.settings.tokens'); ?>">
                     <?php echo $csrf . "\n"; ?>
                     <div class="m-form-grid m-form-grid--tokens">
                         <input type="text" name="token_key" placeholder="token name" required>
@@ -70,7 +70,7 @@ if (!isset($viewRendererGuard)) {
             <div class="m-card">
                 <h2 class="m-heading">Page Cache</h2>
                 <p class="m-muted m-card-intro">File-based cache in <code>storage/cache/pages/</code> served when the rate limit is exceeded. Cached pages expire after 5 minutes.</p>
-                <form method="POST" action="/mark/settings/flush-cache">
+                <form method="POST" action="<?php echo $url('mark.settings.flush-cache'); ?>">
                     <?php echo $csrf . "\n"; ?>
                     <button class="m-btn m-btn-error" data-confirm="Flush all cached pages?">Flush Page Cache</button>
                 </form>
@@ -81,7 +81,7 @@ if (!isset($viewRendererGuard)) {
             <div class="m-card">
                 <h2 class="m-heading">Navigation (header)</h2>
                 <?php echo $navTable . "\n"; ?>
-                <form class="m-form m-form--after-table" method="POST" action="/mark/settings/nav">
+                <form class="m-form m-form--after-table" method="POST" action="<?php echo $url('mark.settings.nav'); ?>">
                     <?php echo $csrf . "\n"; ?>
                     <div class="m-form-grid">
                         <input type="text" name="label" placeholder="Label" required>
@@ -98,7 +98,7 @@ if (!isset($viewRendererGuard)) {
                 <h2 class="m-heading">Admin panel navigation</h2>
                 <p class="m-muted m-card-intro">Manage which pages appear in the admin sidebar/top bar, their order, and visibility. Changes apply immediately.</p>
                 <?php echo $adminNavTable . "\n"; ?>
-                <form class="m-form m-form--after-table" method="POST" action="/mark/settings/admin-nav">
+                <form class="m-form m-form--after-table" method="POST" action="<?php echo $url('mark.settings.admin-nav'); ?>">
                     <?php echo $csrf . "\n"; ?>
                     <div class="m-form-grid m-form-grid--nav">
                         <input type="text" name="label" placeholder="Label" required>

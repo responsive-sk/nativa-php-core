@@ -33,9 +33,25 @@ final class AdminEscapeTest extends TestCase
         $html = PagesTableRenderer::row(
             ['slug' => 'about', 'title' => 'About', 'published' => true],
             $evil,
+            self::router(),
         );
 
         $this->assertStringNotContainsString($evil, $html);
         $this->assertStringContainsString('&quot;', $html);
     }
+    private static function router(): \Modules\Core\Kernel\Contracts\RouterInterface
+    {
+        return new class implements \Modules\Core\Kernel\Contracts\RouterInterface {
+            public function match(\Modules\Core\Infrastructure\Http\Request $request): ?array
+            {
+                return null;
+            }
+
+            public function url(string $name, array $params = []): string
+            {
+                return '/mark/' . $name;
+            }
+        };
+    }
 }
+

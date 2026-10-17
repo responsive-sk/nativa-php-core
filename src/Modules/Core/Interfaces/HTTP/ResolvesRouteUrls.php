@@ -30,8 +30,16 @@ use Modules\Core\Kernel\Contracts\RouterInterface;
  */
 trait ResolvesRouteUrls
 {
-    public function __construct(private readonly ?RouterInterface $router = null)
+    /**
+     * Not promoted in the constructor: an action that already has one
+     * (`MediaCloudinaryAction`'s `?CloudinaryApi`) keeps it and assigns this
+     * property itself, so the trait composes with the existing signatures.
+     */
+    private readonly ?RouterInterface $router;
+
+    public function __construct(?RouterInterface $router = null)
     {
+        $this->router = $router;
     }
 
     /**
@@ -40,6 +48,16 @@ trait ResolvesRouteUrls
     protected function url(string $name, array $params = []): string
     {
         return $this->router()->url($name, $params);
+    }
+
+    /**
+     * The renderer's copy of the same seam: templates call `$url('mark.x')`.
+     *
+     * @return \Closure(string, array<string, string|int>): string
+     */
+    protected function urlBuilder(): \Closure
+    {
+        return fn (string $name, array $params = []): string => $this->url($name, $params);
     }
 
     protected function router(): RouterInterface

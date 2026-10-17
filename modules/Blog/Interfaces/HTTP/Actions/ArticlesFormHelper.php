@@ -9,6 +9,7 @@ use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Users\Infrastructure\Persistence\Repositories\UserRepository;
 use Modules\Core\Application\Services\View\ViewRenderer;
+use Modules\Core\Kernel\Contracts\RouterInterface;
 use Modules\Media\Interfaces\HTTP\MediaEditorHelper;
 
 /**
@@ -32,9 +33,9 @@ final class ArticlesFormHelper
     /**
      * Media picker modal + script — delegates to shared MediaEditorHelper.
      */
-    public static function mediaPickerScript(): string
+    public static function mediaPickerScript(RouterInterface $router): string
     {
-        return MediaEditorHelper::editorScript('body');
+        return MediaEditorHelper::editorScript($router, 'body');
     }
 
     /**

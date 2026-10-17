@@ -8,6 +8,7 @@ use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
 use Modules\Core\Application\Services\ShellContextProviderRegistry;
+use Modules\Core\Kernel\Contracts\RouterInterface;
 
 /**
  * CompactLayout — top-menu admin shell (no sidebar).
@@ -28,6 +29,7 @@ final class CompactLayout
         string $activeSection = '',
         array $actions = [],
         array $recentItems = [],
+        ?RouterInterface $router = null,
     ): string {
         $actionsHtml = '';
 
@@ -61,7 +63,7 @@ final class CompactLayout
         // plus the mark-switch entry for the Publish/Draft switch).
         $markCssLinks = AdminLayout::markCssLinks();
 
-        return ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/compact.phtml', ['actionsBar' => $actionsBar, 'content' => $content, 'csrf' => $csrf, 'currentUserName' => $currentUserName, 'htmlLang' => $htmlLang, 'htmxConfig' => $htmxConfig, 'htmxScript' => $htmxScript, 'markCssLinks' => $markCssLinks, 'navHtml' => $navHtml, 'recentJson' => $recentJson, 'titleEscaped' => $titleEscaped]);
+        return ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/compact.phtml', ['actionsBar' => $actionsBar, 'content' => $content, 'csrf' => $csrf, 'currentUserName' => $currentUserName, 'htmlLang' => $htmlLang, 'htmxConfig' => $htmxConfig, 'htmxScript' => $htmxScript, 'markCssLinks' => $markCssLinks, 'navHtml' => $navHtml, 'recentJson' => $recentJson, 'titleEscaped' => $titleEscaped, 'url' => AdminLayout::urlBuilder($router)]);
     }
 
     /**

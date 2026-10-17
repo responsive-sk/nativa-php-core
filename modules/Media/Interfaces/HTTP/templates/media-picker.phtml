@@ -46,7 +46,7 @@ if (!isset($viewRendererGuard)) {
         function loadPickerGrid(){
             var grid=document.getElementById('media-picker-grid');
             grid.innerHTML='<p style="color:var(--cba-muted);font-size:13px;">Loading...</p>';
-            fetch('/mark/media/json').then(function(r){return r.json()}).then(function(data){
+            fetch('<?php echo $url('media.json'); ?>').then(function(r){return r.json()}).then(function(data){
                 grid.innerHTML='';
                 if(!data.length){grid.innerHTML='<p style="color:var(--cba-muted);font-size:13px;">No images uploaded yet. Upload one above.</p>';return}
                 data.forEach(function(item){
@@ -135,7 +135,7 @@ if (!isset($viewRendererGuard)) {
             var fd=new FormData();
             fd.append('_token',_csrfToken);
             function send(){
-                fetch('/mark/media/upload-json',{method:'POST',body:fd}).then(function(r){
+                fetch('<?php echo $url('media.upload.json'); ?>',{method:'POST',body:fd}).then(function(r){
                     return r.json()['catch'](function(){return {error:'Upload failed (HTTP '+r.status+') — the file may exceed the server upload limit or was rejected by a security filter.'}})
                 }).then(function(data){
                     if(data.error){alert('Upload failed: '+data.error);return}

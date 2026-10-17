@@ -12,7 +12,7 @@ if (!isset($viewRendererGuard)) {
 }
 
 ?>    <div class="m-card">
-        <form class="m-form" method="POST" action="/mark/roles/<?php echo $groupId; ?>/permissions">
+        <form class="m-form" method="POST" action="<?php echo $url('mark.roles.permissions', ['id' => $groupId]); ?>">
             <?php echo $csrf . "\n"; ?>
             <?php echo $sections . "\n"; ?>
             <div><button class="m-btn m-btn-primary" type="submit">Save permissions</button></div>

@@ -9,6 +9,7 @@ use Modules\Cardboard\Application\Services\BulkActions;
 use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Pages\Application\Services\PageCrudService;
@@ -22,6 +23,8 @@ use Modules\Pages\Interfaces\HTTP\PagesTableRenderer;
 #[Route(path: '/mark/pages', method: 'GET', name: 'pages.index')]
 final class PagesIndexAction
 {
+    use ResolvesRouteUrls;
+
     private const int PER_PAGE = 20;
 
     /** Whitelisted sortable columns (query ?sort= value). */
@@ -52,14 +55,14 @@ final class PagesIndexAction
         $enClass = 'en_US' === $locale ? 'm-pill m-pill-active' : 'm-pill';
 
         $localeBar = '<div class="m-filter-bar">'
-            . '<a class="' . $skClass . '" href="/mark/pages?locale=sk">SK</a>'
-            . '<a class="' . $enClass . '" href="/mark/pages?locale=en">EN</a>'
+            . '<a class="' . $skClass . '" href="' . AdminLayout::e($this->url('pages.index') . '?locale=sk') . '">SK</a>'
+            . '<a class="' . $enClass . '" href="' . AdminLayout::e($this->url('pages.index') . '?locale=en') . '">EN</a>'
             . '</div>';
 
         $grid = $this->renderGrid($paginated, $localeRaw, $search, $page, $totalPages, $total, $sort, $dir);
 
         $breadcrumb = AdminLayout::breadcrumb([
-            ['label' => 'Dashboard', 'href' => '/mark'],
+            ['label' => 'Dashboard', 'href' => $this->url('mark.dashboard')],
             ['label' => 'Pages'],
         ]);
 
@@ -82,9 +85,9 @@ final class PagesIndexAction
             'Pages',
             $content . $toast,
             'pages',
-            [['label' => 'New page', 'href' => '/mark/pages/create?locale=' . $localeRaw]],
+            [['label' => 'New page', 'href' => $this->url('pages.create') . '?locale=' . $localeRaw]],
             $recentPages,
-        ));
+        router: $this->router()));
     }
 
     /**
@@ -100,7 +103,7 @@ final class PagesIndexAction
         foreach (array_slice($pages, 0, 5) as $page) {
             $recent[] = [
                 'label' => $page['title'],
-                'href' => '/mark/pages/' . $page['slug'] . '/edit?locale=' . $locale,
+                'href' => $this->url('pages.edit', ['slug' => $page['slug']]) . '?locale=' . $locale,
                 'icon' => '📄',
             ];
         }
@@ -168,13 +171,18 @@ final class PagesIndexAction
         if ([] === $pages) {
             $emptyTitle = '' !== $search ? 'No pages match your search' : 'No pages yet';
             $emptyDesc = '' !== $search ? 'Try a different search term.' : 'Create your first page to get started.';
-            $cta = '' !== $search ? '' : '/mark/pages/create?locale=' . $locale;
+            $cta = '' !== $search ? '' : $this->url('pages.create') . '?locale=' . $locale;
             $ctaLabel = '' !== $search ? '' : 'New page';
 
             return $searchInput . AdminLayout::emptyState($emptyTitle, $emptyDesc, $cta, $ctaLabel);
         }
 
-        $bulkBar = BulkActions::actionBarWithPublish('pages', '/mark/bulk-publish', $locale);
+        $bulkBar = BulkActions::actionBarWithPublish(
+            'pages',
+            $this->url('mark.bulk-publish'),
+            $this->url('mark.bulk-delete'),
+            $locale,
+        );
 
         return $searchInput . $bulkBar . $this->renderContent($pages, $locale, $search, $currentPage, $totalPages, $total, $sort, $dir);
     }
@@ -191,7 +199,7 @@ final class PagesIndexAction
     {
         $pagination = $this->renderPagination($currentPage, $totalPages, $locale, $search, $sort, $dir);
         $countInfo = '<div class="m-muted" style="font-size:13px;margin-bottom:12px;">Showing ' . count($pages) . ' of ' . $total . ' pages</div>';
-        $tableHtml = PagesTableRenderer::table($pages, $locale, $sort, $dir, ['locale' => $locale, 'q' => $search]);
+        $tableHtml = PagesTableRenderer::table($pages, $locale, $sort, $dir, ['locale' => $locale, 'q' => $search], $this->router());
 
         $skeleton = AdminLayout::skeletonTable([
             ['5%'], ['30%'], ['20%'], ['20%'], ['15%'],
@@ -219,7 +227,7 @@ final class PagesIndexAction
 
         return '<div class="m-filter-bar" style="margin-bottom:16px;">'
             . '<input type="search" name="q" value="' . $escapedSearch . '"'
-            . ' hx-get="/mark/pages"'
+            . ' hx-get="' . $this->url('pages.index') . '"'
             . ' hx-trigger="keyup changed delay:300ms, search"'
             . ' hx-target="#pages-content"'
             . ' hx-swap="outerHTML"'
@@ -247,7 +255,7 @@ final class PagesIndexAction
         if ($currentPage > 1) {
             $href = $this->paginationUrl($currentPage - 1, $locale, $search, $sort, $dir);
             $nav .= '<a class="m-btn m-btn-sm" href="' . $href . '"'
-                . ' hx-get="/mark/pages' . $href . '"'
+                . ' hx-get="' . $this->url('pages.index') . $href . '"'
                 . ' hx-target="#pages-content"'
                 . ' hx-swap="outerHTML"'
                 . ' hx-indicator="#pages-skeleton"'
@@ -265,7 +273,7 @@ final class PagesIndexAction
                 $nav .= '<span class="m-btn m-btn-sm m-btn-primary" aria-current="page">' . $i . '</span>';
             } else {
                 $nav .= '<a class="m-btn m-btn-sm" href="' . $href . '"'
-                    . ' hx-get="/mark/pages' . $href . '"'
+                    . ' hx-get="' . $this->url('pages.index') . $href . '"'
                     . ' hx-target="#pages-content"'
                     . ' hx-swap="outerHTML"'
                     . ' hx-indicator="#pages-skeleton"'
@@ -277,7 +285,7 @@ final class PagesIndexAction
         if ($currentPage < $totalPages) {
             $href = $this->paginationUrl($currentPage + 1, $locale, $search, $sort, $dir);
             $nav .= '<a class="m-btn m-btn-sm" href="' . $href . '"'
-                . ' hx-get="/mark/pages' . $href . '"'
+                . ' hx-get="' . $this->url('pages.index') . $href . '"'
                 . ' hx-target="#pages-content"'
                 . ' hx-swap="outerHTML"'
                 . ' hx-indicator="#pages-skeleton"'

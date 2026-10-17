@@ -64,7 +64,7 @@ final class UsersAction
         $escapedSearch = AdminLayout::e($search);
         $searchInput = '<div class="m-filter-bar">'
             . '<input type="search" name="q" value="' . $escapedSearch . '" class="m-input--filter"'
-            . ' hx-get="/mark/users"'
+            . ' hx-get="' . $this->url('mark.users') . '"'
             . ' hx-trigger="keyup changed delay:300ms, search"'
             . ' hx-target="#users-content"'
             . ' hx-swap="outerHTML"'
@@ -72,7 +72,7 @@ final class UsersAction
             . ' placeholder="Search users...">'
             . '</div>';
 
-        $grid = \Modules\Users\Interfaces\HTTP\UsersTableRenderer::render($users);
+        $grid = \Modules\Users\Interfaces\HTTP\UsersTableRenderer::render($users, $this->router());
 
         // HTMX: return partial HTML.
         if (AdminLayout::isHtmx($request)) {
@@ -91,8 +91,8 @@ final class UsersAction
             'Users',
             $content,
             'users',
-            [['label' => 'New user', 'href' => '/mark/users/create']],
-        ));
+            [['label' => 'New user', 'href' => $this->url('mark.users.create')]],
+        router: $this->router()));
     }
 
     /**
@@ -117,7 +117,7 @@ final class UsersAction
     {
         return Response::html($this->form(
             'New user',
-            '/mark/users/create',
+            $this->url('mark.users.create'),
             'Create user',
             [],
             [],
@@ -193,7 +193,7 @@ final class UsersAction
 
         return Response::html($this->form(
             'Edit user — ' . $user->name(),
-            '/mark/users/' . AdminLayout::e($user->id()) . '/edit',
+            $this->url('mark.users.edit', ['id' => AdminLayout::e($user->id())]),
             'Save changes',
             [],
             ['name' => $user->name(), 'email' => $user->email()],
@@ -340,10 +340,10 @@ final class UsersAction
         $hxPost = $htmx ? ' hx-post="' . AdminLayout::e($action) . '" hx-indicator="#user-spinner"' : '';
         $spinner = '<span class="htmx-indicator" id="user-spinner">⏳</span> ';
 
-        $content = ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/users-form.phtml', ['action' => $action, 'activeChecked' => $activeChecked, 'avatarPreview' => $avatarPreview, 'csrf' => $csrf, 'email' => $email, 'errorHtml' => $errorHtml, 'hxPost' => $hxPost, 'name' => $name, 'passwordHint' => $passwordHint, 'removeAvatar' => $removeAvatar, 'roleOptions' => $roleOptions, 'spinner' => $spinner, 'submitLabel' => $submitLabel])
+        $content = ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/users-form.phtml', ['url' => $this->urlBuilder(), 'action' => $action, 'activeChecked' => $activeChecked, 'avatarPreview' => $avatarPreview, 'csrf' => $csrf, 'email' => $email, 'errorHtml' => $errorHtml, 'hxPost' => $hxPost, 'name' => $name, 'passwordHint' => $passwordHint, 'removeAvatar' => $removeAvatar, 'roleOptions' => $roleOptions, 'spinner' => $spinner, 'submitLabel' => $submitLabel])
             . ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/avatar-guard.phtml', []);
 
-        return AdminLayout::render($title, $content, 'users');
+        return AdminLayout::render($title, $content, 'users', router: $this->router());
     }
 
     /**
@@ -394,7 +394,7 @@ final class UsersAction
     {
         return Response::html($this->form(
             'New user',
-            '/mark/users/create',
+            $this->url('mark.users.create'),
             'Create user',
             $errors,
             ['name' => $name, 'email' => $email],
@@ -413,7 +413,7 @@ final class UsersAction
     {
         return Response::html($this->form(
             'Edit user — ' . $user->name(),
-            '/mark/users/' . AdminLayout::e($user->id()) . '/edit',
+            $this->url('mark.users.edit', ['id' => AdminLayout::e($user->id())]),
             'Save changes',
             $errors,
             ['name' => $name, 'email' => $email],

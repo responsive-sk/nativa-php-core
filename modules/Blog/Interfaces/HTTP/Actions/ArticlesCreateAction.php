@@ -109,13 +109,13 @@ final class ArticlesCreateAction
         $e = static fn (string $key, string $default = ''): string => AdminLayout::e($data[$key] ?? $default);
 
         $localeParam = ContentServices::mapper()->languageCode($locale);
-        $backHref = '/mark/articles?locale=' . $localeParam;
+        $backHref = $this->url('articles.index') . '?locale=' . $localeParam;
 
         $htmx = null !== $request && AdminLayout::isHtmx($request);
-        $hxPost = $htmx ? ' hx-post="/mark/articles/create?locale=' . $localeParam . '" hx-indicator="#create-spinner"' : '';
+        $hxPost = $htmx ? ' hx-post="' . AdminLayout::e($this->url('articles.create')) . '?locale=' . $localeParam . '" hx-indicator="#create-spinner"' : '';
         $spinner = '<span class="htmx-indicator" id="create-spinner">⏳</span> ';
 
-        $content = '<form method="POST" action="/mark/articles/create?locale=' . $localeParam . '"' . $hxPost . '>'
+        $content = '<form method="POST" action="' . AdminLayout::e($this->url('articles.create')) . '?locale=' . $localeParam . '"' . $hxPost . '>'
             . $errorHtml
             . $this->formFields($csrf, $data, $locale)
             . '<div class="m-filter-bar">'
@@ -123,10 +123,10 @@ final class ArticlesCreateAction
             . '<a class="m-btn m-btn-ghost" href="' . $backHref . '">Cancel</a>'
             . '</div>'
             . '</form>'
-            . ArticlesFormHelper::mediaPickerScript()
+            . ArticlesFormHelper::mediaPickerScript($this->router())
             . ArticlesFormHelper::formGuardScript();
 
-        return AdminLayout::render('New article', $content, 'articles');
+        return AdminLayout::render('New article', $content, 'articles', router: $this->router());
     }
 
     /**

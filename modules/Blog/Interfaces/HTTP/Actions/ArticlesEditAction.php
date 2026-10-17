@@ -13,6 +13,7 @@ use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Users\Interfaces\HTTP\AuthServices;
@@ -27,6 +28,8 @@ use Modules\Validation\Validation\Validator;
 #[Route(path: '/mark/articles/{slug}/edit', method: 'GET|POST', name: 'articles.edit')]
 final class ArticlesEditAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         $slug = (string) ($request->routeParam('slug') ?? '');
@@ -35,7 +38,7 @@ final class ArticlesEditAction
         $article = $service->find($slug, $locale);
 
         if (null === $article) {
-            return Response::html(AdminLayout::render('Not found', '<div class="m-card"><p>Article not found.</p></div>'), 404);
+            return Response::html(AdminLayout::render('Not found', '<div class="m-card"><p>Article not found.</p></div>', router: $this->router()), 404);
         }
 
         if (!BlogServices::writeGuard()->owns($slug, $locale, AuthServices::auth()->currentUser())) {
@@ -108,7 +111,7 @@ final class ArticlesEditAction
     private function refused(string $slug): Response
     {
         return Response::html(
-            AdminLayout::render('Not your article', BlogServices::ownership()->refusal($slug)),
+            AdminLayout::render('Not your article', BlogServices::ownership()->refusal($slug), router: $this->router()),
             403,
         );
     }
@@ -119,7 +122,7 @@ final class ArticlesEditAction
     private function saved(Request $request, string $locale): Response
     {
         $localeParam = ContentServices::mapper()->languageCode($locale);
-        $target = '/mark/articles?locale=' . $localeParam . '&toast=Article+saved+successfully';
+        $target = $this->url('articles.index') . '?locale=' . $localeParam . '&toast=Article+saved+successfully';
 
         if (AdminLayout::isHtmx($request)) {
             $response = Response::html('');
@@ -141,16 +144,16 @@ final class ArticlesEditAction
         $data = $override ?: $this->normalizeArticle($article, $slug);
         $localeParam = ContentServices::mapper()->languageCode($locale);
         $slugEscaped = AdminLayout::e($slug);
-        $backHref = '/mark/articles?locale=' . $localeParam;
+        $backHref = $this->url('articles.index') . '?locale=' . $localeParam;
         $fields = $this->passthroughFields($data) . $this->formFields($data, $slug, $locale);
         $bodyValue = AdminLayout::e($data['body']);
         $questionContext = $this->questionContext($slug, $locale);
 
         $htmx = null !== $request && AdminLayout::isHtmx($request);
-        $hxPost = $htmx ? ' hx-post="/mark/articles/' . $slugEscaped . '/edit?locale=' . $localeParam . '" hx-indicator="#edit-spinner"' : '';
+        $hxPost = $htmx ? ' hx-post="' . AdminLayout::e($this->url('articles.edit', ['slug' => $slugEscaped])) . '?locale=' . $localeParam . '" hx-indicator="#edit-spinner"' : '';
         $spinner = '<span class="htmx-indicator" id="edit-spinner">⏳</span> ';
 
-        $content = '<form method="POST" action="/mark/articles/' . $slugEscaped . '/edit?locale=' . $localeParam . '"' . $hxPost . '>'
+        $content = '<form method="POST" action="' . AdminLayout::e($this->url('articles.edit', ['slug' => $slugEscaped])) . '?locale=' . $localeParam . '"' . $hxPost . '>'
             . AdminLayout::messages($errors, 'err')
             . AdminLayout::csrfField()
             . $fields
@@ -162,10 +165,10 @@ final class ArticlesEditAction
             . '<a class="m-btn m-btn-ghost" href="' . $backHref . '">Cancel</a>'
             . '</div>'
             . '</form>'
-            . ArticlesFormHelper::mediaPickerScript()
+            . ArticlesFormHelper::mediaPickerScript($this->router())
             . ArticlesFormHelper::formGuardScript();
 
-        return AdminLayout::render('Edit: ' . $slug, $content, 'articles');
+        return AdminLayout::render('Edit: ' . $slug, $content, 'articles', router: $this->router());
     }
 
     private function questionContext(string $slug, string $locale): string

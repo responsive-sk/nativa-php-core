@@ -22,7 +22,7 @@ if (!isset($viewRendererGuard)) {
          summary). Collapsing is the user's choice, not the default. -->
     <details class="m-card m-folder-manage" open>
         <summary class="m-folder-manage__summary">Manage folders <span class="m-badge m-badge-gray"><?php echo $folderCount; ?></span></summary>
-        <form class="m-folder-manage__create" method="post" action="/mark/media/folders/create">
+        <form class="m-folder-manage__create" method="post" action="<?php echo $url('media.folder-create'); ?>">
             <?php echo $csrf; ?>
             <label class="m-label" for="folder-new">New folder</label>
             <input class="m-input m-input--compact" id="folder-new" type="text" name="path" placeholder="photos/2026" required>

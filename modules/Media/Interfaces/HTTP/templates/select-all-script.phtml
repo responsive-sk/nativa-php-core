@@ -11,7 +11,7 @@ if (!isset($viewRendererGuard)) {
     throw new \RuntimeException('Template must be rendered via ViewRenderer.');
 }
 
-?>    <form method="POST" action="/mark/media/batch-delete">
+?>    <form method="POST" action="<?php echo $url('media.batch-delete'); ?>">
         <?php echo $csrf . "\n"; ?>
         <div class="m-card m-card-flush">
             <div class="m-toolbar">

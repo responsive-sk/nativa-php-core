@@ -13,8 +13,8 @@ if (!isset($viewRendererGuard)) {
 
 ?>    <div class="m-card">
         <h2 class="m-heading">Create role</h2>
-        <form class="m-form" method="POST" action="/mark/roles/create"
-              hx-post="/mark/roles/create" hx-indicator="#role-spinner">
+        <form class="m-form" method="POST" action="<?php echo $url('mark.roles.create'); ?>"
+              hx-post="<?php echo $url('mark.roles.create'); ?>" hx-indicator="#role-spinner">
             <?php echo $csrf . "\n"; ?>
             <label for="role_name">Role name</label>
             <input type="text" id="role_name" name="name" placeholder="e.g. editor" required>

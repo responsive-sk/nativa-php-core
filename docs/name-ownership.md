@@ -16,8 +16,8 @@ it should not be.
 ## What is counted, and what is not
 
 Scope: `src/Modules/{Core,Database,KernelTheme,Tooling}`, `src/Themes`,
-`modules`, `tests`, `bin`, `public` (minus `public/dist`). 411 non-gate files
-plus the three gate files — 414 scanned: rule 1 reads all of them, while the
+`modules`, `tests`, `bin`, `public` (minus `public/dist`). 412 non-gate files
+plus the three gate files — 415 scanned: rule 1 reads all of them, while the
 two counts exclude the gates for the reason below.
 
 `src/Modules/<Name>` for any other module is **gitignored operator state**. A
@@ -30,11 +30,11 @@ identical:
 
 | | full tree | kernel-only |
 |---|---|---|
-| files (rule 1 scan) | 414 | 414 |
+| files (rule 1 scan) | 415 | 415 |
 | declarations (rule 3, excluding the gates) | 238 | 238 |
 | distinct names (rule 3) | 202 | 202 |
 | values with 2+ names (rule 1) | **2** | **2** |
-| literal places (rule 2) | 499 | 499 |
+| literal places (rule 2) | 496 | 496 |
 
 ## Rule 1 — one string value, one name · absolute, 2 exemptions
 
@@ -89,19 +89,19 @@ writes down WHY.
 The list also fails **when an entry stops applying** — an exemption that
 stopped being a collision is rot in the ledger, not a free pass.
 
-## Rule 2 — a value spelled as a literal outside its owner · ratchet at 499
+## Rule 2 — a value spelled as a literal outside its owner · ratchet at 496
 
 A **ceiling, not a list.** 52 owned string values appear as raw literals on
-**499 places** across the tree. An absolute rule here would need 499
-exemptions, and a gate with 499 exemptions is not a gate:
+**496 places** across the tree. An absolute rule here would need 496
+exemptions, and a gate with 496 exemptions is not a gate:
 
 | filter | values | places | files |
 |---|---|---|---|
-| none | 52 | 499 | 112 |
-| length ≥ 4 | 48 | 447 | 108 |
-| length ≥ 8 | 26 | 88 | 42 |
-| contains `/` or `.` | 13 | 73 | 27 |
-| contains `/` | 4 | 44 | 21 |
+| none | 52 | 496 | 112 |
+| length ≥ 4 | 48 | 444 | 108 |
+| length ≥ 8 | 26 | 87 | 42 |
+| contains `/` or `.` | 13 | 70 | 25 |
+| contains `/` | 4 | 41 | 19 |
 
 The leading values are `'sk_SK'` (132 places), `'en'` (48) and `'home'` (36).
 A locale code, the default language and a route slug — data that appears in seed
@@ -117,13 +117,15 @@ constants and the three call sites that retyped `'/mark'` beside them are gone,
 while `AdminRoutePolicy::DEFAULT_PREFIX` keeps the value owned — the remaining
 `/mark` literals are still counted. It moved 502 → 499 with task 2.8: the 130
 admin redirects now address routes by name, and the three that spelled the bare
-`/mark` were the ones this rule could see (the rest is held by
-`AdminRedirectRouteNamesTest`). That is the only legal direction, and it moved
-as work rather than as an accounting change. The gate refuses the 500th.
+`/mark` were the ones this rule could see. It moved 499 → 496 with task 2.9,
+which did the same for HTML links and forms; the rest of both refactors is held
+by `AdminRouteUrlNamesTest`, which scans `href`, `action` and HTMX URLs. That is
+the only legal direction, and it moved as work rather than as an accounting
+change. The gate refuses the 497th.
 
 ### Places that are counted on purpose and must stay counted
 
-Seven of the 499 are test literals that **look** like duplication and are not.
+Seven of the 496 are test literals that **look** like duplication and are not.
 They are `assertSame()` calls whose subject is the exact string that has to
 arrive in the database row:
 

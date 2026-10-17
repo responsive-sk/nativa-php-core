@@ -13,10 +13,11 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * AdminRedirectRouteNamesTest — a redirect addresses a route by NAME.
+ * AdminRouteUrlNamesTest — admin navigation addresses a route by NAME.
  *
- * Task 2.8, from a measurement on 2026-10-17: 130 admin redirects retyped the
- * path their own file had just declared beside a name, e.g.
+ * Tasks 2.8 and 2.9, from a measurement on 2026-10-17: 130 admin redirects and
+ * 83 HTML links/forms (54 in PHP, 29 in .phtml) retyped the path their own
+ * file had just declared beside a name, e.g.
  *
  *     #[Route(path: '/mark/settings/modules', name: 'mark.settings.modules')]
  *     ...
@@ -30,9 +31,10 @@ use PHPUnit\Framework\TestCase;
  *
  * Two claims are pinned here:
  *
- *  1. **The tree holds no path-literal redirects.** The scan is the gate; it
- *     reads the catalogue (or the installed slice on a kernel-only checkout)
- *     and ignores comments, so the docblock above is not a false positive.
+ *  1. **The tree holds no path-literal navigation.** Redirects, `HX-Redirect`
+ *     headers, `href`, `action` and HTMX URLs are all scanned; the gate reads
+ *     the catalogue (or the installed slice on a kernel-only checkout) and
+ *     ignores comments, so the docblock above is not a false positive.
  *  2. **The NAME is what builds the URL.** The probe route's path is
  *     deliberately different from the name's usual path; a redirect that
  *     resolved `mark.settings` to `/mark/settings` would fail. The second half
@@ -43,10 +45,10 @@ use PHPUnit\Framework\TestCase;
  *
  * @coversNothing
  */
-final class AdminRedirectRouteNamesTest extends TestCase
+final class AdminRouteUrlNamesTest extends TestCase
 {
     #[Test]
-    public function noAdminActionBuildsARedirectFromAPathLiteral(): void
+    public function noAdminNavigationIsBuiltFromAPathLiteral(): void
     {
         $root = is_dir(APP_BASE_PATH . '/modules')
             ? APP_BASE_PATH . '/modules'
@@ -62,13 +64,16 @@ final class AdminRedirectRouteNamesTest extends TestCase
         );
 
         foreach ($iterator as $file) {
-            if (!$file instanceof \SplFileInfo || !$file->isFile() || 'php' !== $file->getExtension()) {
+            if (!$file instanceof \SplFileInfo || !$file->isFile() || !in_array($file->getExtension(), ['php', 'phtml'], true)) {
                 continue;
             }
 
             $path = $file->getPathname();
 
-            if (!str_contains($path, '/Interfaces/HTTP/')) {
+            // HTML navigation is emitted from the HTTP layer and from the
+            // shared UI services it calls (BulkActions builds forms). A
+            // service that spells a path is the same defect one layer down.
+            if (!str_contains($path, '/Interfaces/HTTP/') && !str_contains($path, '/Application/Services/')) {
                 continue;
             }
 
@@ -84,6 +89,14 @@ final class AdminRedirectRouteNamesTest extends TestCase
 
                 if (str_contains($line, "Response::redirect('/mark")
                     || str_contains($line, "HX-Redirect', '/mark")
+                    || str_contains($line, 'href="/mark')
+                    || str_contains($line, 'action="/mark')
+                    || str_contains($line, 'hx-get="/mark')
+                    || str_contains($line, 'hx-post="/mark')
+                    || str_contains($line, 'hx-delete="/mark')
+                    || str_contains($line, 'hx-put="/mark')
+                    || str_contains($line, 'hx-patch="/mark')
+                    || str_contains($line, 'data-reorder-url="/mark')
                 ) {
                     $found[] = sprintf('%s:%d %s', $relative, $index + 1, trim($line));
                 }
@@ -95,7 +108,7 @@ final class AdminRedirectRouteNamesTest extends TestCase
         self::assertSame(
             [],
             $found,
-            "A redirect spells a route as a path instead of asking the Router for its name:\n"
+            "A redirect or link spells a route as a path instead of asking the Router for its name:\n"
             . implode("\n", $found)
             . "\nUse \$this->url('route.name') (ResolvesRouteUrls); the Kernel injects the Router.",
         );

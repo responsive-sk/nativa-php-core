@@ -117,13 +117,13 @@ final class MediaEditAction
 
         $viewIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
 
-        $content = ViewRenderer::render('Modules/Media/Interfaces/HTTP/templates/media-edit.phtml', ['altText' => $altText, 'caption' => $caption, 'catOptions' => $catOptions, 'category' => $category, 'csrf' => $csrf, 'folder' => $folder, 'folderOptions' => $folderOptions, 'id' => $id, 'name' => $name, 'preview' => $preview, 'providerName' => $providerName, 'tagOptions' => $tagOptions, 'tagsStr' => $tagsStr, 'viewCount' => $viewCount, 'viewIcon' => $viewIcon]);
+        $content = ViewRenderer::render('Modules/Media/Interfaces/HTTP/templates/media-edit.phtml', ['url' => $this->urlBuilder(), 'altText' => $altText, 'caption' => $caption, 'catOptions' => $catOptions, 'category' => $category, 'csrf' => $csrf, 'folder' => $folder, 'folderOptions' => $folderOptions, 'id' => $id, 'name' => $name, 'preview' => $preview, 'providerName' => $providerName, 'tagOptions' => $tagOptions, 'tagsStr' => $tagsStr, 'viewCount' => $viewCount, 'viewIcon' => $viewIcon]);
 
         return Response::html(AdminLayout::render(
             'Edit Media',
             $content,
             'media',
-        ));
+        router: $this->router()));
     }
 
     /**

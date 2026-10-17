@@ -21,13 +21,13 @@ if (!isset($viewRendererGuard)) {
         <?php echo $foldersHtml . "\n"; ?>
 
         <?php if ('' === $foldersHtml && '' !== $currentFolder): ?>
-        <p class="m-muted">No subfolders here. <a href="/mark/media/cloudinary?root=1">Show all folders</a></p>
+        <p class="m-muted">No subfolders here. <a href="<?php echo $url('media.cloudinary') . '?root=1'; ?>">Show all folders</a></p>
         <?php endif; ?>
 
         <?php echo $summaryHtml . "\n"; ?>
 
         <?php if ('' !== $cardsHtml): ?>
-        <form method="POST" action="/mark/media/cloudinary/import">
+        <form method="POST" action="<?php echo $url('media.cloudinary.import'); ?>">
             <?php echo $csrf . "\n"; ?>
             <input type="hidden" name="folder" value="<?php echo $currentFolder; ?>">
             <div class="m-toolbar">

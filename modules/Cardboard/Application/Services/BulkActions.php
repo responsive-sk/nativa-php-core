@@ -36,12 +36,14 @@ final class BulkActions
      * ENT_QUOTES) before reaching attributes or element content — the same
      * convention the callers' $slug/$locale already follow.
      *
+     * @param string $publishAction The entity's publish-toggle URL, built by
+     *                              the caller through the Router (task 2.9)
      * @param array{draft: string, published: string, tooltip_publish: string, tooltip_unpublish: string} $labels
      */
-    public static function markSwitch(string $slug, string $entity, string $locale, string $csrf, bool $published, array $labels): string
+    public static function markSwitch(string $publishAction, string $locale, string $csrf, bool $published, array $labels): string
     {
         $labels = self::escapeLabels($labels);
-        $action = '/mark/' . $entity . '/' . $slug . '/publish?locale=' . $locale;
+        $action = AdminLayout::e($publishAction . '?locale=' . $locale);
         $state = $published ? 'on' : 'off';
         $tooltip = $published ? $labels['tooltip_unpublish'] : $labels['tooltip_publish'];
         $aria = $published
@@ -148,11 +150,13 @@ final class BulkActions
      *
      * @param string $entity        Entity type (e.g. "articles", "pages")
      * @param string $publishAction URL for bulk publish endpoint
+     * @param string $deleteAction  URL for bulk delete endpoint
      */
-    public static function actionBarWithPublish(string $entity, string $publishAction, string $locale = ''): string
+    public static function actionBarWithPublish(string $entity, string $publishAction, string $deleteAction, string $locale = ''): string
     {
         $escapedEntity = AdminLayout::e($entity);
         $escapedPublish = AdminLayout::e($publishAction);
+        $escapedDelete = AdminLayout::e($deleteAction);
         $token = CsrfMiddleware::token();
         $localeInput = '' !== $locale
             ? '<input type="hidden" name="locale" value="' . AdminLayout::e($locale) . '">'
@@ -188,7 +192,7 @@ final class BulkActions
             . '</button>'
             . '</form>'
             // Delete — plain POST, same ids[]-injection flow as publish.
-            . '<form method="POST" action="/mark/bulk-delete"'
+            . '<form method="POST" action="' . $escapedDelete . '"'
             . ' style="display:inline;" id="bulk-delete-form">'
             . '<input type="hidden" name="_token" value="' . AdminLayout::e($token) . '">'
             . '<input type="hidden" name="entity" value="' . $escapedEntity . '">'

@@ -59,8 +59,8 @@ final class TagsManageAction
             'Tags',
             $content,
             'tags',
-            [['label' => 'New tag', 'href' => '/mark/tags#create-form']],
-        ));
+            [['label' => 'New tag', 'href' => $this->url('tags.manage') . '#create-form']],
+        router: $this->router()));
     }
 
     public function create(Request $request): Response
@@ -145,7 +145,7 @@ final class TagsManageAction
     private function createForm(string $csrf): string
     {
         return '<div id="create-form" class="m-filter-bar m-create-panel">'
-            . '<form method="POST" action="/mark/tags/create" class="m-inline-form">'
+            . '<form method="POST" action="' . AdminLayout::e($this->url('tags.create')) . '" class="m-inline-form">'
             . $csrf
             . '<input type="text" name="tag" class="m-input" placeholder="New tag name" required>'
             . '<button class="m-btn m-btn-primary m-btn-sm">Create</button>'
@@ -178,7 +178,7 @@ final class TagsManageAction
                 . "<td>{$count}</td>"
                 . '<td>'
                 . '<div class="m-btn-group">'
-                . '<form method="POST" action="/mark/tags/rename" class="m-inline-form">'
+                . '<form method="POST" action="' . AdminLayout::e($this->url('tags.rename')) . '" class="m-inline-form">'
                 . "{$csrf}"
                 . "<input type=\"hidden\" name=\"old_tag\" value=\"{$tagEsc}\">"
                 . '<input type="text" name="new_tag" class="m-input m-input--compact" placeholder="New name" required>'
@@ -188,7 +188,7 @@ final class TagsManageAction
                 . '</td>'
                 . '<td>'
                 . '<div class="m-btn-group">'
-                . '<form method="POST" action="/mark/tags/delete" class="m-inline-form">'
+                . '<form method="POST" action="' . AdminLayout::e($this->url('tags.delete')) . '" class="m-inline-form">'
                 . "{$csrf}"
                 . "<input type=\"hidden\" name=\"tag\" value=\"{$tagEsc}\">"
                 . '<button class="m-btn m-btn-error m-btn-sm m-btn-icon" '

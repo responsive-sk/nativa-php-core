@@ -81,15 +81,15 @@ final class LocalesAction
             'Translations',
             $content,
             'locales',
-            [['label' => 'New translation', 'href' => '/mark/locales/create']],
-        ));
+            [['label' => 'New translation', 'href' => $this->url('mark.locales.create')]],
+        router: $this->router()));
     }
 
     public function createForm(Request $request): Response
     {
         return Response::html($this->form(
             'New translation',
-            '/mark/locales/create',
+            $this->url('mark.locales.create'),
             'Create translation',
             [],
         ));
@@ -114,7 +114,7 @@ final class LocalesAction
 
         return Response::html($this->form(
             'New translation',
-            '/mark/locales/create',
+            $this->url('mark.locales.create'),
             'Create translation',
             $errors,
             ['key' => $key, 'locale' => $localeCode, 'value' => $value, 'group' => $group],
@@ -132,7 +132,7 @@ final class LocalesAction
 
         return Response::html($this->form(
             'Edit translation',
-            '/mark/locales/' . $translation->id() . '/edit',
+            $this->url('mark.locales.edit', ['id' => $translation->id()]),
             'Save changes',
             [],
             [
@@ -163,7 +163,7 @@ final class LocalesAction
         if ([] !== $valueErrors) {
             return Response::html($this->form(
                 'Edit translation',
-                '/mark/locales/' . $translation->id() . '/edit',
+                $this->url('mark.locales.edit', ['id' => $translation->id()]),
                 'Save changes',
                 $valueErrors,
                 [
@@ -215,7 +215,7 @@ final class LocalesAction
                 'Translations',
                 $this->messageBox('Import failed — no valid file uploaded.'),
                 'locales',
-            ));
+            router: $this->router()));
         }
 
         $tmpPath = is_string($file['tmp_name'] ?? null) ? $file['tmp_name'] : '';
@@ -226,7 +226,7 @@ final class LocalesAction
                 'Translations',
                 $this->messageBox('Import failed — could not read the uploaded file.'),
                 'locales',
-            ));
+            router: $this->router()));
         }
 
         $data = json_decode($contents, true);
@@ -236,7 +236,7 @@ final class LocalesAction
                 'Translations',
                 $this->messageBox('Import failed — the file is not valid JSON.'),
                 'locales',
-            ));
+            router: $this->router()));
         }
 
         [$locale, $entries] = $this->parseImport($data);
@@ -246,7 +246,7 @@ final class LocalesAction
                 'Translations',
                 $this->messageBox('Import failed — unknown locale "' . AdminLayout::e($locale) . '".'),
                 'locales',
-            ));
+            router: $this->router()));
         }
 
         $imported = $this->importEntries($locale, $entries);
@@ -285,9 +285,9 @@ final class LocalesAction
             ? '<p class="m-mono cba-field-hint">' . $localeLabel . '</p>'
             : '<select id="locale" name="locale">' . $this->localeOptions($values['locale'] ?? '') . '</select>';
 
-        $content = ViewRenderer::render('Modules/Locales/Interfaces/HTTP/templates/locales-list.phtml', ['action' => $action, 'csrf' => $csrf, 'errorHtml' => $errorHtml, 'group' => $group, 'keyField' => $keyField, 'localeField' => $localeField, 'submitLabel' => $submitLabel, 'value' => $value]);
+        $content = ViewRenderer::render('Modules/Locales/Interfaces/HTTP/templates/locales-list.phtml', ['url' => $this->urlBuilder(), 'action' => $action, 'csrf' => $csrf, 'errorHtml' => $errorHtml, 'group' => $group, 'keyField' => $keyField, 'localeField' => $localeField, 'submitLabel' => $submitLabel, 'value' => $value]);
 
-        return AdminLayout::render($title, $content, 'locales');
+        return AdminLayout::render($title, $content, 'locales', router: $this->router());
     }
 
     /**
@@ -310,7 +310,7 @@ final class LocalesAction
             $rowGroup = AdminLayout::e($translation->group);
             $iconEdit = AdminLayout::iconEdit();
             $iconDelete = AdminLayout::iconDelete();
-            $rows .= ViewRenderer::render('Modules/Locales/Interfaces/HTTP/templates/locales-edit.phtml', ['csrf' => $csrf, 'iconDelete' => $iconDelete, 'iconEdit' => $iconEdit, 'id' => $id, 'key' => $key, 'rowGroup' => $rowGroup, 'value' => $value]);
+            $rows .= ViewRenderer::render('Modules/Locales/Interfaces/HTTP/templates/locales-edit.phtml', ['url' => $this->urlBuilder(), 'csrf' => $csrf, 'iconDelete' => $iconDelete, 'iconEdit' => $iconEdit, 'id' => $id, 'key' => $key, 'rowGroup' => $rowGroup, 'value' => $value]);
         }
 
         $table = '' === $rows
@@ -336,7 +336,7 @@ final class LocalesAction
             // Inactive tabs inherit the page bg (transparent nav) — use muted
             // ink (≥ 4.5:1 in both themes) instead of the nav-white `inherit`.
             $style = '' === $active ? ' m-pill--muted' : '';
-            $localeTabs .= "<a class=\"m-pill{$active}{$style}\" href=\"/mark/locales?locale={$code}\">{$label}</a>";
+            $localeTabs .= '<a class="m-pill' . $active . $style . '" href="' . AdminLayout::e($this->url('mark.locales') . '?locale=' . $code) . '">' . $label . '</a>';
         }
 
         $groupValue = AdminLayout::e($group);
@@ -348,7 +348,7 @@ final class LocalesAction
         return $importNotice
             . '<div class="m-filter-row">'
             . '<div class="m-filter-bar">' . $localeTabs . '</div>'
-            . '<form method="GET" action="/mark/locales" class="m-filter-form">'
+            . '<form method="GET" action="' . AdminLayout::e($this->url('mark.locales')) . '" class="m-filter-form">'
             . '<input type="hidden" name="locale" value="' . AdminLayout::e($activeLocale) . '">'
             . '<input type="text" name="group" class="m-input" placeholder="group (nav, home…)" value="' . $groupValue . '">'
             . '<input type="text" name="q" class="m-input" placeholder="Search…" value="' . $searchValue . '">'
@@ -365,7 +365,7 @@ final class LocalesAction
 
         return '<div class="m-card">'
             . '<h2 class="m-heading">Import JSON</h2>'
-            . '<form class="m-form" method="POST" action="/mark/locales/import" enctype="multipart/form-data">'
+            . '<form class="m-form" method="POST" action="' . AdminLayout::e($this->url('mark.locales.import')) . '" enctype="multipart/form-data">'
             . $csrf
             . '<input type="file" name="translation_file" accept="application/json,.json" required>'
             . '<p class="m-muted m-hint">Flat {"nav.home": "Home"} or grouped {"locale": "en_US", "translations": {...}}</p>'
@@ -499,7 +499,7 @@ final class LocalesAction
     private function messageBox(string $message): string
     {
         return '<div class="cba-msg cba-msg--err">' . AdminLayout::e($message) . '</div>'
-            . '<p><a class="m-btn m-btn-ghost" href="/mark/locales">Back to translations</a></p>';
+            . '<p><a class="m-btn m-btn-ghost" href="' . AdminLayout::e($this->url('mark.locales')) . '">Back to translations</a></p>';
     }
 
     private function localeOptions(string $selected): string

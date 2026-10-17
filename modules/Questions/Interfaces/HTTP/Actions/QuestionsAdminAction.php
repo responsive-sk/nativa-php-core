@@ -118,7 +118,7 @@ final class QuestionsAdminAction
             'Questions',
             $this->summary($all, $status) . $this->filterBar($status) . $body,
             'questions',
-        );
+        router: $this->router());
     }
 
     /**
@@ -184,7 +184,7 @@ final class QuestionsAdminAction
         }
 
         $language = ContentServices::mapper()->languageCode($locale);
-        $href = '/mark/articles/' . rawurlencode($slug) . '/edit?locale=' . rawurlencode($language);
+        $href = $this->url('articles.edit', ['slug' => rawurlencode($slug)]) . '?locale=' . rawurlencode($language);
 
         return '<p><a class="m-btn m-btn-ghost" href="' . AdminLayout::e($href) . '">Review article</a></p>';
     }
@@ -276,7 +276,7 @@ final class QuestionsAdminAction
             default   => AdminLayout::iconDelete(),
         };
 
-        return '<form method="POST" action="' . AdminLayout::e('/mark/questions/' . $id . '/' . $action)
+        return '<form method="POST" action="' . AdminLayout::e($this->url('mark.questions.' . $action, ['id' => $id]))
             . '" class="m-inline-form"' . $confirm . '>' . $csrf
             . '<button class="m-btn m-btn-sm m-btn-icon ' . ('delete' === $action ? 'm-btn-error' : 'm-btn-ghost')
             . '" data-tooltip="' . $label . '" title="' . $label . '">' . $icon . '</button></form>';
@@ -314,7 +314,7 @@ final class QuestionsAdminAction
     {
         $pill = static fn (string $label, ?string $value): string => '<a class="m-pill'
             . ($value === $status ? ' m-pill-active' : '') . '" href="'
-            . AdminLayout::e(null === $value ? '/mark/questions' : '/mark/questions?status=' . rawurlencode($value))
+            . AdminLayout::e(null === $value ? $this->url('mark.questions') : $this->url('mark.questions') . '?status=' . rawurlencode($value))
             . '">' . $label . '</a>';
 
         $bar = $pill('All', null);

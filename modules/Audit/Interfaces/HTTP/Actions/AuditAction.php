@@ -9,6 +9,7 @@ use Modules\Audit\Interfaces\HTTP\AuditServices;
 use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 
 /**
@@ -21,6 +22,8 @@ use Modules\Core\Interfaces\HTTP\Attributes\Route;
 #[Route(path: '/mark/audit', method: 'GET', name: 'mark.audit')]
 final class AuditAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         $entries = AuditServices::audit()->recent(100);
@@ -42,7 +45,7 @@ final class AuditAction
                 . '<tbody>' . $rows . '</tbody></table></div>';
         }
 
-        return Response::html(AdminLayout::render('Audit log', $content, 'audit'));
+        return Response::html(AdminLayout::render('Audit log', $content, 'audit', router: $this->router()));
     }
 
     private function row(AuditEntry $entry): string

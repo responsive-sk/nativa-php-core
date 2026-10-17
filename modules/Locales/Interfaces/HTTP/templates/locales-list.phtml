@@ -25,7 +25,7 @@ if (!isset($viewRendererGuard)) {
             <input type="text" id="group" name="group" value="<?php echo $group; ?>">
             <div>
                 <button class="m-btn m-btn-primary" type="submit"><?php echo $submitLabel; ?></button>
-                <a class="m-btn m-btn-ghost" href="/mark/locales">Cancel</a>
+                <a class="m-btn m-btn-ghost" href="<?php echo $url('mark.locales'); ?>">Cancel</a>
             </div>
         </form>
     </div>

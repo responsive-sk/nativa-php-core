@@ -9,6 +9,8 @@ use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
+use Modules\Core\Kernel\Contracts\RouterInterface;
 use Modules\Media\Application\Services\MediaService;
 use Modules\Media\Infrastructure\Storage\Providers\CloudinaryApi;
 use Modules\Media\Interfaces\HTTP\MediaIcons;
@@ -28,6 +30,8 @@ use Modules\Media\Interfaces\HTTP\MediaServices;
 #[Route(path: '/mark/media/cloudinary', method: 'GET', name: 'media.cloudinary')]
 final readonly class MediaCloudinaryAction
 {
+    use ResolvesRouteUrls;
+
     private const int PER_PAGE = 60;
 
     /**
@@ -35,8 +39,11 @@ final readonly class MediaCloudinaryAction
      *                                substituted client is the only way to
      *                                exercise these states offline
      */
-    public function __construct(private ?CloudinaryApi $api = null)
-    {
+    public function __construct(
+        private ?CloudinaryApi $api = null,
+        ?RouterInterface $router = null,
+    ) {
+        $this->router = $router;
     }
 
     public function handle(Request $request): Response
@@ -142,7 +149,7 @@ final readonly class MediaCloudinaryAction
         $listing = $api->search($folder, self::PER_PAGE, $cursor);
         $nextQuery = array_filter(['folder' => $folder, 'c' => $listing['next_cursor']]);
         $nextHref = '' !== $listing['next_cursor']
-            ? '/mark/media/cloudinary?' . http_build_query($nextQuery)
+            ? $this->url('media.cloudinary') . '?' . http_build_query($nextQuery)
             : '';
 
         return [
@@ -214,7 +221,7 @@ final readonly class MediaCloudinaryAction
      */
     private function crumbs(string $folder, string $landing, bool $atRoot): string
     {
-        $html = '<a class="m-pill' . ($atRoot ? ' m-pill-active' : '') . '" href="/mark/media/cloudinary?root=1">Library</a>';
+        $html = '<a class="m-pill' . ($atRoot ? ' m-pill-active' : '') . '" href="' . AdminLayout::e($this->url('media.cloudinary')) . '?root=1">Library</a>';
 
         if ($atRoot) {
             return $html;
@@ -229,7 +236,7 @@ final readonly class MediaCloudinaryAction
             return '';
         }
 
-        $href = AdminLayout::e('/mark/media/cloudinary?' . http_build_query(['folder' => $landing]));
+        $href = AdminLayout::e($this->url('media.cloudinary') . '?' . http_build_query(['folder' => $landing]));
         $separator = ' <span class="m-muted">/</span> ';
 
         return $separator . '<a class="m-pill' . ($folder === $landing ? ' m-pill-active' : '') . '" href="' . $href . '">' . AdminLayout::e($landing) . '</a>';
@@ -259,7 +266,7 @@ final readonly class MediaCloudinaryAction
                 continue;
             }
 
-            $href = AdminLayout::e('/mark/media/cloudinary?' . http_build_query(['folder' => $prefix]));
+            $href = AdminLayout::e($this->url('media.cloudinary') . '?' . http_build_query(['folder' => $prefix]));
             $html .= $separator . '<a class="m-pill" href="' . $href . '">' . $label . '</a>';
         }
 
@@ -280,7 +287,7 @@ final readonly class MediaCloudinaryAction
 
         $tiles = '';
         foreach ($folders as $child) {
-            $href = AdminLayout::e('/mark/media/cloudinary?' . http_build_query(['folder' => $child['path']]));
+            $href = AdminLayout::e($this->url('media.cloudinary') . '?' . http_build_query(['folder' => $child['path']]));
             $isCurrent = !$atRoot && $child['path'] === $currentFolder;
             $tiles .= '<a class="m-folder-card' . ($isCurrent ? ' m-folder-card--active' : '') . '" href="' . $href . '">'
                 . '<span class="m-folder-card__icon">' . MediaIcons::folder() . '</span>'
@@ -354,13 +361,13 @@ final readonly class MediaCloudinaryAction
      */
     private function page(array $vars): Response
     {
-        $content = ViewRenderer::render('Modules/Media/Interfaces/HTTP/templates/media-cloudinary.phtml', $vars);
+        $content = ViewRenderer::render('Modules/Media/Interfaces/HTTP/templates/media-cloudinary.phtml', $vars + ['url' => $this->urlBuilder()]);
 
         return Response::html(AdminLayout::render(
             'Cloudinary library',
             $content,
             'media',
-            [['label' => 'Back to media', 'href' => '/mark/media']],
-        ));
+            [['label' => 'Back to media', 'href' => $this->url('media.index')]],
+        router: $this->router()));
     }
 }

@@ -13,6 +13,7 @@ use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Outbox\Application\Services\OutboxDrain;
 use Modules\Outbox\Interfaces\HTTP\OutboxServices;
@@ -29,6 +30,8 @@ use Modules\Users\Interfaces\HTTP\AuthServices;
 #[Route(path: '/mark/articles/{slug}/publish', method: 'POST', name: 'articles.publish-toggle')]
 final class ArticlePublishToggleAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         $slug = (string) ($request->routeParam('slug') ?? '');
@@ -86,7 +89,7 @@ final class ArticlePublishToggleAction
     {
         foreach ($crud->list($locale) as $article) {
             if ($article['slug'] === $slug) {
-                return Response::html(ArticlesTableRenderer::row($article, $localeParam));
+                return Response::html(ArticlesTableRenderer::row($article, $localeParam, $this->router()));
             }
         }
 
@@ -99,7 +102,7 @@ final class ArticlePublishToggleAction
             ? ($to ? 'Article+published' : 'Article+unpublished')
             : 'Article+not+found';
 
-        return '/mark/articles?locale=' . $localeParam . '&toast=' . $toast;
+        return $this->url('articles.index') . '?locale=' . $localeParam . '&toast=' . $toast;
     }
 
     /**
@@ -115,7 +118,7 @@ final class ArticlePublishToggleAction
     private function refused(string $slug): Response
     {
         return Response::html(
-            AdminLayout::render('Not your article', BlogServices::ownership()->refusal($slug)),
+            AdminLayout::render('Not your article', BlogServices::ownership()->refusal($slug), router: $this->router()),
             403,
         );
     }

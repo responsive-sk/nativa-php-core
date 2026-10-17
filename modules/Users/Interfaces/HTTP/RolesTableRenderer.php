@@ -6,6 +6,7 @@ namespace Modules\Users\Interfaces\HTTP;
 
 use Modules\Cardboard\Application\Services\BulkActions;
 use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
+use Modules\Core\Kernel\Contracts\RouterInterface;
 
 /**
  * RolesTableRenderer — renders the Roles admin table (thead + rows + bulk bar).
@@ -19,15 +20,15 @@ final class RolesTableRenderer
      *
      * @param list<array{id: int|string, name: string, description: string}> $roles
      */
-    public static function render(array $roles): string
+    public static function render(array $roles, RouterInterface $router): string
     {
         $rows = '';
 
         foreach ($roles as $role) {
-            $rows .= self::row($role);
+            $rows .= self::row($role, $router);
         }
 
-        $bulkBar = BulkActions::actionBar('roles', '/mark/bulk-delete');
+        $bulkBar = BulkActions::actionBar('roles', $router->url('mark.bulk-delete'));
 
         $skeleton = AdminLayout::skeletonTable([
             ['60%'], ['10%'],
@@ -46,7 +47,7 @@ final class RolesTableRenderer
     /**
      * @param array{id: int|string, name: string, description: string} $role
      */
-    private static function row(array $role): string
+    private static function row(array $role, RouterInterface $router): string
     {
         $id = AdminLayout::e((string) $role['id']);
         $name = AdminLayout::e((string) $role['name']);
@@ -62,10 +63,10 @@ final class RolesTableRenderer
             . '<td>'
             . '<div class="m-btn-group">'
             . '<a class="m-btn m-btn-sm m-btn-icon"'
-            . ' href="/mark/roles/' . $id . '/permissions"'
+            . ' href="' . AdminLayout::e($router->url('mark.roles.permissions', ['id' => $id])) . '"'
             . ' data-tooltip="Permissions" title="Permissions">' . $iconPerms . '</a>'
-            . '<form method="POST" action="/mark/roles/' . $id . '/delete"'
-            . ' hx-delete="/mark/roles/' . $id . '/delete"'
+            . '<form method="POST" action="' . AdminLayout::e($router->url('mark.roles.delete', ['id' => $id])) . '"'
+            . ' hx-delete="' . AdminLayout::e($router->url('mark.roles.delete', ['id' => $id])) . '"'
             . ' data-confirm="Delete this role?"'
             . ' hx-target="closest tr"'
             . ' hx-swap="outerHTML swap:500ms"'

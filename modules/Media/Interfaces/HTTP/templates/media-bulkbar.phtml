@@ -11,7 +11,7 @@ if (!isset($viewRendererGuard)) {
     throw new \RuntimeException('Template must be rendered via ViewRenderer.');
 }
 
-?>    <form class="m-media-filters" method="GET" action="/mark/media">
+?>    <form class="m-media-filters" method="GET" action="<?php echo $url('media.index'); ?>">
         <?php echo $hiddenFields . "\n"; ?>
         <div class="m-filter-bar m-filter-bar--flush"><?php echo $typeLinks; ?></div>
         <span class="m-media-filters__sep">·</span>

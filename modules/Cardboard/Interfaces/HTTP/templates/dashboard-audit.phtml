@@ -14,10 +14,10 @@ if (!isset($viewRendererGuard)) {
 ?>    <div class="m-card">
         <h2 class="m-heading">Quick actions</h2>
         <div class="m-filter-bar">
-            <a class="m-btn m-btn-primary" href="/mark/users/create">New user</a>
-            <a class="m-btn m-btn-primary" href="/mark/articles/create">New article</a>
-            <a class="m-btn m-btn-primary" href="/mark/pages/create">New page</a>
-            <a class="m-btn m-btn-primary" href="/mark/media/upload">Upload media</a>
-            <a class="m-btn m-btn-primary" href="/mark/settings">Settings</a>
+            <a class="m-btn m-btn-primary" href="<?php echo $url('mark.users.create'); ?>">New user</a>
+            <a class="m-btn m-btn-primary" href="<?php echo $url('articles.create'); ?>">New article</a>
+            <a class="m-btn m-btn-primary" href="<?php echo $url('pages.create'); ?>">New page</a>
+            <a class="m-btn m-btn-primary" href="<?php echo $url('media.upload'); ?>">Upload media</a>
+            <a class="m-btn m-btn-primary" href="<?php echo $url('mark.settings'); ?>">Settings</a>
         </div>
     </div>

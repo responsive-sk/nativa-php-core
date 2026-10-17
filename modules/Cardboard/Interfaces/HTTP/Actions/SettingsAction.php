@@ -82,13 +82,13 @@ final class SettingsAction
         $parentOptions = $this->adminParentOptions($adminNavItems);
         $adminNavTable = $this->adminNavTable($adminNavItems, $csrf);
 
-        $content = ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/settings-form.phtml', ['adminEmail' => $adminEmail, 'adminNavTable' => $adminNavTable, 'csrf' => $csrf, 'errorHtml' => $errorHtml, 'iconOptions' => $iconOptions, 'layoutSelect' => $layoutSelect, 'locale' => $locale, 'navTable' => $navTable, 'parentOptions' => $parentOptions, 'regChecked' => $regChecked, 'siteDescription' => $siteDescription, 'siteName' => $siteName, 'themeSelect' => $themeSelect, 'timezone' => $timezone, 'tokenTable' => $tokenTable]);
+        $content = ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/settings-form.phtml', ['url' => $this->urlBuilder(), 'adminEmail' => $adminEmail, 'adminNavTable' => $adminNavTable, 'csrf' => $csrf, 'errorHtml' => $errorHtml, 'iconOptions' => $iconOptions, 'layoutSelect' => $layoutSelect, 'locale' => $locale, 'navTable' => $navTable, 'parentOptions' => $parentOptions, 'regChecked' => $regChecked, 'siteDescription' => $siteDescription, 'siteName' => $siteName, 'themeSelect' => $themeSelect, 'timezone' => $timezone, 'tokenTable' => $tokenTable]);
 
         return AdminLayout::render(
             'Settings',
             $content,
             'settings',
-        );
+        router: $this->router());
     }
 
     /**
@@ -226,26 +226,29 @@ final class SettingsAction
                 . IconRegistry::optionsHtml($currentIcon) . '</select>';
             // Indent children visually.
             $isChild = null !== ($item['parent_id'] ?? null);
+            $iconUrl = $this->url('mark.settings.admin-nav.icon', ['id' => $itemId]);
+            $toggleUrl = $this->url('mark.settings.admin-nav.toggle', ['id' => $itemId]);
+            $deleteUrl = $this->url('mark.settings.admin-nav.delete', ['id' => $itemId]);
             $indent = $isChild ? ' class="m-nav-row--child"' : '';
             $prefix = $isChild ? '<span class="m-nav-row__branch">└</span> ' : '';
             $rows .= "<tr data-nav-id=\"{$itemId}\" draggable=\"true\"{$indent}>
                 <td class=\"m-drag-handle\" title=\"Drag to reorder\">⋮⋮</td>
                 <td><span class=\"{$statusClass}\">{$prefix}{$label}</span></td>
                 <td><code>{$href}</code></td>
-                <td>                        <form method=\"POST\" action=\"/mark/settings/admin-nav/{$itemId}/icon\" class=\"m-inline-form m-inline-form--icon\">
+                <td>                        <form method=\"POST\" action=\"{$iconUrl}\" class=\"m-inline-form m-inline-form--icon\">
                         {$csrf}
                         {$iconSelect}
                         <button class=\"m-btn m-btn-sm\" title=\"Save icon\">✓</button>
                     </form>
                 </td>
                 <td>
-                    <form method=\"POST\" action=\"/mark/settings/admin-nav/{$itemId}/toggle\" class=\"m-inline-form\">
+                    <form method=\"POST\" action=\"{$toggleUrl}\" class=\"m-inline-form\">
                         {$csrf}
                         <button class=\"m-btn m-btn-sm\" title=\"Toggle visibility\">{$statusText}</button>
                     </form>
                 </td>
                 <td>
-                    <form method=\"POST\" action=\"/mark/settings/admin-nav/{$itemId}/delete\" class=\"m-inline-form\">
+                    <form method=\"POST\" action=\"{$deleteUrl}\" class=\"m-inline-form\">
                         {$csrf}
                         <button class=\"m-btn m-btn-error m-btn-sm m-btn-icon\"
                                 data-confirm=\"Delete this nav item?\" title=\"Delete\">{$iconDelete}</button>
@@ -258,7 +261,7 @@ final class SettingsAction
             return '<p class="m-muted">No admin nav items — using defaults.</p>';
         }
 
-        return ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/settings-admin-table.phtml', ['adminNavRows' => $rows]);
+        return ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/settings-admin-table.phtml', ['url' => $this->urlBuilder(), 'adminNavRows' => $rows]);
     }
 
     /**
@@ -280,12 +283,13 @@ final class SettingsAction
             $label = AdminLayout::e((string) $item['label']);
             $href = AdminLayout::e((string) $item['href']);
             $iconDelete = AdminLayout::iconDelete();
+            $deleteUrl = $this->url('mark.settings.nav.delete', ['id' => $itemId]);
             $rows .= "<tr data-nav-id=\"{$itemId}\" draggable=\"true\">"
                 . '<td class="m-drag-handle" title="Drag to reorder">⋮⋮</td>'
                 . "<td>{$label}</td>"
                 . "<td><code>{$href}</code></td>"
                 . '<td>'
-                . "<form method=\"POST\" action=\"/mark/settings/nav/{$itemId}/delete\" class=\"m-inline-form\">"
+                . "<form method=\"POST\" action=\"{$deleteUrl}\" class=\"m-inline-form\">"
                 . $csrf
                 . '<button class="m-btn m-btn-error m-btn-sm m-btn-icon"'
                 . ' data-confirm="Delete this nav item?" title="Delete">' . $iconDelete . '</button>'
@@ -304,7 +308,7 @@ final class SettingsAction
             . ' data-nav-save-order>Save order</button>'
             . '</div>'
             . '<div class="m-table-scroll"><table class="m-table" id="header-nav-table" data-nav-table'
-            . ' data-reorder-url="/mark/settings/nav/reorder">'
+            . ' data-reorder-url="' . AdminLayout::e($this->url('mark.settings.nav.reorder')) . '">'
             . '<thead><tr><th class="m-table__cell--drag"></th><th>Label</th><th>Href</th><th></th></tr></thead>'
             . "<tbody>{$rows}</tbody></table></div>";
     }

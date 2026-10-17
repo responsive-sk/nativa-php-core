@@ -7,6 +7,7 @@ namespace Modules\Outbox\Interfaces\HTTP\Actions;
 use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Outbox\Domain\Model\OutboxMessage;
 use Modules\Outbox\Interfaces\HTTP\OutboxServices;
@@ -22,6 +23,8 @@ use Modules\Outbox\Interfaces\HTTP\OutboxServices;
 #[Route(path: '/mark/outbox/{id}', method: 'GET', name: 'mark.outbox.detail', handlerMethod: 'detail')]
 final class OutboxAdminAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         return Response::html($this->listPage($request));
@@ -34,7 +37,7 @@ final class OutboxAdminAction
 
         if (null === $message) {
             return Response::html(
-                AdminLayout::render('Message not found', '<p class="m-muted">No message with this id.</p>'),
+                AdminLayout::render('Message not found', '<p class="m-muted">No message with this id.</p>', router: $this->router()),
                 404,
             );
         }
@@ -70,7 +73,7 @@ final class OutboxAdminAction
                 . '</tr></thead><tbody>' . $rows . '</tbody></table>';
         }
 
-        return AdminLayout::render('Outbox', $content, 'outbox');
+        return AdminLayout::render('Outbox', $content, 'outbox', router: $this->router());
     }
 
     private function row(OutboxMessage $message): string
@@ -78,7 +81,7 @@ final class OutboxAdminAction
         $id = $message->id();
 
         return '<tr>'
-            . '<td><a href="/mark/outbox/' . $id . '" class="m-mono">' . AdminLayout::e(substr($id, 0, 8)) . '</a></td>'
+            . '<td><a href="' . AdminLayout::e($this->url('mark.outbox.detail', ['id' => $id])) . '" class="m-mono">' . AdminLayout::e(substr($id, 0, 8)) . '</a></td>'
             . '<td class="m-mono">' . AdminLayout::e($message->eventType()) . '</td>'
             . '<td>' . $this->badge($message->status()) . '</td>'
             . '<td class="m-mono">' . $message->attempts() . '/' . $message->maxAttempts() . '</td>'
@@ -121,9 +124,9 @@ final class OutboxAdminAction
             . (null !== $error
                 ? '<h2 class="m-heading">Error</h2><pre class="m-mono" style="overflow:auto">' . AdminLayout::e($error) . '</pre>'
                 : '')
-            . '<p><a href="/mark/outbox">← Back to messages</a></p>';
+            . '<p><a href="' . AdminLayout::e($this->url('mark.outbox')) . '">← Back to messages</a></p>';
 
-        return AdminLayout::render('Message ' . substr($message->id(), 0, 8), $content, 'outbox');
+        return AdminLayout::render('Message ' . substr($message->id(), 0, 8), $content, 'outbox', router: $this->router());
     }
 
     /**

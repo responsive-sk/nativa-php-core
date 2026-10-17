@@ -6,6 +6,7 @@ namespace Modules\Users\Interfaces\HTTP;
 
 use Modules\Cardboard\Application\Services\BulkActions;
 use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
+use Modules\Core\Kernel\Contracts\RouterInterface;
 use Modules\Users\Domain\Entities\User;
 
 /**
@@ -20,15 +21,15 @@ final class UsersTableRenderer
      *
      * @param list<User> $users
      */
-    public static function render(array $users): string
+    public static function render(array $users, RouterInterface $router): string
     {
         $rows = '';
 
         foreach ($users as $user) {
-            $rows .= self::row($user);
+            $rows .= self::row($user, $router);
         }
 
-        $bulkBar = BulkActions::actionBar('users', '/mark/bulk-delete');
+        $bulkBar = BulkActions::actionBar('users', $router->url('mark.bulk-delete'));
 
         $skeleton = AdminLayout::skeletonTable([
             ['30%'], ['50%'], ['40%'], ['20%'], ['10%'],
@@ -44,7 +45,7 @@ final class UsersTableRenderer
             . '</div>';
     }
 
-    private static function row(User $user): string
+    private static function row(User $user, RouterInterface $router): string
     {
         $id = AdminLayout::e($user->id());
         $name = AdminLayout::e($user->name());
@@ -66,10 +67,10 @@ final class UsersTableRenderer
             . '<td>' . $badge . '</td>'
             . '<td>'
             . '<div class="m-btn-group">'
-            . '<a class="m-btn m-btn-sm m-btn-icon" href="/mark/users/' . $id . '/edit"'
+            . '<a class="m-btn m-btn-sm m-btn-icon" href="' . AdminLayout::e($router->url('mark.users.edit', ['id' => $id])) . '"'
             . ' data-tooltip="Edit user" title="Edit">' . $iconEdit . '</a>'
-            . '<form method="POST" action="/mark/users/' . $id . '/delete"'
-            . ' hx-delete="/mark/users/' . $id . '/delete"'
+            . '<form method="POST" action="' . AdminLayout::e($router->url('mark.users.delete', ['id' => $id])) . '"'
+            . ' hx-delete="' . AdminLayout::e($router->url('mark.users.delete', ['id' => $id])) . '"'
             . ' data-confirm="Delete this user?"'
             . ' hx-target="closest tr"'
             . ' hx-swap="outerHTML swap:500ms"'

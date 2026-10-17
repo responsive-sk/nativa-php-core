@@ -10,6 +10,7 @@ use Modules\Cardboard\Interfaces\HTTP\CardboardServices;
 use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Cardboard\Infrastructure\Registry\CardboardRegistry;
 use Modules\Cardboard\Infrastructure\Registry\MetricRegistry;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
@@ -26,6 +27,8 @@ use Modules\Core\Interfaces\HTTP\Attributes\Route;
 #[Route(path: '/mark', method: 'GET', name: 'mark.dashboard')]
 final class DashboardAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         $settings = CardboardServices::settings()->all();
@@ -45,7 +48,7 @@ final class DashboardAction
         }
         $statCards .= '</div>';
 
-        $quickActions = ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/dashboard-audit.phtml', []);
+        $quickActions = ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/dashboard-audit.phtml', ['url' => $this->urlBuilder()]);
 
         $systemRows = '';
         $system = [
@@ -68,7 +71,7 @@ final class DashboardAction
         return Response::html(AdminLayout::render(
             $siteName . ' — Dashboard',
             $content,
-        ));
+        router: $this->router()));
     }
 
     /**
@@ -97,7 +100,7 @@ final class DashboardAction
             $params['period'] = $period->value;
             $qs = http_build_query($params);
             $active = $period === $current ? ' m-btn--active' : '';
-            $html .= '<a class="m-btn' . $active . '" href="/mark?' . $qs . '">'
+            $html .= '<a class="m-btn' . $active . '" href="' . $this->url('mark.dashboard') . '?' . $qs . '">'
                 . AdminLayout::e($period->label()) . '</a>';
         }
 

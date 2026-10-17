@@ -10,6 +10,7 @@ use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Media\Interfaces\HTTP\MediaEditorHelper;
@@ -27,6 +28,8 @@ use Modules\Validation\Validation\Validator;
 #[Route(path: '/mark/pages/create', method: 'GET|POST', name: 'pages.create')]
 final class PagesCreateAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         if ($request->isMethod('POST')) {
@@ -68,7 +71,7 @@ final class PagesCreateAction
             $request->getClientIp(),
         );
 
-        $redirect = '/mark/pages?locale=' . $locale . '&toast=Page+created+successfully';
+        $redirect = $this->url('pages.index') . '?locale=' . $locale . '&toast=Page+created+successfully';
 
         // HTMX: return redirect header for partial update.
         if (AdminLayout::isHtmx($request)) {
@@ -91,10 +94,10 @@ final class PagesCreateAction
         $csrf = AdminLayout::csrfField();
 
         $localeParam = ContentServices::mapper()->languageCode($locale);
-        $backHref = '/mark/pages?locale=' . $localeParam;
+        $backHref = $this->url('pages.index') . '?locale=' . $localeParam;
 
-        $content = '<form method="POST" action="/mark/pages/create?locale=' . $localeParam . '"'
-            . ' hx-post="/mark/pages/create?locale=' . $localeParam . '"'
+        $content = '<form method="POST" action="' . AdminLayout::e($this->url('pages.create')) . '?locale=' . $localeParam . '"'
+            . ' hx-post="' . AdminLayout::e($this->url('pages.create')) . '?locale=' . $localeParam . '"'
             . ' hx-indicator="#create-spinner">'
             . $errorHtml
             . $csrf
@@ -105,9 +108,9 @@ final class PagesCreateAction
             . '<a class="m-btn m-btn-ghost" href="' . $backHref . '">Cancel</a>'
             . '</div>'
             . '</form>'
-            . MediaEditorHelper::editorScript('body');
+            . MediaEditorHelper::editorScript($this->router(), 'body');
 
-        return AdminLayout::render('New page', $content, 'pages');
+        return AdminLayout::render('New page', $content, 'pages', router: $this->router());
     }
 
     /**

@@ -373,15 +373,17 @@ final class BulkDeleteAction
     private function renderUpdatedTable(string $entity, string $locale): string
     {
         return match ($entity) {
-            'users' => \Modules\Users\Interfaces\HTTP\UsersTableRenderer::render(CardboardServices::users()->all()),
-            'roles' => \Modules\Users\Interfaces\HTTP\RolesTableRenderer::render(CardboardServices::roles()->allRoles()),
+            'users' => \Modules\Users\Interfaces\HTTP\UsersTableRenderer::render(CardboardServices::users()->all(), $this->router()),
+            'roles' => \Modules\Users\Interfaces\HTTP\RolesTableRenderer::render(CardboardServices::roles()->allRoles(), $this->router()),
             'pages' => \Modules\Pages\Interfaces\HTTP\PagesTableRenderer::render(
                 CardboardServices::pageCrud()->list($locale),
                 $locale,
+                $this->router(),
             ),
             'articles' => \Modules\Blog\Interfaces\HTTP\ArticlesTableRenderer::render(
                 CardboardServices::blogCrud()->list($locale),
                 $locale,
+                $this->router(),
             ),
             default => '',
         };

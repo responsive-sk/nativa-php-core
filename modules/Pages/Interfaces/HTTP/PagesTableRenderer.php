@@ -6,6 +6,7 @@ namespace Modules\Pages\Interfaces\HTTP;
 
 use Modules\Cardboard\Application\Services\BulkActions;
 use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
+use Modules\Core\Kernel\Contracts\RouterInterface;
 use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Locales\Interfaces\HTTP\LocalesServices;
 
@@ -24,12 +25,13 @@ final class PagesTableRenderer
      * @param string                                                    $sort       Active sort column
      * @param string                                                    $dir        Active sort direction
      */
-    public static function table(array $pages, string $locale, string $sort = 'date', string $dir = 'desc', array $baseParams = []): string
+    public static function table(array $pages, string $locale, string $sort = 'date', string $dir = 'desc', array $baseParams = [], ?RouterInterface $router = null): string
     {
+        $router ??= throw new \LogicException('PagesTableRenderer::table() needs a Router.');
         $rows = '';
 
         foreach ($pages as $page) {
-            $rows .= self::row($page, $locale);
+            $rows .= self::row($page, $locale, $router);
         }
 
         $headers = BulkActions::headerCell()
@@ -50,13 +52,18 @@ final class PagesTableRenderer
      *
      * @param list<array{slug: string, title: string, published: bool}> $pages
      */
-    public static function render(array $pages, string $locale): string
+    public static function render(array $pages, string $locale, RouterInterface $router): string
     {
-        $bulkBar = BulkActions::actionBarWithPublish('pages', '/mark/bulk-publish', $locale);
+        $bulkBar = BulkActions::actionBarWithPublish(
+            'pages',
+            $router->url('mark.bulk-publish'),
+            $router->url('mark.bulk-delete'),
+            $locale,
+        );
 
         return $bulkBar
             . '<div id="pages-content">'
-            . self::table($pages, $locale)
+            . self::table($pages, $locale, router: $router)
             . '</div>';
     }
 
@@ -66,15 +73,23 @@ final class PagesTableRenderer
      *
      * @param array{slug: string, title: string, published: bool, translation?: ?string} $page
      */
-    public static function row(array $page, string $locale): string
+    public static function row(array $page, string $locale, ?RouterInterface $router = null): string
     {
+        $router ??= throw new \LogicException('PagesTableRenderer::row() needs a Router.');
+
         // Defense in depth beside the actions' boundary allowlist: a future
         // caller passing a raw param must not get attribute breakout.
         $locale = AdminLayout::e($locale);
         $slug = AdminLayout::e($page['slug']);
         $title = AdminLayout::e($page['title']);
-        $editHref = '/mark/pages/' . $slug . '/edit?locale=' . $locale;
-        $switch = BulkActions::markSwitch($slug, 'pages', $locale, AdminLayout::csrfField(), $page['published'], self::switchLabels());
+        $editHref = $router->url('pages.edit', ['slug' => $slug]) . '?locale=' . $locale;
+        $switch = BulkActions::markSwitch(
+            $router->url('pages.publish-toggle', ['slug' => $slug]) . '?locale=' . $locale,
+            $locale,
+            AdminLayout::csrfField(),
+            $page['published'],
+            self::switchLabels(),
+        );
 
         // The public URL is PER LOCALE — /o-nas in sk, /en/about in en. The
         // raw admin param is canonicalized through the mapper first, so 'sk'
@@ -102,8 +117,8 @@ final class PagesTableRenderer
             . ' target="_blank" rel="noopener" data-tooltip="View page" title="View">' . $iconView . '</a>'
             . '<a class="m-btn m-btn-sm m-btn-icon" href="' . $editHref . '"'
             . ' data-tooltip="Edit page" title="Edit">' . $iconEdit . '</a>'
-            . '<form method="POST" action="/mark/pages/' . $slug . '/delete?locale=' . $locale . '"'
-            . ' hx-delete="/mark/pages/' . $slug . '/delete?locale=' . $locale . '"'
+            . '<form method="POST" action="' . AdminLayout::e($router->url('pages.delete', ['slug' => $slug]) . '?locale=' . $locale) . '"'
+            . ' hx-delete="' . AdminLayout::e($router->url('pages.delete', ['slug' => $slug]) . '?locale=' . $locale) . '"'
             . ' data-confirm="' . ($page['published'] ? 'Delete this page? It will be unpublished first, then deleted.' : 'Delete this page?') . '"'
             . ' hx-target="closest tr"'
             . ' hx-swap="outerHTML swap:500ms"'

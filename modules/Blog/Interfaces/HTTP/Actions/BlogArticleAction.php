@@ -15,6 +15,7 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\Markdown\MarkdownBlockContext;
@@ -42,6 +43,8 @@ use Modules\Users\Interfaces\HTTP\AuthServices;
 #[Route(path: '/blog/{slug}', method: 'GET', name: 'blog.article')]
 final class BlogArticleAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         $slug = (string) ($request->routeParam('slug') ?? '');
@@ -397,7 +400,7 @@ final class BlogArticleAction
         }
 
         return $this->mayEdit($slug, $locale)
-            ? '/mark/articles/' . rawurlencode($slug) . '/edit?locale=' . rawurlencode($locale)
+            ? $this->url('articles.edit', ['slug' => rawurlencode($slug)]) . '?locale=' . rawurlencode($locale)
             : '';
     }
 

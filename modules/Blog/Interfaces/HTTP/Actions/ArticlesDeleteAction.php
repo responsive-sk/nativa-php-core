@@ -42,7 +42,7 @@ final class ArticlesDeleteAction
 
             if (null === $article || !$guard->owns($slug, $locale, $user)) {
                 return Response::html(
-                    AdminLayout::render('Not your article', BlogServices::ownership()->refusal($slug)),
+                    AdminLayout::render('Not your article', BlogServices::ownership()->refusal($slug), router: $this->router()),
                     403,
                 );
             }

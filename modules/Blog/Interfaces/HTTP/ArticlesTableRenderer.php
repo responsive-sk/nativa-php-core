@@ -7,6 +7,7 @@ namespace Modules\Blog\Interfaces\HTTP;
 use Modules\Cardboard\Application\Services\BulkActions;
 use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\Core\Kernel\Contracts\RouterInterface;
 use Modules\Locales\Interfaces\HTTP\LocalesServices;
 
 /**
@@ -22,9 +23,9 @@ final class ArticlesTableRenderer
      *
      * @param array{slug: string, title: string, date: string, category: string, author: string, author_email: string, tags: list<string>, members_only: bool, published: bool} $article
      */
-    public static function row(array $article, string $locale): string
+    public static function row(array $article, string $locale, RouterInterface $router): string
     {
-        return self::buildRow($article, $locale);
+        return self::buildRow($article, $locale, $router);
     }
 
     /**
@@ -33,12 +34,12 @@ final class ArticlesTableRenderer
      * @param list<array{slug: string, title: string, date: string, category: string, author: string, author_email: string, tags: list<string>, members_only: bool, published: bool}> $articles
      * @param array<string, string>                                                                                                                                                   $baseParams Query params preserved by the sort links (locale, q, period)
      */
-    public static function table(array $articles, string $locale, string $sort = 'date', string $dir = 'desc', array $baseParams = []): string
+    public static function table(array $articles, string $locale, string $sort = 'date', string $dir = 'desc', array $baseParams = [], ?RouterInterface $router = null): string
     {
         $rows = '';
 
         foreach ($articles as $article) {
-            $rows .= self::row($article, $locale);
+            $rows .= self::row($article, $locale, $router ?? throw new \LogicException('Router required'));
         }
 
         $headers = BulkActions::headerCell()
@@ -60,20 +61,25 @@ final class ArticlesTableRenderer
      *
      * @param list<array{slug: string, title: string, date: string, category: string, author: string, author_email: string, tags: list<string>, members_only: bool, published: bool}> $articles
      */
-    public static function render(array $articles, string $locale): string
+    public static function render(array $articles, string $locale, RouterInterface $router): string
     {
-        $bulkBar = BulkActions::actionBarWithPublish('articles', '/mark/bulk-publish', $locale);
+        $bulkBar = BulkActions::actionBarWithPublish(
+            'articles',
+            $router->url('mark.bulk-publish'),
+            $router->url('mark.bulk-delete'),
+            $locale,
+        );
 
         return $bulkBar
             . '<div id="articles-content">'
-            . self::table($articles, $locale)
+            . self::table($articles, $locale, router: $router)
             . '</div>';
     }
 
     /**
      * @param array{slug: string, title: string, date: string, category: string, author: string, author_email: string, tags: list<string>, members_only: bool, published: bool} $article
      */
-    private static function buildRow(array $article, string $locale): string
+    private static function buildRow(array $article, string $locale, RouterInterface $router): string
     {
         // Defense in depth beside the actions' boundary allowlist: a future
         // caller passing a raw param must not get attribute breakout.
@@ -82,7 +88,7 @@ final class ArticlesTableRenderer
         $title = AdminLayout::e($article['title']);
         $date = AdminLayout::e($article['date']);
         $author = AdminLayout::e($article['author']);
-        $editHref = '/mark/articles/' . $slug . '/edit?locale=' . $locale;
+        $editHref = $router->url('articles.edit', ['slug' => $slug]) . '?locale=' . $locale;
         $checkbox = BulkActions::checkboxCell($article['slug']);
         $csrf = AdminLayout::csrfField();
         $iconView = AdminLayout::iconView();
@@ -94,8 +100,13 @@ final class ArticlesTableRenderer
         $statusBadges = self::statusBadges($article);
         $slugUrl = '/blog/' . $slug;
         $copyIcon = '<svg class="m-copy__icon" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>';
-        $deleteForm = self::deleteForm($slug, $locale, $csrf, $iconDelete, $article['published']);
-        $switch = self::markSwitch($slug, $locale, $csrf, $article['published']);
+        $deleteForm = self::deleteForm($slug, $locale, $csrf, $iconDelete, $article['published'], $router);
+        $switch = self::markSwitch(
+            $router->url('articles.publish-toggle', ['slug' => $slug]) . '?locale=' . $locale,
+            $locale,
+            $csrf,
+            $article['published'],
+        );
 
         return '<tr>'
             . $checkbox
@@ -121,10 +132,12 @@ final class ArticlesTableRenderer
      * Publish/Draft switch — delegates to the shared BulkActions builder
      * wired to the articles publish-toggle endpoint, with labels resolved
      * through the Locales translation system (mark.* keys, EN defaults).
+     *
+     * The URL is built here through the Router; BulkActions only renders it.
      */
-    private static function markSwitch(string $slug, string $locale, string $csrf, bool $published): string
+    private static function markSwitch(string $publishAction, string $locale, string $csrf, bool $published): string
     {
-        return BulkActions::markSwitch($slug, 'articles', $locale, $csrf, $published, self::switchLabels());
+        return BulkActions::markSwitch($publishAction, $locale, $csrf, $published, self::switchLabels());
     }
 
     /**
@@ -162,14 +175,14 @@ final class ArticlesTableRenderer
         return $badges;
     }
 
-    private static function deleteForm(string $slug, string $locale, string $csrf, string $iconDelete, bool $published): string
+    private static function deleteForm(string $slug, string $locale, string $csrf, string $iconDelete, bool $published, RouterInterface $router): string
     {
         $confirm = $published
             ? 'Delete this article? It will be unpublished first, then deleted.'
             : 'Delete this article?';
 
-        return '<form method="POST" action="/mark/articles/' . $slug . '/delete?locale=' . $locale . '"'
-            . ' hx-delete="/mark/articles/' . $slug . '/delete?locale=' . $locale . '"'
+        return '<form method="POST" action="' . AdminLayout::e($router->url('articles.delete', ['slug' => $slug]) . '?locale=' . $locale) . '"'
+            . ' hx-delete="' . AdminLayout::e($router->url('articles.delete', ['slug' => $slug]) . '?locale=' . $locale) . '"'
             . ' data-confirm="' . $confirm . '"'
             . ' hx-target="closest tr"'
             . ' hx-swap="outerHTML swap:500ms"'

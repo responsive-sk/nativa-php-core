@@ -59,8 +59,8 @@ final class CategoriesManageAction
             'Categories',
             $content,
             'categories',
-            [['label' => 'New category', 'href' => '/mark/categories#create-form']],
-        ));
+            [['label' => 'New category', 'href' => $this->url('categories.manage') . '#create-form']],
+        router: $this->router()));
     }
 
     public function create(Request $request): Response
@@ -164,7 +164,7 @@ final class CategoriesManageAction
     private function createForm(string $csrf): string
     {
         return '<div id="create-form" class="m-filter-bar m-create-panel">'
-            . '<form method="POST" action="/mark/categories/create" class="m-inline-form">'
+            . '<form method="POST" action="' . AdminLayout::e($this->url('categories.create')) . '" class="m-inline-form">'
             . $csrf
             . '<input type="text" name="category" class="m-input" placeholder="New category name" required>'
             . '<button class="m-btn m-btn-primary m-btn-sm">Create</button>'
@@ -197,7 +197,7 @@ final class CategoriesManageAction
                 . "<td>{$count}</td>"
                 . '<td>'
                 . '<div class="m-btn-group">'
-                . '<form method="POST" action="/mark/categories/rename" class="m-inline-form">'
+                . '<form method="POST" action="' . AdminLayout::e($this->url('categories.rename')) . '" class="m-inline-form">'
                 . "{$csrf}"
                 . "<input type=\"hidden\" name=\"old_category\" value=\"{$catEsc}\">"
                 . '<input type="text" name="new_category" class="m-input m-input--compact" placeholder="New name" required>'
@@ -207,7 +207,7 @@ final class CategoriesManageAction
                 . '</td>'
                 . '<td>'
                 . '<div class="m-btn-group">'
-                . '<form method="POST" action="/mark/categories/delete" class="m-inline-form">'
+                . '<form method="POST" action="' . AdminLayout::e($this->url('categories.delete')) . '" class="m-inline-form">'
                 . "{$csrf}"
                 . "<input type=\"hidden\" name=\"category\" value=\"{$catEsc}\">"
                 . '<button class="m-btn m-btn-error m-btn-sm m-btn-icon" '

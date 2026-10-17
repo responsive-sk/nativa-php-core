@@ -238,10 +238,12 @@ final class BulkPublishAction
             'pages' => \Modules\Pages\Interfaces\HTTP\PagesTableRenderer::render(
                 CardboardServices::pageCrud()->list($locale),
                 $locale,
+                $this->router(),
             ),
             'articles' => \Modules\Blog\Interfaces\HTTP\ArticlesTableRenderer::render(
                 CardboardServices::blogCrud()->list($locale),
                 $locale,
+                $this->router(),
             ),
             default => '',
         };

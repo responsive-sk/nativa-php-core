@@ -12,6 +12,7 @@ use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Core\Infrastructure\Registry\NavBadgeRegistry;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
 use Modules\Core\Interfaces\HTTP\ThemeResolver;
+use Modules\Core\Kernel\Contracts\RouterInterface;
 use Modules\Core\Application\Services\ShellContextProviderRegistry;
 
 /**
@@ -34,11 +35,12 @@ final class AdminLayout
         string $activeSection = '',
         array $actions = [],
         array $recentItems = [],
+        ?RouterInterface $router = null,
     ): string {
         // Check layout setting — delegate to CompactLayout if needed.
         $layout = self::resolveLayout();
         if ('compact' === $layout) {
-            return CompactLayout::render($title, $content, $activeSection, $actions, $recentItems);
+            return CompactLayout::render($title, $content, $activeSection, $actions, $recentItems, $router);
         }
 
         $actionsHtml = '';
@@ -86,7 +88,30 @@ final class AdminLayout
         // Encode recent items for command palette.
         $recentJson = json_encode($recentItems, JSON_HEX_TAG | JSON_HEX_AMP) ?: '[]';
 
-        return ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/layout.phtml', ['actionsBar' => $actionsBar, 'content' => $content, 'csrf' => $csrf, 'currentUserName' => $currentUserName, 'htmlLang' => $htmlLang, 'htmxConfig' => $htmxConfig, 'htmxScript' => $htmxScript, 'markCssLinks' => $markCssLinks, 'navHtml' => $navHtml, 'recentJson' => $recentJson, 'titleEscaped' => $titleEscaped]);
+        return ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/layout.phtml', ['actionsBar' => $actionsBar, 'content' => $content, 'csrf' => $csrf, 'currentUserName' => $currentUserName, 'htmlLang' => $htmlLang, 'htmxConfig' => $htmxConfig, 'htmxScript' => $htmxScript, 'markCssLinks' => $markCssLinks, 'navHtml' => $navHtml, 'recentJson' => $recentJson, 'titleEscaped' => $titleEscaped, 'url' => self::urlBuilder($router)]);
+    }
+
+    /**
+     * The template's URL seam — a closure, so a template cannot reach the
+     * Router itself and the layout decides what a template may address.
+     *
+     * Task 2.9: templates used to spell `/mark/...` by hand. They call
+     * `$url('mark.settings')` now, and a layout rendered without a router
+     * fails loudly instead of shipping a wrong link.
+     *
+     * @return \Closure(string, array<string, string|int>): string
+     */
+    public static function urlBuilder(?RouterInterface $router): \Closure
+    {
+        return static function (string $name, array $params = []) use ($router): string {
+            if (null === $router) {
+                throw new \LogicException(
+                    'An admin layout was rendered without a Router; pass one to AdminLayout::render().',
+                );
+            }
+
+            return $router->url($name, $params);
+        };
     }
 
     /**

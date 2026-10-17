@@ -24,7 +24,7 @@ if (!isset($viewRendererGuard)) {
             <div class="m-edit-info__views m-muted"><?php echo $viewIcon; ?> <?php echo $viewCount; ?> views</div>
         </div>
 
-        <form method="POST" action="/mark/media/<?php echo $id; ?>/edit">
+        <form method="POST" action="<?php echo $url('media.edit', ['id' => $id]); ?>">
             <?php echo $csrf . "\n"; ?>
 
             <div class="m-form-group">
@@ -74,7 +74,7 @@ if (!isset($viewRendererGuard)) {
 
             <div class="m-flex m-gap-2">
                 <button type="submit" class="m-btn m-btn-primary">Save</button>
-                <a href="/mark/media" class="m-btn m-btn-ghost">Cancel</a>
+                <a href="<?php echo $url('media.index'); ?>" class="m-btn m-btn-ghost">Cancel</a>
             </div>
         </form>
     </div>

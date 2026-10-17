@@ -113,9 +113,9 @@ final class MediaUploadAction
         }
 
         $folderOptions = $this->localFolderOptions();
-        $content = ViewRenderer::render('Modules/Media/Interfaces/HTTP/templates/media-upload-form.phtml', ['csrf' => $csrf, 'errorHtml' => $errorHtml, 'providerHtml' => $providerHtml, 'folderOptions' => $folderOptions, 'uploadLimits' => MediaUploadLimits::formConfig(), 'serverLimitLabel' => MediaUploadLimits::iniLabel('upload_max_filesize')]);
+        $content = ViewRenderer::render('Modules/Media/Interfaces/HTTP/templates/media-upload-form.phtml', ['url' => $this->urlBuilder(), 'csrf' => $csrf, 'errorHtml' => $errorHtml, 'providerHtml' => $providerHtml, 'folderOptions' => $folderOptions, 'uploadLimits' => MediaUploadLimits::formConfig(), 'serverLimitLabel' => MediaUploadLimits::iniLabel('upload_max_filesize')]);
 
-        return AdminLayout::render('Upload media', $content, 'media');
+        return AdminLayout::render('Upload media', $content, 'media', router: $this->router());
     }
 
     private function localFolderOptions(): string

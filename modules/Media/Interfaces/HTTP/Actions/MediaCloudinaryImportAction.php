@@ -9,6 +9,8 @@ use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
+use Modules\Core\Kernel\Contracts\RouterInterface;
 use Modules\Media\Application\Services\MediaService;
 use Modules\Media\Infrastructure\Storage\Providers\CloudinaryApi;
 use Modules\Media\Interfaces\HTTP\MediaServices;
@@ -28,6 +30,8 @@ use Modules\Media\Interfaces\HTTP\MediaServices;
 #[Route(path: '/mark/media/cloudinary/import', method: 'POST', name: 'media.cloudinary.import')]
 final readonly class MediaCloudinaryImportAction
 {
+    use ResolvesRouteUrls;
+
     private const int MAX_IMPORT = 50;
 
     /**
@@ -35,14 +39,17 @@ final readonly class MediaCloudinaryImportAction
      *                                substituted client is the only way to
      *                                exercise this caller offline
      */
-    public function __construct(private ?CloudinaryApi $api = null)
-    {
+    public function __construct(
+        private ?CloudinaryApi $api = null,
+        ?RouterInterface $router = null,
+    ) {
+        $this->router = $router;
     }
 
     public function handle(Request $request): Response
     {
         $folder = MediaService::normalizeFolder(is_string($request->body('folder')) ? $request->body('folder') : '');
-        $back = '/mark/media/cloudinary' . ('' !== $folder ? '?' . http_build_query(['folder' => $folder]) : '');
+        $back = $this->url('media.cloudinary') . ('' !== $folder ? '?' . http_build_query(['folder' => $folder]) : '');
 
         $api = $this->api ?? MediaServices::cloudinaryApi();
         if (null === $api) {

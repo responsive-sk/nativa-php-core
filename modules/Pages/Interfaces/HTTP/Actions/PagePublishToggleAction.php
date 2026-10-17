@@ -58,7 +58,7 @@ final class PagePublishToggleAction
             $pages = $crud->list($locale);
             foreach ($pages as $page) {
                 if ($page['slug'] === $slug) {
-                    return Response::html(PagesTableRenderer::row($page, $localeParam));
+                    return Response::html(PagesTableRenderer::row($page, $localeParam, $this->router()));
                 }
             }
 

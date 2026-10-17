@@ -12,6 +12,7 @@ use Modules\Cardboard\Application\Services\BulkActions;
 use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Users\Interfaces\HTTP\AuthServices;
 
@@ -23,6 +24,8 @@ use Modules\Users\Interfaces\HTTP\AuthServices;
 #[Route(path: '/mark/articles', method: 'GET', name: 'articles.index')]
 final class ArticlesIndexAction
 {
+    use ResolvesRouteUrls;
+
     private const int PER_PAGE = 20;
 
     /** Published-date windows for the period filter (query value => days). */
@@ -59,7 +62,7 @@ final class ArticlesIndexAction
         $grid = $this->renderGrid($paginated, $localeRaw, $search, $period, $page, $totalPages, $total, $sort, $dir);
 
         $breadcrumb = AdminLayout::breadcrumb([
-            ['label' => 'Dashboard', 'href' => '/mark'],
+            ['label' => 'Dashboard', 'href' => $this->url('mark.dashboard')],
             ['label' => 'Articles'],
         ]);
 
@@ -82,9 +85,9 @@ final class ArticlesIndexAction
             'Articles',
             $content . $toast,
             'articles',
-            [['label' => 'New article', 'href' => '/mark/articles/create?locale=' . $localeRaw]],
+            [['label' => 'New article', 'href' => $this->url('articles.create') . '?locale=' . $localeRaw]],
             $recentArticles,
-        ));
+        router: $this->router()));
     }
 
     /**
@@ -152,7 +155,7 @@ final class ArticlesIndexAction
         foreach (array_slice($articles, 0, 5) as $article) {
             $recent[] = [
                 'label' => $article['title'],
-                'href' => '/mark/articles/' . $article['slug'] . '/edit?locale=' . $locale,
+                'href' => $this->url('articles.edit', ['slug' => $article['slug']]) . '?locale=' . $locale,
                 'icon' => '📝',
             ];
         }
@@ -223,13 +226,18 @@ final class ArticlesIndexAction
             $emptyDesc = $hasFilter
                 ? 'Try a different search term or period.'
                 : 'Write your first article to get started.';
-            $cta = $hasFilter ? '' : '/mark/articles/create?locale=' . $locale;
+            $cta = $hasFilter ? '' : $this->url('articles.create') . '?locale=' . $locale;
             $ctaLabel = $hasFilter ? '' : 'New article';
 
             return $searchInput . AdminLayout::emptyState($emptyTitle, $emptyDesc, $cta, $ctaLabel);
         }
 
-        $bulkBar = BulkActions::actionBarWithPublish('articles', '/mark/bulk-publish', $locale);
+        $bulkBar = BulkActions::actionBarWithPublish(
+            'articles',
+            $this->url('mark.bulk-publish'),
+            $this->url('mark.bulk-delete'),
+            $locale,
+        );
 
         return $searchInput . $bulkBar . $this->renderContent($articles, $locale, $search, $period, $currentPage, $totalPages, $total, $sort, $dir);
     }
@@ -246,7 +254,7 @@ final class ArticlesIndexAction
     {
         $pagination = $this->renderPagination($currentPage, $totalPages, $locale, $search, $period, $sort, $dir);
         $countInfo = '<div class="m-muted" style="font-size:13px;margin-bottom:12px;">Showing ' . count($articles) . ' of ' . $total . ' articles</div>';
-        $tableHtml = ArticlesTableRenderer::table($articles, $locale, $sort, $dir);
+        $tableHtml = ArticlesTableRenderer::table($articles, $locale, $sort, $dir, router: $this->router());
 
         $skeleton = AdminLayout::skeletonTable([
             ['5%'], ['30%'], ['15%'], ['20%'], ['20%'], ['15%'],
@@ -277,7 +285,7 @@ final class ArticlesIndexAction
 
         return '<div class="m-filter-bar m-filter-bar--search m-filter-row__search">'
             . '<input type="search" name="q" value="' . AdminLayout::e($search) . '"'
-            . ' hx-get="/mark/articles"'
+            . ' hx-get="' . $this->url('articles.index') . '"'
             . ' hx-trigger="keyup changed delay:300ms, search"'
             . ' hx-target="#articles-content"'
             . ' hx-swap="outerHTML"'
@@ -308,7 +316,7 @@ final class ArticlesIndexAction
         $html = '<div class="m-filter-bar m-filter-row__filters">';
 
         foreach ($labels as $value => $label) {
-            $href = '/mark/articles?locale=' . $localeRaw . ('' !== $value ? '&period=' . $value : '');
+            $href = $this->url('articles.index') . '?locale=' . $localeRaw . ('' !== $value ? '&period=' . $value : '');
             $class = $value === $period ? 'm-pill m-pill-active' : 'm-pill';
             $html .= '<a class="' . $class . '" href="' . $href . '">' . AdminLayout::e($label) . '</a>';
         }
@@ -317,8 +325,8 @@ final class ArticlesIndexAction
         // narrow screens it collapses and the language pills wrap below.
         $html .= '<div class="m-filter-spacer"></div>';
 
-        $html .= '<a class="' . $skClass . '" href="/mark/articles?locale=sk' . $periodSuffix . '">SK</a>'
-            . '<a class="' . $enClass . '" href="/mark/articles?locale=en' . $periodSuffix . '">EN</a>';
+        $html .= '<a class="' . $skClass . '" href="' . $this->url('articles.index') . '?locale=sk' . $periodSuffix . '">SK</a>'
+            . '<a class="' . $enClass . '" href="' . $this->url('articles.index') . '?locale=en' . $periodSuffix . '">EN</a>';
 
         return $html . '</div>';
     }
@@ -338,7 +346,7 @@ final class ArticlesIndexAction
         if ($currentPage > 1) {
             $href = $this->paginationUrl($currentPage - 1, $locale, $search, $period, $sort, $dir);
             $nav .= '<a class="m-btn m-btn-sm" href="' . $href . '"'
-                . ' hx-get="/mark/articles' . $href . '"'
+                . ' hx-get="' . $this->url('articles.index') . $href . '"'
                 . ' hx-target="#articles-content"'
                 . ' hx-swap="outerHTML"'
                 . ' hx-indicator="#articles-skeleton"'
@@ -356,7 +364,7 @@ final class ArticlesIndexAction
                 $nav .= '<span class="m-btn m-btn-sm m-btn-primary" aria-current="page">' . $i . '</span>';
             } else {
                 $nav .= '<a class="m-btn m-btn-sm" href="' . $href . '"'
-                    . ' hx-get="/mark/articles' . $href . '"'
+                    . ' hx-get="' . $this->url('articles.index') . $href . '"'
                     . ' hx-target="#articles-content"'
                     . ' hx-swap="outerHTML"'
                     . ' hx-indicator="#articles-skeleton"'
@@ -368,7 +376,7 @@ final class ArticlesIndexAction
         if ($currentPage < $totalPages) {
             $href = $this->paginationUrl($currentPage + 1, $locale, $search, $period, $sort, $dir);
             $nav .= '<a class="m-btn m-btn-sm" href="' . $href . '"'
-                . ' hx-get="/mark/articles' . $href . '"'
+                . ' hx-get="' . $this->url('articles.index') . $href . '"'
                 . ' hx-target="#articles-content"'
                 . ' hx-swap="outerHTML"'
                 . ' hx-indicator="#articles-skeleton"'

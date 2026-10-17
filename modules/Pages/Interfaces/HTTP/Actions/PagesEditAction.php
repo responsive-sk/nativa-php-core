@@ -9,6 +9,7 @@ use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Media\Interfaces\HTTP\MediaEditorHelper;
@@ -24,6 +25,8 @@ use Modules\Validation\Validation\Validator;
 #[Route(path: '/mark/pages/{slug}/edit', method: 'GET|POST', name: 'pages.edit')]
 final class PagesEditAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         $slug = (string) ($request->routeParam('slug') ?? '');
@@ -32,7 +35,7 @@ final class PagesEditAction
         $page = $service->find($slug, $locale);
 
         if (null === $page) {
-            return Response::html(AdminLayout::render('Not found', '<div class="m-card"><p>Page not found.</p></div>'), 404);
+            return Response::html(AdminLayout::render('Not found', '<div class="m-card"><p>Page not found.</p></div>', router: $this->router()), 404);
         }
 
         if ($request->isMethod('POST')) {
@@ -80,7 +83,7 @@ final class PagesEditAction
         );
 
         $localeParam = ContentServices::mapper()->languageCode($locale);
-        $redirect = '/mark/pages?locale=' . $localeParam . '&toast=Page+saved+successfully';
+        $redirect = $this->url('pages.index') . '?locale=' . $localeParam . '&toast=Page+saved+successfully';
 
         // HTMX: return redirect header for partial update.
         if (AdminLayout::isHtmx($request)) {
@@ -103,7 +106,7 @@ final class PagesEditAction
         $data = $override ?: $this->normalizePage($page, $slug);
         $localeParam = ContentServices::mapper()->languageCode($locale);
         $slugEscaped = AdminLayout::e($slug);
-        $backHref = '/mark/pages?locale=' . $localeParam;
+        $backHref = $this->url('pages.index') . '?locale=' . $localeParam;
         $bodyValue = AdminLayout::e($data['body']);
 
         $actions = '<div class="m-filter-bar">'
@@ -112,8 +115,8 @@ final class PagesEditAction
             . '<a class="m-btn m-btn-ghost" href="' . $backHref . '">Cancel</a>'
             . '</div>';
 
-        $content = '<form method="POST" action="/mark/pages/' . $slugEscaped . '/edit?locale=' . $localeParam . '"'
-            . ' hx-post="/mark/pages/' . $slugEscaped . '/edit?locale=' . $localeParam . '"'
+        $content = '<form method="POST" action="' . AdminLayout::e($this->url('pages.edit', ['slug' => $slugEscaped])) . '?locale=' . $localeParam . '"'
+            . ' hx-post="' . AdminLayout::e($this->url('pages.edit', ['slug' => $slugEscaped])) . '?locale=' . $localeParam . '"'
             . ' hx-indicator="#edit-spinner">'
             . AdminLayout::messages($errors, 'err')
             . AdminLayout::csrfField()
@@ -122,9 +125,9 @@ final class PagesEditAction
             . '<textarea id="body" name="body" rows="20" style="width:100%;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;padding:12px;border:1px solid var(--m-border);border-radius:8px;background:var(--m-surface);color:var(--m-ink);box-sizing:border-box;">' . $bodyValue . '</textarea></div>'
             . $actions
             . '</form>'
-            . MediaEditorHelper::editorScript('body');
+            . MediaEditorHelper::editorScript($this->router(), 'body');
 
-        return AdminLayout::render('Edit: ' . $slug, $content, 'pages');
+        return AdminLayout::render('Edit: ' . $slug, $content, 'pages', router: $this->router());
     }
 
     /**

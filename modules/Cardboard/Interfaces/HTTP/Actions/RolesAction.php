@@ -58,7 +58,7 @@ final class RolesAction
         $escapedSearch = AdminLayout::e($search);
         $searchInput = '<div class="m-filter-bar">'
             . '<input type="search" name="q" value="' . $escapedSearch . '" class="m-input--filter"'
-            . ' hx-get="/mark/roles"'
+            . ' hx-get="' . $this->url('mark.roles') . '"'
             . ' hx-trigger="keyup changed delay:300ms, search"'
             . ' hx-target="#roles-content"'
             . ' hx-swap="outerHTML"'
@@ -66,7 +66,7 @@ final class RolesAction
             . ' placeholder="Search roles...">'
             . '</div>';
 
-        $grid = \Modules\Users\Interfaces\HTTP\RolesTableRenderer::render($allRoles);
+        $grid = \Modules\Users\Interfaces\HTTP\RolesTableRenderer::render($allRoles, $this->router());
 
         // HTMX: return partial HTML.
         if (AdminLayout::isHtmx($request)) {
@@ -82,14 +82,14 @@ final class RolesAction
         $csrf = AdminLayout::csrfField();
         $spinner = '<span class="htmx-indicator" id="role-spinner">⏳</span> ';
 
-        $content = ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/roles-list.phtml', ['csrf' => $csrf, 'grid' => $grid, 'searchInput' => $searchInput, 'spinner' => $spinner, 'toast' => $toast]);
+        $content = ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/roles-list.phtml', ['url' => $this->urlBuilder(), 'csrf' => $csrf, 'grid' => $grid, 'searchInput' => $searchInput, 'spinner' => $spinner, 'toast' => $toast]);
 
         return Response::html(AdminLayout::render(
             'Roles',
             $content,
             'roles',
-            [['label' => 'Permissions', 'href' => '/mark/permissions']],
-        ));
+            [['label' => 'Permissions', 'href' => $this->url('mark.permissions')]],
+        router: $this->router()));
     }
 
     /**
@@ -203,13 +203,13 @@ final class RolesAction
             $sections .= '<h3 class="m-heading m-heading--sm">' . AdminLayout::e($group) . "</h3><div class=\"cba-checkgrid\">{$checks}</div>";
         }
 
-        $content = ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/roles-permissions.phtml', ['csrf' => $csrf, 'groupId' => $groupId, 'sections' => $sections]);
+        $content = ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/roles-permissions.phtml', ['url' => $this->urlBuilder(), 'csrf' => $csrf, 'groupId' => $groupId, 'sections' => $sections]);
 
         return Response::html(AdminLayout::render(
             'Permissions — ' . (string) $role['name'],
             $content,
             'roles',
-        ));
+        router: $this->router()));
     }
 
     public function savePermissions(Request $request): Response
@@ -272,7 +272,7 @@ final class RolesAction
             'Permissions',
             $content,
             'roles',
-        ));
+        router: $this->router()));
     }
 
     /**

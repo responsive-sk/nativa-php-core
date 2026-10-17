@@ -108,6 +108,7 @@ final class AdminEscapeTest extends TestCase
                 'published'    => true,
             ]],
             self::EVIL,
+            router: self::router(),
         );
 
         $this->assertStringNotContainsString(self::EVIL, $html);
@@ -135,4 +136,19 @@ final class AdminEscapeTest extends TestCase
         $this->assertStringNotContainsString(self::EVIL, $html);
         $this->assertStringContainsString('&lt;svg', $html);
     }
+    private static function router(): \Modules\Core\Kernel\Contracts\RouterInterface
+    {
+        return new class implements \Modules\Core\Kernel\Contracts\RouterInterface {
+            public function match(\Modules\Core\Infrastructure\Http\Request $request): ?array
+            {
+                return null;
+            }
+
+            public function url(string $name, array $params = []): string
+            {
+                return '/mark/' . $name;
+            }
+        };
+    }
 }
+

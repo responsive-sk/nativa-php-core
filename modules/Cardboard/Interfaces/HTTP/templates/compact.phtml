@@ -133,7 +133,7 @@ if (!isset($viewRendererGuard)) {
 </head>
 <body>
     <nav class="m-topnav">
-        <a class="m-topnav__brand" href="/mark">
+        <a class="m-topnav__brand" href="<?php echo $url('mark.dashboard'); ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
             Mark
         </a>
@@ -152,7 +152,7 @@ if (!isset($viewRendererGuard)) {
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
                 </span>
             </button>
-            <a class="m-topnav__user" href="/mark/users" title="Profile">
+            <a class="m-topnav__user" href="<?php echo $url('mark.users'); ?>" title="Profile">
                 <span class="m-topnav__avatar"><?php echo $currentUserName[0]; ?></span>
                 <span><?php echo $currentUserName; ?></span>
             </a>

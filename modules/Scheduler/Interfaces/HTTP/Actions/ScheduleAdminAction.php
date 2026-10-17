@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Scheduler\Interfaces\HTTP\SchedulerServices;
 
@@ -23,6 +24,8 @@ use Modules\Scheduler\Interfaces\HTTP\SchedulerServices;
 #[Route(path: '/mark/schedule', method: 'GET', name: 'mark.schedule')]
 final class ScheduleAdminAction
 {
+    use ResolvesRouteUrls;
+
     public function handle(Request $request): Response
     {
         $schedule = SchedulerServices::schedule();
@@ -61,7 +64,7 @@ final class ScheduleAdminAction
                 . '(system cron, every minute). Edit the timetable in code — this page only reads it.</p>';
         }
 
-        return Response::html(AdminLayout::render('Schedule', $content, 'schedule'));
+        return Response::html(AdminLayout::render('Schedule', $content, 'schedule', router: $this->router()));
     }
 
     private function badge(string $label, string $modifier): string

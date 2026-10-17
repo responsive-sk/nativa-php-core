@@ -43,7 +43,7 @@ final class QueueAdminAction
 
         if (null === $job) {
             return Response::html(
-                AdminLayout::render('Job not found', '<p class="m-muted">No job with this id.</p>'),
+                AdminLayout::render('Job not found', '<p class="m-muted">No job with this id.</p>', router: $this->router()),
                 404,
             );
         }
@@ -103,7 +103,7 @@ final class QueueAdminAction
 
         $content = $summary . $this->jobsTable($jobs, $csrf) . $this->failedTable($failed, $csrf);
 
-        return AdminLayout::render('Queue', $content, 'queue');
+        return AdminLayout::render('Queue', $content, 'queue', router: $this->router());
     }
 
     /**
@@ -123,12 +123,12 @@ final class QueueAdminAction
             $attempts = (int) $job['attempts'] . '/' . (int) $job['max_attempts'];
 
             $rows .= '<tr>'
-                . '<td><a href="/mark/queue/' . $id . '" class="m-mono">' . $short . '</a></td>'
+                . '<td><a href="' . AdminLayout::e($this->url('mark.queue.detail', ['id' => $id])) . '" class="m-mono">' . $short . '</a></td>'
                 . '<td>' . AdminLayout::e((string) $job['queue']) . '</td>'
                 . '<td class="m-mono">' . AdminLayout::e((string) $job['handler']) . '</td>'
                 . '<td>' . AdminLayout::e((string) $job['state']) . '</td>'
                 . '<td class="m-mono">' . AdminLayout::e($attempts) . '</td>'
-                . '<td>' . $this->deleteForm('/mark/queue/' . $id . '/delete', $csrf, 'Drop') . '</td>'
+                . '<td>' . $this->deleteForm($this->url('mark.queue.delete', ['id' => $id]), $csrf, 'Drop') . '</td>'
                 . '</tr>';
         }
 
@@ -161,8 +161,8 @@ final class QueueAdminAction
                 . '<td class="m-mono">' . AdminLayout::e((string) $job['handler']) . '</td>'
                 . '<td>' . $error . '</td>'
                 . '<td><div class="m-btn-group">'
-                . $this->retryForm('/mark/queue/failed/' . $id . '/retry', $csrf)
-                . $this->deleteForm('/mark/queue/failed/' . $id . '/delete', $csrf, 'Delete')
+                . $this->retryForm($this->url('mark.queue.failed.retry', ['id' => $id]), $csrf)
+                . $this->deleteForm($this->url('mark.queue.failed.delete', ['id' => $id]), $csrf, 'Delete')
                 . '</div></td>'
                 . '</tr>';
         }
@@ -194,10 +194,10 @@ final class QueueAdminAction
         $content = '<table class="m-table"><tbody>' . $rows . '</tbody></table>'
             . '<h2 class="m-heading">Args (payload)</h2>'
             . '<pre class="m-mono" style="overflow:auto">' . AdminLayout::e($this->prettyJson((string) $job['payload'])) . '</pre>'
-            . '<p>' . $this->deleteForm('/mark/queue/' . $id . '/delete', $csrf, 'Drop this job') . '</p>'
-            . '<p><a href="/mark/queue">← Back to jobs</a></p>';
+            . '<p>' . $this->deleteForm($this->url('mark.queue.delete', ['id' => $id]), $csrf, 'Drop this job') . '</p>'
+            . '<p><a href="' . AdminLayout::e($this->url('mark.queue')) . '">← Back to jobs</a></p>';
 
-        return AdminLayout::render('Job ' . substr($id, 0, 8), $content, 'queue');
+        return AdminLayout::render('Job ' . substr($id, 0, 8), $content, 'queue', router: $this->router());
     }
 
     /**

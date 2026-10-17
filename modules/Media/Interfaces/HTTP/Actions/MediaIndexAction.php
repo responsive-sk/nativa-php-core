@@ -10,6 +10,7 @@ use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Env;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Media\Application\Services\MediaService;
 use Modules\Media\Domain\Model\MediaAsset;
@@ -25,6 +26,8 @@ use Modules\Media\Interfaces\HTTP\MediaServices;
 #[Route(path: '/mark/media', method: 'GET', name: 'media.index')]
 final class MediaIndexAction
 {
+    use ResolvesRouteUrls;
+
     private const int PER_PAGE = 50;
 
     public function handle(Request $request): Response
@@ -78,9 +81,9 @@ final class MediaIndexAction
             <script nonce="__CSP_NONCE_PLACEHOLDER__">{$mediaBulkScript}</script>
         HTML;
 
-        $actions = [['label' => 'Upload file', 'href' => '/mark/media/upload']];
+        $actions = [['label' => 'Upload file', 'href' => $this->url('media.upload')]];
         if (null !== MediaServices::cloudinaryApi()) {
-            $actions[] = ['label' => 'Cloudinary library', 'href' => '/mark/media/cloudinary'];
+            $actions[] = ['label' => 'Cloudinary library', 'href' => $this->url('media.cloudinary')];
         }
 
         return Response::html(AdminLayout::render(
@@ -88,7 +91,7 @@ final class MediaIndexAction
             $content . $selectAllScript . $this->toast($request),
             'media',
             $actions,
-        ));
+        router: $this->router()));
     }
 
     /**
@@ -107,14 +110,14 @@ final class MediaIndexAction
             $cells .= $this->renderCell($asset);
         }
 
-        return ViewRenderer::render('Modules/Media/Interfaces/HTTP/templates/select-all-script.phtml', ['cells' => $cells, 'csrf' => $csrf, 'iconDelete' => $iconDelete]);
+        return ViewRenderer::render('Modules/Media/Interfaces/HTTP/templates/select-all-script.phtml', ['url' => $this->urlBuilder(), 'cells' => $cells, 'csrf' => $csrf, 'iconDelete' => $iconDelete]);
     }
 
     private function renderCell(MediaAsset $asset): string
     {
         $id = AdminLayout::e($asset->id());
         $name = AdminLayout::e($asset->originalName());
-        $editHref = "/mark/media/{$id}/edit";
+        $editHref = AdminLayout::e($this->url('media.edit', ['id' => $asset->id()]));
         // '' when the provider cannot be built here (a cloudinary row in an
         // environment without credentials) — the card links to its edit page
         // and shows the placeholder instead of taking the index down.
@@ -244,7 +247,7 @@ final class MediaIndexAction
 
         // Sort dropdown — HTMX with hx-trigger change.
         $sortOptions = ['newest' => 'Newest', 'most_viewed' => 'Most viewed', 'name_asc' => 'Name A-Z'];
-        $hxCommon = 'hx-get="/mark/media" hx-target="#media-content" hx-swap="outerHTML" hx-trigger="change" hx-include="closest form"';
+        $hxCommon = 'hx-get="' . $this->url('media.index') . '" hx-target="#media-content" hx-swap="outerHTML" hx-trigger="change" hx-include="closest form"';
         $sortSelect = '<select name="sort" class="m-input m-input--compact" ' . $hxCommon . '>';
         foreach ($sortOptions as $val => $label) {
             $selected = $val === $currentSort ? ' selected' : '';
@@ -277,7 +280,7 @@ final class MediaIndexAction
         $sourcePills = self::sourcePills($currentSource, $currentType, $currentSort, $currentCategory, $currentTag, $currentFolder);
         $folderSelect = self::folderSelect($currentFolder, $folders);
 
-        return ViewRenderer::render('Modules/Media/Interfaces/HTTP/templates/media-bulkbar.phtml', ['catSelect' => $catSelect, 'folderSelect' => $folderSelect, 'hiddenFields' => $hiddenFields, 'sortSelect' => $sortSelect, 'sourcePills' => $sourcePills, 'tagLinks' => $tagLinks, 'typeLinks' => $typeLinks]);
+        return ViewRenderer::render('Modules/Media/Interfaces/HTTP/templates/media-bulkbar.phtml', ['url' => $this->urlBuilder(), 'catSelect' => $catSelect, 'folderSelect' => $folderSelect, 'hiddenFields' => $hiddenFields, 'sortSelect' => $sortSelect, 'sourcePills' => $sourcePills, 'tagLinks' => $tagLinks, 'typeLinks' => $typeLinks]);
     }
 
     /**
@@ -318,7 +321,7 @@ final class MediaIndexAction
             $rows .= $this->folderManageRow($path);
         }
 
-        return ViewRenderer::render('Modules/Media/Interfaces/HTTP/templates/media-folder-manage.phtml', [
+        return ViewRenderer::render('Modules/Media/Interfaces/HTTP/templates/media-folder-manage.phtml', ['url' => $this->urlBuilder(), 
             'csrf'        => AdminLayout::csrfField(),
             'rows'        => $rows,
             'folderCount' => (string) count($folders),
@@ -335,14 +338,14 @@ final class MediaIndexAction
         $csrf = AdminLayout::csrfField();
 
         return '<div class="m-folder-row">'
-            . '<form class="m-folder-row__rename" method="post" action="/mark/media/folders/rename">'
+            . '<form class="m-folder-row__rename" method="post" action="' . AdminLayout::e($this->url('media.folder-rename')) . '">'
             . $csrf
             . '<input type="hidden" name="from" value="' . $escaped . '">'
             . '<label class="m-label" for="' . AdminLayout::e((string) $id) . '">' . $escaped . '</label>'
             . '<input class="m-input m-input--compact" id="' . AdminLayout::e((string) $id) . '" type="text" name="to" value="' . $escaped . '" required>'
             . '<button class="m-btn m-btn--sm" type="submit">Rename</button>'
             . '</form>'
-            . '<form class="m-folder-row__delete" method="post" action="/mark/media/folders/delete">'
+            . '<form class="m-folder-row__delete" method="post" action="' . AdminLayout::e($this->url('media.folder-delete')) . '">'
             . $csrf
             . '<input type="hidden" name="path" value="' . $escaped . '">'
             . '<label class="m-check"><input type="checkbox" name="cascade" value="1"> delete its files too</label>'
@@ -444,7 +447,7 @@ final class MediaIndexAction
      */
     private static function folderSelect(string $current, array $folders): string
     {
-        $hxCommon = 'hx-get="/mark/media" hx-target="#media-content" hx-swap="outerHTML" hx-trigger="change" hx-include="closest form"';
+        $hxCommon = 'hx-get="' . $this->url('media.index') . '" hx-target="#media-content" hx-swap="outerHTML" hx-trigger="change" hx-include="closest form"';
         $select = '<select name="folder" class="m-input m-input--compact" ' . $hxCommon . '>';
         $select .= '<option value="">All folders</option>';
         foreach ($folders as $folder) {
@@ -496,7 +499,7 @@ final class MediaIndexAction
             $params['folder'] = $folder;
         }
 
-        return '/mark/media' . ([] !== $params ? '?' . http_build_query($params) : '');
+        return $this->url('media.index') . ([] !== $params ? '?' . http_build_query($params) : '');
     }
 
     private function renderStats(int $total): string
@@ -548,6 +551,6 @@ final class MediaIndexAction
             $params['folder'] = $folder;
         }
 
-        return '/mark/media?' . http_build_query($params);
+        return $this->url('media.index') . '?' . http_build_query($params);
     }
 }
