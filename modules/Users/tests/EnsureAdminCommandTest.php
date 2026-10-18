@@ -53,9 +53,14 @@ final class EnsureAdminCommandTest extends TestCase
     {
         parent::setUp();
 
+        // The INSTALLED slices, not the catalogue: `Modules\…` autoloads from
+        // `src/Modules/` alone (composer.json psr-4). Accepting `modules/` here
+        // made the guard pass in a checkout that has the catalogue and nothing
+        // installed, and the suite then reported "Class UsersDatabaseMigrator
+        // not found" in the kernel-only job instead of skipping.
         foreach (['Users', 'Security', 'Database'] as $module) {
-            if (!is_dir(APP_BASE_PATH . '/src/Modules/' . $module) && !is_dir(APP_BASE_PATH . '/modules/' . $module)) {
-                $this->markTestSkipped($module . ' is not installed.');
+            if (!is_dir(APP_BASE_PATH . '/src/Modules/' . $module)) {
+                $this->markTestSkipped($module . ' is not installed — its classes autoload from src/Modules/ only.');
             }
         }
 

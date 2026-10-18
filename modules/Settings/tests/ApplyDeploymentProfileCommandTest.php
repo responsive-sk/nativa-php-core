@@ -45,8 +45,15 @@ final class ApplyDeploymentProfileCommandTest extends TestCase
     {
         parent::setUp();
 
-        if (!is_dir(APP_BASE_PATH . '/src/Modules/Settings') && !is_dir(APP_BASE_PATH . '/modules/Settings')) {
-            $this->markTestSkipped('Settings is not installed.');
+        // The INSTALLED slice, not the catalogue. `Modules\…` autoloads from
+        // `src/Modules/` alone (composer.json psr-4), so a checkout that has
+        // the catalogue under `modules/` and nothing installed used to pass
+        // this guard and then die on the next line with "Class
+        // SettingsDatabaseMigrator not found" — the kernel-only CI job reported
+        // ERRORS where every other module test reports a skip. The guard has
+        // to ask the same question the autoloader answers.
+        if (!is_dir(APP_BASE_PATH . '/src/Modules/Settings')) {
+            $this->markTestSkipped('Settings is not installed — the command ships with the installed slice.');
         }
 
         $this->tmpDir = sys_get_temp_dir() . '/nativa-deploy-profile-' . bin2hex(random_bytes(6));
