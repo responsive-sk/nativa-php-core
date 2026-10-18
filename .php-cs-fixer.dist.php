@@ -12,9 +12,10 @@ use PhpCsFixer\Finder;
  * files) — scoped to the code THIS repo owns and may restyle:
  *
  *   - `src/Modules/Core` + `src/Modules/Database` (the kernel slice),
- *     `src/Themes`, `bin`, `public`, `tests`. That is the same scope
- *     `phpstan.neon` analyses, and the scope `bin/build/extract-kernel.sh
- *     --check` compares. Upstream's finder covered all of `src/`; this tree's
+ *     `src/Themes`, `bin`, `public`, `tests`, plus the HTTP composition root
+ *     `src/http.php`. That is the same scope `phpstan.neon` analyses; `public/`
+ *     is also the entry point `bin/build/extract-kernel.sh --check` compares.
+ *     Upstream's finder covered all of `src/`; this tree's
  *     `src/Modules/*` also holds INSTALLED module slices, which are operator
  *     state (gitignored, present only where someone ran `bin/cms module:add`).
  *     Scanning those would make the gate's verdict depend on what is installed:
@@ -38,6 +39,7 @@ $finder = Finder::create()
         __DIR__ . '/public',
         __DIR__ . '/tests',
     ])
+    ->append([__DIR__ . '/src/http.php'])
     ->name('*.php')
     ->ignoreDotFiles(true)
     ->ignoreVCS(true);

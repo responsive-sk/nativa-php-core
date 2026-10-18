@@ -147,7 +147,8 @@ The admin gate is picked up the same way, one level down: a module ships an
 `AuthProvider` marked `#[AsAuthProvider]`, and `AuthProviderRegistry` (Core)
 finds it by file name — `*AuthProvider.php` in the module's `Interfaces/HTTP`.
 The composition root asks that registry and wraps `AuthMiddleware` around what
-it gets, so `public/index.php` names no module class for auth at all. Install
+it gets, so the HTTP composition root (`src/http.php`) names no module class
+for auth at all. Install
 the module and the gate exists; a tree with the admin router but no provider
 module answers 200 (there is nothing to gate with — a route is not a guard),
 and a kernel-only tree answers 404. (`Users` used to ship an `AuthWiring::wire()`
@@ -157,7 +158,7 @@ entry point for this; it was deleted when discovery landed — see
 measured states, with `docs/kernel-status.md` as the index over the parts.)
 
 `RateLimitMiddleware` is the one stage still wired explicitly in
-`public/index.php`, behind `class_exists`: it needs a limiter FACTORY in its
+`src/http.php`, behind `class_exists`: it needs a limiter FACTORY in its
 constructor, which the zero-argument scan cannot supply, and its product is a
 service holding a PDO rather than a zero-argument port implementation.
 

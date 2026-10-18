@@ -31,9 +31,9 @@ use PHPUnit\Framework\TestCase;
  *  3. **Both delivery entry points call it.** This is the drift guard, and it
  *     is a SOURCE assertion on purpose: the bug being prevented is a wiring
  *     line present in one entry point and missing from the other, which no
- *     runtime assertion can see. Re-adding `public/index.php`'s own inline
- *     block would make this test pass while reintroducing Boot 16 — so the
- *     third case also pins that `public/index.php` no longer carries one.
+ *     runtime assertion can see. Re-adding `src/http.php`'s own inline
+ * block would make this test pass while reintroducing Boot 16 — so the
+ * third case also pins that `src/http.php` no longer carries one.
  *
  * Every source assertion reads CODE, not text: comments are stripped with
  * `token_get_all()` first, because both entry points *describe* this wiring in
@@ -93,7 +93,7 @@ final class CompositionWiringTest extends TestCase
      */
     public static function deliveryEntryPoints(): iterable
     {
-        yield 'the HTTP bootstrap' => ['public/index.php'];
+        yield 'the HTTP bootstrap' => ['src/http.php'];
 
         yield 'the CLI tool' => ['bin/cms'];
     }
@@ -119,8 +119,8 @@ final class CompositionWiringTest extends TestCase
         // legitimately uses.
         $this->assertStringNotContainsString(
             'SecurityEventHandler::register',
-            $this->code('public/index.php'),
-            'public/index.php must not re-declare the pairing it delegates to src/composition.php.',
+            $this->code('src/http.php'),
+            'src/http.php must not re-declare the pairing it delegates to src/composition.php.',
         );
     }
 

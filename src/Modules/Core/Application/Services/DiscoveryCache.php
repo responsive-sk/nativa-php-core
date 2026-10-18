@@ -10,7 +10,7 @@ use Modules\Core\Infrastructure\Paths\AppPaths;
  * DiscoveryCache — fingerprint-validated cache for the Router scan.
  *
  * The Router rescans every PHP file under the action dirs on each boot
- * (per request in `public/index.php`, per Kernel in tests). This cache stores
+ * (per request in `src/http.php`, per Kernel in tests). This cache stores
  * that scan's output (RFC-1, `.ai-factory/plans/rfc-discovery-cache-preference.md`):
  *
  * - payload: `version` + `builtAt` + `fingerprint` + `routes` (the exact entry

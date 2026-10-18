@@ -613,7 +613,7 @@ fi
 # Delivery is the assertion, not the row count. Every security event recorded
 # above has to have been consumed by the end-of-request drain, and the audit row
 # is the proof: the handler that consumes exactly those events IS the audit
-# writer (registered in the composition root, `public/index.php`).
+# writer (registered in the HTTP composition root, `src/http.php`).
 pending="$(dbq DB_OUTBOX "SELECT COUNT(*) FROM outbox_messages WHERE status = 'pending'")"
 want 'outbox messages left pending' 0 "$pending"
 

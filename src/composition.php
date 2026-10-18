@@ -30,9 +30,9 @@ declare(strict_types = 1);
  * So the rule this file states is:
  *
  *   Every process that DELIVERS must wire the handlers it delivers through,
- *   and there is one list, here. `public/index.php` calls it for the request;
- *   `bin/cms` calls it for the worker commands. A new delivery path that
- *   forgets is a bug the CompositionWiringTest names.
+ *   and there is one list, here. `src/http.php` calls it for the request (via
+ *   `public/index.php`); `bin/cms` calls it for the worker commands. A new
+ *   delivery path that forgets is a bug the CompositionWiringTest names.
  *
  * Naming: module classes appear FULLY QUALIFIED AND INLINE, never in a `use`
  * statement and never in a type position. Both are load-bearing, not style:

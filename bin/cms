@@ -451,7 +451,7 @@ function cmdScheduleRun(): void
 /**
  * Deliver the pending outbox messages and prune the processed ones.
  *
- * The operator side of the same queue `public/index.php` drains at the end of
+ * The operator side of the same queue `src/http.php` drains at the end of
  * every request — for a deployment without traffic, or an operator who wants to
  * see the backlog before it clears itself.
  *
