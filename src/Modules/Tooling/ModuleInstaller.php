@@ -140,7 +140,15 @@ final readonly class ModuleInstaller
 
     public function flushPageCache(): int
     {
-        $dir = AppPaths::instance()->storage(PageCacheService::DEFAULT_DIR);
+        // `DEFAULT_DIR` is relative to the BASE ('storage/cache/pages'), not to
+        // the storage root: composing it with `AppPaths::storage()` prepends a
+        // second `storage/`, and — because `PageCacheService` creates the
+        // directory it is handed — `module:add`/`module:remove` left an empty
+        // `storage/storage/cache/pages` behind while the real cache kept every
+        // entry. Same composition as `CacheInvalidator::flush()` and
+        // `CardboardServices::pageCache()`, which is the contract the constant
+        // documents. Pinned by PageCacheDirectoryTest.
+        $dir = APP_BASE_PATH . '/' . PageCacheService::DEFAULT_DIR;
 
         return (new PageCacheService($dir))->flush();
     }
