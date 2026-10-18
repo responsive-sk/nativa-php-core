@@ -49,6 +49,28 @@ DIVERGED src/Modules/Core/Interfaces/HTTP/Router.php # Boot 19: upstream's mayDe
 DIVERGED src/Modules/Core/Infrastructure/Http/Request.php # audit finding #7: isSameOrigin() compares a URL's HOST against the request Host through the same trustedHosts()/isTrustedHost() guard absoluteUrl() uses (a forged Host cannot describe a cross-site request as same-site)
 DIVERGED src/Modules/Core/Interfaces/HTTP/Middleware/CsrfMiddleware.php # audit finding #7: Origin/Referer cross-check, AFTER the token check (a tokenless request is refused with the same 403 and the same message as before) and token-only when both headers are absent
 #
+# --- Kernel contracts: no symfony/console in a type position (Boot 32) ---------
+# The four files below were one change with one reason: the migrator contract
+# carried `CliOutput | OutputInterface`, a union naming a `require-dev` class.
+# It worked only because PHP silently skips an unresolvable class when matching
+# a union — a dependency on a language behaviour in the tree whose one claim is
+# having no runtime dependencies. Nothing is lost: `OutputInterface` exposes
+# `writeln(string)`, which is `CliOutput`'s only method.
+DIVERGED src/Modules/Core/Interfaces/CLI/CliOutput.php # Boot 32: the lightweight logger the auto-migration path hands a migrator, stated as the reason the interface exists (the HTTP bootstrap and `bin/cms migrate` both run in a tree with no vendor/)
+DIVERGED src/Modules/Core/Interfaces/CLI/MigratorInterface.php # Boot 32: run(CliOutput $output) — the `| OutputInterface` union removed, so a kernel contract names no dev package in a type position
+DIVERGED src/Modules/Core/Interfaces/CLI/Support/DatabaseMigrator.php # Boot 32: the `use Symfony\...\OutputInterface` import and the union type it fed are gone; the runner dispatches run(CliOutput) only
+DIVERGED src/Modules/Core/Infrastructure/Attributes/AsMigrator.php # Boot 32: the docblock documents run(CliOutput $output), so the attribute's stated contract matches the interface it is checked against
+#
+# --- Grouped module layout: the declared path does not say where the bytes are --
+# `criticalCss()` and the inline scripts name a module, not the layout, and a
+# module may be filed under a group (`src/Modules/<Group>/<Name>/`). The
+# resolver answers where the bytes are; a flat module, a kernel module and a
+# missing file all still resolve to src(<path>), so a failure reports the
+# declared path.
+DIVERGED src/Modules/Core/Infrastructure/Paths/AppPaths.php # grouped-layout commit: moduleFile() resolves `Modules/<Name>/<tail>` against the installed tree whether or not the slice sits under a group
+DIVERGED src/Modules/Core/Application/Services/View/Paths.php # grouped-layout commit: the view half of the same resolver (moduleFile()), so the view helpers and AppPaths share one answer and a sandbox override still answers first
+DIVERGED src/Modules/Core/Application/Services/View/InlineJs.php # grouped-layout commit: the inline-script helper asks Paths::moduleFile() instead of Paths::src(), which is what made a grouped module's script resolve
+#
 # --- Rewritten roots ----------------------------------------------------------
 DIVERGED public/index.php # kernel-only composition root: nothing to wire, wiring is discovery
 DIVERGED bin/cms # kernel module tool (module:* + migrate), not the showcase console
@@ -72,6 +94,11 @@ OWNED src/Modules/Core/Application/Services/DiscoveryCache.php # route + middlew
 OWNED src/Modules/Core/Domain/ThemePreference.php # theme preference resolution, added in this tree
 OWNED Frontend/packages/griffe # Griffe theme package (module-carried), added in this tree
 OWNED Frontend/packages/mono # Mono theme package (module-carried), added in this tree
+OWNED Frontend/packages/boson # Boson theme package (module-carried), added in this tree — the build the theme declared, alongside griffe and mono
+OWNED src/Modules/Core/Interfaces/HTTP/ResolvesRouteUrls.php # admin redirects and admin HTML links address routes by name; the name is the one stable thing a route keeps when its URL moves
+OWNED src/Modules/Core/Domain/Permissions.php # the admin permission table lives in the kernel, because the gate that reads it is the kernel's
+OWNED src/Modules/Core/Domain/AdminRoutePolicy.php # the admin path is an optional prefix (ADMIN_PATH, default /mark) and an alias, owned once and applied to both spellings; a malformed value falls back to /mark rather than hiding the panel
+OWNED config/deploy.php # the committed deployment profile: the settings a build starts a site from, so an artifact cannot silently rebrand itself into the kernel's own (theme, site name). Applied by `bin/cms settings:profile` right after migrate; --no-profile skips it
 OWNED src/Modules/Core/Domain/Contracts/AuthProvider.php # auth port (Boot 5)
 OWNED src/Modules/Core/Domain/AuthIdentity.php # auth port (Boot 5)
 OWNED src/Modules/Core/Infrastructure/Attributes/AsShellContextProvider.php # shell port (Boot 3)
