@@ -4,10 +4,12 @@ declare(strict_types = 1);
 
 namespace Modules\Themes\Boson\Tests;
 
+use Modules\Core\Application\Services\AssetManager;
 use Modules\Core\Application\Services\View\InlineCss;
 use Modules\Core\Domain\AdminRoutePolicy;
 use Modules\Core\Domain\ShellNavItem;
 use Modules\Core\Infrastructure\Http\Request;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\PageContext;
 use Modules\Core\Interfaces\HTTP\ShellContext;
 use Modules\Core\Interfaces\HTTP\ThemeRegistry;
@@ -58,17 +60,44 @@ final class BosonThemeTest extends TestCase
     }
 
     /**
-     * The behaviour script is inline (there is no Vite package), and it is the
-     * only script the wrap adds — FrontendLayout owns the head's pre-paint
-     * block.
+     * The behaviour script arrives exactly once, from one of two places: the
+     * built bundle FrontendLayout tags with `defer` when `public/dist/boson/`
+     * has a manifest, or the vendored file inlined here when it has not.
+     *
+     * Both branches are asserted against the same state, so the test says the
+     * same thing in a tree that ran `make assets` and in the CI job that runs
+     * the suite without a build. The built case is the reason for the test: a
+     * wrap that inlined as well would execute every init twice — duplicate
+     * scroll listeners, duplicate copy buttons — and nothing would fail.
      */
     #[Test]
     public function pageWrapShipsTheBehaviourScriptOnce(): void
     {
         $theme = new BosonTheme();
         $wrapped = $theme->pageWrap($theme->homepage(self::homepageContext()));
+        $built = null !== (new AssetManager('boson'))->jsUrl('boson');
 
         $this->assertSame(1, substr_count($wrapped, '<main class="bo-main">'), 'One wrap, one <main>.');
+
+        if ($built) {
+            $this->assertSame(
+                0,
+                substr_count($wrapped, '<script'),
+                'The bundle is the page\'s one script; inlining the vendored copy too would run the IIFE twice.',
+            );
+
+            $html = FrontendLayout::render('Test', $wrapped, theme: 'boson');
+
+            $this->assertSame(
+                1,
+                substr_count($html, '<script src="/dist/boson/'),
+                'A built tree ships the bundle as the one deferred behaviour script.',
+            );
+            $this->assertStringContainsString(' defer></script>', $html);
+
+            return;
+        }
+
         $this->assertSame(1, substr_count($wrapped, '<script'), 'One behaviour script, no per-surface scripts.');
         $this->assertStringContainsString('nonce="__CSP_NONCE_PLACEHOLDER__"', $wrapped);
         $this->assertStringContainsString('initHeader()', $wrapped);
@@ -553,6 +582,172 @@ final class BosonThemeTest extends TestCase
         $this->assertStringNotContainsString('http://', $html);
         $this->assertStringNotContainsString('https://', $html);
         $this->assertStringNotContainsString('//cdn', $html);
+    }
+
+    /**
+     * Lighthouse: "Heading elements are not in a sequentially-descending
+     * order" — the home page jumped `h2` to `h5` twice (the three columns and
+     * the four split notes). Each level is a document outline, so a skip is a
+     * section a screen-reader user cannot estimate the depth of; the fix is
+     * the level, not the label, and `.bo-column__title` / `.bo-split__title`
+     * carry their own size so the change moves no pixel.
+     *
+     * Every rendered surface is checked, not just the homepage: the same
+     * `<h5>` in a shared band would come back on another page.
+     */
+    #[Test]
+    public function headingLevelsDescendWithoutSkippingALevel(): void
+    {
+        $theme = new BosonTheme();
+        $surfaces = [
+            'homepage' => $theme->homepage(self::homepageContext()),
+            'blog index' => $theme->blogIndex(self::indexContext()),
+            'blog article' => $theme->blogArticle(self::articleContext()),
+        ];
+
+        foreach ($surfaces as $surface => $html) {
+            preg_match_all('/<h([1-6])\b[^>]*>(.*?)<\/h([1-6])>/s', $html, $matches, PREG_SET_ORDER);
+
+            // A heading whose closer names another level is still a heading to
+            // a browser and still in the outline the audit reads, so it must
+            // not be allowed to fall out of this walk unnoticed.
+            preg_match_all('/<h[1-6]\b/i', $html, $opened);
+            $this->assertSame(
+                count($opened[0]),
+                count($matches),
+                sprintf('The %s opens %d headings but closes only %d of them correctly.', $surface, count($opened[0]), count($matches)),
+            );
+
+            $previous = 0;
+
+            foreach ($matches as $match) {
+                $this->assertSame(
+                    $match[1],
+                    $match[3],
+                    sprintf('The %s closes an h%s with </h%s>.', $surface, $match[1], $match[3]),
+                );
+
+                $level = (int) $match[1];
+
+                if ($previous > 0) {
+                    $this->assertLessThanOrEqual(
+                        $previous + 1,
+                        $level,
+                        sprintf(
+                            'The %s jumps from h%d to h%d ("%s") — an outline with a hole in it.',
+                            $surface,
+                            $previous,
+                            $level,
+                            mb_substr(trim(strip_tags($match[2])), 0, 40),
+                        ),
+                    );
+                }
+
+                $previous = $level;
+            }
+
+            $this->assertGreaterThan(0, count($matches), sprintf('The %s renders no headings at all.', $surface));
+            $this->assertSame(1, substr_count($html, '<h1'), sprintf('The %s must carry exactly one h1.', $surface));
+        }
+    }
+
+    /**
+     * Lighthouse: "Certain ARIA roles must contain particular children" on the
+     * comparison table. `role="table"` may only own `rowgroup`/`row`, and a
+     * `row` may only own `cell`/`columnheader`/`rowheader`/`gridcell`; the body
+     * rows shipped without any role, so the table had rows of anonymous spans
+     * and assistive technology announced nothing usable.
+     */
+    #[Test]
+    public function theComparisonTableOwnsTheRolesItsRoleRequires(): void
+    {
+        $html = (new BosonTheme())->homepage(self::homepageContext());
+
+        $start = strpos($html, 'class="bo-compare__table"');
+        $this->assertNotFalse($start, 'The comparison table left the homepage.');
+
+        $table = substr($html, $start, strpos($html, '</section>', $start) - $start);
+
+        $this->assertStringContainsString('role="table"', $table);
+
+        // role="table" owns row groups/rows, never cells directly.
+        $this->assertStringContainsString('<div role="rowgroup">', $table, 'A table whose rows are not grouped has no header/body split.');
+
+        // Five rows: one header plus the four comparisons.
+        $rows = substr_count($table, 'role="row"');
+        $this->assertSame(5, $rows, 'One header row plus the four comparison rows.');
+
+        // The rule this test exists for: no cell-shaped child may go without
+        // its role, because that is what turned the rows into anonymous spans.
+        preg_match_all('/<span class="bo-compare__(?:label|cell)[^"]*"(?![^>]*\brole=)/', $table, $anonymous);
+        $this->assertSame([], $anonymous[0], 'Every bo-compare label/cell must carry its role: ' . implode(', ', $anonymous[0]));
+
+        // Header cells are column headers, body cells are cells.
+        preg_match_all('/<span class="bo-compare__(?:label|cell)[^"]*" role="([a-z]+)"/', $table, $roles);
+        $this->assertSame(3, count(array_filter($roles[1], static fn (string $r): bool => 'columnheader' === $r)), 'One columnheader per column.');
+        $this->assertSame(4 * 3, count(array_filter($roles[1], static fn (string $r): bool => 'cell' === $r)), 'Four body rows of three cells each.');
+        $this->assertSame(
+            count($roles[1]),
+            substr_count($table, 'role="row"') * 3,
+            'Every child of every row carries a role.',
+        );
+    }
+
+    /**
+     * Lighthouse: "Background and foreground colors do not have a sufficient
+     * contrast ratio" on `bo-btn--primary` — the brand orange on the button
+     * fill measured 4.40:1, just under the 4.5:1 floor for normal-size text.
+     *
+     * The ratio is computed here from the two tokens the rule actually uses,
+     * so a palette edit that fixes the default and re-breaks the hover (or the
+     * reverse) fails: both states are labels a reader can land on.
+     */
+    #[Test]
+    public function thePrimaryButtonLabelPassesContrastInBothStates(): void
+    {
+        $css = InlineCss::file('Modules/Boson/assets/critical/boson.css');
+
+        $brand = $this->token($css, '--bo-brand');
+        $this->assertGreaterThanOrEqual(4.5, self::contrast($brand, $this->token($css, '--bo-btn')), 'The primary button label is under 4.5:1 on its resting fill.');
+        $this->assertGreaterThanOrEqual(4.5, self::contrast($brand, $this->token($css, '--bo-btn-hover')), 'The primary button label is under 4.5:1 on its hover fill.');
+
+        // The same orange is the eyebrow, the comparison marks and the hover
+        // link colour on the page background; those were only passing by luck
+        // before, so the floor is pinned for them too.
+        $this->assertGreaterThanOrEqual(4.5, self::contrast($brand, $this->token($css, '--bo-bg')), 'Brand text on the page background is under 4.5:1.');
+    }
+
+    /** A `--bo-*` colour token from the stylesheet, as `#rrggbb`. */
+    private function token(string $css, string $name): string
+    {
+        $this->assertMatchesRegularExpression('/' . preg_quote($name, '/') . ':\s*(#[0-9a-f]{6});/i', $css, sprintf('Token %s is not declared as a hex colour.', $name));
+
+        preg_match('/' . preg_quote($name, '/') . ':\s*(#[0-9a-f]{6});/i', $css, $matches);
+
+        return strtolower($matches[1]);
+    }
+
+    /** WCAG 2.x contrast ratio of two opaque hex colours. */
+    private static function contrast(string $a, string $b): float
+    {
+        $la = self::luminance($a);
+        $lb = self::luminance($b);
+        $hi = max($la, $lb);
+        $lo = min($la, $lb);
+
+        return ($hi + 0.05) / ($lo + 0.05);
+    }
+
+    private static function luminance(string $hex): float
+    {
+        $channels = [];
+
+        foreach ([1, 3, 5] as $offset) {
+            $value = hexdec(substr($hex, $offset, 2)) / 255;
+            $channels[] = $value <= 0.03928 ? $value / 12.92 : (($value + 0.055) / 1.055) ** 2.4;
+        }
+
+        return 0.2126 * $channels[0] + 0.7152 * $channels[1] + 0.0722 * $channels[2];
     }
 
     private static function homepageContext(): PageContext

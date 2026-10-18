@@ -107,8 +107,14 @@
   --bo-brand: #f93904;
   --bo-brand-hover: #ff5a2b;
   --bo-brand-deep: #972203;
-  --bo-btn: #3a1309;
-  --bo-btn-hover: #601a08;
+  /* The primary button's label is the brand orange on these. `#3a1309`
+   * measured 4.40:1 against it — under the 4.5:1 floor an audit checks, and
+   * the reason `bo-btn--primary` was the one failing contrast element on the
+   * home page. Darkening the fill fixes that without touching the brand
+   * colour every link, eyebrow and mark also uses: #260c04 is 4.94:1 and its
+   * hover #300f06 is 4.69:1 (was 3.41:1), so both states pass. */
+  --bo-btn: #260c04;
+  --bo-btn-hover: #300f06;
   --bo-line: rgba(255, 255, 255, 0.05);
   --bo-line-strong: rgba(255, 255, 255, 0.14);
   --bo-font-main: Inter, "Inter Fallback", BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
@@ -843,9 +849,17 @@ table th {
   box-shadow: 0 0 90px rgba(249, 57, 4, 0.18);
 }
 
+/* The mark is the site's own `/favicon.svg`: a `viewBox` and no `width`/
+   `height` attributes, so its intrinsic size is unknown and only the ratio is.
+   `height: auto` therefore leans on the `<img width="72" height="72">`
+   attributes for the box, which reserves the space but is exactly what
+   Lighthouse reports as an "unsized image element" — the CSS, not the markup,
+   should be the thing that proves the box. `aspect-ratio` says it in the
+   theme's own vocabulary (`.bo-orbit` and `__core` use the same declaration). */
 .bo-orbit__mark {
   display: block;
   width: 52%;
+  aspect-ratio: 1 / 1;
   height: auto;
 }
 
@@ -1117,6 +1131,7 @@ table th {
 .bo-column__title {
   margin: 0;
   font-size: 1.15rem;
+  line-height: 1.3;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -1396,6 +1411,7 @@ table th {
 .bo-split__title {
   margin: 0;
   font-size: 1.15rem;
+  line-height: 1.3;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }

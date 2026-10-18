@@ -20,6 +20,8 @@ importers:
 
   basic: {}
 
+  boson: {}
+
   erik: {}
 
   griffe:

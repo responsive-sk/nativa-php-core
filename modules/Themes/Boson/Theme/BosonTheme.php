@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Themes\Boson\Theme;
 
+use Modules\Core\Application\Services\AssetManager;
 use Modules\Core\Application\Services\View\InlineJs;
 use Modules\Core\Domain\AdminRoutePolicy;
 use Modules\Core\Domain\ShellNavItem;
@@ -66,14 +67,21 @@ use Themes\ThemeModule;
  * at all — the reference's landing is a statement page, and its only path to
  * the blog is the CTA.
  *
- * ## The build it declares
+ * ## The build, and the fallback it falls back FROM
  *
- * No Vite package: the reference's CSS is vendored (prefixed, rewritten) as
- * `assets/critical/boson.css` and the behaviour script as
- * `assets/scripts/boson.js`. `bundle()` is still `boson` because that is the
- * body-class spelling `FrontendLayout` derives from the theme name, and
- * `jsKey()` names the entry should a bundle ever be built for it — the
- * layout simply emits no deferred `<script>` while no manifest exists.
+ * The CSS and the behaviour script are vendored in this module
+ * (`assets/critical/boson.css`, `assets/scripts/boson.js`) and stay there: a
+ * tree that never runs `make assets` still renders the theme, because
+ * `criticalCss()` inlines the stylesheet and `pageWrap()` inlines the script.
+ * `Frontend/packages/boson/` bundles those SAME two files into
+ * `public/dist/boson/`; once that manifest exists, `FrontendLayout` inlines
+ * the minified stylesheet and emits the deferred `<script src>` instead — the
+ * build optimises the vendored bytes rather than duplicating them.
+ *
+ * The script therefore has one source of truth at runtime: the bundle when it
+ * resolves, the inline file when it does not. `pageWrap()` asks
+ * `AssetManager` before inlining, so a built tree cannot run the same IIFE
+ * twice.
  */
 final class BosonTheme implements ThemeModule
 {
@@ -242,17 +250,22 @@ final class BosonTheme implements ThemeModule
     }
 
     /**
-     * The page body plus the one vendored behaviour script.
+     * The page body plus the one vendored behaviour script — inline only when
+     * there is no build for `FrontendLayout` to defer.
      *
-     * The script is inline, not a deferred bundle: this theme has no Vite
-     * package, so `AssetManager` resolves no manifest and `FrontendLayout`
-     * emits no `<script src>`. It sits after `</main>` so the header it reads
-     * is already parsed; every init self-gates on its markup, so a page
+     * `jsTag()` already emits the bundle as `<script src="/dist/boson/…"
+     * defer>` once `public/dist/boson/manifest.json` resolves. Inlining the
+     * vendored file as well would run every init twice — duplicate scroll
+     * listeners, duplicate copy buttons — so the inline copy is the fallback
+     * for a tree without the build, the same shape `criticalCss()` has for the
+     * stylesheet. The script sits after `</main>` so the header it reads is
+     * already parsed, and every init self-gates on its markup, so a page
      * without an accordion or a fenced block runs nothing.
      */
     public function pageWrap(string $content): string
     {
-        $js = InlineJs::file('Modules/Boson/assets/scripts/boson.js');
+        $built = null !== (new AssetManager($this->bundle()))->jsUrl($this->jsKey());
+        $js = $built ? '' : InlineJs::file('Modules/Boson/assets/scripts/boson.js');
 
         return '<main class="bo-main">' . "\n"
             . '    ' . $content . "\n"
@@ -567,7 +580,7 @@ final class BosonTheme implements ThemeModule
         foreach ($columns as [$title, $text]) {
             $html .= '<article class="bo-column">'
                 . '<span class="bo-column__mark" aria-hidden="true"></span>'
-                . '<h5 class="bo-column__title">' . self::e($title) . '</h5>'
+                . '<h3 class="bo-column__title">' . self::e($title) . '</h3>'
                 . '<p class="bo-column__text">' . self::e($text) . '</p>'
                 . '</article>';
         }
@@ -627,27 +640,40 @@ final class BosonTheme implements ThemeModule
         $body = '';
 
         foreach ($rows as [$label, $ours, $theirs]) {
-            $body .= '<div class="bo-compare__row">'
-                . '<span class="bo-compare__label">' . self::e($label) . '</span>'
-                . '<span class="bo-compare__cell bo-compare__cell--yes">'
+            $body .= '<div class="bo-compare__row" role="row">'
+                . '<span class="bo-compare__label" role="cell">' . self::e($label) . '</span>'
+                . '<span class="bo-compare__cell bo-compare__cell--yes" role="cell">'
                 . '<span class="bo-compare__mark" aria-hidden="true">+</span>' . self::e($ours) . '</span>'
-                . '<span class="bo-compare__cell bo-compare__cell--no">'
+                . '<span class="bo-compare__cell bo-compare__cell--no" role="cell">'
                 . '<span class="bo-compare__mark" aria-hidden="true">&minus;</span>' . self::e($theirs) . '</span>'
                 . '</div>';
         }
 
+        // Every role here is load-bearing: `role="table"` may only own
+        // `rowgroup`/`row`, and a `row` may only own `cell`/`columnheader`.
+        // The body rows shipped without roles, so the table had rows whose
+        // children were plain spans — the audit's "required children are
+        // missing", and a screen reader that announced nothing. A native
+        // `<table>` would say it without ARIA, but `.bo-compare__row` is a
+        // grid, and `display: block` on table elements drops their table
+        // semantics in some engines — the explicit roles are what survive the
+        // CSS this band is drawn with.
         return '<section class="bo-compare" aria-label="Comparison">'
             . '<div class="bo-compare__head">'
             . '<p class="bo-segment__label">The right choice</p>'
             . '<h2 class="bo-segment__title">Less machinery.<br>Clearer ownership.</h2>'
             . '</div>'
             . '<div class="bo-compare__table" role="table" aria-label="Nativa compared with a typical framework">'
+            . '<div role="rowgroup">'
             . '<div class="bo-compare__row bo-compare__row--head" role="row">'
             . '<span class="bo-compare__label" role="columnheader">Question</span>'
             . '<span class="bo-compare__cell bo-compare__cell--yes" role="columnheader">Nativa</span>'
             . '<span class="bo-compare__cell bo-compare__cell--no" role="columnheader">Typical framework</span>'
             . '</div>'
+            . '</div>'
+            . '<div role="rowgroup">'
             . $body
+            . '</div>'
             . '</div>'
             . '</section>';
     }
@@ -671,7 +697,7 @@ final class BosonTheme implements ThemeModule
             $html .= '<article class="bo-split__item">'
                 . '<span class="bo-split__badge" aria-hidden="true"></span>'
                 . '<div class="bo-split__body">'
-                . '<h5 class="bo-split__title">' . self::e($title) . '</h5>'
+                . '<h3 class="bo-split__title">' . self::e($title) . '</h3>'
                 . '<p class="bo-split__text">' . self::e($text) . '</p>'
                 . '</div></article>';
         }

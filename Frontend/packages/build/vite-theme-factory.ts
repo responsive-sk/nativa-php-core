@@ -44,6 +44,7 @@ const THEME_PORTS: Record<string, { dev: number; preview: number }> = {
   jednotka: { dev: 5183, preview: 4183 },
   griffe: { dev: 5184, preview: 4184 },
   mono: { dev: 5185, preview: 4185 },
+  boson: { dev: 5186, preview: 4186 },
 };
 
 export interface ThemeConfigOptions {
