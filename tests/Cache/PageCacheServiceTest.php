@@ -5,9 +5,12 @@ declare(strict_types = 1);
 namespace Tests\Cache;
 
 use Modules\Core\Application\Services\PageCacheService;
+use Modules\Core\Domain\AdminRoutePolicy;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Core\Interfaces\HTTP\Middleware\PageCacheMiddleware;
+use Modules\Core\Interfaces\HTTP\Middleware\SecurityHeadersMiddleware;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -17,9 +20,9 @@ use PHPUnit\Framework\TestCase;
  *
  * The page cache is keyed by method + path + query + locale, which is to say by
  * nothing that distinguishes one visitor from another. It is written by
- * `PageCacheMiddleware` on every cacheable response and read by
- * `RateLimitMiddleware` when a client trips the rate limit — so the cache is
- * served to WHOEVER trips the limit, never to whoever triggered the write.
+ * `PageCacheMiddleware` on every cacheable response and read back by that same
+ * middleware for the next anonymous GET — and by `RateLimitMiddleware` (serving
+ * to whoever trips the limit) when the limiter blocks a request.
  *
  * That makes any session-dependent render a cross-visitor leak the moment it is
  * stored, and one such render exists by design: the shell chrome advertises the
@@ -107,6 +110,100 @@ final class PageCacheServiceTest extends TestCase
     }
 
     /**
+     * The read path, first half: a fresh entry answers the request WITHOUT the
+     * page being rendered again. That is the whole point of the cache on the
+     * ordinary path — the render is where a deployment's seconds go.
+     */
+    #[Test]
+    public function aFreshEntryIsServedWithoutRenderingThePageAgain(): void
+    {
+        $request = Request::create('GET', '/blog');
+
+        [$first, $rendersAfterFirst] = $this->serveThroughMiddleware($request);
+        [$second, $rendersAfterSecond] = $this->serveThroughMiddleware($request);
+
+        $this->assertSame(1, $rendersAfterFirst, 'The first request has nothing to serve, so it renders.');
+        $this->assertNull($first->getHeader('X-Cache'), 'A rendered response is not a cache hit.');
+
+        $this->assertSame(0, $rendersAfterSecond, 'The second request rendered the page the cache was supposed to answer.');
+        $this->assertSame('HIT', $second->getHeader('X-Cache'));
+        $this->assertSame('<html>rendered</html>', (string) $second->getContent());
+    }
+
+    /**
+     * The read path, second half: what comes out of the cache still carries the
+     * placeholder, so `SecurityHeadersMiddleware` — which wraps this middleware
+     * — stamps a fresh nonce on the response that actually leaves. A served
+     * entry pinned to the nonce of the response that wrote it would be a CSP
+     * that no longer matches its own body.
+     */
+    #[Test]
+    public function aServedEntryKeepsTheNoncePlaceholder(): void
+    {
+        $request = Request::create('GET', '/');
+        $body = '<html><script nonce="' . SecurityHeadersMiddleware::NONCE_PLACEHOLDER . '">x</script></html>';
+
+        $this->serveThroughMiddleware($request, $body);
+        [$served, $renders] = $this->serveThroughMiddleware($request, '<html>rendered again</html>');
+
+        $this->assertSame(0, $renders, 'Precondition: the entry must answer the second request without a render.');
+        $this->assertStringContainsString(
+            SecurityHeadersMiddleware::NONCE_PLACEHOLDER,
+            (string) $served->getContent(),
+            'A served entry must keep the placeholder for SecurityHeadersMiddleware to replace.',
+        );
+        $this->assertStringNotContainsString('rendered again', (string) $served->getContent());
+    }
+
+    /**
+     * The serve path obeys the REQUEST half of the bypass table, entry or no
+     * entry: a stale guide, an admin page, a POST or a submission state must
+     * never be answered from a shared file.
+     *
+     * Deliberately a different table than `uncacheableRequests()`: that one
+     * also carries the RESPONSE rules (a 404 is not stored, but `GET /` is
+     * still a request a fresh entry may answer), and this path decides before
+     * any response exists.
+     *
+     * @param array<string, string> $query
+     */
+    #[Test]
+    #[DataProvider('requestsThatAreNeverServedFromTheCache')]
+    public function nothingFromTheRequestBypassTableIsServedFromTheCache(string $method, string $path, array $query): void
+    {
+        $request = Request::create($method, $path, $query);
+
+        $this->seedCacheEntry($request, '<html>from the cache</html>');
+        [$served, $renders] = $this->serveThroughMiddleware($request);
+
+        $this->assertSame(1, $renders, sprintf('%s %s was answered from the page cache.', $method, $path));
+        $this->assertNull($served->getHeader('X-Cache'), sprintf('%s %s must not report a cache hit.', $method, $path));
+        $this->assertSame('<html>rendered</html>', (string) $served->getContent());
+    }
+
+    /**
+     * The cross-visitor rule on the READ path: an anonymous entry sitting in
+     * the cache is not an answer for a signed-in editor, whose chrome names the
+     * admin surface. The store half of this rule is pinned above; a serve half
+     * that forgot it would hand the editor the anonymous page instead.
+     */
+    #[Test]
+    public function aSignedInVisitorIsNeverServedTheAnonymousEntry(): void
+    {
+        $request = Request::create('GET', '/');
+
+        $this->serveThroughMiddleware($request, '<html>anonymous</html>');
+        $this->assertCount(1, $this->cacheFiles(), 'Precondition: the anonymous render is cached.');
+
+        $this->signIn();
+        [$served, $renders] = $this->serveThroughMiddleware($request);
+
+        $this->assertSame(1, $renders, 'The editor was served the anonymously rendered page from the cache.');
+        $this->assertNull($served->getHeader('X-Cache'));
+        $this->assertSame('<html>rendered</html>', (string) $served->getContent());
+    }
+
+    /**
      * The bypass table the new rule sits inside — pinned so that an edit to
      * `isCacheable()` cannot trade one leak for another.
      *
@@ -123,6 +220,23 @@ final class PageCacheServiceTest extends TestCase
             new PageCacheService($this->cacheDir)->isCacheable($request, $response),
             sprintf('%s %s must not be cacheable.', $method, $path),
         );
+    }
+
+    /**
+     * The request half of the table — what the middleware refuses to LOOK UP,
+     * before any response exists to judge.
+     *
+     * @return iterable<string, array{0: string, 1: string, 2: array<string, string>}>
+     */
+    public static function requestsThatAreNeverServedFromTheCache(): iterable
+    {
+        yield 'a POST is never a page' => ['POST', '/', []];
+
+        yield 'the admin surface' => ['GET', AdminRoutePolicy::prefix(), []];
+
+        yield 'a guide is the file' => ['GET', '/docs/kernel', []];
+
+        yield 'a submission state' => ['GET', '/blog', ['form-sent' => '1']];
     }
 
     /**
@@ -150,6 +264,42 @@ final class PageCacheServiceTest extends TestCase
         $middleware = new PageCacheMiddleware(new PageCacheService($this->cacheDir));
 
         $middleware->handle($request, static fn (): Response => Response::html('<html>ok</html>'));
+    }
+
+    /**
+     * Drive the middleware the way the kernel does — through the READ path, so
+     * a hit is visible as "the render did not happen".
+     *
+     * @return array{0: Response, 1: int} the response and how many times the page was rendered
+     */
+    private function serveThroughMiddleware(Request $request, string $body = '<html>rendered</html>'): array
+    {
+        $renders = 0;
+        $middleware = new PageCacheMiddleware(new PageCacheService($this->cacheDir));
+
+        $response = $middleware->handle(
+            $request,
+            static function () use (&$renders, $body): Response {
+                $renders++;
+
+                return Response::html($body);
+            },
+        );
+
+        return [$response, $renders];
+    }
+
+    /**
+     * Put an entry under the key the middleware would build for this request,
+     * so the bypass tests measure whether the middleware LOOKS IT UP rather
+     * than whether something ever wrote it.
+     */
+    private function seedCacheEntry(Request $request, string $body): void
+    {
+        $service = new PageCacheService($this->cacheDir);
+        $key = $service->cacheKey($request, ContentServices::mapper()->defaultLocale());
+
+        $service->set($key, Response::html($body));
     }
 
     /**

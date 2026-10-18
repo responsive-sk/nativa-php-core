@@ -9,12 +9,20 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 
 /**
- * PageCacheService — file-based HTML page cache for rate-limit fallback.
+ * PageCacheService — file-based HTML page cache for anonymous public pages.
  *
  * Cached pages are stored in storage/cache/pages/ as JSON files keyed by
- * SHA256(method + path + query + locale). The cache is passively populated
- * by PageCacheMiddleware on every cacheable GET response, and served by
- * RateLimitMiddleware when the rate limit is exceeded.
+ * SHA256(method + path + query + locale). `PageCacheMiddleware` populates it
+ * on every cacheable GET response and serves it back while the entry is
+ * fresh; `RateLimitMiddleware` reads the same entries as its fallback when a
+ * client trips the rate limit, which is why the cache predates being read on
+ * the ordinary path.
+ *
+ * The TTL is the staleness contract (`DEFAULT_TTL`, 300 seconds) and an edit
+ * in the admin does not wait for it: every content write flushes the cache
+ * through `CacheInvalidator`. What a visitor can therefore see is a page up
+ * to five minutes old when nobody touched it, and never an old page after
+ * somebody did.
  *
  * Cached content retains the __CSP_NONCE_PLACEHOLDER__ string —
  * SecurityHeadersMiddleware replaces it with a fresh nonce on every request,
@@ -39,8 +47,8 @@ final readonly class PageCacheService
      *
      * `/docs` belongs here because a guide IS the file: a 300-second-old copy
      * of the exact paragraph a developer came to read is worse than one more
-     * file read, and an edit to a guide must be visible on the next reload. The
-     * cache exists for the rate-limit fallback, not to shield the disk.
+     * file read, and an edit to a guide must be visible on the next reload.
+     * Skipping the render is not a reason to serve a stale guide.
      *
      * The admin surface is not listed: it is answered at runtime through
      * `AdminRoutePolicy::isAdminPath()`, which knows both the configured
@@ -164,11 +172,11 @@ final readonly class PageCacheService
     }
 
     /**
-     * Determine whether a request+response pair should be cached.
+     * Determine whether a request+response pair should be stored.
      */
     public function isCacheable(Request $request, Response $response): bool
     {
-        if ('GET' !== $request->getMethod()) {
+        if (!$this->isCacheableRequest($request)) {
             return false;
         }
 
@@ -179,6 +187,27 @@ final readonly class PageCacheService
         $contentType = (string) ($response->getHeader('Content-Type') ?? '');
 
         if (!str_starts_with($contentType, 'text/html')) {
+            return false;
+        }
+
+        return '' !== trim($response->getContent());
+    }
+
+    /**
+     * The request half of the rule, on its own — the question the middleware
+     * has to answer BEFORE it renders, because that is when a cache lookup
+     * happens. `isCacheable()` asks it too, so the store path and the serve
+     * path cannot drift: a request that may not be written is a request that
+     * may not be served, and the other way round.
+     *
+     * Nothing here looks at a response. The response half (200, text/html,
+     * non-empty) is what `isCacheable()` adds, and no cached entry can carry a
+     * value that half would have refused — entries are only ever written
+     * through it.
+     */
+    public function isCacheableRequest(Request $request): bool
+    {
+        if ('GET' !== $request->getMethod()) {
             return false;
         }
 
@@ -202,11 +231,7 @@ final readonly class PageCacheService
             return false;
         }
 
-        if ($this->renderedForASignedInVisitor()) {
-            return false;
-        }
-
-        return '' !== trim($response->getContent());
+        return !$this->renderedForASignedInVisitor();
     }
 
     /**

@@ -52,11 +52,13 @@ unset($_earlyLogDir);
 use Modules\Core\Application\Services\AuthProviderRegistry;
 use Modules\Core\Application\Services\DiscoveryCache;
 use Modules\Core\Application\Services\DisposalRegistry;
+use Modules\Core\Application\Services\PageCacheService;
 use Modules\Core\Infrastructure\Bootstrap\Bootstrapper;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Interfaces\HTTP\Kernel;
 use Modules\Core\Interfaces\HTTP\Middleware\AuthMiddleware;
 use Modules\Core\Interfaces\HTTP\Middleware\MiddlewareRegistry;
+use Modules\Core\Interfaces\HTTP\Middleware\PageCacheMiddleware;
 use Modules\Core\Interfaces\HTTP\Middleware\RateLimitMiddleware;
 use Modules\Core\Interfaces\HTTP\Router;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
@@ -147,6 +149,22 @@ if (class_exists(SecurityRateLimiter::class)) {
 } else {
     error_log('[rate] absent — no Security module');
 }
+
+// The page cache: an anonymous public GET is answered from storage/cache/pages
+// while its entry is fresh, so the theme render is paid once per TTL instead of
+// once per visitor. Core-owned — no module class to guard — so it is wired
+// unconditionally, and wired AFTER the limiter on purpose: the rate limit is
+// counted before a cache hit is returned, not after.
+//
+// It is added as the pipeline is built rather than found by discovery because
+// it needs a constructed `PageCacheService`, and the discovered stages are the
+// ones with no wiring (SecurityHeaders, Csrf, Debugbar). The signed-in and
+// admin bypasses are the service's own policy, so this file states no rule of
+// its own here.
+$kernel->addMiddleware(new PageCacheMiddleware(
+    new PageCacheService(APP_BASE_PATH . '/' . PageCacheService::DEFAULT_DIR),
+));
+error_log('[cache] wired PageCache (anonymous HTML, 5 min TTL, admin and signed-in bypass)');
 
 // The admin gate: the provider is DISCOVERED (`#[AsAuthProvider]`), so this
 // file names no module class for auth at all. `first()` returns null in a tree
