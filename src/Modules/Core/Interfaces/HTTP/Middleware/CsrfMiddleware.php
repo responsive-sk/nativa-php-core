@@ -100,6 +100,37 @@ final class CsrfMiddleware implements MiddlewareInterface
     }
 
     /**
+     * The token the session THIS request opened already holds, minting nothing
+     * and starting nothing — `null` when no session is open or none holds one.
+     *
+     * `token()` is the caller-facing accessor and mints on first use; this one
+     * answers the question a cache policy has to ask: "does the body I am about
+     * to store contain the token of the session that produced it?"
+     *
+     * The test is `session_status()`, not a cookie: a page that printed a form
+     * started the session in this request (that is what printing the token
+     * does), while `$_COOKIE` is the REQUEST's cookies and is therefore empty on
+     * the very first render — which is exactly the render a cache stores. Asking
+     * the cookie is how the first version of this method missed the case it was
+     * written for: the guest's first page carried a token and was cached anyway,
+     * and the next visitor's submission failed with 403.
+     *
+     * A request that never printed a token is a request with no session open (or
+     * one opened for something else, holding no `csrf_token`) — nothing to
+     * protect, and nothing a store may leak.
+     */
+    public static function sessionToken(): ?string
+    {
+        if (PHP_SESSION_NONE === session_status()) {
+            return null;
+        }
+
+        $token = $_SESSION[self::SESSION_KEY] ?? null;
+
+        return is_string($token) && '' !== $token ? $token : null;
+    }
+
+    /**
      * Regenerate the session token (call after login to prevent fixation).
      */
     public static function regenerateToken(): string

@@ -9,6 +9,7 @@ use Modules\Core\Domain\AdminRoutePolicy;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
 use Modules\Core\Interfaces\HTTP\Middleware\PageCacheMiddleware;
 use Modules\Core\Interfaces\HTTP\Middleware\SecurityHeadersMiddleware;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -107,6 +108,45 @@ final class PageCacheServiceTest extends TestCase
             $this->cacheFiles(),
             'The rule must cost the editor their own cache entry, not the whole site its cache.',
         );
+    }
+
+    /**
+     * A form's token is per SESSION. A body that contains it is not a page a
+     * shared key may hold: the next visitor would post a credential that is not
+     * theirs. Found by `bin/build/admin-smoke.sh` — the first guest comment on a
+     * cached article page came back 403.
+     */
+    #[Test]
+    public function aBodyThatPrintedTheSessionTokenIsNeverStored(): void
+    {
+        $this->startSessionWithToken();
+
+        $this->assertIsString(
+            CsrfMiddleware::sessionToken(),
+            'Precondition: printing the token opened the session that holds it.',
+        );
+
+        $this->writeThroughMiddleware(Request::create('GET', '/blog'), '<html>' . CsrfMiddleware::field() . '</html>');
+
+        $this->assertSame(
+            [],
+            $this->cacheFiles(),
+            'A response carrying this visitor\'s CSRF token was stored under a key every visitor shares.',
+        );
+    }
+
+    /**
+     * The other half of the same rule: the guard must cost the form-bearing
+     * pages their cache entry, not the whole site its cache.
+     */
+    #[Test]
+    public function aPageWithoutAFormIsStillStoredWhileASessionHoldsAToken(): void
+    {
+        $this->startSessionWithToken();
+
+        $this->writeThroughMiddleware(Request::create('GET', '/blog'), '<html><p>no form here</p></html>');
+
+        $this->assertCount(1, $this->cacheFiles(), 'A page that printed no token must still be cached.');
     }
 
     /**
@@ -259,11 +299,25 @@ final class PageCacheServiceTest extends TestCase
      * The real write path: the middleware captures a response only when the
      * service calls it cacheable.
      */
-    private function writeThroughMiddleware(Request $request): void
+    private function writeThroughMiddleware(Request $request, string $body = '<html>ok</html>'): void
     {
         $middleware = new PageCacheMiddleware(new PageCacheService($this->cacheDir));
 
-        $middleware->handle($request, static fn (): Response => Response::html('<html>ok</html>'));
+        $middleware->handle($request, static fn (): Response => Response::html($body));
+    }
+
+    /**
+     * A visitor the app would have given a token to — and ONLY a token: nobody is
+     * signed in, so these cases measure the CSRF rule rather than the signed-in
+     * one. Deliberately sets NO cookie, because the render that escapes is the
+     * FIRST one: the request arrives without a session cookie, printing the form
+     * opens the session and sets the cookie on the way out, and the store happens
+     * after that — so a guard that asked `$_COOKIE` would see nothing to ask
+     * about and cache the page.
+     */
+    private function startSessionWithToken(): void
+    {
+        CsrfMiddleware::token();
     }
 
     /**

@@ -37,6 +37,14 @@ use Modules\Core\Interfaces\HTTP\ContentServices;
  *    which the content actions call on every write — the reason a 5-minute
  *    window does not turn into a 5-minute lie after an edit.
  *
+ * A fourth rule is not visible here because it is inside `isCacheable()`: a
+ * body that printed the visitor's CSRF token is never stored. A form's token is
+ * per session, so a cached form would hand the next visitor a credential that
+ * fails their own submission — the `403` on the first guest comment, which is
+ * how the rule was found. Form-bearing pages are therefore not cached; the
+ * store path is the only one that needs the rule, because nothing is served
+ * that was not stored.
+ *
  * Runs after RateLimitMiddleware in the pipeline so only requests that passed
  * the rate limit are served and cached — the limiter stays in front of the
  * cache rather than behind it.

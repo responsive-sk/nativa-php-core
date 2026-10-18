@@ -7,6 +7,7 @@ namespace Modules\Core\Application\Services;
 use Modules\Core\Domain\AdminRoutePolicy;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
 
 /**
  * PageCacheService — file-based HTML page cache for anonymous public pages.
@@ -190,7 +191,39 @@ final readonly class PageCacheService
             return false;
         }
 
+        if ($this->renderedASessionToken($response)) {
+            return false;
+        }
+
         return '' !== trim($response->getContent());
+    }
+
+    /**
+     * Whether this body carries the visitor's CSRF token.
+     *
+     * A form's hidden `_token` is minted per SESSION, so a body containing it is
+     * not a page: stored under a key every visitor shares, it hands the next
+     * visitor a credential that fails their own submission. That is not a
+     * theory — it is what `bin/build/admin-smoke.sh` caught the first time this
+     * cache was read on the ordinary path: the guest's comment on an article
+     * page came back `403`, because the token in the served form belonged to
+     * whoever rendered the page first.
+     *
+     * Read through `CsrfMiddleware::sessionToken()`, which mints nothing and
+     * starts no session: a page that printed no form carries no token, and a
+     * visitor who never used one must not acquire a session for being cached.
+     *
+     * The consequence is deliberate: the surfaces that print a form (the
+     * comment section, the questions block) are never cached, and the pages
+     * that do not (the landing page, the blog index) still are. Serving them
+     * would mean substituting the field like the CSP nonce is substituted, a
+     * change to the auth surface this cache has no business making on its own.
+     */
+    private function renderedASessionToken(Response $response): bool
+    {
+        $token = CsrfMiddleware::sessionToken();
+
+        return null !== $token && str_contains($response->getContent(), $token);
     }
 
     /**
