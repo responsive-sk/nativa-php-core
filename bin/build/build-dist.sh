@@ -412,6 +412,31 @@ else
     echo "    error log is clean"
 fi
 
+# --- Runtime state -----------------------------------------------------------
+# The artifact ships a storage SKELETON: the five directories, and the databases
+# migrate built inside them. Everything else under storage/ was produced by the
+# steps above, on THIS machine, and would be inherited by a host that has its
+# own answer. Two of them are not cosmetic:
+#
+#   storage/cache/.migrations-applied — the bootstrapper's "the migrators have
+#     already run" marker. It is a claim about the DATABASES, and it was written
+#     against the ones this script just migrated. A deployment that opens OTHER
+#     databases — `DB_*` in the host's .env pointing at a volume, a storage/data
+#     the deploy does not populate — then finds the marker, SKIPS the migration
+#     that would create its schema, and the first request dies on the first
+#     query: `PDOException: no such table: settings`, 500 on `GET /`. Measured
+#     both ways: the artifact with DB_* on an empty directory is a 500, and the
+#     very same artifact with the marker removed is a 200 (the first request
+#     re-runs migrate and writes the marker where it belongs).
+#   storage/cache/pages/ + storage/logs/ — HTML the smoke rendered here and the
+#     build's own log lines. Runtime state a host should not inherit, and
+#     neither is a schema the host needs.
+step "Purging runtime state (the databases stay; caches, sessions and logs do not)"
+for dir in cache logs sessions; do
+    find "$DIST_DIR/storage/$dir" -mindepth 1 -delete
+    echo "    storage/$dir/: emptied"
+done
+
 # --- Permissions -------------------------------------------------------------
 step "Setting permissions"
 find "$DIST_DIR" -type d -exec chmod 755 {} \;
