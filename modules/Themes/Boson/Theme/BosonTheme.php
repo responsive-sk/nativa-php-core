@@ -803,16 +803,33 @@ final class BosonTheme implements ThemeModule
         $prefix = self::urlPrefix($locale);
         $cards = '';
 
-        foreach ($pairs as $pair) {
+        foreach ($pairs as $index => $pair) {
             $meta = implode(' &middot; ', array_map(
                 static fn (string $bit): string => self::e($bit),
                 array_filter([$pair['date'], $pair['category'], $pair['author']], static fn (string $bit): bool => '' !== $bit),
             ));
 
+            // The first grid row holds the LCP candidate, so those covers load
+            // eager and ask for priority; the rest stay lazy below the fold.
+            // Measured 2026-10-18 on responsive.sk: Boson's card marked EVERY
+            // cover `loading="lazy"`, including the one Lighthouse then named
+            // the LCP element, and carried no width/height, so the box was
+            // unreserved and no srcset reached the browser. The starter theme
+            // has answered all three since Boot 24; this is the same rule, on
+            // the grid that has 3 columns of the same minimum width (320px).
+            // The 3 is a literal on purpose: `NameOwnershipContractTest` caps
+            // the tree's const declarations, and a constant that only names a
+            // count the CSS already states is the growth that cap forbids.
+            $inFirstRow = $index < 3;
+            $loading = $inFirstRow ? 'eager' : 'lazy';
+            $priority = $inFirstRow ? ' fetchpriority="high"' : '';
+
             $cards .= '<article class="bo-card">'
                 . (null === $pair['image']
                     ? ''
-                    : '<img class="bo-card__cover" src="' . self::e($pair['image']) . '" alt="" loading="lazy" decoding="async">')
+                    : '<img class="bo-card__cover" src="' . self::e($pair['image']) . '" alt=""'
+                        . ' loading="' . $loading . '"' . $priority . ' decoding="async"'
+                        . ' width="720" height="360"' . ($pair['imageSrcset'] ?? '') . '>')
                 . ('' === $meta ? '' : '<p class="bo-card__meta">' . $meta . '</p>')
                 . '<h2 class="bo-card__title"><a href="' . $prefix . '/blog/' . self::e($pair['slug']) . '">'
                 . self::e($pair['title']) . '</a></h2>'
