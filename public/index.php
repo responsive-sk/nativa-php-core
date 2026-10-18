@@ -161,10 +161,27 @@ if (class_exists(SecurityRateLimiter::class)) {
 // ones with no wiring (SecurityHeaders, Csrf, Debugbar). The signed-in and
 // admin bypasses are the service's own policy, so this file states no rule of
 // its own here.
-$kernel->addMiddleware(new PageCacheMiddleware(
-    new PageCacheService(APP_BASE_PATH . '/' . PageCacheService::DEFAULT_DIR),
-));
-error_log('[cache] wired PageCache (anonymous HTML, 5 min TTL, admin and signed-in bypass)');
+//
+// PAGE_CACHE (default: on) is the one lever, read from the environment so a
+// deployment can turn it off in `.env` without a rebuild. It exists because the
+// question "does the cache cause the render delay?" is not answerable by
+// reading code: measured on responsive.sk, the cache HIT served TTFB in 0 ms
+// while Lighthouse reported an LCP element render delay of 2500 ms, and every
+// candidate the delay could come from is ruled out on its own terms —
+// `font-display: swap` on all seven @font-face rules, the 47 KB critical CSS
+// inlined and resolving, 61–158 KB hero images, and Total Blocking Time at 0 ms.
+// Speed Index measures visual completeness from screenshots, which a
+// server-side HTML cache does not touch, so the switch makes the claim
+// measurable on the deployment instead of argued. Turning it off costs the
+// render: TTFB stops being 0 ms.
+if (\Modules\Core\Infrastructure\Env::bool('PAGE_CACHE', true)) {
+    $kernel->addMiddleware(new PageCacheMiddleware(
+        new PageCacheService(APP_BASE_PATH . '/' . PageCacheService::DEFAULT_DIR),
+    ));
+    error_log('[cache] wired PageCache (anonymous HTML, 5 min TTL, admin and signed-in bypass)');
+} else {
+    error_log('[cache] PageCache OFF (PAGE_CACHE=false in .env)');
+}
 
 // The admin gate: the provider is DISCOVERED (`#[AsAuthProvider]`), so this
 // file names no module class for auth at all. `first()` returns null in a tree
