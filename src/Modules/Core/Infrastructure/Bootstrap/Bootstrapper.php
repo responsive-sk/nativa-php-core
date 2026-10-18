@@ -41,12 +41,49 @@ final readonly class Bootstrapper
     }
 
     /**
-     * Ensure storage directories exist.
+     * Ensure storage directories exist AND are writable by this process.
+     *
+     * The writability half is not decoration. Measured on a deployed artifact:
+     * `build-dist.sh` chmods every directory to 755, and a deploy that runs as
+     * one user (rsync as root, an FTP client, a CI account) while php-fpm/www-data
+     * serves as another leaves storage/ unwritable for the SAPI. Every symptom
+     * downstream is a different, misleading one:
+     *
+     *   - data/ unwritable  → `PDOException: [HY000] [14] unable to open
+     *     database file` on the first query. A 500 that reads like a broken
+     *     artifact rather than a permissions problem.
+     *   - cache/ unwritable → the DDL runs fine, then this class's own marker
+     *     write fails. The warning became an ErrorException, so the request
+     *     500'd with `file_put_contents(...): Failed to open stream`. Worse,
+     *     the marker never landed, so the ENTIRE schema migration re-ran on
+     *     every request: three requests, three full migrations across ten
+     *     SQLite databases. Per-request DDL is what turns a 500 into a
+     *     gateway timeout (502/503) under php-fpm's request timeout.
+     *
+     * Checking once, here, and naming the path converts both into one
+     * actionable failure instead of an obscure one plus a timeout storm.
+     *
+     * @throws \RuntimeException when a storage directory is not writable
      */
     public function ensureStorage(): void
     {
         foreach (['data', 'logs', 'cache', 'sessions', 'uploads'] as $dir) {
-            $this->paths->ensureDir($this->paths->storage($dir));
+            $path = $this->paths->storage($dir);
+            $this->paths->ensureDir($path);
+
+            if (!is_writable($path)) {
+                throw new \RuntimeException(sprintf(
+                    'storage/%s is not writable by the web server (%s). '
+                    . 'The application cannot create its databases, its logs, '
+                    . 'its sessions or its caches. Fix the ownership of the '
+                    . 'deployed tree, e.g. `chgrp -R %s storage && chmod -R 775 storage`, '
+                    . 'where %s is the group php-fpm/www-data runs as.',
+                    $dir,
+                    $path,
+                    'www-data',
+                    'www-data',
+                ));
+            }
         }
     }
 
@@ -83,7 +120,23 @@ final readonly class Bootstrapper
         // the auto-run stays armed for migrators added in later phases.
         if ([] !== $migrated) {
             $this->paths->ensureDir($this->paths->cache());
-            file_put_contents($this->markerPath(), implode(PHP_EOL, $migrated) . PHP_EOL);
+
+            // `@` plus an explicit check, not a bare file_put_contents(). The
+            // global handler in init.php turns a PHP warning into an
+            // ErrorException, so a failed write used to surface as
+            // `file_put_contents(...): Failed to open stream` — a message
+            // about an internal function, on a line that is not the cause.
+            // ensureStorage() has already refused an unwritable cache/, so
+            // reaching the failure means something changed underneath us; say
+            // so plainly instead of re-throwing the warning's own wording.
+            if (false === @file_put_contents($this->markerPath(), implode(PHP_EOL, $migrated) . PHP_EOL)) {
+                throw new \RuntimeException(sprintf(
+                    'Cannot write the migration marker %s — every request would '
+                    . 're-run the full schema migration. Check that storage/cache '
+                    . 'is writable by the web server.',
+                    $this->markerPath(),
+                ));
+            }
         }
 
         return $migrated;

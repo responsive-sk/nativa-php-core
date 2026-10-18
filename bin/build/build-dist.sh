@@ -447,6 +447,25 @@ find "$DIST_DIR" -type f -exec chmod 644 {} \;
 # non-executable — every file under bin/ is a program by definition.
 find "$DIST_DIR/bin" -type f -exec chmod 755 {} \;
 
+# storage/ must be WRITABLE BY THE WEB SERVER, and the blanket 755 above is
+# what made the deployed artifact 500: a deploy runs as one user (rsync as
+# root, FTP, a CI account) while php-fpm/www-data serves as another, and 755
+# gives the SAPI no write access. Measured both ways on this artifact:
+#
+#   storage/ unwritable  → `PDOException: [HY000] [14] unable to open database
+#     file` on the first query — a 500 that reads like a broken build.
+#   storage/cache/ alone unwritable → the DDL succeeds, the migration marker
+#     does not, and the whole ten-database migration re-runs on EVERY request.
+#     Per-request DDL is what a 500 becomes a 502/503 once php-fpm's request
+#     timeout is in play.
+#
+# 775 matches `AppPaths::ensureDir()`, which has always created directories at
+# 0o775 — this step was silently overriding the kernel's own convention. It
+# still does not know the deploy's group, so the deploy line below carries the
+# chgrp; the group bit is what makes that a one-liner instead of a chown -R.
+find "$DIST_DIR/storage" -type d -exec chmod 775 {} \;
+find "$DIST_DIR/storage" -type f -exec chmod 664 {} \;
+
 # --- Summary -----------------------------------------------------------------
 size="$(du -sh "$DIST_DIR" | cut -f1)"
 files="$(find "$DIST_DIR" -type f | wc -l | tr -d ' ')"
@@ -472,4 +491,11 @@ echo ""
 echo "  Deploy with:"
 echo "    rsync -az --delete $DIST_DIR/ user@host:/var/www/nativa-php-core/"
 echo "    (every file is a real copy — no symlinks, so a plain FTP upload works)"
+echo ""
+echo "  THEN hand storage/ to the web server — the artifact ships 775 for this,"
+echo "  the rsync user is not the SAPI user, and a storage/ the SAPI cannot"
+echo "  write is a 500 on every request (or a 503, once the per-request"
+echo "  re-migration it triggers hits the request timeout):"
+echo "    chgrp -R www-data /var/www/nativa-php-core/storage"
+echo "    (use 'nginx' or '_www' — whatever your php-fpm pool runs as)"
 echo "============================================================================="
