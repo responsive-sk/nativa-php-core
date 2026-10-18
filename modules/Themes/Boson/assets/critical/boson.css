@@ -41,23 +41,21 @@
   src: url("/fonts/roboto-condensed-400.woff2") format("woff2");
 }
 
-@font-face {
-  font-family: "JetBrains Mono";
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("/fonts/jetbrains-mono-500.woff2") format("woff2");
-}
-
-/* Metric-matched fallbacks (CLS). `font-display: swap` paints text at once
+/* Two families, both self-hosted: Inter for body copy, Roboto Condensed for
+ * display type. Monospace is NOT a third download — the shipped JetBrains
+ * Mono face was 22 KB (a second preload, a second CORS fetch) to style small
+ * code blocks and badges, so `--bo-font-mono` names the system stack instead.
+ * The page's identity comes from the two proportional faces; a code sample
+ * nobody has to wait for reads the same.
+ *
+ * Metric-matched fallbacks (CLS). `font-display: swap` paints text at once
  * in the local fallback and swaps the webfont in later — a reflow unless the
  * fallback occupies the same box. Each face is a local font scaled and
  * re-metriced onto the webfont it stands in for, so the swap changes glyph
  * shapes but neither a line break nor a line box. Values come from the
  * shipped woff2 metrics (ascent/descent/lineGap of hhea, average advance of
  * `The quick brown fox… 0123456789`) against the local fallback it names —
- * Arial/Liberation Sans (2.048 em) for the two proportional families,
- * Courier New/Liberation Mono for the mono one:
+ * Arial/Liberation Sans (2.048 em) for both proportional families:
  *
  *   size-adjust       = (webfont avg/upm) / (fallback avg/upm)
  *   ascent-override   = (webfont ascent/upm) / size-adjust
@@ -84,19 +82,6 @@
   line-gap-override: 0%;
 }
 
-/* Mono stands in for a monospaced local face, never Arial: both JetBrains
- * Mono and Courier New advance every glyph by 0.6 em, so the widths line up
- * per character instead of on average (Arial would need 126% and still drift
- * up to 7% on a sentence). */
-@font-face {
-  font-family: "JetBrains Mono Fallback";
-  src: local("Courier New"), local("Liberation Mono"), local("Menlo"), local("DejaVu Sans Mono");
-  size-adjust: 100%;
-  ascent-override: 102%;
-  descent-override: 30%;
-  line-gap-override: 0%;
-}
-
 :root {
   --bo-bg: #0d1119;
   --bo-layer: #0f131c;
@@ -119,7 +104,7 @@
   --bo-line-strong: rgba(255, 255, 255, 0.14);
   --bo-font-main: Inter, "Inter Fallback", BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   --bo-font-title: "Roboto Condensed", "Roboto Condensed Fallback", "Segoe UI", Roboto, sans-serif;
-  --bo-font-mono: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --bo-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   --bo-ui: 56px;
   --bo-header: 100px;
   --bo-header-small: 70px;
