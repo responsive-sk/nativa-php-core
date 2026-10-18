@@ -13,18 +13,11 @@
  * without a rewrite.
  */
 import { mergeConfig } from 'vite';
-import type { Plugin } from 'vite';
-import { createRequire } from 'node:module';
 import { fileURLToPath } from 'url';
 import { createThemeConfig } from '../build/vite-theme-factory.ts';
+import { minifyTemplateLiterals } from './minify-literals.ts';
 
 const src = fileURLToPath(new URL('./src', import.meta.url));
-
-// CJS-only package: `import` hands back `{ default: fn }`, so require it (the
-// shape the plugin's own typings describe) and keep the plugin type explicit.
-const minifyHtmlLiterals = (createRequire(import.meta.url)(
-  'rollup-plugin-minify-html-literals',
-) as { default: () => Plugin }).default;
 
 export default mergeConfig(
   createThemeConfig({
@@ -41,6 +34,6 @@ export default mergeConfig(
     // shipped bytes. This plugin runs a real CSS/HTML minifier over literals
     // with those tags only, so the whitespace goes away without touching any
     // other string. The tag outlived Lit (`src/utils/css.ts`).
-    plugins: [minifyHtmlLiterals()],
+    plugins: [minifyTemplateLiterals()],
   },
 );

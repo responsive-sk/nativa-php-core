@@ -11,8 +11,13 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@types/clean-css": "^4.2.11",
+    "@types/html-minifier-terser": "^7.0.2",
     "chart.js": "^4.5.1",
+    "clean-css": "^5.3.3",
+    "html-minifier-terser": "^7.2.0",
     "lit": "^3.3.2",
-    "rollup-plugin-minify-html-literals": "^1.2.6"
+    "magic-string": "^0.30.17",
+    "parse-literals": "^1.2.1"
   }
 }
