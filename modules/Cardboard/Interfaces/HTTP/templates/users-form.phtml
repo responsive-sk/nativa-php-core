@@ -28,7 +28,10 @@ if (!isset($viewRendererGuard)) {
                 <?php echo $roleOptions . "\n"; ?>
             </select>
             <label for="avatar">Avatar</label>
-            <input type="file" id="avatar" name="avatar" accept="image/*">
+            <input type="hidden" id="avatar" name="avatar" value="<?php echo $avatarValue; ?>">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <button type="button" class="m-btn m-btn-ghost" data-action="open-media-picker" data-target="avatar">Choose from Media</button>
+            </div>
             <?php echo $avatarPreview . "\n"; ?>
             <?php echo $removeAvatar . "\n"; ?>
             <div class="m-check">

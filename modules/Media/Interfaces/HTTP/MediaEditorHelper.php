@@ -26,11 +26,13 @@ final class MediaEditorHelper
      * Renders a reusable set of JS functions and a modal that can be
      * embedded in any admin form with a markdown textarea.
      *
-     * @param string $textareaId The ID of the markdown textarea element
+     * @param string|null $textareaId The markdown textarea to insert into, or
+     *                                null when the picker only fills a field
+     *                                (a cover image, an avatar)
      */
-    public static function editorScript(RouterInterface $router, string $textareaId = 'body'): string
+    public static function editorScript(RouterInterface $router, ?string $textareaId = 'body'): string
     {
-        $escapedId = htmlspecialchars($textareaId, ENT_QUOTES);
+        $escapedId = null !== $textareaId ? htmlspecialchars($textareaId, ENT_QUOTES) : '';
 
         return ViewRenderer::render('Modules/Media/Interfaces/HTTP/templates/media-picker.phtml', [
             'escapedId' => $escapedId,

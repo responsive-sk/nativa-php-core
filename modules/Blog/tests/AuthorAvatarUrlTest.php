@@ -60,11 +60,37 @@ final class AuthorAvatarUrlTest extends TestCase
     }
 
     #[Test]
+    public function aMediaLibraryUrlIsAcceptedWhenItsFileExists(): void
+    {
+        $relative = 'tests/avatar-' . bin2hex(random_bytes(8)) . '.jpg';
+        $full = AppPaths::instance()->storage('uploads/' . $relative);
+        AppPaths::instance()->ensureDir(dirname($full));
+        file_put_contents($full, 'avatar');
+        $this->created[] = $full;
+
+        $avatar = new AuthorAvatar(new LocalStorageProvider());
+
+        $this->assertSame('/storage/uploads/' . $relative, $avatar->url('/storage/uploads/' . $relative));
+    }
+
+    #[Test]
+    public function aCdnUrlIsAccepted(): void
+    {
+        $avatar = new AuthorAvatar(new LocalStorageProvider());
+
+        $this->assertSame(
+            'https://res.cloudinary.com/epithemic/image/upload/avatar.jpg',
+            $avatar->url('https://res.cloudinary.com/epithemic/image/upload/avatar.jpg'),
+        );
+    }
+
+    #[Test]
     public function aMissingAvatarHasNoUrl(): void
     {
         $avatar = new AuthorAvatar(new LocalStorageProvider());
 
         $this->assertNull($avatar->url('tests/missing-' . bin2hex(random_bytes(8)) . '.jpg'));
+        $this->assertNull($avatar->url('/storage/uploads/tests/missing-' . bin2hex(random_bytes(8)) . '.jpg'));
         $this->assertNull($avatar->url(null));
         $this->assertNull($avatar->url(''));
     }

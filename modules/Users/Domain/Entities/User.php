@@ -65,8 +65,9 @@ final class User
     }
 
     /**
-     * Relative stored-avatar path (e.g. 2026/08/09/<hex>.png), or null when
-     * the user has no avatar.
+     * The avatar reference: a relative stored path (`2026/08/09/<hex>.png`)
+     * for older/direct uploads, or a public media URL when picked from the
+     * library. Null when the user has no avatar.
      */
     public function avatar(): ?string
     {

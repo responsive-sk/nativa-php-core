@@ -29,7 +29,8 @@ if (!isset($viewRendererGuard)) {
     (function(){
         var _pickerTarget='';
         var _pickerMode='insert';
-        var _textarea=document.getElementById('<?php echo $escapedId; ?>');
+        var _textareaId=<?php echo json_encode($escapedId); ?>;
+        var _textarea=_textareaId?document.getElementById(_textareaId):null;
         var _csrfInput=document.querySelector('input[name="_token"]');
         var _csrfToken=_csrfInput?_csrfInput.value:'';
 

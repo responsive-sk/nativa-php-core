@@ -10,9 +10,10 @@ use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
-use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Infrastructure\Storage\LocalStorageProvider;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
+use Modules\Media\Interfaces\HTTP\MediaEditorHelper;
 use Modules\Security\Application\Services\PasswordHasher;
 use Modules\Security\Domain\PasswordPolicy;
 use Modules\Validation\Validation\Validator;
@@ -28,9 +29,10 @@ use Modules\Validation\Validation\Validator;
  * - POST /mark/users/{id}/edit   edit submit
  * - POST /mark/users/{id}/delete delete
  *
- * Avatar upload (phase 2): both forms accept an image file stored via
- * LocalStorageProvider; the relative path persists into users.avatar and the
- * edit form can also remove it.
+ * Avatar selection: both forms pick an existing image from the Media
+ * library (the same picker the article editor uses); the chosen URL persists
+ * into users.avatar and the edit form can also remove it. The media asset is
+ * shared, so changing or clearing an avatar never deletes the file.
  *
  * Every security event the user mutations emit rides the Outbox when it is
  * installed, behind a `class_exists` guard and never a `use` statement: an
@@ -145,11 +147,11 @@ final class UsersAction
             return $this->createFormResponse(['A user with this email already exists.'], $name, $email, $request);
         }
 
-        // Avatar upload — attempted only after field validation and email
+        // Avatar selection — attempted only after field validation and email
         // uniqueness passed; on error nothing is stored (path is null).
-        $upload = $this->avatarUpload();
-        if ('' !== $upload['error']) {
-            return $this->createFormResponse([$upload['error']], $name, $email, $request);
+        $avatar = $this->avatarSelection($request);
+        if ('' !== $avatar['error']) {
+            return $this->createFormResponse([$avatar['error']], $name, $email, $request);
         }
 
         $hasher = new PasswordHasher();
@@ -158,7 +160,7 @@ final class UsersAction
             'name'     => $name,
             'email'    => $email,
             'password' => $hasher->hash($password),
-            'avatar'   => $upload['path'],
+            'avatar'   => $avatar['path'],
         ]);
 
         if ('' !== $roleId) {
@@ -224,14 +226,11 @@ final class UsersAction
             return $this->editFormResponse($user, $errors, $name, $email, $request);
         }
 
-        // Avatar change (upload, removal, or none) — a storage error keeps
-        // the DB untouched (the orphaned file is deleted below).
-        $state = $this->editAvatarState($errors, $request);
+        // Avatar change (selection, removal, or none) — an invalid selection
+        // keeps the DB untouched. The file belongs to the media library, so
+        // nothing is deleted when the selection fails or the avatar changes.
+        $state = $this->editAvatarState($errors, $request, $user->avatar());
         if ([] !== $state['errors']) {
-            if (null !== $state['newAvatar']) {
-                (new LocalStorageProvider())->delete($state['newAvatar']);
-            }
-
             return $this->editFormResponse($user, $state['errors'], $name, $email, $request);
         }
 
@@ -324,14 +323,12 @@ final class UsersAction
             ? '<p class="m-muted m-hint">Leave blank to keep the current password.</p>'
             : '';
 
-        // Avatar preview + removal checkbox (edit only). Mirrors the public
-        // rendering: a stored file that no longer exists falls back to the
-        // placeholder instead of a broken image.
+        // Avatar preview + removal checkbox. The picker fills the hidden
+        // `avatar` field with a media URL; the preview uses the same IDs the
+        // shared picker updates after a selection.
         $avatar = null !== $user ? $user->avatar() : null;
-        $avatarPreview = null !== $avatar
-            ? '<p class="m-hint">Current avatar:</p>'
-                . $this->avatarPreviewImg($avatar, $user?->name() ?? '')
-            : '';
+        $avatarPreview = $this->avatarPreview($avatar);
+        $avatarValue = null !== $avatar ? AdminLayout::e($avatar) : '';
         $removeAvatar = null !== $avatar
             ? '<div class="m-check"><input type="checkbox" id="remove_avatar" name="remove_avatar" value="1"><label for="remove_avatar">Remove avatar</label></div>'
             : '';
@@ -340,8 +337,8 @@ final class UsersAction
         $hxPost = $htmx ? ' hx-post="' . AdminLayout::e($action) . '" hx-indicator="#user-spinner"' : '';
         $spinner = '<span class="htmx-indicator" id="user-spinner">⏳</span> ';
 
-        $content = ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/users-form.phtml', ['url' => $this->urlBuilder(), 'action' => $action, 'activeChecked' => $activeChecked, 'avatarPreview' => $avatarPreview, 'csrf' => $csrf, 'email' => $email, 'errorHtml' => $errorHtml, 'hxPost' => $hxPost, 'name' => $name, 'passwordHint' => $passwordHint, 'removeAvatar' => $removeAvatar, 'roleOptions' => $roleOptions, 'spinner' => $spinner, 'submitLabel' => $submitLabel])
-            . ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/avatar-guard.phtml', []);
+        $content = ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/users-form.phtml', ['avatarPreview' => $avatarPreview, 'avatarValue' => $avatarValue, 'url' => $this->urlBuilder(), 'action' => $action, 'activeChecked' => $activeChecked, 'csrf' => $csrf, 'email' => $email, 'errorHtml' => $errorHtml, 'hxPost' => $hxPost, 'name' => $name, 'passwordHint' => $passwordHint, 'removeAvatar' => $removeAvatar, 'roleOptions' => $roleOptions, 'spinner' => $spinner, 'submitLabel' => $submitLabel])
+            . MediaEditorHelper::editorScript($this->router(), null);
 
         return AdminLayout::render($title, $content, 'users', router: $this->router());
     }
@@ -424,52 +421,57 @@ final class UsersAction
     }
 
     /**
-     * Admin avatar preview — the stored file when it exists, else the same
-     * initial-letter placeholder the public pages render (no broken image).
+     * Admin avatar preview, using the same IDs the shared media picker
+     * updates after a selection. A missing file hides the preview instead of
+     * rendering a broken image; the picker can fill it again.
      */
-    private function avatarPreviewImg(string $avatar, string $name): string
+    private function avatarPreview(?string $avatar): string
     {
-        $storage = new LocalStorageProvider();
-        $src = $storage->exists($avatar)
-            ? $storage->url($avatar)
-            : (new \Modules\Blog\Application\Services\AuthorAvatar($storage))->placeholderDataUri($name);
+        $src = null !== $avatar
+            ? (new \Modules\Blog\Application\Services\AuthorAvatar(new LocalStorageProvider()))->url($avatar)
+            : null;
 
-        return '<img src="' . AdminLayout::e($src) . '" alt="" width="48" height="48" class="m-avatar">';
+        return '<div id="image-preview" style="margin-top:8px;' . (null !== $src ? '' : 'display:none;') . '">'
+            . '<img id="image-preview-img" src="' . AdminLayout::e($src ?? '') . '" alt="Preview"'
+            . ' style="max-width:120px;max-height:120px;border-radius:8px;border:1px solid var(--cba-border);">'
+            . '</div>';
     }
 
     /**
-     * Store the submitted avatar file, if any.
+     * The avatar chosen from the media library.
+     *
+     * The picker writes a public URL (`/storage/uploads/...` or an https CDN
+     * URL) into the hidden field. A local URL is checked against the upload
+     * allowlist so a forged POST cannot point at an arbitrary file; a Cloudinary
+     * URL is accepted because that is what the media picker lists when the
+     * provider is configured. The media asset stays owned by Media: changing
+     * or clearing an avatar never deletes it.
      *
      * @return array{path: ?string, error: string}
      */
-    private function avatarUpload(): array
+    private function avatarSelection(Request $request): array
     {
-        // MediaUploadPayload::filesFor() prefers the real multipart entry and
-        // falls back to a synthetic entry built from the base64 "avatar_b64"
-        // POST field (the form's guard script encodes the picked file) — on
-        // shared hosting the multipart path can be unusable (broken
-        // upload_tmp_dir / upload_max_filesize) while the urlencoded path
-        // works.
-        $file = \Modules\Media\Interfaces\HTTP\MediaUploadPayload::filesFor('avatar')['avatar'] ?? null;
+        $avatar = $request->body('avatar');
 
-        if (!is_array($file) || UPLOAD_ERR_NO_FILE === ($file['error'] ?? UPLOAD_ERR_NO_FILE)) {
+        if (!is_string($avatar) || '' === trim($avatar)) {
             return ['path' => null, 'error' => ''];
         }
 
-        try {
-            $result = (new LocalStorageProvider())->store($file);
-        } catch (\RuntimeException $e) {
-            return ['path' => null, 'error' => $e->getMessage()];
+        $avatar = trim($avatar);
+
+        if (str_starts_with($avatar, '/storage/uploads/')) {
+            $relative = substr($avatar, strlen('/storage/uploads/'));
+
+            return (new LocalStorageProvider())->isAllowed($relative)
+                ? ['path' => $avatar, 'error' => '']
+                : ['path' => null, 'error' => 'Choose an image from the media library.'];
         }
 
-        // The provider whitelist also admits pdf/txt/md — avatars are images.
-        if (!str_starts_with($result['mime_type'], 'image/')) {
-            (new LocalStorageProvider())->delete($result['path']);
-
-            return ['path' => null, 'error' => 'Avatar must be an image file.'];
+        if (1 === preg_match('#^https://res\.cloudinary\.com/#i', $avatar)) {
+            return ['path' => $avatar, 'error' => ''];
         }
 
-        return ['path' => $result['path'], 'error' => ''];
+        return ['path' => null, 'error' => 'Choose an image from the media library.'];
     }
 
     /**
@@ -478,41 +480,49 @@ final class UsersAction
      *
      * @param list<string> $errors
      *
+     * @param string|null $currentAvatar the stored value, so an unchanged
+     *                                  missing file does not block unrelated edits
+     *
      * @return array{errors: list<string>, newAvatar: ?string, removeAvatar: bool}
      */
-    private function editAvatarState(array $errors, Request $request): array
+    private function editAvatarState(array $errors, Request $request, ?string $currentAvatar = null): array
     {
         $removeAvatar = in_array($request->body('remove_avatar'), ['on', '1', 'true', true], true);
-        $upload = $this->avatarUpload();
-        $newAvatar = $upload['path'];
+        $selection = $this->avatarSelection($request);
+        $posted = $request->body('avatar');
+        $newAvatar = $selection['path'];
 
-        if ('' !== $upload['error']) {
-            $errors[] = $upload['error'];
+        // The form always posts the stored value. If that file has gone
+        // missing, saving the name or role must still work: the avatar is
+        // unchanged, not an invalid new selection.
+        if ('' !== $selection['error'] && is_string($posted) && $posted === $currentAvatar) {
+            $selection = ['path' => null, 'error' => ''];
+            $newAvatar = null;
+        }
+
+        if ('' !== $selection['error']) {
+            $errors[] = $selection['error'];
         }
 
         return ['errors' => $errors, 'newAvatar' => $newAvatar, 'removeAvatar' => $removeAvatar];
     }
 
     /**
-     * Apply an avatar change from the edit form: a new upload, a removal, or
-     * nothing. Old files are deleted best-effort after the DB write.
+     * Apply an avatar change from the edit form: a new selection, a removal,
+     * or nothing. The media asset is shared, so the old file is never deleted
+     * here — an image used by an article or another user must survive an
+     * avatar change.
      */
     private function applyAvatarChange(\Modules\Users\Domain\Entities\User $user, ?string $newAvatar, bool $removeAvatar): void
     {
         if (null !== $newAvatar) {
-            $old = $user->avatar();
             CardboardServices::users()->updateAvatar($user->id(), $newAvatar);
-
-            if (null !== $old && $old !== $newAvatar) {
-                (new LocalStorageProvider())->delete($old);
-            }
 
             return;
         }
 
         if ($removeAvatar && null !== $user->avatar()) {
             CardboardServices::users()->updateAvatar($user->id(), null);
-            (new LocalStorageProvider())->delete($user->avatar());
         }
     }
 

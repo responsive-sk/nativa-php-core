@@ -55,20 +55,35 @@ final readonly class AuthorAvatar
     }
 
     /**
-     * Public URL for a stored avatar path, or null when there is no file.
+     * Public URL for an avatar reference, or null when there is no file.
      *
-     * The database stores a path under storage/uploads (`2026/10/09/<hex>.jpg`),
-     * not a URL. A caller that renders it directly gets a browser-relative
-     * request — on `/authors/<slug>` that is `/authors/2026/10/09/…` and a 404 —
-     * so every surface must pass the path through here.
+     * A reference is either a media-library URL (`/storage/uploads/…` or an
+     * https CDN URL) or the relative path older rows carry. Rendering the raw
+     * path makes the browser resolve it against the current page — on
+     * `/authors/<slug>` that is `/authors/2026/10/09/…` and a 404 — so every
+     * surface must pass the reference through here.
      */
     public function url(?string $avatar): ?string
     {
-        if (null === $avatar || '' === $avatar || !$this->storage->exists($avatar)) {
+        if (null === $avatar || '' === $avatar) {
             return null;
         }
 
-        return $this->storage->url($avatar);
+        // The media library stores a public URL in users.avatar when an avatar
+        // is picked; older rows and direct uploads still carry the relative
+        // storage path. Both forms are accepted here so a theme never has to
+        // know which one it received.
+        if (str_starts_with($avatar, '/storage/uploads/')) {
+            $relative = substr($avatar, strlen('/storage/uploads/'));
+
+            return $this->storage->exists($relative) ? $avatar : null;
+        }
+
+        if (1 === preg_match('#^https://#i', $avatar)) {
+            return $avatar;
+        }
+
+        return $this->storage->exists($avatar) ? $this->storage->url($avatar) : null;
     }
 
     /**
