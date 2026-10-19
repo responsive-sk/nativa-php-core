@@ -171,6 +171,44 @@ final class PageCacheServiceTest extends TestCase
     }
 
     /**
+     * Locale is part of the key — not just a parameter with a default.
+     *
+     * `LocaleMiddleware` strips `/en` from the path before this cache sees the
+     * request, so the path plus the DEFAULT locale cannot tell `/blog` from
+     * `/en/blog`. Measured on the artifact, `/en/blog` was answered from the
+     * Slovak entry (and `/en` from the `/` entry). The locale the middleware
+     * resolved for the request — carried as its `locale` attribute — is what
+     * keeps the two apart, in both directions.
+     */
+    #[Test]
+    public function theSamePathInAnotherLocaleIsNotAnsweredFromTheCache(): void
+    {
+        [$defaultLocale, $otherLocale] = ContentServices::mapper()->locales();
+
+        $default = Request::create('GET', '/blog');
+        $default->setAttribute('locale', $defaultLocale);
+
+        $other = Request::create('GET', '/en/blog');
+        $other->setPathInfo('/blog');
+        $other->setAttribute('locale', $otherLocale);
+
+        $this->serveThroughMiddleware($default, '<html>default locale</html>');
+
+        [$served, $renders] = $this->serveThroughMiddleware($other, '<html>other locale</html>');
+
+        $this->assertSame(1, $renders, 'The prefixed path was answered from the entry the bare path wrote.');
+        $this->assertSame('<html>other locale</html>', (string) $served->getContent());
+
+        [$defaultAgain, $defaultRenders] = $this->serveThroughMiddleware($default);
+        $this->assertSame(0, $defaultRenders);
+        $this->assertSame('<html>default locale</html>', (string) $defaultAgain->getContent());
+
+        [$otherAgain, $otherRenders] = $this->serveThroughMiddleware($other);
+        $this->assertSame(0, $otherRenders);
+        $this->assertSame('<html>other locale</html>', (string) $otherAgain->getContent());
+    }
+
+    /**
      * The read path, second half: what comes out of the cache still carries the
      * placeholder, so `SecurityHeadersMiddleware` — which wraps this middleware
      * — stamps a fresh nonce on the response that actually leaves. A served
@@ -351,7 +389,7 @@ final class PageCacheServiceTest extends TestCase
     private function seedCacheEntry(Request $request, string $body): void
     {
         $service = new PageCacheService($this->cacheDir);
-        $key = $service->cacheKey($request, ContentServices::mapper()->defaultLocale());
+        $key = $service->cacheKeyForRequest($request);
 
         $service->set($key, Response::html($body));
     }

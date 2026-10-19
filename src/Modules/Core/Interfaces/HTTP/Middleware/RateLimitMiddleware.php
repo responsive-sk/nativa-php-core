@@ -8,7 +8,6 @@ use Modules\Core\Application\Services\PageCacheService;
 use Modules\Core\Domain\Contracts\RateLimiter;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
-use Modules\Core\Interfaces\HTTP\ContentServices;
 
 /**
  * RateLimitMiddleware — general per-IP request throttling.
@@ -140,7 +139,7 @@ final readonly class RateLimitMiddleware implements MiddlewareInterface
         $this->recordTrip($key, $request);
 
         if (null !== $this->cache) {
-            $cacheKey = $this->cache->cacheKey($request, ContentServices::mapper()->defaultLocale());
+            $cacheKey = $this->cache->cacheKeyForRequest($request);
             $cached = $this->cache->get($cacheKey);
 
             if (null !== $cached) {

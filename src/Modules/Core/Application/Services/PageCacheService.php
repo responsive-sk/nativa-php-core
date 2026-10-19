@@ -7,6 +7,7 @@ namespace Modules\Core\Application\Services;
 use Modules\Core\Domain\AdminRoutePolicy;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
 
 /**
@@ -311,6 +312,33 @@ final readonly class PageCacheService
         $session = $_SESSION;
 
         return isset($session['auth']['user_id']);
+    }
+
+    /**
+     * The key a middleware must use for a request — one owner for the locale
+     * half of the key.
+     *
+     * `LocaleMiddleware` runs BEFORE the page cache in the pipeline and does
+     * two things that make `cacheKey($request, defaultLocale())` wrong: it
+     * strips the `/en` prefix from the path, and it records the resolved
+     * locale as the request's `locale` attribute. The default locale is
+     * therefore the same string for every request and the wrong one for a
+     * prefixed request — measured on the artifact, `/en/blog` was answered
+     * from the entry `/blog` had written (Slovak articles under the English
+     * URL), and `/en` from the `/` entry.
+     *
+     * The attribute is the middleware's own answer. A tree without Locales
+     * sets none, and the mapper's default is then the only locale the site
+     * has.
+     */
+    public function cacheKeyForRequest(Request $request): string
+    {
+        $locale = $request->getAttribute('locale');
+
+        return $this->cacheKey(
+            $request,
+            is_string($locale) && '' !== $locale ? $locale : ContentServices::mapper()->defaultLocale(),
+        );
     }
 
     /**

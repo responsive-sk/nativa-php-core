@@ -7,7 +7,6 @@ namespace Modules\Core\Interfaces\HTTP\Middleware;
 use Modules\Core\Application\Services\PageCacheService;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
-use Modules\Core\Interfaces\HTTP\ContentServices;
 
 /**
  * PageCacheMiddleware — serves an anonymous public page from the file cache
@@ -63,7 +62,7 @@ final readonly class PageCacheMiddleware implements MiddlewareInterface
     public function handle(Request $request, callable $next): Response
     {
         if ($this->cache->isCacheableRequest($request)) {
-            $key = $this->cache->cacheKey($request, ContentServices::mapper()->defaultLocale());
+            $key = $this->cache->cacheKeyForRequest($request);
             $cached = $this->cache->get($key);
 
             if (null !== $cached) {
@@ -82,7 +81,7 @@ final readonly class PageCacheMiddleware implements MiddlewareInterface
         $response = $next($request);
 
         if ($this->cache->isCacheable($request, $response)) {
-            $key = $this->cache->cacheKey($request, ContentServices::mapper()->defaultLocale());
+            $key = $this->cache->cacheKeyForRequest($request);
             $this->cache->set($key, $response);
         }
 

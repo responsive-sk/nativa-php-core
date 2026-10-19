@@ -163,25 +163,30 @@ function http_kernel(): Kernel
     // signed-in and admin bypasses are the service's own policy, so this file
     // states no rule of its own here.
     //
-    // PAGE_CACHE (default: on) is the one lever, read from the environment so a
-    // deployment can turn it off in `.env` without a rebuild. It exists because
-    // the question "does the cache cause the render delay?" is not answerable
-    // by reading code: measured on responsive.sk, the cache HIT served TTFB in
-    // 0 ms while Lighthouse reported an LCP element render delay of 2500 ms,
-    // and every candidate the delay could come from is ruled out on its own
-    // terms — `font-display: swap` on all seven @font-face rules, the 47 KB
-    // critical CSS inlined and resolving, 61–158 KB hero images, and Total
-    // Blocking Time at 0 ms. Speed Index measures visual completeness from
-    // screenshots, which a server-side HTML cache does not touch, so the switch
-    // makes the claim measurable on the deployment instead of argued. Turning
-    // it off costs the render: TTFB stops being 0 ms.
-    if (Env::bool('PAGE_CACHE', true)) {
+    // PAGE_CACHE (default: OFF) is the one lever, read from the environment so
+    // a deployment can turn it on in `.env` without a rebuild. It is opt-in on
+    // purpose: serving a page a visitor did not just render is a deployment's
+    // decision, not a kernel default, and a cached HTML copy outlives the
+    // request that produced it.
+    //
+    // The lever exists because "does the cache cause the render delay?" is not
+    // answerable by reading code: measured on responsive.sk, the cache HIT
+    // served TTFB in 0 ms while Lighthouse reported an LCP element render
+    // delay of 2500 ms, and every candidate the delay could come from is ruled
+    // out on its own terms — `font-display: swap` on all seven @font-face
+    // rules, the 47 KB critical CSS inlined and resolving, 61–158 KB hero
+    // images, and Total Blocking Time at 0 ms. Speed Index measures visual
+    // completeness from screenshots, which a server-side HTML cache does not
+    // touch, so the switch makes the claim measurable on the deployment
+    // instead of argued. Turning it ON buys the 0 ms HIT; leaving it off pays
+    // the render on every request.
+    if (Env::bool('PAGE_CACHE', false)) {
         $kernel->addMiddleware(new PageCacheMiddleware(
             new PageCacheService(APP_BASE_PATH . '/' . PageCacheService::DEFAULT_DIR),
         ));
         error_log('[cache] wired PageCache (anonymous HTML, 5 min TTL, admin and signed-in bypass)');
     } else {
-        error_log('[cache] PageCache OFF (PAGE_CACHE=false in .env)');
+        error_log('[cache] PageCache OFF (PAGE_CACHE not enabled)');
     }
 
     // The admin gate: the provider is DISCOVERED (`#[AsAuthProvider]`), so this

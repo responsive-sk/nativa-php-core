@@ -198,7 +198,7 @@ odpovede, ktorá prišla z page cache.
 if (class_exists(SecurityRateLimiter::class)) { ... }
 
 // 2. Page cache — potrebuje PageCacheService
-if (Env::bool('PAGE_CACHE', true)) { ... }
+if (Env::bool('PAGE_CACHE', false)) { ... }
 
 // 3. Auth — provider je objavený cez #[AsAuthProvider]
 $authProvider = AuthProviderRegistry::first();
@@ -314,15 +314,15 @@ TTL je 300 sekúnd. Pri cache hite sa vráti telo a hlavičky a
 zápis v admine volá `CacheInvalidator`, takže po editácii sa nezobrazí stará
 stránka.
 
-Vypnúť sa dá bez rebuildu:
+Zapnúť sa dá bez rebuildu:
 
 ```
-PAGE_CACHE=false
+PAGE_CACHE=true
 ```
 
 To je jediný prepínač. V tomto checkoute nie je `.env`, takže platí default
-`true` — a live smoke to potvrdil: prvý request po štarte bol MISS (uložil),
-druhý už `X-Cache: HIT`.
+`false` — cache je opt-in. S explicitným `PAGE_CACHE=true` to live smoke
+potvrdil: prvý request po štarte bol MISS (uložil), druhý už `X-Cache: HIT`.
 
 ---
 
