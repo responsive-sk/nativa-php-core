@@ -244,6 +244,64 @@ final class ModuleCatalogueShapeTest extends TestCase
     }
 
     /**
+     * The install closure must be a DAG, not merely a set of manifests.
+     *
+     * `install-catalogue.sh` retries `module:add`, and a refusal that names the
+     * missing closure is the graph talking. That loop can only terminate when
+     * the graph has no cycle — measured on CI when Cardboard imported Media
+     * while Media imported Cardboard, the second round installed nothing and
+     * left twelve modules pending. A closure scan alone does not report the
+     * cycle; it just refuses forever. This test runs the same rounds in memory,
+     * so the failure is a test name and a pending list instead of a red job.
+     */
+    #[Test]
+    public function theCatalogueCanBeInstalledWithoutADependencyCycle(): void
+    {
+        $catalogue = self::catalogue();
+        $pending = array_values(array_diff(
+            $catalogue->catalogued(),
+            self::CATALOGUE_FIXTURES,
+        ));
+        $installed = array_fill_keys(ModuleCatalog::KERNEL_MODULES, true);
+
+        while ([] !== $pending) {
+            $next = [];
+            $progress = false;
+
+            foreach ($pending as $name) {
+                $missing = array_values(array_filter(
+                    $catalogue->manifest($name)->closure(),
+                    static fn (string $dependency): bool => !in_array($dependency, ModuleCatalog::KERNEL_MODULES, true)
+                        && !isset($installed[$dependency]),
+                ));
+
+                if ([] === $missing) {
+                    $installed[$name] = true;
+                    $progress = true;
+
+                    continue;
+                }
+
+                $next[] = $name;
+            }
+
+            if (!$progress) {
+                self::fail(
+                    'The catalogue closure graph has a cycle; these modules can never be installed:'
+                    . "\n  " . implode("\n  ", $next)
+                    . "\nA module must not `use` another module that already depends on it."
+                    . ' Fully-qualified inline references are invisible to the closure scanner;'
+                    . ' a `use` line is the edge.',
+                );
+            }
+
+            $pending = $next;
+        }
+
+        self::assertSame([], $pending);
+    }
+
+    /**
      * A group with no member is a directory nobody can install and nobody reads:
      * it would silently drop its modules from `catalogued()` if one ever left,
      * so the set is checked rather than assumed.

@@ -13,7 +13,6 @@ use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Infrastructure\Storage\LocalStorageProvider;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
-use Modules\Media\Interfaces\HTTP\MediaEditorHelper;
 use Modules\Security\Application\Services\PasswordHasher;
 use Modules\Security\Domain\PasswordPolicy;
 use Modules\Validation\Validation\Validator;
@@ -32,7 +31,10 @@ use Modules\Validation\Validation\Validator;
  * Avatar selection: both forms pick an existing image from the Media
  * library (the same picker the article editor uses); the chosen URL persists
  * into users.avatar and the edit form can also remove it. The media asset is
- * shared, so changing or clearing an avatar never deletes the file.
+ * shared, so changing or clearing an avatar never deletes the file. The
+ * helper is named fully-qualified inline, not imported: a `use` line would
+ * put Cardboard back in Media's closure while Media already imports
+ * Cardboard, and `module:add` would stall on that cycle.
  *
  * Every security event the user mutations emit rides the Outbox when it is
  * installed, behind a `class_exists` guard and never a `use` statement: an
@@ -339,7 +341,7 @@ final class UsersAction
         $spinner = '<span class="htmx-indicator" id="user-spinner">⏳</span> ';
 
         $content = ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/users-form.phtml', ['avatarPreview' => $avatarPreview, 'avatarValue' => $avatarValue, 'url' => $this->urlBuilder(), 'action' => $action, 'activeChecked' => $activeChecked, 'csrf' => $csrf, 'email' => $email, 'errorHtml' => $errorHtml, 'hxPost' => $hxPost, 'name' => $name, 'passwordHint' => $passwordHint, 'removeAvatar' => $removeAvatar, 'roleOptions' => $roleOptions, 'spinner' => $spinner, 'submitLabel' => $submitLabel])
-            . MediaEditorHelper::editorScript($this->router(), null);
+            . \Modules\Media\Interfaces\HTTP\MediaEditorHelper::editorScript($this->router(), null);
 
         return AdminLayout::render($title, $content, 'users', router: $this->router());
     }
