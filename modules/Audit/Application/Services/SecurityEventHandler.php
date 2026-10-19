@@ -77,13 +77,16 @@ final readonly class SecurityEventHandler
     {
         $payload = $message->payload();
 
+        [$actorUserId, $actorName] = self::actor($message->eventType(), $payload, $message);
+
         try {
             $this->audit->logWithId(
                 $message->id(),
                 $message->eventType(),
                 self::detail($message->eventType(), $payload),
-                self::actor($payload, $message),
-                self::target($message->eventType(), $payload),
+                $actorUserId,
+                $actorName,
+                self::target($message->eventType(), $payload, $message),
                 self::ip($payload),
             );
         } catch (\PDOException $e) {
@@ -110,37 +113,84 @@ final readonly class SecurityEventHandler
     }
 
     /**
-     * Who acted. Falls back to the metadata the emit site attached, then to
-     * 'system' — an unattributed security row is still worth having.
+     * Who acted, as [id, name].
+     *
+     * `userId` is the actor for an authz denial, but for `security.user.changed`
+     * it is the TARGET whose row was edited. Reading it as the actor is what put
+     * the target's hash into the viewer's "Admin" column and made the actor and
+     * target identical. Account and role emitters therefore attach the signed-in
+     * admin in metadata; the payload fallback is used only for the event types
+     * whose payload really does identify the caller.
+     *
+     * @param array<string, mixed> $payload
+     *
+     * @return array{0: string, 1: string}
+     */
+    private static function actor(string $eventType, array $payload, OutboxMessage $message): array
+    {
+        $metadata = $message->metadata();
+        $meta = is_array($metadata) ? $metadata : [];
+
+        $id = self::str($meta['actor_id'] ?? '');
+        $name = self::str($meta['actor_name'] ?? '');
+        $legacy = self::str($meta['actor'] ?? '');
+
+        if ('' === $id) {
+            $id = '' !== $legacy ? $legacy : self::payloadActor($eventType, $payload);
+        }
+
+        if ('' === $name) {
+            $name = '' !== $legacy ? $legacy : $id;
+        }
+
+        if ('' === $id) {
+            $id = 'system';
+        }
+
+        if ('' === $name) {
+            $name = $id;
+        }
+
+        return [$id, $name];
+    }
+
+    /**
+     * The payload key that names the caller, for the event types where one does.
+     *
+     * Deliberately excludes USER_CHANGED and ROLE_CHANGED: their `userId` and
+     * `roleId` keys identify the object being changed, not the administrator
+     * changing it.
      *
      * @param array<string, mixed> $payload
      */
-    private static function actor(array $payload, OutboxMessage $message): string
+    private static function payloadActor(string $eventType, array $payload): string
     {
-        $userId = $payload['userId'] ?? null;
-
-        if (is_string($userId) && '' !== $userId) {
-            return $userId;
-        }
-
-        $email = $payload['email'] ?? null;
-        if (is_string($email) && '' !== $email) {
-            return $email;
-        }
-
-        $metadata = $message->metadata();
-        $actor = is_array($metadata) ? ($metadata['actor'] ?? null) : null;
-
-        return is_string($actor) && '' !== $actor ? $actor : 'system';
+        return match ($eventType) {
+            SecurityEvents::AUTHZ_DENIED => self::str($payload['userId']),
+            SecurityEvents::AUTH_ATTEMPT => self::str($payload['email']),
+            default                      => '',
+        };
     }
 
     /**
      * What the event was about — the path, the role, the rate-limit key.
      *
+     * Account and role emitters attach a readable label (`target`) because the
+     * payload's id is a random 32-character string and the audit viewer is read
+     * by people. The id stays in the payload for machines; the label is what the
+     * Target column shows.
+     *
      * @param array<string, mixed> $payload
      */
-    private static function target(string $eventType, array $payload): string
+    private static function target(string $eventType, array $payload, OutboxMessage $message): string
     {
+        $metadata = $message->metadata();
+        $label = is_array($metadata) ? self::str($metadata['target'] ?? '') : '';
+
+        if ('' !== $label) {
+            return $label;
+        }
+
         return match ($eventType) {
             SecurityEvents::AUTHZ_DENIED      => self::str($payload['path']),
             SecurityEvents::USER_CHANGED      => self::str($payload['userId']),

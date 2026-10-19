@@ -11,8 +11,8 @@ use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Infrastructure\Storage\LocalStorageProvider;
-use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Media\Interfaces\HTTP\MediaEditorHelper;
 use Modules\Security\Application\Services\PasswordHasher;
 use Modules\Security\Domain\PasswordPolicy;
@@ -94,7 +94,8 @@ final class UsersAction
             $content,
             'users',
             [['label' => 'New user', 'href' => $this->url('mark.users.create')]],
-        router: $this->router()));
+            router: $this->router(),
+        ));
     }
 
     /**
@@ -168,10 +169,10 @@ final class UsersAction
         }
 
         CacheInvalidator::flush();
-        \Modules\Audit\Interfaces\HTTP\AuditServices::log('users.create', 'user:' . $user->id(), 'Created user ' . $email, $request->getClientIp());
+        \Modules\Audit\Interfaces\HTTP\AuditServices::log('users.create', $user->email(), 'Created user ' . $email, $request->getClientIp());
         if (class_exists('Modules\\Outbox\\Interfaces\\HTTP\\SecurityEventServices')) {
             $events = \Modules\Outbox\Interfaces\HTTP\SecurityEventServices::class;
-            $events::userChanged($user->id(), $events::OP_CREATE, $request->getClientIp());
+            $events::userChanged($user->id(), $events::OP_CREATE, $request->getClientIp(), $this->eventContext($user->email()));
         }
 
         if (AdminLayout::isHtmx($request)) {
@@ -244,10 +245,10 @@ final class UsersAction
         }
 
         CacheInvalidator::flush();
-        \Modules\Audit\Interfaces\HTTP\AuditServices::log('users.update', 'user:' . $user->id(), 'Updated user ' . $email, $request->getClientIp());
+        \Modules\Audit\Interfaces\HTTP\AuditServices::log('users.update', $user->email(), 'Updated user ' . $email, $request->getClientIp());
         if (class_exists('Modules\\Outbox\\Interfaces\\HTTP\\SecurityEventServices')) {
             $events = \Modules\Outbox\Interfaces\HTTP\SecurityEventServices::class;
-            $events::userChanged($user->id(), $events::OP_UPDATE, $request->getClientIp());
+            $events::userChanged($user->id(), $events::OP_UPDATE, $request->getClientIp(), $this->eventContext($user->email()));
         }
 
         if (AdminLayout::isHtmx($request)) {
@@ -272,10 +273,10 @@ final class UsersAction
             if (null !== $user && $user->id() !== CardboardServices::auth()->currentUserId()) {
                 $users->delete($id);
                 CacheInvalidator::flush();
-                \Modules\Audit\Interfaces\HTTP\AuditServices::log('users.delete', 'user:' . $user->id(), 'Deleted user ' . $user->email(), $request->getClientIp());
+                \Modules\Audit\Interfaces\HTTP\AuditServices::log('users.delete', $user->email(), 'Deleted user ' . $user->email(), $request->getClientIp());
                 if (class_exists('Modules\\Outbox\\Interfaces\\HTTP\\SecurityEventServices')) {
                     $events = \Modules\Outbox\Interfaces\HTTP\SecurityEventServices::class;
-                    $events::userChanged($user->id(), $events::OP_DELETE, $request->getClientIp());
+                    $events::userChanged($user->id(), $events::OP_DELETE, $request->getClientIp(), $this->eventContext($user->email()));
                 }
             }
         }
@@ -479,9 +480,8 @@ final class UsersAction
      * error list (nothing stored on error), resolved new path, removal flag.
      *
      * @param list<string> $errors
-     *
-     * @param string|null $currentAvatar the stored value, so an unchanged
-     *                                  missing file does not block unrelated edits
+     * @param string|null  $currentAvatar the stored value, so an unchanged
+     *                                    missing file does not block unrelated edits
      *
      * @return array{errors: list<string>, newAvatar: ?string, removeAvatar: bool}
      */
@@ -524,6 +524,26 @@ final class UsersAction
         if ($removeAvatar && null !== $user->avatar()) {
             CardboardServices::users()->updateAvatar($user->id(), null);
         }
+    }
+
+    /**
+     * Attribution for the Outbox copy of a user security event.
+     *
+     * The payload's `userId` is the affected account, not the administrator, so
+     * the actor travels in metadata. Without it the Audit handler fell back to
+     * that id and wrote the target's hash into the Admin column.
+     *
+     * @return array{actor_id: string, actor_name: string, target: string}
+     */
+    private function eventContext(string $target): array
+    {
+        $actor = CardboardServices::auth()->currentUser();
+
+        return [
+            'actor_id'   => null === $actor ? '' : $actor->id(),
+            'actor_name' => null === $actor ? '' : $actor->name(),
+            'target'     => $target,
+        ];
     }
 
     /**

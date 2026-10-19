@@ -48,6 +48,12 @@ final readonly class AuditService
      * primary key, so a redelivered message collides and is discarded. That is
      * what makes at-least-once delivery safe here \u2014 see `SecurityEventHandler`.
      *
+     * `$actorName` is a separate argument on purpose: this method used to pass
+     * the actor id into `AuditEntry::createWithId()` twice, so the viewer's
+     * "Admin" column showed a 32-character id instead of the name the column
+     * asks for. An audit row needs BOTH the immutable id and the readable name;
+     * one cannot stand in for the other.
+     *
      * @internal
      */
     public function logWithId(
@@ -55,13 +61,14 @@ final readonly class AuditService
         string $action,
         string $detail,
         string $actorUserId,
+        string $actorName,
         string $target = '',
         ?string $ipAddress = null,
     ): void {
         $this->entries->insert(AuditEntry::createWithId(
             $id,
             $actorUserId,
-            $actorUserId,
+            $actorName,
             $action,
             $target,
             $detail,

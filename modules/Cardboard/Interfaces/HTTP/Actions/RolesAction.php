@@ -10,8 +10,8 @@ use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
-use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
+use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 
 /**
  * Roles + permissions management — task 9.3.
@@ -89,7 +89,8 @@ final class RolesAction
             $content,
             'roles',
             [['label' => 'Permissions', 'href' => $this->url('mark.permissions')]],
-        router: $this->router()));
+            router: $this->router(),
+        ));
     }
 
     /**
@@ -117,14 +118,14 @@ final class RolesAction
             $id = bin2hex(random_bytes(16));
             CardboardServices::roles()->createRole($id, $name, $description);
             CacheInvalidator::flush();
-            \Modules\Audit\Interfaces\HTTP\AuditServices::log('roles.create', 'role:' . $id, 'Created role ' . $name, $request->getClientIp());
+            \Modules\Audit\Interfaces\HTTP\AuditServices::log('roles.create', $name, 'Created role ' . $name, $request->getClientIp());
             // A role is an access-control object, so its creation is a
             // security event and not just an admin write. The inline audit row
             // above is the non-atomic fallback; this one rides the outbox so
             // the record survives a crash between the two databases.
             if (class_exists('Modules\\Outbox\\Interfaces\\HTTP\\SecurityEventServices')) {
                 $events = \Modules\Outbox\Interfaces\HTTP\SecurityEventServices::class;
-                $events::roleChanged($id, $events::OP_CREATE, $request->getClientIp());
+                $events::roleChanged($id, $events::OP_CREATE, $request->getClientIp(), $this->eventContext($name));
             }
         }
 
@@ -149,10 +150,10 @@ final class RolesAction
             if (null !== $role && 'admin' !== $role['name']) {
                 CardboardServices::roles()->deleteRole($id);
                 CacheInvalidator::flush();
-                \Modules\Audit\Interfaces\HTTP\AuditServices::log('roles.delete', 'role:' . $id, 'Deleted role ' . $role['name'], $request->getClientIp());
+                \Modules\Audit\Interfaces\HTTP\AuditServices::log('roles.delete', $role['name'], 'Deleted role ' . $role['name'], $request->getClientIp());
                 if (class_exists('Modules\\Outbox\\Interfaces\\HTTP\\SecurityEventServices')) {
                     $events = \Modules\Outbox\Interfaces\HTTP\SecurityEventServices::class;
-                    $events::roleChanged($id, $events::OP_DELETE, $request->getClientIp());
+                    $events::roleChanged($id, $events::OP_DELETE, $request->getClientIp(), $this->eventContext((string) $role['name']));
                 }
             }
         }
@@ -209,7 +210,8 @@ final class RolesAction
             'Permissions — ' . (string) $role['name'],
             $content,
             'roles',
-        router: $this->router()));
+            router: $this->router(),
+        ));
     }
 
     public function savePermissions(Request $request): Response
@@ -233,7 +235,7 @@ final class RolesAction
         CacheInvalidator::flush();
         \Modules\Audit\Interfaces\HTTP\AuditServices::log(
             'roles.permissions',
-            'role:' . $id,
+            null === $role ? $id : $role['name'],
             'Saved ' . count($wanted) . ' permissions' . (null === $role ? '' : ' for ' . $role['name']),
             $request->getClientIp(),
         );
@@ -248,6 +250,7 @@ final class RolesAction
                 $id,
                 $events::OP_PERMISSIONS,
                 $request->getClientIp(),
+                $this->eventContext(null === $role ? $id : (string) $role['name']),
             );
         }
 
@@ -272,7 +275,28 @@ final class RolesAction
             'Permissions',
             $content,
             'roles',
-        router: $this->router()));
+            router: $this->router(),
+        ));
+    }
+
+    /**
+     * Attribution for the Outbox copy of a role security event.
+     *
+     * The payload's `roleId` is the affected role, not the administrator, so
+     * the actor travels in metadata. Without it the Audit handler fell back to
+     * 'system' for role events and to the target id for user events.
+     *
+     * @return array{actor_id: string, actor_name: string, target: string}
+     */
+    private function eventContext(string $target): array
+    {
+        $actor = CardboardServices::auth()->currentUser();
+
+        return [
+            'actor_id'   => null === $actor ? '' : $actor->id(),
+            'actor_name' => null === $actor ? '' : $actor->name(),
+            'target'     => $target,
+        ];
     }
 
     /**

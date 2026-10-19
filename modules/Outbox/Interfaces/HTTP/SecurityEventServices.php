@@ -36,14 +36,24 @@ final class SecurityEventServices
     public const string OP_PERMISSIONS = 'permissions';
 
     /**
+     * Who made the change, plus a readable label for the affected user.
+     * `$userId` itself is the target, not the actor.
+     *
+     * @param array{actor_id?: string, actor_name?: string, target?: string} $context
+     *
      * @return bool false when the event could not be stored — never an error
      *              the calling write should fail on
      */
-    public static function userChanged(string $userId, string $operation, ?string $ip = null): bool
-    {
+    public static function userChanged(
+        string $userId,
+        string $operation,
+        ?string $ip = null,
+        array $context = [],
+    ): bool {
         return OutboxServices::securityEvent(
             SecurityEvents::USER_CHANGED,
             ['userId' => $userId, 'operation' => $operation, 'ip' => $ip ?? ''],
+            self::metadata($context),
         );
     }
 
@@ -102,13 +112,48 @@ final class SecurityEventServices
     }
 
     /**
+     * Who made the change, plus a readable label for the affected role.
+     *
+     * @param array{actor_id?: string, actor_name?: string, target?: string} $context
+     *
      * @return bool false when the event could not be stored
      */
-    public static function roleChanged(string $roleId, string $operation, ?string $ip = null): bool
-    {
+    public static function roleChanged(
+        string $roleId,
+        string $operation,
+        ?string $ip = null,
+        array $context = [],
+    ): bool {
         return OutboxServices::securityEvent(
             SecurityEvents::ROLE_CHANGED,
             ['roleId' => $roleId, 'operation' => $operation, 'ip' => $ip ?? ''],
+            self::metadata($context),
         );
+    }
+
+    /**
+     * Keep only the readable attribution keys the audit handler understands.
+     *
+     * The actor cannot live in the payload: `userId`/`roleId` there name the
+     * object being changed, and `payloadKeys()` is a closed vocabulary. Metadata
+     * is where the outbox already carries "who caused this" for article events.
+     *
+     * @param array{actor_id?: string, actor_name?: string, target?: string} $context
+     *
+     * @return array<string, string>|null
+     */
+    private static function metadata(array $context): ?array
+    {
+        $metadata = [];
+
+        foreach (['actor_id', 'actor_name', 'target'] as $key) {
+            $value = $context[$key] ?? '';
+
+            if (is_string($value) && '' !== $value) {
+                $metadata[$key] = $value;
+            }
+        }
+
+        return [] === $metadata ? null : $metadata;
     }
 }
