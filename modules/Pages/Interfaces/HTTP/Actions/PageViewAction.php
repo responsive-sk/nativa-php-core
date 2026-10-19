@@ -10,6 +10,7 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\Core\Interfaces\HTTP\ErrorPageRenderer;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\Markdown\MarkdownBlockContext;
 use Modules\Core\Interfaces\HTTP\ThemeKernel;
@@ -35,7 +36,7 @@ final class PageViewAction
 
         // Skip empty slugs
         if ('' === $slug) {
-            return $this->notFound();
+            return $this->notFound($request);
         }
 
         // Resolve locale from the URL prefix (set by LocaleMiddleware)
@@ -53,7 +54,7 @@ final class PageViewAction
         // Not published — styled 404. Never redirect at an unpublished page:
         // a 301 that lands on a 404 is a broken promise.
         if (true !== ($page['meta']['published'] ?? false)) {
-            return $this->notFound();
+            return $this->notFound($request);
         }
 
         return $this->published($request, $slug, $page, $locale, $service);
@@ -70,7 +71,7 @@ final class PageViewAction
         $target = $service->aliasTarget($slug, $locale);
 
         if (null === $target || !$service->isPublished($target, $locale)) {
-            return $this->notFound();
+            return $this->notFound($request);
         }
 
         $path = $this->pageHref($locale, $target);
@@ -205,21 +206,21 @@ final class PageViewAction
     }
 
     /**
-     * Render a styled 404 page using the FrontendLayout shell.
+     * The shared, theme-aware 404: `ErrorPageRenderer` resolves the active
+     * theme from the request path and renders the theme's own error block.
+     * The previous local markup was hardcoded to the kernel starter's `st-`
+     * vocabulary and passed no theme, so a boson site answered an unknown URL
+     * in another theme's shell — the exact defect the shared renderer exists
+     * to prevent.
      */
-    private function notFound(): Response
+    private function notFound(Request $request): Response
     {
-        $content = '<section class="st-section" style="text-align:center;padding:80px 20px;">'
-            . '<h1 class="st-section__title">404 Not Found</h1>'
-            . '<p>The requested page could not be found.</p>'
-            . '<a class="st-hero__link" href="/">Back to homepage</a>'
-            . '</section>';
-
-        return Response::html(FrontendLayout::render(
-            '404 — Not Found',
-            $content,
-            noindex: true,
-        ), 404);
+        return ErrorPageRenderer::response(
+            404,
+            'Not Found',
+            'The requested page could not be found.',
+            $request->getPathInfo(),
+        );
     }
 
     /**

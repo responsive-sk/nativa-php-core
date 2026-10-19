@@ -15,6 +15,7 @@ use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\Markdown\MarkdownBlockContext;
 use Modules\Core\Interfaces\HTTP\ThemeKernel;
 use Modules\Core\Interfaces\HTTP\ThemeResolver;
+use Themes\DocsPageTheme;
 
 /**
  * DocsPageAction — GET /docs/{path*}: one published guide.
@@ -68,7 +69,8 @@ final readonly class DocsPageAction
     private function render(Request $request, string $key, array $guide): Response
     {
         $theme = (new ThemeResolver())->resolve($request);
-        $prefix = ThemeKernel::for($theme)->prefix();
+        $module = ThemeKernel::for($theme);
+        $prefix = $module->prefix();
 
         // LocaleMiddleware sets this attribute before routing; a request that
         // reaches the action without one (a direct call) resolves to the
@@ -84,10 +86,14 @@ final readonly class DocsPageAction
             new MarkdownBlockContext($locale, $prefix),
         );
 
-        $content = '<section class="' . $prefix . '-section">'
-            . '<h1 class="' . $prefix . '-section__title">' . FrontendLayout::e($guide['title']) . '</h1>'
-            . '<div class="' . $prefix . '-article__body">' . $bodyHtml . '</div>'
-            . '</section>';
+        // The theme composes the document when it has a vocabulary for it;
+        // otherwise the generic section is still the floor.
+        $content = $module instanceof DocsPageTheme
+            ? $module->docsPage($key, $guide['title'], $bodyHtml)
+            : '<section class="' . $prefix . '-section">'
+                . '<h1 class="' . $prefix . '-section__title">' . FrontendLayout::e($guide['title']) . '</h1>'
+                . '<div class="' . $prefix . '-article__body">' . $bodyHtml . '</div>'
+                . '</section>';
 
         return Response::html(FrontendLayout::render(
             $guide['title'] . ' — Nativa',

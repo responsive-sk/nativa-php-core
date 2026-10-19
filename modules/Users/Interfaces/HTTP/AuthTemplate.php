@@ -7,14 +7,25 @@ namespace Modules\Users\Interfaces\HTTP;
 use Modules\Core\Application\Services\View\InlineJs;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
+use Modules\Core\Interfaces\HTTP\ThemeKernel;
+use Modules\Core\Interfaces\HTTP\ThemeResolver;
 use Modules\Locales\Interfaces\HTTP\LocalesServices;
+use Themes\AuthPageTheme;
 
 /**
- * AuthTemplate — standalone HTML pages for the auth flow.
+ * AuthTemplate — the auth flow's forms, in the active theme when it has one.
  *
- * The full layout system arrives in Phase 10; these pages ship minimal
- * self-contained markup (no external assets, CSP-safe).
+ * A theme that implements `AuthPageTheme` composes the whole surface (heading,
+ * fields, errors, footnote) and this class wraps it in `FrontendLayout`, so the
+ * visitor keeps the site's header, footer and stylesheet. Every other theme
+ * keeps the standalone self-contained document below — no external assets,
+ * CSP-safe — which is the behaviour the kernel-only tree has always had.
+ *
+ * The security-relevant parts stay here on BOTH paths: the CSRF field and the
+ * validated `return_to` input are built by this class and handed to the theme
+ * inside `$hiddenHtml`, so a theme cannot drop either.
  */
 final class AuthTemplate
 {
@@ -34,6 +45,31 @@ final class AuthTemplate
         ?string $returnTo = null,
     ): Response {
         $e = static fn (string $v): string => htmlspecialchars($v, ENT_QUOTES, 'UTF-8');
+
+        // Path-only resolution: auth routes are never admin paths, so the
+        // active preference (not the URL) decides which theme answers.
+        $theme = ThemeResolver::resolvePath($formAction);
+        $module = ThemeKernel::for($theme);
+
+        if ($module instanceof AuthPageTheme) {
+            return Response::html(FrontendLayout::render(
+                $title,
+                $module->authPage(
+                    $title,
+                    $formAction,
+                    $submitLabel,
+                    $fields,
+                    self::returnToField($returnTo, $e) . CsrfMiddleware::field(),
+                    $errors,
+                    $footnote,
+                    $alert,
+                ),
+                description: $title . ' — account access.',
+                currentPath: $formAction,
+                noindex: true,
+                theme: $theme,
+            ));
+        }
 
         $body = self::pageShell(
             $e,

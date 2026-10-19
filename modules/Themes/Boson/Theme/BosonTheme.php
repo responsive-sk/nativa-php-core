@@ -11,6 +11,8 @@ use Modules\Core\Domain\ShellNavItem;
 use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Core\Interfaces\HTTP\PageContext;
 use Modules\Core\Interfaces\HTTP\ShellContext;
+use Themes\AuthPageTheme;
+use Themes\DocsPageTheme;
 use Themes\ThemeModule;
 
 /**
@@ -83,7 +85,7 @@ use Themes\ThemeModule;
  * `AssetManager` before inlining, so a built tree cannot run the same IIFE
  * twice.
  */
-final class BosonTheme implements ThemeModule
+final class BosonTheme implements ThemeModule, AuthPageTheme, DocsPageTheme
 {
     /** The reference's image-less, framework-free copy. */
     private const array DEFAULT_COPY = [
@@ -389,6 +391,22 @@ final class BosonTheme implements ThemeModule
             . '</div></section>';
     }
 
+    /**
+     * Comments and reader questions belong under the article's reading column,
+     * not after the page container: an action appends them to the composed
+     * page, so without this they sit outside `.bo-page` and run edge to edge.
+     */
+    public function articleTail(string $html): string
+    {
+        if ('' === $html) {
+            return '';
+        }
+
+        return '<section class="bo-page bo-page--article-tail"><div class="bo-article-layout">'
+            . '<div class="bo-article-layout__main">' . $html . '</div>'
+            . '</div></section>';
+    }
+
     public function blogTags(PageContext $context): string
     {
         $title = null !== $context->tag ? 'Tag: ' . $context->tag : 'Tags';
@@ -439,6 +457,161 @@ final class BosonTheme implements ThemeModule
         return '<section class="bo-page">' . $head
             . self::cards($context->articles, $context->locale)
             . self::pager($context)
+            . '</section>';
+    }
+
+    /**
+     * The auth surfaces — login, register, forgot and reset — in the
+     * reference's ruled vocabulary: a statement on the left, one bordered
+     * panel on the right.
+     *
+     * `$hiddenHtml` arrives ready to place inside the form: `AuthTemplate`
+     * builds the CSRF field and the validated `return_to` input, so this method
+     * cannot omit either. The footnote is trusted HTML (a static sentence from
+     * the action); the title, labels, values, errors and alert are escaped
+     * here.
+     *
+     * @param list<array{name: string, type?: string, label?: string, value?: mixed, required?: bool, autofocus?: bool}> $fields
+     * @param list<string>                                                                                               $errors
+     */
+    public function authPage(
+        string $title,
+        string $formAction,
+        string $submitLabel,
+        array $fields,
+        string $hiddenHtml,
+        array $errors,
+        ?string $footnote = null,
+        ?string $alert = null,
+    ): string {
+        $fieldsHtml = '';
+
+        foreach ($fields as $field) {
+            $type = $field['type'] ?? 'text';
+            $name = $field['name'];
+            $label = $field['label'] ?? ucfirst($name);
+            $rawValue = $field['value'] ?? '';
+            $value = is_string($rawValue) ? $rawValue : '';
+            $required = ($field['required'] ?? true) ? ' required' : '';
+            $autofocus = ($field['autofocus'] ?? false) ? ' autofocus' : '';
+            $id = 'bo-auth-' . $name;
+
+            if ('hidden' === $type) {
+                $fieldsHtml .= '<input type="hidden" name="' . self::e($name) . '" value="' . self::e($value) . '">';
+
+                continue;
+            }
+
+            if ('checkbox' === $type) {
+                $fieldsHtml .= '<div class="bo-field bo-field--check">'
+                    . '<input class="bo-field__check" type="checkbox" id="' . self::e($id) . '" name="' . self::e($name) . '"'
+                    . $required . '>'
+                    . '<label class="bo-field__label bo-field__label--check" for="' . self::e($id) . '">'
+                    . self::e($label) . '</label>'
+                    . '</div>';
+
+                continue;
+            }
+
+            $fieldsHtml .= '<div class="bo-field">'
+                . '<label class="bo-field__label" for="' . self::e($id) . '">' . self::e($label) . '</label>'
+                . '<input class="bo-field__input" type="' . self::e($type) . '" id="' . self::e($id) . '"'
+                . ' name="' . self::e($name) . '" value="' . self::e($value) . '"'
+                . $required . $autofocus . '>'
+                . '</div>';
+        }
+
+        $errorsHtml = '';
+
+        if ([] !== $errors) {
+            $items = '';
+
+            foreach ($errors as $error) {
+                $items .= '<li class="bo-auth__error">' . self::e($error) . '</li>';
+            }
+
+            $errorsHtml = '<div class="bo-auth__errors" role="alert">'
+                . '<ul class="bo-auth__error-list">' . $items . '</ul>'
+                . '</div>';
+        }
+
+        return '<section class="bo-page bo-auth">'
+            . '<div class="bo-auth__layout">'
+            . '<div class="bo-auth__intro">'
+            . '<p class="bo-page__label">Account</p>'
+            . '<h1 class="bo-auth__title">' . self::e($title) . '</h1>'
+            . '</div>'
+            . '<div class="bo-auth__panel">'
+            . (null !== $alert && '' !== $alert
+                ? '<p class="bo-auth__alert" role="status">' . self::e($alert) . '</p>'
+                : '')
+            . $errorsHtml
+            . '<form class="bo-auth__form" method="post" action="' . self::e($formAction) . '">'
+            . $fieldsHtml
+            . $hiddenHtml
+            . '<button class="bo-btn bo-btn--primary bo-auth__submit" type="submit">'
+            . self::e($submitLabel) . '</button>'
+            . '</form>'
+            . (null !== $footnote && '' !== $footnote
+                ? '<p class="bo-auth__footnote">' . $footnote . '</p>'
+                : '')
+            . '</div>'
+            . '</div>'
+            . '</section>';
+    }
+
+    /**
+     * The /docs index: the ruled head and a card grid of the published guides.
+     *
+     * @param list<array{key: string, title: string, description: string}> $entries
+     */
+    public function docsIndex(array $entries): string
+    {
+        $items = '';
+
+        foreach ($entries as $entry) {
+            $key = $entry['key'] ?? null;
+            $title = $entry['title'] ?? null;
+            $description = $entry['description'] ?? null;
+
+            if (!is_string($key) || '' === $key || !is_string($title) || '' === $title) {
+                continue;
+            }
+
+            $items .= '<li class="bo-docs__item">'
+                . '<a class="bo-docs__link" href="/docs/' . self::e($key) . '">' . self::e($title) . '</a>'
+                . (is_string($description) && '' !== $description
+                    ? '<p class="bo-docs__text">' . self::e($description) . '</p>'
+                    : '')
+                . '</li>';
+        }
+
+        return '<section class="bo-page bo-docs">'
+            . '<header class="bo-page__head">'
+            . '<p class="bo-page__label">Reference</p>'
+            . '<h1 class="bo-page__title">Documentation</h1>'
+            . '<p class="bo-page__sub">The guides that ship with the repository, rendered by the site.</p>'
+            . '</header>'
+            . ('' === $items
+                ? '<p class="bo-empty">No guides are published in this deployment.</p>'
+                : '<ul class="bo-docs__list">' . $items . '</ul>')
+            . '</section>';
+    }
+
+    /**
+     * One guide: back link, ruled head with its catalogue key, rendered body.
+     * `$bodyHtml` is MarkdownRenderer output and passes through by contract.
+     */
+    public function docsPage(string $key, string $title, string $bodyHtml): string
+    {
+        return '<section class="bo-page bo-page--article bo-docs">'
+            . '<p class="bo-docs__back"><a class="bo-docs__back-link" href="/docs">All guides</a></p>'
+            . '<header class="bo-article__head">'
+            . '<p class="bo-page__label">Guide</p>'
+            . '<h1 class="bo-article__title">' . self::e($title) . '</h1>'
+            . '<p class="bo-article__meta">' . self::e($key) . '</p>'
+            . '</header>'
+            . '<div class="bo-article__body">' . $bodyHtml . '</div>'
             . '</section>';
     }
 
@@ -963,11 +1136,17 @@ final class BosonTheme implements ThemeModule
      * `open` is load-bearing: a closed disclosure cannot be forced open from
      * CSS, and its summary is hidden at wide sizes.
      *
+     * Level-2 headings become groups and level-3 headings their sublist, so a
+     * long article reads as a few sections instead of one flat run. A heading
+     * of the `Časť I — Title` shape is split into a quiet kicker and the title:
+     * repeating the same prefix on six lines is noise, not navigation.
+     *
      * @param list<array{level: int, text: string, anchor: string}> $headings
      */
     private static function toc(array $headings): string
     {
-        $items = '';
+        /** @var list<array{heading: array{anchor: string, text: string, level?: int}, subs: list<array{anchor: string, text: string, level?: int}>}> $groups */
+        $groups = [];
 
         foreach ($headings as $heading) {
             if (!is_array($heading)) {
@@ -981,16 +1160,29 @@ final class BosonTheme implements ThemeModule
                 continue;
             }
 
-            $sub = 3 === ($heading['level'] ?? 0) ? ' bo-toc__item--sub' : '';
+            $heading['anchor'] = $anchor;
+            $heading['text'] = trim($text);
 
-            $items .= '<li class="bo-toc__item' . $sub . '">'
-                . '<a class="bo-toc__link" data-toc-link data-heading="' . self::e($anchor) . '"'
-                . ' href="#' . self::e($anchor) . '">' . self::e($text) . '</a>'
-                . '</li>';
+            if (3 === ($heading['level'] ?? 0) && [] !== $groups) {
+                $groups[count($groups) - 1]['subs'][] = $heading;
+
+                continue;
+            }
+
+            $groups[] = ['heading' => $heading, 'subs' => []];
         }
 
-        if ('' === $items) {
+        if ([] === $groups) {
             return '';
+        }
+
+        $items = '';
+
+        foreach ($groups as $group) {
+            $items .= '<li class="bo-toc__item bo-toc__item--group" data-toc-group>'
+                . self::tocLink($group['heading'], true)
+                . self::tocSublist($group['subs'])
+                . '</li>';
         }
 
         return '<aside class="bo-toc" aria-label="On this page">'
@@ -999,6 +1191,54 @@ final class BosonTheme implements ThemeModule
             . '<ul class="bo-toc__list">' . $items . '</ul>'
             . '</details>'
             . '</aside>';
+    }
+
+    /**
+     * One rail link. Top-level links split a `Prefix — Title` heading into a
+     * kicker and the title; sublinks keep their full text so the rail cannot
+     * turn into a column of labels.
+     *
+     * @param array{anchor: string, text: string} $heading
+     */
+    private static function tocLink(array $heading, bool $split): string
+    {
+        $anchor = (string) $heading['anchor'];
+        $text = (string) $heading['text'];
+        $inner = '<span class="bo-toc__text">' . self::e($text) . '</span>';
+
+        if ($split) {
+            $parts = preg_split('/\s+[—–]\s+/u', $text, 2);
+
+            if (is_array($parts) && 2 === count($parts)
+                && '' !== trim($parts[0]) && '' !== trim($parts[1])
+                && strlen(trim($parts[0])) <= 24) {
+                $inner = '<span class="bo-toc__kicker">' . self::e(trim($parts[0])) . '</span>'
+                    . '<span class="bo-toc__text">' . self::e(trim($parts[1])) . '</span>';
+            }
+        }
+
+        $class = $split ? 'bo-toc__link' : 'bo-toc__link bo-toc__link--sub';
+
+        return '<a class="' . $class . '" data-toc-link data-heading="' . self::e($anchor) . '"'
+            . ' href="#' . self::e($anchor) . '">' . $inner . '</a>';
+    }
+
+    /**
+     * @param list<array{anchor: string, text: string}> $headings
+     */
+    private static function tocSublist(array $headings): string
+    {
+        if ([] === $headings) {
+            return '';
+        }
+
+        $items = '';
+
+        foreach ($headings as $heading) {
+            $items .= '<li class="bo-toc__item bo-toc__item--sub">' . self::tocLink($heading, false) . '</li>';
+        }
+
+        return '<ul class="bo-toc__sublist">' . $items . '</ul>';
     }
 
     private static function searchForm(PageContext $context, string $query): string

@@ -669,6 +669,15 @@ ships `open` (a closed `<details>` cannot be forced open from CSS), and the
 shared `tok-*` highlighter markers that `ThemeAssetCompletenessTest` looks
 for.
 
+**Auth and documentation surfaces.** Boson also implements the two optional
+theme contracts: `Themes\AuthPageTheme` renders login, registration,
+forgot-password and reset pages inside the site chrome (a `bo-auth` panel
+with `bo-field` inputs, placed by `AuthTemplate`), and
+`Themes\DocsPageTheme` renders `/docs` as a ruled guide grid and `/docs/…`
+as a prose article with a back link. Both are optional by design: a theme
+that does not implement them keeps the shared standalone auth page and the
+generic `{prefix}-section` docs markup, unchanged.
+
 Measured 2026-10-17 on the installed tree (`module:add Boson`, catalogue 21,
 installed 21 + `KernelTheme`):
 

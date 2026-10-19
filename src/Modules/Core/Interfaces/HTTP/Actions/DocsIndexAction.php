@@ -11,6 +11,7 @@ use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\ThemeKernel;
 use Modules\Core\Interfaces\HTTP\ThemeResolver;
+use Themes\DocsPageTheme;
 
 /**
  * DocsIndexAction — GET /docs: the published guides.
@@ -39,10 +40,16 @@ final readonly class DocsIndexAction
     public function handle(Request $request): Response
     {
         $theme = (new ThemeResolver())->resolve($request);
+        $module = ThemeKernel::for($theme);
 
+        // A theme with its own document surface composes the list; the
+        // generic `{prefix}-section` markup stays the floor for every theme
+        // that has no vocabulary for it.
         return Response::html(FrontendLayout::render(
             'Documentation — Nativa',
-            $this->content(ThemeKernel::for($theme)->prefix()),
+            $module instanceof DocsPageTheme
+                ? $module->docsIndex($this->catalog->entries())
+                : $this->content($module->prefix()),
             description: 'The guides that ship with the repository, rendered by the site.',
             currentPath: $request->getPathInfo(),
             lang: DocsCatalog::LANGUAGE,

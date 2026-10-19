@@ -386,6 +386,11 @@ HTML;
         );
     }
 
+    public function articleTail(string $html): string
+    {
+        return $html;
+    }
+
     public function blogTags(PageContext $context): string
     {
         $chips = '';

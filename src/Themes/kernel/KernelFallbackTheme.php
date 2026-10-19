@@ -91,6 +91,11 @@ final class KernelFallbackTheme implements ThemeModule
         );
     }
 
+    public function articleTail(string $html): string
+    {
+        return $html;
+    }
+
     public function blogTags(PageContext $context): string
     {
         return $this->pageWrap($this->section(null !== $context->tag ? 'Tag: ' . $context->tag : 'Tags'));

@@ -492,6 +492,11 @@ final class MonoTheme implements ThemeModule
             . '</nav></aside>';
     }
 
+    public function articleTail(string $html): string
+    {
+        return $html;
+    }
+
     public function blogTags(PageContext $context): string
     {
         $title = null !== $context->tag ? 'Tag: ' . $context->tag : 'Tags';

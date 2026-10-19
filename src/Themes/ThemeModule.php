@@ -58,6 +58,14 @@ interface ThemeModule
 
     public function blogArticle(PageContext $context): string;
 
+    /**
+     * Blocks the article page owns but the action produces outside the theme:
+     * comments and reader questions. A theme that composes an article column
+     * places them inside it; the default keeps them as the page's trailing
+     * slot, which is what every theme did before this hook existed.
+     */
+    public function articleTail(string $html): string;
+
     public function blogTags(PageContext $context): string;
 
     public function blogCategories(PageContext $context): string;

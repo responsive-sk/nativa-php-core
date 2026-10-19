@@ -139,11 +139,22 @@ final class BlogArticleAction
         // theme gets it appended after the composed page. The reader-questions
         // block is appended for EVERY theme — no theme owns that slot, and a
         // block only one theme renders is a block four readers never see.
+        //
+        // The tail goes back through the theme: appended raw, these blocks
+        // land outside the theme's page container and run edge to edge. The
+        // hook lets a theme place them in its own reading column; the default
+        // keeps the old trailing slot for themes that do not compose one.
+        $tail = '';
+
         if ('erik' !== $theme) {
-            $content .= $this->commentSection($request, $slug, $module->prefix());
+            $tail .= $this->commentSection($request, $slug, $module->prefix());
         }
 
-        $content .= $this->questionBlock($request, $slug, $locale, $module->prefix());
+        $tail .= $this->questionBlock($request, $slug, $locale, $module->prefix());
+
+        if ('' !== $tail) {
+            $content .= $module->articleTail($tail);
+        }
 
         return $this->articleResponse($request, $title, $content, $excerpt, $locale, $slug, $meta, $coverUrl);
     }

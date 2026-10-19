@@ -6,6 +6,7 @@ namespace Modules\Themes\Boson\Tests;
 
 use Modules\Core\Application\Services\AssetManager;
 use Modules\Core\Application\Services\View\InlineCss;
+use Modules\Core\Application\Services\View\InlineJs;
 use Modules\Core\Domain\AdminRoutePolicy;
 use Modules\Core\Domain\ShellNavItem;
 use Modules\Core\Infrastructure\Http\Request;
@@ -410,6 +411,66 @@ final class BosonThemeTest extends TestCase
         $this->assertStringContainsString('data-heading="first-part"', $html);
         $this->assertStringContainsString('open', $html, 'The contents rail must ship open.');
         $this->assertStringContainsString('2 views', $html);
+        $this->assertStringNotContainsString('bo-toc__kicker', $html, 'A heading without a prefix gets no kicker.');
+    }
+
+    /**
+     * `Časť I — Title` on every section is repetition, not navigation: the
+     * prefix becomes a quiet kicker and the title carries the line. Level-3
+     * headings fold under their section so the rail stays a few groups long.
+     */
+    #[Test]
+    public function theArticleTocGroupsSectionsAndQuietsRepeatedKickers(): void
+    {
+        $html = (new BosonTheme())->blogArticle(PageContext::forBlogArticle(
+            Request::create('GET', '/blog/a'),
+            self::THEME,
+            'sk',
+            'a',
+            'A title',
+            '<p>Body</p>',
+            '',
+            '',
+            '',
+            '',
+            [
+                ['level' => 2, 'text' => 'Časť I — Prvý krok', 'anchor' => 'cast-1'],
+                ['level' => 3, 'text' => 'Detail', 'anchor' => 'detail-1'],
+                ['level' => 3, 'text' => 'Druhý detail', 'anchor' => 'detail-2'],
+                ['level' => 2, 'text' => 'Časť II — Druhý krok', 'anchor' => 'cast-2'],
+            ],
+            [],
+            0,
+        ));
+
+        $this->assertSame(4, substr_count($html, 'data-toc-link'), 'Every heading stays reachable.');
+        $this->assertSame(2, substr_count($html, 'data-toc-group'), 'Level-2 headings are the two rail groups.');
+        $this->assertSame(1, substr_count($html, 'bo-toc__sublist'), 'Only the first group has subheadings.');
+        $this->assertSame(2, substr_count($html, 'bo-toc__kicker'), 'Two prefixed headings, two kickers.');
+        $this->assertStringContainsString('<span class="bo-toc__kicker">Časť I</span>', $html);
+        $this->assertStringContainsString('<span class="bo-toc__text">Prvý krok</span>', $html);
+        $this->assertStringContainsString('bo-toc__link bo-toc__link--sub', $html);
+    }
+
+    /**
+     * Comments and reader questions are composed by the action, so they arrive
+     * after the article surface. Appended raw they sit outside `.bo-page` and
+     * lose the page gutters; the tail puts them in the article's own column.
+     */
+    #[Test]
+    public function theArticleTailIsPlacedInTheReadingColumn(): void
+    {
+        $theme = new BosonTheme();
+        $html = $theme->articleTail('<section class="bo-comments">x</section>');
+
+        $this->assertStringContainsString('bo-page bo-page--article-tail', $html);
+        $this->assertStringContainsString('bo-article-layout__main', $html);
+        $this->assertMatchesRegularExpression(
+            '/bo-article-layout__main"><section class="bo-comments">/',
+            $html,
+            'The tail must open inside the reading column, not after the page.',
+        );
+        $this->assertSame('', $theme->articleTail(''));
     }
 
     #[Test]
@@ -473,6 +534,75 @@ final class BosonThemeTest extends TestCase
         $this->assertStringContainsString('Alpha', $html);
     }
 
+    /**
+     * The auth surfaces the theme now composes: the CSRF/return_to inputs
+     * arrive ready and are placed inside the form, the fields are escaped, and
+     * both error and success messages are announced. The footnote stays HTML
+     * because it is the action's static link line, never user input.
+     */
+    #[Test]
+    public function theAuthPagePlacesTheHiddenFieldsAndEscapesItsInput(): void
+    {
+        $html = (new BosonTheme())->authPage(
+            'Sign <in>',
+            '/login',
+            'Sign in',
+            [
+                ['name' => 'email', 'label' => 'Email', 'type' => 'email', 'value' => '"><script>'],
+                ['name' => 'stay', 'label' => 'Keep me signed in', 'type' => 'checkbox', 'required' => false],
+                ['name' => 'token', 'type' => 'hidden', 'value' => 'abc'],
+            ],
+            '<input type="hidden" name="_token" value="csrf">',
+            ['Wrong <password>'],
+            'No account yet? <a href="/register">Create one</a>',
+            'Check <mail>.',
+        );
+
+        $this->assertStringContainsString('bo-auth__form', $html);
+        $this->assertStringContainsString('action="/login"', $html);
+        $this->assertStringContainsString('name="_token" value="csrf"', $html, 'The CSRF field is placed by the theme, never rebuilt.');
+        $this->assertStringContainsString('id="bo-auth-email"', $html);
+        $this->assertStringContainsString('value="&quot;&gt;&lt;script&gt;"', $html);
+        $this->assertStringNotContainsString('"><script>', $html);
+        $this->assertStringContainsString('Sign &lt;in&gt;', $html);
+        $this->assertStringContainsString('Wrong &lt;password&gt;', $html);
+        $this->assertStringContainsString('Check &lt;mail&gt;.', $html);
+        $this->assertStringContainsString('role="alert"', $html);
+        $this->assertStringContainsString('role="status"', $html);
+        $this->assertStringContainsString('<a href="/register">Create one</a>', $html, 'The footnote is trusted HTML by contract.');
+        $this->assertStringContainsString('type="hidden" name="token" value="abc"', $html);
+        $this->assertStringContainsString('type="checkbox"', $html);
+        $this->assertStringContainsString('bo-auth__submit', $html);
+    }
+
+    /**
+     * The /docs surfaces the theme now composes: the index reads the catalogue
+     * and drops an entry without a key (it would have no URL), and the guide
+     * passes MarkdownRenderer output through by contract.
+     */
+    #[Test]
+    public function theDocsSurfacesRenderTheCatalogueAndEscapeIt(): void
+    {
+        $theme = new BosonTheme();
+
+        $index = $theme->docsIndex([
+            ['key' => 'getting-started', 'title' => 'Getting <started>', 'description' => 'How <it> works.'],
+            ['key' => '', 'title' => 'dropped', 'description' => 'No URL.'],
+        ]);
+
+        $this->assertStringContainsString('bo-docs__list', $index);
+        $this->assertStringContainsString('href="/docs/getting-started"', $index);
+        $this->assertStringContainsString('Getting &lt;started&gt;', $index);
+        $this->assertStringContainsString('How &lt;it&gt; works.', $index);
+        $this->assertStringNotContainsString('dropped', $index, 'An entry without a key has no URL, so it is dropped.');
+
+        $page = $theme->docsPage('getting-started', 'Getting started', '<h2>Part</h2><p>Body</p>');
+
+        $this->assertStringContainsString('bo-docs__back-link', $page);
+        $this->assertStringContainsString('bo-article__body', $page);
+        $this->assertStringContainsString('<h2>Part</h2>', $page, 'Markdown output passes through by contract.');
+    }
+
     #[Test]
     public function theErrorContentCarriesStatusAndEscapesDetail(): void
     {
@@ -528,6 +658,22 @@ final class BosonThemeTest extends TestCase
                 '',
             )),
             $theme->errorContent(500, 'Error', 'Detail.'),
+            $theme->authPage(
+                'Sign in',
+                '/login',
+                'Sign in',
+                [
+                    ['name' => 'email', 'label' => 'Email', 'type' => 'email'],
+                    ['name' => 'stay', 'label' => 'Keep me signed in', 'type' => 'checkbox', 'required' => false],
+                ],
+                '<input type="hidden" name="_token" value="x">',
+                ['Wrong credentials.'],
+                'No account yet? <a href="/register">Create one</a>',
+            ),
+            $theme->docsIndex([
+                ['key' => 'getting-started', 'title' => 'Getting started', 'description' => 'How it works.'],
+            ]),
+            $theme->docsPage('getting-started', 'Getting started', '<p>Body.</p>'),
             $theme->header(self::shell()),
             $theme->footer(self::shell()),
         ];
@@ -603,6 +749,7 @@ final class BosonThemeTest extends TestCase
             'homepage' => $theme->homepage(self::homepageContext()),
             'blog index' => $theme->blogIndex(self::indexContext()),
             'blog article' => $theme->blogArticle(self::articleContext()),
+            'docs page' => $theme->docsPage('getting-started', 'Getting started', '<h2>Part</h2><p>Body.</p>'),
         ];
 
         foreach ($surfaces as $surface => $html) {
@@ -649,6 +796,39 @@ final class BosonThemeTest extends TestCase
             $this->assertGreaterThan(0, count($matches), sprintf('The %s renders no headings at all.', $surface));
             $this->assertSame(1, substr_count($html, '<h1'), sprintf('The %s must carry exactly one h1.', $surface));
         }
+    }
+
+    /**
+     * The module surfaces a boson article and page actually render — comments,
+     * reader questions and static pages — are part of the one stylesheet, and
+     * the contents rail exposes its current section to both CSS and assistive
+     * technology. The TOC title is a `<summary>`: it needs the tap-target and
+     * disclosure affordances a bare summary does not get from the browser.
+     */
+    #[Test]
+    public function theModuleSurfacesAndTheActiveTocLinkAreStyled(): void
+    {
+        $css = InlineCss::file('Modules/Boson/assets/critical/boson.css');
+        $script = InlineJs::file('Modules/Boson/assets/scripts/boson.js');
+
+        foreach ([
+            '.bo-section {',
+            '.bo-comments__form,',
+            '.bo-questions__form {',
+            '.bo-toc__title::after {',
+            '.bo-toc__link--active,',
+            '.bo-toc__sublist {',
+            '.bo-toc__kicker {',
+            '.bo-toc__item--group[data-toc-active] .bo-toc__sublist {',
+        ] as $selector) {
+            $this->assertStringContainsString($selector, $css, 'Missing module-surface style: ' . $selector);
+        }
+
+        $this->assertStringContainsString("classList.toggle('bo-toc__link--active'", $script);
+        $this->assertStringContainsString("setAttribute('aria-current', 'true')", $script);
+        $this->assertStringContainsString("removeAttribute('aria-current')", $script);
+        $this->assertStringContainsString("setAttribute('data-toc-active', '')", $script);
+        $this->assertStringContainsString("removeAttribute('data-toc-active')", $script);
     }
 
     /**

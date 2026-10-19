@@ -190,6 +190,23 @@ final class MarkdownRenderer
         );
         $id = '' !== $anchor ? ' id="' . $anchor . '"' : '';
 
+        // A level-2 heading of the `Časť I — Title` shape is a section label,
+        // not a sentence: split it so a theme can set the numbering quietly
+        // instead of repeating it at display size on every section. Only
+        // plain text is split — inline markup stays one run rather than being
+        // cut in the middle of a tag.
+        if (2 === $level && !str_contains($text, '<')) {
+            $parts = preg_split('/\s+[—–]\s+/u', $text, 2);
+
+            if (is_array($parts) && 2 === count($parts)
+                && '' !== trim($parts[0]) && '' !== trim($parts[1])
+                && strlen(trim($parts[0])) <= 24) {
+                $text = '<span data-heading-prefix>' . trim($parts[0]) . '</span>'
+                    . '<span data-heading-dash> — </span>'
+                    . '<span data-heading-title>' . trim($parts[1]) . '</span>';
+            }
+        }
+
         return [
             'html' => '<h' . $level . $id . '>' . $text . '</h' . $level . '>' . "\n",
             'next' => $i + 1,

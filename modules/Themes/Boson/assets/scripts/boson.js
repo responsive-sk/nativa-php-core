@@ -176,6 +176,25 @@
             return;
         }
 
+        var groups = document.querySelectorAll('[data-toc-group]');
+
+        // A group owns its heading and its sublinks. Walk up rather than
+        // relying on a fixed depth, so the markup can nest the list deeper
+        // without the rail silently losing its active section.
+        function groupOf(link) {
+            var node = link.parentNode;
+
+            while (node && 1 === node.nodeType) {
+                if (node.hasAttribute('data-toc-group')) {
+                    return node;
+                }
+
+                node = node.parentNode;
+            }
+
+            return null;
+        }
+
         var tick = false;
 
         function sync() {
@@ -189,8 +208,37 @@
                 }
             }
 
+            // Before the first heading passes the header there is no current
+            // section yet; the first entry is the one the reader is heading
+            // into, so it starts lit instead of leaving the rail blank.
+            if (null === active) {
+                active = entries[0][1];
+            }
+
+            for (var g = 0; g < groups.length; g++) {
+                groups[g].removeAttribute('data-toc-active');
+            }
+
             for (var k = 0; k < entries.length; k++) {
-                entries[k][1].classList.toggle('bo-toc__link--active', entries[k][1] === active);
+                var isActive = entries[k][1] === active;
+
+                entries[k][1].classList.toggle('bo-toc__link--active', isActive);
+
+                // The class paints it; aria-current is what a screen reader
+                // announces. Keep the two in step rather than styling a state
+                // nothing exposes semantically.
+                if (isActive) {
+                    entries[k][1].setAttribute('aria-current', 'true');
+
+                    // Only the section being read unfolds its sublinks.
+                    var group = groupOf(entries[k][1]);
+
+                    if (group) {
+                        group.setAttribute('data-toc-active', '');
+                    }
+                } else {
+                    entries[k][1].removeAttribute('aria-current');
+                }
             }
 
             tick = false;
