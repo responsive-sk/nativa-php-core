@@ -55,14 +55,29 @@ final readonly class AuthorAvatar
     }
 
     /**
+     * Public URL for a stored avatar path, or null when there is no file.
+     *
+     * The database stores a path under storage/uploads (`2026/10/09/<hex>.jpg`),
+     * not a URL. A caller that renders it directly gets a browser-relative
+     * request — on `/authors/<slug>` that is `/authors/2026/10/09/…` and a 404 —
+     * so every surface must pass the path through here.
+     */
+    public function url(?string $avatar): ?string
+    {
+        if (null === $avatar || '' === $avatar || !$this->storage->exists($avatar)) {
+            return null;
+        }
+
+        return $this->storage->url($avatar);
+    }
+
+    /**
      * Avatar <img> — the stored file when it exists, else the placeholder.
      * alt="" (decorative: the name is already adjacent text in the link).
      */
     public function img(?string $avatar, string $name, int $size = 20): string
     {
-        $src = null !== $avatar && $this->storage->exists($avatar)
-            ? $this->storage->url($avatar)
-            : $this->placeholderDataUri($name);
+        $src = $this->url($avatar) ?? $this->placeholderDataUri($name);
 
         return '<img class="st-author-avatar" src="' . FrontendLayout::e($src) . '" alt=""'
             . ' width="' . $size . '" height="' . $size . '" loading="lazy">';

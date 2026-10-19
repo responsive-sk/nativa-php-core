@@ -95,7 +95,7 @@ final class AuthorProfileAction
             $request,
             $theme,
             $locale,
-            ['id' => $profile['id'], 'name' => $profile['name'], 'avatar' => $profile['avatar']],
+            ['id' => $profile['id'], 'name' => $profile['name'], 'avatar' => BlogServices::avatar()->url($profile['avatar'])],
             $pageArticles,
             $this->memberSince($profile['memberSince']),
             $page,
