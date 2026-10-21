@@ -9,6 +9,7 @@
 PHP ?= php
 COMPOSER ?= composer
 MINIMAL_ROOT ?= ../nativa-minimal
+THEMES_ROOT ?= ../nativa-themes
 LEKALO ?= $(shell command -v lekalo 2>/dev/null || echo "$$HOME/.cargo/bin/lekalo")
 # Modules the advisory coupling / architecture-profile reports cover (two, not
 # one: a single module says nothing about whether the shape holds elsewhere).
@@ -51,6 +52,17 @@ kernel-size: ## Measure the kernel shape (bytes, files, layers, interface/concre
 extract-check: ## Verify this tree against the upstream kernel slice
 	bin/build/extract-kernel.sh --check --minimal-root $(MINIMAL_ROOT)
 
+##@ Themes (the source is nativa-themes, not this tree)
+# The five theme modules are authored in `evan70/nativa-themes`; the catalogue
+# here is their copy, because `bin/cms module:add` installs from this tree.
+# `themes-check` is the gate — a hand edit under modules/Themes/ is drift, not
+# a fix, and `themes-sync` is how a reviewed change lands.
+themes-check: ## Verify the theme catalogue against the nativa-themes checkout
+	bin/build/sync-themes.sh --check --from $(THEMES_ROOT)
+
+themes-sync: ## Copy modules/Themes from the nativa-themes checkout
+	bin/build/sync-themes.sh --write --from $(THEMES_ROOT)
+
 ##@ Catalogue
 # The same two steps the `modules` and `admin-smoke` CI jobs run, so a red job
 # can be reproduced here in one command instead of by reading the workflow.
@@ -67,6 +79,7 @@ assets: ## Build the theme bundles in-tree (pnpm workspace under Frontend/packag
 		exit 1; \
 	}
 	cd Frontend/packages && pnpm install --frozen-lockfile && pnpm build
+	@bin/build/check-theme-bundles.sh
 	@echo "Built public/dist/<theme> from Frontend/packages (gitignored — a build artifact, not source)."
 
 assets-import: ## Fallback: copy the showcase's built bundles when pnpm is not available

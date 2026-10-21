@@ -123,3 +123,9 @@ src/Modules/*
 # syntax after a pattern, so the parentheses became part of it and the rule
 # silently matched nothing.
 /dist/
+# The theme repository, checked out where `bin/build/sync-themes.sh` looks by
+# default (--from overrides it). A sibling clone is `../nativa-themes`; CI and
+# a fresh checkout use this path, so it must never be committed: the catalogue
+# under modules/Themes/ is the copy, and two copies in git is the drift the
+# gate exists to catch.
+/.upstream/

@@ -55,7 +55,12 @@
 #                         deliberately: the kernel runtime has zero Composer
 #                         dependencies, and this is where that claim is either
 #                         true or not.
-#   8. Extract-check    — NOT run: `bin/build/extract-kernel.sh --check` needs
+#   8. Themes-check     — the five theme modules are authored in
+#                         `evan70/nativa-themes` (PUBLIC, so the checkout needs
+#                         no token): `bin/build/sync-themes.sh --check` compares
+#                         `modules/Themes/` by SHA-256, which is what makes a
+#                         hand edit here drift instead of a fix.
+#   9. Extract-check    — NOT run: `bin/build/extract-kernel.sh --check` needs
 #                         a checkout of upstream, which is PRIVATE, and the
 #                         run's GITHUB_TOKEN cannot read it. The job records
 #                         that (with the measured evidence and how to enable
@@ -526,6 +531,14 @@ jobs:
         run: pnpm build
         working-directory: Frontend/packages
 
+      # Fáza 0.3 measured the failure this step exists for: delete a theme's
+      # `Frontend/packages/<theme>` and `pnpm build` still exits 0, silently
+      # building one bundle fewer. The three manifest assertions below cover
+      # griffe, mono and the admin entries; this one covers all five themes and
+      # names the missing package instead of reporting a green build.
+      - name: Assert every kernel theme has its bundle
+        run: bin/build/check-theme-bundles.sh
+
       # The build output is gitignored, so nothing below can pass by finding a
       # committed artifact. `mark`, `mark-switch` and `moonshine` are the entries
       # `AdminLayout::markCssLinks()` resolves out of this manifest for /mark;
@@ -726,6 +739,36 @@ jobs:
       - name: Show the server log
         if: always()
         run: tail -50 /tmp/server.log || true
+
+  # ---------------------------------------------------------------------------
+  # THEMES-CHECK — the catalogue is the theme repository's copy, and it runs
+  # ---------------------------------------------------------------------------
+  # The five theme modules are authored in `evan70/nativa-themes`. Unlike
+  # `nativa-minimal` below, that repository is PUBLIC, so the default
+  # GITHUB_TOKEN can check it out and this gate is real: a hand edit under
+  # `modules/Themes/` is red on the push that contains it, not on the machine
+  # that remembered to run `make themes-check`. If the repository is ever made
+  # private, this job fails at checkout with the same `Not Found
+  # (GET /repos/evan70/nativa-themes)` the extract-check section documents, and
+  # the fix is identical: a `UPSTREAM_TOKEN` secret and a `token:` input.
+  themes-check:
+    name: Themes-check (catalogue vs nativa-themes)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Checkout the theme repository (public, no token)
+        uses: actions/checkout@v6
+        with:
+          repository: evan70/nativa-themes
+          path: .upstream/nativa-themes
+          fetch-depth: 1
+
+      - name: Assert the catalogue is the repository's copy
+        run: bin/build/sync-themes.sh --check --from .upstream/nativa-themes
 
   # ---------------------------------------------------------------------------
   # EXTRACT-CHECK — not run here, and the reason is measured, not assumed
