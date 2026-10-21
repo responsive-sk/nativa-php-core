@@ -184,10 +184,19 @@ final class NameOwnershipContractTest extends TestCase
      * direction stays down for existing code; a new surface is measured, not
      * exempted.
      *
+     * Now 526: the demo renderer (`bin/build/render-theme-pages.php`) is a new
+     * build surface, not a new spelling of an existing value. It names the
+     * seven page surfaces (`home`, `article`, …) and the two themes it refuses;
+     * those words are owned elsewhere only by accident — `home` by a shell-copy
+     * test's group constant, `article` by `Question::SUBJECT_ARTICLE`, the theme
+     * names by the theme tests' own `THEME` constants. Making the renderer read
+     * the kernel's constants instead would give a build script a dependency it
+     * has no use for, so the places stay and the ceiling is measured again.
+     *
      * The number is measured, the direction is down, and the gate files' own
      * literals (the exemption reasons) are excluded from it.
      */
-    private const int MAX_LITERAL_PLACES = 507;
+    private const int MAX_LITERAL_PLACES = 526;
 
     /**
      * Rule 3 — measured 2026-10-17 on the tracked scope.
@@ -207,8 +216,13 @@ final class NameOwnershipContractTest extends TestCase
      * the theme's two tables (copy and reading order), and `MODULE`/`THEME`
      * are the module-test idiom every theme test already declares. Four
      * declarations for a new theme, not four spellings of an existing value.
+     *
+     * 246 with the demo renderer: `LOCALES` (locale → directory and fixture),
+     * `SURFACES` (surface → the theme method that renders it), and the two
+     * refusal tables (`NOT_RENDERED`, `REFUSED`). Four tables of a new build
+     * surface, not four spellings of a name that already had an owner.
      */
-    private const int MAX_DECLARATIONS = 242;
+    private const int MAX_DECLARATIONS = 246;
 
     /**
      * 203 → 204 with MAX_DECLARATIONS: `ModuleTreeState::IGNORED` is a name as
@@ -219,8 +233,14 @@ final class NameOwnershipContractTest extends TestCase
      *
      * 203 with boson: only `WORKS` is a new name — `DEFAULT_COPY` already
      * names Jednotka's table, and `MODULE`/`THEME` are the shared test idiom.
+     *
+     * 207 with the demo renderer: `LOCALES`, `SURFACES`, `NOT_RENDERED` and
+     * `REFUSED` name four things nothing else in the tree names — which locale
+     * renders where, which theme method answers a surface, and which themes the
+     * generator will not write over. None of them is a second name for a value
+     * that already had one.
      */
-    private const int MAX_NAMES = 203;
+    private const int MAX_NAMES = 207;
 
     /**
      * `name => modules/<Name>` or `modules/<Group>/<Name>`, resolved once. A
