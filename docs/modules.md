@@ -426,6 +426,14 @@ discovery, so no module can shadow the fallback), and `ThemeResolver` accepts
 a provider-named theme when it is whitelisted or discovered. A removed module
 takes its theme with it — nothing is edited, nothing lingers.
 
+Five of the modules in that group are authored **outside this tree**, in
+`evan70/nativa-themes` under the same `modules/Themes/<Name>/` path. The
+catalogue here is their copy, because `bin/cms module:add <Name>` installs from
+it; `make themes-check` (`bin/build/sync-themes.sh --check`) proves the copy by
+SHA-256 and `make themes-sync` refreshes it. A fix typed into this catalogue is
+therefore drift the gate reports — even though `git status` shows it as an
+ordinary edit, which is exactly why the gate exists.
+
 `modules/Themes/Erik/` is the proof: a trimmed `ErikTheme` (er-* vocabulary,
 dark-first, one critical CSS file) rendering from `ShellContext` +
 `PageContext` alone. The showcase Erik cannot live here — it imports

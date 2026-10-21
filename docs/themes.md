@@ -113,40 +113,56 @@ So the bundle is the only thing that disappears; PHP keeps rendering from the mo
 a page without its full stylesheet. A move therefore needs a gate that names the missing
 package — a green `make assets` is not evidence that every theme was built.
 
-## The gallery in `evan70/nativa-themes`
+## `evan70/nativa-themes`: the theme repository, measured 2026-10-21
 
-Measured at `b4084df` (117 files): a static gallery for GitHub Pages, **not** a theme source.
-Its `RULES.md` states that `src/` and `build/` are copies written by `scripts/sync-themes.mjs`
-from an app checkout (`NATIVA_MINIMAL`, default `../nativa-minimal`), and `sync --check`
-compares a SHA-256 per file, so a hand edit fails `pnpm verify`.
+Updated after the repository became the themes' home (`af593f7`, `134c79a`). It holds **224
+tracked files** — 19 of them the theme modules — and two things, and the split is the point:
 
-What a "theme repository" would have to preserve:
+| path | what it is | edited there? |
+|---|---|---|
+| `modules/Themes/<Name>/` | the five kernel themes — the **source** | yes |
+| `boson/`, `jednotka/`, `mono/`, `starter/`, `erik/`, `magazine/`, `moonshine/`, `font-set/` | the static gallery (60 pages) | generated, or hand-written against the theme's class names |
+| `src/`, `build/` | the gallery's copies of `nativa-minimal`'s frontend sources | no — `pnpm run sync` deletes and recopies them |
 
-- `vite.config.ts` lists **17 inputs by path** (`index.html` + 5 `starter/…` + 5 `erik/…` +
-  5 `magazine/…` + `moonshine/index.html`), `publicDir: 'public'`, `outDir: 'dist'`,
-  `base: './'` for Pages.
-- `pages.yml` uploads `dist` from the repo root, and deliberately does **not** run
-  `sync:check` (the upstream checkout is private, so on a runner it can only report
-  "skipped").
-- The sync map addresses the app root: `Frontend/packages/<theme>/src`, plus
-  `Frontend/packages/build/strip-at-layer.ts` and `public/images/erik-hero-underlay.webp`.
-  Gilroy is deliberately not copied (commercial licence, public repository).
+A theme is edited there and arrives here as a copy: `bin/build/sync-themes.sh --check`
+(`make themes-check`) compares `modules/Themes/<Name>/` by SHA-256 and names every differing
+path — `missing`, `changed`, `only-here`, `theme-only-here`; `--write` (`make themes-sync`)
+replaces the catalogue with the repository's copy. The gate has two directions on purpose: a
+missing file is drift, and so is a file upstream no longer has.
 
-Adding `modules/Themes/<Name>/` at the repo root **does not collide** with any of that
-(`modules/` is not a pnpm package, and Vite reads only the listed inputs), so the gallery can
-stay where it is. Moving it into `gallery/` would instead require editing all 17 input paths,
-`publicDir`, the sync map and the Pages artifact path — cost with no benefit. What the gallery
-cannot do is show a theme whose build source stayed behind in this repository, which is the
-same asymmetry as above.
+`bin/cms module:add <Name>` installs the catalogue into `src/Modules/Themes/<Name>/`, exactly
+as before — nothing about the tool changed. What changed is where a fix belongs.
 
-The gallery covers `starter`, `erik`, `magazine`, `moonshine`; it has no page for `boson`,
-`griffe` or `jednotka`, and `minimal` has no build entry at all.
+**Why a script and not a submodule.** A submodule pins one commit, but `module:add` and
+`make assets` need files, not a pin: every clone would still need `--recursive` before either
+worked, and a missing initialisation reads as "no themes". The script needs the checkout only
+when it runs, accepts both a sibling clone (`../nativa-themes`) and the CI location
+(`.upstream/nativa-themes`), and its `--check` is one command with a non-zero exit. The cost is
+that no commit id is written down anywhere — the catalogue's bytes *are* the pin, and `--check`
+is what compares them. That is a weaker guarantee than a submodule's pin, so it has to run in
+CI (Fáza 3.3), not only on the machine that remembers it.
+
+The gallery stays at the repository root and is a **consumer**: `modules/` is not a pnpm
+package and Vite reads only its explicit inputs, so nothing collides; moving the gallery into
+`gallery/` would rewrite every input path, `publicDir`, the sync map and the Pages artifact
+path for no benefit. Its own gate, `pnpm run sync:check`, protects the gallery's `src/`
+against `nativa-minimal` — **it does not protect the five theme modules**, and `RULES.md`
+says so in those words. `pages.yml` uploads `dist/` from the root and deliberately does not run
+`sync:check` (the upstream checkout is private, so a runner could only report "skipped").
+
+Coverage, measured: `boson`, `jednotka` and `mono` are **generated** — 7 surfaces × 2 locales =
+42 documents, re-rendered by `bin/build/render-theme-pages.php`; `starter`, `erik`, `magazine`
+and `moonshine` are hand-written; `font-set/` is one page. `griffe` has **no** page: its
+homepage is composed from attributes by its own web components, so a static render is empty.
+`erik` has pages but its gallery CSS is `nativa-minimal`'s full stylesheet, not this module's
+355-line critical fallback — a gallery page is not evidence of what the module serves.
+`minimal` has no build entry at all.
 
 ## Open, with the numbers that decide them
 
-1. **Does `Boson` belong to `nativa-minimal` or to this tree?** The showcase's default is
-   `starter`; `boson` appears in neither the showcase's package list nor the gallery. If it
-   moves to a theme repo, its provenance has to be written down somewhere.
+1. ~~**Does `Boson` belong to `nativa-minimal` or to this tree?**~~ Settled by the move: it
+   lives in `nativa-themes/modules/Themes/Boson/` as a kernel theme, and the gallery renders
+   its 14 pages from the theme itself. Its provenance is the repository that now owns it.
 2. **Build source inside the module?** `4.1` of the plan. Until it is answered, a theme repo
    distributes a renderable theme that nobody can rebuild — and `make assets` says "OK".
 3. **Fonts stay here.** 11 woff2 live in `public/fonts` and none under `Frontend/`; Gilroy is

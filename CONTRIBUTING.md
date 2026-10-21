@@ -47,6 +47,11 @@ Describe **what** and **why** in the PR, not how — the diff already says how.
 - **Catalogue vs. installation.** The source is `modules/<Name>/`;
   `src/Modules/<Name>` is gitignored operator state — re-sync after editing
   a module or you test stale code.
+- **Themes are edited in `nativa-themes`.** `modules/Themes/<Name>/` here is
+  that repository's copy (the catalogue `module:add` installs), not a source:
+  change the theme there, run `make themes-sync`, then
+  `php bin/cms module:add <Name>`. `make themes-check` fails on a hand edit
+  here, and its message names the file.
 - **Kernel boundary.** A kernel file may not `use Modules\<X>\…`; module
   dependencies come from `use` lines (`module:show X` → `closure:` must stay
   acyclic). Exceptions go FQ-inline with a docblock reason, never silently.
