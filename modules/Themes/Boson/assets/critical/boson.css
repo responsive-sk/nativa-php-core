@@ -14,12 +14,17 @@
  * page.
  */
 
+/* The font URLs carry a content hash because public/.htaccess serves
+ * /fonts/*.woff2 as immutable for a year: a repaired subset has to ship as a
+ * new URL, not as new bytes behind the old one, or a client that already
+ * cached the old file keeps it and falls back to a system face for every
+ * glyph the old subset lacked (the Slovak č/š/ž/ľ/ť/ň/ô). */
 @font-face {
   font-family: Inter;
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("/fonts/inter-400.woff2") format("woff2");
+  src: url("/fonts/inter-400-0c9c05bd.woff2") format("woff2");
 }
 
 @font-face {
@@ -27,18 +32,22 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("/fonts/roboto-condensed-400.woff2") format("woff2");
+  src: url("/fonts/roboto-condensed-400-c05481f9.woff2") format("woff2");
 }
 
-/* The 600 face is the same Regular file as the 400 face (the shipped
- * asset is a single static instance), and pointing both at one URL keeps
- * that true for the cache too: the second face costs no extra bytes. */
+/* Both weights are the SAME variable file: it carries a `wght` axis
+ * (100–900) and 600 is an instance of it, not a second download — so the
+ * display face costs one URL and one preload. That also means a glyph added
+ * to this subset has to carry its `gvar` deltas with it: a static glyph
+ * transplanted into a variable font stays at the 400 outlines when the
+ * browser asks for 600, which reads as a thinner caron (č, š, ž, ľ, ť) next
+ * to the letters that do thicken. */
 @font-face {
   font-family: "Roboto Condensed";
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url("/fonts/roboto-condensed-400.woff2") format("woff2");
+  src: url("/fonts/roboto-condensed-400-c05481f9.woff2") format("woff2");
 }
 
 /* Two families, both self-hosted: Inter for body copy, Roboto Condensed for
