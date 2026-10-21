@@ -289,7 +289,7 @@ function printDrift(ModuleCatalog $catalog, string $name, array $drift): void
     }
 }
 
-function cmdAdd(ModuleInstaller $installer, string $name): void
+function cmdAdd(ModuleInstaller $installer, ModuleCatalog $catalog, string $name): void
 {
     try {
         $result = $installer->add($name);
@@ -297,7 +297,16 @@ function cmdAdd(ModuleInstaller $installer, string $name): void
         fail($e->getMessage());
     }
 
-    out(sprintf("Installed '%s': %d file(s) copied to src/Modules/%s/.", $name, $result['copied'], $name));
+    // The install target is the catalogue's shape, not `src/Modules/<Name>/`:
+    // a grouped module lands in `src/Modules/<Group>/<Name>/`. Printing the name
+    // twice was how a theme install read as `src/Modules/Boson/` while the
+    // files were in `src/Modules/Themes/Boson/` — the path is asked from the
+    // catalog instead of spelled here.
+    $target = $catalog->installedPath($name);
+    $root = dirname(__DIR__) . DIRECTORY_SEPARATOR;
+    $shown = str_starts_with($target, $root) ? substr($target, strlen($root)) : $target;
+
+    out(sprintf("Installed '%s': %d file(s) copied to %s/.", $name, $result['copied'], $shown));
     out(sprintf('Page cache flushed (%d entr%s removed) — routes are reachable on the next request.', $result['flushed'], 1 === $result['flushed'] ? 'y' : 'ies'));
 }
 
@@ -690,7 +699,7 @@ function main(array $argv): void
                 fail('module:add needs a module name.');
             }
 
-            cmdAdd($installer, $argv[2]);
+            cmdAdd($installer, $catalog, $argv[2]);
 
             break;
 
