@@ -32,18 +32,40 @@ declare(strict_types = 1);
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../../src/init.php';
 
+use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\PageContext;
 use Modules\Core\Interfaces\HTTP\ThemeRegistry;
 
-/** locale code => output subdirectory under `<theme>/`, and the fixture that answers it. */
+/**
+ * Demo locale => the directory it renders into under `<theme>/`, and its fixture.
+ *
+ * The canonical code (`sk_SK`) is not written here: it belongs to the mapper
+ * that owns the locale→directory rule, so `localeCode()` asks it instead of
+ * this file keeping its own copy of the answer.
+ */
 const LOCALES = [
-    'en' => ['dir' => '', 'fixture' => 'themes-demo.php', 'code' => 'en_US'],
-    'sk' => ['dir' => 'sk/', 'fixture' => 'themes-demo-sk.php', 'code' => 'sk_SK'],
+    'en' => ['dir' => '', 'fixture' => 'themes-demo.php'],
+    'sk' => ['dir' => 'sk/', 'fixture' => 'themes-demo-sk.php'],
 ];
 
-const SURFACES = ['home', 'blog', 'article', 'tags', 'categories', 'author', 'search'];
+/**
+ * Demo surface => the theme method that renders it.
+ *
+ * One table instead of a `match` per call site: the list of surfaces a demo
+ * page exists for is also the list of methods a theme may implement, and a
+ * second spelling of either is how the two drift.
+ */
+const SURFACES = [
+    'home' => 'homepage',
+    'blog' => 'blogIndex',
+    'article' => 'blogArticle',
+    'tags' => 'blogTags',
+    'categories' => 'blogCategories',
+    'author' => 'authorProfile',
+    'search' => 'blogSearch',
+];
 
 /**
  * Themes `--theme=all` does not render, each for a measured reason.
@@ -101,16 +123,7 @@ function fixture(string $locale): array
  */
 function surfaceContent(string $surface, object $theme, PageContext $context): ?string
 {
-    $method = match ($surface) {
-        'home' => 'homepage',
-        'blog' => 'blogIndex',
-        'article' => 'blogArticle',
-        'tags' => 'blogTags',
-        'categories' => 'blogCategories',
-        'author' => 'authorProfile',
-        'search' => 'blogSearch',
-        default => null,
-    };
+    $method = SURFACES[$surface] ?? null;
 
     if (null === $method || !method_exists($theme, $method)) {
         return null;
@@ -261,8 +274,8 @@ function demoLocaleLinks(string $locale, string $surface, int $depth): array
     $up = str_repeat('../', $depth - 1);
 
     return 'sk' === $locale
-        ? [LOCALES['sk']['code'] => './', LOCALES['en']['code'] => $up . $suffix]
-        : [LOCALES['sk']['code'] => $up . 'sk/' . $suffix, LOCALES['en']['code'] => './'];
+        ? [localeCode('sk') => './', localeCode('en') => $up . $suffix]
+        : [localeCode('sk') => $up . 'sk/' . $suffix, localeCode('en') => './'];
 }
 
 /**
@@ -414,6 +427,12 @@ function themesToRender(?string $requested): array
     return [$requested];
 }
 
+/** The canonical locale code (`sk` → `sk_SK`), asked of the mapper that owns it. */
+function localeCode(string $locale): string
+{
+    return ContentServices::mapper()->code($locale);
+}
+
 /**
  * The locales this run renders: all of them, or the one asked for.
  *
@@ -450,7 +469,7 @@ function activate(string $locale): void
         return;
     }
 
-    $service::locale()->set(LOCALES[$locale]['code']);
+    $service::locale()->set(localeCode($locale));
 }
 
 $options = [];
@@ -485,7 +504,7 @@ foreach ($themes as $theme) {
         $data = fixture($locale);
         activate($locale);
 
-        foreach (SURFACES as $surface) {
+        foreach (array_keys(SURFACES) as $surface) {
             $context = contextFor($surface, $theme, $data);
             $content = surfaceContent($surface, $module, $context);
 
