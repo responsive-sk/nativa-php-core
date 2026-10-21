@@ -32,8 +32,8 @@ declare(strict_types = 1);
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../../src/init.php';
 
-use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Core\Infrastructure\Http\Request;
+use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\PageContext;
 use Modules\Core\Interfaces\HTTP\ThemeRegistry;
