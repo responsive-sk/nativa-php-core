@@ -283,6 +283,11 @@ final class DiscoveryCacheTest extends TestCase
         $this->assertGreaterThan(0, $warmed);
         $this->assertFileExists($cacheFile);
 
+        // A cleanup failure is recorded here rather than thrown from `finally`:
+        // a throw there would replace whatever the assertion above raised, and
+        // the odd shape is what the lint rule (rightly) flags.
+        $cleanupFailure = null;
+
         try {
             ModuleInstaller::fromAppPaths()->add('Scratch');
 
@@ -295,11 +300,15 @@ final class DiscoveryCacheTest extends TestCase
                 ModuleInstaller::fromAppPaths()->remove('Scratch', true);
             } catch (RuntimeException $e) {
                 if (!str_contains($e->getMessage(), 'is not installed')) {
-                    throw $e;
+                    $cleanupFailure = $e;
                 }
             }
 
             DiscoveryCache::clearCache();
+        }
+
+        if (null !== $cleanupFailure) {
+            throw $cleanupFailure;
         }
     }
 

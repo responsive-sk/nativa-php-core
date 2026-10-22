@@ -94,7 +94,7 @@ final class CsrfMiddleware implements MiddlewareInterface
     /**
      * Verify a submitted token against the session token.
      */
-    public static function verify(string $token): bool
+    public static function verify(#[\SensitiveParameter] string $token): bool
     {
         return hash_equals(self::token(), $token);
     }
