@@ -65,6 +65,12 @@
 #                         run's GITHUB_TOKEN cannot read it. The job records
 #                         that (with the measured evidence and how to enable
 #                         it) instead of reporting a pass it did not earn.
+#  10. Kernel dependency— `mago guard`, the same sentence `KernelCouplingTest`
+#                         asserts in PHP, stated declaratively and resolved from
+#                         source rather than from `use` lines. `guard-baseline.toml`
+#                         is a ledger of 8 reviewed exceptions, not a ratchet: a
+#                         new edge is absent from it and fails. Evidence in
+#                         docs/mago-evaluation.md.
 # =============================================================================
 
 name: CI
@@ -188,6 +194,48 @@ jobs:
 
       - name: Lekalo gate (lock --check + validate)
         run: make lekalo-check
+
+  # ---------------------------------------------------------------------------
+  # KERNEL DEPENDENCY — mago guard, the rule KernelCouplingTest states in PHP
+  # ---------------------------------------------------------------------------
+  # No PHP setup and no composer install on purpose: guard is a Rust binary over
+  # a pinned release archive (`bin/build/mago-spike.sh` verifies the archive's
+  # sha256, the same identity rule the lekalo step above uses), so this job
+  # proves the rule on the checkout that HAS no `vendor/` — the shape that
+  # matters for a kernel claiming zero Composer dependencies.
+  #
+  # The rule (`mago.toml` [guard.perimeter]): `src/Modules/Core`, `Database` and
+  # `Tooling` may depend on each other, on `Themes`, and on PHP itself — never on
+  # a module. `guard-baseline.toml` carries the 8 reviewed exceptions: the
+  # inline-FQCN reaches into `Modules\Outbox\…` in `AuthMiddleware` and
+  # `RateLimitMiddleware`, which `KernelCouplingTest` cannot see because no `use`
+  # statement exists. The baseline is a ledger whose counts are pinned, not a
+  # ratchet: a new edge is not listed and fails here.
+  #
+  # Measured 2026-10-22: planting `use Modules\Blog\…` in
+  # `AuthProviderRegistry.php` turned this gate red with the file and line that
+  # `KernelCouplingTest` prints for the same defect; the tree without the
+  # mutation is green.
+  # ---------------------------------------------------------------------------
+  kernel-dependency:
+    name: Kernel dependency (mago guard)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      # The script downloads, verifies and installs the binary itself; caching
+      # the directory only saves the ~25 MB download on a re-run.
+      - name: Cache mago
+        uses: actions/cache@v5
+        with:
+          path: storage/cache/mago-spike
+          key: mago-1.58.2-x86_64-unknown-linux-gnu
+
+      - name: Guard gate
+        run: make mago-guard
 
   # ---------------------------------------------------------------------------
   # CODE STYLE — php-cs-fixer + Rector dry-runs

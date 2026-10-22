@@ -1,0 +1,37 @@
+variant = "loose"
+
+[[issues]]
+file = "src/Modules/Core/Interfaces/HTTP/Middleware/AuthMiddleware.php"
+code = "disallowed-class-constant"
+message = 'Illegal dependency on `Modules\Outbox\Domain\SecurityEvents`'
+count = 2
+
+[[issues]]
+file = "src/Modules/Core/Interfaces/HTTP/Middleware/AuthMiddleware.php"
+code = "disallowed-class-constant"
+message = 'Illegal dependency on `Modules\Outbox\Interfaces\HTTP\OutboxServices`'
+count = 1
+
+[[issues]]
+file = "src/Modules/Core/Interfaces/HTTP/Middleware/AuthMiddleware.php"
+code = "disallowed-static-call"
+message = 'Illegal dependency on `Modules\Outbox\Interfaces\HTTP\OutboxServices`'
+count = 1
+
+[[issues]]
+file = "src/Modules/Core/Interfaces/HTTP/Middleware/RateLimitMiddleware.php"
+code = "disallowed-class-constant"
+message = 'Illegal dependency on `Modules\Outbox\Domain\SecurityEvents`'
+count = 2
+
+[[issues]]
+file = "src/Modules/Core/Interfaces/HTTP/Middleware/RateLimitMiddleware.php"
+code = "disallowed-class-constant"
+message = 'Illegal dependency on `Modules\Outbox\Interfaces\HTTP\OutboxServices`'
+count = 1
+
+[[issues]]
+file = "src/Modules/Core/Interfaces/HTTP/Middleware/RateLimitMiddleware.php"
+code = "disallowed-static-call"
+message = 'Illegal dependency on `Modules\Outbox\Interfaces\HTTP\OutboxServices`'
+count = 1

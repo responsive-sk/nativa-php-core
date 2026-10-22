@@ -3,9 +3,12 @@
 # =============================================================================
 # mago.toml — the Mago spike, informational only.
 # =============================================================================
-# Nothing in CI runs Mago. `phpstan` (level 9), `php-cs-fixer` and `rector` stay
-# the gates; this file exists so `make mago-spike` measures this tree with a
-# written-down configuration instead of whatever flags were typed that day.
+# One rule from this file IS a gate: `make mago-guard` runs the perimeter below
+# on every pull request (with the reviewed exceptions in `guard-baseline.toml`).
+# Everything else here is informational — `phpstan` (level 9), `php-cs-fixer`
+# and `rector` stay the analysis and style gates, and `make mago-spike` measures
+# this tree with a written-down configuration instead of whatever flags were
+# typed that day.
 # `docs/mago-evaluation.md` holds the numbers this file produced and the
 # adoption decision; `tests/Architecture/MagoScopeContractTest.php` keeps the
 # scope below equal to `phpstan.neon`'s, because a spike that measures a
@@ -135,12 +138,22 @@ single-class-per-file = { enabled = false }
 # mutation — a `use Modules\Blog\…` typed into a Core file, named with the same
 # file and line. The difference is measured, not claimed: guard also resolves
 # inline FQCNs, so it reports the 8 documented `Modules\Outbox\…` escape hatches
-# in AuthMiddleware/RateLimitMiddleware that the test's scanner cannot see. That
-# makes guard stricter, not equivalent — see docs/mago-evaluation.md.
+# in AuthMiddleware/RateLimitMiddleware that the test's scanner cannot see. Those
+# 8 are the complete content of `guard-baseline.toml` — a ledger with pinned
+# counts, so a new edge is not in it and turns `make mago-guard` red. See
+# docs/mago-evaluation.md for why the decision was to record them rather than
+# refactor the kernel into a security-event port.
 # -----------------------------------------------------------------------------
 
 [guard]
 mode = "default"
+# Reviewed exceptions, not a growing suppression file: `guard-baseline.toml`
+# holds exactly the 8 `Modules\Outbox\…` reaches that AuthMiddleware and
+# RateLimitMiddleware make through inline FQCNs behind `class_exists()`. They
+# are the documented escape hatches (see the class docblocks), the KernelCoupling
+# ledger is empty because no `use` statement exists, and guard resolves what
+# that scanner cannot. A new edge is not in the baseline and still fails.
+baseline = "guard-baseline.toml"
 # Kernel slice only: `tests`/`public`/`bin` are consumers of the rule, not
 # subjects of it, `src/Themes` is a tree the kernel renders for (permitted
 # above), and the two composition roots name modules on purpose.

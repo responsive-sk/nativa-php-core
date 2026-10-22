@@ -174,7 +174,16 @@ run_tool() {
 
     issues="$(issue_count "$tool" "$report")"
     printf '%s\t%s\t%s\t%s\t%s\n' "$tool" "$MAGO_VERSION" "$exit_code" "$issues" "$((finished - started))" >> "$SUMMARY"
-    printf 'INFO [mago-spike] tool=%s exit=%s issues=%s wall=%sms\n' "$tool" "$exit_code" "$issues" "$((finished - started))"
+
+    # A baseline that hides issues silently is a gate nobody can audit from the
+    # log; when one is in play, say how many entries it swallowed.
+    local baselined=""
+    if grep -q 'Filtered out [0-9]* issues based on the baseline' "$report"; then
+        baselined=" baselined=$(grep -oE 'Filtered out [0-9]+' "$report" | tail -1 | awk '{print $3}')"
+    fi
+
+    printf 'INFO [mago-spike] tool=%s exit=%s issues=%s%s wall=%sms\n' \
+        "$tool" "$exit_code" "$issues" "$baselined" "$((finished - started))"
 
     if [ "$tool" = "guard" ] && grep -q 'skipped due to missing configuration' "$report"; then
         echo "WARN [mago-spike] guard has no perimeter rules configured — nothing was checked" >&2

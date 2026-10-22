@@ -12,8 +12,11 @@ something the repo cannot express today is **`mago guard`** — it states the
 kernel's dependency rule declaratively and sees couplings the PHPUnit guard
 cannot, because it resolves inline FQCNs.
 
-**Status:** spike only. Nothing in CI runs Mago; `phpstan`, `php-cs-fixer` and
-`rector` remain the gates. Plan: `.ai-factory/plans/feature-evaluate-mago-toolchain.md`.
+**Status:** one rule is a gate. `make mago-guard` runs in CI on every pull
+request — the kernel→module perimeter below, with 8 reviewed exceptions in
+`guard-baseline.toml`. The analyzer, linter and formatter stay informational:
+`phpstan`, `php-cs-fixer` and `rector` remain the analysis and style gates.
+Plan: `.ai-factory/plans/feature-evaluate-mago-toolchain.md`.
 
 Measured 2026-10-22 with `mago 1.58.2` on PHP 8.5.11, over `mago.toml`'s scope
 (123 `.php` files + `bin/cms`, the same nine paths `phpstan.neon` analyses).
@@ -25,13 +28,14 @@ Measured 2026-10-22 with `mago 1.58.2` on PHP 8.5.11, over `mago.toml`'s scope
 | `mago analyze` | 189 errors / 96 warnings / 87 help in ~0,19 s | **not a replacement** — 2 real findings, the rest is config and inference |
 | `mago lint` | 570 findings at the default preset, **22** with the curated rule set | **not a gate** — 22 triaged, 6 worth acting on over time |
 | `mago format` | 124 of 124 files would change (~0,03 s) | **not a replacement** — house rules it cannot express |
-| `mago guard` | 8 errors today, all pre-existing `Modules\Outbox` edges; catches a planted kernel→module import | **candidate** — the only strict addition to the current gates |
+| `mago guard` | 8 errors today, all pre-existing `Modules\Outbox` edges; catches a planted kernel→module import | **gate** — CI job `kernel-dependency`, baseline = those 8 |
 
 Reproduce any line with:
 
 ```
 make mago-spike                     # all four tools, always exit 0
 make mago-spike MAGO_ARGS=--strict  # exit non-zero when a tool does
+make mago-guard                     # the gate: guard only, --strict
 bin/build/mago-spike.sh --only=analyze
 ```
 
@@ -175,6 +179,46 @@ measurable, not aesthetic:
   edges (M/C/G) and ratchets unresolved ones; guard has no such ledger. Guard
   states the rule, the test records the decisions.
 
+### As a gate
+
+`make mago-guard` runs `mago guard` with `--strict`, and the `kernel-dependency`
+CI job runs that target with no PHP setup and no `composer install` — the
+checkout that proves the gate is also the checkout with no `vendor/`.
+`guard-baseline.toml` is committed and contains exactly two files' worth of
+`Modules\Outbox\…` reaches, with counts:
+
+| file | code | dependency | count |
+|---|---|---|---|
+| `AuthMiddleware.php` | `disallowed-class-constant` | `SecurityEvents` | 2 |
+| `AuthMiddleware.php` | `disallowed-class-constant` | `OutboxServices` | 1 |
+| `AuthMiddleware.php` | `disallowed-static-call` | `OutboxServices` | 1 |
+| `RateLimitMiddleware.php` | `disallowed-class-constant` | `SecurityEvents` | 2 |
+| `RateLimitMiddleware.php` | `disallowed-class-constant` | `OutboxServices` | 1 |
+| `RateLimitMiddleware.php` | `disallowed-static-call` | `OutboxServices` | 1 |
+
+The baseline is a **ledger, not a ratchet**: the entries are matched by file,
+code and message, so a new edge (a new file, a new dependency, or more of the
+same call in one of these files) is absent from it and fails. Measured
+2026-10-22: after baselining the 8, planting `use Modules\Blog\…` in
+`AuthProviderRegistry.php` turned the gate red with one issue naming the file and
+line, and reverting turned it green with `baselined=8` in the log.
+
+**Why record instead of refactor.** The alternative is a kernel-owned
+security-event port (`SecurityEventSink` + composition wiring), which would
+remove the FQCNs entirely. It was rejected for this change because the current
+shape is a written decision, not an accident: both class docblocks explain that
+the reach is `class_exists()`-guarded so the kernel answers the request when the
+module is absent, and that spelling the FQCN inline is what keeps
+`KernelCouplingTest`'s ledger at zero while the behaviour survives. Introducing a
+port changes the composition contract for every module that emits security
+events — a plan of its own with its own tests, not a side effect of adopting a
+linter. What this gate adds meanwhile is real: those two files can no longer grow
+a third reach unnoticed.
+
+CI log line for the passing gate is deliberately explicit —
+`INFO [mago-spike] tool=guard exit=0 issues=0 baselined=8` — because a baseline
+that hides issues silently is a gate nobody can audit.
+
 ## Adoption cost
 
 - **Binary:** pin in CI the way `lekalo` is pinned (release tag + `sha256`, no
@@ -187,9 +231,10 @@ measurable, not aesthetic:
   written; the remaining 22 findings need a decision each.
 - **Formatter:** the cost is every file in scope plus the rules in the table
   above.
-- **Guard:** 8 pre-existing errors to classify, and guard becomes a second place
-  where the kernel boundary is written down (the first is
-  `KernelCouplingTest`).
+- **Guard:** paid in this change — 8 pre-existing errors classified into
+  `guard-baseline.toml`, and the rule now lives in two places (`mago.toml` and
+  `KernelCouplingTest`). The second copy sees strictly more, which is the reason
+  it was worth adding.
 
 ## What this spike did not prove
 
@@ -209,11 +254,13 @@ measurable, not aesthetic:
 Delete, in one commit:
 
 - `mago.toml`
+- `guard-baseline.toml`
 - `bin/build/mago-spike.sh`
 - `tests/Architecture/MagoScopeContractTest.php`
-- the `mago-spike` target and its `##@ Mago` block in `Makefile`
+- the `mago-spike` and `mago-guard` targets and the `##@ Mago` block in `Makefile`
+- the `kernel-dependency` CI job and its entry in the workflow header
 - this document
 - `storage/cache/mago-spike/` (gitignored, so `rm -rf` locally)
 
-Nothing else in the tree references Mago: no CI job, no composer script, no
-dependency in `composer.json` or `composer.lock`.
+Nothing else in the tree references Mago: no composer script, no dependency in
+`composer.json` or `composer.lock`.
