@@ -40,6 +40,9 @@ use PHPUnit\Framework\TestCase;
  */
 final class CsrfMiddlewareTest extends TestCase
 {
+    // A fixture, not a credential: the middleware hashes this against whatever
+    // the session holds, so the literal IS the assertion.
+    // @mago-expect lint:no-literal-password
     private const string TOKEN = 'a-known-csrf-token';
 
     protected function setUp(): void
@@ -102,6 +105,8 @@ final class CsrfMiddlewareTest extends TestCase
         foreach (
             [
                 'no token'          => [[], ['origin' => 'https://evil.test']],
+                // Same fixture rule: a wrong token must fail on the token.
+                // @mago-expect lint:no-literal-password
                 'wrong token'       => [['_token' => 'not-the-token'], ['origin' => 'https://evil.test']],
             ] as $case => [$body, $headers]
         ) {
