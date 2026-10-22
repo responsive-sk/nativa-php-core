@@ -156,6 +156,19 @@ final class BlogArticleAction
             $content .= $module->articleTail($tail);
         }
 
+        // The reading surface, applied where every theme gets it: a prose column
+        // bounded by measure beside a floating contents rail. A theme that
+        // already composes a rail (Boson, Jednotka, Mono and Griffe do) is left
+        // untouched — `ReaderLayout` reads the rail's own marker off the
+        // composed HTML rather than guessing from the theme's name, so a theme
+        // that starts or stops composing one needs no change here. Themes are a
+        // copy of `nativa-themes` and a rule in five of them is a rule a sixth
+        // silently misses; this is the one place that covers all of them.
+        //
+        // The headings are the ones the renderer generated, so a rail link can
+        // never point at an id the article does not carry.
+        $content = FrontendLayout::readerLayout($content, $renderer->extractHeadings($bodyHtml));
+
         return $this->articleResponse($request, $title, $content, $excerpt, $locale, $slug, $meta, $coverUrl);
     }
 

@@ -10,12 +10,13 @@ use Modules\Core\Infrastructure\Paths\AppPaths;
  * DocsCatalog — the publication boundary of the /docs surface.
  *
  * The repository's `docs/` directory is not a documentation set, it is a mixed
- * bag, and the difference is measured rather than stylistic: 22 top-level
- * markdown files, of which 13 are guides a reader may open, sitting next to six
- * `security-*` audit / pentest / checklist reports, an internal PR summary, a
- * rhythm-score measurement table, an admin-template map, the ADRs, the Lekalo
- * model documentation with 425 772 B of generated trace manifests, and 37 files
- * of dex-era reference code that are not even in git (`.gitignore:65`).
+ * bag, and the difference is measured rather than stylistic. Measured on THIS
+ * tree, 2026-10-22: six top-level guides, seven parts under `kernel-status/`,
+ * and three article drafts under `clanky/`. The families the upstream tree
+ * carries and this one does not (`security-audit-*`, `security-pentest-*`,
+ * `security-checklist-*`, `PR-summary-*`, `rhythm-score-matrix`,
+ * `admin-templates`, `lekalo/**`, `dex/**`) are still named below, because the
+ * map must refuse them the day one is copied in.
  *
  * So the unit of publication is an ENTRY, not a file extension and not a
  * directory:
@@ -27,17 +28,30 @@ use Modules\Core\Infrastructure\Paths\AppPaths;
  * - the excluded families are named right here so the reason travels with the
  *   code that would otherwise publish them.
  *
- * Excluded on purpose, family by family: `security-audit-*`,
- * `security-pentest-*`, `security-checklist-*` (point-in-time reports about
- * defects that were found and fixed), `PR-summary-*` (internal review
- * artefact), `rhythm-score-matrix` (internal measurement table behind the
- * article-rhythm advisor), `admin-templates` (admin markup map for
- * contributors), `lekalo/**` and its trace manifests, and `dex/**`.
+ * Excluded on purpose, family by family:
  *
- * The architecture decision records under `adr/` ARE published: they are the
- * decisions the articles argue about, they link each other with plain `.md`
- * targets (which `rewriteLinks()` turns into `/docs/adr/...`), and a reader
- * following a series on themes needs the ADR to check the claim.
+ * - `security-audit-*`, `security-pentest-*`, `security-checklist-*` —
+ *   point-in-time reports about defects that were found and fixed;
+ * - `PR-summary-*` — internal review artefact;
+ * - `rhythm-score-matrix` — internal measurement table behind the
+ *   article-rhythm advisor;
+ * - `admin-templates` — admin markup map for contributors;
+ * - `lekalo/**` and its trace manifests, and `dex/**` — generated reference
+ *   data, not prose;
+ * - `prose/**` — the OpenProse experiment (plan Task 0). It is read by an
+ *   AGENT, not by the site: a `.prose.md` contract is an instruction file, and
+ *   serving it would put an execution script behind a public URL;
+ * - `clanky/**` — the ARTICLE archive. The Blog's corpus is `storage/blog/`
+ *   and that is the source of truth; a draft that never became a blog article
+ *   (the two without a pendant today) migrates through the article flow, not
+ *   through this map. `/docs` is English engineering prose with `noindex`;
+ *   a Slovak dated article belongs on `/blog/<slug>` where it is indexed.
+ *
+ * The architecture decision records under `adr/` ARE published when they are
+ * present: they are the decisions the articles argue about, they link each
+ * other with plain `.md` targets (which `rewriteLinks()` turns into
+ * `/docs/adr/...`), and a reader following a series on themes needs the ADR to
+ * check the claim. This tree has none today; the map gains one line per ADR.
  */
 final readonly class DocsCatalog
 {
@@ -55,27 +69,45 @@ final readonly class DocsCatalog
      * Published entries, keyed by their docs-relative path without `.md`.
      *
      * Keyed by path rather than flattened into an invented slug so a nested
-     * document (`adr/0003-…`, `lekalo/scan/…`) costs one line, not a rename.
+     * document (`kernel-status/01-…`, `adr/0003-…`) costs one line, not a
+     * rename.
+     *
+     * ORDER IS THE INDEX ORDER, and the order is deliberate: an introduction
+     * first, then the philosophy the module guides inherit, then the guides
+     * themselves, then the measured log (`kernel-status` and its parts), the
+     * evaluation and the two inventories. Pages is the first module guide —
+     * the template every later module guide follows is derived from it and
+     * from `core-philosophy`, not invented in advance.
+     *
+     * Measured 2026-10-22: the previous map was the UPSTREAM
+     * (`../nativa-minimal/docs/`) guide list copied verbatim — all 16 keys
+     * `UPSTREAM-OK`, none of the files present in this tree, so `/docs`
+     * served an empty index (confirmed against the live deployment). The map
+     * is rewritten from THIS tree, not re-pointed at upstream: the guides are
+     * written here, and the module system they describe (catalogue
+     * `modules/<Name>/` + installed slice `src/Modules/<Name>/` + `bin/cms
+     * module:add/remove`) does not exist upstream in that shape.
      *
      * @var array<string, string> key => file name, relative to docs/
      */
     private const array PUBLISHED = [
-        'getting-started' => 'getting-started.md',
-        'adding-modules' => 'adding-modules.md',
-        'theme-layout' => 'theme-layout.md',
-        'template-map' => 'template-map.md',
-        'design-blocks' => 'design-blocks.md',
-        'blog-covers' => 'blog-covers.md',
-        'blog-images-guide' => 'blog-images-guide.md',
-        'blog-voice' => 'blog-voice.md',
-        'forms' => 'forms.md',
-        'questions' => 'questions.md',
-        'security-patterns' => 'security-patterns.md',
-        'bin-layout' => 'bin-layout.md',
-        'lekalo-model' => 'lekalo-model.md',
-        'adr/0001-theme-architecture-for-2-themes' => 'adr/0001-theme-architecture-for-2-themes.md',
-        'adr/0002-third-wired-theme-erik' => 'adr/0002-third-wired-theme-erik.md',
-        'adr/0003-theme-module-contract' => 'adr/0003-theme-module-contract.md',
+        'intro' => 'intro.md',
+        'core-philosophy' => 'core-philosophy.md',
+        'modules' => 'modules.md',
+        'pages' => 'pages.md',
+        'themes' => 'themes.md',
+        'kernel-status' => 'kernel-status.md',
+        'kernel-status/01-import-and-edge-cuts' => 'kernel-status/01-import-and-edge-cuts.md',
+        'kernel-status/02-admin-flow-and-self-hosting' => 'kernel-status/02-admin-flow-and-self-hosting.md',
+        'kernel-status/03-content-themes-and-the-admin-merge' => 'kernel-status/03-content-themes-and-the-admin-merge.md',
+        'kernel-status/04-kernel-contracts' => 'kernel-status/04-kernel-contracts.md',
+        'kernel-status/05-security-findings-7-to-9' => 'kernel-status/05-security-findings-7-to-9.md',
+        'kernel-status/06-auth-discovery-and-mail-transport' => 'kernel-status/06-auth-discovery-and-mail-transport.md',
+        'kernel-status/07-ci-modules-gate' => 'kernel-status/07-ci-modules-gate.md',
+        'kernel-status/08-docs-surface-and-reader-layout' => 'kernel-status/08-docs-surface-and-reader-layout.md',
+        'mago-evaluation' => 'mago-evaluation.md',
+        'kernel-shape' => 'kernel-shape.md',
+        'name-ownership' => 'name-ownership.md',
     ];
 
     private string $docsDir;

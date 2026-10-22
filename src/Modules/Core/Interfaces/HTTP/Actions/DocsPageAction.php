@@ -81,19 +81,36 @@ final readonly class DocsPageAction
         // Same pipeline as pages and articles — the renderer is the one the
         // projects already read their content through, and the theme owns the
         // chrome, so this surface cannot drift away from either.
-        $bodyHtml = (new MarkdownRenderer())->render(
+        $renderer = new MarkdownRenderer();
+        $bodyHtml = $renderer->render(
             $guide['body'],
             new MarkdownBlockContext($locale, $prefix),
         );
 
-        // The theme composes the document when it has a vocabulary for it;
-        // otherwise the generic section is still the floor.
+        // A guide is read, not scanned: it gets the floating contents rail the
+        // articles have had since Boson, and a prose column bounded by measure
+        // rather than by the viewport. Both are emitted HERE, in the kernel's
+        // surface, for two reasons: the rail is built from the headings the
+        // renderer already extracts (`extractHeadings()` returns the anchors it
+        // generated, so a link can never point at an id the page does not
+        // have), and a theme that implements `DocsPageTheme` composes its own
+        // document — a rail the action did not emit would be missing there.
+        //
+        // The markup is keyed on `data-docs-*` attributes, not on the theme's
+        // class prefix: the stylesheet below travels with it, so every theme
+        // gets the same reader layout without a rule in its own CSS file.
+        $headings = $renderer->extractHeadings($bodyHtml);
+
         $content = $module instanceof DocsPageTheme
             ? $module->docsPage($key, $guide['title'], $bodyHtml)
             : '<section class="' . $prefix . '-section">'
                 . '<h1 class="' . $prefix . '-section__title">' . FrontendLayout::e($guide['title']) . '</h1>'
                 . '<div class="' . $prefix . '-article__body">' . $bodyHtml . '</div>'
                 . '</section>';
+
+        // One rail, never two; `ReaderLayout` owns that rule for every surface
+        // that needs it (this one and the article detail in `Blog`).
+        $content = FrontendLayout::readerLayout($content, $headings);
 
         return Response::html(FrontendLayout::render(
             $guide['title'] . ' — Nativa',

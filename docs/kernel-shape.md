@@ -99,7 +99,7 @@ exactly the movement the table exists to record.
 | `src/Modules/Core/Application/Services/ContentLocaleMapper.php` | 4360 | Application | concrete | 0 | runtime |
 | `src/Modules/Core/Application/Services/DiscoveryCache.php` | 12570 | Application | concrete | 2 | runtime |
 | `src/Modules/Core/Application/Services/DisposalRegistry.php` | 2295 | Application | concrete | 3 | runtime |
-| `src/Modules/Core/Application/Services/DocsCatalog.php` | 13648 | Application | concrete | 0 | runtime |
+| `src/Modules/Core/Application/Services/DocsCatalog.php` | 15865 | Application | concrete | 0 | runtime |
 | `src/Modules/Core/Application/Services/MarkdownRenderer.php` | 17425 | Application | concrete | 12 | runtime |
 | `src/Modules/Core/Application/Services/ModuleCatalog.php` | 13453 | Application | concrete | 1 | tooling |
 | `src/Modules/Core/Application/Services/ModuleInstaller.php` | 8494 | Application | concrete | 4 | tooling |
@@ -142,8 +142,8 @@ exactly the movement the table exists to record.
 | `src/Modules/Core/Interfaces/CLI/Command/ServeCommand.php` | 2190 | Interfaces | concrete | 0 | runtime |
 | `src/Modules/Core/Interfaces/CLI/MigratorInterface.php` | 779 | Interfaces | interface | 10 | contract |
 | `src/Modules/Core/Interfaces/CLI/Support/DatabaseMigrator.php` | 4870 | Interfaces | concrete | 1 | runtime |
-| `src/Modules/Core/Interfaces/HTTP/Actions/DocsIndexAction.php` | 2913 | Interfaces | concrete | 0 | runtime |
-| `src/Modules/Core/Interfaces/HTTP/Actions/DocsPageAction.php` | 4665 | Interfaces | concrete | 0 | runtime |
+| `src/Modules/Core/Interfaces/HTTP/Actions/DocsIndexAction.php` | 5041 | Interfaces | concrete | 0 | runtime |
+| `src/Modules/Core/Interfaces/HTTP/Actions/DocsPageAction.php` | 6026 | Interfaces | concrete | 0 | runtime |
 | `src/Modules/Core/Interfaces/HTTP/Actions/HomepageAction.php` | 2195 | Interfaces | concrete | 1 | runtime |
 | `src/Modules/Core/Interfaces/HTTP/Actions/LlmsTxtAction.php` | 2830 | Interfaces | concrete | 0 | runtime |
 | `src/Modules/Core/Interfaces/HTTP/Actions/RobotsAction.php` | 1902 | Interfaces | concrete | 0 | runtime |
@@ -151,7 +151,7 @@ exactly the movement the table exists to record.
 | `src/Modules/Core/Interfaces/HTTP/Attributes/Route.php` | 711 | Interfaces | concrete | 55 | contract |
 | `src/Modules/Core/Interfaces/HTTP/ContentServices.php` | 1551 | Interfaces | concrete | 28 | runtime |
 | `src/Modules/Core/Interfaces/HTTP/ErrorPageRenderer.php` | 3948 | Interfaces | concrete | 2 | runtime |
-| `src/Modules/Core/Interfaces/HTTP/FrontendLayout.php` | 21548 | Interfaces | concrete | 19 | runtime |
+| `src/Modules/Core/Interfaces/HTTP/FrontendLayout.php` | 29154 | Interfaces | concrete | 19 | runtime |
 | `src/Modules/Core/Interfaces/HTTP/Kernel.php` | 7339 | Interfaces | concrete | 4 | runtime |
 | `src/Modules/Core/Interfaces/HTTP/Markdown/MarkdownBlockContext.php` | 1309 | Interfaces | concrete | 2 | runtime |
 | `src/Modules/Core/Interfaces/HTTP/Markdown/MarkdownBlockInterface.php` | 1247 | Interfaces | interface | 0 | contract |

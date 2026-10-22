@@ -58,10 +58,19 @@ final readonly class DocsIndexAction
         ));
     }
 
-    /** The guide list, in the active theme's own vocabulary. */
+    /**
+     * The guide list, in the active theme's own vocabulary.
+     *
+     * The list is bounded by measure (`data-docs-prose`, 68ch) the same way a
+     * guide's body is: a card carries up to 180 characters of description, and
+     * on a wide display an unbounded one runs the full viewport. The attribute is
+     * the docs surface's own, not a theme prefix, so every theme renders the same
+     * readable column without a rule in its stylesheet — see
+     * `DocsPageAction::readerLayout()` for the rule set that travels with it.
+     */
     private function content(string $prefix): string
     {
-        $html = '<section class="' . $prefix . '-section">'
+        $html = '<section class="' . $prefix . '-section" data-docs-prose>'
             . '<h1 class="' . $prefix . '-section__title">Documentation</h1>';
 
         $entries = $this->catalog->entries();
@@ -72,16 +81,49 @@ final readonly class DocsIndexAction
                 . '</section>';
         }
 
-        $html .= '<div class="' . $prefix . '-article__body"><ul>';
+        // Grouped in the order the groups first appear, so the map's order still
+        // decides the sequence: a guide is filed by its key's first segment and
+        // the group label is that segment. `intro`, `core-philosophy` and the
+        // module guides have no segment and therefore form the leading group —
+        // the reading order the map was written in.
+        $groups = [];
 
         foreach ($entries as $entry) {
-            $html .= '<li>'
-                . '<a href="/docs/' . FrontendLayout::e($entry['key']) . '">'
-                . FrontendLayout::e($entry['title']) . '</a>'
-                . ('' !== $entry['description'] ? ' — ' . FrontendLayout::e($entry['description']) : '')
-                . '</li>';
+            $at = strpos($entry['key'], '/');
+            $group = false === $at ? '' : substr($entry['key'], 0, $at);
+            $groups[$group][] = $entry;
         }
 
-        return $html . '</ul></div></section>';
+        $html .= '<div class="' . $prefix . '-article__body">';
+
+        foreach ($groups as $group => $members) {
+            if ('' !== $group) {
+                $html .= '<h2>' . FrontendLayout::e($this->groupLabel($group)) . '</h2>';
+            }
+
+            $html .= '<ul>';
+
+            foreach ($members as $entry) {
+                $html .= '<li>'
+                    . '<a href="/docs/' . FrontendLayout::e($entry['key']) . '">'
+                    . FrontendLayout::e($entry['title']) . '</a>'
+                    . ('' !== $entry['description'] ? ' — ' . FrontendLayout::e($entry['description']) : '')
+                    . '</li>';
+            }
+
+            $html .= '</ul>';
+        }
+
+        return $html . '</div></section>';
+    }
+
+    /**
+     * A group is a directory under `docs/`, so its label is the directory's own
+     * name made readable — never a second list the kernel would have to keep in
+     * sync with the tree. `kernel-status` reads as "Kernel status".
+     */
+    private function groupLabel(string $group): string
+    {
+        return ucfirst(str_replace(['-', '_'], ' ', $group));
     }
 }

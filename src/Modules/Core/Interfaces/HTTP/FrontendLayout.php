@@ -550,6 +550,114 @@ final class FrontendLayout
         return isset($session['auth']['user_id']);
     }
 
+    /**
+     * The reading surface shared by every long-form page the kernel composes:
+     * a prose column bounded by measure, beside a floating contents rail.
+     *
+     * Why it lives here rather than in a theme: the themes are a copy of
+     * `nativa-themes` and a hand edit there is drift the gate reports
+     * (`make themes-check`), while the surfaces that need the layout are the
+     * kernel's own (`/docs`) and a module's (`/blog/<slug>`). A rule five themes
+     * must each carry — and a sixth silently misses — belongs on the calling
+     * side, once.
+     *
+     * The rail is built from `MarkdownRenderer::extractHeadings()`, which
+     * returns the anchors the renderer itself generated, so a rail link can
+     * never point at an id the page does not carry.
+     *
+     * ONE RAIL, NEVER TWO. A theme whose article already composes a contents
+     * rail (Boson, Jednotka, Mono and Griffe all do) answers the reader's
+     * question itself; wrapping it again would render two. The check is the
+     * marker every rail carries — `aria-label="On this page"` — read off the
+     * composed HTML rather than guessed from the theme's name, so a theme that
+     * starts or stops composing one needs no change here.
+     *
+     * Fewer than two headings means no rail and the full measure: a one-entry
+     * table of contents is furniture, and it would narrow the prose to show a
+     * single link.
+     *
+     * The `<style>` block carries the CSP nonce placeholder, which
+     * `SecurityHeadersMiddleware` replaces on every HTML response, so a cached
+     * page keeps no stale nonce.
+     *
+     * @param list<array{level: int, text: string, anchor: string}> $headings
+     */
+    public static function readerLayout(string $content, array $headings): string
+    {
+        // One rail, never two — measured off the composed document.
+        if (str_contains($content, 'aria-label="On this page"')) {
+            return $content;
+        }
+
+        $rail = self::contentsRail($headings);
+
+        return self::readerLayoutStyle()
+            . '<div data-docs-reader' . ('' !== $rail ? ' data-has-rail' : '') . '>'
+            . '<div data-docs-prose>' . $content . '</div>'
+            . $rail
+            . '</div>';
+    }
+
+    /**
+     * The floating "On this page" rail, or an empty string when the document has
+     * fewer than two headings to list.
+     *
+     * @param list<array{level: int, text: string, anchor: string}> $headings
+     */
+    private static function contentsRail(array $headings): string
+    {
+        if (\count($headings) < 2) {
+            return '';
+        }
+
+        $items = '';
+
+        foreach ($headings as $heading) {
+            $items .= '<li data-docs-toc__item data-level="' . $heading['level'] . '">'
+                . '<a href="#' . self::e($heading['anchor']) . '">'
+                . self::e($heading['text'])
+                . '</a></li>';
+        }
+
+        return '<aside data-docs-toc aria-label="On this page">'
+            . '<p data-docs-toc__title>On this page</p>'
+            . '<ul>' . $items . '</ul>'
+            . '</aside>';
+    }
+
+    /**
+     * The rule set that travels with the markup. Keyed on `data-docs-*`
+     * attributes rather than a theme prefix, so every theme renders the same
+     * reader layout without a rule in its own stylesheet. 68ch is the
+     * long-standing comfortable measure for body copy; a paragraph at full width
+     * on a 1440 px display is ~180 characters and the reader loses the line on
+     * return. Code and tables opt out so a wide sample is not squashed.
+     */
+    private static function readerLayoutStyle(): string
+    {
+        return <<<'CSS'
+            <style nonce="__CSP_NONCE_PLACEHOLDER__">
+            [data-docs-reader]{display:grid;grid-template-columns:minmax(0,1fr);gap:2.5rem}
+            @media (min-width:1024px){
+              [data-docs-reader][data-has-rail]{grid-template-columns:minmax(0,68ch) minmax(12rem,16rem);justify-content:center;align-items:start}
+            }
+            [data-docs-prose]{max-width:68ch}
+            [data-docs-prose] p,[data-docs-prose] li,[data-docs-prose] blockquote{max-width:68ch}
+            [data-docs-prose] pre,[data-docs-prose] table{max-width:none}
+            [data-docs-toc]{font-size:.875rem;line-height:1.5}
+            @media (min-width:1024px){
+              [data-docs-toc]{position:sticky;top:1.5rem;max-height:calc(100vh - 3rem);overflow:auto;padding-left:1rem;border-left:1px solid rgba(128,128,128,.35)}
+            }
+            [data-docs-toc__title]{margin:0 0 .5rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;font-size:.75rem;opacity:.7}
+            [data-docs-toc] ul{margin:0;padding:0;list-style:none}
+            [data-docs-toc] li{margin:0 0 .35rem}
+            [data-docs-toc] li[data-level="3"]{padding-left:.85rem;opacity:.85}
+            [data-docs-toc] a{text-decoration:none;opacity:.8}
+            [data-docs-toc] a:hover,[data-docs-toc] a:focus-visible{opacity:1;text-decoration:underline}
+            </style>
+            CSS;
+    }
+
     public static function e(mixed $value): string
     {
         if (is_string($value)) {
