@@ -94,7 +94,8 @@ uncommitted edits — builds the artifact there, then asserts the smoke test
 passed, the artifact carries no `vendor/`, and `.build-info` agrees. A green
 local `dist/` that a clone cannot reproduce fails there.
 
-`dist/` carries no `vendor/`, no `Frontend/` sources, no dev configs and **one**
+`dist/` carries no `vendor/`, no `Frontend/` sources, no dev configs, no
+`fixtures/` (the theme-gallery inputs a build-time script reads) and **one**
 `Modules` tree — the installed copies, not a second copy of the catalogue
 (`--with-catalogue` ships that too, for a target that must install modules
 itself). It keeps `bin/cms`: that is the production tool for `migrate` and

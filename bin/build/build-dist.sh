@@ -85,6 +85,10 @@ APPLY_PROFILE=true
 #   ./dist             the output directory itself
 #   ./.git ./.github   history and CI are not deployable
 #   ./tests             the harness is not the application
+#   ./fixtures          the theme-gallery inputs, read by
+#                       `bin/build/render-theme-pages.php` — which is itself
+#                       excluded below, so nothing in the artifact reads them;
+#                       `public/demo/` keeps the images a deployment serves
 #   ./Frontend          theme SOURCES: the artifact ships built bundles only
 #   ./vendor            the kernel runtime has zero Composer packages — this is
 #                       the claim the smoke test below is about to check
@@ -116,6 +120,7 @@ EXCLUDES=(
     "./.git"
     "./.github"
     "./tests"
+    "./fixtures"
     "./Frontend"
     "./vendor"
     "./bin/build"
