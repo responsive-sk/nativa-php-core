@@ -135,6 +135,12 @@ final class NameOwnershipContractTest extends TestCase
         // would let the next theme edit move a ceiling that exists to measure
         // PRODUCTION spellings. Rule 1 still reads this file.
         'tests/Theme/ThemeClassOwnershipTest.php',
+        // The sticky-rail gate. It spells the two elements whose overflow it
+        // measures (`html`, `body`), the declaration it looks for and the value
+        // that breaks it — those spellings ARE the subject of the test, and
+        // counting them would let a CSS edit move a ceiling that exists to
+        // measure production spellings. Rule 1 still reads this file.
+        'tests/Theme/ThemeStickyRailTest.php',
         // The catalogue-shape gate. It must spell the group name and the four
         // theme names to measure where they live, and those spellings are the
         // SUBJECT of the test rather than duplication it failed to notice.
