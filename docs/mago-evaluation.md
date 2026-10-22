@@ -306,8 +306,10 @@ Delete, in one commit:
 - `mago.toml`
 - `bin/build/mago-spike.sh`
 - `tests/Architecture/MagoScopeContractTest.php`
-- the `mago-spike` and `mago-guard` targets and the `##@ Mago` block in `Makefile`
-- the `kernel-dependency` CI job and its entry in the workflow header
+- the `mago-spike`, `mago-guard` and `mago-lint` targets and the `##@ Mago`
+  block in `Makefile`
+- the `kernel-dependency` and `curated-lint` CI jobs and their entries in the
+  workflow header
 - this document
 - `storage/cache/mago-spike/` (gitignored, so `rm -rf` locally)
 
