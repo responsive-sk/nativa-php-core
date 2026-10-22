@@ -1,6 +1,6 @@
 {
-    "name": "nativa/nativa-php-core",
-    "description": "Nativa PHP Core — the kernel-only tree: Modules\\Core + Modules\\Database, one theme that needs no build, and a module catalog you can add to and remove from.",
+    "name": "responsive-sk/nativa-php-core",
+    "description": "responsive.sk Nativa PHP Core — the kernel-only tree: Modules\\Core + Modules\\Database, one theme that needs no build, and a module catalog you can add to and remove from.",
     "type": "project",
     "license": "MIT",
     "keywords": [
