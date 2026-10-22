@@ -184,23 +184,37 @@ final class ModuleCatalogueShapeTest extends TestCase
             $this->assertStringContainsString(self::GROUP, $refusal->getMessage());
         }
 
+        $addRefusal = '';
+
         try {
             ModuleInstaller::fromAppPaths()->add(self::GROUP);
-            $this->fail('`module:add Themes` was not refused.');
-        } catch (\RuntimeException) {
-            // The refusal is what matters; nothing may be copied.
+        } catch (\RuntimeException $refusal) {
+            $addRefusal = $refusal->getMessage();
         }
+
+        $this->assertNotSame(
+            '',
+            $addRefusal,
+            '`module:add Themes` must be refused — a group is not an installable module, and nothing may be copied.',
+        );
 
         // The group directory exists in src/Modules because its members live
         // there — that must not read as "the group is an installed module".
         $this->assertFalse($catalogue->isInstalled(self::GROUP));
 
+        $manifestRefusal = '';
+
         try {
             $catalogue->installedManifest(self::GROUP);
-            $this->fail('`installedManifest()` scanned the group as if it were a module.');
-        } catch (\RuntimeException) {
-            // Expected: a group has no manifest on either side.
+        } catch (\RuntimeException $refusal) {
+            $manifestRefusal = $refusal->getMessage();
         }
+
+        $this->assertNotSame(
+            '',
+            $manifestRefusal,
+            '`installedManifest()` must refuse a group name instead of scanning it as a module.',
+        );
 
         $this->assertDirectoryDoesNotExist(
             self::base() . '/src/Modules/' . self::GROUP . '/' . self::GROUP,

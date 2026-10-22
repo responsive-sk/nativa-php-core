@@ -65,8 +65,14 @@ if (!is_dir($_earlyLogDir)) {
     @mkdir($_earlyLogDir, 0o755, true);
 }
 if (is_dir($_earlyLogDir)) {
+    // This runs before any framework exists, and PHP offers no other way to say
+    // where a fatal before bootstrap is written: the three values are the
+    // bootstrap's own configuration, not a runtime override.
+    // @mago-expect lint:no-ini-set
     ini_set('log_errors', '1');
+    // @mago-expect lint:no-ini-set
     ini_set('error_log', $_earlyLogDir . '/php-error.log');
+    // @mago-expect lint:no-ini-set
     ini_set('display_errors', '0');
 }
 unset($_earlyLogDir);

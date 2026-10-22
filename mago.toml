@@ -114,17 +114,19 @@ prefer-first-class-callable = { enabled = false }
 prefer-static-closure = { enabled = false }
 single-class-per-file = { enabled = false }
 
-# Kept on purpose — correctness, security and readability, measured at 16
+# Kept on purpose — correctness, security and readability, measured at 8
 # findings together:
 #   no-insecure-comparison (4), no-literal-password (2), sensitive-parameter (1),
-#   no-unsafe-finally (1), no-empty-catch-clause (3), no-ini-set (5).
-# Two rules that used to be on this list have no findings left, because their 6
-# were fixed rather than triaged on 2026-10-22: explicit-octal (5 implicit
-# `0755`-style literals → `0o755`) and assert-description (1 `assert()` without
-# a message).
+#   no-unsafe-finally (1).
+# Four rules that used to be on this list have no findings left, because their
+# 14 were fixed rather than triaged on 2026-10-22: explicit-octal (5 implicit
+# `0755`-style literals → `0o755`), assert-description (1 `assert()` without a
+# message), no-empty-catch-clause (3 — the two test refusals are asserted now,
+# the WAL pragma logs its failure) and no-ini-set (5 bootstrap/`error_log` sites,
+# each carrying `@mago-expect lint:no-ini-set` and its reason).
 # They are NOT disabled even though most of their hits are reviewed and
 # intentional: a security rule silenced because this tree happens to trip it
-# would be the one suppression that matters. The triage of all 16 is in
+# would be the one suppression that matters. The triage of all 8 is in
 # docs/mago-evaluation.md.
 
 # -----------------------------------------------------------------------------

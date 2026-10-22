@@ -26,7 +26,7 @@ Measured 2026-10-22 with `mago 1.58.2` on PHP 8.5.11, over `mago.toml`'s scope
 | tool | measured on this tree | verdict |
 |---|---|---|
 | `mago analyze` | 189 errors / 96 warnings / 87 help in ~0,19 s | **not a replacement** — 2 real findings, the rest is config and inference |
-| `mago lint` | 570 findings at the default preset, **16** with the curated rule set | **not a gate** — 16 triaged, the 6 worth acting on were fixed 2026-10-22 |
+| `mago lint` | 570 findings at the default preset, **8** with the curated rule set | **not a gate** — 8 triaged; 14 of the original 22 were fixed 2026-10-22 |
 | `mago format` | 124 of 124 files would change (~0,03 s) | **not a replacement** — house rules it cannot express |
 | `mago guard` | 0 issues after the `SecurityEventSink` refactor; catches a planted kernel→module import | **gate** — CI job `kernel-dependency`, empty report is the claim |
 
@@ -106,17 +106,26 @@ checked), 36 are `cyclomatic-complexity` at threshold 15.
 
 `mago.toml` therefore disables 18 rules — each with its measured count and
 reason in the file — and keeps correctness, security and readability rules on.
-Result: **16 findings**, all triaged. The two rules that were real and small were
-fixed rather than triaged on 2026-10-22, taking the count from 22: `explicit-octal`
-(5 implicit `0755`/`0775`/`0002` literals → `0o755`/`0o775`/`0o002`) and
-`assert-description` (the one `assert()` in `DatabaseMigrator` now carries the
-reason it cannot fire — the `RuntimeException` above it already refuses the same
-class).
+Result: **8 findings**, all triaged. Fourteen of the original 22 were resolved
+rather than triaged on 2026-10-22:
+
+- `explicit-octal` (5): implicit `0755`/`0775`/`0002` literals now say
+  `0o755`/`0o775`/`0o002` — in the kernel, `config/session.php` and the
+  `Blog`/`Pages` slices, so the whole tree spells a mode one way;
+- `assert-description` (1): the `assert()` in `DatabaseMigrator` carries the
+  reason it cannot fire — the `RuntimeException` above it already refuses the
+  same class;
+- `no-empty-catch-clause` (3): the two in `ModuleCatalogueShapeTest` capture the
+  refusal and assert on it instead of swallowing it, and
+  `DatabaseConnectionManager`'s WAL pragma logs the failure it used to hide;
+- `no-ini-set` (5): `src/http.php`'s three bootstrap values and the two
+  `error_log` probes in `AuthProviderRegistryTest` configure PHP before any
+  framework exists, so each site carries `@mago-expect lint:no-ini-set` with the
+  reason. The rule stays on, and `@mago-expect` turns into an
+  `unfulfilled-expect` warning if the site ever goes away.
 
 | finding | count | judgement |
 |---|---|---|
-| `no-ini-set` in `src/http.php` bootstrap | 5 | intentional |
-| `no-empty-catch-clause` (documented best-effort) | 3 | intentional |
 | `no-insecure-comparison` on a PHP-tokenizer `$token` | 4 | false positive (name heuristic, not a secret) |
 | `no-literal-password` on the test's `TOKEN` constant | 2 | false positive (fixture) |
 | `sensitive-parameter` on the CSRF `$token` | 1 | debatable, not a defect |
@@ -246,7 +255,7 @@ thing this whole section is about.
   bootstrap mechanism, or a reviewed ignore list — today none of the three
   exists in this repo.
 - **Linter:** the curated `[linter.rules]` block is the cost, and it is already
-  written; the remaining 16 findings need a decision each.
+  written; the remaining 8 findings need a decision each.
 - **Formatter:** the cost is every file in scope plus the rules in the table
   above.
 - **Guard:** paid in this change — 8 pre-existing errors removed by a kernel

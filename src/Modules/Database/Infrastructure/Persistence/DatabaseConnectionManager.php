@@ -113,11 +113,17 @@ final class DatabaseConnectionManager
         $pdo->exec('PRAGMA busy_timeout = 5000');
         $pdo->exec('PRAGMA foreign_keys = ON');
 
-        // WAL improves concurrent read/write behaviour under FPM workers.
+        // WAL improves concurrent read/write behaviour under FPM workers. It is
+        // best-effort: a read-only or network filesystem refuses it and the
+        // connection still works, so the refusal is logged rather than raised.
         try {
             $pdo->exec('PRAGMA journal_mode = WAL');
-        } catch (\PDOException) {
-            // Journal mode is best-effort (e.g. read-only filesystems).
+        } catch (\PDOException $refusal) {
+            error_log(sprintf(
+                '[db] %s: journal_mode WAL unavailable (%s), continuing without it',
+                $name,
+                $refusal->getMessage(),
+            ));
         }
 
         return $pdo;
