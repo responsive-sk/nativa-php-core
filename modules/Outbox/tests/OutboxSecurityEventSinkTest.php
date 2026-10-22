@@ -40,6 +40,9 @@ final class OutboxSecurityEventSinkTest extends TestCase
 
     private ?string $previousDbOutbox = null;
 
+    /** Set only once `setUp()` got past the install check; `tearDown()` still runs for a skipped test. */
+    private bool $ready = false;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -62,10 +65,21 @@ final class OutboxSecurityEventSinkTest extends TestCase
             }
         };
         (new OutboxDatabaseMigrator($this->pdo()))->run($null);
+
+        $this->ready = true;
     }
 
     protected function tearDown(): void
     {
+        // PHPUnit calls this even when `setUp()` skipped on a kernel-only tree,
+        // where the module's classes are not on disk at all — hence the flag
+        // rather than the install check again.
+        if (!$this->ready) {
+            parent::tearDown();
+
+            return;
+        }
+
         $this->restoreEnv('DB_OUTBOX', $this->previousDbOutbox);
 
         OutboxServices::reset();
