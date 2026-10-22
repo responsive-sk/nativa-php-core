@@ -42,6 +42,29 @@ bin/build/mago-spike.sh --only=analyze
 Reports land in `storage/cache/mago-spike/` (gitignored): `<tool>.txt` and
 `summary.tsv`.
 
+## Mago and Lekalo are different layers
+
+The obvious question after the verdict is whether this replaces Lekalo. It does
+not, and the two are not even reading the same thing: Lekalo reads a YAML MODEL
+of the system, Mago reads the PHP SOURCE that implements it. The table is the
+short version; the Lekalo side is documented in `docs/modules.md`.
+
+| | Lekalo | Mago |
+|---|---|---|
+| what it is | a semantic model OF the system, written in `lekalo/` and locked by `lekalo.lock` | a PHP toolchain OVER the source: linter, analyzer, formatter, architectural guard |
+| reads | entities, commands, effects, queries, events, policies, endpoints, scenarios | the PHP files in `mago.toml`'s scope (the same paths as `phpstan.neon`) |
+| answers | "is the model well-formed and self-consistent?" — every `ref` resolves, grammar holds, ids are unique, CLI contract versions match | "what does the code do that a written rule forbids?" — kernel→module edges, 570 lint findings at the default preset, formatting |
+| blind spot | the model↔code gap: `lekalo.lock` reports `adapters 0`, no PHP adapter, so a stale or even FALSE description still validates | intent: a name heuristic cannot tell a CSRF fixture from a password — 2 curated `@mago-expect` sites, reviewed |
+| the gate here | `make lekalo-check` = lock check + whole model + every module separately; CI job `Lint + PHPStan + Lekalo model` | `make mago-guard` (empty report) and `make mago-lint` (zero findings); CI jobs `kernel-dependency` and `curated-lint` |
+| pin | CLI `v0.6.5`, sha256-verified archive | `mago 1.58.2`, sha256-verified archive |
+| what closes its gap | PHPUnit contract tests: `ModelPayloadContractTest`, `ModelReferenceContractTest`, `SecurityEventPayloadContractTest` | `KernelCouplingTest` states the same perimeter rule in PHP, and the count gates refuse the next finding |
+| in `dist/` | `lekalo/` and `lekalo.lock` are excluded (model of the build, not the build) | `mago.toml` is excluded (how the tree is checked, not how it runs) |
+
+Neither is a check on the other: a model can validate while the code drifts away
+from it, and the code can pass every rule while the model describes a system
+that does not exist. The contract tests in the last row are what bind the two,
+and they are PHPUnit tests rather than either tool's feature.
+
 ## How the binary is pinned
 
 `bin/build/mago-spike.sh` downloads `mago-1.58.2-x86_64-unknown-linux-gnu.tar.gz`,

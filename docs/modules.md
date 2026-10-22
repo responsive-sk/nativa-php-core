@@ -230,7 +230,9 @@ no longer exists — the same stale-bytecode lesson
 queries, events, policies, endpoints and scenarios, described in Lekalo's
 grammar. It is the one place where the shape of the system is written down as
 data rather than as prose, and it is worth knowing exactly how much standing it
-has, because the gate in front of it is easy to over-read.
+has, because the gate in front of it is easy to over-read. Mago is a different
+layer — it reads the PHP source, not this model — and the side-by-side table is
+in `docs/mago-evaluation.md`.
 
 | | |
 |---|---|
