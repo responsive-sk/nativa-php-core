@@ -91,18 +91,34 @@ final class ReaderLayoutTest extends TestCase
     }
 
     /**
-     * Code and tables opt out of the measure: a wide sample squashed to 68
-     * characters wraps mid-token and stops being copyable.
+     * Code and tables opt out of the measure — a sample squashed to 68
+     * characters wraps mid-token and stops being copyable — but they do it
+     * inside the column, never over the rail.
+     *
+     * Measured on `/docs/themes` at 1440px before this rule existed: the theme's
+     * `.bo-page` (90vw) and its table were 1296px wide inside a 729px column,
+     * ending 527px into the rail. `max-width:none` is what allowed it, and a
+     * wide table needs a scroll box rather than a wider line.
      */
     #[Test]
-    public function codeAndTablesKeepTheFullWidth(): void
+    public function codeAndTablesScrollInsideTheColumnInsteadOfOverTheRail(): void
     {
         $html = FrontendLayout::readerLayout('<article>body</article>', self::headings(2));
 
         self::assertStringContainsString(
-            '[data-docs-prose] pre,[data-docs-prose] table{max-width:none}',
+            '[data-docs-prose] pre,[data-docs-prose] table{max-width:100%}',
             $html,
-            'A sample or a table is bounded by the prose measure — it would wrap mid-token.',
+            'A sample or a table is wider than the column — it would run under the rail.',
+        );
+        self::assertStringContainsString(
+            '[data-docs-prose]>*{max-width:100%}',
+            $html,
+            'A theme section that sets its own width (Boson\'s `.bo-page` is 90vw) is not contained by the column.',
+        );
+        self::assertStringContainsString(
+            '[data-docs-prose] table{display:block;overflow-x:auto}',
+            $html,
+            'A table too wide for the column has no scroll box: it would overlap the rail instead.',
         );
     }
 

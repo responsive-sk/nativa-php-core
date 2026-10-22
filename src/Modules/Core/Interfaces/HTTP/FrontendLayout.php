@@ -631,7 +631,12 @@ final class FrontendLayout
      * reader layout without a rule in its own stylesheet. 68ch is the
      * long-standing comfortable measure for body copy; a paragraph at full width
      * on a 1440 px display is ~180 characters and the reader loses the line on
-     * return. Code and tables opt out so a wide sample is not squashed.
+     * return. Code and tables opt out of the measure — a sample squashed to 68
+     * characters wraps mid-token — but they opt out INSIDE the column, not
+     * outside it: a table wide enough to need more room scrolls in its own box
+     * instead of running under the rail. That distinction is measured, not
+     * theoretical: `/docs/themes` put a theme's `.bo-page` (90vw) and its table
+     * 527px into the rail column before `[data-docs-prose] > *` was bounded.
      */
     private static function readerLayoutStyle(): string
     {
@@ -641,9 +646,12 @@ final class FrontendLayout
             @media (min-width:1024px){
               [data-docs-reader][data-has-rail]{grid-template-columns:minmax(0,68ch) minmax(12rem,16rem);justify-content:center;align-items:start}
             }
-            [data-docs-prose]{max-width:68ch}
+            [data-docs-prose]{max-width:68ch;min-width:0}
             [data-docs-prose] p,[data-docs-prose] li,[data-docs-prose] blockquote{max-width:68ch}
-            [data-docs-prose] pre,[data-docs-prose] table{max-width:none}
+            [data-docs-prose]>*{max-width:100%}
+            [data-docs-prose] pre,[data-docs-prose] table{max-width:100%}
+            [data-docs-prose] pre{overflow-x:auto}
+            [data-docs-prose] table{display:block;overflow-x:auto}
             [data-docs-toc]{font-size:.875rem;line-height:1.5}
             @media (min-width:1024px){
               [data-docs-toc]{position:sticky;top:1.5rem;max-height:calc(100vh - 3rem);overflow:auto;padding-left:1rem;border-left:1px solid rgba(128,128,128,.35)}
