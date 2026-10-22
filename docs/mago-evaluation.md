@@ -211,6 +211,29 @@ Gate behaviour after the refactor — planted `use Modules\Blog\…` in
 reverted → exit 0 with `issues=0`, no `baselined=` field, because no baseline
 exists to filter anything.
 
+### A baseline that comes back cannot rot
+
+An empty report is the claim today, but the gate also has to handle the day
+someone re-introduces a ledger: an entry that no longer matches an issue is a
+fixed problem the baseline still declares open, and mago only WARNS about that.
+So `bin/build/mago-spike.sh` resolves the baseline path — `baseline = "…"` in
+`mago.toml`, else the default `guard-baseline.toml` — and when the file exists
+passes `--baseline <path>` plus `--fail-on-out-of-sync-baseline`. The explicit
+path is load-bearing: mago does not pick the default file up by itself.
+
+Measured 2026-10-22 on a ledger holding one already-fixed `Modules\Outbox`
+reach (the exact shape the baseline used to carry):
+
+| invocation | exit | output |
+|---|---|---|
+| `guard` with the file in place, no flags | 0 | `No issues found.` |
+| `guard --fail-on-out-of-sync-baseline`, no `--baseline` | 0 | warns `no baseline path was specified` |
+| `guard --baseline guard-baseline.toml --fail-on-out-of-sync-baseline` | 1 | `contains 1 entry for issues that no longer exist` |
+
+With no baseline the flags are not passed at all — mago warns twice about a
+missing path for a flag it cannot apply, and a gate log nobody reads is the
+thing this whole section is about.
+
 ## Adoption cost
 
 - **Binary:** pin in CI the way `lekalo` is pinned (release tag + `sha256`, no

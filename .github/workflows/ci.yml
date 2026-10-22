@@ -212,7 +212,10 @@ jobs:
   # `class_exists()`, invisible to `KernelCouplingTest`) were removed at the
   # source — the kernel raises its security events through its own
   # `SecurityEventSink` port, the Outbox module implements it, and the
-  # composition root wires it. An empty report is the claim.
+  # composition root wires it. An empty report is the claim. Should a baseline be
+  # re-introduced, `bin/build/mago-spike.sh` passes `--baseline` plus
+  # `--fail-on-out-of-sync-baseline`, so an entry nobody can match any more fails
+  # this job instead of lingering in the ledger.
   #
   # Measured 2026-10-22: with the port in place the gate reports 0 issues; before
   # it, planting `use Modules\Blog\…` in `AuthProviderRegistry.php` turned the

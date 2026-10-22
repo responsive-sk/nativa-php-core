@@ -193,6 +193,24 @@ run_tool() {
     fi
 }
 
+# The baseline path mago would use: the one `mago.toml` configures, else the
+# default file beside it. Resolved rather than hard-coded so a renamed ledger is
+# still checked instead of silently skipped.
+guard_baseline_path() {
+    local configured
+    configured="$(sed -n 's/^[[:space:]]*baseline[[:space:]]*=[[:space:]]*"\(.*\)"[[:space:]]*$/\1/p' "$CONFIG" | head -1)"
+
+    if [ -z "$configured" ]; then
+        echo "$ROOT/guard-baseline.toml"
+        return
+    fi
+
+    case "$configured" in
+        /*) echo "$configured" ;;
+        *) echo "$ROOT/$configured" ;;
+    esac
+}
+
 mkdir -p "$OUT"
 : > "$SUMMARY"
 
@@ -205,7 +223,27 @@ fi
 if [ -z "$ONLY" ] || [ "$ONLY" = "analyze" ]; then run_tool analyze; fi
 if [ -z "$ONLY" ] || [ "$ONLY" = "lint" ]; then run_tool lint; fi
 if [ -z "$ONLY" ] || [ "$ONLY" = "format" ]; then run_tool format --dry-run; fi
-if [ -z "$ONLY" ] || [ "$ONLY" = "guard" ]; then run_tool guard; fi
+# Stale-baseline step. A baseline entry that no longer matches an issue is a
+# fixed problem the ledger still declares open, and mago only WARNS about it —
+# exit stays 0, so a gate that only checks "no new issues" would keep the stale
+# entry forever. `--fail-on-out-of-sync-baseline` turns that warning into a
+# failure. It is passed only when a baseline exists: with none, mago prints two
+# warnings about a missing path for nothing. Today this tree has no baseline, so
+# this costs nothing until someone adds one back.
+if [ -z "$ONLY" ] || [ "$ONLY" = "guard" ]; then
+    GUARD_BASELINE="$(guard_baseline_path)"
+
+    if [ -f "$GUARD_BASELINE" ]; then
+        # `--baseline` is explicit because mago does not pick the default file up
+        # on its own, and `--fail-on-out-of-sync-baseline` does nothing without
+        # it — measured 2026-10-22: with only the flag, a stale entry exited 0
+        # and mago warned "no baseline path was specified".
+        echo "INFO [mago-spike] guard baseline ${GUARD_BASELINE#"$ROOT"/} is in play — stale entries fail the gate"
+        run_tool guard --baseline "$GUARD_BASELINE" --fail-on-out-of-sync-baseline
+    else
+        run_tool guard
+    fi
+fi
 
 echo "INFO [mago-spike] reports in ${OUT#"$ROOT"/} (informational — see docs/mago-evaluation.md)"
 
