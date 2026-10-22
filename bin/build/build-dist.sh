@@ -89,10 +89,13 @@ APPLY_PROFILE=true
 #   ./vendor            the kernel runtime has zero Composer packages — this is
 #                       the claim the smoke test below is about to check
 #   ./bin/build         the tools that BUILT this artifact, including itself
-#   dev tool configs    phpstan/phpunit/rector/cs-fixer/Makefile/composer.* say
-#                       how to develop here, and shipping them invites someone
-#                       on the server to run `composer install` against a tree
-#                       that does not need it
+#   dev tool configs    phpstan/phpunit/rector/cs-fixer/mago/Makefile/composer.*
+#                       say how to develop and CHECK here, and shipping them
+#                       invites someone on the server to run `composer install`
+#                       against a tree that does not need it. `mago.toml` is in
+#                       that list for the same reason: nothing outside the dev
+#                       tooling reads it, and the artifact ships how the tree
+#                       RUNS, not how it is measured.
 #   .env and friends    local secrets. NOTE: `.env.*` also matches the
 #                       `.env.example` this artifact DOES need — it arrives via
 #                       the explicit copy below, not through this tar pass.
@@ -129,6 +132,7 @@ EXCLUDES=(
     "./.gitignore"
     "./.php-cs-fixer.cache"
     "./.php-cs-fixer.dist.php"
+    "./mago.toml"
     "./.phpunit.result.cache"
     "./.rector.cache"
     "./Makefile"

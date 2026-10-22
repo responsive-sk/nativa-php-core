@@ -303,7 +303,8 @@ thing this whole section is about.
 
 Delete, in one commit:
 
-- `mago.toml`
+- `mago.toml` — the artifact already excludes it, so nothing a deployment runs
+  depends on it
 - `bin/build/mago-spike.sh`
 - `tests/Architecture/MagoScopeContractTest.php`
 - the `mago-spike`, `mago-guard` and `mago-lint` targets and the `##@ Mago`
