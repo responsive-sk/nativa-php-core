@@ -84,7 +84,10 @@
 #                         asserts the build's own HTTP smoke test, the absent
 #                         vendor/ and the .build-info claim. A green local `dist/`
 #                         that a fresh clone cannot reproduce is the failure this
-#                         job exists for.
+#                         job exists for. The same job runs
+#                         `make dist-profile-test`: kernel-only and `--no-profile`
+#                         must skip the profile, and a broken one with Settings
+#                         installed must fail the build.
 # =============================================================================
 
 name: CI
@@ -872,6 +875,12 @@ jobs:
 
       - name: Build and smoke the artifact from a clean clone
         run: make dist-check
+
+      # The three profile branches: kernel-only → skip, `--no-profile` → skip, and
+      # Settings installed + a broken profile → the build MUST fail. All three
+      # clone HEAD on their own, so this step borrows nothing from the checkout.
+      - name: The three deployment-profile branches
+        run: make dist-profile-test
 
   # ---------------------------------------------------------------------------
   # THEMES-CHECK — the catalogue is the theme repository's copy, and it runs

@@ -92,7 +92,10 @@ make dist-check                # same build, but from a clean clone of HEAD
 tracked bytes only, no `vendor/`, no locally installed module slices, no
 uncommitted edits — builds the artifact there, then asserts the smoke test
 passed, the artifact carries no `vendor/`, and `.build-info` agrees. A green
-local `dist/` that a clone cannot reproduce fails there.
+local `dist/` that a clone cannot reproduce fails there. `make dist-profile-test`
+covers the three identity branches — Settings absent, `--no-profile`, and a
+profile that is wrong while Settings IS installed (that one must fail the
+build) — each in its own clone, with no HTTP smoke run.
 
 `dist/` carries no `vendor/`, no `Frontend/` sources, no dev configs, no
 `fixtures/` (the theme-gallery inputs a build-time script reads) and **one**

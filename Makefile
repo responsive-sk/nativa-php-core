@@ -17,7 +17,7 @@ LEKALO_MODULES ?= users,blog
 
 ##@ Help
 help: ## Show available targets
-	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 ##@ Setup
 install: ## Install PHP dev dependencies (the kernel runtime itself has none)
@@ -102,6 +102,11 @@ admin-smoke: ## Boot the panel with temp DBs and walk the admin flows over HTTP
 # edits. CI runs exactly this target.
 dist-check: ## Gate: build dist from a clean clone (no vendor/) and smoke it
 	@bin/build/dist-check.sh
+
+# The profile branches all end in a GREEN build except the broken one, which is
+# why each of them needs its own assertion rather than a single happy-path run.
+dist-profile-test: ## Gate: the three deployment-profile branches (skip / skip / fail)
+	@bin/build/dist-profile-test.sh
 
 ##@ Assets
 assets: ## Build the theme bundles in-tree (pnpm workspace under Frontend/packages)
