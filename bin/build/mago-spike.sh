@@ -28,6 +28,9 @@
 #   bin/build/mago-spike.sh                # all four tools, always exit 0
 #   bin/build/mago-spike.sh --strict       # exit non-zero when a tool does
 #   bin/build/mago-spike.sh --only=analyze # one tool: analyze|lint|format|guard
+#   bin/build/mago-spike.sh --only=lint --max-issues=6
+#                                          # ceiling gate: the finding count may
+#                                          # not rise above 6
 #
 # Reports: storage/cache/mago-spike/<tool>.txt, summary.tsv
 # Rationale and measurements: docs/mago-evaluation.md
@@ -50,17 +53,19 @@ MAGO_ARCHIVE_SHA256="80b6e6ed3cd2fe2da348f9cd83d23e638f2ccd44988d48bebd766c20ccd
 
 STRICT=0
 ONLY=""
+MAX_ISSUES=""
 
 for arg in "$@"; do
     case "$arg" in
         --strict) STRICT=1 ;;
         --only=*) ONLY="${arg#--only=}" ;;
+        --max-issues=*) MAX_ISSUES="${arg#--max-issues=}" ;;
         -h|--help)
-            sed -n '3,30p' "$0" | sed 's/^# \{0,1\}//'
+            sed -n '3,37p' "$0" | sed 's/^# \{0,1\}//'
             exit 0
             ;;
         *)
-            echo "usage: bin/build/mago-spike.sh [--strict] [--only=analyze|lint|format|guard]" >&2
+            echo "usage: bin/build/mago-spike.sh [--strict] [--only=analyze|lint|format|guard] [--max-issues=N]" >&2
             exit 2
             ;;
     esac
@@ -73,6 +78,11 @@ case "$ONLY" in
         exit 2
         ;;
 esac
+
+if [ -n "$MAX_ISSUES" ] && ! [ "$MAX_ISSUES" -ge 0 ] 2>/dev/null; then
+    echo "mago-spike: --max-issues expects an integer, got '$MAX_ISSUES'" >&2
+    exit 2
+fi
 
 sha256_of() {
     if command -v sha256sum >/dev/null 2>&1; then
@@ -159,6 +169,7 @@ issue_count() {
 }
 
 FAILED=0
+CEILING_FAILED=0
 run_tool() {
     local tool="$1"
     shift
@@ -190,6 +201,14 @@ run_tool() {
     fi
     if [ "$exit_code" -ne 0 ] && [ "$STRICT" -eq 1 ]; then
         FAILED=1
+    fi
+
+    # A ceiling, not a verdict on the remaining findings: the tool exits 1
+    # whenever it reports anything, so counting is what keeps a reviewed set of
+    # findings from growing without a decision.
+    if [ -n "$MAX_ISSUES" ] && [ "$issues" -gt "$MAX_ISSUES" ]; then
+        echo "FAIL [mago-spike] tool=${tool} reported ${issues} findings; the ceiling is ${MAX_ISSUES}" >&2
+        CEILING_FAILED=1
     fi
 }
 
@@ -246,6 +265,10 @@ if [ -z "$ONLY" ] || [ "$ONLY" = "guard" ]; then
 fi
 
 echo "INFO [mago-spike] reports in ${OUT#"$ROOT"/} (informational — see docs/mago-evaluation.md)"
+
+if [ "$CEILING_FAILED" -eq 1 ]; then
+    exit 1
+fi
 
 if [ "$STRICT" -eq 1 ] && [ "$FAILED" -eq 1 ]; then
     exit 1

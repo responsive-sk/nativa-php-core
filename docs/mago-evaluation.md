@@ -26,7 +26,7 @@ Measured 2026-10-22 with `mago 1.58.2` on PHP 8.5.11, over `mago.toml`'s scope
 | tool | measured on this tree | verdict |
 |---|---|---|
 | `mago analyze` | 189 errors / 96 warnings / 87 help in ~0,19 s | **not a replacement** — 2 real findings, the rest is config and inference |
-| `mago lint` | 570 findings at the default preset, **8** with the curated rule set | **not a gate** — 8 triaged; 14 of the original 22 were fixed 2026-10-22 |
+| `mago lint` | 570 findings at the default preset, **6** with the curated rule set | **count gate** — `make mago-lint` fails above 6; the 6 left are two false-positive classes |
 | `mago format` | 124 of 124 files would change (~0,03 s) | **not a replacement** — house rules it cannot express |
 | `mago guard` | 0 issues after the `SecurityEventSink` refactor; catches a planted kernel→module import | **gate** — CI job `kernel-dependency`, empty report is the claim |
 
@@ -106,7 +106,7 @@ checked), 36 are `cyclomatic-complexity` at threshold 15.
 
 `mago.toml` therefore disables 18 rules — each with its measured count and
 reason in the file — and keeps correctness, security and readability rules on.
-Result: **8 findings**, all triaged. Fourteen of the original 22 were resolved
+Result: **6 findings**, all triaged. Sixteen of the original 22 were resolved
 rather than triaged on 2026-10-22:
 
 - `explicit-octal` (5): implicit `0755`/`0775`/`0002` literals now say
@@ -122,18 +122,33 @@ rather than triaged on 2026-10-22:
   `error_log` probes in `AuthProviderRegistryTest` configure PHP before any
   framework exists, so each site carries `@mago-expect lint:no-ini-set` with the
   reason. The rule stays on, and `@mago-expect` turns into an
-  `unfulfilled-expect` warning if the site ever goes away.
+  `unfulfilled-expect` warning if the site ever goes away;
+- `sensitive-parameter` (1): `CsrfMiddleware::verify()`'s `$token` now carries
+  `#[\SensitiveParameter]`, so a stack trace from `hash_equals()` cannot print
+  it — the finding was a real gap, not a false positive;
+- `no-unsafe-finally` (1): `DiscoveryCacheTest` recorded the cleanup failure and
+  rethrows it after the `finally`, so a throw there can no longer replace the
+  assertion it was cleaning up after.
 
 | finding | count | judgement |
 |---|---|---|
 | `no-insecure-comparison` on a PHP-tokenizer `$token` | 4 | false positive (name heuristic, not a secret) |
 | `no-literal-password` on the test's `TOKEN` constant | 2 | false positive (fixture) |
-| `sensitive-parameter` on the CSRF `$token` | 1 | debatable, not a defect |
-| `no-unsafe-finally` in a test | 1 | in a test, reviewed |
 
 The security rules were deliberately **not** switched off to make the count look
 better: a security rule silenced because this tree happens to trip it is the one
-suppression that matters.
+suppression that matters. What stayed is a ceiling on the count, below.
+
+### The count is what CI gates, not the verdict
+
+`mago lint` exits 1 while any finding remains, so it cannot be a pass/fail gate
+on this tree without silencing rules the section above refuses to silence. The
+count can: `make mago-lint` runs the linter with `--max-issues=6`, and the CI
+job `curated-lint` runs exactly that target, on the same binary, checksum and
+cache key as the guard job and with no `vendor/`. A 7th finding means a rule
+fired on code nobody has triaged and fails the job; fixing one of the two
+remaining false-positive classes means lowering the ceiling in the same commit,
+which is the only direction it moves.
 
 ## Formatter
 
@@ -255,7 +270,8 @@ thing this whole section is about.
   bootstrap mechanism, or a reviewed ignore list — today none of the three
   exists in this repo.
 - **Linter:** the curated `[linter.rules]` block is the cost, and it is already
-  written; the remaining 8 findings need a decision each.
+  written; the 6 that remain are false positives, and the ceiling keeps them
+  from being joined silently.
 - **Formatter:** the cost is every file in scope plus the rules in the table
   above.
 - **Guard:** paid in this change — 8 pre-existing errors removed by a kernel

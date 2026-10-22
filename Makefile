@@ -57,6 +57,13 @@ mago-spike: ## Informational: run mago lint/analyze/format/guard over the phpsta
 mago-guard: ## Gate: the kernel→module dependency rule
 	@bin/build/mago-spike.sh --only=guard --strict
 
+# The count, not the verdict: the linter always exits 1 while anything is left,
+# so the ceiling is what makes a reviewed set stay reviewed. 22 findings were
+# triaged on 2026-10-22, 16 fixed, and the 6 that remain are documented false
+# positives — a 7th is a decision nobody has written down yet.
+mago-lint: ## Gate: curated lint findings may not exceed 6
+	@bin/build/mago-spike.sh --only=lint --max-issues=6
+
 ##@ Measurement
 # Informational by design: it reports whatever is true and exits 0. The gate on
 # kernel shape is `tests/Architecture/KernelShapeTest` (the concrete allow-list) —

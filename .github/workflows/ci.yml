@@ -72,6 +72,11 @@
 #                         inline FQCNs, and those were removed by giving the
 #                         kernel a `SecurityEventSink` port instead of listing
 #                         them. Evidence in docs/mago-evaluation.md.
+#  11. Curated lint      — `mago lint` under the curated rule set, counted. The
+#                         linter exits 1 while anything is left, so the gate is
+#                         a CEILING: 6 findings, all documented false positives
+#                         of two security rules. A 7th fails the job instead of
+#                         quietly outgrowing the number in the document.
 # =============================================================================
 
 name: CI
@@ -240,6 +245,38 @@ jobs:
 
       - name: Guard gate
         run: make mago-guard
+
+  # ---------------------------------------------------------------------------
+  # CURATED LINT — the count of `mago lint` findings, as a ceiling
+  # ---------------------------------------------------------------------------
+  # `mago lint` is not a verdict gate: it exits 1 while any finding remains, and
+  # 6 of them are false positives this tree has decided to live with (the two
+  # security rules that misfire on a CSRF token and a tokenizer `$token`). What
+  # CAN be a gate is the count — 22 triaged on 2026-10-22, 16 fixed, 6 left —
+  # because a 7th finding means a rule fired on new code without anyone
+  # deciding what it means. `--max-issues=6` turns that into exit 1.
+  #
+  # Same binary, same checksum, same cache key as the guard job above: no PHP
+  # setup and no `composer install`, so the count is measured on the checkout a
+  # deployment would get.
+  # ---------------------------------------------------------------------------
+  curated-lint:
+    name: Curated lint count (mago lint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Cache mago
+        uses: actions/cache@v5
+        with:
+          path: storage/cache/mago-spike
+          key: mago-1.58.2-x86_64-unknown-linux-gnu
+
+      - name: Lint ceiling
+        run: make mago-lint
 
   # ---------------------------------------------------------------------------
   # CODE STYLE — php-cs-fixer + Rector dry-runs
