@@ -100,7 +100,7 @@ if ($isDebug) {
     ini_set('display_startup_errors', '0');
     ini_set('log_errors', '1');
     $logDir = dirname(__DIR__) . '/storage/logs';
-    if (is_dir($logDir) || mkdir($logDir, 0755, true)) {
+    if (is_dir($logDir) || mkdir($logDir, 0o755, true)) {
         ini_set('error_log', $logDir . '/php-error.log');
     }
     error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);

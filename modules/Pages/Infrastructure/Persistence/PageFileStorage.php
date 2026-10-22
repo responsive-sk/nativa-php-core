@@ -115,7 +115,7 @@ final readonly class PageFileStorage
         $dir = dirname($file);
 
         if (!is_dir($dir)) {
-            @mkdir($dir, 0775, true);
+            @mkdir($dir, 0o775, true);
         }
 
         file_put_contents($file, $content);
