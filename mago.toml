@@ -60,7 +60,7 @@ minimum-fail-level = "error"
 # -----------------------------------------------------------------------------
 # Curated rule set — correctness kept, taste and convention switched off.
 #
-# Default preset measured 566 findings on this tree (163 error / 327 warning /
+# Default preset measured 570 findings on this tree (164 error / 330 warning /
 # 76 help). Most of that is either a style opinion `php-cs-fixer` already owns,
 # or a rule that argues against a convention this codebase holds on purpose.
 # Every disabled rule carries its reason; nothing is off "because the number was
@@ -68,7 +68,7 @@ minimum-fail-level = "error"
 # -----------------------------------------------------------------------------
 
 [linter.rules]
-# 238 findings, all of them "pass this literal as a named argument". Call style
+# 241 findings, all of them "pass this literal as a named argument". Call style
 # is `.php-cs-fixer.dist.php`'s job, and adding names at ~240 call sites is a
 # refactor nobody asked for.
 literal-named-argument = { enabled = false }
@@ -78,7 +78,7 @@ literal-named-argument = { enabled = false }
 # already checked. The rule is not wrong in general; it is wrong here.
 no-error-control-operator = { enabled = false }
 
-# 35 findings at the default threshold of 15. Complexity is a review
+# 36 findings at the default threshold of 15. Complexity is a review
 # conversation, not a gate: the two longest methods here (Router::dispatch,
 # MarkdownRenderer) are long for reasons their docblocks state.
 cyclomatic-complexity = { enabled = false }

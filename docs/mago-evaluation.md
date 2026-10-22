@@ -23,7 +23,7 @@ Measured 2026-10-22 with `mago 1.58.2` on PHP 8.5.11, over `mago.toml`'s scope
 | tool | measured on this tree | verdict |
 |---|---|---|
 | `mago analyze` | 189 errors / 96 warnings / 87 help in ~0,19 s | **not a replacement** — 2 real findings, the rest is config and inference |
-| `mago lint` | 566 findings at the default preset, **22** with the curated rule set | **not a gate** — 22 triaged, 6 worth acting on over time |
+| `mago lint` | 570 findings at the default preset, **22** with the curated rule set | **not a gate** — 22 triaged, 6 worth acting on over time |
 | `mago format` | 124 of 124 files would change (~0,03 s) | **not a replacement** — house rules it cannot express |
 | `mago guard` | 8 errors today, all pre-existing `Modules\Outbox` edges; catches a planted kernel→module import | **candidate** — the only strict addition to the current gates |
 
@@ -94,11 +94,11 @@ grows hides the next finding.
 
 ## Linter
 
-The default preset reports **566** findings and is not usable as-is: 238 of them
+The default preset reports **570** findings and is not usable as-is: 241 of them
 are `literal-named-argument` (pass literals as named arguments — a call-style
 refactor of ~240 sites), 51 are `no-error-control-operator` (the tree uses `@`
 on purpose for best-effort filesystem calls, with `@mkdir()`'s return value
-checked), 35 are `cyclomatic-complexity` at threshold 15.
+checked), 36 are `cyclomatic-complexity` at threshold 15.
 
 `mago.toml` therefore disables 18 rules — each with its measured count and
 reason in the file — and keeps correctness, security and readability rules on.
