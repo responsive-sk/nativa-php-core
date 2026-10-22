@@ -1,16 +1,17 @@
 #!/bin/bash
 #
 # =============================================================================
-# dist-check.sh — build the artifact from a CLEAN worktree and prove it boots.
+# dist-check.sh — build the artifact from a CLEAN CLONE and prove it boots.
 # =============================================================================
 # `bin/build/build-dist.sh` copies the working tree, and the claim a deployment
-# makes is the one this gate tests: a fresh clone builds a green artifact. A
-# worktree of HEAD is exactly the bytes a clone gets — no `vendor/`, no locally
-# installed slice under `src/Modules/`, no `storage/data/` — so anything the
-# build borrows from the developer's checkout fails HERE instead of on a server.
+# makes is the one this gate tests: a fresh clone builds a green artifact. So
+# this CLONES the repo into a temp directory and builds there — tracked files
+# only, no `vendor/`, no locally installed slice under `src/Modules/`, no
+# `storage/data/`. Anything the build borrows from the developer's checkout
+# fails HERE instead of on a server.
 #
 # What it checks, in order:
-#   1. the worktree is clean: no untracked and no ignored files;
+#   1. the clone is clean: no untracked and no ignored files;
 #   2. `vendor/` is absent BEFORE the build — the whole point of the job;
 #   3. `build-dist.sh` exits 0 with its default flags. `--skip-assets` is passed
 #      because the bundles are committed and rebuilding them is `make assets`,
@@ -19,6 +20,9 @@
 #      and the build's own smoke test reached a clean error log.
 #
 # Usage: bin/build/dist-check.sh   (CI runs `make dist-check`)
+#
+# Note: the clone is of HEAD, not of the working tree — uncommitted edits are
+# deliberately invisible here, because that is what a deployment would get.
 # =============================================================================
 
 set -euo pipefail
@@ -29,7 +33,6 @@ TREE="$WORK/tree"
 LOG="$WORK/build.log"
 
 cleanup() {
-    git -C "$ROOT" worktree remove --force "$TREE" >/dev/null 2>&1 || true
     rm -rf "$WORK"
 }
 trap cleanup EXIT
@@ -43,23 +46,23 @@ step() {
     echo "==> $*"
 }
 
-step "Checking HEAD out into $TREE (a clone's bytes, nothing ignored)"
-git -C "$ROOT" worktree add --detach "$TREE" HEAD >/dev/null
+step "Cloning $ROOT into $TREE (HEAD, tracked bytes only — a deployment's start)"
+git clone --quiet "$ROOT" "$TREE"
 
 if [ -d "$TREE/vendor" ]; then
-    fail "the worktree carries vendor/ — this is not a clean checkout"
+    fail "the clone carries vendor/ — this is not a clean checkout"
 fi
 
 dirty="$(git -C "$TREE" status --porcelain --ignored)"
 if [ -n "$dirty" ]; then
-    fail "the worktree is not clean:
+    fail "the clone is not clean:
 $dirty"
 fi
 
 step "Building the artifact (default flags, migrate + profile + smoke included)"
 if ! "$TREE/bin/build/build-dist.sh" --skip-assets > "$LOG" 2>&1; then
     tail -40 "$LOG" >&2
-    fail "build-dist.sh failed in a clean worktree (tail of its log above)"
+    fail "build-dist.sh failed in a clean clone (tail of its log above)"
 fi
 
 if [ ! -d "$TREE/dist" ]; then
@@ -86,5 +89,5 @@ files="$(find "$TREE/dist" -type f | wc -l | tr -d ' ')"
 size="$(du -sh "$TREE/dist" | cut -f1)"
 identity="$(sed -n 's/^  identity:   //p' "$LOG" | head -1)"
 
-step "OK — clean worktree → $size, $files files, no vendor/, smoke clean"
+step "OK — clean clone → $size, $files files, no vendor/, smoke clean"
 echo "    identity: ${identity:-unknown}"

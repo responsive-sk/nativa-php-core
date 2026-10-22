@@ -85,14 +85,14 @@ after cloning, enable the enforcer: `cp bin/git-hooks/commit-msg .git/hooks/comm
 ```sh
 make assets                    # theme bundles → public/dist/ (gitignored)
 bin/build/build-dist.sh        # → dist/ : assets, migrated databases, smoke-tested
-make dist-check                # same build, from a worktree of HEAD: a clone's bytes
+make dist-check                # same build, but from a clean clone of HEAD
 ```
 
-`make dist-check` is the gate CI runs: it builds that artifact from a worktree of
-`HEAD` — a fresh clone's bytes, so no `vendor/` and no locally installed module
-slices to borrow from — then asserts the smoke test passed, the artifact carries
-no `vendor/`, and `.build-info` agrees. A green local `dist/` that a clone cannot
-reproduce fails there.
+`make dist-check` is the gate CI runs: it clones `HEAD` into a temp directory —
+tracked bytes only, no `vendor/`, no locally installed module slices, no
+uncommitted edits — builds the artifact there, then asserts the smoke test
+passed, the artifact carries no `vendor/`, and `.build-info` agrees. A green
+local `dist/` that a clone cannot reproduce fails there.
 
 `dist/` carries no `vendor/`, no `Frontend/` sources, no dev configs and **one**
 `Modules` tree — the installed copies, not a second copy of the catalogue

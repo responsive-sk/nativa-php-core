@@ -96,11 +96,11 @@ admin-smoke: ## Boot the panel with temp DBs and walk the admin flows over HTTP
 	bin/build/admin-smoke.sh
 
 ##@ Distribution
-# A worktree of HEAD, not the working tree: `build-dist.sh` copies what is on
-# disk, and the claim being tested is that a FRESH CLONE builds a green artifact
-# — no vendor/, no locally installed module slice, no storage state. CI runs
-# exactly this target.
-dist-check: ## Gate: build dist from a clean worktree (no vendor/) and smoke it
+# A clone of HEAD, not the working tree: `build-dist.sh` copies what is on disk,
+# and the claim being tested is that a FRESH CLONE builds a green artifact — no
+# vendor/, no locally installed module slice, no storage state, no uncommitted
+# edits. CI runs exactly this target.
+dist-check: ## Gate: build dist from a clean clone (no vendor/) and smoke it
 	@bin/build/dist-check.sh
 
 ##@ Assets

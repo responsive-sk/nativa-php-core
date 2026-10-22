@@ -78,12 +78,13 @@
 #                         fixed in the code with no rule disabled, and the first
 #                         new one fails the job instead of quietly joining a
 #                         number in the document.
-#  12. Dist artifact     — `make dist-check` builds the deployable tree from a
-#                         worktree of HEAD (a clone's bytes: no vendor/, no
-#                         locally installed modules) and asserts the build's own
-#                         HTTP smoke test, the absent vendor/ and the .build-info
-#                         claim. A green local `dist/` that a fresh clone cannot
-#                         reproduce is the failure this job exists for.
+#  12. Dist artifact     — `make dist-check` clones HEAD (tracked bytes only: no
+#                         vendor/, no locally installed modules, no uncommitted
+#                         edits) and builds the deployable tree there, then
+#                         asserts the build's own HTTP smoke test, the absent
+#                         vendor/ and the .build-info claim. A green local `dist/`
+#                         that a fresh clone cannot reproduce is the failure this
+#                         job exists for.
 # =============================================================================
 
 name: CI
@@ -837,16 +838,16 @@ jobs:
         run: tail -50 /tmp/server.log || true
 
   # ---------------------------------------------------------------------------
-  # DIST ARTIFACT — the deployable tree, built from a worktree of HEAD
+  # DIST ARTIFACT — the deployable tree, built from a clean clone of HEAD
   # ---------------------------------------------------------------------------
-  # `make dist-check` checks HEAD out into a throwaway worktree — a clone's
-  # bytes, so no `vendor/`, no `src/Modules/<Name>` slice someone installed and
-  # no `storage/` state — runs `bin/build/build-dist.sh` there with its default
-  # flags, and asserts what the script itself cannot: the worktree started
-  # clean, the artifact carries no `vendor/`, `.build-info` says the same, and
-  # the build's own HTTP smoke test reached a clean error log. Migrate, the
-  # deployment profile and the smoke run INSIDE that build, so a failure prints
-  # there rather than here.
+  # `make dist-check` clones HEAD into a temp directory — tracked bytes only, so
+  # no `vendor/`, no `src/Modules/<Name>` slice someone installed, no `storage/`
+  # state and no uncommitted edits — runs `bin/build/build-dist.sh` there with
+  # its default flags, and asserts what the script itself cannot: the clone
+  # started clean, the artifact carries no `vendor/`, `.build-info` says the
+  # same, and the build's own HTTP smoke test reached a clean error log. Migrate,
+  # the deployment profile and the smoke run INSIDE that build, so a failure
+  # prints there rather than here.
   #
   # A kernel-only checkout reaches the documented profile branch (the file is
   # committed, the Settings module that applies it is not) and ships the kernel
@@ -854,7 +855,7 @@ jobs:
   # working instead of discovering it on a deployment.
   # ---------------------------------------------------------------------------
   dist:
-    name: Dist artifact (clean worktree)
+    name: Dist artifact (clean clone)
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -869,7 +870,7 @@ jobs:
           extensions: json, mbstring, pdo, pdo_sqlite, sqlite3
           coverage: none
 
-      - name: Build and smoke the artifact from a clean worktree
+      - name: Build and smoke the artifact from a clean clone
         run: make dist-check
 
   # ---------------------------------------------------------------------------
