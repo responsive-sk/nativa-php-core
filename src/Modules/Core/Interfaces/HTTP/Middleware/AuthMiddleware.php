@@ -7,6 +7,7 @@ namespace Modules\Core\Interfaces\HTTP\Middleware;
 use Modules\Core\Domain\AdminRoutePolicy;
 use Modules\Core\Domain\AuthIdentity;
 use Modules\Core\Domain\Contracts\AuthProvider;
+use Modules\Core\Domain\Contracts\SecurityEventSink;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 
@@ -21,10 +22,12 @@ use Modules\Core\Infrastructure\Http\Response;
  * kernel-owned identity by whoever owns the session), which paths are
  * protected and what they require, and which paths are guest-only.
  *
- * The refusal itself is recorded as `SecurityEvents::AUTHZ_DENIED` — named
- * inline, never imported, behind a `class_exists` guard, exactly the way
- * `RateLimitMiddleware` records its 429s. Without the outbox the event is
- * dropped, not the refusal.
+ * The refusal itself crosses the kernel's `SecurityEventSink` port, exactly the
+ * way `RateLimitMiddleware` records its 429s: the middleware says WHICH fact
+ * happened and with what values, the module that owns the outbox decides which
+ * event type and payload keys that becomes. With no sink wired (a kernel-only
+ * tree) the event is dropped, not the refusal — absence of the record never
+ * changes the answer.
  *
  * The middleware is wired only when a provider exists (no provider → no admin
  * surface to protect → `/mark` is 404, never 403). Session handling,
@@ -37,8 +40,10 @@ use Modules\Core\Infrastructure\Http\Response;
  */
 final readonly class AuthMiddleware implements MiddlewareInterface
 {
-    public function __construct(private AuthProvider $auth)
-    {
+    public function __construct(
+        private AuthProvider $auth,
+        private ?SecurityEventSink $sink = null,
+    ) {
     }
 
     public function handle(Request $request, callable $next): Response
@@ -143,21 +148,22 @@ final readonly class AuthMiddleware implements MiddlewareInterface
     {
         $this->logDenial($path, $identity, $required);
 
-        if (!class_exists(\Modules\Outbox\Interfaces\HTTP\OutboxServices::class)
-            || !class_exists(\Modules\Outbox\Domain\SecurityEvents::class)
-        ) {
+        if (null === $this->sink) {
             return;
         }
 
-        \Modules\Outbox\Interfaces\HTTP\OutboxServices::securityEvent(
-            \Modules\Outbox\Domain\SecurityEvents::AUTHZ_DENIED,
-            [
-                'path'     => $path,
-                'required' => $required,
-                'userId'   => $identity->id,
-                'roles'    => [],
-                'ip'       => (string) (getenv('REMOTE_ADDR') ?: ''),
-            ],
-        );
+        try {
+            $this->sink->authorizationDenied(
+                $path,
+                $required,
+                $identity->id,
+                [],
+                (string) (getenv('REMOTE_ADDR') ?: ''),
+            );
+        } catch (\Throwable $e) {
+            // A record that cannot be written must not turn a 403 into a 500:
+            // the refusal is the answer, the outbox message is the trace.
+            error_log('[authz] could not record the refusal: ' . $e->getMessage());
+        }
     }
 }

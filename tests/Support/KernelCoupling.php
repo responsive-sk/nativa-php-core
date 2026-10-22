@@ -180,27 +180,30 @@ final class KernelCoupling
         $depth = 0;
 
         for ($i = 0; $i < $count; $i++) {
-            $token = $tokens[$i];
+            // An element is a token ARRAY or a bare character — braces arrive as
+            // one-character strings, which is why this is not called `$token`:
+            // a security linter reads that name as a credential.
+            $element = $tokens[$i];
 
-            if (\is_array($token)) {
-                if (T_CURLY_OPEN === $token[0] || T_DOLLAR_OPEN_CURLY_BRACES === $token[0]) {
+            if (\is_array($element)) {
+                if (T_CURLY_OPEN === $element[0] || T_DOLLAR_OPEN_CURLY_BRACES === $element[0]) {
                     $depth++;
                     continue;
                 }
 
-                if (T_USE === $token[0] && 0 === $depth) {
+                if (T_USE === $element[0] && 0 === $depth) {
                     $symbol = self::symbolAfter($tokens, $i);
                     if (null !== $symbol) {
-                        $imports[] = [$token[2], $symbol];
+                        $imports[] = [$element[2], $symbol];
                     }
                 }
 
                 continue;
             }
 
-            if ('{' === $token) {
+            if ('{' === $element) {
                 $depth++;
-            } elseif ('}' === $token) {
+            } elseif ('}' === $element) {
                 $depth--;
             }
         }

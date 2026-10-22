@@ -30,13 +30,15 @@ use PHPUnit\Framework\TestCase;
  * well, and nobody re-ran it across the match.
  *
  * Why an architecture test rather than a behavioural one: the five arms have
- * FOUR different owners. Four of them are the `SecurityEventServices` helpers,
- * but `AUTHZ_DENIED` is also emitted inline by `AuthMiddleware` and
- * `RATELIMIT_TRIPPED` only by `RateLimitMiddleware` — and `RateLimitMiddleware`'s
- * own test points `DB_OUTBOX` at a directory that does not exist on purpose (it
- * proves a failing outbox never breaks the request), so a behavioural sweep
- * cannot reach that arm at all. Every file is read as TEXT, like its neighbours:
- * no class is loaded, so the kernel-only gate is unaffected.
+ * TWO owners in one module. Four are the `SecurityEventServices` helpers; the
+ * two refusal arms are emitted by `OutboxSecurityEventSink`, the module's
+ * implementation of the kernel's `SecurityEventSink` port — the kernel says
+ * which fact happened and this module decides the event type and the keys, so
+ * both halves stay in the module that declares them. A behavioural sweep still
+ * cannot reach the rate-limit arm: `RateLimitMiddlewareTest` hands the
+ * middleware a sink that throws on purpose, to prove a recorder that cannot
+ * write never turns a 429 into a 500. Every file is read as TEXT, like its
+ * neighbours: no class is loaded, so the kernel-only gate is unaffected.
  *
  * `modules/Outbox/...` is the committed catalogue (the source the installed
  * slice is copied from); `src/Modules/Core/...` is the kernel itself, which is
@@ -59,8 +61,7 @@ final class SecurityEventPayloadContractTest extends TestCase
      */
     private const array EMIT_SITES = [
         'modules/Outbox/Interfaces/HTTP/SecurityEventServices.php',
-        'src/Modules/Core/Interfaces/HTTP/Middleware/AuthMiddleware.php',
-        'src/Modules/Core/Interfaces/HTTP/Middleware/RateLimitMiddleware.php',
+        'modules/Outbox/Application/Services/OutboxSecurityEventSink.php',
     ];
 
     /**

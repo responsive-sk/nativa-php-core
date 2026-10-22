@@ -389,7 +389,7 @@ final class Router implements RouterInterface
 
         $dir = dirname($this->cacheFile);
         if (!is_dir($dir)) {
-            @mkdir($dir, 0775, true);
+            @mkdir($dir, 0o775, true);
         }
 
         $export = var_export($data, true);

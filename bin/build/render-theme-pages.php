@@ -463,7 +463,7 @@ function localesToRender(?string $requested): array
  */
 function activate(string $locale): void
 {
-    $service = 'Modules\\Locales\\Interfaces\\HTTP\\LocalesServices';
+    $service = \Modules\Locales\Interfaces\HTTP\LocalesServices::class;
 
     if (!class_exists($service)) {
         return;

@@ -166,7 +166,7 @@ final readonly class DiscoveryCache
 
         $perms = @fileperms($this->cacheFile);
 
-        if (false !== $perms && 0 !== ($perms & 0002)) {
+        if (false !== $perms && 0 !== ($perms & 0o002)) {
             error_log('[discovery] ignoring world-writable cache file: ' . $this->cacheFile);
 
             return null;

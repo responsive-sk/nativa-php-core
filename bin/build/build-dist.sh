@@ -26,7 +26,9 @@
 #      profile applied with `bin/cms settings:profile` right after `migrate`, so
 #      a build cannot silently rebrand a deployment. `--no-profile` ships the
 #      kernel defaults on purpose, and a deployment changes anything afterwards
-#      in /mark → Settings.
+#      in /mark → Settings. A KERNEL-ONLY checkout has the profile file but no
+#      Settings module to apply it with; that build keeps the kernel defaults and
+#      says so, rather than failing a documented shape of this tree.
 #
 # Usage:
 #   bin/build/build-dist.sh                    # assets if missing → assemble → migrate → smoke
@@ -70,6 +72,7 @@ VERSION="$(git -C "$ROOT" describe --tags --always --dirty 2>/dev/null || echo '
 COMMIT="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo 'unknown')"
 
 SKIP_ASSETS=false
+PROFILE_APPLIED=false
 SKIP_MIGRATE=false
 SKIP_SMOKE=false
 WITH_ENV=false
@@ -82,14 +85,21 @@ APPLY_PROFILE=true
 #   ./dist             the output directory itself
 #   ./.git ./.github   history and CI are not deployable
 #   ./tests             the harness is not the application
+#   ./fixtures          the theme-gallery inputs, read by
+#                       `bin/build/render-theme-pages.php` — which is itself
+#                       excluded below, so nothing in the artifact reads them;
+#                       `public/demo/` keeps the images a deployment serves
 #   ./Frontend          theme SOURCES: the artifact ships built bundles only
 #   ./vendor            the kernel runtime has zero Composer packages — this is
 #                       the claim the smoke test below is about to check
 #   ./bin/build         the tools that BUILT this artifact, including itself
-#   dev tool configs    phpstan/phpunit/rector/cs-fixer/Makefile/composer.* say
-#                       how to develop here, and shipping them invites someone
-#                       on the server to run `composer install` against a tree
-#                       that does not need it
+#   dev tool configs    phpstan/phpunit/rector/cs-fixer/mago/Makefile/composer.*
+#                       say how to develop and CHECK here, and shipping them
+#                       invites someone on the server to run `composer install`
+#                       against a tree that does not need it. `mago.toml` is in
+#                       that list for the same reason: nothing outside the dev
+#                       tooling reads it, and the artifact ships how the tree
+#                       RUNS, not how it is measured.
 #   .env and friends    local secrets. NOTE: `.env.*` also matches the
 #                       `.env.example` this artifact DOES need — it arrives via
 #                       the explicit copy below, not through this tar pass.
@@ -110,6 +120,7 @@ EXCLUDES=(
     "./.git"
     "./.github"
     "./tests"
+    "./fixtures"
     "./Frontend"
     "./vendor"
     "./bin/build"
@@ -126,6 +137,7 @@ EXCLUDES=(
     "./.gitignore"
     "./.php-cs-fixer.cache"
     "./.php-cs-fixer.dist.php"
+    "./mago.toml"
     "./.phpunit.result.cache"
     "./.rector.cache"
     "./Makefile"
@@ -313,6 +325,14 @@ if [ "$SKIP_MIGRATE" = true ]; then
     step "Skipping the deployment profile (--skip-migrate): there is no settings table to write"
 elif [ "$APPLY_PROFILE" = false ]; then
     step "Skipping the deployment profile (--no-profile): the artifact keeps the kernel defaults"
+elif [ -f "$DIST_DIR/config/deploy.php" ] && [ ! -d "$DIST_DIR/src/Modules/Settings" ]; then
+    # A kernel-only checkout is a supported build shape and `config/deploy.php`
+    # is committed, so the file is there while the module that writes settings
+    # is not. There is nothing to apply the profile TO, and failing here would
+    # make `git clone && bin/build/build-dist.sh` impossible while changing
+    # nothing about the artifact — it would still boot as the kernel's own site.
+    # The step says which identity it ships, so the skip is never silent.
+    step "Skipping the deployment profile: the Settings module is not installed — the artifact keeps the kernel defaults"
 elif [ -f "$DIST_DIR/config/deploy.php" ]; then
     step "Applying the deployment profile (config/deploy.php)"
     # The path is absolute and the binary is selected BY PATH, so this writes the
@@ -322,6 +342,8 @@ elif [ -f "$DIST_DIR/config/deploy.php" ]; then
     if ! php "$DIST_DIR/bin/cms" settings:profile --file="$DIST_DIR/config/deploy.php"; then
         fail "the deployment profile could not be applied — the artifact would ship with the kernel defaults" 1
     fi
+
+    PROFILE_APPLIED=true
 else
     step "No config/deploy.php — the artifact keeps the kernel defaults"
 fi
@@ -477,8 +499,10 @@ echo "  Version:    $VERSION ($COMMIT)"
 echo "  Build time: $BUILD_TIME"
 echo "  Output:     $DIST_DIR  ($size, $files files)"
 echo "  vendor/:    absent — the runtime has zero Composer packages"
-if [ "$APPLY_PROFILE" = true ] && [ -f "$DIST_DIR/config/deploy.php" ] && [ "$SKIP_MIGRATE" = false ]; then
+if [ "$PROFILE_APPLIED" = true ]; then
     echo "  identity:   config/deploy.php applied (theme, site name — see the step above)"
+elif [ "$APPLY_PROFILE" = true ] && [ -f "$DIST_DIR/config/deploy.php" ] && [ "$SKIP_MIGRATE" = false ] && [ ! -d "$DIST_DIR/src/Modules/Settings" ]; then
+    echo "  identity:   kernel defaults (no Settings module to apply config/deploy.php)"
 else
     echo "  identity:   kernel defaults (theme=kernel, site_name=Nativa PHP Core)"
 fi

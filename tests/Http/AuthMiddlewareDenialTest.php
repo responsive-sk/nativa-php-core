@@ -7,6 +7,7 @@ namespace Tests\Http;
 use Modules\Core\Domain\AdminRoutePolicy;
 use Modules\Core\Domain\AuthIdentity;
 use Modules\Core\Domain\Contracts\AuthProvider;
+use Modules\Core\Domain\Contracts\SecurityEventSink;
 use Modules\Core\Domain\Permissions;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
@@ -396,7 +397,10 @@ final class AuthMiddlewareDenialTest extends TestCase
 
     private function middleware(AuthIdentity $identity): AuthMiddleware
     {
-        return new AuthMiddleware(new readonly class ($identity, Permissions::USERS) implements AuthProvider {
+        // The REAL port implementation, not a stub: this class's claim is that a
+        // kernel refusal reaches an audit row, and the adapter is the code that
+        // turns the kernel's decision into the outbox message.
+        $provider = new readonly class ($identity, Permissions::USERS) implements AuthProvider {
             public function __construct(
                 private AuthIdentity $identity,
                 private string $required,
@@ -428,7 +432,23 @@ final class AuthMiddlewareDenialTest extends TestCase
             public function noteEvent(string $event, array $context): void
             {
             }
-        });
+        };
+
+        // The adapter is the module's code, so its name is a STRING: `tests/`
+        // is kernel scope and must typecheck in a checkout where `Modules\Outbox`
+        // is not on disk (the skip above is runtime; PHPStan is not). The
+        // `assertInstanceOf` both proves the port is implemented and gives the
+        // variable its kernel type.
+        $sinkClass = 'Modules\\Outbox\\Application\\Services\\OutboxSecurityEventSink';
+
+        if (!class_exists($sinkClass)) {
+            self::fail('Outbox is installed but its security-event adapter is not autoloadable.');
+        }
+
+        $sink = new $sinkClass();
+        self::assertInstanceOf(SecurityEventSink::class, $sink);
+
+        return new AuthMiddleware($provider, $sink);
     }
 
     private static function passThrough(): callable

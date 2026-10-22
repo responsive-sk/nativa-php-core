@@ -65,6 +65,29 @@
 #                         run's GITHUB_TOKEN cannot read it. The job records
 #                         that (with the measured evidence and how to enable
 #                         it) instead of reporting a pass it did not earn.
+#  10. Kernel dependency— `mago guard`, the same sentence `KernelCouplingTest`
+#                         asserts in PHP, stated declaratively and resolved from
+#                         source rather than from `use` lines. No baseline: its
+#                         first run found 8 `Modules\Outbox\…` reaches behind
+#                         inline FQCNs, and those were removed by giving the
+#                         kernel a `SecurityEventSink` port instead of listing
+#                         them. Evidence in docs/mago-evaluation.md.
+#  11. Curated lint      — `mago lint` under the curated rule set, counted. The
+#                         linter exits 1 while anything is left, so the gate is
+#                         a CEILING of 0: all 22 findings it once reported are
+#                         fixed in the code with no rule disabled, and the first
+#                         new one fails the job instead of quietly joining a
+#                         number in the document.
+#  12. Dist artifact     — `make dist-check` clones HEAD (tracked bytes only: no
+#                         vendor/, no locally installed modules, no uncommitted
+#                         edits) and builds the deployable tree there, then
+#                         asserts the build's own HTTP smoke test, the absent
+#                         vendor/ and the .build-info claim. A green local `dist/`
+#                         that a fresh clone cannot reproduce is the failure this
+#                         job exists for. The same job runs
+#                         `make dist-profile-test`: kernel-only and `--no-profile`
+#                         must skip the profile, and a broken one with Settings
+#                         installed must fail the build.
 # =============================================================================
 
 name: CI
@@ -188,6 +211,83 @@ jobs:
 
       - name: Lekalo gate (lock --check + validate)
         run: make lekalo-check
+
+  # ---------------------------------------------------------------------------
+  # KERNEL DEPENDENCY — mago guard, the rule KernelCouplingTest states in PHP
+  # ---------------------------------------------------------------------------
+  # No PHP setup and no composer install on purpose: guard is a Rust binary over
+  # a pinned release archive (`bin/build/mago-spike.sh` verifies the archive's
+  # sha256, the same identity rule the lekalo step above uses), so this job
+  # proves the rule on the checkout that HAS no `vendor/` — the shape that
+  # matters for a kernel claiming zero Composer dependencies.
+  #
+  # The rule (`mago.toml` [guard.perimeter]): `src/Modules/Core`, `Database` and
+  # `Tooling` may depend on each other, on `Themes`, and on PHP itself — never on
+  # a module. There is NO baseline and no exception list: the 8 reaches into
+  # `Modules\Outbox\…` that the rule first reported (inline FQCNs behind
+  # `class_exists()`, invisible to `KernelCouplingTest`) were removed at the
+  # source — the kernel raises its security events through its own
+  # `SecurityEventSink` port, the Outbox module implements it, and the
+  # composition root wires it. An empty report is the claim. Should a baseline be
+  # re-introduced, `bin/build/mago-spike.sh` passes `--baseline` plus
+  # `--fail-on-out-of-sync-baseline`, so an entry nobody can match any more fails
+  # this job instead of lingering in the ledger.
+  #
+  # Measured 2026-10-22: with the port in place the gate reports 0 issues; before
+  # it, planting `use Modules\Blog\…` in `AuthProviderRegistry.php` turned the
+  # same gate red with the file and line `KernelCouplingTest` prints.
+  # ---------------------------------------------------------------------------
+  kernel-dependency:
+    name: Kernel dependency (mago guard)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      # The script downloads, verifies and installs the binary itself; caching
+      # the directory only saves the ~25 MB download on a re-run.
+      - name: Cache mago
+        uses: actions/cache@v5
+        with:
+          path: storage/cache/mago-spike
+          key: mago-1.58.2-x86_64-unknown-linux-gnu
+
+      - name: Guard gate
+        run: make mago-guard
+
+  # ---------------------------------------------------------------------------
+  # CURATED LINT — the count of `mago lint` findings, as a ceiling
+  # ---------------------------------------------------------------------------
+  # `mago lint` is not a verdict gate on its own: it exits 1 while any finding
+  # remains. What CAN gate is the count, and the number is 0 — on 2026-10-22 all
+  # 22 findings were resolved in the code without disabling a rule (16 fixes, 4
+  # renames of a `token_get_all()` element, 2 reasoned `@mago-expect` comments on
+  # CSRF fixtures). `--max-issues=0` fails the job on the first new finding, and
+  # `unfulfilled-expect` counts as one, so a pragma cannot outlive its code.
+  #
+  # Same binary, same checksum, same cache key as the guard job above: no PHP
+  # setup and no `composer install`, so the count is measured on the checkout a
+  # deployment would get.
+  # ---------------------------------------------------------------------------
+  curated-lint:
+    name: Curated lint count (mago lint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Cache mago
+        uses: actions/cache@v5
+        with:
+          path: storage/cache/mago-spike
+          key: mago-1.58.2-x86_64-unknown-linux-gnu
+
+      - name: Lint ceiling
+        run: make mago-lint
 
   # ---------------------------------------------------------------------------
   # CODE STYLE — php-cs-fixer + Rector dry-runs
@@ -739,6 +839,48 @@ jobs:
       - name: Show the server log
         if: always()
         run: tail -50 /tmp/server.log || true
+
+  # ---------------------------------------------------------------------------
+  # DIST ARTIFACT — the deployable tree, built from a clean clone of HEAD
+  # ---------------------------------------------------------------------------
+  # `make dist-check` clones HEAD into a temp directory — tracked bytes only, so
+  # no `vendor/`, no `src/Modules/<Name>` slice someone installed, no `storage/`
+  # state and no uncommitted edits — runs `bin/build/build-dist.sh` there with
+  # its default flags, and asserts what the script itself cannot: the clone
+  # started clean, the artifact carries no `vendor/`, `.build-info` says the
+  # same, and the build's own HTTP smoke test reached a clean error log. Migrate,
+  # the deployment profile and the smoke run INSIDE that build, so a failure
+  # prints there rather than here.
+  #
+  # A kernel-only checkout reaches the documented profile branch (the file is
+  # committed, the Settings module that applies it is not) and ships the kernel
+  # defaults — that is what a fresh clone builds, so this job keeps that path
+  # working instead of discovering it on a deployment.
+  # ---------------------------------------------------------------------------
+  dist:
+    name: Dist artifact (clean clone)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: json, mbstring, pdo, pdo_sqlite, sqlite3
+          coverage: none
+
+      - name: Build and smoke the artifact from a clean clone
+        run: make dist-check
+
+      # The three profile branches: kernel-only → skip, `--no-profile` → skip, and
+      # Settings installed + a broken profile → the build MUST fail. All three
+      # clone HEAD on their own, so this step borrows nothing from the checkout.
+      - name: The three deployment-profile branches
+        run: make dist-profile-test
 
   # ---------------------------------------------------------------------------
   # THEMES-CHECK — the catalogue is the theme repository's copy, and it runs

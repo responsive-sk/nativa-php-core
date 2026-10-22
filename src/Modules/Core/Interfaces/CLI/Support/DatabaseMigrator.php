@@ -99,7 +99,10 @@ final readonly class DatabaseMigrator
                 throw new \RuntimeException(sprintf('%s is annotated #[AsMigrator] but must implement %s.', $class, MigratorInterface::class));
             }
 
-            assert(is_subclass_of($class, MigratorInterface::class));
+            assert(
+                is_subclass_of($class, MigratorInterface::class),
+                sprintf('%s is annotated #[AsMigrator] but does not implement %s.', $class, MigratorInterface::class),
+            );
 
             $migrator = $attribute->newInstance();
 

@@ -9,6 +9,7 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
+use Modules\Core\Interfaces\HTTP\Middleware\SecurityHeadersMiddleware;
 
 /**
  * PageCacheService — file-based HTML page cache for anonymous public pages.
@@ -123,7 +124,11 @@ final readonly class PageCacheService
         }
 
         return [
-            'content' => $entry['content'],
+            // Heal on read: an entry written before the placeholder contract
+            // (or through any path that stored a post-replacement body) would
+            // otherwise pin this response to a stale nonce while the CSP
+            // header carries a fresh one — every inline script blocked.
+            'content' => self::normalizeNonces((string) $entry['content']),
             'statusCode' => $entry['statusCode'],
             'headers' => $entry['headers'],
         ];
@@ -134,7 +139,12 @@ final readonly class PageCacheService
      */
     public function set(string $key, Response $response, int $ttl = self::DEFAULT_TTL): void
     {
-        $content = $response->getContent();
+        // Normalize BEFORE the size check and the store: a body that already
+        // went through SecurityHeadersMiddleware carries a real nonce, and
+        // caching it verbatim would serve every later visitor a credential
+        // that matches nobody's CSP header. The placeholder is what the
+        // outer middleware replaces per request.
+        $content = self::normalizeNonces($response->getContent());
 
         if ('' === $content || strlen($content) > self::MAX_CACHE_SIZE) {
             return;
@@ -150,6 +160,27 @@ final readonly class PageCacheService
 
         $file = $this->cacheDir . '/' . $key . '.json';
         file_put_contents($file, json_encode($data, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE), LOCK_EX);
+    }
+
+    /**
+     * Rewrite any baked-in CSP nonce (`nonce="<32 hex chars>"`, the exact
+     * shape SecurityHeadersMiddleware mints) back to the placeholder.
+     *
+     * The placeholder itself is not hex, so it passes through untouched; a
+     * CSRF token field is a `value="…"` attribute, never `nonce="…"`, so
+     * the session-token rule above is unaffected.
+     */
+    private static function normalizeNonces(string $content): string
+    {
+        if (!str_contains($content, 'nonce="')) {
+            return $content;
+        }
+
+        return (string) preg_replace(
+            '/nonce="[0-9a-f]{32}"/',
+            'nonce="' . SecurityHeadersMiddleware::NONCE_PLACEHOLDER . '"',
+            $content,
+        );
     }
 
     /**
@@ -359,7 +390,7 @@ final readonly class PageCacheService
         $this->validatePath();
 
         if (!is_dir($this->cacheDir)) {
-            mkdir($this->cacheDir, 0755, true);
+            mkdir($this->cacheDir, 0o755, true);
         }
     }
 

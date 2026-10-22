@@ -67,6 +67,9 @@ final class AuthProviderRegistryTest extends TestCase
         }
 
         if (false !== $this->logBefore) {
+            // Routing `error_log()` to a probe file is the only way to assert
+            // what the registry wrote; the ini value is restored here.
+            // @mago-expect lint:no-ini-set
             ini_set('error_log', (string) $this->logBefore);
             $this->logBefore = false;
         }
@@ -285,6 +288,9 @@ final class AuthProviderRegistryTest extends TestCase
         $this->logFile = $file;
         $this->logBefore = ini_get('error_log');
 
+        // The probe needs `error_log()` itself, so the destination is an ini
+        // value; `tearDown()` puts the previous one back.
+        // @mago-expect lint:no-ini-set
         ini_set('error_log', $file);
     }
 

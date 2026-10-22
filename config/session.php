@@ -31,7 +31,7 @@ ini_set('session.auto_start', '0');
 // Session storage directory.
 $sessionPath = APP_BASE_PATH . '/storage/sessions';
 if (!is_dir($sessionPath)) {
-    if (!@mkdir($sessionPath, 0775, true) && !is_dir($sessionPath)) {
+    if (!@mkdir($sessionPath, 0o775, true) && !is_dir($sessionPath)) {
         error_log('[session] Failed to create session save path: ' . $sessionPath . ' — falling back to system temp.');
         $sessionPath = sys_get_temp_dir();
     }

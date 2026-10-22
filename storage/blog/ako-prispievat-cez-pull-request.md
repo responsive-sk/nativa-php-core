@@ -22,7 +22,7 @@ cp bin/git-hooks/commit-msg .git/hooks/commit-msg
 composer install
 ```
 
-Hook nie je ozdoba: históra tohto repa nenesie **žiadny agent-footer**
+Hook nie je ozdoba: história tohto repozitára nenesie **žiadny agent-footer**
 (konvencia z nativa-minimal) a hook ho vymaže z každej commit message skôr,
 než sa zapíše. `.git/hooks` sa neversionuje, takže každý čerstvý klon potrebuje
 tú jednu kópiu. `composer install` je pritom len na dev-nástroje — runtime

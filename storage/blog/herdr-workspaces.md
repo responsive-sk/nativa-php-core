@@ -1,9 +1,9 @@
 ---
-title: "Herdr workspaces — ako držať viac repov v jednej session"
+title: "Herdr workspaces — ako držať viac repozitárov v jednej session"
 date: "2026-10-21"
 tags: ["herdr", "terminal", "workspaces", "worktree", "agenti"]
-excerpt: "Workspace, tab a pane nie sú tri názvy pre to isté. Zmerané na živej session: čo ktorá vrstva drží, kedy je správna odpoveď nový workspace a kedy worktree, ako vyzerá hub s viacerými repmi — a kde sa pane cwd rozíde s metadátami workspace."
-author: "Nativa Dev"
+excerpt: "Workspace, tab a pane nie sú tri názvy pre to isté. Zmerané na živej session: čo ktorá vrstva drží, kedy je správna odpoveď nový workspace a kedy worktree, ako vyzerá hub s viacerými repozitármi — a kde sa pane cwd rozíde s metadátami workspace."
+author: "nativa.dev@example.test"
 author_email: "nativa.dev@example.test"
 category: "Nástroje"
 published: true
@@ -16,7 +16,7 @@ Prišla veta, ktorá sa dá zodpovedať jedným slovom a pritom nijako nepomôc�
 > „mozeme pracovat v herdr na viacerych repo?"
 
 Odpoveď „áno" je pravdivá a nepoužiteľná. Herdr nemá jednu úroveň, na ktorej by
-„viac repov" znamenalo jednu vec. Má tri — a každá z nich rieši iný problém,
+„viac repozitárov" znamenalo jednu vec. Má tri — a každá z nich rieši iný problém,
 s inými dôsledkami pre to, čo sa deje s git indexom, s pracovným stromom a s
 kontextom agenta, ktorý v tom termináli beží.
 
@@ -68,7 +68,7 @@ užívateľ práve kurzor.
 
 ## Časť III — Čo bolo v session namerané
 
-Pred akýmkoľvek presúvaním súborov alebo repov sa vyplatí pozrieť, čo v session
+Pred akýmkoľvek presúvaním súborov alebo repozitárov sa vyplatí pozrieť, čo v session
 naozaj je:
 
 ```bash
@@ -93,12 +93,12 @@ workspace   w6   label "nativa-php-core"   tab_count 1   pane_count 3
 Dve veci na tom stoja za pozornosť, lebo vyzerajú ako rozpor a nie sú:
 
 1. **Label a cwd hovoria `nativa-php-core`, metadáta worktree hovoria
-   `nativa-minimal`.** Metadáta workspace sa odvodzujú z jedného repa a sú
+   `nativa-minimal`.** Metadáta workspace sa odvodzujú z jedného repozitára a sú
    informatívne; pracovný adresár drží každý pane zvlášť. Keď sa pany rozídu do
-   rôznych repov, workspace-level `worktree` objekt prestane byť pravda o obsahu
-   a zostane len stopou o tom, z ktorého repa workspace vznikol.
+   rôznych repozitárov, workspace-level `worktree` objekt prestane byť pravda o obsahu
+   a zostane len stopou o tom, z ktorého repozitára workspace vznikol.
 2. **Existujúci linked worktree bol zatvorený.** `herdr worktree list` ukázal
-   dva checkouts toho istého repa:
+   dva checkouty toho istého repozitára:
 
 ```
 /home/evan/dev/06/nativa-minimal                                          master                  open → w6
@@ -110,9 +110,9 @@ a vie ich otvoriť aj zavrieť bez toho, aby sa čokoľvek stratilo.
 
 ---
 
-## Časť IV — Tri úrovne, ako sa dostať k druhému repu
+## Časť IV — Tri úrovne, ako sa dostať k druhému repozitáru
 
-### 1. Workspace na repo
+### 1. Workspace na repozitár
 
 Najčistejšia odpoveď, keď má ísť o paralelnú prácu. Každý workspace má vlastný
 pane, vlastný cwd a vlastného agenta:
@@ -128,7 +128,7 @@ užívateľovi, nie automatizácii.
 
 ### 2. Tab s vlastným cwd
 
-Keď majú byť oba repy v jednom okne, ale oddelene:
+Keď majú byť oba repozitáre v jednom okne, ale oddelene:
 
 ```bash
 herdr tab create --workspace w6 --cwd /home/evan/dev/06/ui --label ui
@@ -139,7 +139,7 @@ dáva poriadok v panoch.
 
 ### 3. Pane s vlastným cwd
 
-Najlacnejšie a najčastejšie. Jeden panel vedľa druhého, každý v inom repe:
+Najlacnejšie a najčastejšie. Jeden panel vedľa druhého, každý v inom repozitári:
 
 ```bash
 herdr pane split --current --direction right --cwd /home/evan/dev/06/boson --no-focus
@@ -151,28 +151,27 @@ ktorých sa nedá čítať diff ani log.
 
 ---
 
-## Časť V — Hub: jeden workspace, viac repov
+## Časť V — Hub: jeden workspace, viac repozitárov
 
 Ďalšia otázka prišla hneď po tom, ako hub vznikol: môže taký workspace obsahovať
-viac rôznych repov, alebo je to len adresár, v ktorom sa nič gitové nedeje?
+viac rôznych repozitárov, alebo je to len adresár, v ktorom sa nič gitové nedeje?
 
-Môže — a je to presne ten prípad, na ktorý hub existuje. Workspace nemá jednu
-„repo rolu“; je to najvyššia jednotka s vlastným cwd, a **každý pane v ňom má cwd
+Môže — a je to presne ten prípad, na ktorý hub existuje. Workspace nemá jednu rolu repozitára; je to najvyššia jednotka s vlastným cwd, a **každý pane v ňom má cwd
 vlastný**. Meranie z tej istej session:
 
 ```
-w7  label dev10   cwd /home/evan/dev/10     (nadradený adresár, sám nie je repo)
+w7  label dev10   cwd /home/evan/dev/10     (nadradený adresár, sám nie je repozitár)
   w7:p1           cwd /home/evan/dev/10
 
 dev/10/
-  resp-blog        git repo, vetva main
+  resp-blog        git repozitár, vetva main
   boson            bez .git
   FontGenerator    bez .git
   font-subsetter   bez .git
   marko            bez .git
 ```
 
-Pane v hube sa do repa dostane obyčajným `cd`, alebo sa rovno založí s cwd v
+Pane v hube sa do repozitára dostane obyčajným `cd`, alebo sa rovno založí s cwd v
 ňom:
 
 ```bash
@@ -183,16 +182,16 @@ herdr tab create --workspace w7 --cwd /home/evan/dev/10/resp-blog --label resp-b
 ```
 
 Každý taký pane má vlastný shell, vlastný git kontext a môže v ňom bežať vlastný
-agent. Hub je teda legitímny spôsob, ako mať päť repov v jednom okne.
+agent. Hub je teda legitímny spôsob, ako mať päť repozitárov v jednom okne.
 
-Cena za to je jedna vec a je merateľná: **hub nemá repo metadáta.**
+Cena za to je jedna vec a je merateľná: **hub nemá metadáta repozitára.**
 
 ```bash
 herdr workspace get w7
 # ... "workspace": {"label": "dev10", ...}      ← žiadny "worktree" kľúč
 ```
 
-Pre porovnanie, workspace založený priamo v repe (časť III) má `worktree` objekt
+Pre porovnanie, workspace založený priamo v repozitári (časť III) má `worktree` objekt
 s `repo_root`, `repo_key` a `is_linked_worktree`. Hub nie — nemá z čoho. A git
 pomocníci sa podľa toho správajú:
 
@@ -202,7 +201,7 @@ herdr worktree list
 # {"error":{"code":"not_git_worktree",
 #   "message":"Herdr worktree actions require a workspace inside a Git work tree"}}
 
-# po cd do repa tá istá otázka funguje a nájde source repo
+# po cd do repozitára tá istá otázka funguje a nájde zdrojový repozitár
 herdr pane run w7:p1 "cd /home/evan/dev/10/resp-blog"
 herdr worktree list
 # {"source":{"repo_name":"resp-blog", "source_workspace_id":"w7"}, ...}
@@ -212,20 +211,20 @@ Z toho vyplývajú tri pravidlá pre hub:
 
 | pravidlo | dôsledok |
 |---|---|
-| git pomocníci čítajú pane, nie workspace | `worktree create`/`list` pušťaj s `--cwd` do konkrétneho repa |
-| hub nemá default repo | `herdr worktree create --workspace w7` nemá z čoho vychádzať |
-| pany v tom istom repe zdieľajú index | izoláciu dáva worktree, nie druhý pane |
+| git pomocníci čítajú pane, nie workspace | `worktree create`/`list` pušťaj s `--cwd` do konkrétneho repozitára |
+| hub nemá predvolený repozitár | `herdr worktree create --workspace w7` nemá z čoho vychádzať |
+| pany v tom istom repozitári zdieľajú index | izoláciu dáva worktree, nie druhý pane |
 
-A jedna vec, ktorá platí bez ohľadu na to, či je workspace hub alebo repo: keď sa
-pany rozídu do rôznych repov, workspace-level metadáta prestanú byť pravdou o
-obsahu. Hub je čitateľný vtedy, keď tie repy k sebe patria; keď spolu nesúvisia,
-workspace na repo je zrozumiteľnejší.
+A jedna vec, ktorá platí bez ohľadu na to, či je workspace hub alebo repozitár: keď sa
+pany rozídu do rôznych repozitárov, workspace-level metadáta prestanú byť pravdou o
+obsahu. Hub je čitateľný vtedy, keď tie repozitáre k sebe patria; keď spolu nesúvisia,
+workspace na repozitár je zrozumiteľnejší.
 
 ---
 
-## Časť VI — Worktree: druhý checkout toho istého repa
+## Časť VI — Worktree: druhý checkout toho istého repozitára
 
-Workspace rieší „iný repo". Worktree rieši „iná vetva toho istého repa bez
+Workspace rieší „iný repozitár". Worktree rieši „iná vetva toho istého repozitára bez
 rozbitia hlavného checkoutu":
 
 ```bash
@@ -281,9 +280,9 @@ naozaj čaká.
 
 | chcem | primitívum |
 |---|---|
-| iný repo, paralelná práca | workspace per repo |
-| viac repov v jednom okne | hub workspace + pane/tab s `--cwd` |
-| iná vetva na tom istom repe | worktree |
+| iný repozitár, paralelná práca | workspace na repozitár |
+| viac repozitárov v jednom okne | hub workspace + pane/tab s `--cwd` |
+| iná vetva na tom istom repozitári | worktree |
 | druhý pohľad na ten istý checkout | pane split alebo tab |
 | len čítať výstup, nič nevytvárať | pane read |
 | spustiť príkaz a počkať na jeho výstup | pane run + pane wait-output |
@@ -294,7 +293,7 @@ checkoutom sú bezplatné na čítanie a drahé na zápis.
 
 ---
 
-## Časť IX — Pasec, ktoré nie sú chyby
+## Časť IX — Pasce, ktoré nie sú chyby
 
 **Holé `herdr` neotváraj na prieskum.** Spustí alebo pripojí TUI. Objavovanie
 začína na `herdr --help` a pokračuje skupinou bez podpríkazu (`herdr workspace`,
@@ -306,14 +305,14 @@ povie" tu znamená „urobil som to".
 
 **Metadáta workspace nie sú cwd panov.** Nameraný príklad z časti III to
 ukazuje priamo: workspace tvrdí `nativa-minimal`, všetky tri pany sú v
-`nativa-php-core`. Pri miešaní repov v jednom workspace sú tie metadáta len
+`nativa-php-core`. Pri miešaní repozitárov v jednom workspace sú tie metadáta len
 stopa o pôvode — a hub (časť V) ich nemá vôbec, takže git pomocníci sa riadia
 pane cwd, nie workspace.
 
 **Agent edituje to, čo vidí zo svojho cwd.** Agent spustený v pane dedí cwd
 panu. To isté platí pre nástroje, ktoré má k dispozícii — nástroj ukotvený na
-koreň projektu nepreskočí do susedného repa len preto, že ho vidno v inom pane.
-Paralelná práca v dvoch repoch preto znamená dvoch agentov v dvoch workspace,
+koreň projektu nepreskočí do susedného repozitára len preto, že ho vidno v inom pane.
+Paralelná práca v dvoch repozitároch preto znamená dvoch agentov v dvoch workspace,
 nie jedného agenta s dvoma cestami.
 
 **Fokus je užívateľov.** `--no-focus` pri každom vytvorení, ktoré nemá užívateľa
@@ -328,7 +327,7 @@ Výber stroja v TUI príkazy z panu neprepína.
 
 ## Časť X — Recepty
 
-**Dva repy vedľa seba, každý s agentom.**
+**Dva repozitáre vedľa seba, každý s agentom.**
 
 ```bash
 herdr workspace create --cwd /home/evan/dev/06/nativa-php-core  --label core  --no-focus
@@ -369,8 +368,8 @@ výsledok nečaká odhadom, ale `wait-output`.
 ## Časť XI — Čo z toho zostáva
 
 Workspace nie je „väčší pane". Je to hranica, na ktorej sa dá bezpečne povedať
-„toto je iný repo, s iným git kontextom a iným agentom". Worktree je hranica
-druhá — v rámci jedného repa — a je to jediná hranica, ktorá oddelí dva git
+„toto je iný repozitár, s iným git kontextom a iným agentom". Worktree je hranica
+druhá — v rámci jedného repozitára — a je to jediná hranica, ktorá oddelí dva git
 indexy.
 
 Zvyšok je disciplína: čítať ID z odpovedí namiesto ich hádania, nedeliť pany

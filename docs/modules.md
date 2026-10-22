@@ -162,6 +162,14 @@ measured states, with `docs/kernel-status.md` as the index over the parts.)
 constructor, which the zero-argument scan cannot supply, and its product is a
 service holding a PDO rather than a zero-argument port implementation.
 
+The security-event sink is wired the same way and for the same reason: the
+kernel owns the port (`Modules\Core\Domain\Contracts\SecurityEventSink`), the
+`Outbox` module implements it (`OutboxSecurityEventSink`, where the event type
+and payload keys live), and `src/http.php` constructs it behind `class_exists`
+and hands it to `AuthMiddleware` and `RateLimitMiddleware`. Both middlewares
+name no module, so a kernel-only tree drops the record and still answers the
+request — and `mago guard` sees a kernel with no module dependency at all.
+
 ## The closure rule
 
 `module:add` refuses when any closure member is not installed, names the
@@ -222,7 +230,9 @@ no longer exists — the same stale-bytecode lesson
 queries, events, policies, endpoints and scenarios, described in Lekalo's
 grammar. It is the one place where the shape of the system is written down as
 data rather than as prose, and it is worth knowing exactly how much standing it
-has, because the gate in front of it is easy to over-read.
+has, because the gate in front of it is easy to over-read. Mago is a different
+layer — it reads the PHP source, not this model — and the side-by-side table is
+in `docs/mago-evaluation.md`.
 
 | | |
 |---|---|
@@ -279,7 +289,8 @@ when there are some.
    | in code, not in the model | **`roles`** |
    | the same event's own description | lists `roles` — the array did not |
 
-   Both emit sites send it (`AuthMiddleware::recordDenial()`,
+   Both emit sites send it (`AuthMiddleware::recordDenial()` — through the
+   kernel's `SecurityEventSink` port since 2026-10-22, see the note below — and
    `SecurityEventServices::bulkRefused()`), so the model was the only side still
    describing four keys, and it contradicted itself doing so. **Fixed
    2026-10-16:** `roles` is declared, and `ModelPayloadContractTest` binds the
@@ -349,7 +360,19 @@ when there are some.
    the actor, the target and the missing permission in it; the emitted payload keys
    equal the declared ones; an owned name is still recorded while `authz.denied` is
    refused; and an inactive identity is refused with no event at all — the one
-   refusal decided before any policy. Four negative controls, each reverted with the
+   refusal decided before any policy.
+
+   **2026-10-22 — the inline naming became a port.** `mago guard` was right about
+   the shape that kept the `use`-line ledger empty: a kernel that can only say
+   "record an `AUTHZ_DENIED`" by naming `Modules\Outbox\…` still depends on the
+   module, whether or not a `class_exists` guard protects the call. Both
+   middlewares now raise the fact through
+   `Modules\Core\Domain\Contracts\SecurityEventSink` (`authorizationDenied()`,
+   `rateLimitTripped()`), `OutboxSecurityEventSink` maps it to the owned type and
+   the declared keys, and `src/http.php` wires the adapter. The kernel names no
+   module, guard reports 0 with no baseline, and
+   `SecurityEventPayloadContractTest` reads the adapter as the emit site instead
+   of the two middleware files. Four negative controls, each reverted with the
    tree verified by digest: the bare name back → the delivery test red; the guard
    removed → red; `ip` dropped from the declaration → red; the inactive branch made
    to record → red. The same claim is then made against a **booted server**:

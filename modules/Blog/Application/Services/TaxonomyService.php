@@ -350,7 +350,7 @@ final class TaxonomyService
         $path = AppPaths::instance()->storage(self::REGISTRY_FILE);
         $dir = dirname($path);
 
-        if (is_dir($dir) || @mkdir($dir, 0775, true)) {
+        if (is_dir($dir) || @mkdir($dir, 0o775, true)) {
             file_put_contents($path, json_encode($registry, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), LOCK_EX);
         }
     }

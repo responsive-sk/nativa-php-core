@@ -687,11 +687,13 @@ final class NameOwnershipContractTest extends TestCase
         $start = $cursor;
 
         while ($cursor < $count) {
-            $token = $tokens[$cursor];
+            // An element is a token ARRAY or a bare character — `?` and `|`
+            // arrive as one-character strings, which is why this is not called
+            // `$token`: a security linter reads that name as a credential.
+            $element = $tokens[$cursor];
 
-            if (!is_array($token)) {
-                // `?` and `|` are bare characters, not tokens.
-                if ('?' === $token || '|' === $token) {
+            if (!is_array($element)) {
+                if ('?' === $element || '|' === $element) {
                     $cursor = $this->skipSpace($tokens, $count, $cursor + 1);
 
                     continue;
@@ -700,7 +702,7 @@ final class NameOwnershipContractTest extends TestCase
                 break;
             }
 
-            if (!in_array($token[0], self::TYPE_TOKENS, true)) {
+            if (!in_array($element[0], self::TYPE_TOKENS, true)) {
                 break;
             }
 

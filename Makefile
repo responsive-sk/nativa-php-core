@@ -17,7 +17,7 @@ LEKALO_MODULES ?= users,blog
 
 ##@ Help
 help: ## Show available targets
-	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 ##@ Setup
 install: ## Install PHP dev dependencies (the kernel runtime itself has none)
@@ -39,6 +39,29 @@ analyze: ## Run phpstan + rector dry + cs-fixer dry
 	$(COMPOSER) phpstan
 	$(COMPOSER) rector-dry
 	$(COMPOSER) cs-fix-dry
+
+##@ Mago
+# Informational, like `kernel-size` and `lekalo-verify`: the script exits 0
+# whatever the tools say, because none of the numbers has been triaged into a
+# gate. `MAGO_ARGS=--strict` is the switch a later decision would flip.
+# What it measures, and the adoption verdict, live in docs/mago-evaluation.md.
+MAGO_ARGS ?=
+
+mago-spike: ## Informational: run mago lint/analyze/format/guard over the phpstan scope
+	@bin/build/mago-spike.sh $(MAGO_ARGS)
+
+# The gate, as against the report above: one rule (`mago.toml` [guard]), no
+# exception list, and `--strict` so a kernel→module edge fails the job. Should a
+# baseline ever come back, the script fails it on entries that no longer match
+# an issue. CI runs exactly this target.
+mago-guard: ## Gate: the kernel→module dependency rule
+	@bin/build/mago-spike.sh --only=guard --strict
+
+# The count, not the verdict: `mago lint` exits 1 while anything is left, so the
+# count is the part that can gate. 22 findings were resolved on 2026-10-22
+# without disabling a rule, and the ceiling is 0 — the first new one fails.
+mago-lint: ## Gate: curated lint findings must be zero
+	@bin/build/mago-spike.sh --only=lint --max-issues=0
 
 ##@ Measurement
 # Informational by design: it reports whatever is true and exits 0. The gate on
@@ -71,6 +94,19 @@ modules-install: ## Install every catalogued module (closure order; refuses a cy
 
 admin-smoke: ## Boot the panel with temp DBs and walk the admin flows over HTTP
 	bin/build/admin-smoke.sh
+
+##@ Distribution
+# A clone of HEAD, not the working tree: `build-dist.sh` copies what is on disk,
+# and the claim being tested is that a FRESH CLONE builds a green artifact — no
+# vendor/, no locally installed module slice, no storage state, no uncommitted
+# edits. CI runs exactly this target.
+dist-check: ## Gate: build dist from a clean clone (no vendor/) and smoke it
+	@bin/build/dist-check.sh
+
+# The profile branches all end in a GREEN build except the broken one, which is
+# why each of them needs its own assertion rather than a single happy-path run.
+dist-profile-test: ## Gate: the three deployment-profile branches (skip / skip / fail)
+	@bin/build/dist-profile-test.sh
 
 ##@ Assets
 assets: ## Build the theme bundles in-tree (pnpm workspace under Frontend/packages)

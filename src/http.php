@@ -45,6 +45,7 @@ use Modules\Core\Application\Services\AuthProviderRegistry;
 use Modules\Core\Application\Services\DiscoveryCache;
 use Modules\Core\Application\Services\DisposalRegistry;
 use Modules\Core\Application\Services\PageCacheService;
+use Modules\Core\Domain\Contracts\SecurityEventSink;
 use Modules\Core\Infrastructure\Bootstrap\Bootstrapper;
 use Modules\Core\Infrastructure\Env;
 use Modules\Core\Infrastructure\Http\Request;
@@ -62,11 +63,17 @@ use Modules\Security\Application\Services\RateLimiter as SecurityRateLimiter;
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
 $_earlyLogDir = dirname(__DIR__) . '/storage/logs';
 if (!is_dir($_earlyLogDir)) {
-    @mkdir($_earlyLogDir, 0755, true);
+    @mkdir($_earlyLogDir, 0o755, true);
 }
 if (is_dir($_earlyLogDir)) {
+    // This runs before any framework exists, and PHP offers no other way to say
+    // where a fatal before bootstrap is written: the three values are the
+    // bootstrap's own configuration, not a runtime override.
+    // @mago-expect lint:no-ini-set
     ini_set('log_errors', '1');
+    // @mago-expect lint:no-ini-set
     ini_set('error_log', $_earlyLogDir . '/php-error.log');
+    // @mago-expect lint:no-ini-set
     ini_set('display_errors', '0');
 }
 unset($_earlyLogDir);
@@ -132,6 +139,24 @@ function http_kernel(): Kernel
 
     // WIRING — the pipeline stages auto-discovery cannot construct.
 
+    // The security-event sink: the kernel's own `SecurityEventSink` port, which
+    // the Outbox module implements. The class name is a STRING on purpose, the
+    // same rule the limiter below keeps: a kernel-only checkout has no
+    // `Modules\Outbox` on disk, and a class written in a TYPE position here
+    // (the `new` itself, or a return annotation) is resolved by static analysis
+    // whether or not the guard would protect it. PHPStan proved that on the
+    // first CI run of this wiring.
+    //
+    // The proof that the built object really is the port is the `instanceof`
+    // inside `$asSink`, and it has to happen where the value is typed `object`:
+    // checked on the `new` result directly, static analysis already knows the
+    // module class implements the port and calls the test redundant — which is
+    // only true in a tree that HAS the module. Widened to `object`, the same
+    // line is a real check in both shapes, and neither shape needs a suppression.
+    $sinkClass = 'Modules\\Outbox\\Application\\Services\\OutboxSecurityEventSink';
+    $asSink = static fn (object $candidate): ?SecurityEventSink => $candidate instanceof SecurityEventSink ? $candidate : null;
+    $securityEvents = class_exists($sinkClass) ? $asSink(new $sinkClass()) : null;
+
     // The factory yields an `object` because that is RateLimitMiddleware's own
     // declared shape (`\Closure(): object`) — its product is verified at
     // runtime by isLimiter(), never trusted at compile time. Nothing about the
@@ -144,6 +169,7 @@ function http_kernel(): Kernel
             static fn (): object => new SecurityRateLimiter(
                 DatabaseConnectionManager::instance()->connection('users'),
             ),
+            sink: $securityEvents,
         ));
         error_log('[rate] wired RateLimit');
     } else {
@@ -199,7 +225,7 @@ function http_kernel(): Kernel
     $authProvider = AuthProviderRegistry::first();
 
     if (null !== $authProvider) {
-        $kernel->addMiddleware(new AuthMiddleware($authProvider));
+        $kernel->addMiddleware(new AuthMiddleware($authProvider, $securityEvents));
         error_log('[auth] wired ' . $authProvider::class);
     } else {
         error_log('[auth] absent — no provider module');

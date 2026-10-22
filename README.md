@@ -85,9 +85,20 @@ after cloning, enable the enforcer: `cp bin/git-hooks/commit-msg .git/hooks/comm
 ```sh
 make assets                    # theme bundles → public/dist/ (gitignored)
 bin/build/build-dist.sh        # → dist/ : assets, migrated databases, smoke-tested
+make dist-check                # same build, but from a clean clone of HEAD
 ```
 
-`dist/` carries no `vendor/`, no `Frontend/` sources, no dev configs and **one**
+`make dist-check` is the gate CI runs: it clones `HEAD` into a temp directory —
+tracked bytes only, no `vendor/`, no locally installed module slices, no
+uncommitted edits — builds the artifact there, then asserts the smoke test
+passed, the artifact carries no `vendor/`, and `.build-info` agrees. A green
+local `dist/` that a clone cannot reproduce fails there. `make dist-profile-test`
+covers the three identity branches — Settings absent, `--no-profile`, and a
+profile that is wrong while Settings IS installed (that one must fail the
+build) — each in its own clone, with no HTTP smoke run.
+
+`dist/` carries no `vendor/`, no `Frontend/` sources, no dev configs, no
+`fixtures/` (the theme-gallery inputs a build-time script reads) and **one**
 `Modules` tree — the installed copies, not a second copy of the catalogue
 (`--with-catalogue` ships that too, for a target that must install modules
 itself). It keeps `bin/cms`: that is the production tool for `migrate` and
@@ -101,4 +112,7 @@ after `migrate`. Migrating alone seeds the kernel defaults and copies none of
 the developer's `storage/data/`, so without the profile a rebuilt responsive.sk
 dist came up as the kernel's own site (the theme's copy looked deleted). Build
 with `--no-profile` to ship the kernel defaults on purpose; afterwards every
-value is still the operator's to change in `/mark` → Settings.
+value is still the operator's to change in `/mark` → Settings. A kernel-only
+checkout has the profile file but no `Settings` module to apply it with, so that
+build keeps the kernel defaults and says so — the failure that would matter
+(the module is installed, the profile is wrong) still fails the build.
