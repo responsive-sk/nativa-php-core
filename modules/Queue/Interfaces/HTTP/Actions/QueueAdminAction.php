@@ -21,8 +21,19 @@ use Modules\Queue\Interfaces\HTTP\QueueServices;
  * with its JSON args, deletes jobs via POST; every state change redirects
  * back to the list. Failed-job retry/delete arrive in the next task on
  * this same class.
+ *
+ * `process()` is the deployment trigger. The worker (`bin/cms queue:work`) is
+ * the right shape for a host with cron; the hosts this tree targets often have
+ * none, and a queue nobody drains is a table of emails that never leave. So the
+ * panel can run one bounded batch on demand — the same `QueueServices::work()`
+ * seam the CLI command drives, which means the button cannot behave differently
+ * from the worker. It is idempotent by construction: `DatabaseQueue::reserve()`
+ * claims a row under `BEGIN IMMEDIATE` with `reserved_at IS NULL`, so two
+ * operators clicking at once process different jobs instead of mailing the same
+ * comment twice.
  */
 #[Route(path: '/mark/queue', method: 'GET', name: 'mark.queue')]
+#[Route(path: '/mark/queue/work', method: 'POST', name: 'mark.queue.work', handlerMethod: 'process')]
 #[Route(path: '/mark/queue/{id}', method: 'GET', name: 'mark.queue.detail', handlerMethod: 'detail')]
 #[Route(path: '/mark/queue/{id}/delete', method: 'POST', name: 'mark.queue.delete', handlerMethod: 'delete')]
 #[Route(path: '/mark/queue/failed/{id}/retry', method: 'POST', name: 'mark.queue.failed.retry', handlerMethod: 'retryFailed')]
@@ -30,6 +41,13 @@ use Modules\Queue\Interfaces\HTTP\QueueServices;
 final class QueueAdminAction
 {
     use ResolvesRouteUrls;
+
+    /**
+     * How many jobs one click may run. Ten is the CLI default; the cap exists
+     * because this runs inside a request that a web server will kill — a
+     * hundred emails in one POST is a timeout with half the batch reserved.
+     */
+    private const int WORK_LIMIT = 10;
 
     public function handle(Request $request): Response
     {
@@ -62,6 +80,36 @@ final class QueueAdminAction
         }
 
         return Response::redirect($this->url('mark.queue'));
+    }
+
+    /**
+     * Run one batch, the same way `bin/cms queue:work` does.
+     *
+     * Nothing about the caller is trusted: the batch size is a constant, the
+     * queue is "any due job", and the result travels back as numbers rather
+     * than as a message — a job's own error text is already in `failed_jobs`
+     * with its payload, so repeating it on the list page would only spread it.
+     */
+    public function process(Request $request): Response
+    {
+        $result = QueueServices::work(null, self::WORK_LIMIT);
+
+        CacheInvalidator::flush();
+        AuditServices::log(
+            'queue.work',
+            'queue',
+            sprintf(
+                'Processed %d job(s) from /mark (limit %d, failed: %d)',
+                $result['processed'],
+                self::WORK_LIMIT,
+                $result['failed'],
+            ),
+            $request->getClientIp(),
+        );
+
+        return Response::redirect(
+            $this->url('mark.queue') . '?worked=' . $result['processed'] . '&failed=' . $result['failed'],
+        );
     }
 
     public function retryFailed(Request $request): Response
@@ -101,9 +149,38 @@ final class QueueAdminAction
             . (null !== $filter ? ' in queue “' . AdminLayout::e($filter) . '”' : '')
             . ' · ' . count($failed) . ' failed</p>';
 
-        $content = $summary . $this->jobsTable($jobs, $csrf) . $this->failedTable($failed, $csrf);
+        $content = $summary . $this->processForm($request, $csrf) . $this->jobsTable($jobs, $csrf)
+            . $this->failedTable($failed, $csrf);
 
         return AdminLayout::render('Queue', $content, 'queue', router: $this->router());
+    }
+
+    /**
+     * The "Process now" control: the trigger for a deployment without cron.
+     *
+     * Shown even for an empty queue on purpose — a control that appears and
+     * disappears is indistinguishable from a broken one, and a run against an
+     * empty queue answers 0 processed, which is true. The line after the button
+     * says what it does, because "Process now" alone does not tell an operator
+     * whether it drains one job or a thousand.
+     */
+    private function processForm(Request $request, string $csrf): string
+    {
+        $worked = $request->query('worked', null);
+        $failedNow = $request->query('failed', null);
+
+        $result = '';
+
+        if (is_string($worked) && ctype_digit($worked)) {
+            $result = '<p class="m-muted">Processed ' . (int) $worked . ' job(s) · '
+                . (is_string($failedNow) && ctype_digit($failedNow) ? (int) $failedNow : 0) . ' failed.</p>';
+        }
+
+        return $result
+            . '<p><form method="POST" action="' . AdminLayout::e($this->url('mark.queue.work')) . '"'
+            . ' class="m-inline-form">' . $csrf
+            . '<button class="m-btn m-btn-sm">Process now</button></form>'
+            . '<span class="m-muted"> runs up to ' . self::WORK_LIMIT . ' due job(s) in this request</span></p>';
     }
 
     /**

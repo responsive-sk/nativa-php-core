@@ -9,6 +9,10 @@ use Modules\Comments\Interfaces\HTTP\CommentsServices;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
+use Modules\Queue\Interfaces\HTTP\QueueServices;
+use Modules\Users\Application\Services\AdminNotificationHandler;
+use Modules\Users\Application\Services\NotificationPayload;
+use Modules\Users\Application\Services\NotifyJobs;
 
 /**
  * Comment submit action — POST /blog/{slug}/comments.
@@ -80,6 +84,8 @@ final class CommentSubmitAction
         );
 
         if ($result['ok']) {
+            $this->notifyAdmin($slug, $userId !== null ? $userName : $guestName, $body);
+
             return Response::redirect('/blog/' . $slug . '#comments');
         }
 
@@ -94,6 +100,38 @@ final class CommentSubmitAction
         ]);
 
         return (new BlogArticleAction())->handle($request);
+    }
+
+    /**
+     * Queue the operator notification for a comment that was just stored.
+     *
+     * The comment is `pending` — moderation is the operator's next move, so
+     * tell them now rather than on their next visit to /mark. Queued, not sent
+     * here: a reader's submission must not wait for a mail transport, and the
+     * panel runs the queue on demand (there is no cron on the deployments this
+     * tree targets).
+     *
+     * Contained on purpose — a stored comment must not become an error page
+     * because the notification could not be queued, so the log names what
+     * happened and the reader sees the normal confirmation.
+     */
+    private function notifyAdmin(string $slug, ?string $author, string $body): void
+    {
+        try {
+            QueueServices::queue()->push(
+                AdminNotificationHandler::HANDLER,
+                NotificationPayload::comment($slug, $author, $body, '/mark/comments'),
+                // One attempt: a retried notification is a second email for a
+                // comment the admin may already have moderated.
+                maxAttempts: 1,
+            );
+        } catch (\Throwable $e) {
+            error_log(sprintf(
+                '[comments] could not queue the admin notification for "%s": %s',
+                $slug,
+                $e->getMessage(),
+            ));
+        }
     }
 
     private function stringOrNull(mixed $value): ?string

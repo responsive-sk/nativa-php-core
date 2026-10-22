@@ -9,8 +9,12 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\Queue\Interfaces\HTTP\QueueServices;
+use Modules\Users\Application\Services\AdminNotificationHandler;
+use Modules\Users\Application\Services\NotificationPayload;
 use Modules\Pages\Interfaces\HTTP\Actions\PageViewAction;
 use Modules\Questions\Application\QuestionsServices;
+use Modules\Questions\Application\Services\QuestionsBadge;
 use Modules\Questions\Domain\Entities\Question;
 use Modules\Users\Interfaces\HTTP\AuthServices;
 use Modules\Validation\Validation\Validator;
@@ -97,6 +101,7 @@ final class QuestionSubmitAction
         }
 
         $this->store($request, $subjectType, $subjectSlug, $locale, $ip);
+        $this->notifyAdmin($request, $subjectType, $subjectSlug);
 
         return $this->redirectToSubject($subjectType, $subjectSlug, $locale);
     }
@@ -152,6 +157,40 @@ final class QuestionSubmitAction
             null === $user ? null : $user->id(),
             $ip,
         ));
+    }
+
+    /**
+     * Queue the operator notification for a question that was just stored.
+     *
+     * Queued, not sent here: the reader gets the confirmation page without
+     * waiting for a mail transport, and the panel drains the queue on demand.
+     * Contained on purpose — a stored question must not become an error page
+     * because the notification could not be queued.
+     */
+    private function notifyAdmin(Request $request, string $subjectType, string $subjectSlug): void
+    {
+        try {
+            QueueServices::queue()->push(
+                AdminNotificationHandler::HANDLER,
+                NotificationPayload::question(
+                    $subjectType,
+                    $subjectSlug,
+                    $this->stringOrNull($request->body('display_name')),
+                    (string) $this->stringOrNull($request->body('text')),
+                    QuestionsBadge::NAV_HREF,
+                ),
+                // One attempt: a retried notification is a second email for a
+                // question the admin may already have answered.
+                maxAttempts: 1,
+            );
+        } catch (\Throwable $e) {
+            error_log(sprintf(
+                '[questions] could not queue the admin notification for "%s/%s": %s',
+                $subjectType,
+                $subjectSlug,
+                $e->getMessage(),
+            ));
+        }
     }
 
     /**
