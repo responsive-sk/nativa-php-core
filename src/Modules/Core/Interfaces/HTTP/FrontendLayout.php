@@ -580,6 +580,12 @@ final class FrontendLayout
      * `SecurityHeadersMiddleware` replaces on every HTML response, so a cached
      * page keeps no stale nonce.
      *
+     * The rail's sticky top is `calc(var(--docs-header-offset) + 1.5rem)`, not a
+     * constant: Boson's bar is fixed at 100px (70px once scrolled) and is painted
+     * over the top of the viewport, so a rail at 1.5rem sat behind it. The number
+     * is measured per page by `readerLayoutScript()`, which keeps the kernel out
+     * of the business of knowing any theme's header.
+     *
      * @param list<array{level: int, text: string, anchor: string}> $headings
      */
     public static function readerLayout(string $content, array $headings): string
@@ -595,7 +601,10 @@ final class FrontendLayout
             . '<div data-docs-reader' . ('' !== $rail ? ' data-has-rail' : '') . '>'
             . '<div data-docs-prose>' . $content . '</div>'
             . $rail
-            . '</div>';
+            . '</div>'
+            // After the markup it measures: the rail has to be in the DOM
+            // before the script looks for it, and nothing above should wait.
+            . self::readerLayoutScript();
     }
 
     /**
@@ -642,7 +651,7 @@ final class FrontendLayout
     {
         return <<<'CSS'
             <style nonce="__CSP_NONCE_PLACEHOLDER__">
-            [data-docs-reader]{display:grid;grid-template-columns:minmax(0,1fr);gap:2.5rem}
+            [data-docs-reader]{--docs-header-offset:0px;display:grid;grid-template-columns:minmax(0,1fr);gap:2.5rem}
             @media (min-width:1024px){
               [data-docs-reader][data-has-rail]{grid-template-columns:minmax(0,68ch) minmax(12rem,16rem);justify-content:center;align-items:start}
             }
@@ -654,7 +663,7 @@ final class FrontendLayout
             [data-docs-prose] table{display:block;overflow-x:auto}
             [data-docs-toc]{font-size:.875rem;line-height:1.5}
             @media (min-width:1024px){
-              [data-docs-toc]{position:sticky;top:1.5rem;max-height:calc(100vh - 3rem);overflow:auto;padding-left:1rem;border-left:1px solid rgba(128,128,128,.35)}
+              [data-docs-toc]{position:sticky;top:calc(var(--docs-header-offset) + 1.5rem);max-height:calc(100vh - var(--docs-header-offset) - 3rem);overflow:auto;padding-left:1rem;border-left:1px solid rgba(128,128,128,.35)}
             }
             [data-docs-toc__title]{margin:0 0 .5rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;font-size:.75rem;opacity:.7}
             [data-docs-toc] ul{margin:0;padding:0;list-style:none}
@@ -664,6 +673,21 @@ final class FrontendLayout
             [data-docs-toc] a:hover,[data-docs-toc] a:focus-visible{opacity:1;text-decoration:underline}
             </style>
             CSS;
+    }
+
+    /**
+     * The measuring script that answers `--docs-header-offset` (see
+     * assets/scripts/docs-reader.js). Carries the nonce placeholder like every
+     * other inline script, so CSP lets it run; a missing asset emits nothing and
+     * the rail falls back to the 1.5rem it had before.
+     */
+    private static function readerLayoutScript(): string
+    {
+        $script = InlineJs::file('Modules/Core/Interfaces/HTTP/assets/scripts/docs-reader.js');
+
+        return '' !== $script
+            ? '<script nonce="__CSP_NONCE_PLACEHOLDER__">' . "\n" . $script . "\n" . '</script>'
+            : '';
     }
 
     public static function e(mixed $value): string

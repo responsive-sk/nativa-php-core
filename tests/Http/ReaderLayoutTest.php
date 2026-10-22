@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Tests\Http;
 
+use Modules\Core\Application\Services\View\InlineJs;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -137,6 +138,64 @@ final class ReaderLayoutTest extends TestCase
             $html,
             'The reader layout style block carries no nonce placeholder, so SecurityHeadersMiddleware'
             . ' cannot give it a nonce and the CSP blocks it.',
+        );
+    }
+
+    /**
+     * The rail must not be painted under the theme's pinned header. Measured on
+     * `/docs/themes` at 1440px with the Boson theme: the rail stuck at `top: 24px`
+     * while the fixed bar covered 0–71px, so the "On this page" title and the
+     * first entries were behind it — the rail worked and was invisible.
+     *
+     * The offset is a custom property, not a number, because its value belongs to
+     * the theme (Boson's bar is 100px, 70px once scrolled; Griffe and Mono pin a
+     * sticky nav) and this layout must hold for a theme that is not installed yet.
+     */
+    #[Test]
+    public function theRailIsOffsetByTheThemesPinnedHeader(): void
+    {
+        $html = FrontendLayout::readerLayout('<article>body</article>', self::headings(2));
+
+        self::assertStringContainsString(
+            '[data-docs-reader]{--docs-header-offset:0px;',
+            $html,
+            'The reader does not declare the header offset — the rail falls back to the top of the viewport.',
+        );
+        self::assertStringContainsString(
+            'top:calc(var(--docs-header-offset) + 1.5rem)',
+            $html,
+            'The rail sticks at a constant top, so a fixed header covers it.',
+        );
+        self::assertStringContainsString(
+            'max-height:calc(100vh - var(--docs-header-offset) - 3rem)',
+            $html,
+            'The rail may grow taller than the space below the header — its last entries would be unreachable.',
+        );
+    }
+
+    /**
+     * The offset is measured in the browser, so the style block and the script
+     * must agree on one property name. A rename on either side is silent: the
+     * rail simply goes back to `top: 1.5rem` under the header, and every other
+     * assertion here still passes.
+     */
+    #[Test]
+    public function theMeasuringScriptIsEmittedAndAgreesWithTheStyle(): void
+    {
+        $html = FrontendLayout::readerLayout('<article>body</article>', self::headings(2));
+        $script = InlineJs::file('Modules/Core/Interfaces/HTTP/assets/scripts/docs-reader.js');
+
+        self::assertNotSame('', $script, 'The docs-reader script asset is missing (path moved?).');
+        self::assertStringContainsString('--docs-header-offset', $script, 'The script writes no offset, so the property stays 0px.');
+        self::assertStringContainsString('<script nonce="__CSP_NONCE_PLACEHOLDER__">', $html, 'The measuring script is not emitted with a nonce.');
+        self::assertStringContainsString($script, $html, 'The measuring script is not inlined into the reader layout.');
+
+        // Without the script there is no offset to measure — an empty asset would
+        // leave the rail under the header exactly as before.
+        self::assertStringContainsString(
+            'pinnedBottom',
+            $script,
+            'The script no longer measures a pinned header.',
         );
     }
 
