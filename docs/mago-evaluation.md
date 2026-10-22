@@ -26,7 +26,7 @@ Measured 2026-10-22 with `mago 1.58.2` on PHP 8.5.11, over `mago.toml`'s scope
 | tool | measured on this tree | verdict |
 |---|---|---|
 | `mago analyze` | 189 errors / 96 warnings / 87 help in ~0,19 s | **not a replacement** — 2 real findings, the rest is config and inference |
-| `mago lint` | 570 findings at the default preset, **6** with the curated rule set | **count gate** — `make mago-lint` fails above 6; the 6 left are two false-positive classes |
+| `mago lint` | 570 findings at the default preset, **0** with the curated rule set | **gate** — `make mago-lint` fails on any finding; all 22 resolved, no rule silenced |
 | `mago format` | 124 of 124 files would change (~0,03 s) | **not a replacement** — house rules it cannot express |
 | `mago guard` | 0 issues after the `SecurityEventSink` refactor; catches a planted kernel→module import | **gate** — CI job `kernel-dependency`, empty report is the claim |
 
@@ -106,8 +106,8 @@ checked), 36 are `cyclomatic-complexity` at threshold 15.
 
 `mago.toml` therefore disables 18 rules — each with its measured count and
 reason in the file — and keeps correctness, security and readability rules on.
-Result: **6 findings**, all triaged. Sixteen of the original 22 were resolved
-rather than triaged on 2026-10-22:
+Result: **0 findings**, all 22 resolved on 2026-10-22 — none by silencing a
+rule. Sixteen were code fixes:
 
 - `explicit-octal` (5): implicit `0755`/`0775`/`0002` literals now say
   `0o755`/`0o775`/`0o002` — in the kernel, `config/session.php` and the
@@ -130,25 +130,32 @@ rather than triaged on 2026-10-22:
   rethrows it after the `finally`, so a throw there can no longer replace the
   assertion it was cleaning up after.
 
-| finding | count | judgement |
-|---|---|---|
-| `no-insecure-comparison` on a PHP-tokenizer `$token` | 4 | false positive (name heuristic, not a secret) |
-| `no-literal-password` on the test's `TOKEN` constant | 2 | false positive (fixture) |
+The last six were false positives of two SECURITY rules, and both rules stay
+enabled — that is the part that matters, because a security rule switched off
+because this tree trips it is the one suppression worth refusing:
 
-The security rules were deliberately **not** switched off to make the count look
-better: a security rule silenced because this tree happens to trip it is the one
-suppression that matters. What stayed is a ceiling on the count, below.
+- `no-insecure-comparison` (4): the heuristic reads `$token` as a credential,
+  but in `tests/Support/KernelCoupling.php` and
+  `tests/Architecture/NameOwnershipContractTest.php` it was an element of a
+  `token_get_all()` stream — a token ARRAY or a one-character string like `{`,
+  `?`, `|`. The variable is now `$element` with the distinction written next to
+  it, which is the accurate name and needs no pragma at all;
+- `no-literal-password` (2): `CsrfMiddlewareTest` really does assert on a
+  literal CSRF token, because the middleware hashes a fixture against the
+  session value — the literal IS the assertion. Both sites carry
+  `@mago-expect lint:no-literal-password` and the reason, so the rule stays on
+  and an `unfulfilled-expect` warning appears if the fixture ever moves.
 
-### The count is what CI gates, not the verdict
+### The empty set is what CI gates
 
-`mago lint` exits 1 while any finding remains, so it cannot be a pass/fail gate
-on this tree without silencing rules the section above refuses to silence. The
-count can: `make mago-lint` runs the linter with `--max-issues=6`, and the CI
-job `curated-lint` runs exactly that target, on the same binary, checksum and
-cache key as the guard job and with no `vendor/`. A 7th finding means a rule
-fired on code nobody has triaged and fails the job; fixing one of the two
-remaining false-positive classes means lowering the ceiling in the same commit,
-which is the only direction it moves.
+`make mago-lint` runs the linter with `--max-issues=0`, and the CI job
+`curated-lint` runs exactly that target on the same binary, checksum and cache
+key as the guard job, with no `vendor/`. `mago lint` on its own would not be a
+usable verdict (it exits 1 while anything remains), and a fixed ceiling would
+let the next finding hide under it — zero is the only number this tree can
+claim, and a single finding fails the job. A pragma that outlives its code
+counts as a finding too, through `unfulfilled-expect`, so the suppressions
+cannot rot either.
 
 ## Formatter
 
@@ -270,8 +277,8 @@ thing this whole section is about.
   bootstrap mechanism, or a reviewed ignore list — today none of the three
   exists in this repo.
 - **Linter:** the curated `[linter.rules]` block is the cost, and it is already
-  written; the 6 that remain are false positives, and the ceiling keeps them
-  from being joined silently.
+  written; the curated set is empty and `make mago-lint` fails on the first
+  finding that arrives.
 - **Formatter:** the cost is every file in scope plus the rules in the table
   above.
 - **Guard:** paid in this change — 8 pre-existing errors removed by a kernel

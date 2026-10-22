@@ -74,9 +74,10 @@
 #                         them. Evidence in docs/mago-evaluation.md.
 #  11. Curated lint      — `mago lint` under the curated rule set, counted. The
 #                         linter exits 1 while anything is left, so the gate is
-#                         a CEILING: 6 findings, all documented false positives
-#                         of two security rules. A 7th fails the job instead of
-#                         quietly outgrowing the number in the document.
+#                         a CEILING of 0: all 22 findings it once reported are
+#                         fixed in the code with no rule disabled, and the first
+#                         new one fails the job instead of quietly joining a
+#                         number in the document.
 # =============================================================================
 
 name: CI
@@ -249,12 +250,12 @@ jobs:
   # ---------------------------------------------------------------------------
   # CURATED LINT — the count of `mago lint` findings, as a ceiling
   # ---------------------------------------------------------------------------
-  # `mago lint` is not a verdict gate: it exits 1 while any finding remains, and
-  # 6 of them are false positives this tree has decided to live with (the two
-  # security rules that misfire on a CSRF token and a tokenizer `$token`). What
-  # CAN be a gate is the count — 22 triaged on 2026-10-22, 16 fixed, 6 left —
-  # because a 7th finding means a rule fired on new code without anyone
-  # deciding what it means. `--max-issues=6` turns that into exit 1.
+  # `mago lint` is not a verdict gate on its own: it exits 1 while any finding
+  # remains. What CAN gate is the count, and the number is 0 — on 2026-10-22 all
+  # 22 findings were resolved in the code without disabling a rule (16 fixes, 4
+  # renames of a `token_get_all()` element, 2 reasoned `@mago-expect` comments on
+  # CSRF fixtures). `--max-issues=0` fails the job on the first new finding, and
+  # `unfulfilled-expect` counts as one, so a pragma cannot outlive its code.
   #
   # Same binary, same checksum, same cache key as the guard job above: no PHP
   # setup and no `composer install`, so the count is measured on the checkout a

@@ -57,12 +57,11 @@ mago-spike: ## Informational: run mago lint/analyze/format/guard over the phpsta
 mago-guard: ## Gate: the kernel→module dependency rule
 	@bin/build/mago-spike.sh --only=guard --strict
 
-# The count, not the verdict: the linter always exits 1 while anything is left,
-# so the ceiling is what makes a reviewed set stay reviewed. 22 findings were
-# triaged on 2026-10-22, 16 fixed, and the 6 that remain are documented false
-# positives — a 7th is a decision nobody has written down yet.
-mago-lint: ## Gate: curated lint findings may not exceed 6
-	@bin/build/mago-spike.sh --only=lint --max-issues=6
+# The count, not the verdict: `mago lint` exits 1 while anything is left, so the
+# count is the part that can gate. 22 findings were resolved on 2026-10-22
+# without disabling a rule, and the ceiling is 0 — the first new one fails.
+mago-lint: ## Gate: curated lint findings must be zero
+	@bin/build/mago-spike.sh --only=lint --max-issues=0
 
 ##@ Measurement
 # Informational by design: it reports whatever is true and exits 0. The gate on
