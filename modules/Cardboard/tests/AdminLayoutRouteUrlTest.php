@@ -127,6 +127,7 @@ final class AdminLayoutRouteUrlTest extends TestCase
                 'locale'       => '',
                 'layoutSelect' => '',
                 'themeSelect'  => '',
+                'themeSettingsCard' => '',
                 'regChecked'   => '',
                 'tokenTable'   => '',
                 'navTable'     => '',

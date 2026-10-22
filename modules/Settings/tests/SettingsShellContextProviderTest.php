@@ -354,6 +354,44 @@ final class SettingsShellContextProviderTest extends TestCase
         $this->assertNull((new SettingsShellContextProvider())->theme());
     }
 
+    /**
+     * The theme-settings half of the port: only the ACTIVE theme's rows.
+     *
+     * The kernel theme is the active one here on purpose — this module's test
+     * must not depend on another module's theme being installed, and the rule
+     * under test is the prefix filter, not a particular theme. A row belonging
+     * to another theme is exactly the failure this pins: it would hand Boson
+     * the meatball Mono was configured with.
+     */
+    #[Test]
+    public function themeSettingsAnswersOnlyTheActiveThemesRows(): void
+    {
+        $this->storeTheme(ThemeResolver::KERNEL_THEME);
+
+        $repository = new SettingsRepository($this->pdo);
+        $repository->set('theme.kernel.nav_toggle_icon', 'meatball', 'design', false);
+        $repository->set('theme.other.nav_toggle_icon', 'burger', 'design', false);
+        SettingsServices::reset();
+
+        $this->assertSame(
+            ['nav_toggle_icon' => 'meatball'],
+            (new SettingsShellContextProvider())->themeSettings(),
+            'The storage prefix carries the theme name; another theme\'s row is not an answer.',
+        );
+    }
+
+    #[Test]
+    public function themeSettingsAreEmptyUntilARowIsStored(): void
+    {
+        $this->storeTheme(ThemeResolver::KERNEL_THEME);
+
+        $this->assertSame(
+            [],
+            (new SettingsShellContextProvider())->themeSettings(),
+            'A fresh install stores nothing; defaults belong to the theme schema, not to this port.',
+        );
+    }
+
     #[Test]
     public function resolvePathFollowsTheStoredTheme(): void
     {

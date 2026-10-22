@@ -8,6 +8,7 @@ use Modules\Core\Domain\AdminRoutePolicy;
 use Modules\Core\Domain\Contracts\ShellContextProvider;
 use Modules\Core\Domain\ShellNavItem;
 use Modules\Core\Domain\ThemePreference;
+use Modules\Core\Domain\ThemeSettingValues;
 use Modules\Core\Infrastructure\Attributes\AsShellContextProvider;
 use Modules\Core\Interfaces\HTTP\ThemeRegistry;
 use Modules\Core\Interfaces\HTTP\ThemeResolver;
@@ -114,6 +115,43 @@ final class SettingsShellContextProvider implements ShellContextProvider
         $available = [...ThemeResolver::PUBLIC_WHITELIST, ...array_keys(ThemeRegistry::all())];
 
         return ThemePreference::isResolvable($stored, $available) ? $stored : null;
+    }
+
+    /**
+     * The stored settings of the ACTIVE theme, one map, prefix stripped.
+     *
+     * The theme is resolved the same way `theme()` resolves it — stored vote
+     * vetted against what the tree can render, else the kernel theme — because
+     * the rows are keyed by that name: reading `theme.<something else>.` here
+     * would hand Boson the meatball Mono was configured with.
+     *
+     * Every row of the settings table is scanned rather than queried per key:
+     * `SettingsService` already holds the whole table in memory for the request
+     * (that is why it exists), and the alternative is a `LIKE 'theme.%'` that
+     * would still need the same filtering in PHP to match the theme exactly.
+     *
+     * @return array<string, string>
+     */
+    public function themeSettings(): array
+    {
+        $theme = $this->theme() ?? ThemeResolver::PUBLIC_THEME;
+        $values = [];
+
+        foreach (SettingsServices::settings()->all() as $key => $value) {
+            if (!is_string($key) || !is_string($value)) {
+                continue;
+            }
+
+            $field = ThemeSettingValues::fieldFromStorageKey($theme, $key);
+
+            if (null === $field) {
+                continue;
+            }
+
+            $values[$field] = $value;
+        }
+
+        return $values;
     }
 
     /**

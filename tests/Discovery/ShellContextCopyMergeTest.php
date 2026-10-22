@@ -223,6 +223,12 @@ final class ShellContextCopyMergeTest extends TestCase
                 {
                     return [];
                 }
+
+                /** @return array<string, string> */
+                public function themeSettings(): array
+                {
+                    return [];
+                }
             }
 
             PHP);
@@ -285,6 +291,12 @@ final class ShellContextCopyMergeTest extends TestCase
 
                 /** @return list<ShellNavItem> */
                 public function navigation(string $slot, string $currentPath): array
+                {
+                    return [];
+                }
+
+                /** @return array<string, string> */
+                public function themeSettings(): array
                 {
                     return [];
                 }

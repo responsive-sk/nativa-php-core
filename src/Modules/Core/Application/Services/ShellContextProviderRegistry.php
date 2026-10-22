@@ -202,6 +202,35 @@ final class ShellContextProviderRegistry
     }
 
     /**
+     * The stored settings of the active theme, merged per key — the same rule
+     * `copy()` gets, for the same reason: a module that owns one theme-scoped
+     * choice must not have to re-answer another module's rows, and two modules
+     * answering the same field is a real disagreement worth a log line.
+     *
+     * An empty string is not an answer here either. A blank row keeps the
+     * schema default visible instead of masking it with a value no theme
+     * would render as anything but a broken option.
+     *
+     * @return array<string, string>
+     */
+    public static function themeSettings(): array
+    {
+        $settings = [];
+
+        foreach (self::all() as $provider) {
+            foreach ($provider->themeSettings() as $key => $value) {
+                if ('' === $value || array_key_exists($key, $settings)) {
+                    continue;
+                }
+
+                $settings[$key] = $value;
+            }
+        }
+
+        return $settings;
+    }
+
+    /**
      * The first non-empty navigation for a slot — see the merge rule above.
      * A same-priority second menu is logged, never silently dropped.
      *

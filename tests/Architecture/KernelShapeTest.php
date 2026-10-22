@@ -85,6 +85,8 @@ final class KernelShapeTest extends TestCase
         'src/Modules/Core/Domain/Permissions.php',
         'src/Modules/Core/Domain/ShellNavItem.php',
         'src/Modules/Core/Domain/ThemePreference.php',
+        'src/Modules/Core/Domain/ThemeSetting.php',
+        'src/Modules/Core/Domain/ThemeSettingValues.php',
         'src/Modules/Core/Infrastructure/Attributes/AsAuthProvider.php',
         'src/Modules/Core/Infrastructure/Attributes/AsMarkdownBlock.php',
         'src/Modules/Core/Infrastructure/Attributes/AsMiddleware.php',
@@ -135,11 +137,18 @@ final class KernelShapeTest extends TestCase
      * and guard nothing. This constant is the ceiling the refactor reached
      * (67 concrete at the baseline → 59 after the dead code left and the
      * tooling moved, **60** once `AuthProviderRegistry` came back for the
-     * auth-provider discovery round), so it is written down as a number a
-     * reviewer can argue with: lowering it is the work, raising it is a
-     * deliberate edit with its own red line.
+     * auth-provider discovery round, **64** once the per-theme settings
+     * contract arrived), so it is written down as a number a reviewer can
+     * argue with: lowering it is the work, raising it is a deliberate edit
+     * with its own red line.
+     *
+     * 62 → 64 is the theme-settings round and nothing else: `ThemeSetting` is
+     * the field a theme declares (a value object the admin, the save path and
+     * the renderer all read) and `ThemeSettingValues` is the storage-prefix and
+     * validation rule they share. Both are `contract` rows in
+     * docs/kernel-shape.md; neither touches a database.
      */
-    private const int MAX_APPROVED = 62;
+    private const int MAX_APPROVED = 64;
 
     /**
      * Rule 1: every `.php` file under `src/Modules/Core` is an interface, enum
