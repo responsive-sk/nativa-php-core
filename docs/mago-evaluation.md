@@ -13,8 +13,8 @@ kernel's dependency rule declaratively and sees couplings the PHPUnit guard
 cannot, because it resolves inline FQCNs.
 
 **Status:** one rule is a gate. `make mago-guard` runs in CI on every pull
-request — the kernel→module perimeter below, with 8 reviewed exceptions in
-`guard-baseline.toml`. The analyzer, linter and formatter stay informational:
+request — the kernel→module perimeter below, with **no baseline and no
+exception list**. The analyzer, linter and formatter stay informational:
 `phpstan`, `php-cs-fixer` and `rector` remain the analysis and style gates.
 Plan: `.ai-factory/plans/feature-evaluate-mago-toolchain.md`.
 
@@ -28,7 +28,7 @@ Measured 2026-10-22 with `mago 1.58.2` on PHP 8.5.11, over `mago.toml`'s scope
 | `mago analyze` | 189 errors / 96 warnings / 87 help in ~0,19 s | **not a replacement** — 2 real findings, the rest is config and inference |
 | `mago lint` | 570 findings at the default preset, **22** with the curated rule set | **not a gate** — 22 triaged, 6 worth acting on over time |
 | `mago format` | 124 of 124 files would change (~0,03 s) | **not a replacement** — house rules it cannot express |
-| `mago guard` | 8 errors today, all pre-existing `Modules\Outbox` edges; catches a planted kernel→module import | **gate** — CI job `kernel-dependency`, baseline = those 8 |
+| `mago guard` | 0 issues after the `SecurityEventSink` refactor; catches a planted kernel→module import | **gate** — CI job `kernel-dependency`, empty report is the claim |
 
 Reproduce any line with:
 
@@ -168,56 +168,48 @@ Evidence that this is a guard and not a green light:
 Both catch the same mutation with the same file and line. The difference is
 measurable, not aesthetic:
 
-- **Guard is stricter.** On the untouched tree it reports **8 errors**, all in
-  `AuthMiddleware.php` and `RateLimitMiddleware.php` — the two documented places
-  where the kernel reaches `Modules\Outbox\…` through inline FQCNs behind
-  `class_exists()`. `KernelCouplingTest`'s ledger is empty precisely because
-  those are not `use` statements; guard resolves them anyway. Adopting guard
-  means deciding what those 8 are (the test's docblock already argues they are
-  deliberate), not leaving them unexplained.
+- **Guard is stricter.** On the untouched tree, before the refactor below, it
+  reported **8 errors**, all in `AuthMiddleware.php` and `RateLimitMiddleware.php`
+  — the two places where the kernel reached `Modules\Outbox\…` through inline
+  FQCNs behind `class_exists()`. `KernelCouplingTest`'s ledger was empty
+  precisely because those are not `use` statements; guard resolves them anyway.
+  That is the whole argument for having it.
 - **Guard does not replace the test.** `KernelCouplingTest` also classifies
   edges (M/C/G) and ratchets unresolved ones; guard has no such ledger. Guard
   states the rule, the test records the decisions.
 
-### As a gate
+### As a gate, with no baseline
 
 `make mago-guard` runs `mago guard` with `--strict`, and the `kernel-dependency`
 CI job runs that target with no PHP setup and no `composer install` — the
-checkout that proves the gate is also the checkout with no `vendor/`.
-`guard-baseline.toml` is committed and contains exactly two files' worth of
-`Modules\Outbox\…` reaches, with counts:
+checkout that proves the gate is also the checkout with no `vendor/`. There is no
+baseline file: the 8 findings were fixed rather than listed.
 
-| file | code | dependency | count |
-|---|---|---|---|
-| `AuthMiddleware.php` | `disallowed-class-constant` | `SecurityEvents` | 2 |
-| `AuthMiddleware.php` | `disallowed-class-constant` | `OutboxServices` | 1 |
-| `AuthMiddleware.php` | `disallowed-static-call` | `OutboxServices` | 1 |
-| `RateLimitMiddleware.php` | `disallowed-class-constant` | `SecurityEvents` | 2 |
-| `RateLimitMiddleware.php` | `disallowed-class-constant` | `OutboxServices` | 1 |
-| `RateLimitMiddleware.php` | `disallowed-static-call` | `OutboxServices` | 1 |
+**What the 8 became.** A kernel-owned port, `Modules\Core\Domain\Contracts\SecurityEventSink`,
+with one method per fact the kernel raises (`authorizationDenied`,
+`rateLimitTripped`) and primitives crossing it — the shape `RateLimiter` already
+uses. The Outbox module implements it (`OutboxSecurityEventSink`), and that class
+is now where the event type and the payload keys live, next to
+`SecurityEvents::payloadKeys()`. `src/http.php` — a composition root, the one
+place allowed to name modules — constructs the adapter behind `class_exists()`
+and passes it to both middlewares; without the module the sink is null and the
+record is dropped, never the refusal.
 
-The baseline is a **ledger, not a ratchet**: the entries are matched by file,
-code and message, so a new edge (a new file, a new dependency, or more of the
-same call in one of these files) is absent from it and fails. Measured
-2026-10-22: after baselining the 8, planting `use Modules\Blog\…` in
-`AuthProviderRegistry.php` turned the gate red with one issue naming the file and
-line, and reverting turned it green with `baselined=8` in the log.
+What that changed, measured:
 
-**Why record instead of refactor.** The alternative is a kernel-owned
-security-event port (`SecurityEventSink` + composition wiring), which would
-remove the FQCNs entirely. It was rejected for this change because the current
-shape is a written decision, not an accident: both class docblocks explain that
-the reach is `class_exists()`-guarded so the kernel answers the request when the
-module is absent, and that spelling the FQCN inline is what keeps
-`KernelCouplingTest`'s ledger at zero while the behaviour survives. Introducing a
-port changes the composition contract for every module that emits security
-events — a plan of its own with its own tests, not a side effect of adopting a
-linter. What this gate adds meanwhile is real: those two files can no longer grow
-a third reach unnoticed.
+- guard: **8 errors → 0**, with no baseline and no ignore list;
+- `KernelCouplingTest`'s ledger is still empty — the kernel adds no `use Modules\…`
+  line, it adds a contract the module depends on (the normal direction);
+- the payload vocabulary still has one owner: `SecurityEventPayloadContractTest`
+  reads `OutboxSecurityEventSink` instead of the two middleware files;
+- the kernel no longer turns a 403/429 into a 500 if the recorder fails: both
+  middlewares isolate the port call, and `RateLimitMiddlewareTest` hands in a
+  throwing sink to prove it.
 
-CI log line for the passing gate is deliberately explicit —
-`INFO [mago-spike] tool=guard exit=0 issues=0 baselined=8` — because a baseline
-that hides issues silently is a gate nobody can audit.
+Gate behaviour after the refactor — planted `use Modules\Blog\…` in
+`AuthProviderRegistry.php` → exit 1 with one issue naming file and line;
+reverted → exit 0 with `issues=0`, no `baselined=` field, because no baseline
+exists to filter anything.
 
 ## Adoption cost
 
@@ -231,10 +223,10 @@ that hides issues silently is a gate nobody can audit.
   written; the remaining 22 findings need a decision each.
 - **Formatter:** the cost is every file in scope plus the rules in the table
   above.
-- **Guard:** paid in this change — 8 pre-existing errors classified into
-  `guard-baseline.toml`, and the rule now lives in two places (`mago.toml` and
-  `KernelCouplingTest`). The second copy sees strictly more, which is the reason
-  it was worth adding.
+- **Guard:** paid in this change — 8 pre-existing errors removed by a kernel
+  port (`SecurityEventSink` + `OutboxSecurityEventSink` + one wiring block), and
+  the rule now lives in two places (`mago.toml` and `KernelCouplingTest`). The
+  second copy sees strictly more, which is the reason it was worth adding.
 
 ## What this spike did not prove
 
@@ -254,7 +246,6 @@ that hides issues silently is a gate nobody can audit.
 Delete, in one commit:
 
 - `mago.toml`
-- `guard-baseline.toml`
 - `bin/build/mago-spike.sh`
 - `tests/Architecture/MagoScopeContractTest.php`
 - the `mago-spike` and `mago-guard` targets and the `##@ Mago` block in `Makefile`
@@ -263,4 +254,6 @@ Delete, in one commit:
 - `storage/cache/mago-spike/` (gitignored, so `rm -rf` locally)
 
 Nothing else in the tree references Mago: no composer script, no dependency in
-`composer.json` or `composer.lock`.
+`composer.json` or `composer.lock`. The `SecurityEventSink` port is **not** on
+that list — it is a code-level improvement that stands on its own, and reverting
+Mago does not revert it.

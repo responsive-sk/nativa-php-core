@@ -50,10 +50,10 @@ MAGO_ARGS ?=
 mago-spike: ## Informational: run mago lint/analyze/format/guard over the phpstan scope
 	@bin/build/mago-spike.sh $(MAGO_ARGS)
 
-# The gate, as against the report above: one rule (`mago.toml` [guard]), 8
-# reviewed exceptions in `guard-baseline.toml`, and `--strict` so a new
-# kernel→module edge fails the job. CI runs exactly this target.
-mago-guard: ## Gate: the kernel→module dependency rule (mago guard + reviewed baseline)
+# The gate, as against the report above: one rule (`mago.toml` [guard]), no
+# exception list, and `--strict` so a kernel→module edge fails the job. CI runs
+# exactly this target.
+mago-guard: ## Gate: the kernel→module dependency rule
 	@bin/build/mago-spike.sh --only=guard --strict
 
 ##@ Measurement

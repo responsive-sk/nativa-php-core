@@ -67,10 +67,11 @@
 #                         it) instead of reporting a pass it did not earn.
 #  10. Kernel dependency— `mago guard`, the same sentence `KernelCouplingTest`
 #                         asserts in PHP, stated declaratively and resolved from
-#                         source rather than from `use` lines. `guard-baseline.toml`
-#                         is a ledger of 8 reviewed exceptions, not a ratchet: a
-#                         new edge is absent from it and fails. Evidence in
-#                         docs/mago-evaluation.md.
+#                         source rather than from `use` lines. No baseline: its
+#                         first run found 8 `Modules\Outbox\…` reaches behind
+#                         inline FQCNs, and those were removed by giving the
+#                         kernel a `SecurityEventSink` port instead of listing
+#                         them. Evidence in docs/mago-evaluation.md.
 # =============================================================================
 
 name: CI
@@ -206,16 +207,16 @@ jobs:
   #
   # The rule (`mago.toml` [guard.perimeter]): `src/Modules/Core`, `Database` and
   # `Tooling` may depend on each other, on `Themes`, and on PHP itself — never on
-  # a module. `guard-baseline.toml` carries the 8 reviewed exceptions: the
-  # inline-FQCN reaches into `Modules\Outbox\…` in `AuthMiddleware` and
-  # `RateLimitMiddleware`, which `KernelCouplingTest` cannot see because no `use`
-  # statement exists. The baseline is a ledger whose counts are pinned, not a
-  # ratchet: a new edge is not listed and fails here.
+  # a module. There is NO baseline and no exception list: the 8 reaches into
+  # `Modules\Outbox\…` that the rule first reported (inline FQCNs behind
+  # `class_exists()`, invisible to `KernelCouplingTest`) were removed at the
+  # source — the kernel raises its security events through its own
+  # `SecurityEventSink` port, the Outbox module implements it, and the
+  # composition root wires it. An empty report is the claim.
   #
-  # Measured 2026-10-22: planting `use Modules\Blog\…` in
-  # `AuthProviderRegistry.php` turned this gate red with the file and line that
-  # `KernelCouplingTest` prints for the same defect; the tree without the
-  # mutation is green.
+  # Measured 2026-10-22: with the port in place the gate reports 0 issues; before
+  # it, planting `use Modules\Blog\…` in `AuthProviderRegistry.php` turned the
+  # same gate red with the file and line `KernelCouplingTest` prints.
   # ---------------------------------------------------------------------------
   kernel-dependency:
     name: Kernel dependency (mago guard)

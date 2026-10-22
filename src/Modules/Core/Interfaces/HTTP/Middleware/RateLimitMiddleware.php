@@ -6,6 +6,7 @@ namespace Modules\Core\Interfaces\HTTP\Middleware;
 
 use Modules\Core\Application\Services\PageCacheService;
 use Modules\Core\Domain\Contracts\RateLimiter;
+use Modules\Core\Domain\Contracts\SecurityEventSink;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 
@@ -21,16 +22,14 @@ use Modules\Core\Infrastructure\Http\Response;
  * - LOCALE. The cache key is per locale; without Locales it falls back to
  *   the mapper's default (itself the shell provider's answer with a kernel
  *   fallback) instead of loading a missing translation store.
- * - OUTBOX. A throttled request is a security event, recorded only when the
- *   outbox is installed: the `class_exists` guard emits through the module's
- *   services when they are here and drops the event when they are not — the
- *   request is answered either way, never fataled. No `use` statement names
- *   the module, so the ledger stays clean while the behaviour survives —
- *   and that is why both FQCNs are written out at the call site instead of
- *   imported. An import would be a second, quieter way to say the same thing:
- *   it compiles whether or not the branch ever runs, and `KernelCouplingTest`
- *   counts it as an edge regardless of the guard. Keep the strings inline;
- *   adding the `use` back is a green test turning red for a stylistic gain.
+ * - OUTBOX. A throttled request is a security event, and the kernel raises it
+ *   through its own `SecurityEventSink` port: the module that owns the outbox
+ *   implements the port and the composition root wires it, so this file names
+ *   no module, imports none, and a tree without one simply gets no sink — the
+ *   request is answered either way, never fataled. The inline-FQCN-with-
+ *   `class_exists` shape this replaced kept `KernelCouplingTest`'s ledger empty
+ *   while `mago guard` still counted the dependency, which is why the edge is
+ *   inverted now instead of hidden.
  * - LIMITER. The factory product is duck-typed, not type-hinted: the limiter
  *   itself is a kernel obligation, so the middleware degrades (passes the
  *   request through un-limited) rather than disappearing when the factory
@@ -60,6 +59,7 @@ final readonly class RateLimitMiddleware implements MiddlewareInterface
     public function __construct(
         private \Closure $rateLimiterFactory,
         private ?PageCacheService $cache = null,
+        private ?SecurityEventSink $sink = null,
     ) {
     }
 
@@ -109,16 +109,17 @@ final readonly class RateLimitMiddleware implements MiddlewareInterface
      */
     private function recordTrip(string $key, Request $request): void
     {
-        if (!class_exists(\Modules\Outbox\Interfaces\HTTP\OutboxServices::class)
-            || !class_exists(\Modules\Outbox\Domain\SecurityEvents::class)
-        ) {
+        if (null === $this->sink) {
             return;
         }
 
-        \Modules\Outbox\Interfaces\HTTP\OutboxServices::securityEvent(
-            \Modules\Outbox\Domain\SecurityEvents::RATELIMIT_TRIPPED,
-            ['key' => $key, 'scope' => $request->getPathInfo(), 'ip' => $request->getClientIp()],
-        );
+        try {
+            $this->sink->rateLimitTripped($key, $request->getPathInfo(), $request->getClientIp());
+        } catch (\Throwable $e) {
+            // The 429 is the answer; the event is the trace. A sink that cannot
+            // write must not turn a refusal into a 500.
+            error_log('[rate] could not record the trip: ' . $e->getMessage());
+        }
     }
 
     /**

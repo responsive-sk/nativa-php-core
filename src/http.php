@@ -132,6 +132,15 @@ function http_kernel(): Kernel
 
     // WIRING — the pipeline stages auto-discovery cannot construct.
 
+    // The security-event sink: the kernel's own `SecurityEventSink` port, which
+    // the Outbox module implements. Named inline inside the guard, the same shape
+    // as the limiter below — the composition root is the one place that may say
+    // which module fills a kernel port, and a tree without the module gets null,
+    // which the middlewares read as "drop the record, answer the request".
+    $securityEvents = class_exists('Modules\\Outbox\\Application\\Services\\OutboxSecurityEventSink')
+        ? new \Modules\Outbox\Application\Services\OutboxSecurityEventSink()
+        : null;
+
     // The factory yields an `object` because that is RateLimitMiddleware's own
     // declared shape (`\Closure(): object`) — its product is verified at
     // runtime by isLimiter(), never trusted at compile time. Nothing about the
@@ -144,6 +153,7 @@ function http_kernel(): Kernel
             static fn (): object => new SecurityRateLimiter(
                 DatabaseConnectionManager::instance()->connection('users'),
             ),
+            sink: $securityEvents,
         ));
         error_log('[rate] wired RateLimit');
     } else {
@@ -199,7 +209,7 @@ function http_kernel(): Kernel
     $authProvider = AuthProviderRegistry::first();
 
     if (null !== $authProvider) {
-        $kernel->addMiddleware(new AuthMiddleware($authProvider));
+        $kernel->addMiddleware(new AuthMiddleware($authProvider, $securityEvents));
         error_log('[auth] wired ' . $authProvider::class);
     } else {
         error_log('[auth] absent — no provider module');

@@ -24,8 +24,10 @@ use PHPUnit\Framework\TestCase;
  * day: `payloadKeys()` declared `ip` for both refusal types while the Audit
  * handler read it and every emit site sent it — a key present in prose and
  * absent from the list, which is exactly the shape here. Both emit sites DO
- * send `roles` (`AuthMiddleware::recordDenial()`, `SecurityEventServices::
- * bulkRefused()`), and `SecurityEvents` is the one owner of that vocabulary
+ * send `roles` (`OutboxSecurityEventSink::authorizationDenied()` — the module's
+ * side of the kernel port that `AuthMiddleware::recordDenial()` calls — and
+ * `SecurityEventServices::bulkRefused()`), and `SecurityEvents` is the one owner
+ * of that vocabulary
  * ("no emit site and no handler spells an event type or invents a payload key
  * of its own"), so the model was the only side still describing four keys.
  *

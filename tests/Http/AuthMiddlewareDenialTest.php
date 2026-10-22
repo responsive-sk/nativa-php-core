@@ -396,7 +396,10 @@ final class AuthMiddlewareDenialTest extends TestCase
 
     private function middleware(AuthIdentity $identity): AuthMiddleware
     {
-        return new AuthMiddleware(new readonly class ($identity, Permissions::USERS) implements AuthProvider {
+        // The REAL port implementation, not a stub: this class's claim is that a
+        // kernel refusal reaches an audit row, and the adapter is the code that
+        // turns the kernel's decision into the outbox message.
+        $provider = new readonly class ($identity, Permissions::USERS) implements AuthProvider {
             public function __construct(
                 private AuthIdentity $identity,
                 private string $required,
@@ -428,7 +431,12 @@ final class AuthMiddlewareDenialTest extends TestCase
             public function noteEvent(string $event, array $context): void
             {
             }
-        });
+        };
+
+        return new AuthMiddleware(
+            $provider,
+            new \Modules\Outbox\Application\Services\OutboxSecurityEventSink(),
+        );
     }
 
     private static function passThrough(): callable

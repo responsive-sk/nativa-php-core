@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Modules\Security\Tests;
 
+use Modules\Core\Domain\Contracts\SecurityEventSink;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Middleware\RateLimitMiddleware;
-use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Security\Application\Services\RateLimiter;
 use PDO;
 use PHPUnit\Framework\Attributes\Test;
@@ -30,14 +30,15 @@ use PHPUnit\Framework\TestCase;
  *   FORGES a non-loopback `REMOTE_ADDR` for the first half; production
  *   behaviour is untouched.
  *
- * A refused request also records a security event; `DB_OUTBOX` points at an
- * unreachable file here so that write is dropped inside the outbox's own
- * catch — the test never touches the working tree's outbox. The Outbox is
- * therefore RESET through a `class_exists` guard and never imported (the
- * middleware reaches it the same way): the reset is only ever needed when the
- * module is installed, and a `use` statement would make Security's closure
- * claim Outbox — closing Cardboard → Security → Outbox → Cardboard, a cycle no
- * install order can satisfy.
+ * A refused request also records a security event, through the kernel's
+ * `SecurityEventSink` port. The middleware no longer reaches the Outbox module
+ * at all — that edge became a kernel contract (`Modules\Core\Domain\Contracts\
+ * SecurityEventSink`, implemented by `OutboxSecurityEventSink`), which is why
+ * this file can now hand in a sink of its own. It hands in one that THROWS: the
+ * port is a boundary the kernel does not control, so what is asserted is that a
+ * recorder which cannot write leaves the 429 and its `Retry-After` intact
+ * instead of turning a refusal into a 500. No database, no `DB_OUTBOX` file, and
+ * no module closure gained by Security.
  *
  * Like every module test it skips when the module is not installed.
  */
@@ -47,8 +48,6 @@ final class RateLimitMiddlewareTest extends TestCase
 
     private const int LIMIT = 60;
 
-    private string $tmpDir = '';
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -56,30 +55,6 @@ final class RateLimitMiddlewareTest extends TestCase
         if (!is_dir(APP_BASE_PATH . '/src/Modules/Security')) {
             $this->markTestSkipped('Security is not installed.');
         }
-
-        $this->tmpDir = sys_get_temp_dir() . '/nativa-ratelimit-' . bin2hex(random_bytes(6));
-        mkdir($this->tmpDir, 0o775, true);
-
-        putenv('DB_OUTBOX=' . $this->tmpDir . '/no-such-dir/outbox.db');
-        DatabaseConnectionManager::resetInstance();
-        self::resetOutbox();
-    }
-
-    protected function tearDown(): void
-    {
-        if ('' !== $this->tmpDir && is_dir($this->tmpDir)) {
-            putenv('DB_OUTBOX');
-            DatabaseConnectionManager::resetInstance();
-            self::resetOutbox();
-
-            foreach (glob($this->tmpDir . '/*') ?: [] as $file) {
-                @unlink($file);
-            }
-
-            @rmdir($this->tmpDir);
-        }
-
-        parent::tearDown();
     }
 
     /**
@@ -172,12 +147,31 @@ final class RateLimitMiddlewareTest extends TestCase
     /**
      * A fresh limiter per test over an in-memory database — the real class,
      * the real upsert, no shared state between the halves of the contract.
+     *
+     * The sink throws on purpose; see the class docblock.
      */
     private function middleware(): RateLimitMiddleware
     {
         $limiter = new RateLimiter(new PDO('sqlite::memory:'));
 
-        return new RateLimitMiddleware(static fn (): RateLimiter => $limiter);
+        $sink = new class implements SecurityEventSink {
+            public function authorizationDenied(
+                string $path,
+                string $required,
+                string $userId,
+                array $roles,
+                string $ip,
+            ): void {
+                throw new \RuntimeException('security event sink unavailable');
+            }
+
+            public function rateLimitTripped(string $key, string $scope, string $ip): void
+            {
+                throw new \RuntimeException('security event sink unavailable');
+            }
+        };
+
+        return new RateLimitMiddleware(static fn (): RateLimiter => $limiter, null, $sink);
     }
 
     /**
@@ -188,16 +182,5 @@ final class RateLimitMiddlewareTest extends TestCase
     private function request(string $ip): Request
     {
         return Request::create('GET', '/docs', [], [], ['REMOTE_ADDR' => $ip]);
-    }
-
-    /**
-     * Drop the Outbox's memoized instance, when the module is there to have
-     * one — see the class docblock for why this is a guard and not an import.
-     */
-    private static function resetOutbox(): void
-    {
-        if (class_exists('Modules\\Outbox\\Interfaces\\HTTP\\OutboxServices')) {
-            \Modules\Outbox\Interfaces\HTTP\OutboxServices::reset();
-        }
     }
 }
