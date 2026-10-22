@@ -23,7 +23,7 @@ final readonly class FileSessionHandler implements \SessionHandlerInterface
     public function open(string $path, string $name): bool
     {
         if (!is_dir($this->dir)) {
-            @mkdir($this->dir, 0755, true);
+            @mkdir($this->dir, 0o755, true);
         }
 
         return is_dir($this->dir);

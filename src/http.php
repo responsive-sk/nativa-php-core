@@ -62,7 +62,7 @@ use Modules\Security\Application\Services\RateLimiter as SecurityRateLimiter;
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
 $_earlyLogDir = dirname(__DIR__) . '/storage/logs';
 if (!is_dir($_earlyLogDir)) {
-    @mkdir($_earlyLogDir, 0755, true);
+    @mkdir($_earlyLogDir, 0o755, true);
 }
 if (is_dir($_earlyLogDir)) {
     ini_set('log_errors', '1');

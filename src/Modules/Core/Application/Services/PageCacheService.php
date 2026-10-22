@@ -359,7 +359,7 @@ final readonly class PageCacheService
         $this->validatePath();
 
         if (!is_dir($this->cacheDir)) {
-            mkdir($this->cacheDir, 0755, true);
+            mkdir($this->cacheDir, 0o755, true);
         }
     }
 

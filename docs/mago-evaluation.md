@@ -26,7 +26,7 @@ Measured 2026-10-22 with `mago 1.58.2` on PHP 8.5.11, over `mago.toml`'s scope
 | tool | measured on this tree | verdict |
 |---|---|---|
 | `mago analyze` | 189 errors / 96 warnings / 87 help in ~0,19 s | **not a replacement** — 2 real findings, the rest is config and inference |
-| `mago lint` | 570 findings at the default preset, **22** with the curated rule set | **not a gate** — 22 triaged, 6 worth acting on over time |
+| `mago lint` | 570 findings at the default preset, **16** with the curated rule set | **not a gate** — 16 triaged, the 6 worth acting on were fixed 2026-10-22 |
 | `mago format` | 124 of 124 files would change (~0,03 s) | **not a replacement** — house rules it cannot express |
 | `mago guard` | 0 issues after the `SecurityEventSink` refactor; catches a planted kernel→module import | **gate** — CI job `kernel-dependency`, empty report is the claim |
 
@@ -106,12 +106,15 @@ checked), 36 are `cyclomatic-complexity` at threshold 15.
 
 `mago.toml` therefore disables 18 rules — each with its measured count and
 reason in the file — and keeps correctness, security and readability rules on.
-Result: **22 findings**, all triaged:
+Result: **16 findings**, all triaged. The two rules that were real and small were
+fixed rather than triaged on 2026-10-22, taking the count from 22: `explicit-octal`
+(5 implicit `0755`/`0775`/`0002` literals → `0o755`/`0o775`/`0o002`) and
+`assert-description` (the one `assert()` in `DatabaseMigrator` now carries the
+reason it cannot fire — the `RuntimeException` above it already refuses the same
+class).
 
 | finding | count | judgement |
 |---|---|---|
-| `explicit-octal` (`0755` → `0o755`) | 5 | real, worth doing |
-| `assert-description` (`assert()` without a message) | 1 | real, minor |
 | `no-ini-set` in `src/http.php` bootstrap | 5 | intentional |
 | `no-empty-catch-clause` (documented best-effort) | 3 | intentional |
 | `no-insecure-comparison` on a PHP-tokenizer `$token` | 4 | false positive (name heuristic, not a secret) |
@@ -243,7 +246,7 @@ thing this whole section is about.
   bootstrap mechanism, or a reviewed ignore list — today none of the three
   exists in this repo.
 - **Linter:** the curated `[linter.rules]` block is the cost, and it is already
-  written; the remaining 22 findings need a decision each.
+  written; the remaining 16 findings need a decision each.
 - **Formatter:** the cost is every file in scope plus the rules in the table
   above.
 - **Guard:** paid in this change — 8 pre-existing errors removed by a kernel
