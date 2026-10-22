@@ -200,6 +200,36 @@ final class ReaderLayoutTest extends TestCase
     }
 
     /**
+     * The same measurement answers anchors. A heading scrolled to the top edge
+     * sits under the theme's pinned bar, so every rail link lands on a heading
+     * the reader cannot see — measured on `/docs/themes` in Boson, whose bar is
+     * 101px, with the rail link's target at 124px only because the theme declares
+     * `scroll-padding-top` itself.
+     *
+     * Themes do not all declare it (Boson is the only one), so the script writes
+     * the padding — but only after READING the computed value: a theme that has
+     * an opinion about its own chrome keeps it. Both halves are asserted here
+     * because either one alone is silent: no read means every theme is
+     * overridden, no write means anchors stay under the bar everywhere else.
+     */
+    #[Test]
+    public function theMeasurementAlsoClearsTheThemesAnchors(): void
+    {
+        $script = InlineJs::file('Modules/Core/Interfaces/HTTP/assets/scripts/docs-reader.js');
+
+        self::assertStringContainsString(
+            'getComputedStyle(document.documentElement).scrollPaddingTop',
+            $script,
+            'The script no longer reads the theme\'s scroll-padding, so it would overwrite a declared one.',
+        );
+        self::assertStringContainsString(
+            'style.scrollPaddingTop',
+            $script,
+            'The script sets no scroll-padding: an anchored heading lands under a pinned header on every theme that does not declare one.',
+        );
+    }
+
+    /**
      * Rail text is escaped: a heading is content, and a heading containing markup
      * must not become markup in the rail.
      */
