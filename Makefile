@@ -40,6 +40,16 @@ analyze: ## Run phpstan + rector dry + cs-fixer dry
 	$(COMPOSER) rector-dry
 	$(COMPOSER) cs-fix-dry
 
+##@ Mago
+# Informational, like `kernel-size` and `lekalo-verify`: the script exits 0
+# whatever the tools say, because none of the numbers has been triaged into a
+# gate. `MAGO_ARGS=--strict` is the switch a later decision would flip.
+# What it measures, and the adoption verdict, live in docs/mago-evaluation.md.
+MAGO_ARGS ?=
+
+mago-spike: ## Informational: run mago lint/analyze/format/guard over the phpstan scope
+	@bin/build/mago-spike.sh $(MAGO_ARGS)
+
 ##@ Measurement
 # Informational by design: it reports whatever is true and exits 0. The gate on
 # kernel shape is `tests/Architecture/KernelShapeTest` (the concrete allow-list) —
