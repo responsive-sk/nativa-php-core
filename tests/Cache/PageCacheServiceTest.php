@@ -234,6 +234,65 @@ final class PageCacheServiceTest extends TestCase
     }
 
     /**
+     * A body that already went through the nonce substitution (a real nonce
+     * baked in) must never be stored verbatim: the next visitor's CSP header
+     * carries a fresh nonce, so every inline script — the pre-paint
+     * theme-init at the top of the document first — would be blocked as a
+     * `script-src-elem` violation. Measured on the deployment: page cache ON,
+     * localhost (cache OFF) clean.
+     */
+    #[Test]
+    public function aBakedInNonceIsNormalizedBackToThePlaceholderOnStore(): void
+    {
+        $stale = bin2hex(random_bytes(16));
+        $request = Request::create('GET', '/');
+        $body = '<html><script nonce="' . $stale . '">x</script></html>';
+
+        $this->writeThroughMiddleware($request, $body);
+
+        [$served, $renders] = $this->serveThroughMiddleware($request, '<html>rendered again</html>');
+
+        $this->assertSame(0, $renders, 'Precondition: the entry must answer the second request without a render.');
+        $this->assertStringContainsString(
+            SecurityHeadersMiddleware::NONCE_PLACEHOLDER,
+            (string) $served->getContent(),
+            'A stale nonce entered the shared cache instead of the placeholder.',
+        );
+        $this->assertStringNotContainsString($stale, (string) $served->getContent());
+    }
+
+    /**
+     * The other half: entries poisoned BEFORE this normalization (a deploy
+     * does not flush the cache) heal on read, so the fix takes effect without
+     * anyone having to flush `storage/cache/pages` by hand.
+     */
+    #[Test]
+    public function anAlreadyPoisonedEntryIsHealedOnRead(): void
+    {
+        $stale = bin2hex(random_bytes(16));
+        $service = new PageCacheService($this->cacheDir);
+        $request = Request::create('GET', '/');
+        $key = $service->cacheKeyForRequest($request);
+
+        file_put_contents(
+            $this->cacheDir . '/' . $key . '.json',
+            json_encode([
+                'content' => '<html><script nonce="' . $stale . '">x</script></html>',
+                'statusCode' => 200,
+                'headers' => ['Content-Type' => 'text/html; charset=UTF-8'],
+                'cachedAt' => time(),
+                'ttl' => 300,
+            ], JSON_THROW_ON_ERROR),
+        );
+
+        $entry = $service->get($key);
+
+        $this->assertNotNull($entry, 'Precondition: the poisoned entry must still be readable.');
+        $this->assertStringContainsString(SecurityHeadersMiddleware::NONCE_PLACEHOLDER, $entry['content']);
+        $this->assertStringNotContainsString($stale, $entry['content']);
+    }
+
+    /**
      * The serve path obeys the REQUEST half of the bypass table, entry or no
      * entry: a stale guide, an admin page, a POST or a submission state must
      * never be answered from a shared file.

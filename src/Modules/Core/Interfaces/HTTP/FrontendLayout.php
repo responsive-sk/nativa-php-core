@@ -301,11 +301,20 @@ final class FrontendLayout
             : '';
     }
 
-    /** JSON-LD block — rendered only when the action provides structured data. */
+    /**
+     * JSON-LD block — rendered only when the action provides structured data.
+     *
+     * Carries the CSP nonce like every other inline script: without it the
+     * `script-src 'self' 'nonce-…'` directive blocks the block in browsers
+     * (reported as two `script-src-elem` violations on article pages) and
+     * the structured data never reaches the consumer. The placeholder is
+     * substituted per response by SecurityHeadersMiddleware, exactly like
+     * the theme init and toggle scripts below.
+     */
     private static function structuredTag(?string $structuredData): string
     {
         return null !== $structuredData
-            ? '<script type="application/ld+json">' . $structuredData . '</script>' . "\n"
+            ? '<script type="application/ld+json" nonce="__CSP_NONCE_PLACEHOLDER__">' . $structuredData . '</script>' . "\n"
             : '';
     }
 
