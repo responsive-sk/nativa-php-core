@@ -101,4 +101,7 @@ after `migrate`. Migrating alone seeds the kernel defaults and copies none of
 the developer's `storage/data/`, so without the profile a rebuilt responsive.sk
 dist came up as the kernel's own site (the theme's copy looked deleted). Build
 with `--no-profile` to ship the kernel defaults on purpose; afterwards every
-value is still the operator's to change in `/mark` → Settings.
+value is still the operator's to change in `/mark` → Settings. A kernel-only
+checkout has the profile file but no `Settings` module to apply it with, so that
+build keeps the kernel defaults and says so — the failure that would matter
+(the module is installed, the profile is wrong) still fails the build.
