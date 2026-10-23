@@ -15,7 +15,7 @@ evolutions/     0 súborov     ← prázdne
 skill-context/  0 súborov     ← prázdne
 ```
 
-Päťdesiatšesťdesiat riadkov, štyri plány, štyri patche — a **dva priečinky sú úplne prázdne**.
+Sedem plánov, štyri patche — a **dva priečinky sú úplne prázdne**.
 
 *(Tento blok je stav v okamihu písania. Neskôr, keď sa to rozhodnutie zavrelo, je
 `patches/` 5 a `evolutions/` 1 — beh `$aif-evolve` sa uskutočnil. `skill-context/` je

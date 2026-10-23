@@ -60,6 +60,7 @@ same PR that introduces it, not a second variant in the prose.
 | **cache** | ž. | tá cache · z cache · dve cache | nesklonné |
 | **workspace** | m. | ten workspace · z workspace · dva workspace | nesklonné |
 | **worktree** | m. | ten worktree · z worktree · dva worktree | nesklonné |
+| **pane** | m. | ten pane · z panu · dva pany | terminálové okno v Herdr; gen. pl. `panov`, lok. pl. `panoch` — nie „to pane“ (n.) |
 | **checkout** | m. | ten checkout · z checkoutu · dva checkouty | |
 | **request** | m. | ten request · z requestu · dva requesty | |
 | **handler** | m. | ten handler · z handlera · dva handlery | |
