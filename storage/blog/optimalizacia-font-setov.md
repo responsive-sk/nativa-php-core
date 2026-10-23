@@ -163,7 +163,7 @@ hmtx pre pôvodné glyfy       nezmenené
 mená a ID pôvodných glyfov   nezmenené
 ```
 
-Výsledok po mergi:
+Výsledok po merge:
 
 | súbor | pred | po | cmap | glyfov |
 |---|---|---|---|---|
@@ -177,7 +177,7 @@ CSS smeruje na tú istú 400 URL, takže obe váhy sú opravené jedným súboro
 
 ## Časť VII — Prečo to aj tak nefungovalo
 
-Po mergi bolo pokrytie čisté (`missing: none`) a headless test v čerstvom
+Po merge bolo pokrytie čisté (`missing: none`) a headless test v čerstvom
 Chromiu ukazoval správne šírky. A predsa: na obrazovke fallback. Príčina bola
 v `public/.htaccess`:
 

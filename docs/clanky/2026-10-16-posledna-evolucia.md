@@ -15,7 +15,7 @@ evolutions/     0 súborov     ← prázdne
 skill-context/  0 súborov     ← prázdne
 ```
 
-Päťdesiatšesťdesiat riadkov, štyri plány, štyri patche — a **dve priečinky sú úplne prázdne**.
+Päťdesiatšesťdesiat riadkov, štyri plány, štyri patche — a **dva priečinky sú úplne prázdne**.
 
 *(Tento blok je stav v okamihu písania. Neskôr, keď sa to rozhodnutie zavrelo, je
 `patches/` 5 a `evolutions/` 1 — beh `$aif-evolve` sa uskutočnil. `skill-context/` je
@@ -23,7 +23,7 @@ Päťdesiatšesťdesiat riadkov, štyri plány, štyri patche — a **dve prieč
 
 Toto nie je zanedbanie náhody. `$aif-evolve` je v tomto projekte **nainštalovaný** — je
 v `.agents/skills/aif-evolve/` a má vlastný SKILL.md. A tento SKILL.md hovorí presne to,
-čo tie dve priečinky majú byť:
+čo tie dva priečinky majú byť:
 
 > Raw patches (`.ai-factory/patches/*.md`) sú zdrojový materiál.
 > Skill-context rules (`.ai-factory/skill-context/*`) sú kompaktný, znovupoužiteľný výstup.
@@ -48,7 +48,7 @@ Patch je písaný vzorne. Namiesto „zrevidujme ten diff" robí to, čo má:
 
 - `git merge-tree --write-tree master feature/erik-minimal-home` → **exit 0**, žiadny konflikt;
 - skutočný merge v worktree, automatický, bez zásahov;
-- `composer test --filter Erik` → **11 testov / 91 asercií**, celá suite **291 / 1248**, exit 0;
+- `composer test --filter Erik` → **11 testov / 91 asercí**, celá suite **291 / 1248**, exit 0;
 - pre griffe jeden konflikt v `heroSlide()`, vyriešený a overený;
 - na koniec **Reproduce** blok, aby sa to dalo zopakovať.
 
@@ -97,10 +97,10 @@ meranie je hádanka oblečená do citácie.
 **Obidve čísla asercí sedia na patchi presne** — 91 a 126. To je tá kontrola, ktorá
 hovorí, že ranné meranie proti `masteru` o 13 commitov staršiemu ešte platí na dnešnom.
 
-Rezolúcia konfliktu nebola mince: **větev skladá scénu, master argument.**
-Větev pridáva `heroVisual()` a eyebrow kicker; master zmenil `revealLines()` tak, že
-si berie druhý argument a hero sa dopredu odhalí. Vzát větvovou jednoargumentovú
-volbu by sa **čistě zmergovalo a potichu vrátilo masterovu zmenu animácie** — a právě
+Rezolúcia konfliktu nebola minca: **vetva skladá scénu, master argument.**
+Vetva pridáva `heroVisual()` a eyebrow kicker; master zmenil `revealLines()` tak, že
+si berie druhý argument a hero sa dopredu odhalí. Vziať vetvovú jednoargumentovú
+voľbu by sa **čisto zmergovalo a potichu vrátilo masterovu zmenu animácie** — a práve
 to ten konflikt spôsobuje. Rozdiel je teraz komentár v kóde, nie tvrdenie v patchi,
 ktorý nikto nečíta.
 
@@ -111,27 +111,27 @@ Riziká boli rôzne a boli zmerané:
 | `*Theme.php` na masteri | **0 commitov** | **+68 / −44** |
 | `*ThemeTest.php` na masteri | 1 commit | **7 commitov** |
 
-Erik je čisté přičtenie do souboru, který nikdo nesahal. Griffe přistupuje k hero,
-které si master mezitím přepsal. Obě suite jsou zelené — a **„suite prochází" je tvrzení
-o správnosti, ne o designu.** Proto to má aj tělo PR #9 napsané, a ne až ako překvapení
-po mergi.
+Erik je čisté pričítanie do súboru, na ktorý nikto nesiahal. Griffe pristupuje k hero,
+ktoré si master medzitým prepísal. Obe suite sú zelené — a **„suite prechádza" je tvrdenie
+o správnosti, nie o dizajne.** Preto to má aj telo PR #9 napísané, a nie až ako prekvapenie
+po merge.
 
-### A past, kterou jsem si přiváděl tentýž den
+### A pasca, ktorú som si privodil ten istý deň
 
-První přeměření vyrobilo **zelenou suite z rozbitého prostředí**. Worktree jsem osadil
-`cp -a "$MAIN/src/Modules" .` — a čerstvý `git worktree add` repozitáře, jehož modulové
-řezy jsou v `.gitignore`, už `src/Modules` **má**. Takže `cp -a` adresář zkopíroval do
-sebe ako `src/Modules/Modules`. Pět instalovaných modulů místo 22, **267 testů
-přeskočilo**, a každý modulový test hlásil OK, protože většina jich vůbec nespustila.
+Prvé premeranie vyrobilo **zelenú suite z rozbitého prostredia**. Worktree som osadil
+`cp -a "$MAIN/src/Modules" .` — a čerstvý `git worktree add` repozitára, ktorého modulové
+rezy sú v `.gitignore`, už `src/Modules` **má**. Takže `cp -a` adresár skopíroval do
+seba ako `src/Modules/Modules`. Päť instalovaných modulov namiesto 22, **267 testov
+preskočilo**, a každý modulový test hlásil OK, pretože väčšina z nich sa vôbec nespustila.
 
-Vypovídal o tom `git status` s necommitovaným `Modules/`, ne výstup suite. Fix je
-koncová `/.`, která kopíruje obsah.
+Hovoril o tom `git status` s necommitnutým `Modules/`, nie výstup suite. Fix je
+koncová `/.`, ktorá kopíruje obsah.
 
-To je **tretia** past v téže rodině jako ty dvě, co patch zaplatil — symlink na
-`vendor/` láme tree hash v `ModuleLifecycleTest`, a reinstalace všech modulů v pořadí
-`ls` zničí instalovanou sadu, protože Cardboard ↔ Outbox sú kruhové. Ale tahle je
-horší než obě předchozí, lebo **právě ju patch doporučoval**: jeho blok `Reproduce`
-predpisoval `cp -a <main>/src/Modules .` doslova. Nasledovať patch presne je ten
+To je **tretia** pasca v tej istej rodine ako tie dve, ktoré patch zaplatil — symlink na
+`vendor/` láme tree hash v `ModuleLifecycleTest`, a reinstalácia všetkých modulov v poradí
+`ls` zničí instalovanú sadu, pretože Cardboard ↔ Outbox sú kruhové. Ale táto je
+horšia než obe predchádzajúce, lebo **práve ju patch odporúčal**: jeho blok `Reproduce`
+predpisoval `cp -a <main>/src/Modules .` doslovne. Nasledovať patch presne je ten
 jediný krok, ktorý ťa nenechá chytiť, že sa mýliš. Patch teraz nesie všetky tri,
 aj kontrolu `ls src/Modules | wc -l`, ktorú reproducer nemal. Zelená suite bola po
 celý čas najmenej informatívny signál, aký bol po ruke.
@@ -142,7 +142,7 @@ posledné nezavreté rozhodnutie, bol čitateľný len na stroji, ktorý ho nap�
 chyba ako prázdna `evolutions/` a gitignorovaná `patches/` — len v mierke jedného
 commitu.
 
-Výsledok: **360 testů / 1557 asercí**, admin-smoke **85 kontrol** (témy nepridávajú
+Výsledok: **360 testov / 1557 asercí**, admin-smoke **85 kontrol** (témy nepridávajú
 adminovú plochu), lint, PHPStan L9 aj Lekalo exit 0. Oba PR zelené 8/8.
 
 ---
@@ -155,7 +155,7 @@ adminovú plochu), lint, PHPStan L9 aj Lekalo exit 0. Oba PR zelené 8/8.
 
 `php bin/cms outbox:process` vypísal usage a skončil exit 1. Problém nebol, že chýbali —
 **nedali sa načítať vôbec**. Oba dedili `Symfony\...\Command` a `symfony/console` je
-`require-dev`. Joby `admin-smoke` a `boot` zámorne bežia **bez `vendor/`**. Teraz oba
+`require-dev`. Joby `admin-smoke` a `boot` zámerne bežia **bez `vendor/`**. Teraz oba
 plain-PHP: `$argv` dovnútra, exit kód von, `CliOutput` — šev, ktorý už používa
 `DatabaseMigrator`.
 
@@ -175,9 +175,9 @@ mimo `Modules\Core`.
 
 ### 3. Worker, ktorý nemal čo doručiť
 
-`queue:work` existoval jedno kolo. Teraz má prvého producenta: **zápis článku zařadí jeho
+`queue:work` existoval jedno kolo. Teraz má prvého producenta: **zápis článku zaradí jeho
 obálku**. Spúšťač sa **nezamýšľal, ale zmeral** — outbox publish event je nesprávny dvakrát
-(funguje na zrušenie publikovania, prehĺdne editáciu publikovaného článku), takže producent
+(funguje na zrušenie publikovania, prehliadne editáciu publikovaného článku), takže producent
 sídli tam, kde sa už čistila cache.
 
 Payload sú **dva skaláre**, `{slug, locale}`. Nie náhodou: `jobs.payload` žije v `queue.db`
@@ -186,17 +186,17 @@ a na obrazovke — čo presne audit našiel, keď sa reset token objavil v logu.
 
 ### 4. Retry sa nerozložil v čase
 
-`work()` pouštal zlyhávajúcu úlohu bez odkladu, takže jeden hovor spálil všetky pokusy —
+`work()` púšťal zlyhávajúcu úlohu bez odkladu, takže jeden hovor spálil všetky pokusy —
 `max_attempts` obmedzoval *pokusy*, nie *minúty*. Teraz exponenciálny backoff so stropom,
 pripnutý na injektované hodinky (`DatabaseQueue` prijímal `?callable $now` od prvého
 commitu a **žiadny test mu ho nikdy neposkytol**).
 
-Viditeľný dôsledok: worker, ktorý **bude opakovať, vrací 0**; worker, ktorý niečo
-**zaparkoval, vrací 1**.
+Viditeľný dôsledok: worker, ktorý **bude opakovať, vracia 0**; worker, ktorý niečo
+**zaparkoval, vracia 1**.
 
-### 5. Model, který nikto nespuštal
+### 5. Model, ktorý nikto nespúšťal
 
-`lekalo/` bola priečinka, ktorú nič nespúšťalo — `grep -c lekalo .github/workflows/ci.yml`
+`lekalo/` bol priečinok, ktorý nič nespúšťalo — `grep -c lekalo .github/workflows/ci.yml`
 bolo **0**. Dnes je brána, s pinnutým checksumom zdieľaným s `nativa-minimal`, a modul
 `queue` je zmodelovaný (bol 22bajtovým stubom).
 
@@ -220,14 +220,14 @@ Posledné dve sú dôležité:
 **Štvrtá** znamená, že číslo „1" prestalo niečo znamenať. A človek, ktorý si vypestoval
 zvyk ignorovať červenú, si ju zanesie aj na tie, na ktorých záleží.
 
-**Piata** bola chyba mne samému. Boot 31 zapísal 79 kontrol a toto číslo je bolo už
+**Piata** bola chyba mne samému. Boot 31 zapísal 79 kontrol a toto číslo bolo už
 mergnuté. Zmeral som to prehratím z worktree, ktorého `admin-smoke.sh` je byte-zo `masteru`
 — takže 78 je definitívne master, nie artefakt worktree. Pravdepodobná príčina: **číslo
 bolo brané z filtrovaného behu namiesto počítania toho, čo skript vypíše** — presne tá
 chyba, ktorú tento repozitár už raz spravil s `make lint` (`|| true`) a potom s `$?`
 za pipelinou.
 
-Log má teraz na mieste vetu, prečo sa to stalo. Oprava čísla bez dôvodu by bola polovicu práce.
+Log má teraz na mieste vetu, prečo sa to stalo. Oprava čísla bez dôvodu by bola polovica práce.
 
 ---
 
@@ -242,8 +242,8 @@ súladné, aby aj toto bolo napísané:
 
 - **Mazanie článku obálku nezachováva — je to opravené (Boot 34).** Pôvodne
   `BlogCrudService::delete()` bol jeden `unlink()` markdownu a obálka zostávala na
-  disku, stále servírovaná pod `max-age=31536000` na URL, na ktoré už nič neodkazuje.
-  Brána to uklízila v skripte, produkt nie — a Lekalo model to popisovalo **opačne**,
+  disku, stále servírovaná pod `max-age=31536000` na URL, na ktorú už nič neodkazuje.
+  Brána to upratala v skripte, produkt nie — a Lekalo model to popisovalo **opačne**,
   čo bol druhý merateľný dôkaz, že model bez adaptéra nemôže byť skontrolovaný.
   Teraz to robí produkt, brána tvrdí a model hovorí pravdu.
 
@@ -253,7 +253,7 @@ súladné, aby aj toto bolo napísané:
   A **negatívna kontrola to chytila, nie testy**: testy posielali `sk`, admin posiela
   `sk_SK`, a `collides()` porovnáva jazykový kód — článok sa pri `sk_SK` zhodol **sám so
   sebou** a vlastnú obálku preskočil. Celá modulová suite bola zelená a produkt
-  stále uklížal.
+  stále upratoval.
 - **Queued reset link** je bezpečnostné rozhodnutie pre operátora — ale odmerané
   (Boot 35), nie odložené. Front by daroval záruku opakovania pri dočasnom výpadku
   mailera (dnes `HttpPasswordResetMailer` výnimku chytí, zapíše a vráti), a kúpil by
@@ -279,7 +279,7 @@ Päť chýb dnes, päť vetiev `SKILL.md`, ktoré by ich zachytili bez následko
 spustenie `$aif-evolve` by ich možno zapísalo naraz — a zajtrajší `$aif-implement` by
 vedel, že `--no-prune` je prepínač, ktorý niečo vypína.
 
-Prázdna priečinka nevadí. Nevadí dovtedy, kým si na ňu nespoľahne niekto, kto verí, že
+Prázdny priečinok nevadí. Nevadí dovtedy, kým si naň nespoľahne niekto, kto verí, že
 niečo obsahuje.
 
 ---
