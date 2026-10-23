@@ -45,6 +45,13 @@ final class MailerTest extends TestCase
     {
         parent::setUp();
 
+        // Kernel-only checkouts carry no Users slice: the kernel suite runs the
+        // module tests too, and a missing class must skip the file rather than
+        // fail it. Same guard as PasswordResetMailerTest.
+        if (!is_dir(APP_BASE_PATH . '/src/Modules/Users')) {
+            $this->markTestSkipped('Users is not installed.');
+        }
+
         $this->tmpDir = sys_get_temp_dir() . '/nativa-mailer-' . bin2hex(random_bytes(6));
         mkdir($this->tmpDir, 0o775, true);
 

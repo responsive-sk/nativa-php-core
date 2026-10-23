@@ -27,6 +27,18 @@ use PHPUnit\Framework\TestCase;
  */
 final class AdminNotificationTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Kernel-only checkouts carry no Users slice: the kernel suite runs the
+        // module tests too, and a missing class must skip the file rather than
+        // fail it. Same guard as PasswordResetMailerTest.
+        if (!is_dir(APP_BASE_PATH . '/src/Modules/Users')) {
+            $this->markTestSkipped('Users is not installed.');
+        }
+    }
+
     #[Test]
     public function aCommentNotificationNamesTheArticleAuthorTextAndPanel(): void
     {
