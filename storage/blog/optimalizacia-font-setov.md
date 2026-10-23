@@ -2,7 +2,7 @@
 title: "Font set, ktorý nemal kde vziať znaky — a nástroje, ktoré to nevedeli"
 date: "2026-10-21"
 tags: ["fonty", "woff2", "fonttools", "subsetting", "cache", "boson"]
-excerpt: "Bosonove fonty mali 24 chýbajúcich slovenských znakov. Zmerané: prečo subsetter nedokáže pridať glyf, ako vyzerá oprava z tej istej buildy, čo nesmie zmeniť metriky — a prečo nový font musí mať novú URL."
+excerpt: "Bosonove fonty mali 24 chýbajúcich slovenských znakov. Zmerané: prečo subsetter nedokáže pridať glyf, ako vyzerá oprava z toho istého buildu, čo nesmie zmeniť metriky — a prečo nový font musí mať novú URL."
 author: "Nativa Dev"
 author_email: "nativa.dev@example.test"
 category: "Nástroje"
@@ -89,7 +89,7 @@ s diakritikou máme iné písmo.
 
 Zostala cesta 2 — s podmienkou, ktorá celý zásah drží pokope:
 
-> donor musí byť subset **tej istej buildy**: rovnaká rodina, verzia, `upm`
+> donor musí byť subset **toho istého buildu**: rovnaká rodina, verzia, `upm`
 > a rovnaké obrysy pre glyfy, ktoré majú oba súbory spoločné.
 
 Keď to platí, kopírovanie glyfu nie je „približná náhrada", je to presne ten
@@ -97,14 +97,14 @@ tvar, ktorý by tam bol, keby subset nikdy neodrezal.
 
 ---
 
-## Časť V — Ako sa overí „tá istá builda"
+## Časť V — Ako sa overí „ten istý build"
 
 Dve merania stačili.
 
 **Inter.** `public/fonts/inter-400.woff2` má md5 `da03732a27e1…`, a latin
 subset z Google Fonts má **ten istý md5**. To nie je „podobný font", to je
 identický súbor — takže `latin-ext` subset tej istej rodiny je donor
-z tej istej buildy.
+z toho istého buildu.
 
 **Roboto Condensed.** md5 nesedel (náš súbor je custom subset s 363 znakmi),
 takže sa porovnávali obrysy a metriky:
@@ -120,7 +120,7 @@ hhea ascent/descent    1900 / -500            1900 / -500
 ```
 
 Rovnaká verzia, rovnaké `upm`, rovnaké vertikálne metriky a **rovnaké obrysy
-aj advance** pre spoločné glyfy → donor je tá istá builda.
+aj advance** pre spoločné glyfy → donor je ten istý build.
 
 ---
 
@@ -282,7 +282,7 @@ font_subsetter.py \
 Čo by musel urobiť, aby nevyrobil tichú chybu:
 
 ```
-1. overiť, že donor a cieľ sú tá istá builda  (verzia, upm, obrysy, advance)
+1. overiť, že donor a cieľ sú z toho istého buildu  (verzia, upm, obrysy, advance)
 2. skopírovať len chýbajúce znaky (+ komponenty)
 3. assertnúť invarianty metrík: head, hhea, OS/2, hmtx pôvodných glyfov
 4. zapísať woff2 pod názov s content-hashom  (cache v .htaccess je immutable)
@@ -298,7 +298,7 @@ hlásil.
 ## Časť XI — Zhrnutie v piatich vetách
 
 Subset je jednosmerný, takže oprava vyžaduje buď plný zdroj tej istej verzie,
-alebo donor z tej istej buildy. Transplantácia glyfov je presná len vtedy, keď
+alebo donor z toho istého buildu. Transplantácia glyfov je presná len vtedy, keď
 sa overí verzia, `upm` a obrysy — inak je to nový font s cudzími znakmi.
 Metriky sa nesmú prepočítať, inak sa rozpadne metricky zladený fallback a vráti
 sa CLS, ktorý má `size-adjust` odstrániť. Fonty sa v tomto projekte servírujú
