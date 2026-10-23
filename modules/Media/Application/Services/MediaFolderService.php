@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Media\Application\Services;
 
+use Modules\Core\Domain\SubmitResult;
 use Modules\Database\Infrastructure\Persistence\UnitOfWork;
 use Modules\Media\Infrastructure\Persistence\MediaFolderRepository;
 
@@ -78,9 +79,9 @@ final readonly class MediaFolderService
      * The ids come back so the caller cascades through the provider-aware
      * path; the refusal names the number of files for the same reason.
      *
-     * @return array{ok: bool, error: string, folders: int, assets: int, skipped: int, ids: list<string>}
+     * @return SubmitResult<array{folders: int, assets: int, skipped: int, ids: list<string>}>
      */
-    public function delete(string $path, bool $cascade): array
+    public function delete(string $path, bool $cascade): SubmitResult
     {
         if (!$this->folders->exists($path)) {
             return self::deleteFailure('No folder named ' . $path . '.');
@@ -99,45 +100,49 @@ final readonly class MediaFolderService
 
         $this->folders->deleteSubtree($path);
 
-        return [
-            'ok'       => true,
-            'error'    => '',
-            'folders'  => $counts['folders'],
-            'assets'   => $counts['assets'],
-            'skipped'  => $counts['cloudinary'],
-            'ids'      => $ids,
-        ];
+        return SubmitResult::success([
+            'folders' => $counts['folders'],
+            'assets'  => $counts['assets'],
+            'skipped' => $counts['cloudinary'],
+            'ids'     => $ids,
+        ]);
     }
 
     /**
      * Register a folder that holds nothing yet.
      *
-     * @return array{ok: bool, path: string, error: string}
+     * `path` travels on both answers: a refusal shows the field the reader
+     * typed in, and a success is the name that was actually stored.
+     *
+     * @return SubmitResult<array{path: string}>
      */
-    public function create(string $path): array
+    public function create(string $path): SubmitResult
     {
         $clean = trim($path);
         $error = self::validate($clean);
 
         if ('' !== $error) {
-            return ['ok' => false, 'path' => $clean, 'error' => $error];
+            return SubmitResult::failure($error, ['path' => $clean]);
         }
 
         if ($this->folders->exists($clean)) {
-            return ['ok' => false, 'path' => $clean, 'error' => 'A folder named ' . $clean . ' already exists.'];
+            return SubmitResult::failure(
+                'A folder named ' . $clean . ' already exists.',
+                ['path' => $clean],
+            );
         }
 
         $this->folders->insert($clean);
 
-        return ['ok' => true, 'path' => $clean, 'error' => ''];
+        return SubmitResult::success(['path' => $clean]);
     }
 
     /**
      * Rename a folder and move its whole subtree with it.
      *
-     * @return array{ok: bool, error: string, folders: int, assets: int, skipped: int}
+     * @return SubmitResult<array{folders: int, assets: int, skipped: int}>
      */
-    public function rename(string $from, string $to): array
+    public function rename(string $from, string $to): SubmitResult
     {
         $clean = trim($to);
         $error = $this->refusal($from, $clean);
@@ -152,13 +157,11 @@ final readonly class MediaFolderService
             fn (): array => $this->folders->renameSubtree($from, $clean),
         );
 
-        return [
-            'ok'      => true,
-            'error'   => '',
+        return SubmitResult::success([
             'folders' => $moved['folders'],
             'assets'  => $moved['assets'],
             'skipped' => $skipped,
-        ];
+        ]);
     }
 
     /**
@@ -235,18 +238,24 @@ final readonly class MediaFolderService
     }
 
     /**
-     * @return array{ok: bool, error: string, folders: int, assets: int, skipped: int}
+     * A refusal still carries the counts at zero, so a caller that renders the
+     * report does not have to know which answer it holds before reading them.
+     *
+     * @return SubmitResult<array{folders: int, assets: int, skipped: int}>
      */
-    private static function renameFailure(string $error): array
+    private static function renameFailure(string $error): SubmitResult
     {
-        return ['ok' => false, 'error' => $error, 'folders' => 0, 'assets' => 0, 'skipped' => 0];
+        return SubmitResult::failure($error, ['folders' => 0, 'assets' => 0, 'skipped' => 0]);
     }
 
     /**
-     * @return array{ok: bool, error: string, folders: int, assets: int, skipped: int, ids: list<string>}
+     * @return SubmitResult<array{folders: int, assets: int, skipped: int, ids: list<string>}>
      */
-    private static function deleteFailure(string $error): array
+    private static function deleteFailure(string $error): SubmitResult
     {
-        return ['ok' => false, 'error' => $error, 'folders' => 0, 'assets' => 0, 'skipped' => 0, 'ids' => []];
+        /** @var array{folders: int, assets: int, skipped: int, ids: list<string>} $context */
+        $context = ['folders' => 0, 'assets' => 0, 'skipped' => 0, 'ids' => []];
+
+        return SubmitResult::failure($error, $context);
     }
 }

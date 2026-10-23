@@ -83,7 +83,7 @@ final class CommentSubmitAction
             $request->getClientIp(),
         );
 
-        if ($result['ok']) {
+        if ($result->ok) {
             $this->notifyAdmin($slug, $userId !== null ? $userName : $guestName, $body);
 
             return Response::redirect('/blog/' . $slug . '#comments');
@@ -92,7 +92,7 @@ final class CommentSubmitAction
         // Re-render the article with errors inline — the errors and old
         // input are passed through a request attribute to BlogArticleAction.
         $request->setPathInfo('/blog/' . $slug);
-        $request->setAttribute('comment_errors', $result['errors']);
+        $request->setAttribute('comment_errors', $result->errors);
         $request->setAttribute('comment_old', [
             'guest_name'  => $guestName ?? '',
             'guest_email' => $guestEmail ?? '',

@@ -73,9 +73,10 @@ final readonly class DocsCatalog
      * rename.
      *
      * ORDER IS THE INDEX ORDER, and the order is deliberate: an introduction
-     * first, then the philosophy the module guides inherit, then the guides
-     * themselves, then the measured log (`kernel-status` and its parts), the
-     * evaluation and the two inventories. Pages is the first module guide —
+     * first, then the philosophy the module guides inherit and the boolean
+     * rule they obey, then the guides themselves, then the measured log
+     * (`kernel-status` and its parts), the evaluation and the two inventories.
+     * Pages is the first module guide —
      * the template every later module guide follows is derived from it and
      * from `core-philosophy`, not invented in advance.
      *
@@ -93,6 +94,7 @@ final readonly class DocsCatalog
     private const array PUBLISHED = [
         'intro' => 'intro.md',
         'core-philosophy' => 'core-philosophy.md',
+        'boolean-vocabulary' => 'boolean-vocabulary.md',
         'modules' => 'modules.md',
         'pages' => 'pages.md',
         'themes' => 'themes.md',

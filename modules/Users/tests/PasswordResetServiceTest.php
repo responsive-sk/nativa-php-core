@@ -170,14 +170,18 @@ final class PasswordResetServiceTest extends TestCase
         for ($i = 1; $i <= 3; $i++) {
             $result = $this->resets->requestReset('eva@example.test', '203.0.113.' . $i);
 
-            $this->assertTrue($result['ok'], 'request ' . $i . ' of 3 for the same address must be allowed');
-            $this->assertSame(0, $result['retryAfter']);
+            $this->assertTrue($result->ok, 'request ' . $i . ' of 3 for the same address must be allowed');
+            $this->assertSame(0, $result->context['retryAfter']);
         }
 
         $refused = $this->resets->requestReset('eva@example.test', '203.0.113.9');
 
-        $this->assertFalse($refused['ok'], 'the fourth request for one address must be refused');
-        $this->assertGreaterThan(3500, $refused['retryAfter'], 'the refusal must carry the per-address window');
+        $this->assertFalse($refused->ok, 'the fourth request for one address must be refused');
+        $this->assertGreaterThan(
+            3500,
+            $refused->context['retryAfter'],
+            'the refusal must carry the per-address window',
+        );
     }
 
     /**
@@ -190,7 +194,7 @@ final class PasswordResetServiceTest extends TestCase
         for ($i = 1; $i <= 5; $i++) {
             $result = $this->resets->requestReset('eva@example.test', '127.0.0.1');
 
-            $this->assertTrue($result['ok'], 'request ' . $i . ' from the local address must be allowed');
+            $this->assertTrue($result->ok, 'request ' . $i . ' from the local address must be allowed');
         }
     }
 }
