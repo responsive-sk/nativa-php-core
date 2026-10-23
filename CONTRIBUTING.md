@@ -42,6 +42,36 @@ Describe **what** and **why** in the PR, not how — the diff already says how.
    `mark` / `mark-switch` / `moonshine`, no `@layer` in built CSS
 5. **Boot without vendor/** — the kernel boots with no `composer install`
 
+## Slovak loanwords in articles (rod a tvar)
+
+The article corpus under `storage/blog/` is Slovak, and an English technical
+term is fine — but it has **one gender and one set of forms** across the
+articles. This table is that ledger. A word missing here gets its row in the
+same PR that introduces it, not a second variant in the prose.
+
+| slovo | rod | tvary | poznámka |
+|---|---|---|---|
+| **build** | m. | ten build · z buildu · dva buildy | nie „builda“ (ž.) |
+| **deploy** | m. | ten deploy · z deploya · dva deploye | v próze radšej „nasadenie“ |
+| **release** | m. | ten release · z releasu · dva releasy | v próze radšej „vydanie“ |
+| **feature** | ž. | tá feature · z feature · dve feature | nesklonné; v próze „funkcia“/„vlastnosť“ |
+| **commit** | m. | ten commit · z commitu · dva commity | |
+| **session** | ž. | tá session · z tej session · dve session | nesklonné |
+| **cache** | ž. | tá cache · z cache · dve cache | nesklonné |
+| **workspace** | m. | ten workspace · z workspace · dva workspace | nesklonné |
+| **worktree** | m. | ten worktree · z worktree · dva worktree | nesklonné |
+| **checkout** | m. | ten checkout · z checkoutu · dva checkouty | |
+| **request** | m. | ten request · z requestu · dva requesty | |
+| **handler** | m. | ten handler · z handlera · dva handlery | |
+| **payload** | m. | ten payload · z payloadu · dva payloady | |
+| **test** | m. | ten test · z testu · dva testy | |
+| **log** | m. | ten log · z logu · dva logy | |
+
+Where the prose already has a Slovak word (`fronta` for queue, `nasadenie`
+for deploy), use it; the English term belongs in code and in the sentence that
+names the code. A term that appears once with each gender is a content bug,
+not a style choice — fix the article rather than widening this table.
+
 ## Boundaries most often broken
 
 - **Catalogue vs. installation.** The source is `modules/<Name>/`;
