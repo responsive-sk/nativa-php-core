@@ -19,8 +19,8 @@
 #   1. `.env` may never be tracked. `.env.example` may — it is the template.
 #   2. A secret-shaped assignment is a finding only when the value is a QUOTED
 #      LITERAL of 8+ characters. `$token = $_SESSION[self::SESSION_KEY]`,
-#      `'password' => $row['password']` and `token: {{ csrf }}` are code.
-#      `$apiKey = "sk_live_…"` is a credential.
+#      `'password' => $row['password']` and `token: {{ csrf }}` are code; a
+#      real `sk_live_…` key beside a credential name is not.
 #
 # Deliberately NOT here: the vendored script's JS-shaped checks (`npm audit`,
 # `console.log` in `src/`, `error.message`). This tree's `src/` is PHP, its
