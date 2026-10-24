@@ -56,6 +56,14 @@ declare(strict_types = 1);
  */
 function wire_module_handlers(): void
 {
+    // Queue handlers first, and OUTSIDE the outbox guard below. They used to be
+    // wired at the end of an `if` that names Audit and Outbox, so a tree with
+    // Queue and Blog but without Audit drained its cover jobs into
+    // `No handler registered for event type` — the same Boot 16 failure this
+    // file exists to prevent, one guard further down. A delivery path is a
+    // delivery path whether or not the outbox is installed.
+    wire_queue_handlers();
+
     if (!class_exists('Modules\Audit\Application\Services\SecurityEventHandler')
         || !class_exists('Modules\Outbox\Interfaces\HTTP\OutboxServices')
         || !class_exists('Modules\Audit\Interfaces\HTTP\AuditServices')
@@ -67,12 +75,10 @@ function wire_module_handlers(): void
         \Modules\Outbox\Interfaces\HTTP\OutboxServices::processor(),
         \Modules\Audit\Interfaces\HTTP\AuditServices::audit(),
     );
-
-    wire_queue_handlers();
 }
 
 /**
- * The Queue module's handlers — currently one, and the tree's first real
+ * The Queue module's handlers — the tree's first real
  * producer's consumer (Boot 32).
  *
  * Named inline, never imported, for the same reason as the pairing above: a
@@ -86,12 +92,35 @@ function wire_queue_handlers(): void
 {
     if (!class_exists('Modules\Queue\Interfaces\HTTP\QueueServices')
         || !class_exists('Modules\Queue\Application\Services\HandlerRegistry')
-        || !class_exists('Modules\Blog\Application\Services\CoverRenderHandler')
     ) {
         return;
     }
 
-    \Modules\Blog\Application\Services\CoverRenderHandler::register(
-        \Modules\Queue\Interfaces\HTTP\QueueServices::handlers(),
-    );
+    if (class_exists('Modules\Blog\Application\Services\CoverRenderHandler')) {
+        \Modules\Blog\Application\Services\CoverRenderHandler::register(
+            \Modules\Queue\Interfaces\HTTP\QueueServices::handlers(),
+        );
+    }
+
+    // The operator notification. It is pushed by Comments and Questions, whose
+    // jobs are drained by the panel's "Process now" button in the WEB process —
+    // a handler registered only for the CLI would leave that button reporting
+    // "0 processed, 1 failed" with the reason parked in failed_jobs.
+    if (class_exists('Modules\Users\Application\Services\AdminNotificationHandler')
+        && class_exists('Modules\Users\Application\Services\AdminNotifier')
+    ) {
+        // A closure, not a static register(): Users must not import Queue. Queue
+        // reaches Users through Audit (`QueueAdminAction` writes an audit row and
+        // `AuditServices` authenticates through Users), so that edge would close a
+        // cycle the catalogue refuses. This file already names both sides inline
+        // and is the one list every DELIVERY process wires.
+        \Modules\Queue\Interfaces\HTTP\QueueServices::handlers()->register(
+            \Modules\Users\Application\Services\AdminNotificationHandler::HANDLER,
+            static function (array $args): void {
+                (new \Modules\Users\Application\Services\AdminNotificationHandler(
+                    \Modules\Users\Application\Services\AdminNotifier::create(),
+                ))->handle($args);
+            },
+        );
+    }
 }

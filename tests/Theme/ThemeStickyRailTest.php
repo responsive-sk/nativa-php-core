@@ -49,7 +49,7 @@ final class ThemeStickyRailTest extends TestCase
     #[Test]
     public function noThemesCriticalCssMakesThePageAScrollContainer(): void
     {
-        $checked = [];
+        $railsChecked = 0;
 
         foreach (ThemeRegistry::all() as $name => $class) {
             $theme = ThemeRegistry::get($name);
@@ -64,6 +64,8 @@ final class ThemeStickyRailTest extends TestCase
                 if (!str_contains($css, self::STICKY)) {
                     continue; // no sticky rail to protect in this stylesheet
                 }
+
+                $railsChecked++;
 
                 foreach (self::CONTAINERS as $element) {
                     $this->assertNotSame(
@@ -80,12 +82,10 @@ final class ThemeStickyRailTest extends TestCase
                     );
                 }
             }
-
-            $checked[] = $name;
         }
 
-        if ([] === $checked) {
-            $this->markTestSkipped('No theme installed — nothing to check.');
+        if (0 === $railsChecked) {
+            $this->markTestSkipped('No installed theme declares a sticky rail — nothing to check.');
         }
     }
 

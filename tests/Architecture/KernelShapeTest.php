@@ -84,7 +84,10 @@ final class KernelShapeTest extends TestCase
         'src/Modules/Core/Domain/AuthIdentity.php',
         'src/Modules/Core/Domain/Permissions.php',
         'src/Modules/Core/Domain/ShellNavItem.php',
+        'src/Modules/Core/Domain/SubmitResult.php',
         'src/Modules/Core/Domain/ThemePreference.php',
+        'src/Modules/Core/Domain/ThemeSetting.php',
+        'src/Modules/Core/Domain/ThemeSettingValues.php',
         'src/Modules/Core/Infrastructure/Attributes/AsAuthProvider.php',
         'src/Modules/Core/Infrastructure/Attributes/AsMarkdownBlock.php',
         'src/Modules/Core/Infrastructure/Attributes/AsMiddleware.php',
@@ -135,11 +138,17 @@ final class KernelShapeTest extends TestCase
      * and guard nothing. This constant is the ceiling the refactor reached
      * (67 concrete at the baseline → 59 after the dead code left and the
      * tooling moved, **60** once `AuthProviderRegistry` came back for the
-     * auth-provider discovery round), so it is written down as a number a
-     * reviewer can argue with: lowering it is the work, raising it is a
-     * deliberate edit with its own red line.
+     * auth-provider discovery round, **64** once the per-theme settings
+     * contract arrived, **65** with `SubmitResult`), so it is written down as
+     * a number a reviewer can argue with: lowering it is the work, raising it
+     * is a deliberate edit with its own red line.
+     *
+     * 64 → 65 is the boolean-result round and nothing else: `SubmitResult` is
+     * the `ok`/`errors` answer four services used to spell as an array, with
+     * the "`ok` ⇒ no errors" invariant now in its constructors. It is a
+     * `contract` row in docs/kernel-shape.md and stores nothing.
      */
-    private const int MAX_APPROVED = 62;
+    private const int MAX_APPROVED = 65;
 
     /**
      * Rule 1: every `.php` file under `src/Modules/Core` is an interface, enum

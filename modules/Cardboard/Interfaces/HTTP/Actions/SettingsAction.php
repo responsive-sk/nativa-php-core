@@ -9,13 +9,19 @@ use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Cardboard\Interfaces\HTTP\CardboardServices;
 use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Application\Services\View\ViewRenderer;
+use Modules\Core\Domain\ThemePreference;
+use Modules\Core\Domain\ThemeSetting;
+use Modules\Core\Domain\ThemeSettingValues;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
+use Modules\Core\Interfaces\HTTP\ThemeKernel;
 use Modules\Core\Interfaces\HTTP\ThemeRegistry;
 use Modules\Core\Interfaces\HTTP\ThemeResolver;
 use Modules\Settings\Application\DTOs\MenuItemDTO;
+use Themes\ThemeModule;
+use Themes\ThemeSettings;
 
 /**
  * Settings forms — task 9.4.
@@ -32,6 +38,7 @@ use Modules\Settings\Application\DTOs\MenuItemDTO;
 #[Route(path: '/mark/settings', method: 'GET', name: 'mark.settings')]
 #[Route(path: '/mark/settings/site', method: 'POST', name: 'mark.settings.site', handlerMethod: 'saveSite')]
 #[Route(path: '/mark/settings/tokens', method: 'POST', name: 'mark.settings.tokens', handlerMethod: 'saveTokens')]
+#[Route(path: '/mark/settings/theme', method: 'POST', name: 'mark.settings.theme', handlerMethod: 'saveThemeSettings')]
 #[Route(path: '/mark/settings/nav', method: 'POST', name: 'mark.settings.nav', handlerMethod: 'saveNav')]
 #[Route(path: '/mark/settings/nav/{id}/delete', method: 'POST', name: 'mark.settings.nav.delete', handlerMethod: 'deleteNav')]
 #[Route(path: '/mark/settings/nav/reorder', method: 'POST', name: 'mark.settings.nav.reorder', handlerMethod: 'reorderNav')]
@@ -74,6 +81,7 @@ final class SettingsAction
 
         $layoutSelect = $this->layoutSelect($all);
         $themeSelect = $this->themeSelect($all);
+        $themeSettingsCard = $this->themeSettingsCard($all, $csrf);
         $tokenTable = $this->designTokensTable($settings->designTokens());
         $navTable = $this->headerNavTable($csrf);
 
@@ -82,7 +90,7 @@ final class SettingsAction
         $parentOptions = $this->adminParentOptions($adminNavItems);
         $adminNavTable = $this->adminNavTable($adminNavItems, $csrf);
 
-        $content = ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/settings-form.phtml', ['url' => $this->urlBuilder(), 'settingsTabs' => AdminLayout::settingsTabs($this->urlBuilder(), 'general'), 'adminEmail' => $adminEmail, 'adminNavTable' => $adminNavTable, 'csrf' => $csrf, 'errorHtml' => $errorHtml, 'iconOptions' => $iconOptions, 'layoutSelect' => $layoutSelect, 'locale' => $locale, 'navTable' => $navTable, 'parentOptions' => $parentOptions, 'regChecked' => $regChecked, 'siteDescription' => $siteDescription, 'siteName' => $siteName, 'themeSelect' => $themeSelect, 'timezone' => $timezone, 'tokenTable' => $tokenTable]);
+        $content = ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/settings-form.phtml', ['url' => $this->urlBuilder(), 'settingsTabs' => AdminLayout::settingsTabs($this->urlBuilder(), 'general'), 'adminEmail' => $adminEmail, 'adminNavTable' => $adminNavTable, 'csrf' => $csrf, 'errorHtml' => $errorHtml, 'iconOptions' => $iconOptions, 'layoutSelect' => $layoutSelect, 'locale' => $locale, 'navTable' => $navTable, 'parentOptions' => $parentOptions, 'regChecked' => $regChecked, 'siteDescription' => $siteDescription, 'siteName' => $siteName, 'themeSelect' => $themeSelect, 'themeSettingsCard' => $themeSettingsCard, 'timezone' => $timezone, 'tokenTable' => $tokenTable]);
 
         return AdminLayout::render(
             'Settings',
@@ -159,6 +167,135 @@ final class SettingsAction
         }
 
         return '<select id="theme" name="theme">' . $options . '</select>';
+    }
+
+    /**
+     * The ACTIVE theme's own settings block, rendered from the schema the
+     * theme declares.
+     *
+     * Only the active theme has controls, because only the active theme's
+     * values are ever rendered — a form for a theme nobody is using is a form
+     * whose saved values the admin cannot check. The values themselves are
+     * still stored per theme (`theme.{name}.{field}`), so switching to another
+     * theme and back restores what this one was configured with.
+     *
+     * A theme without the contract says so in words rather than rendering an
+     * empty card: an empty form looks like a bug, and the admin cannot tell
+     * "this theme has no options" from "the options failed to load".
+     *
+     * @param array<string, mixed> $all
+     */
+    private function themeSettingsCard(array $all, string $csrf): string
+    {
+        $theme = self::activeThemeName($all);
+        $module = ThemeKernel::for($theme);
+        $stored = [];
+
+        if ($module instanceof ThemeSettings) {
+            $settings = CardboardServices::settings();
+
+            foreach ($module->settingsSchema() as $field) {
+                $value = $settings->get(ThemeSettingValues::storageKey($theme, $field->key));
+
+                if (is_string($value)) {
+                    $stored[$field->key] = $value;
+                }
+            }
+        }
+
+        return self::renderThemeSettingsCard($theme, $module, $stored, $csrf, $this->urlBuilder());
+    }
+
+    /**
+     * The card itself — a pure renderer, so the form the admin sees is
+     * testable without a database or a request.
+     *
+     * The stored map is the caller's answer, not read here: the same function
+     * then renders the EMPTY form (fresh install) and the FILLED one without a
+     * second code path, and a test can prove what a stored `meatball` looks
+     * like selected without migrating a tree.
+     *
+     * @param array<string, string>                              $stored field => stored value
+     * @param \Closure(string, array<string, string|int>): string $url    route-name resolver
+     */
+    public static function renderThemeSettingsCard(
+        string $theme,
+        ThemeModule $module,
+        array $stored,
+        string $csrf,
+        \Closure $url,
+    ): string {
+        $themeName = AdminLayout::e($theme);
+        $schema = $module instanceof ThemeSettings ? $module->settingsSchema() : [];
+
+        if ([] === $schema) {
+            return '<div class="m-card">'
+                . '<h2 class="m-heading">Theme settings</h2>'
+                . '<p class="m-muted">' . $themeName . ' declares no settings.</p>'
+                . '</div>';
+        }
+
+        $fields = '';
+
+        foreach ($schema as $field) {
+            // The stored value is vetted the same way the renderer vets it, so
+            // the form opens on what the page is actually showing instead of on
+            // a stale row the theme would reject.
+            $raw = $stored[$field->key] ?? null;
+            $current = is_string($raw) && $field->accepts($raw) ? $raw : $field->fallbackValue();
+            $id = 'theme-setting-' . $field->key;
+            $name = 'theme_settings[' . $field->key . ']';
+            $fields .= '<label for="' . AdminLayout::e($id) . '">' . AdminLayout::e($field->label) . '</label>';
+            $fields .= match ($field->type) {
+                'select' => self::themeSettingSelect($field, $id, $name, $current),
+                default  => '<input type="text" id="' . AdminLayout::e($id) . '" name="' . AdminLayout::e($name)
+                    . '" value="' . AdminLayout::e($current) . '">',
+            };
+        }
+
+        return '<div class="m-card">'
+            . '<h2 class="m-heading">Theme settings — ' . $themeName . '</h2>'
+            . '<p class="m-muted m-card-intro">Options this theme declares. Stored per theme, so switching back restores them.</p>'
+            . '<form class="m-form" method="POST" action="' . AdminLayout::e($url('mark.settings.theme')) . '">'
+            . $csrf
+            . $fields
+            . '<div><button class="m-btn m-btn-primary" type="submit">Save theme settings</button></div>'
+            . '</form>'
+            . '</div>';
+    }
+
+    /** One declared `select` field — the options are the field's own whitelist. */
+    private static function themeSettingSelect(ThemeSetting $field, string $id, string $name, string $current): string
+    {
+        $options = '';
+
+        foreach ($field->options as $value => $label) {
+            $selected = (string) $value === $current ? ' selected' : '';
+            $options .= '<option value="' . AdminLayout::e((string) $value) . '"' . $selected . '>'
+                . AdminLayout::e($label) . '</option>';
+        }
+
+        return '<select id="' . AdminLayout::e($id) . '" name="' . AdminLayout::e($name) . '">' . $options . '</select>';
+    }
+
+    /**
+     * The theme whose values this screen edits — the stored public theme,
+     * resolved exactly as `ThemeResolver` resolves it for a public page.
+     *
+     * Shared by the form and the save path on purpose: a save that resolved a
+     * different theme than the form rendered would write rows nobody reads. The
+     * POST body never names the theme — otherwise a hand-made request could
+     * write values for a theme that is not active, which the admin could then
+     * never see or clear from this screen.
+     *
+     * @param array<string, mixed> $all
+     */
+    public static function activeThemeName(array $all): string
+    {
+        $raw = $all[ThemeResolver::THEME_SETTING] ?? ThemeResolver::PUBLIC_THEME;
+        $stored = is_string($raw) ? $raw : ThemeResolver::PUBLIC_THEME;
+
+        return ThemePreference::resolve($stored, self::selectableThemes(), ThemeResolver::PUBLIC_THEME);
     }
 
     /**
@@ -360,6 +497,69 @@ final class SettingsAction
 
         CacheInvalidator::flush();
         \Modules\Audit\Interfaces\HTTP\AuditServices::log('settings.save', 'settings', 'Saved site settings', $request->getClientIp());
+
+        return Response::redirect($this->url('mark.settings'));
+    }
+
+    /**
+     * Store the posted values of the ACTIVE theme's declared fields.
+     *
+     * Iterates the POST body, not the schema: a field the form did not send
+     * keeps its stored value. Writing every schema field on every save would
+     * turn a partially-submitted form into a silent reset.
+     *
+     * An unknown key or an unacceptable value never fails the save — the form
+     * was rendered from this schema, so the request is hand-made or the schema
+     * changed mid-session. Unknown keys are dropped (logged), unacceptable
+     * values become the field's default (logged), which is the same policy
+     * `saveSite()` applies to an unknown theme.
+     */
+    public function saveThemeSettings(Request $request): Response
+    {
+        $settings = CardboardServices::settings();
+        $theme = self::activeThemeName($settings->all());
+        $module = ThemeKernel::for($theme);
+
+        if (!$module instanceof ThemeSettings) {
+            error_log('[SettingsAction.saveThemeSettings] theme=' . $theme . ' declares no settings schema — nothing stored');
+
+            return Response::redirect($this->url('mark.settings'));
+        }
+
+        $posted = $request->body('theme_settings');
+        $saved = 0;
+
+        foreach (is_array($posted) ? $posted : [] as $key => $value) {
+            if (!is_string($key) || !is_string($value)) {
+                continue;
+            }
+
+            $sanitized = ThemeSettingValues::sanitize($module, $key, $value);
+
+            if (null === $sanitized) {
+                error_log('[SettingsAction.saveThemeSettings] dropped unknown field `' . $key . '` for theme=' . $theme);
+
+                continue;
+            }
+
+            if ($sanitized !== trim($value)) {
+                error_log('[SettingsAction.saveThemeSettings] field `' . $key . '` value `' . trim($value)
+                    . '` is not accepted by theme=' . $theme . ' — stored `' . $sanitized . '` instead');
+            }
+
+            $settings->set(ThemeSettingValues::storageKey($theme, $key), $sanitized, 'design', false);
+            ++$saved;
+        }
+
+        if (0 !== $saved) {
+            CacheInvalidator::flush();
+            \Modules\Audit\Interfaces\HTTP\AuditServices::log(
+                'settings.theme',
+                'settings',
+                'Saved ' . $saved . ' theme setting(s) for ' . $theme,
+                $request->getClientIp(),
+            );
+        }
 
         return Response::redirect($this->url('mark.settings'));
     }

@@ -58,9 +58,9 @@ final class PasswordResetRequestAction
         $resets = AuthServices::resets();
         $result = $resets->requestReset(is_string($email) ? $email : '', $request->getClientIp());
 
-        if (!$result['ok']) {
+        if (!$result->ok) {
             return ThrottledResponse::render(
-                $result['retryAfter'],
+                $result->context['retryAfter'],
                 'Too many password reset requests. Please try again later.',
             );
         }

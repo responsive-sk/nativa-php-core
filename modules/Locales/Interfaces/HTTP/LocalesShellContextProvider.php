@@ -115,4 +115,17 @@ final class LocalesShellContextProvider implements ShellContextProvider
     {
         return [];
     }
+
+    /**
+     * No theme settings here, and `[]` is the answer rather than an oversight:
+     * this module owns translations, not the choices a theme offers its admin.
+     * The rows live with the module that owns the settings table; a second
+     * reader of the same keys would be a second source for one fact.
+     *
+     * @return array<string, string>
+     */
+    public function themeSettings(): array
+    {
+        return [];
+    }
 }

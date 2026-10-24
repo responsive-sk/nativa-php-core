@@ -34,18 +34,20 @@ final class MediaFolderCreateAction
         $raw = $request->body('path');
         $result = MediaServices::folders()->create(is_string($raw) ? $raw : '');
 
-        if (!$result['ok']) {
-            return MediaFolderResponses::refusal($this->router(), $request, $result['error']);
+        if (!$result->ok) {
+            return MediaFolderResponses::refusal($this->router(), $request, $result->error());
         }
+
+        $path = $result->context['path'];
 
         CacheInvalidator::flush();
         AuditServices::log(
             'media.folder-create',
             'media',
-            'Created folder: ' . $result['path'],
+            'Created folder: ' . $path,
             $request->getClientIp(),
         );
 
-        return MediaFolderResponses::success($this->router(), $request, 'Folder ' . $result['path'] . ' created.', $result['path']);
+        return MediaFolderResponses::success($this->router(), $request, 'Folder ' . $path . ' created.', $path);
     }
 }

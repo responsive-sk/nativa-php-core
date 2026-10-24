@@ -22,6 +22,9 @@ final readonly class ShellContext
      *                                                     translations). Null = switcher renders the
      *                                                     current path for every available locale.
      * @param list<string>               $availableLocales language codes available in locales.db
+     * @param array<string, string>      $themeSettings    the active theme's settings, defaults
+     *                                                     already merged in by the kernel — a theme
+     *                                                     reads its own field, never the settings table
      */
     private function __construct(
         public string $siteName,
@@ -33,6 +36,7 @@ final readonly class ShellContext
         public string $activeLocale,
         public array $availableLocales,
         public bool $signedIn,
+        public array $themeSettings,
     ) {
     }
 
@@ -41,6 +45,7 @@ final readonly class ShellContext
      * @param list<ShellNavItem>         $footerNav
      * @param array<string, string>|null $localeLinks
      * @param list<string>               $availableLocales
+     * @param array<string, string>      $themeSettings
      */
     public static function from(
         string $siteName,
@@ -51,6 +56,7 @@ final readonly class ShellContext
         string $activeLocale,
         array $availableLocales,
         bool $signedIn,
+        array $themeSettings = [],
     ): self {
         return new self(
             $siteName,
@@ -62,6 +68,7 @@ final readonly class ShellContext
             $activeLocale,
             $availableLocales,
             $signedIn,
+            $themeSettings,
         );
     }
 }

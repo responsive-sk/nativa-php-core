@@ -107,4 +107,23 @@ interface ShellContextProvider
      * @return list<ShellNavItem>
      */
     public function navigation(string $slot, string $currentPath): array;
+
+    /**
+     * The stored settings of the ACTIVE theme, keyed by the theme's own field
+     * names (`nav_toggle_icon`), with the `theme.{name}.` storage prefix
+     * already stripped.
+     *
+     * Deliberately undecorated: defaults are the THEME's answer, not the
+     * provider's. The provider owns one row of storage and knows nothing about
+     * which fields a theme renders, so it reports what is stored and lets the
+     * schema fill the gaps — a second place carrying defaults is a second place
+     * that can disagree with the form.
+     *
+     * `[]` therefore means "nothing stored for this theme", which is exactly
+     * the state of a fresh install and the state of every theme that has no
+     * settings contract at all.
+     *
+     * @return array<string, string>
+     */
+    public function themeSettings(): array;
 }

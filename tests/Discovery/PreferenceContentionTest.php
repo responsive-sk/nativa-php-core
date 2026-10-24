@@ -133,6 +133,12 @@ final class PreferenceContentionTest extends TestCase
                     {
                         return [];
                     }
+
+                    /** @return array<string, string> */
+                    public function themeSettings(): array
+                    {
+                        return [];
+                    }
                 }
 
                 PHP,

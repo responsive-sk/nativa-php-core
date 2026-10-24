@@ -227,8 +227,20 @@ final class NameOwnershipContractTest extends TestCase
      * `SURFACES` (surface → the theme method that renders it), and the two
      * refusal tables (`NOT_RENDERED`, `REFUSED`). Four tables of a new build
      * surface, not four spellings of a name that already had an owner.
+     *
+     * 250 with the operator notification: `HANDLER` (`notify.admin`, pushed by
+     * two producers and looked up by one registry), `EXCERPT_LIMIT` and
+     * `PAYLOAD_EXCERPT_LIMIT` (the mail body and the queue row are different
+     * surfaces with different budgets) and `WORK_LIMIT` (the batch the panel may
+     * run inside one request). `HttpTransport::TIMEOUT_SECONDS` moved here from
+     * the reset mailer rather than being added, so it is not part of the four:
+     * the transport the two mailers share was the reason it was extracted.
+     * None of the four is a second name for a value that already had one; the
+     * duplicate this feature first introduced — a hardcoded `/mark/questions`
+     * beside `QuestionsBadge::NAV_HREF` — was removed by carrying the panel
+     * path in the payload, which is why rule 2 stayed at 526.
      */
-    private const int MAX_DECLARATIONS = 246;
+    private const int MAX_DECLARATIONS = 250;
 
     /**
      * 203 → 204 with MAX_DECLARATIONS: `ModuleTreeState::IGNORED` is a name as
@@ -245,8 +257,17 @@ final class NameOwnershipContractTest extends TestCase
      * renders where, which theme method answers a surface, and which themes the
      * generator will not write over. None of them is a second name for a value
      * that already had one.
+     *
+     * 209 with the operator notification: `EXCERPT_LIMIT` (how much of a
+     * reader's text a mail may carry — the payload's own cap is a different
+     * number for a different surface, so it is not the same name twice) and
+     * `WORK_LIMIT` (how much of the queue one admin click may run inside a
+     * request). `HANDLER` was already owned by `Blog\CoverJobs` and is reused by
+     * design — one name for "the job this producer pushes" — and
+     * `TIMEOUT_SECONDS` moved with the shared HTTP transport rather than
+     * arriving new.
      */
-    private const int MAX_NAMES = 207;
+    private const int MAX_NAMES = 209;
 
     /**
      * `name => modules/<Name>` or `modules/<Group>/<Name>`, resolved once. A

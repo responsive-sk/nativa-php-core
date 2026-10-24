@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Users\Application\Services;
 
+use Modules\Core\Domain\SubmitResult;
 use Modules\Security\Application\Services\PasswordHasher;
 use Modules\Security\Application\Services\RateLimiter;
 use Modules\Security\Domain\LocalClient;
@@ -66,9 +67,9 @@ final readonly class PasswordResetService
      * typed — never whether an account exists, so a 429 here says nothing
      * about anyone's account and the flow stays non-enumerable.
      *
-     * @return array{ok: bool, retryAfter: int}
+     * @return SubmitResult<array{retryAfter: int}>
      */
-    public function requestReset(string $email, string $ip): array
+    public function requestReset(string $email, string $ip): SubmitResult
     {
         $email = strtolower(trim($email));
 
@@ -77,7 +78,10 @@ final readonly class PasswordResetService
         if (0 < $retryAfter) {
             $this->debug('[security] reset request throttled (retry in ' . $retryAfter . 's)');
 
-            return ['ok' => false, 'retryAfter' => $retryAfter];
+            return SubmitResult::failure(
+                'Too many password reset requests — try again later.',
+                ['retryAfter' => $retryAfter],
+            );
         }
 
         $token = bin2hex(random_bytes(32));
@@ -102,7 +106,7 @@ final readonly class PasswordResetService
         // changes the response, and neither throws — see the port's docblock.
         $this->mailer->sendResetLink($email, $token, self::TOKEN_TTL_HOURS);
 
-        return ['ok' => true, 'retryAfter' => 0];
+        return SubmitResult::success(['retryAfter' => 0]);
     }
 
     /**

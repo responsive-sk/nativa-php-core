@@ -6,6 +6,7 @@ namespace Modules\Comments\Application\Services;
 
 use Modules\Comments\Domain\Entities\Comment;
 use Modules\Comments\Infrastructure\Persistence\Repositories\CommentRepository;
+use Modules\Core\Domain\SubmitResult;
 use Modules\Security\Application\Services\RateLimiter;
 use Modules\Security\Domain\LocalClient;
 use Modules\Validation\Validation\Validator;
@@ -39,7 +40,11 @@ final readonly class CommentsService
     /**
      * Submit a comment (pending by default).
      *
-     * @return array{ok: bool, errors: list<string>}
+     * The answer is a `SubmitResult`, not `array{ok, errors}`: `ok` and the
+     * reason are built together, so a caller can no longer receive a success
+     * carrying an error (or a refusal with nothing to show the reader).
+     *
+     * @return SubmitResult<array{}>
      */
     public function submit(
         string $slug,
@@ -49,7 +54,7 @@ final readonly class CommentsService
         ?string $guestEmail,
         string $body,
         string $ip,
-    ): array {
+    ): SubmitResult {
         $slug = trim($slug);
         $body = trim($body);
         $guestName = null === $guestName ? null : trim($guestName);
@@ -57,13 +62,13 @@ final readonly class CommentsService
 
         // Rate limit first — invalid payloads must not bypass throttling.
         if (!$this->isAllowed($slug, $ip)) {
-            return ['ok' => false, 'errors' => ['Too many comments — try again in a minute.']];
+            return SubmitResult::failure('Too many comments — try again in a minute.');
         }
 
         $errors = $this->validate($slug, $userId, $guestName, $guestEmail, $body);
 
         if ([] !== $errors) {
-            return ['ok' => false, 'errors' => $errors];
+            return SubmitResult::failure($errors);
         }
 
         // Logged-in users carry their account name as the display name.
@@ -78,7 +83,7 @@ final readonly class CommentsService
             $this->loopback($ip) ? null : $ip,
         ));
 
-        return ['ok' => true, 'errors' => []];
+        return SubmitResult::success();
     }
 
     /**

@@ -9,7 +9,10 @@ use Modules\Core\Application\Services\ShellContextProviderRegistry;
 use Modules\Core\Application\Services\View\InlineCss;
 use Modules\Core\Application\Services\View\InlineJs;
 use Modules\Core\Domain\ShellNavItem;
+use Modules\Core\Domain\ThemeSettingValues;
 use Modules\Core\Infrastructure\Paths\AppPaths;
+use Themes\ThemeModule;
+use Themes\ThemeSettings;
 
 /**
  * FrontendLayout — shared public page shell (task 10.3).
@@ -138,6 +141,12 @@ final class FrontendLayout
         $activeLocale = ShellContextProviderRegistry::activeLocale()
             ?? ShellContextProviderRegistry::defaultLocale()
             ?? '';
+
+        // The theme module is resolved BEFORE the shell context because the
+        // context now carries the theme's own settings: the stored rows are
+        // the port's answer, the defaults and the accepted values are the
+        // theme's, and only the module can supply the second half.
+        $themeModule = ThemeKernel::for($theme ?? ThemeResolver::PUBLIC_THEME);
         $shellContext = self::shellContext(
             $siteName,
             $headerNav,
@@ -146,9 +155,9 @@ final class FrontendLayout
             $localeLinks,
             $activeLocale,
             ShellContextProviderRegistry::languages(),
+            self::themeSettings($themeModule),
         );
 
-        $themeModule = ThemeKernel::for($theme ?? ThemeResolver::PUBLIC_THEME);
         $bundle = $themeModule->name();
         $jsKey = $themeModule->jsKey();
         $pageChrome = $themeModule->header($shellContext)
@@ -383,6 +392,7 @@ final class FrontendLayout
      * @param list<ShellNavItem>         $footerNav
      * @param array<string, string>|null $localeLinks
      * @param list<string>               $availableLocales language codes, in display order
+     * @param array<string, string>      $themeSettings    resolved values for the active theme
      */
     private static function shellContext(
         string $siteName,
@@ -392,6 +402,7 @@ final class FrontendLayout
         ?array $localeLinks,
         string $activeLocale,
         array $availableLocales,
+        array $themeSettings,
     ): ShellContext {
         return ShellContext::from(
             $siteName,
@@ -402,6 +413,30 @@ final class FrontendLayout
             $activeLocale,
             $availableLocales,
             self::sessionHasAuth(),
+            $themeSettings,
+        );
+    }
+
+    /**
+     * The active theme's settings, defaults merged in — what the theme reads off
+     * the shell context.
+     *
+     * Two sources, and neither can answer alone: the port knows what an admin
+     * stored (and nothing about which fields exist), the theme's schema knows
+     * which fields exist and which values are legal (and nothing about
+     * storage). `ThemeSettingValues::resolve()` is the one place they meet, so a
+     * hand-written row or a value retired from the schema cannot reach markup.
+     *
+     * A theme without the contract gets `[]` — no schema, no values, no change
+     * to how it renders today.
+     *
+     * @return array<string, string>
+     */
+    private static function themeSettings(ThemeModule $theme): array
+    {
+        return ThemeSettingValues::resolve(
+            $theme instanceof ThemeSettings ? $theme : null,
+            ShellContextProviderRegistry::themeSettings(),
         );
     }
 

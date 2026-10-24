@@ -58,8 +58,6 @@ final readonly class HttpPasswordResetMailer implements PasswordResetMailer
     /** The path the reset form lives at — the module owns it (`PasswordResetAction`). */
     private const string RESET_PATH = '/reset-password';
 
-    private const int TIMEOUT_SECONDS = 10;
-
     /**
      * @param \Closure(string $endpoint, list<string> $headers, string $body): array{status: int, body: string}|null $sender
      *        the transport call, injectable so the suite can assert the request
@@ -99,10 +97,10 @@ final readonly class HttpPasswordResetMailer implements PasswordResetMailer
             ),
         ], JSON_THROW_ON_ERROR);
 
-        $sender = $this->sender ?? self::streamSender();
+        $sender = $this->sender ?? HttpTransport::streamSender();
 
         try {
-            $response = $sender($this->endpoint, $this->headers(), $payload);
+            $response = $sender($this->endpoint, HttpTransport::headers($this->apiKey), $payload);
         } catch (\Throwable $e) {
             error_log(sprintf(
                 '[mailer:http] reset link for %s could not be delivered to %s: %s',
@@ -126,66 +124,4 @@ final readonly class HttpPasswordResetMailer implements PasswordResetMailer
         }
     }
 
-    /**
-     * @return list<string>
-     */
-    private function headers(): array
-    {
-        $headers = [
-            'Content-Type: application/json',
-            'Accept: application/json',
-        ];
-
-        if ('' !== $this->apiKey) {
-            $headers[] = 'Authorization: Bearer ' . $this->apiKey;
-        }
-
-        return $headers;
-    }
-
-    /**
-     * The default transport: a plain `file_get_contents` POST with a stream
-     * context — no `curl` extension required, and `ignore_errors` because the
-     * STATUS is the answer here, not a PHP warning.
-     *
-     * @return \Closure(string, list<string>, string): array{status: int, body: string}
-     */
-    private static function streamSender(): \Closure
-    {
-        return static function (string $endpoint, array $headers, string $body): array {
-            $context = stream_context_create([
-                'http' => [
-                    'method'        => 'POST',
-                    'header'        => implode("\r\n", $headers),
-                    'content'       => $body,
-                    'timeout'       => self::TIMEOUT_SECONDS,
-                    'ignore_errors' => true,
-                ],
-            ]);
-
-            // The warning for an unreachable host is expected and handled below
-            // (status 0 + a log line); suppressing it keeps a deployment's
-            // error stream about the failure, not about the failure twice.
-            $response = @file_get_contents($endpoint, false, $context);
-
-            return [
-                'status' => self::statusFrom($http_response_header ?? []),
-                'body'   => is_string($response) ? $response : '',
-            ];
-        };
-    }
-
-    /**
-     * @param array<int, string> $headers the response header block `file_get_contents` fills in
-     */
-    private static function statusFrom(array $headers): int
-    {
-        foreach ($headers as $header) {
-            if (1 === preg_match('#^HTTP/\S+\s+(\d{3})#', $header, $matches)) {
-                return (int) $matches[1];
-            }
-        }
-
-        return 0;
-    }
 }

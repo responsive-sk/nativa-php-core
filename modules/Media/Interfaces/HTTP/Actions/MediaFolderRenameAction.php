@@ -39,9 +39,13 @@ final class MediaFolderRenameAction
 
         $result = MediaServices::folders()->rename($from, $to);
 
-        if (!$result['ok']) {
-            return MediaFolderResponses::refusal($this->router(), $request, $result['error'], $from);
+        if (!$result->ok) {
+            return MediaFolderResponses::refusal($this->router(), $request, $result->error(), $from);
         }
+
+        $folders = $result->context['folders'];
+        $assets = $result->context['assets'];
+        $skipped = $result->context['skipped'];
 
         CacheInvalidator::flush();
         AuditServices::log(
@@ -51,9 +55,9 @@ final class MediaFolderRenameAction
                 'Renamed folder: %s -> %s (%d folder(s), %d file(s)%s)',
                 $from,
                 $to,
-                $result['folders'],
-                $result['assets'],
-                0 < $result['skipped'] ? sprintf(', skipped %d imported', $result['skipped']) : '',
+                $folders,
+                $assets,
+                0 < $skipped ? sprintf(', skipped %d imported', $skipped) : '',
             ),
             $request->getClientIp(),
         );
@@ -61,7 +65,7 @@ final class MediaFolderRenameAction
         return MediaFolderResponses::success(
             $this->router(),
             $request,
-            sprintf('Renamed to %s — %d folder(s), %d file(s).', $to, $result['folders'], $result['assets']),
+            sprintf('Renamed to %s — %d folder(s), %d file(s).', $to, $folders, $assets),
             $to,
         );
     }

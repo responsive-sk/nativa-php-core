@@ -40,15 +40,6 @@ use Modules\Users\Domain\Contracts\PasswordResetMailer;
 final class PasswordResetMailerFactory
 {
     /**
-     * Environments whose missing mail transport is covered by the dev log.
-     *
-     * Not the negation of `production` on purpose: an unrecognised name is an
-     * environment nobody classified, and an unclassified environment must not
-     * be the one that keeps a plaintext token on disk.
-     */
-    private const array DEV_ENVIRONMENTS = ['development', 'local', 'testing', 'test', 'dev'];
-
-    /**
      * The mailer this environment delivers with.
      */
     public static function create(): PasswordResetMailer
@@ -118,10 +109,6 @@ final class PasswordResetMailerFactory
      */
     public static function writesToLog(): bool
     {
-        return in_array(
-            strtolower(Env::get('APP_ENV', 'development') ?? 'development'),
-            self::DEV_ENVIRONMENTS,
-            true,
-        );
+        return MailerFactory::writesToLog();
     }
 }

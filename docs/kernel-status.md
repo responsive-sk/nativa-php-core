@@ -54,6 +54,9 @@ keep resolving to the section that holds them.
 
 ## The other record
 
+- `docs/boolean-vocabulary.md` — when a `bool` is the whole answer, when the
+  reason has to outlive the call, and when a stored value needs a name. The
+  mechanical half is `tests/Architecture/PersistedBooleanContractTest`.
 - `docs/name-ownership.md` — the const ledger: one name, one owner. The
   exemptions and the numbers live beside
   `tests/Architecture/NameOwnershipContractTest.php`, whose two ceilings can only

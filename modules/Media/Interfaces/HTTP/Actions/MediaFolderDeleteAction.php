@@ -6,6 +6,7 @@ namespace Modules\Media\Interfaces\HTTP\Actions;
 
 use Modules\Audit\Interfaces\HTTP\AuditServices;
 use Modules\Core\Application\Services\CacheInvalidator;
+use Modules\Core\Domain\SubmitResult;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
@@ -46,12 +47,16 @@ final class MediaFolderDeleteAction
 
         $pdo = DatabaseConnectionManager::instance()->connection('media');
         $outcome = (new UnitOfWork($pdo))->transaction(
-            fn (): array => $this->deleteWithCascade($path, $cascade),
+            fn (): SubmitResult => $this->deleteWithCascade($path, $cascade),
         );
 
-        if (!$outcome['ok']) {
-            return MediaFolderResponses::refusal($this->router(), $request, $outcome['error'], $path);
+        if (!$outcome->ok) {
+            return MediaFolderResponses::refusal($this->router(), $request, $outcome->error(), $path);
         }
+
+        $deleted = $outcome->context['deleted'];
+        $folders = $outcome->context['folders'];
+        $skipped = $outcome->context['skipped'];
 
         CacheInvalidator::flush();
         AuditServices::log(
@@ -60,9 +65,9 @@ final class MediaFolderDeleteAction
             sprintf(
                 'Deleted folder: %s (%d file(s) deleted, %d folder row(s)%s)',
                 $path,
-                $outcome['deleted'],
-                $outcome['folders'],
-                0 < $outcome['skipped'] ? sprintf(', skipped %d imported', $outcome['skipped']) : '',
+                $deleted,
+                $folders,
+                0 < $skipped ? sprintf(', skipped %d imported', $skipped) : '',
             ),
             $request->getClientIp(),
         );
@@ -70,7 +75,7 @@ final class MediaFolderDeleteAction
         return MediaFolderResponses::success(
             $this->router(),
             $request,
-            sprintf('Folder %s deleted (%d file(s)).', $path, $outcome['deleted']),
+            sprintf('Folder %s deleted (%d file(s)).', $path, $deleted),
         );
     }
 
@@ -78,24 +83,23 @@ final class MediaFolderDeleteAction
      * The registry row(s), then the files — in that order inside the
      * transaction, so a refusal has written nothing by the time it is returned.
      *
-     * @return array{ok: bool, error: string, deleted: int, folders: int, skipped: int}
+     * @return SubmitResult<array{deleted: int, folders: int, skipped: int}>
      */
-    private function deleteWithCascade(string $path, bool $cascade): array
+    private function deleteWithCascade(string $path, bool $cascade): SubmitResult
     {
         $outcome = MediaServices::folders()->delete($path, $cascade);
 
-        if (!$outcome['ok']) {
-            return ['ok' => false, 'error' => $outcome['error'], 'deleted' => 0, 'folders' => 0, 'skipped' => 0];
+        if (!$outcome->ok) {
+            return SubmitResult::failure($outcome->error(), ['deleted' => 0, 'folders' => 0, 'skipped' => 0]);
         }
 
-        $deleted = [] !== $outcome['ids'] ? MediaServices::media()->batchDelete($outcome['ids']) : [];
+        $ids = $outcome->context['ids'];
+        $deleted = [] !== $ids ? MediaServices::media()->batchDelete($ids) : [];
 
-        return [
-            'ok'      => true,
-            'error'   => '',
+        return SubmitResult::success([
             'deleted' => count($deleted),
-            'folders' => $outcome['folders'],
-            'skipped' => $outcome['skipped'],
-        ];
+            'folders' => $outcome->context['folders'],
+            'skipped' => $outcome->context['skipped'],
+        ]);
     }
 }
