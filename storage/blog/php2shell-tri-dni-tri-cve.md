@@ -184,6 +184,30 @@ obsluhuje požiadavky. `php -i` v shelli je CLI konfigurácia a pri otázke
 php-fpm -i | grep -E 'session\.(upload_progress|serialize_handler)'
 ```
 
+### Kde to v tomto repe žije
+
+Jedna direktíva, jeden súbor: `deploy/php/99-nativa-session.ini`. Inštalácia je
+kopírovanie, nie editácia `php.ini` — a to je celý rozdiel medzi mitigáciou,
+ktorá sa dá reviewovať v PR, a mitigáciou, ktorá existuje len na jednom serveri:
+
+```sh
+sudo cp deploy/php/99-nativa-session.ini /etc/php/conf.d/
+php -i | grep '^session.upload_progress.enabled'     # Off
+```
+
+Prečo je v ňom len jeden riadok: `config/session.php` už nastavuje strict mode,
+`cookie_httponly`, `cookie_samesite` aj `cookie_secure` podľa HTTPS. Skopírovať
+tie štyri do ini súboru by nepridalo ochranu, len by to vyzeralo ako pokrytie —
+pričom runtime `ini_set()` v appke aj tak vyhráva. Jediné, čo aplikácia
+ovplyvniť nesmie, je `upload_progress`, a to je jediné, čo tam je.
+
+Na tomto stroji to bolo merateľné do písmena: `/etc/php/php.ini` je
+`php.ini-production` z PHP 8.5.12 a všetkých šesť `upload_progress` direktív je
+v ňom **zakomentovaných** — rozhodujúci riadok 1453 je
+`;session.upload_progress.enabled = On`. Default `On` teda nebol nikde
+prepísaný a jediná stopa bola v advisory, ktoré si prečíta len ten, kto ho
+hľadá.
+
 ---
 
 ## Runbook, ktorý z toho vznikol
@@ -198,8 +222,9 @@ opravuje neznáma binárka.
    prefixu, alebo `/proc/<pid>/exe -v`.
 3. **Oprav.** `8.5.12` / `8.4.27` / `8.3.36` / `8.2.35`. Pri distribúcii
    aktualizujte balík, nie zdroj; distribúcie mali záplaty pred vydaním.
-4. **Vypni `session.upload_progress`** cez `php_admin_flag` (vyššie). Jedna
-   línia, ktorá platí aj pre `CVE-2026-115560`, aj ako hygiena.
+4. **Vypni `session.upload_progress`** cez `php_admin_flag` (vyššie) alebo
+   drop-inom z `deploy/php/99-nativa-session.ini`. Jedna línia, ktorá platí aj
+   pre `CVE-2026-115560`, aj ako hygiena.
 5. **Restartuj každý worker.** `systemctl restart php8.5-fpm` a k tomu
    `opcache` reset. Reload necháva staré procesy žiť.
 6. **Over na SAPI.** `php-fpm -i | grep session.upload_progress` musí vrátiť
@@ -222,11 +247,11 @@ z nich sa dali zavrieť v ten istý deň:
 | **Deployment konfigurácia** — žiadny `php.ini`/pool config v repe | `session.upload_progress` sa nedal reviewovať v PR; bol len na serveri | **čiastočne** — `deploy/php/99-nativa-session.ini` je v gite a reviewovateľný, ale nainštalovať ho musí operátor |
 
 Prvá položka bola čisto inžinierska a lacná: jeden znak navyše v constrained
-verzii. Druhá je hodina písania, ktorá sa odkladá najľahšie. Tretia zostáva —
-a je to tá, ktorú tento týždeň nevyrieši, pretože konfigurácia servera je
-súčasť produktu rovnako ako `composer.json`, len sa nikde nereviewuje.
-`SECURITY.md` to pomenúva aspoň tak, že pri každej CVE prikazuje overiť
-nastavenie na SAPI a zapísať, že mitigácia je mimo repozitára.
+verzii. Druhá je hodina písania, ktorá sa odkladá najľahšie. Tretia zostáva
+čiastočne otvorená a nezatvorí ju žiadny commit: `deploy/php/99-nativa-session.ini`
+dáva obsahu mitigácie stopu v gite, ale či ho konkrétny server načítal, vie iba
+ten server. Rozdiel je v tom, že už sa dá v PR nesúhlasiť s obsahom — a nie len
+zistiť po incidente, že nikto nevie, čo v `/etc` je.
 
 A jedna vec, ktorú tento článok **nerieši**: či je `FileSessionHandler`
 v `Infrastructure/Session/` vôbec zapojený. `session_set_save_handler` sa
@@ -245,8 +270,9 @@ Tri vety, ktoré by som chcel mať napísané minulý pondelok:
 2. **Pri CVE v jadre nestačí vymeniť súbor.** Musí zaniknúť každý proces,
    ktorý drží starý stav; inak sa oprava netýka toho, čo obsluhuje requesty.
 3. **Mitigácia, ktorá sa nedá reviewovať, neexistuje.** `php_admin_flag`
-   v `/etc` je bezpečnostné rozhodnutie, ktoré nemá v repozitári stopu —
-   a preto sa pri ďalšej CVE bude znovu objavovať.
+   v `/etc` je bezpečnostné rozhodnutie bez stopy v repozitári — a preto sa pri
+   ďalšej CVE bude znovu objavovať. Drop-in je kompromis, ktorý sa dá aspoň
+   prečítať: obsah v gite, načítanie na serveri.
 
 ---
 
@@ -255,7 +281,9 @@ Tri vety, ktoré by som chcel mať napísané minulý pondelok:
 `PHP_VERSION: "8.5"` v CI, 0 výskytov
 `session.upload_progress` v trackovanom kóde, 9 volaní `ini_set` na `session.*`
 v `config/session.php` (žiadne na `serialize_handler`), 0 v `src/` a `modules/`,
-8 volaní `session_start()` v šiestich súboroch nainštalovaného slice. Fakty
+8 volaní `session_start()` v šiestich súboroch nainštalovaného slice, a
+`/etc/php/php.ini` (php.ini-production, 8.5.12), kde je riadok 1453
+`;session.upload_progress.enabled = On` — teda default, nikým neprepísaný. Fakty
 o CVE sú z advisory PHP, z [FAQ watchTowr](https://watchtowr.com/intelligence/php-cve-2026-109618-faq/)
 a z [php.net/releases](https://www.php.net/releases/); čísla o strome sú
 z behu, nie z dokumentácie. Ak niektoré už neplatí, je to dôvod na ďalšie
