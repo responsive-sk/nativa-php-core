@@ -37,4 +37,5 @@ kernel theme instead of a 500.
 pattern behind it; the module guides each follow the same shape — what it
 serves, what it owns, what it refuses. Start with [pages](pages.md) if you
 publish content, with the [module contract](modules.md) if you build. The
-measured log lives in [kernel-status](kernel-status.md).
+measured log lives in [kernel-status](kernel-status.md); [tree history](tree-history.md)
+has the shape that log left, landing by landing.

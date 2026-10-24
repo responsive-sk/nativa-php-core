@@ -110,6 +110,7 @@ final readonly class DocsCatalog
         'mago-evaluation' => 'mago-evaluation.md',
         'kernel-shape' => 'kernel-shape.md',
         'name-ownership' => 'name-ownership.md',
+        'tree-history' => 'tree-history.md',
     ];
 
     private string $docsDir;
