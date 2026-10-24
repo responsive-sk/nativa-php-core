@@ -40,6 +40,14 @@ analyze: ## Run phpstan + rector dry + cs-fixer dry
 	$(COMPOSER) rector-dry
 	$(COMPOSER) cs-fix-dry
 
+# The floor, not the checklist. `$aif`'s security skill is a reading task and
+# its `audit.sh` is re-installed under you, so the two rules that must hold on
+# every push live in tracked code: `.env` is never tracked, and a
+# secret-shaped assignment counts only when the value is a quoted literal.
+# CI runs this target.
+security-audit: ## Gate: no tracked .env, no secret-shaped literals in tracked code
+	@bin/build/security-audit.sh
+
 ##@ Mago
 # Informational, like `kernel-size` and `lekalo-verify`: the script exits 0
 # whatever the tools say, because none of the numbers has been triaged into a

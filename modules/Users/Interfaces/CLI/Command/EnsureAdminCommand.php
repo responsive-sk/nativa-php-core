@@ -228,7 +228,7 @@ final readonly class EnsureAdminCommand
     {
         $values = [
             'email'    => 'admin@example.test',
-            'password' => 'admin1234',
+            'password' => 'admin1234', // audit-ok: documented development default, see the class docblock
             'name'     => 'Admin',
         ];
         $positional = [];

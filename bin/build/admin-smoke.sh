@@ -41,12 +41,15 @@ TMP="$(mktemp -d)"
 FAILED=0
 
 export APP_ENV=production
+# Fixture credentials for accounts this script creates in temp databases and
+# deletes again; `security-audit` would otherwise read them as leaks. No real
+# account ever holds one — `make admin-smoke` never touches a real database.
 export SMOKE_ADMIN_EMAIL='smoke-admin@example.test'
-export SMOKE_ADMIN_PASSWORD='Smoke-Admin-2026!'
+export SMOKE_ADMIN_PASSWORD='Smoke-Admin-2026!' # audit-ok: smoke fixture
 export SMOKE_AUTHOR_EMAIL='smoke-author@example.test'
-export SMOKE_AUTHOR_PASSWORD='Smoke-Author-2026!'
+export SMOKE_AUTHOR_PASSWORD='Smoke-Author-2026!' # audit-ok: smoke fixture
 export SMOKE_USER_EMAIL='smoke-user@example.test'
-export SMOKE_USER_PASSWORD='Smoke-User-2026!'
+export SMOKE_USER_PASSWORD='Smoke-User-2026!' # audit-ok: smoke fixture
 
 for db in users outbox config audit blog comments locales media questions queue; do
     export "DB_$(printf '%s' "$db" | tr '[:lower:]' '[:upper:]')=$TMP/$db.db"

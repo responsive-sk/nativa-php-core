@@ -332,8 +332,8 @@ readonly class CloudinaryApi
     {
         return [
             'cloudName' => $this->cloudName,
-            'apiKey'    => '***redacted***',
-            'apiSecret' => '***redacted***',
+            'apiKey'    => '***redacted***', // audit-ok: redaction placeholder
+            'apiSecret' => '***redacted***', // audit-ok: redaction placeholder
             'folder'    => $this->folder,
             'baseUrl'   => $this->baseUrl,
         ];

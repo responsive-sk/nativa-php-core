@@ -162,7 +162,7 @@ final readonly class CloudinaryProvider implements MediaProviderInterface
     {
         return [
             'cloudName' => $this->cloudName,
-            'apiKey'    => '***redacted***',
+            'apiKey'    => '***redacted***', // audit-ok: redaction placeholder
             'folder'    => $this->folder,
             'name'      => $this->getName(),
         ];
