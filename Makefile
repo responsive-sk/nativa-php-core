@@ -48,6 +48,22 @@ analyze: ## Run phpstan + rector dry + cs-fixer dry
 security-audit: ## Gate: no tracked .env, no secret-shaped literals in tracked code
 	@bin/build/security-audit.sh
 
+# Two lockfiles, two supply chains: `composer.lock` (development tooling — the
+# kernel runtime itself has no packages) and `Frontend/packages/pnpm-lock.yaml`
+# (the theme builds). Both are audited from the LOCKFILE, so neither `vendor/`
+# nor `node_modules/` is needed — a fresh checkout can run this, which is what
+# CI does.
+#
+# High and critical only. A moderate advisory in a dev formatter is a fact to
+# read, not a reason to block an unrelated change, and a gate that reddens for
+# it stops being read. The report still prints in full: the threshold decides
+# the exit status, not what you see (measured on pnpm 12.15.0 — `--audit-level
+# critical` exits 0 while printing the same 6 advisories `--audit-level high`
+# exits 1 on).
+dependency-audit: ## Gate: no high/critical advisories in either lockfile
+	composer audit --locked --ignore-severity=low --ignore-severity=medium
+	cd Frontend/packages && pnpm audit --audit-level high
+
 ##@ Mago
 # Informational, like `kernel-size` and `lekalo-verify`: the script exits 0
 # whatever the tools say, because none of the numbers has been triaged into a

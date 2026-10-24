@@ -97,6 +97,16 @@
 #                         script after its first section, and 20 benign
 #                         `$token = $_SESSION[...]` lines were reported as
 #                         credentials.
+#  14. Dependency audit — `make dependency-audit`, both lockfiles at once:
+#                         `composer audit --locked` for the development
+#                         tooling (the kernel runtime ships no packages) and
+#                         `pnpm audit` for `Frontend/packages`. Neither reads
+#                         `vendor/` or `node_modules/`, so the job audits what
+#                         a clone actually pins. High and critical only; the
+#                         report prints in full either way. The one advisory
+#                         this tree has met — `launch-editor`, through vite —
+#                         was found by a person reading (868adfd), which is
+#                         what a gate exists to stop being necessary.
 # =============================================================================
 
 name: CI
@@ -366,6 +376,49 @@ jobs:
 
       - name: Audit the tracked tree
         run: make security-audit
+
+  # ---------------------------------------------------------------------------
+  # DEPENDENCY-AUDIT — both lockfiles, the advisory class worth blocking on
+  # ---------------------------------------------------------------------------
+  # `composer.json` requires five dev tools and no runtime package, and
+  # `Frontend/packages` pins vite, typescript and the theme workspace. Those are
+  # the two supply chains, and until this job neither was checked on a push:
+  # the one advisory this tree has met (`launch-editor`, through vite) was
+  # fixed by hand in 868adfd.
+  #
+  # No `composer install` and no `pnpm install`: both audits read the lockfile,
+  # so the job asserts what a clone pins rather than what a runner happened to
+  # install, and it cannot be green because a dependency tree was stale.
+  dependency-audit:
+    name: Dependency audit (composer + pnpm)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6.0.10
+        with:
+          version: 12
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: Frontend/packages/pnpm-lock.yaml
+
+      - name: Audit both lockfiles
+        run: make dependency-audit
 
   # ---------------------------------------------------------------------------
   # PHPUNIT — the test suite in the kernel-only shape
