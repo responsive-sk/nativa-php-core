@@ -142,15 +142,21 @@ Tu je dôvod, prečo je mitigácia konfigurácia a nie patch v aplikácii: spú�
 je práve **runtime `ini_set()`**. Keby ste to riešili v kóde, riešili by ste
 symptóm toho istého mechanizmu, ktorý útočník používa.
 
-**Zmerané v tomto strome:** `grep -rn "session.upload_progress"
---include='*.php' --include='*.ini'` vráti **0** výskytov. `ini_set` na
-`session.*` vráti tiež **0** — jediné `ini_set` volania v produkte sú
-`log_errors`, `error_log` a `display_errors` v `src/http.php`. Session sa
-inicializuje voliteľným `config/session.php`, ktorý v klone nie je, a
-`session_start()` sa volá lenivo na **ôsmich miestach v šiestich súboroch**
-nainštalovaného slice (CSRF, layout, page cache, locale, settings, auth).
-To znamená: prvú a druhú podmienku strom sám nevytvára. Štvrtú — zapnutý
-`upload_progress` — áno, ale len preto, že ju nikto nevypol.
+**Zmerané v tomto strome:** `git grep upload_progress` vráti **0** výskytov —
+funkcia nie je použitá nikde v trackovanom kóde. Session nastavuje
+`config/session.php`, ktorý v repe **je** (deväť `ini_set` volaní: `name`,
+`use_strict_mode`, `use_only_cookies`, `cookie_httponly`, `cookie_samesite`,
+`cookie_secure` podľa HTTPS, `gc_maxlifetime`, `auto_start`, `save_path`) — a
+ani jedno z nich nie je `session.serialize_handler`. V `src/` a `modules/` nie
+je `ini_set` na `session.*` ani jeden; ostatné `ini_set` v produkte sú
+`log_errors`, `error_log` a `display_errors` v `src/http.php`. `session_start()`
+sa volá lenivo na **ôsmich miestach v šiestich súboroch** nainštalovaného slice
+(CSRF, layout, page cache, locale, settings, auth).
+
+To znamená: prvú a druhú podmienku strom sám nevytvára — handler ostáva na
+`php`, čo je default. Štvrtú — zapnutý `upload_progress` — áno, ale len preto,
+že ju nikto nevypol. A je to jediná zo štyroch, ktorú appka neriadi: cookie
+flagy a strict mode už v `config/session.php` nastavené sú.
 
 To je presne ten rozdiel, ktorý sa v incidente stráca: **kód je čistý a
 konfigurácia je default.** Bezpečnostná diera nemusí byť v tom, čo ste
@@ -213,7 +219,7 @@ z nich sa dali zavrieť v ten istý deň:
 |---|---|---|
 | **Runtime podlaha** — `^8.5` namiesto `^8.5.12` | constraint spĺňal aj zraniteľnú verziu; nikde nebola veta „pod 8.5.12 neinštaluj" | **zavreté** — `composer.json` má `^8.5.12`, `8.5.11` už neprejde |
 | **`SECURITY.md`** — žiadny kontakt ani rozsah podpory | niet kam nahlásiť zraniteľnosť; niet ako zistiť, či verzia, ktorú používate, je tá podporovaná | **zavreté** — kontakt, rozsah, non-goals a pravidlo pre CVE |
-| **Deployment konfigurácia** — žiadny `php.ini`/pool config v repe | `session.upload_progress` a `serialize_handler` sa nedajú reviewovať v PR; sú len na serveri | **otvorené** — `php_admin_flag` žije v `/etc`, nie v gite |
+| **Deployment konfigurácia** — žiadny `php.ini`/pool config v repe | `session.upload_progress` sa nedal reviewovať v PR; bol len na serveri | **čiastočne** — `deploy/php/99-nativa-session.ini` je v gite a reviewovateľný, ale nainštalovať ho musí operátor |
 
 Prvá položka bola čisto inžinierska a lacná: jeden znak navyše v constrained
 verzii. Druhá je hodina písania, ktorá sa odkladá najľahšie. Tretia zostáva —
@@ -247,7 +253,8 @@ Tri vety, ktoré by som chcel mať napísané minulý pondelok:
 *Merané 24. októbra 2026 na tomto stroji: PHP `8.5.12` (build 21. 10. 20:05),
 `composer.json` s `"php": "^8.5"` v čase merania a `^8.5.12` po oprave,
 `PHP_VERSION: "8.5"` v CI, 0 výskytov
-`session.upload_progress` v `*.php`/`*.ini`, 0 volaní `ini_set` na `session.*`,
+`session.upload_progress` v trackovanom kóde, 9 volaní `ini_set` na `session.*`
+v `config/session.php` (žiadne na `serialize_handler`), 0 v `src/` a `modules/`,
 8 volaní `session_start()` v šiestich súboroch nainštalovaného slice. Fakty
 o CVE sú z advisory PHP, z [FAQ watchTowr](https://watchtowr.com/intelligence/php-cve-2026-109618-faq/)
 a z [php.net/releases](https://www.php.net/releases/); čísla o strome sú
