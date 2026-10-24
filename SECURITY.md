@@ -118,16 +118,18 @@ workspace, the order matters:
 
 Configuration that mitigates a PHP CVE belongs in the pool/`php.ini` layer with
 `php_admin_flag`, because `ini_set()` is itself an attack path in
-`CVE-2026-115560`. If a mitigation exists only on a server and not in this
-repository, say so in the boot record — an unreviewable mitigation is not a
-mitigation the next person can keep.
+`CVE-2026-115560` — the application must not be able to undo it. The reviewable
+form of that setting lives in `deploy/php/`, installed by copying a drop-in;
+what the repository cannot own is whether a given server has it loaded. When a
+mitigation exists only on one machine, say so in the boot record: an
+unreviewable mitigation is not a mitigation the next person can keep.
 
 ## Fixed or mitigated so far
 
 | Date | CVE | What changed | Where |
 |---|---|---|---|
 | 2026-10-24 | `CVE-2026-109618`, `CVE-2026-109619` (PHP2Shell) | runtime floor `^8.5` → `^8.5.12`; `8.5.11` is now rejected by Composer | `composer.json` |
-| 2026-10-24 | `CVE-2026-115560` (`session.upload_progress`) | no repository change is possible — the tree never sets `session.serialize_handler` and has no upload-progress UI. Operators must set `php_admin_flag[session.upload_progress.enabled] = off` in the pool; the advisory's fix is still pending upstream. | deployment, recorded here |
+| 2026-10-24 | `CVE-2026-115560` (`session.upload_progress`) | the tree never sets `session.serialize_handler` and has no upload-progress UI, so the narrow preconditions are absent — but the ini default is `On`. `deploy/php/99-nativa-session.ini` now carries the mitigating line, reviewable in a PR; installing it stays an operator step. Upstream fix still pending. | `deploy/php/99-nativa-session.ini` |
 | 2026-10-16 | password policy, registration and reset throttles, CSRF cross-check | findings #3, #4, #6, #7 from the 2026-10 audit | `bin/build/`, `PasswordPolicy`, `RateLimiter`, `CsrfMiddleware` |
 
 ## The gates this policy relies on
