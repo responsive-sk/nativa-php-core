@@ -42,7 +42,13 @@ final class HealthChecksTest extends TestCase
 
     protected function tearDown(): void
     {
-        $this->removeDirectory($this->tempDir);
+        // The guard is not decoration: PHPUnit runs tearDown() even when setUp()
+        // skipped, and on a kernel-only tree (CI) it did — reading an
+        // uninitialised typed property and turning 10 skips into 10 errors.
+        // Same shape as `TaxonomyRegistryTest`.
+        if (isset($this->tempDir)) {
+            $this->removeDirectory($this->tempDir);
+        }
 
         parent::tearDown();
     }

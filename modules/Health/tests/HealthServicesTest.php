@@ -40,6 +40,15 @@ final class HealthServicesTest extends TestCase
         putenv('DB_OTHER');
         putenv('DB_FOREIGN');
 
+        // PHPUnit runs tearDown() even after a skipped setUp(), so on a
+        // kernel-only tree (CI) this file used to error on an uninitialised
+        // typed property instead of skipping. Same guard as the checks test.
+        if (!isset($this->tempDir)) {
+            parent::tearDown();
+
+            return;
+        }
+
         if (is_file($this->tempDir . '/other.db')) {
             unlink($this->tempDir . '/other.db');
         }
