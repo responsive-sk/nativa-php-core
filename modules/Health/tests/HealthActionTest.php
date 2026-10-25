@@ -47,8 +47,7 @@ final class HealthActionTest extends TestCase
         $payload = json_decode($response->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
         self::assertSame('healthy', $payload['status']);
-        self::assertSame(
-            [['name' => 'database', 'status' => 'healthy', 'message' => '12 module databases answered', 'duration' => 0.25]],
+        self::assertSame(                    [['name' => 'database', 'status' => 'healthy', 'message' => '12 module databases answered', 'duration_ms' => 0.25]],
             $payload['checks'],
         );
     }
@@ -122,6 +121,33 @@ final class HealthActionTest extends TestCase
     }
 
     #[Test]
+    public function aFastProbeIsNotPublishedInExponentNotation(): void
+    {
+        $fast = new class implements HealthCheckInterface {
+            public function getName(): string
+            {
+                return 'filesystem';
+            }
+
+            public function check(): HealthResult
+            {
+                // The first real payload: 82 microseconds in seconds.
+                return new HealthResult(
+                    name: 'filesystem',
+                    status: HealthStatus::Healthy,
+                    message: '1 storage directories accepted a write',
+                    duration: 8.20159912109375e-5,
+                );
+            }
+        };
+
+        $body = $this->dispatch([$fast])->getContent();
+
+        self::assertStringContainsString('"duration_ms":0.082', $body);
+        self::assertStringNotContainsString('e-', $body, 'A reader saw 8.2e-5 and asked why the probe took 8 seconds.');
+    }
+
+    #[Test]
     public function theResponseCannotBeCachedByAnythingInFrontOfIt(): void
     {
         $response = $this->dispatch([self::check('database', HealthStatus::Healthy)]);
@@ -180,14 +206,14 @@ final class HealthActionTest extends TestCase
 
             public function check(): HealthResult
             {
-                // A non-zero duration on purpose: `json_encode(0.0)` emits `0`,
-                // and a strict comparison would then pin a JSON encoding detail
-                // instead of the payload contract.
+                // A quarter of a millisecond, on purpose: `json_encode(0.0)`
+                // emits `0`, and a strict comparison would then pin a JSON
+                // encoding detail instead of the payload contract.
                 return new HealthResult(
                     name: $this->name,
                     status: $this->status,
                     message: $this->message,
-                    duration: 0.25,
+                    duration: 0.00025,
                 );
             }
         };
