@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "health",
+      "kind": "module",
+      "version": 1,
+      "description": "Health — ordered runtime probes (module databases, storage directories, theme bundle manifests) exposed as a JSON /health endpoint that answers 503 when a probe is unhealthy, ported from Marko's health package."
+    }
+  ]
+}

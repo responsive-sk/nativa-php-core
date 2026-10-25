@@ -423,6 +423,38 @@ else
     mark_status="$(curl -s -o /dev/null -w '%{http_code}' "http://$SMOKE_HOST:$SMOKE_PORT/mark")"
     echo "    --  /mark → $mark_status (depends on the installed modules; not asserted)"
 
+    # /health is asserted only when the artifact carries the Health module, for
+    # the same reason /mark is not: a clean clone builds with the kernel's own
+    # slices only. When it IS there, the STATUS CODE is not the assertion — the
+    # BODY is, because an empty registry answers 200 by design (nothing
+    # registered is not "broken"), so 200 alone cannot tell "every probe
+    # passed" from "every probe silently disappeared".
+    #
+    # This is also the only place the three probes meet the ARTIFACT's own
+    # storage: they open its migrated databases, write into its storage/cache
+    # and parse its public/dist manifests. A build that shipped the slice but
+    # dropped `public/dist` or failed to migrate answers 503 here, which is
+    # exactly the state that would have reached a server unstyled.
+    if [ -d "$DIST_DIR/src/Modules/Health" ]; then
+        health_response="$(curl -s -w '\n%{http_code}' "http://$SMOKE_HOST:$SMOKE_PORT/health")"
+        health_status="${health_response##*$'\n'}"
+        health_body="${health_response%$'\n'*}"
+
+        if [ "$health_status" != "200" ]; then
+            echo "$health_body" >&2
+            fail "GET /health expected 200, got $health_status"
+        fi
+
+        if ! printf '%s' "$health_body" | grep -q '"status":"healthy"'; then
+            echo "$health_body" >&2
+            fail "GET /health answered 200 but the body does not say healthy"
+        fi
+
+        echo "    ok  /health → $health_status, body says healthy"
+    else
+        echo "    --  /health → not installed (the artifact carries no Health slice; not asserted)"
+    fi
+
     kill "$server_pid" 2>/dev/null || true
     wait "$server_pid" 2>/dev/null || true
     trap - EXIT
