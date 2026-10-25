@@ -1,0 +1,3 @@
+[mcp_servers.aifhub]
+command = "ai-factory"
+args = ["aifhub-mcp"]
