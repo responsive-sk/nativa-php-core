@@ -8,7 +8,7 @@ use Modules\Audit\Interfaces\HTTP\AuditServices;
 use Modules\Blog\Application\BlogServices;
 use Modules\Blog\Application\Services\BlogArticlesService;
 use Modules\Blog\Application\Services\CoverJobs;
-use Modules\Core\Application\Services\CacheInvalidator;
+use Modules\Blog\Application\Services\BlogPageCache;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
@@ -95,7 +95,7 @@ final class BlogInlineEditAction
             return $this->refuse($request, $slug, $locale, 'Not your article', 'You can edit articles you wrote.', 403);
         }
 
-        CacheInvalidator::flush();
+        BlogPageCache::invalidate();
 
         // The cover is derived work: slow, and nothing in this request should
         // wait for it. Queued where the cache is already flushed for a content

@@ -17,11 +17,19 @@ use Modules\Outbox\Interfaces\HTTP\OutboxServices;
  * queue from cron flushes caches for publishes that happened while it was
  * down.
  *
- * The flush is idempotent (`CacheInvalidator::flush()` clears a directory),
- * so at-most-once effect is acceptable. That is the property the module's
- * non-transactional guarantee depends on: at-least-once delivery plus an
- * idempotent handler equals "the cache is eventually right", which is all a
- * 5-minute-TTL cache can ask for.
+ * The invalidation is idempotent (deleting entries under `/`, `/blog` and
+ * `/authors` twice deletes the second set of files, or none), so at-most-once
+ * effect is acceptable. That is the property the module's non-transactional
+ * guarantee depends on: at-least-once delivery plus an idempotent handler
+ * equals "the cache is eventually right", which is all a 5-minute-TTL cache
+ * can ask for.
+ *
+ * It invalidates the article pages rather than flushing the cache: a scheduled
+ * publish changes articles, not `/kontakt`. The three paths are spelled here
+ * instead of importing `BlogPageCache` because Blog already imports Outbox
+ * (`CoverJobs` queues cover renders through it) — the reverse import would make
+ * the catalogue closure graph cyclic and neither module installable.
+ * `PageCacheInvalidationTest` pins that both lists agree.
  */
 final class ArticlePublishHandler
 {
@@ -32,7 +40,7 @@ final class ArticlePublishHandler
     {
         foreach ([OutboxServices::ARTICLE_PUBLISHED, OutboxServices::ARTICLE_UNPUBLISHED] as $type) {
             $processor->registerHandler($type, static function (): void {
-                CacheInvalidator::flush();
+                CacheInvalidator::invalidate('/', '/blog', '/authors');
             });
         }
     }

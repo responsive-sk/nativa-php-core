@@ -5,18 +5,25 @@ declare(strict_types = 1);
 namespace Modules\Core\Application\Services;
 
 /**
- * CacheInvalidator — flushes the file-based page cache.
+ * CacheInvalidator — drops the page-cache entries a write made stale.
  *
  * Contract: after ANY admin write action completes, the page cache must not
  * serve content that predates the save. Every action that appends to the
- * immutable audit log calls CacheInvalidator::flush() beside it; bulk actions
- * flush once after their loop. The rate-limit 429 fallback therefore never
- * serves pre-edit content for longer than the request that wrote it.
+ * immutable audit log invalidates beside it; bulk actions invalidate once
+ * after their loop. The rate-limit 429 fallback therefore never serves
+ * pre-edit content for longer than the request that wrote it.
  *
- * Flush-all (glob + unlink) instead of selective invalidation: cache keys
- * are SHA256 hashes with no path metadata, a reverse index would add state
- * for a problem the 5-minute TTL already bounds. The cache repopulates
- * passively on the next requests.
+ * Selective invalidation is the default: `invalidate('/blog', '/authors', '/')`
+ * deletes only the pages under those paths, because `PageCacheService::set()`
+ * records the request path beside the entry. An article edit therefore costs
+ * the blog its render and leaves every unrelated page (`/kontakt`, `/docs/…`)
+ * cached, instead of making the whole site re-render on the next visitor.
+ *
+ * `flush()` stays for writes that genuinely change every page — a module
+ * install/remove, settings that alter the shell everywhere, media or locales
+ * that every render reads — where a path list could only be an incomplete
+ * guess. A caller that cannot name the affected paths must flush, never
+ * invalidate a subset it guessed.
  *
  * Lives in Core (shared kernel) so every module can call it without
  * cross-module imports; static + stateless so #[Route] action classes
@@ -29,8 +36,25 @@ final class CacheInvalidator
      */
     public static function flush(): int
     {
-        return (new PageCacheService(
+        return self::service()->flush();
+    }
+
+    /**
+     * Delete the cached pages rendered for the given request paths.
+     *
+     * Each path is a segment-boundary prefix: '/blog' covers `/blog` and
+     * `/blog/{slug}`, '/' covers the homepage only. Returns the number of
+     * files deleted.
+     */
+    public static function invalidate(string ...$paths): int
+    {
+        return self::service()->invalidatePaths(...$paths);
+    }
+
+    private static function service(): PageCacheService
+    {
+        return new PageCacheService(
             APP_BASE_PATH . '/' . PageCacheService::DEFAULT_DIR,
-        ))->flush();
+        );
     }
 }

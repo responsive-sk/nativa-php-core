@@ -22,10 +22,17 @@ use Modules\Core\Interfaces\HTTP\Middleware\SecurityHeadersMiddleware;
  * the ordinary path.
  *
  * The TTL is the staleness contract (`DEFAULT_TTL`, 300 seconds) and an edit
- * in the admin does not wait for it: every content write flushes the cache
- * through `CacheInvalidator`. What a visitor can therefore see is a page up
- * to five minutes old when nobody touched it, and never an old page after
- * somebody did.
+ * in the admin does not wait for it: every content write invalidates the
+ * entries that depend on it through `CacheInvalidator`. What a visitor can
+ * therefore see is a page up to five minutes old when nobody touched it, and
+ * never an old page after somebody did.
+ *
+ * An entry records the request path it was rendered for, which is what makes
+ * `invalidatePaths()` possible: a write drops the pages under the paths it
+ * changed (`/blog`, `/authors`, `/`) instead of the whole cache, so an article
+ * edit no longer costs every other page its render. Entries written before the
+ * metadata existed carry no path and are deleted by any invalidation —
+ * conservatively, once.
  *
  * Cached content retains the __CSP_NONCE_PLACEHOLDER__ string —
  * SecurityHeadersMiddleware replaces it with a fresh nonce on every request,
@@ -137,7 +144,7 @@ final readonly class PageCacheService
     /**
      * Write a response to the cache.
      */
-    public function set(string $key, Response $response, int $ttl = self::DEFAULT_TTL): void
+    public function set(string $key, Response $response, int $ttl = self::DEFAULT_TTL, ?string $path = null): void
     {
         // Normalize BEFORE the size check and the store: a body that already
         // went through SecurityHeadersMiddleware carries a real nonce, and
@@ -154,6 +161,7 @@ final readonly class PageCacheService
             'content' => $content,
             'statusCode' => $response->getStatusCode(),
             'headers' => $response->getHeaders(),
+            'path' => null === $path ? null : self::normalizeInvalidationPath($path),
             'cachedAt' => time(),
             'ttl' => $ttl,
         ];
@@ -181,6 +189,112 @@ final readonly class PageCacheService
             'nonce="' . SecurityHeadersMiddleware::NONCE_PLACEHOLDER . '"',
             $content,
         );
+    }
+
+    /**
+     * Delete the entries rendered for one of the given request paths.
+     *
+     * A path is a prefix on a segment boundary: `'/blog'` covers `/blog` and
+     * `/blog/anything`, never `/blogfeed`, and `'/'` covers the homepage only
+     * — the root is a page, not every page. Query variants share their path,
+     * so every cached variant of an invalidated page goes with it.
+     *
+     * Entries stored before `path` metadata existed cannot be told apart from
+     * an unrelated page, so they are deleted too: the alternative is serving a
+     * stale article after an edit, which is exactly what this cache must never
+     * do. That cost is paid once, on the first write after the upgrade.
+     *
+     * Returns the number of files deleted.
+     *
+     * @param string ...$paths request paths, e.g. '/', '/blog', '/authors'
+     */
+    public function invalidatePaths(string ...$paths): int
+    {
+        $tags = [];
+
+        foreach ($paths as $path) {
+            $normalized = self::normalizeInvalidationPath($path);
+
+            if ('' !== $normalized) {
+                $tags[$normalized] = true;
+            }
+        }
+
+        if ([] === $tags) {
+            return 0;
+        }
+
+        $files = glob($this->cacheDir . '/*.json');
+
+        if (!is_array($files)) {
+            return 0;
+        }
+
+        $count = 0;
+
+        foreach ($files as $file) {
+            if (!is_file($file)) {
+                continue;
+            }
+
+            $raw = file_get_contents($file);
+
+            if (false === $raw) {
+                continue;
+            }
+
+            /** @var mixed $entry */
+            $entry = json_decode($raw, true);
+            $entryPath = is_array($entry) && isset($entry['path']) && is_string($entry['path'])
+                ? self::normalizeInvalidationPath($entry['path'])
+                : '';
+
+            // '' is a legacy or unreadable entry: no path, no evidence it is
+            // unrelated, so it goes.
+            if ('' !== $entryPath && !self::pathMatchesTags($entryPath, $tags)) {
+                continue;
+            }
+
+            if (@unlink($file)) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
+    /**
+     * A request path in the one shape the tag comparison expects: leading
+     * slash, no trailing slash, no query string. `/` stays `/`.
+     */
+    private static function normalizeInvalidationPath(string $path): string
+    {
+        $withoutQuery = strtok(trim($path), '?');
+        $normalized = '/' . trim((string) $withoutQuery, '/');
+
+        return '/' === $normalized ? '/' : rtrim($normalized, '/');
+    }
+
+    /**
+     * @param array<string, true> $tags
+     */
+    private static function pathMatchesTags(string $path, array $tags): bool
+    {
+        foreach ($tags as $tag => $_) {
+            if ('/' === $tag) {
+                if ('/' === $path) {
+                    return true;
+                }
+
+                continue;
+            }
+
+            if ($path === $tag || str_starts_with($path, $tag . '/')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

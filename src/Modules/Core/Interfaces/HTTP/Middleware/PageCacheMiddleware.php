@@ -82,7 +82,9 @@ final readonly class PageCacheMiddleware implements MiddlewareInterface
 
         if ($this->cache->isCacheable($request, $response)) {
             $key = $this->cache->cacheKeyForRequest($request);
-            $this->cache->set($key, $response);
+            // The request path is stored beside the entry so a later write can
+            // invalidate `/blog` without flushing every unrelated page.
+            $this->cache->set($key, $response, path: $request->getPathInfo());
         }
 
         return $response;

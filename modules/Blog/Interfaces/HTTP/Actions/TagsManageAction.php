@@ -6,8 +6,8 @@ namespace Modules\Blog\Interfaces\HTTP\Actions;
 
 use Modules\Audit\Interfaces\HTTP\AuditServices;
 use Modules\Blog\Application\BlogServices;
+use Modules\Blog\Application\Services\BlogPageCache;
 use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
-use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
@@ -74,7 +74,7 @@ final class TagsManageAction
         $created = BlogServices::taxonomy()->createTag($tag);
 
         if ($created) {
-            CacheInvalidator::flush();
+            BlogPageCache::invalidate();
             AuditServices::log(
                 'tags.create',
                 'tags',
@@ -97,7 +97,7 @@ final class TagsManageAction
 
         $count = $this->replaceTagInAllArticles($oldTag, $newTag);
 
-        CacheInvalidator::flush();
+        BlogPageCache::invalidate();
         AuditServices::log(
             'tags.rename',
             'tags',
@@ -118,7 +118,7 @@ final class TagsManageAction
 
         $count = $this->removeTagFromAllArticles($tag);
 
-        CacheInvalidator::flush();
+        BlogPageCache::invalidate();
         AuditServices::log(
             'tags.delete',
             'tags',

@@ -8,9 +8,9 @@ use Modules\Audit\Interfaces\HTTP\AuditServices;
 use Modules\Blog\Application\BlogServices;
 use Modules\Blog\Application\Services\BlogCrudService;
 use Modules\Blog\Interfaces\HTTP\ArticlesTableRenderer;
+use Modules\Blog\Application\Services\BlogPageCache;
 use Modules\Cardboard\Application\Services\AdminLocale;
 use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
-use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
@@ -71,7 +71,7 @@ final class ArticlePublishToggleAction
      */
     private function record(Request $request, string $slug, string $locale, bool $to): void
     {
-        CacheInvalidator::flush();
+        BlogPageCache::invalidate();
         AuditServices::log(
             $to ? 'article.publish' : 'article.unpublish',
             'article',

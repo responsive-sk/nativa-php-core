@@ -7,9 +7,9 @@ namespace Modules\Blog\Interfaces\HTTP\Actions;
 use Modules\Audit\Interfaces\HTTP\AuditServices;
 use Modules\Blog\Application\Services\BlogCrudService;
 use Modules\Blog\Application\Services\CoverJobs;
+use Modules\Blog\Application\Services\BlogPageCache;
 use Modules\Cardboard\Application\Services\AdminLocale;
 use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
-use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
@@ -73,7 +73,7 @@ final class ArticlesCreateAction
         $userId = $auth->currentUserId();
         $actorName = null !== $userId ? ($auth->currentUser()?->name() ?? 'admin') : 'admin';
 
-        CacheInvalidator::flush();
+        BlogPageCache::invalidate();
 
         // The cover is derived work: slow, and nothing in this request should
         // wait for it. Queued where the cache is already flushed for a content
