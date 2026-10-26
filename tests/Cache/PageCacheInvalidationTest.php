@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace Tests\Cache;
 
-use Modules\Blog\Application\Services\BlogPageCache;
 use Modules\Core\Application\Services\PageCacheService;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
@@ -130,12 +129,25 @@ final class PageCacheInvalidationTest extends TestCase
         );
     }
 
+    /**
+     * `Modules\Blog` is named inline behind `class_exists()` and never imported:
+     * `tests/` sits inside PHPStan's scope while `src/Modules/Blog` is gitignored
+     * operator state, so a `use` line here is an unconditional reference the
+     * analyser reports as `class.notFound` on every kernel-only checkout — which
+     * is exactly how CI run #1 on this file went red. Same idiom as
+     * `AuthMiddlewareDenialTest`, and the guard has to sit in the same scope as
+     * the call for PHPStan to narrow it.
+     */
     #[Test]
     public function theBlogTagListCoversTheHomepageTheBlogAndAuthorProfiles(): void
     {
+        if (!class_exists(\Modules\Blog\Application\Services\BlogPageCache::class)) {
+            $this->markTestSkipped('The Blog slice is not installed in this kernel-only checkout.');
+        }
+
         $this->assertSame(
             ['/', '/blog', '/authors'],
-            BlogPageCache::paths(),
+            \Modules\Blog\Application\Services\BlogPageCache::paths(),
             'An article write changes the homepage list, the blog pages and the author profile that lists the article.',
         );
     }
@@ -244,7 +256,15 @@ final class PageCacheInvalidationTest extends TestCase
             $source,
             'A scheduled publish still flushes the whole cache.',
         );
-        $this->assertSame(['/', '/blog', '/authors'], BlogPageCache::paths());
+
+        // Guarded like the call above it: the canonical Blog source is tracked,
+        // so the file assertions hold on a kernel-only checkout where the slice
+        // itself is not installed.
+        if (!class_exists(\Modules\Blog\Application\Services\BlogPageCache::class)) {
+            $this->markTestSkipped('The Blog slice is not installed in this kernel-only checkout.');
+        }
+
+        $this->assertSame(['/', '/blog', '/authors'], \Modules\Blog\Application\Services\BlogPageCache::paths());
     }
 
     private function service(): PageCacheService
