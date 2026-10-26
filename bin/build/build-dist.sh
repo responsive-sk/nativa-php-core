@@ -426,15 +426,20 @@ else
     # /health is asserted only when the artifact carries the Health module, for
     # the same reason /mark is not: a clean clone builds with the kernel's own
     # slices only. When it IS there, the STATUS CODE is not the assertion — the
-    # BODY is, because an empty registry answers 200 by design (nothing
-    # registered is not "broken"), so 200 alone cannot tell "every probe
-    # passed" from "every probe silently disappeared".
+    # BODY is, because an empty registry and a degraded tree both answer 200 by
+    # design (nothing registered is not "broken", and an unfinished tree is not
+    # an outage), so 200 alone cannot tell "every probe passed" from "every
+    # probe silently disappeared". The body must therefore say `healthy` at the
+    # TOP level, list at least one check, and carry a healthy entry for every
+    # probe the module owns — a substring match would also accept the nested
+    # `"status":"healthy"` of one passing probe under a degraded top level.
     #
     # This is also the only place the three probes meet the ARTIFACT's own
     # storage: they open its migrated databases, write into its storage/cache
     # and parse its public/dist manifests. A build that shipped the slice but
-    # dropped `public/dist` or failed to migrate answers 503 here, which is
-    # exactly the state that would have reached a server unstyled.
+    # dropped `public/dist` or failed to migrate answers 200 with a DEGRADED
+    # body — the state that would otherwise have reached a server unstyled —
+    # and this assertion turns exactly that into a failed build.
     if [ -d "$DIST_DIR/src/Modules/Health" ]; then
         health_response="$(curl -s -w '\n%{http_code}' "http://$SMOKE_HOST:$SMOKE_PORT/health")"
         health_status="${health_response##*$'\n'}"
@@ -445,12 +450,49 @@ else
             fail "GET /health expected 200, got $health_status"
         fi
 
-        if ! printf '%s' "$health_body" | grep -q '"status":"healthy"'; then
+        if ! printf '%s' "$health_body" | php -r '
+            $payload = json_decode(stream_get_contents(STDIN), true);
+
+            if (!is_array($payload)) {
+                fwrite(STDERR, "body is not JSON\n");
+                exit(1);
+            }
+
+            if (($payload["status"] ?? null) !== "healthy") {
+                fwrite(STDERR, "top-level status is " . ($payload["status"] ?? "(missing)") . "\n");
+                exit(1);
+            }
+
+            $checks = $payload["checks"] ?? [];
+
+            if (!is_array($checks) || [] === $checks) {
+                fwrite(STDERR, "checks is empty — no probe ran\n");
+                exit(1);
+            }
+
+            $names = [];
+
+            foreach ($checks as $check) {
+                if (($check["status"] ?? null) !== "healthy") {
+                    fwrite(STDERR, ($check["name"] ?? "?") . " is " . ($check["status"] ?? "(missing)") . "\n");
+                    exit(1);
+                }
+
+                $names[] = $check["name"] ?? "";
+            }
+
+            $missing = array_diff(["database", "filesystem", "dist"], $names);
+
+            if ([] !== $missing) {
+                fwrite(STDERR, "missing probe(s): " . implode(", ", $missing) . "\n");
+                exit(1);
+            }
+        '; then
             echo "$health_body" >&2
-            fail "GET /health answered 200 but the body does not say healthy"
+            fail "GET /health answered 200 but its body does not prove every probe passed"
         fi
 
-        echo "    ok  /health → $health_status, body says healthy"
+        echo "    ok  /health → $health_status, every probe healthy"
     else
         echo "    --  /health → not installed (the artifact carries no Health slice; not asserted)"
     fi
