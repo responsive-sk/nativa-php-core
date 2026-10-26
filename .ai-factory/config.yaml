@@ -1,0 +1,52 @@
+# AI Factory Configuration
+#
+# Omitted sections keep their defaults (the full annotated template is what
+# `ai-factory init --config` writes). This file records where this project
+# differs from those defaults, plus the keys AIFHub tooling requires.
+
+config_version: 1
+
+language:
+  # Human-facing prose in this project is Slovak. Upstream's commented template
+  # lists only en/ru/de/fr/es/zh/ja/ko/pt/it; AIFHub accepts any usable value.
+  ui: sk
+  # Plans, OpenSpec artifacts and reports in this repository are English.
+  artifacts: en
+  technical_terms: keep
+
+aifhub:
+  tools:
+    # The active work is an OpenSpec change (openspec/changes/marko-adoption)
+    # against the canonical spec in openspec/specs/, so planning, review,
+    # verify and done run on that tree rather than on .ai-factory/plans/.
+    openspec: true
+    hlv: false
+    lekalo: false
+
+paths:
+  plans: openspec/changes
+  specs: openspec/specs
+  rules: .ai-factory/rules
+  state: .ai-factory/state
+  qa: .ai-factory/qa
+  generated_rules: .ai-factory/rules/generated
+  docs: docs/
+
+reviews:
+  policy_file: REVIEW.md
+
+warmup:
+  # Extra context read by /aif-warmup after the core artifacts (DESCRIPTION,
+  # ARCHITECTURE, ROADMAP, RESEARCH, rules, AGENTS.md). Entries are ordered,
+  # literal, project-relative files or directories; this list is user-owned.
+  paths:
+    - README.md
+    - docs/kernel-shape.md
+    - docs/kernel-status.md
+
+analyze:
+  skill_version: 0.16.0
+
+git:
+  # This repository's integration branch (see `git branch`).
+  base_branch: master
