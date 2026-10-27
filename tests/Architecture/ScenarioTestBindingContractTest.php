@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Tests\Architecture;
 
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -60,10 +61,22 @@ use PHPUnit\Framework\TestCase;
  * tree's `const` count, and a gate's own lookup table is not a name anybody
  * else owns.
  *
+ * ## The `spec-tree` group
+ *
+ * Four of the five rules skip in any checkout without `/openspec/` — which is
+ * every clone from GitHub and therefore every CI checkout. The `modules` CI job
+ * forbids a skip outright ("the catalogue is installed, so it has no reason
+ * to"), and that rule is worth more than this check's presence there: it is what
+ * turns a deleted guard into a red job. So the class carries the `spec-tree`
+ * group and that job excludes it, which keeps the rule strict and says where
+ * the check actually runs. A typo in the group name fails loudly rather than
+ * silently: the class then skips in that job and the rule fires.
+ *
  * @internal
  *
  * @coversNothing
  */
+#[Group('spec-tree')]
 final class ScenarioTestBindingContractTest extends TestCase
 {
     /**
