@@ -109,10 +109,12 @@ APPLY_PROFILE=true
 #                       rebuilt by migrate inside the dist.
 #   ./.lekalo ./.freebuff  local tool caches
 #   ./.agents ./.ai-factory ./.ai-factory.json ./openspec
-#                       internal agent tooling, gitignored for the same reason
-#                       ("never committed, never pushed") and just as little
-#                       deployable: plans, references and the factory config
-#                       are how this tree is BUILT, not how it runs
+#                       agent tooling and the plan/spec tree: plans,
+#                       references and the factory config are how this tree is
+#                       BUILT, not how it runs. The factory runtime and the
+#                       skills are gitignored; `openspec/` is tracked as of
+#                       2026-10-27 and excluded here on the `mago.toml`
+#                       argument instead — nothing in the artifact reads it
 #   ./lekalo* ./.gitignore  the Lekalo IR model and the repo's ignore rules are
 #                       how this tree is DEVELOPED, not how it runs
 EXCLUDES=(

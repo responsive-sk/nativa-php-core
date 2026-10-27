@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace Tests\Architecture;
 
-use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -33,18 +32,23 @@ use PHPUnit\Framework\TestCase;
  * forked grammar or a sidecar file. The probe directory was deleted after the
  * measurement.
  *
- * ## Why this is a local gate and not a CI gate
+ * ## Where it runs
  *
- * `/openspec/` is gitignored — "OpenSpec plans and specs are our internal
- * tooling too (decision 2026-10-14): they stay local and never go to GitHub" —
- * so a CI checkout has no specs at all. The check therefore SKIPS when the
- * tree is absent, the shape module tests already use when their module is not
- * installed (`TaxonomyRegistryTest`), and asserts the floor of files and
- * scenarios it read whenever the tree IS there, so it cannot pass by reading
- * nothing. A skipped check makes no claim, and says so; it is not a pass.
- * Four of the five tests guard that way — the CI job-count ratchet does not,
- * because it reads a tracked file and is worth running where the specs are
- * absent.
+ * `/openspec/` is TRACKED as of 2026-10-27 — it was gitignored from 2026-10-14,
+ * and `.gitignore` carries the reversal with its reason — so the specs are in
+ * every clone and in CI, and this check runs in both. It did not always: while
+ * the tree was ignored the four spec rules could only skip in CI, and the
+ * `modules` job (which forbids a skip outright) excluded them by group. That
+ * exclusion and the group are gone; the class is now held to the same no-skips
+ * rule as everything else in that job.
+ *
+ * The skip guard stays anyway, worded so it cannot be read as a pass: a
+ * checkout that removed the tree has nothing to bind, and the floor of files
+ * and scenarios asserted whenever the tree IS there is what stops the check
+ * from passing by reading nothing. Module tests use the same shape when their
+ * module is not installed (`TaxonomyRegistryTest`). Four of the five tests
+ * guard that way — the CI job-count ratchet does not, because it reads a
+ * tracked file and is worth running even where the specs are absent.
  *
  * ## The ratchet
  *
@@ -61,22 +65,10 @@ use PHPUnit\Framework\TestCase;
  * tree's `const` count, and a gate's own lookup table is not a name anybody
  * else owns.
  *
- * ## The `spec-tree` group
- *
- * Four of the five rules skip in any checkout without `/openspec/` — which is
- * every clone from GitHub and therefore every CI checkout. The `modules` CI job
- * forbids a skip outright ("the catalogue is installed, so it has no reason
- * to"), and that rule is worth more than this check's presence there: it is what
- * turns a deleted guard into a red job. So the class carries the `spec-tree`
- * group and that job excludes it, which keeps the rule strict and says where
- * the check actually runs. A typo in the group name fails loudly rather than
- * silently: the class then skips in that job and the rule fires.
- *
  * @internal
  *
  * @coversNothing
  */
-#[Group('spec-tree')]
 final class ScenarioTestBindingContractTest extends TestCase
 {
     /**
@@ -96,7 +88,7 @@ final class ScenarioTestBindingContractTest extends TestCase
             'A checkout without openspec/ must be skipped, not checked: with no spec tree there is'
             . ' nothing to bind, and a check that reads nothing must not report a pass.',
         );
-        self::assertStringContainsString('gitignored', $absent, 'The skip has to name why the tree is missing.');
+        self::assertStringContainsString('tracked', $absent, 'The skip has to name why the tree is missing.');
         self::assertStringContainsString('not a pass', $absent, 'The skip has to refuse to be read as green.');
 
         self::assertNull(
@@ -302,9 +294,9 @@ final class ScenarioTestBindingContractTest extends TestCase
         }
 
         return 'openspec/ is not in this checkout, so there is nothing to bind. The spec tree is'
-            . ' gitignored (decision 2026-10-14: plans and specs stay local and never go to GitHub),'
-            . ' which is why CI has no specs at all. Nothing was checked here — and that is not a'
-            . ' pass, it is a skip.';
+            . ' tracked (since 2026-10-27 — see .gitignore), so this is not a clone that never had'
+            . ' specs: the directory was removed here, and nothing can be measured against it.'
+            . ' Nothing was checked — and that is not a pass, it is a skip.';
     }
 
     /**
