@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "pagination",
+      "kind": "module",
+      "version": 1,
+      "description": "Pagination — shared offset and cursor paginators with a transport-free toArray() (items/meta/links): page numbers over LIMIT/OFFSET and keyset pages over a limit+1 fetch, ported from Marko's pagination package."
+    }
+  ]
+}

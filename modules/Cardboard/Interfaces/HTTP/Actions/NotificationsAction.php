@@ -9,6 +9,7 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
+use Modules\Pagination\Pagination\OffsetPaginator;
 use Modules\Notifications\Domain\Model\Notification;
 use Modules\Notifications\Domain\SignedInUser;
 use Modules\Notifications\Interfaces\HTTP\NotificationsServices;
@@ -42,7 +43,7 @@ final class NotificationsAction
 
     public function handle(Request $request): Response
     {
-        return Response::html($this->page());
+        return Response::html($this->page($request));
     }
 
     public function read(Request $request): Response
@@ -68,7 +69,7 @@ final class NotificationsAction
         return Response::redirect($this->url('mark.notifications'));
     }
 
-    private function page(): string
+    private function page(Request $request): string
     {
         $userId = SignedInUser::id();
 
@@ -85,16 +86,20 @@ final class NotificationsAction
 
         // Rows per page. The list is the operator's recent history, not an
         // archive: twenty is more than a working day of moderation here and
-        // keeps the page a page. Paging it through the shared paginator is
-        // Phase F's job, which is why this is a local number and not a constant
-        // the declaration ratchet would have to grow for.
+        // keeps the page a page. A local number rather than a constant, so the
+        // declaration ratchet does not have to grow for a page size.
         $pageSize = 20;
 
         try {
             $inbox = NotificationsServices::inbox();
-            $notifications = $inbox->recent($userId, $pageSize);
+
+            // Two phases, because `?page=` is not a range: the paginator is
+            // built from the TOTAL first, so `offset()` comes from the clamped
+            // page and `?page=99999` reads the last page instead of an empty
+            // table.
+            $paginator = new OffsetPaginator([], $inbox->total($userId), $pageSize, $this->requestedPage($request));
+            $page = $paginator->withItems($inbox->recent($userId, $pageSize, $paginator->offset()));
             $unread = $inbox->unreadCount($userId);
-            $total = $inbox->total($userId);
         } catch (\Throwable $e) {
             error_log('[notifications] inbox unavailable: ' . $e->getMessage());
 
@@ -109,12 +114,42 @@ final class NotificationsAction
             );
         }
 
+        /** @var list<Notification> $notifications */
+        $notifications = $page->items();
+
+        $base = $this->url('mark.notifications');
+        // Page one is the bare list, every other page adds the parameter — the
+        // shape the panel's own links use. The KEY is spelled here, not in the
+        // paginator: it is this surface's word for the address, and an API
+        // paging the same class spells its own.
+        $view = $page->toArray(static fn (string $target): string => '1' === $target
+            ? $base
+            : $base . '?page=' . $target);
+
+        $content = $this->summary($unread, $page->total()) . $this->listHtml($notifications);
+
+        if ($page->lastPage() > 1) {
+            $content .= AdminLayout::pager($view['meta'], $view['links']);
+        }
+
         return AdminLayout::render(
             'Notifications',
-            $this->summary($unread, $total) . $this->listHtml($notifications),
+            $content,
             'notifications',
             router: $this->router(),
         );
+    }
+
+    /**
+     * The requested page number, or the first page when the query says nothing
+     * usable. The paginator clamps it either way; this only refuses to hand a
+     * non-number to `(int)`.
+     */
+    private function requestedPage(Request $request): int
+    {
+        $page = $request->query('page');
+
+        return is_numeric($page) ? (int) $page : 1;
     }
 
     private function summary(int $unread, int $total): string

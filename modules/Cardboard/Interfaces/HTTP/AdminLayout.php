@@ -264,6 +264,45 @@ final class AdminLayout
     }
 
     /**
+     * The pager under a list: the row range plus the two links that move.
+     *
+     * Reads the `meta`/`links` arrays `Modules\Pagination\…::toArray()`
+     * produces — the same shape a future API answers with — so a page means the
+     * same thing in the panel and outside it, and only the markup is ours.
+     *
+     * A link the paginator left null renders as a disabled-looking span rather
+     * than disappearing: controls that come and go shift the row under the
+     * reader's cursor, and "Previous is not available here" is information.
+     *
+     * @param array<string, int|string|bool|null> $meta
+     * @param array<string, string|null>          $links
+     */
+    public static function pager(array $meta, array $links): string
+    {
+        $from = $meta['from'] ?? 0;
+        $to = $meta['to'] ?? 0;
+        $total = $meta['total'] ?? 0;
+
+        return '<div class="m-pagination">'
+            . '<span class="m-muted">Showing ' . self::e($from) . '–' . self::e($to) . ' of ' . self::e($total) . '</span>'
+            . self::pageLink('‹ Prev', $links['previous'] ?? null)
+            . self::pageLink('Next ›', $links['next'] ?? null)
+            . '</div>';
+    }
+
+    /**
+     * One pager control — a link, or the same control inert at an end.
+     */
+    private static function pageLink(string $label, ?string $href): string
+    {
+        if (null === $href) {
+            return '<span class="m-page-link" aria-disabled="true">' . self::e($label) . '</span>';
+        }
+
+        return '<a class="m-page-link" href="' . self::e($href) . '">' . self::e($label) . '</a>';
+    }
+
+    /**
      * The settings tab bar — one markup for both screens that show it.
      *
      * The five settings panels live on `/mark/settings` and switch in place;

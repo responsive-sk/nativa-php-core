@@ -136,6 +136,80 @@ final class NotificationsPageTest extends TestCase
         self::assertStringNotContainsString('Mark all as read', $html, 'a sweep with nothing to clear is a lie');
     }
 
+    /**
+     * The inbox is the one `/mark` list paged through the shared paginator, so
+     * this asserts the pager is REAL: the range it names, the link it builds,
+     * and the rows each page actually holds. A pager that renders while every
+     * page shows the same twenty rows looks right in a screenshot.
+     */
+    #[Test]
+    public function theInboxIsPagedThroughTheSharedPaginator(): void
+    {
+        $this->signIn('user-a');
+
+        for ($i = 1; $i <= 25; $i++) {
+            $this->push('user-a', 'Row ' . $i, 'Body');
+        }
+
+        $first = $this->action()->handle($this->request('GET', '/mark/notifications'))->getContent();
+
+        self::assertStringContainsString('Showing 1–20 of 25', $first);
+        self::assertStringContainsString('Row 25', $first, 'the newest row is first');
+        self::assertStringContainsString('Row 6', $first, 'page one ends at row 6 of the newest-first list');
+        self::assertStringNotContainsString('Row 5<', $first, 'page one must not reach into page two');
+        self::assertStringContainsString('aria-disabled="true">‹ Prev', $first, 'page one has no previous page');
+
+        // Page two is reached by FOLLOWING the link page one rendered, not by
+        // rebuilding it here: an href that answers 404 or reads the wrong offset
+        // passes any assertion that only looks at the markup.
+        $next = $this->pagerHref($first, 'Next ›');
+
+        self::assertSame('/mark/notifications?page=2', $next, 'the next link addresses page two');
+
+        $second = $this->follow($next);
+
+        self::assertStringContainsString('Showing 21–25 of 25', $second);
+        self::assertStringContainsString('Row 5', $second);
+        self::assertStringContainsString('Row 1', $second);
+        self::assertStringNotContainsString('Row 6<', $second);
+        self::assertSame('/mark/notifications', $this->pagerHref($second, '‹ Prev'), 'page two goes back to the bare list');
+        self::assertStringContainsString('aria-disabled="true">Next', $second, 'the last page has no next page');
+    }
+
+    /**
+     * A hand-edited page number is the normal way a list goes empty: the pager
+     * is right, the offset is not. The clamped offset has to reach the query.
+     */
+    #[Test]
+    public function aPageBeyondTheEndShowsTheLastPageInsteadOfNothing(): void
+    {
+        $this->signIn('user-a');
+
+        for ($i = 1; $i <= 25; $i++) {
+            $this->push('user-a', 'Row ' . $i, 'Body');
+        }
+
+        // The address a reader edits by hand — the whole point of the test, so
+        // it is typed the way they type it.
+        $html = $this->follow('/mark/notifications?page=99');
+
+        self::assertStringContainsString('Showing 21–25 of 25', $html);
+        self::assertStringContainsString('Row 1', $html);
+        self::assertStringNotContainsString('No notifications', $html);
+    }
+
+    #[Test]
+    public function aSinglePageOfRowsRendersNoPager(): void
+    {
+        $this->signIn('user-a');
+        $this->push('user-a', 'Only row', 'Body');
+
+        $html = $this->action()->handle($this->request('GET', '/mark/notifications'))->getContent();
+
+        self::assertStringContainsString('Only row', $html);
+        self::assertStringNotContainsString('m-pagination', $html, 'a pager over one page is furniture with no job');
+    }
+
     #[Test]
     public function markingOneRowReadClearsOnlyThatRow(): void
     {
@@ -207,9 +281,38 @@ final class NotificationsPageTest extends TestCase
         return $this->action()->read($request);
     }
 
-    private function request(string $method, string $path): Request
+    /**
+     * @param array<string, string> $query
+     */
+    private function request(string $method, string $path, array $query = []): Request
     {
-        return Request::create($method, $path);
+        return Request::create($method, $path, $query);
+    }
+
+    /**
+     * Open a URL the page itself produced and answer with its HTML.
+     */
+    private function follow(string $url): string
+    {
+        $query = [];
+        parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
+
+        return $this->action()
+            ->handle($this->request('GET', (string) parse_url($url, PHP_URL_PATH), $query))
+            ->getContent();
+    }
+
+    /**
+     * The href behind a pager control. A label with no anchor is exactly the
+     * failure a "contains Next" assertion would miss.
+     */
+    private function pagerHref(string $html, string $label): string
+    {
+        $pattern = '/<a class="m-page-link" href="([^"]*)">' . preg_quote($label, '/') . '<\/a>/';
+
+        self::assertSame(1, preg_match($pattern, $html, $matches), 'the pager must render a "' . $label . '" link');
+
+        return $matches[1];
     }
 
     private function push(string $notifiableId, string $title, string $body): void
