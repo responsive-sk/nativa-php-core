@@ -37,6 +37,7 @@ final readonly class SettingsDatabaseMigrator implements MigratorInterface
         ['Docs', '/docs', 'footer', 10],
         // Admin panel navigation (location = 'admin') — label, href, location, sort, icon
         ['Dashboard', '/mark', 'admin', 10, 'dashboard'],
+        ['Notifications', '/mark/notifications', 'admin', 15, 'bell'],
         ['Users', '/mark/users', 'admin', 20, 'users'],
         ['Roles', '/mark/roles', 'admin', 30, 'shield'],
         ['Settings', '/mark/settings', 'admin', 40, 'settings'],

@@ -117,8 +117,21 @@ function wire_queue_handlers(): void
         \Modules\Queue\Interfaces\HTTP\QueueServices::handlers()->register(
             \Modules\Users\Application\Services\AdminNotificationHandler::HANDLER,
             static function (array $args): void {
+                // The inbox is wired HERE, not inside the handler, for the same
+                // reason the handler itself is wired here: Notifications is an
+                // optional slice, and the handler must keep working (mail only)
+                // in a tree that never installed it. A `class_exists` guard in
+                // the same scope as the call is what lets PHPStan analyse this
+                // file on a kernel-only checkout.
+                $inbox = null;
+
+                if (class_exists('Modules\\Notifications\\Interfaces\\HTTP\\NotificationsServices')) {
+                    $inbox = \Modules\Notifications\Interfaces\HTTP\NotificationsServices::inbox();
+                }
+
                 (new \Modules\Users\Application\Services\AdminNotificationHandler(
                     \Modules\Users\Application\Services\AdminNotifier::create(),
+                    $inbox,
                 ))->handle($args);
             },
         );

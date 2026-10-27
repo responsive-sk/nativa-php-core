@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Modules\Cardboard\Application\Services;
 
+use Modules\Core\Domain\Permissions;
+
 /**
  * AdminNavService — resolves admin panel navigation items from DB.
  *
@@ -25,6 +27,7 @@ final readonly class AdminNavService
      */
     private const array FALLBACK = [
         ['id' => '_dashboard', 'label' => 'Dashboard', 'href' => '/mark', 'sort_order' => 10, 'is_active' => true, 'icon' => 'dashboard', 'parent_id' => null],
+        ['id' => '_notifications', 'label' => 'Notifications', 'href' => '/mark/notifications', 'sort_order' => 15, 'is_active' => true, 'icon' => 'bell', 'parent_id' => null],
         ['id' => '_users',     'label' => 'Users',     'href' => '/mark/users', 'sort_order' => 20, 'is_active' => true, 'icon' => 'users', 'parent_id' => null],
         ['id' => '_roles',     'label' => 'Roles',     'href' => '/mark/roles', 'sort_order' => 30, 'is_active' => true, 'icon' => 'shield', 'parent_id' => null],
         ['id' => '_settings',  'label' => 'Settings',  'href' => '/mark/settings', 'sort_order' => 40, 'is_active' => true, 'icon' => 'settings', 'parent_id' => null],
@@ -217,13 +220,20 @@ final readonly class AdminNavService
     }
 
     /**
-     * Local copy of the admin-route permission table (permission strings
-     * only, no Users import — see CardboardServices note about the single
-     * admin module staying a leaf for the install-closure scanner).
+     * Local copy of the admin-route PREFIX table (no Users import — see
+     * CardboardServices note about the single admin module staying a leaf for
+     * the install-closure scanner).
      *
-     * It is a COPY, not a second owner: `CardboardPermissionCopyTest` asks
-     * `AdminRoutePolicy` for every prefix's answer and fails when this table
-     * drifts, including a prefix the policy added and this copy never got.
+     * It is a COPY of the mapping, not a second owner of the vocabulary: every
+     * value is the constant from `Modules\Core\Domain\Permissions`, so a
+     * permission renamed in its owner is renamed here by the same edit, and the
+     * literal `'content.manage'` has one spelling in the tree instead of
+     * eighteen. The prefixes still have to be copied, because hiding an item
+     * needs to know which surface it points at — and
+     * `CardboardPermissionCopyTest` asks `AdminRoutePolicy` for every prefix's
+     * answer and fails when this table drifts, including a prefix the policy
+     * added and this copy never got.
+     *
      * Kept as a method so the guard can read the whole table without inventing
      * a public API or another permission constant.
      *
@@ -232,23 +242,24 @@ final readonly class AdminNavService
     private static function permissionTable(): array
     {
         return [
-            '/mark' => 'mark.access',
-            '/mark/articles' => 'content.manage',
-            '/mark/pages' => 'content.manage',
-            '/mark/categories' => 'content.manage',
-            '/mark/tags' => 'content.manage',
-            '/mark/comments' => 'content.manage',
-            '/mark/questions' => 'content.manage',
-            '/mark/media' => 'content.manage',
-            '/mark/forms' => 'content.manage',
-            '/mark/bulk-publish' => 'content.manage',
-            '/mark/bulk-delete' => 'content.manage',
-            '/mark/locales' => 'settings.manage',
-            '/mark/settings' => 'settings.manage',
-            '/mark/users' => 'users.manage',
-            '/mark/roles' => 'roles.manage',
-            '/mark/permissions' => 'roles.manage',
-            '/mark/audit' => 'roles.manage',
+            '/mark' => Permissions::MARK_ACCESS,
+            '/mark/notifications' => Permissions::MARK_ACCESS,
+            '/mark/articles' => Permissions::CONTENT,
+            '/mark/pages' => Permissions::CONTENT,
+            '/mark/categories' => Permissions::CONTENT,
+            '/mark/tags' => Permissions::CONTENT,
+            '/mark/comments' => Permissions::CONTENT,
+            '/mark/questions' => Permissions::CONTENT,
+            '/mark/media' => Permissions::CONTENT,
+            '/mark/forms' => Permissions::CONTENT,
+            '/mark/bulk-publish' => Permissions::CONTENT,
+            '/mark/bulk-delete' => Permissions::CONTENT,
+            '/mark/locales' => Permissions::SETTINGS,
+            '/mark/settings' => Permissions::SETTINGS,
+            '/mark/users' => Permissions::USERS,
+            '/mark/roles' => Permissions::ROLES,
+            '/mark/permissions' => Permissions::ROLES,
+            '/mark/audit' => Permissions::ROLES,
         ];
     }
 

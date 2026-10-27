@@ -4,6 +4,11 @@ declare(strict_types = 1);
 
 namespace Modules\Users\Application\Services;
 
+use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
+use Modules\Notifications\Application\Services\NotificationInbox;
+use Modules\Users\Domain\Entities\User;
+use Modules\Users\Infrastructure\Persistence\Repositories\UserRepository;
+
 /**
  * AdminNotificationHandler — the consumer behind "tell the operator".
  *
@@ -11,6 +16,20 @@ namespace Modules\Users\Application\Services;
  * is, so Comments and Questions push a job name they do not own and the wording
  * of the mail lives in exactly one place. A third event is a `match` arm, not a
  * second handler and a second registration.
+ *
+ * **Two channels, one wording.** The handler writes a durable inbox row for
+ * every user who can open the panel and THEN sends the mail. The order is
+ * deliberate — the mail is best-effort (no configured address, no transport, a
+ * bounce nobody reads), while the inbox row is the record that survives all
+ * three. An inbox write that fails is logged and never stops the mail, because
+ * the operator losing the notification itself is the worse of the two failures.
+ *
+ * Recipients are this module's question, not Notifications': it owns users,
+ * roles and the permission vocabulary, so it asks "who can open the panel"
+ * (`User::canAccessPanel()`) and hands the ids over. That is also why
+ * Notifications is allowed as a dependency here while it must not reach back:
+ * Notifications imports Core and Database only, so this edge and Cardboard's
+ * (which renders the inbox page) form a DAG.
  *
  * **It deliberately does not import Queue.** The natural shape — a static
  * `register(HandlerRegistry)` like `Blog\CoverRenderHandler` — would make Users
@@ -42,8 +61,15 @@ final readonly class AdminNotificationHandler
      */
     private const int EXCERPT_LIMIT = 400;
 
-    public function __construct(private AdminNotifier $notifier)
-    {
+    /**
+     * The inbox is optional so a tree without the Notifications slice keeps
+     * sending mail exactly as before, and so the mail tests can construct this
+     * object without a database.
+     */
+    public function __construct(
+        private AdminNotifier $notifier,
+        private ?NotificationInbox $inbox = null,
+    ) {
     }
 
     /**
@@ -66,23 +92,98 @@ final readonly class AdminNotificationHandler
         $panel = is_string($args['panel'] ?? null) ? $args['panel'] : '';
         $moderate = '' === $panel ? '' : "\n\n" . 'Moderate: ' . $this->notifier->link($panel);
 
-        return match ($kind) {
-            'comment' => $this->notifier->send(
+        [$subject, $body] = match ($kind) {
+            'comment' => [
                 'New comment awaiting moderation',
                 "A reader posted a comment that is waiting for you.\n\n"
                 . "Article: {$target}\n"
                 . "From: {$author}\n\n"
-                . $excerpt . $moderate,
-            ),
-            'question' => $this->notifier->send(
+                . $excerpt,
+            ],
+            'question' => [
                 'New question awaiting moderation',
                 "A reader asked a question that is waiting for you.\n\n"
                 . "About: {$target}\n"
                 . "From: {$author}\n\n"
-                . $excerpt . $moderate,
-            ),
-            default => $this->unknown($kind),
+                . $excerpt,
+            ],
+            default => [null, null],
         };
+
+        if (null === $subject) {
+            return $this->unknown($kind);
+        }
+
+        // Before the mail: the row is the durable half of this notification.
+        $this->record($kind, $subject, $body, $panel);
+
+        return $this->notifier->send($subject, $body . $moderate);
+    }
+
+    /**
+     * Write one inbox row per panel user, and never fail the mail over it.
+     *
+     * The wording handed over is the MAIL's wording minus the absolute
+     * "Moderate:" link: an inbox row carries the root-relative panel path it
+     * was given (`href`), so the panel builds the link at render time and a
+     * deployment that moves `APP_URL` does not leave stale absolute URLs in
+     * every inbox.
+     */
+    private function record(string $kind, string $subject, string $body, string $panel): void
+    {
+        if (null === $this->inbox) {
+            return;
+        }
+
+        $recipients = self::panelUserIds();
+
+        if ([] === $recipients) {
+            return;
+        }
+
+        try {
+            $this->inbox->push($recipients, $kind, $subject, $body, $panel);
+        } catch (\Throwable $e) {
+            error_log(sprintf(
+                '[notifications] could not write the inbox row for "%s": %s',
+                $subject,
+                $e->getMessage(),
+            ));
+        }
+    }
+
+    /**
+     * Ids of the accounts that can open the panel.
+     *
+     * A missing or unmigrated users table answers `[]` — nobody to address, in a
+     * tree where the panel does not exist either. That is logged rather than
+     * thrown for the same reason as above: it must not cost the mail.
+     *
+     * @return list<string>
+     */
+    private static function panelUserIds(): array
+    {
+        try {
+            $users = new UserRepository(
+                DatabaseConnectionManager::instance()->connection('users'),
+            );
+
+            $ids = [];
+
+            foreach ($users->all() as $user) {
+                if (!$user->isActive() || !$user->canAccessPanel()) {
+                    continue;
+                }
+
+                $ids[] = $user->id();
+            }
+
+            return $ids;
+        } catch (\Throwable $e) {
+            error_log('[notifications] could not resolve the panel recipients: ' . $e->getMessage());
+
+            return [];
+        }
     }
 
     /**

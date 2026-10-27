@@ -78,6 +78,12 @@ final class AdminRoutePolicy
     private const array TABLE = [
         '/mark'                  => Permissions::MARK_ACCESS,
 
+        // The inbox is the reader's own: opening it is neither a content act
+        // nor an access-management one, so it stays under the panel's own gate
+        // and every user who may enter `/mark` may read their own rows. Who
+        // those rows belong to is enforced by the query, not by this table.
+        '/mark/notifications'    => Permissions::MARK_ACCESS,
+
         // Content. Articles, pages, comments, media and forms are all "the
         // things a writer works with" — one permission keeps the author role
         // readable, and the audit log still says exactly which action ran.

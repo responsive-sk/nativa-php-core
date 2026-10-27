@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "notifications",
+      "kind": "module",
+      "version": 1,
+      "description": "Notifications — a per-user admin inbox in its own SQLite database: one row per recipient with that recipient's own read state, a /mark page that lists and clears it, and a sidebar badge for the unread count, ported from Marko's notification-database package."
+    }
+  ]
+}

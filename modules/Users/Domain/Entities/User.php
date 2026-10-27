@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Modules\Users\Domain\Entities;
 
+use Modules\Core\Domain\Permissions;
+
 /**
  * User domain entity.
  */
@@ -155,5 +157,19 @@ final class User
         }
 
         return false;
+    }
+
+    /**
+     * Whether this account may open the admin panel.
+     *
+     * One question with two readers that must agree — the sidebar's nav filter
+     * and the inbox fan-out that decides who a `notify.admin` job is addressed
+     * to — so it is asked here, through `hasPermission()` (which already carries
+     * the admin-role bypass), rather than spelled as a role check in one place
+     * and a permission check in the other.
+     */
+    public function canAccessPanel(): bool
+    {
+        return $this->hasPermission(Permissions::MARK_ACCESS);
     }
 }
