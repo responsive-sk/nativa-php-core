@@ -7,6 +7,7 @@ namespace Modules\Outbox\Tests;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Outbox\Infrastructure\Persistence\Migrations\OutboxDatabaseMigrator;
 use Modules\Outbox\Infrastructure\Persistence\Repositories\SqliteOutboxRepository;
+use Modules\Outbox\Infrastructure\Persistence\Statement;
 use PDO;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -84,7 +85,7 @@ final class OutboxAdminListTest extends TestCase
 
     private function seed(string $status, string $createdAt): void
     {
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'INSERT INTO outbox_messages (id, event_type, event_payload, status, attempts, max_attempts, created_at)'
             . ' VALUES (:id, :type, :payload, :status, 0, 5, :created)',
         );

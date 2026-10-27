@@ -40,8 +40,8 @@ final readonly class CloudinaryProvider implements MediaProviderInterface
 
     public function __construct(
         ?string $cloudName = null,
-        ?string $apiKey = null,
-        ?string $apiSecret = null,
+        #[\SensitiveParameter] ?string $apiKey = null,
+        #[\SensitiveParameter] ?string $apiSecret = null,
         ?string $uploadPreset = null,
         ?string $folder = null,
     ) {
@@ -162,6 +162,9 @@ final readonly class CloudinaryProvider implements MediaProviderInterface
     {
         return [
             'cloudName' => $this->cloudName,
+            // The redaction placeholder, not a credential: it is what the report
+            // prints so the real value never reaches a log line.
+            // @mago-expect lint:no-literal-password
             'apiKey'    => '***redacted***', // audit-ok: redaction placeholder
             'folder'    => $this->folder,
             'name'      => $this->getName(),

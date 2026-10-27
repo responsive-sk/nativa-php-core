@@ -8,6 +8,7 @@ use Modules\Core\Infrastructure\Attributes\AsMigrator;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Core\Interfaces\CLI\MigratorInterface;
 use Modules\Locales\Infrastructure\Persistence\SeedData;
+use Modules\Locales\Infrastructure\Persistence\Statement;
 
 /**
  * Locales Database Migrator — creates the locales.db schema.
@@ -69,7 +70,7 @@ final readonly class LocalesDatabaseMigrator implements MigratorInterface
      */
     private function seedDefaultTranslations(): int
     {
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'INSERT OR IGNORE INTO translations (id, translation_key, locale, value, group_name, created_at, updated_at)
              VALUES (:id, :key, :locale, :value, :group, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
         );

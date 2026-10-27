@@ -69,7 +69,7 @@ final class PasswordResetAction
     /**
      * @param list<string> $errors
      */
-    private function form(string $token, array $errors): Response
+    private function form(#[\SensitiveParameter] string $token, array $errors): Response
     {
         return AuthTemplate::render(
             'Choose a new password',

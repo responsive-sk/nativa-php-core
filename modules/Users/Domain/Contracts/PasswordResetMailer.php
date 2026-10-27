@@ -39,5 +39,5 @@ interface PasswordResetMailer
      * Returning `void` is deliberate — the token does not travel back out of
      * this port, so no caller can decide to record it somewhere of its own.
      */
-    public function sendResetLink(string $email, string $token, int $ttlHours): void;
+    public function sendResetLink(string $email, #[\SensitiveParameter] string $token, int $ttlHours): void;
 }

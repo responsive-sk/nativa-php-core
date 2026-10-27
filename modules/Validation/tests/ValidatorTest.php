@@ -16,6 +16,10 @@ use PHPUnit\Framework\TestCase;
  * covers (see TaxonomyRegistryTest for why module tests live here): the
  * suite drives the INSTALLED copy and skips on a kernel-only tree.
  */
+// Every password-shaped value in this file is a fixture the rules are asserted
+// against: the literal IS the subject, and a constant would only move it one
+// name away from the assertion while hiding what the rule was given.
+// @mago-expect lint:no-literal-password
 final class ValidatorTest extends TestCase
 {
     private Validator $validator;

@@ -104,6 +104,39 @@ final class Request
         return $this->body[$key] ?? $default;
     }
 
+    /**
+     * A query-string value as a string, or `$default` when it is absent or is
+     * not a string.
+     *
+     * `query()` returns `mixed` because a query string really can carry
+     * anything, and `header()` already reads its input as a `?string` for the
+     * same reason that this reads as a `string`: the caller wants one type and
+     * declares what it gets otherwise. The hand-written form this replaces
+     * read the field twice —
+     * `is_string($request->query('q')) ? $request->query('q') : ''` — and the
+     * second read was still `mixed`, because narrowing one call says nothing
+     * about the next. One read is what makes the result typed.
+     */
+    public function queryString(string $key, string $default = ''): string
+    {
+        /** @var mixed $value a query-string value has no type until it is checked */
+        $value = $this->query[$key] ?? null;
+
+        return is_string($value) ? $value : $default;
+    }
+
+    /**
+     * A body value as a string, or `$default` when it is absent or is not a
+     * string. See `queryString()` for why the read is single.
+     */
+    public function bodyString(string $key, string $default = ''): string
+    {
+        /** @var mixed $value a form value has no type until it is checked */
+        $value = $this->body[$key] ?? null;
+
+        return is_string($value) ? $value : $default;
+    }
+
     public function header(string $key, ?string $default = null): ?string
     {
         return $this->headers[strtolower($key)] ?? $default;

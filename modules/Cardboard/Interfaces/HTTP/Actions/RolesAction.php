@@ -46,7 +46,7 @@ final class RolesAction
 
     public function handle(Request $request): Response
     {
-        $search = is_string($request->query('q')) ? $request->query('q') : '';
+        $search = $request->queryString('q');
         $rolesService = CardboardServices::roles();
         $allRoles = $rolesService->allRoles();
 
@@ -74,7 +74,7 @@ final class RolesAction
         }
 
         $toast = '';
-        $toastMessage = is_string($request->query('toast')) ? $request->query('toast') : '';
+        $toastMessage = $request->queryString('toast');
         if ('' !== $toastMessage) {
             $toast = AdminLayout::toast(urldecode($toastMessage));
         }
@@ -111,8 +111,8 @@ final class RolesAction
 
     public function createRole(Request $request): Response
     {
-        $name = is_string($request->body('name')) ? trim($request->body('name')) : '';
-        $description = is_string($request->body('description')) ? trim($request->body('description')) : '';
+        $name = trim($request->bodyString('name'));
+        $description = trim($request->bodyString('description'));
 
         if ('' !== $name && null === CardboardServices::roles()->findByName($name)) {
             $id = bin2hex(random_bytes(16));

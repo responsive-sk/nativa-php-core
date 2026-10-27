@@ -52,7 +52,7 @@ final class NotificationsAction
         $id = $request->routeParam('id');
 
         if (null !== $userId && null !== $id && '' !== $id) {
-            NotificationsServices::inbox()->markRead($id, $userId);
+            $this->markRead($id, $userId);
         }
 
         return Response::redirect($this->url('mark.notifications'));
@@ -63,10 +63,40 @@ final class NotificationsAction
         $userId = SignedInUser::id();
 
         if (null !== $userId) {
-            NotificationsServices::inbox()->markAllRead($userId);
+            $this->markAllRead($userId);
         }
 
         return Response::redirect($this->url('mark.notifications'));
+    }
+
+    /**
+     * Clear one row, and never answer 500 when the database cannot be asked.
+     *
+     * The page already renders an unmigrated inbox as an empty state instead of
+     * an error; a form submitted from a page rendered before a reset — or from
+     * one whose `notifications.db` went away between render and submit — has to
+     * agree with it. The redirect happens either way: the row is either read or
+     * still waiting, and the next render says which.
+     */
+    private function markRead(string $id, string $userId): void
+    {
+        try {
+            NotificationsServices::inbox()->markRead($id, $userId);
+        } catch (\Throwable $e) {
+            error_log('[notifications] could not mark a row read: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Clear that user's whole inbox, with the same tolerance as one row.
+     */
+    private function markAllRead(string $userId): void
+    {
+        try {
+            NotificationsServices::inbox()->markAllRead($userId);
+        } catch (\Throwable $e) {
+            error_log('[notifications] could not mark the inbox read: ' . $e->getMessage());
+        }
     }
 
     private function page(Request $request): string

@@ -13,6 +13,12 @@
 # ignored by day three. `--strict` propagates the tools' exit codes, so the
 # switch to a gate is one flag, deliberately not taken here.
 #
+# `--scope=modules` is that rule applied to the catalogue alone: lint and analyze
+# read `modules/` and nothing else, reports land in `.../mago-spike/modules/`,
+# and the exit code is 0 no matter what the tools find. It answers "how is the
+# module code doing?" without answering "may this merge?" — the gates over the
+# same tree are `make mago-lint` (ceiling 0) and `make mago-guard`.
+#
 # The binary is pinned by version AND by the sha256 of its release archive. The
 # checksum is the identity: a re-rolled upstream asset fails here instead of
 # silently changing what the report measured. Same pattern as the `lekalo` step
@@ -31,8 +37,11 @@
 #   bin/build/mago-spike.sh --only=lint --max-issues=6
 #                                          # ceiling gate: the finding count may
 #                                          # not rise above 6
+#   bin/build/mago-spike.sh --scope=modules # the catalogue only: lint + analyze,
+#                                          # informational by construction
 #
 # Reports: storage/cache/mago-spike/<tool>.txt, summary.tsv
+#          (--scope=modules: storage/cache/mago-spike/modules/<tool>.txt)
 # Rationale and measurements: docs/mago-evaluation.md
 # =============================================================================
 
@@ -41,10 +50,12 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
 
-OUT="$ROOT/storage/cache/mago-spike"
-BIN="$OUT/bin/mago"
+CACHE="$ROOT/storage/cache/mago-spike"
+# Report directory. `--scope=modules` moves it under the cache root so a module
+# reading never overwrites the report the evaluation document quotes.
+OUT="$CACHE"
+BIN="$CACHE/bin/mago"
 CONFIG="$ROOT/mago.toml"
-SUMMARY="$OUT/summary.tsv"
 
 MAGO_VERSION="1.58.2"
 MAGO_TARGET="x86_64-unknown-linux-gnu"
@@ -54,30 +65,64 @@ MAGO_ARCHIVE_SHA256="80b6e6ed3cd2fe2da348f9cd83d23e638f2ccd44988d48bebd766c20ccd
 STRICT=0
 ONLY=""
 MAX_ISSUES=""
+SCOPE="all"
 
 for arg in "$@"; do
     case "$arg" in
         --strict) STRICT=1 ;;
         --only=*) ONLY="${arg#--only=}" ;;
         --max-issues=*) MAX_ISSUES="${arg#--max-issues=}" ;;
+        --scope=*) SCOPE="${arg#--scope=}" ;;
         -h|--help)
-            sed -n '3,37p' "$0" | sed 's/^# \{0,1\}//'
+            # The usage block, from `# Usage:` to the closing banner. A line
+            # range would silently truncate on the next edit.
+            awk '/^# Usage:/ {p = 1} p && /^# ={20,}$/ {exit} p {print}' "$0" | sed 's/^# \{0,1\}//'
             exit 0
             ;;
         *)
-            echo "usage: bin/build/mago-spike.sh [--strict] [--only=analyze|lint|format|guard] [--max-issues=N]" >&2
+            echo "usage: bin/build/mago-spike.sh [--strict] [--scope=all|modules] [--only=analyze|lint|format|guard] [--max-issues=N]" >&2
             exit 2
             ;;
     esac
 done
 
+case "$SCOPE" in
+    all) ;;
+    modules)
+        OUT="$CACHE/modules"
+        # The module reading is informational by construction: it is the question
+        # "what does the catalogue look like?", not "may this change land?".
+        # Saying so beats honouring a flag whose whole meaning is the opposite.
+        if [ "$STRICT" -eq 1 ]; then
+            echo "WARN [mago-spike] --strict ignored with --scope=modules: that scope is a reading, never a gate" >&2
+        fi
+        if [ -n "$MAX_ISSUES" ]; then
+            echo "mago-spike: --max-issues is a gate and --scope=modules is a reading — pass one, not both" >&2
+            exit 2
+        fi
+        STRICT=0
+        ;;
+    *)
+        echo "mago-spike: unknown scope '$SCOPE' — expected all or modules" >&2
+        exit 2
+        ;;
+esac
+
 case "$ONLY" in
-    ""|analyze|lint|format|guard) ;;
+    ""|analyze|lint) ;;
+    format|guard)
+        if [ "$SCOPE" = "modules" ]; then
+            echo "mago-spike: --scope=modules runs lint and analyze only; '$ONLY' is out of scope by mago.toml" >&2
+            exit 2
+        fi
+        ;;
     *)
         echo "mago-spike: unknown tool '$ONLY' — expected analyze, lint, format or guard" >&2
         exit 2
         ;;
 esac
+
+SUMMARY="$OUT/summary.tsv"
 
 if [ -n "$MAX_ISSUES" ] && ! [ "$MAX_ISSUES" -ge 0 ] 2>/dev/null; then
     echo "mago-spike: --max-issues expects an integer, got '$MAX_ISSUES'" >&2
@@ -112,9 +157,9 @@ ensure_mago() {
         return 0
     fi
 
-    mkdir -p "$OUT/bin"
+    mkdir -p "$CACHE/bin"
 
-    local archive="$OUT/mago-${MAGO_VERSION}-${MAGO_TARGET}.tar.gz"
+    local archive="$CACHE/mago-${MAGO_VERSION}-${MAGO_TARGET}.tar.gz"
     if [ ! -f "$archive" ]; then
         echo "INFO [mago-spike] downloading mago ${MAGO_VERSION} (${MAGO_TARGET})" >&2
         if ! curl -fsSL -o "$archive" \
@@ -136,8 +181,8 @@ ensure_mago() {
         return 1
     fi
 
-    tar xzf "$archive" -C "$OUT"
-    install -m 0755 "$OUT/mago-${MAGO_VERSION}-${MAGO_TARGET}/mago" "$BIN"
+    tar xzf "$archive" -C "$CACHE"
+    install -m 0755 "$CACHE/mago-${MAGO_VERSION}-${MAGO_TARGET}/mago" "$BIN"
 
     # A checksum proves the archive, not that this kernel can execute it: a
     # binary for another platform installs fine and fails on the first call.
@@ -239,9 +284,22 @@ if ! ensure_mago; then
     exit 0
 fi
 
-if [ -z "$ONLY" ] || [ "$ONLY" = "analyze" ]; then run_tool analyze; fi
-if [ -z "$ONLY" ] || [ "$ONLY" = "lint" ]; then run_tool lint; fi
-if [ -z "$ONLY" ] || [ "$ONLY" = "format" ]; then run_tool format --dry-run; fi
+# A positional path makes Mago use it INSTEAD of `[source] paths`, so the module
+# reading asks the same two questions of the catalogue alone and lands in its own
+# report directory. Only lint and analyze have a module question to answer:
+# `format` is excluded from the catalogue by `mago.toml`, and guard's perimeter
+# is a statement about the kernel, not about the modules on the other side of it.
+case "$SCOPE" in
+    modules)
+        if [ -z "$ONLY" ] || [ "$ONLY" = "analyze" ]; then run_tool analyze modules; fi
+        if [ -z "$ONLY" ] || [ "$ONLY" = "lint" ]; then run_tool lint modules; fi
+        ;;
+    *)
+        if [ -z "$ONLY" ] || [ "$ONLY" = "analyze" ]; then run_tool analyze; fi
+        if [ -z "$ONLY" ] || [ "$ONLY" = "lint" ]; then run_tool lint; fi
+        if [ -z "$ONLY" ] || [ "$ONLY" = "format" ]; then run_tool format --dry-run; fi
+        ;;
+esac
 # Stale-baseline step. A baseline entry that no longer matches an issue is a
 # fixed problem the ledger still declares open, and mago only WARNS about it —
 # exit stays 0, so a gate that only checks "no new issues" would keep the stale
@@ -249,7 +307,7 @@ if [ -z "$ONLY" ] || [ "$ONLY" = "format" ]; then run_tool format --dry-run; fi
 # failure. It is passed only when a baseline exists: with none, mago prints two
 # warnings about a missing path for nothing. Today this tree has no baseline, so
 # this costs nothing until someone adds one back.
-if [ -z "$ONLY" ] || [ "$ONLY" = "guard" ]; then
+if [ "$SCOPE" != "modules" ] && { [ -z "$ONLY" ] || [ "$ONLY" = "guard" ]; }; then
     GUARD_BASELINE="$(guard_baseline_path)"
 
     if [ -f "$GUARD_BASELINE" ]; then

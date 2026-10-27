@@ -256,6 +256,30 @@ final class NotificationsPageTest extends TestCase
         self::assertSame(1, NotificationsServices::inbox()->unreadCount('user-b'));
     }
 
+    /**
+     * The page answers an unmigrated database with an empty state, so the forms
+     * it renders must not answer 500 when the database is gone either. A form
+     * submitted from a page rendered before a reset — or after the file went
+     * away — is a redirect: the row is either cleared or still waiting, and the
+     * next render says which.
+     */
+    #[Test]
+    public function formsAnswerAMissingDatabaseWithARedirectInsteadOfFailing(): void
+    {
+        $this->signIn('user-a');
+        $this->push('user-a', 'A row', 'Body');
+
+        putenv('DB_NOTIFICATIONS=' . $this->tmpDir . '/never-migrated.db');
+        DatabaseConnectionManager::resetInstance();
+        NotificationsServices::reset();
+
+        $one = $this->read('any-id');
+        $all = $this->action()->readAll($this->request('POST', '/mark/notifications/read-all'));
+
+        self::assertSame(302, $one->getStatusCode(), 'marking one row read must not fail on a missing table');
+        self::assertSame(302, $all->getStatusCode(), 'marking the inbox read must not fail on a missing table');
+    }
+
     private function action(): NotificationsAction
     {
         $router = Router::fromEntries([], [

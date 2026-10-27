@@ -12,6 +12,7 @@ use Modules\Outbox\Infrastructure\Persistence\Migrations\OutboxDatabaseMigrator;
 use Modules\Outbox\Interfaces\HTTP\OutboxServices;
 use Modules\Core\Domain\Permissions;
 use Modules\Users\Infrastructure\Persistence\Migrations\UsersDatabaseMigrator;
+use Modules\Users\Infrastructure\Persistence\Statement;
 use Modules\Users\Interfaces\HTTP\AuthServices;
 use PDO;
 use Modules\Core\Interfaces\CLI\CliOutput;
@@ -288,7 +289,8 @@ final class AdminAccessControlTest extends TestCase
     {
         $id = bin2hex(random_bytes(16));
 
-        $stmt = (DatabaseConnectionManager::instance()->connection('users'))->prepare(
+        $stmt = Statement::prepare(
+            DatabaseConnectionManager::instance()->connection('users'),
             'INSERT INTO users (id, name, email, password, is_active) VALUES (:id, :name, :email, :password, 1)',
         );
         $stmt->execute([
@@ -298,7 +300,8 @@ final class AdminAccessControlTest extends TestCase
             ':password' => password_hash('irrelevant-for-this-test', PASSWORD_DEFAULT),
         ]);
 
-        $stmt = (DatabaseConnectionManager::instance()->connection('users'))->prepare(
+        $stmt = Statement::prepare(
+            DatabaseConnectionManager::instance()->connection('users'),
             'INSERT INTO user_roles (user_id, role_id) VALUES (:user, :role)',
         );
         $stmt->execute([':user' => $id, ':role' => $roleId]);

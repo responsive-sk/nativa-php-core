@@ -57,7 +57,7 @@ final class UsersAction
 
     public function handle(Request $request): Response
     {
-        $search = is_string($request->query('q')) ? $request->query('q') : '';
+        $search = $request->queryString('q');
         $users = CardboardServices::users()->all();
 
         // Filter by search query.
@@ -84,7 +84,7 @@ final class UsersAction
         }
 
         $toast = '';
-        $toastMessage = is_string($request->query('toast')) ? $request->query('toast') : '';
+        $toastMessage = $request->queryString('toast');
         if ('' !== $toastMessage) {
             $toast = AdminLayout::toast(urldecode($toastMessage));
         }
@@ -134,10 +134,10 @@ final class UsersAction
 
     public function createSubmit(Request $request): Response
     {
-        $name = is_string($request->body('name')) ? $request->body('name') : '';
-        $email = is_string($request->body('email')) ? $request->body('email') : '';
-        $password = is_string($request->body('password')) ? $request->body('password') : '';
-        $roleId = is_string($request->body('role')) ? $request->body('role') : '';
+        $name = $request->bodyString('name');
+        $email = $request->bodyString('email');
+        $password = $request->bodyString('password');
+        $roleId = $request->bodyString('role');
 
         $errors = $this->createErrors($name, $email, $password, $roleId);
         if ([] !== $errors) {
@@ -218,10 +218,10 @@ final class UsersAction
             return Response::redirect($this->url('mark.users'));
         }
 
-        $name = is_string($request->body('name')) ? $request->body('name') : '';
-        $email = is_string($request->body('email')) ? $request->body('email') : '';
-        $password = is_string($request->body('password')) ? $request->body('password') : '';
-        $roleId = is_string($request->body('role')) ? $request->body('role') : '';
+        $name = $request->bodyString('name');
+        $email = $request->bodyString('email');
+        $password = $request->bodyString('password');
+        $roleId = $request->bodyString('role');
         $isActive = in_array($request->body('is_active'), ['on', '1', 'true', true], true);
 
         $errors = $this->editErrors($user, $name, $email, $roleId, $users);
@@ -349,7 +349,7 @@ final class UsersAction
     /**
      * @return list<string>
      */
-    private function createErrors(string $name, string $email, string $password, string $roleId): array
+    private function createErrors(string $name, string $email, #[\SensitiveParameter] string $password, string $roleId): array
     {
         $errors = $this->validate($name, $email, $password, true);
 
@@ -569,7 +569,7 @@ final class UsersAction
     /**
      * @return list<string>
      */
-    private function validate(string $name, string $email, string $password, bool $passwordRequired): array
+    private function validate(string $name, string $email, #[\SensitiveParameter] string $password, bool $passwordRequired): array
     {
         // The admin form's legacy strings, kept byte-identical; the field
         // rules live in the Validation module. Two deliberate tightenings

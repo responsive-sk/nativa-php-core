@@ -39,7 +39,7 @@ final class BulkDeleteAction
 
     public function handle(Request $request): Response
     {
-        $entity = is_string($request->body('entity')) ? $request->body('entity') : '';
+        $entity = $request->bodyString('entity');
 
         // The entity is chosen by the POST body, so the path-level permission
         // (content.manage) is not the entity's own gate. Checked BEFORE any id
@@ -63,7 +63,7 @@ final class BulkDeleteAction
         // Body carries the raw param ('sk' | 'en'); storage services need the
         // canonical code — directoryFor() only maps 'en_US' to blog/en, a raw
         // 'en' here silently fell back to the SK directory (EN bulk no-op bug).
-        $localeRaw = is_string($request->body('locale')) ? $request->body('locale') : 'sk';
+        $localeRaw = $request->bodyString('locale', 'sk');
         $locale = AdminLocale::canonical($localeRaw);
         $ids = $this->selectedIds($request);
 

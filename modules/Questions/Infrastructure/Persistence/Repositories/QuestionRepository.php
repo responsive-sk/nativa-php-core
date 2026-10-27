@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Questions\Infrastructure\Persistence\Repositories;
 
 use Modules\Questions\Domain\Entities\Question;
+use Modules\Questions\Infrastructure\Persistence\Statement;
 
 /**
  * QuestionRepository — SQLite persistence for questions.
@@ -22,7 +23,7 @@ final readonly class QuestionRepository
 
     public function findById(string $id): ?Question
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM questions WHERE id = :id');
+        $stmt = Statement::prepare($this->pdo, 'SELECT * FROM questions WHERE id = :id');
         $stmt->execute(['id' => $id]);
         /** @var array<string, mixed>|false $row */
         $row = $stmt->fetch();
@@ -42,7 +43,7 @@ final readonly class QuestionRepository
      */
     public function findBySubject(string $subjectType, string $subjectSlug, string $locale): array
     {
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'SELECT * FROM questions WHERE subject_type = :type AND subject_slug = :slug AND locale = :locale ORDER BY created_at DESC',
         );
         $stmt->execute([
@@ -61,7 +62,7 @@ final readonly class QuestionRepository
      */
     public function findPending(): array
     {
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'SELECT * FROM questions WHERE status = :status ORDER BY created_at DESC',
         );
         $stmt->execute(['status' => Question::STATUS_PENDING]);
@@ -80,7 +81,7 @@ final readonly class QuestionRepository
      */
     public function countPending(): int
     {
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'SELECT COUNT(*) FROM questions WHERE status = :status',
         );
         $stmt->execute(['status' => Question::STATUS_PENDING]);
@@ -98,17 +99,17 @@ final readonly class QuestionRepository
      */
     public function all(): array
     {
-        $stmt = $this->pdo->query(
+        $stmt = Statement::query($this->pdo,
             'SELECT * FROM questions ORDER BY CASE status WHEN \'pending\' THEN 0 ELSE 1 END, created_at DESC',
         );
 
-        return false === $stmt ? [] : $this->hydrateAll($stmt);
+        return $this->hydrateAll($stmt);
     }
 
     public function insert(Question $question): void
     {
         $data = $question->toArray();
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'INSERT INTO questions (id, subject_type, subject_slug, locale, text, attempted_answer, display_name, author_user_id, status, ip_address, created_at)
              VALUES (:id, :type, :slug, :locale, :text, :answer, :name, :author, :status, :ip, :created)',
         );
@@ -132,13 +133,13 @@ final readonly class QuestionRepository
      */
     public function setStatus(string $id, string $status): void
     {
-        $stmt = $this->pdo->prepare('UPDATE questions SET status = :status WHERE id = :id');
+        $stmt = Statement::prepare($this->pdo, 'UPDATE questions SET status = :status WHERE id = :id');
         $stmt->execute(['status' => $status, 'id' => $id]);
     }
 
     public function delete(string $id): void
     {
-        $stmt = $this->pdo->prepare('DELETE FROM questions WHERE id = :id');
+        $stmt = Statement::prepare($this->pdo, 'DELETE FROM questions WHERE id = :id');
         $stmt->execute(['id' => $id]);
     }
 

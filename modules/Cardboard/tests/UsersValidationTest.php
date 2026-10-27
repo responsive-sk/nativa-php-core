@@ -46,7 +46,7 @@ final class UsersValidationTest extends TestCase
         $method = new ReflectionMethod(UsersAction::class, 'validate');
         $action = (new \ReflectionClass(UsersAction::class))->newInstanceWithoutConstructor();
 
-        $this->validate = static fn (string $name, string $email, string $password, bool $required): array =>
+        $this->validate = static fn (string $name, string $email, #[\SensitiveParameter] string $password, bool $required): array =>
             /** @var list<string> */
             $method->invoke($action, $name, $email, $password, $required);
     }

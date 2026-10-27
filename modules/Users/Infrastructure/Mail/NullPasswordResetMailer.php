@@ -23,7 +23,7 @@ use Modules\Users\Domain\Contracts\PasswordResetMailer;
  */
 final class NullPasswordResetMailer implements PasswordResetMailer
 {
-    public function sendResetLink(string $email, string $token, int $ttlHours): void
+    public function sendResetLink(string $email, #[\SensitiveParameter] string $token, int $ttlHours): void
     {
         if ('debug' !== strtolower((string) (getenv('LOG_LEVEL') ?: 'info'))) {
             return;

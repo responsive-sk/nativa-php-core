@@ -469,6 +469,7 @@ final readonly class MediaService
         } catch (\RuntimeException) {
             // Deliberately swallowed: the row is deleted regardless, which
             // is the only part of this operation the caller can act on.
+            // @mago-expect lint:no-empty-catch-clause
         }
     }
 

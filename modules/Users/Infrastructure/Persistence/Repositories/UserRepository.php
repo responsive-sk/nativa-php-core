@@ -6,6 +6,7 @@ namespace Modules\Users\Infrastructure\Persistence\Repositories;
 
 use Modules\Database\Infrastructure\Persistence\UnitOfWork;
 use Modules\Users\Domain\Entities\User;
+use Modules\Users\Infrastructure\Persistence\Statement;
 
 /**
  * UserRepository — persistence for users + role/permission loading.
@@ -18,7 +19,7 @@ final readonly class UserRepository
 
     public function findByEmail(string $email): ?User
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM users WHERE email = :email COLLATE NOCASE LIMIT 1');
+        $stmt = Statement::prepare($this->pdo, 'SELECT * FROM users WHERE email = :email COLLATE NOCASE LIMIT 1');
         $stmt->execute([':email' => $email]);
         /** @var array<string, mixed>|false $row */
         $row = $stmt->fetch();
@@ -32,7 +33,7 @@ final readonly class UserRepository
 
     public function findById(string $id): ?User
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM users WHERE id = :id LIMIT 1');
+        $stmt = Statement::prepare($this->pdo, 'SELECT * FROM users WHERE id = :id LIMIT 1');
         $stmt->execute([':id' => $id]);
         /** @var array<string, mixed>|false $row */
         $row = $stmt->fetch();
@@ -51,8 +52,8 @@ final readonly class UserRepository
      */
     public function all(): array
     {
-        $stmt = $this->pdo->query('SELECT * FROM users ORDER BY created_at DESC');
-        $rows = false === $stmt ? [] : $stmt->fetchAll();
+        $stmt = Statement::query($this->pdo, 'SELECT * FROM users ORDER BY created_at DESC');
+        $rows = $stmt->fetchAll();
         $users = [];
 
         foreach ($rows as $row) {
@@ -68,7 +69,7 @@ final readonly class UserRepository
      */
     public function update(string $id, string $name, string $email, bool $isActive): void
     {
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'UPDATE users SET name = :name, email = :email, is_active = :active, updated_at = CURRENT_TIMESTAMP WHERE id = :id',
         );
         $stmt->execute([
@@ -89,13 +90,13 @@ final readonly class UserRepository
 
         $uow = new UnitOfWork($this->pdo);
         $uow->transaction(function (\PDO $pdo) use ($id, $email): void {
-            $pdo->prepare('DELETE FROM user_roles WHERE user_id = :id')->execute([':id' => $id]);
+            Statement::prepare($pdo, 'DELETE FROM user_roles WHERE user_id = :id')->execute([':id' => $id]);
             if ('' !== $email) {
-                $pdo->prepare('DELETE FROM password_reset_tokens WHERE email = :email')->execute([':email' => $email]);
+                Statement::prepare($pdo, 'DELETE FROM password_reset_tokens WHERE email = :email')->execute([':email' => $email]);
             }
-            $pdo->prepare('DELETE FROM remember_tokens WHERE user_id = :id')->execute([':id' => $id]);
-            $pdo->prepare('DELETE FROM sessions WHERE user_id = :id')->execute([':id' => $id]);
-            $pdo->prepare('DELETE FROM users WHERE id = :id')->execute([':id' => $id]);
+            Statement::prepare($pdo, 'DELETE FROM remember_tokens WHERE user_id = :id')->execute([':id' => $id]);
+            Statement::prepare($pdo, 'DELETE FROM sessions WHERE user_id = :id')->execute([':id' => $id]);
+            Statement::prepare($pdo, 'DELETE FROM users WHERE id = :id')->execute([':id' => $id]);
         });
     }
 
@@ -104,14 +105,14 @@ final readonly class UserRepository
      */
     public function removeRole(string $userId, string $roleId): void
     {
-        $this->pdo->prepare(
+        Statement::prepare($this->pdo,
             'DELETE FROM user_roles WHERE user_id = :uid AND role_id = :rid',
         )->execute([':uid' => $userId, ':rid' => $roleId]);
     }
 
     public function emailExists(string $email): bool
     {
-        $stmt = $this->pdo->prepare('SELECT 1 FROM users WHERE email = :email COLLATE NOCASE LIMIT 1');
+        $stmt = Statement::prepare($this->pdo, 'SELECT 1 FROM users WHERE email = :email COLLATE NOCASE LIMIT 1');
         $stmt->execute([':email' => $email]);
 
         return false !== $stmt->fetch();
@@ -131,7 +132,7 @@ final readonly class UserRepository
         $password = is_string($data['password'] ?? null) ? $data['password'] : '';
         $avatar = is_string($data['avatar'] ?? null) ? $data['avatar'] : null;
 
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'INSERT INTO users (id, name, email, password, avatar, is_active, created_at, updated_at)
              VALUES (:id, :name, :email, :password, :avatar, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
         );
@@ -154,7 +155,7 @@ final readonly class UserRepository
      */
     public function assignRole(string $userId, string $roleId): void
     {
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'INSERT OR IGNORE INTO user_roles (user_id, role_id, created_at) VALUES (:uid, :rid, CURRENT_TIMESTAMP)',
         );
         $stmt->execute([':uid' => $userId, ':rid' => $roleId]);
@@ -165,22 +166,22 @@ final readonly class UserRepository
      */
     public function updateAvatar(string $userId, ?string $avatar): void
     {
-        $this->pdo->prepare(
+        Statement::prepare($this->pdo,
             'UPDATE users SET avatar = :avatar, updated_at = CURRENT_TIMESTAMP WHERE id = :id',
         )->execute([':avatar' => $avatar, ':id' => $userId]);
     }
 
     public function updateLastLogin(string $userId, string $ip): void
     {
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'UPDATE users SET last_login_at = CURRENT_TIMESTAMP, last_login_ip = :ip WHERE id = :id',
         );
         $stmt->execute([':ip' => $ip, ':id' => $userId]);
     }
 
-    public function updatePassword(string $userId, string $hashedPassword): void
+    public function updatePassword(string $userId, #[\SensitiveParameter] string $hashedPassword): void
     {
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'UPDATE users SET password = :password, updated_at = CURRENT_TIMESTAMP WHERE id = :id',
         );
         $stmt->execute([':password' => $hashedPassword, ':id' => $userId]);
@@ -196,7 +197,7 @@ final readonly class UserRepository
         $user = User::fromRow($row);
 
         // Roles
-        $roleStmt = $this->pdo->prepare(
+        $roleStmt = Statement::prepare($this->pdo,
             'SELECT r.name FROM roles r
              INNER JOIN user_roles ur ON ur.role_id = r.id
              WHERE ur.user_id = :id ORDER BY r.name',
@@ -205,7 +206,7 @@ final readonly class UserRepository
         $roles = array_map(static fn ($r): string => (string) $r['name'], $roleStmt->fetchAll());
 
         // Permissions (via roles)
-        $permStmt = $this->pdo->prepare(
+        $permStmt = Statement::prepare($this->pdo,
             'SELECT DISTINCT p.name FROM permissions p
              INNER JOIN role_permissions rp ON rp.permission_id = p.id
              INNER JOIN user_roles ur ON ur.role_id = rp.role_id

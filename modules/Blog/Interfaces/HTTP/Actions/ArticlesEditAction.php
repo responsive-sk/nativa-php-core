@@ -359,7 +359,7 @@ final class ArticlesEditAction
 
     private function resolveLocale(Request $request): string
     {
-        $localeRaw = is_string($request->query('locale')) ? $request->query('locale') : 'sk';
+        $localeRaw = $request->queryString('locale', 'sk');
 
         return AdminLocale::canonical($localeRaw);
     }

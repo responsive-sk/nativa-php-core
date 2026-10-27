@@ -7,6 +7,7 @@ namespace Modules\Settings\Infrastructure\Persistence\Migrations;
 use Modules\Core\Infrastructure\Attributes\AsMigrator;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Core\Interfaces\CLI\MigratorInterface;
+use Modules\Settings\Infrastructure\Persistence\Statement;
 
 /**
  * Settings Database Migrator — creates the complete config.db schema.
@@ -141,10 +142,7 @@ final readonly class SettingsDatabaseMigrator implements MigratorInterface
      */
     private function addColumnIfMissing(string $table, string $column, string $definition): void
     {
-        $stmt = $this->pdo->query("PRAGMA table_info({$table})");
-        if (false === $stmt) {
-            return;
-        }
+        $stmt = Statement::query($this->pdo, "PRAGMA table_info({$table})");
         $rows = $stmt->fetchAll();
 
         foreach ($rows as $row) {
@@ -182,7 +180,7 @@ final readonly class SettingsDatabaseMigrator implements MigratorInterface
         ];
 
         $inserted = 0;
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'INSERT OR IGNORE INTO settings (id, setting_key, setting_value, value_type, group_name, is_public, created_at, updated_at)
              VALUES (:id, :key, :value, :type, :group, :public, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
         );
@@ -211,8 +209,8 @@ final readonly class SettingsDatabaseMigrator implements MigratorInterface
     private function seedDefaultMenu(): int
     {
         $inserted = 0;
-        $existsStmt = $this->pdo->prepare('SELECT 1 FROM menu_items WHERE label = :label AND location = :loc LIMIT 1');
-        $stmt = $this->pdo->prepare(
+        $existsStmt = Statement::prepare($this->pdo, 'SELECT 1 FROM menu_items WHERE label = :label AND location = :loc LIMIT 1');
+        $stmt = Statement::prepare($this->pdo,
             'INSERT INTO menu_items (id, label, href, sort_order, location, icon, is_active, created_at, updated_at)
              VALUES (:id, :label, :href, :sort, :loc, :icon, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
         );
@@ -259,13 +257,9 @@ final readonly class SettingsDatabaseMigrator implements MigratorInterface
      */
     private function nestChildrenUnderArticles(): void
     {
-        $stmt = $this->pdo->query(
+        $stmt = Statement::query($this->pdo,
             "SELECT id FROM menu_items WHERE label = 'Blog' AND location = 'admin' AND parent_item_id IS NULL LIMIT 1",
         );
-
-        if (false === $stmt) {
-            return;
-        }
 
         $blogId = $stmt->fetchColumn();
 
@@ -273,7 +267,7 @@ final readonly class SettingsDatabaseMigrator implements MigratorInterface
             return;
         }
 
-        $nestStmt = $this->pdo->prepare(
+        $nestStmt = Statement::prepare($this->pdo,
             'UPDATE menu_items SET parent_item_id = :parent, updated_at = CURRENT_TIMESTAMP
              WHERE label = :label AND location = :loc AND parent_item_id IS NULL',
         );

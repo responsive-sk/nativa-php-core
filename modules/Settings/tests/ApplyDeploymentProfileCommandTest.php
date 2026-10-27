@@ -7,6 +7,7 @@ namespace Modules\Settings\Tests;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Core\Interfaces\HTTP\ThemeResolver;
 use Modules\Settings\Infrastructure\Persistence\Migrations\SettingsDatabaseMigrator;
+use Modules\Settings\Infrastructure\Persistence\Statement;
 use Modules\Settings\Interfaces\CLI\Command\ApplyDeploymentProfileCommand;
 use PDO;
 use PHPUnit\Framework\Attributes\Test;
@@ -257,7 +258,7 @@ final class ApplyDeploymentProfileCommandTest extends TestCase
      */
     private function setting(string $key): ?array
     {
-        $statement = $this->pdo->prepare('SELECT * FROM settings WHERE setting_key = :key');
+        $statement = Statement::prepare($this->pdo, 'SELECT * FROM settings WHERE setting_key = :key');
         $statement->execute([':key' => $key]);
         /** @var array<string, mixed>|false $row */
         $row = $statement->fetch();

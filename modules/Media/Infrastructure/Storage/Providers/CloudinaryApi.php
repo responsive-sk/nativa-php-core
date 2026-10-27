@@ -44,8 +44,8 @@ readonly class CloudinaryApi
      */
     public function __construct(
         private string $cloudName,
-        private string $apiKey,
-        private string $apiSecret,
+        #[\SensitiveParameter] private string $apiKey,
+        #[\SensitiveParameter] private string $apiSecret,
         private string $folder = '',
         private string $baseUrl = 'https://api.cloudinary.com',
     ) {
@@ -332,7 +332,11 @@ readonly class CloudinaryApi
     {
         return [
             'cloudName' => $this->cloudName,
+            // The redaction placeholder, not a credential: it is what the report
+            // prints so the real values never reach a log line.
+            // @mago-expect lint:no-literal-password
             'apiKey'    => '***redacted***', // audit-ok: redaction placeholder
+            // @mago-expect lint:no-literal-password
             'apiSecret' => '***redacted***', // audit-ok: redaction placeholder
             'folder'    => $this->folder,
             'baseUrl'   => $this->baseUrl,

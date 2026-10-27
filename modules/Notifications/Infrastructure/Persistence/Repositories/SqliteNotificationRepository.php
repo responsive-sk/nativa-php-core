@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Notifications\Infrastructure\Persistence\Repositories;
 
 use Modules\Notifications\Domain\Model\Notification;
+use Modules\Notifications\Infrastructure\Persistence\Statement;
 
 /**
  * SqliteNotificationRepository — the inbox table, read per notifiable.
@@ -31,7 +32,7 @@ final readonly class SqliteNotificationRepository
     {
         $data = $notification->toArray();
 
-        $stmt = $this->pdo->prepare('
+        $stmt = Statement::prepare($this->pdo, '
             INSERT INTO notifications (id, notifiable_id, kind, title, body, href, read_at, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ');
@@ -50,7 +51,7 @@ final readonly class SqliteNotificationRepository
 
     public function findById(string $id): ?Notification
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM notifications WHERE id = ?');
+        $stmt = Statement::prepare($this->pdo, 'SELECT * FROM notifications WHERE id = ?');
         $stmt->execute([$id]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
@@ -72,7 +73,7 @@ final readonly class SqliteNotificationRepository
      */
     public function forNotifiable(string $notifiableId, int $limit = 50, int $offset = 0): array
     {
-        $stmt = $this->pdo->prepare('
+        $stmt = Statement::prepare($this->pdo, '
             SELECT * FROM notifications
             WHERE notifiable_id = ?
             ORDER BY created_at DESC, rowid DESC
@@ -94,7 +95,7 @@ final readonly class SqliteNotificationRepository
 
     public function countFor(string $notifiableId): int
     {
-        $stmt = $this->pdo->prepare('SELECT COUNT(*) FROM notifications WHERE notifiable_id = ?');
+        $stmt = Statement::prepare($this->pdo, 'SELECT COUNT(*) FROM notifications WHERE notifiable_id = ?');
         $stmt->execute([$notifiableId]);
 
         return (int) $stmt->fetchColumn();
@@ -102,7 +103,7 @@ final readonly class SqliteNotificationRepository
 
     public function unreadCount(string $notifiableId): int
     {
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'SELECT COUNT(*) FROM notifications WHERE notifiable_id = ? AND read_at IS NULL',
         );
         $stmt->execute([$notifiableId]);
@@ -118,7 +119,7 @@ final readonly class SqliteNotificationRepository
      */
     public function markRead(string $id, string $notifiableId): bool
     {
-        $stmt = $this->pdo->prepare('
+        $stmt = Statement::prepare($this->pdo, '
             UPDATE notifications
             SET read_at = ?
             WHERE id = ? AND notifiable_id = ? AND read_at IS NULL
@@ -136,7 +137,7 @@ final readonly class SqliteNotificationRepository
      */
     public function markAllAsRead(string $notifiableId): int
     {
-        $stmt = $this->pdo->prepare('
+        $stmt = Statement::prepare($this->pdo, '
             UPDATE notifications
             SET read_at = ?
             WHERE notifiable_id = ? AND read_at IS NULL

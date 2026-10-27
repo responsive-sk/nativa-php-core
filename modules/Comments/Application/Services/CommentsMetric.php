@@ -13,6 +13,7 @@ use Modules\Cardboard\Domain\Contracts\MetricContract;
 use Modules\Cardboard\Infrastructure\Attributes\AsMetricProvider;
 use Modules\Cardboard\Infrastructure\Registry\CardboardRegistry;
 use Modules\Comments\Domain\Entities\Comment;
+use Modules\Comments\Infrastructure\Persistence\Statement;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 
 /**
@@ -63,12 +64,13 @@ final readonly class CommentsMetric implements MetricContract
             );
         } catch (\Throwable) {
             // Database not ready — skip silently.
+            // @mago-expect lint:no-empty-catch-clause
         }
     }
 
     private function countInPeriod(\PDO $pdo, string $interval): int
     {
-        $stmt = $pdo->prepare(
+        $stmt = Statement::prepare($pdo,
             'SELECT COUNT(*) FROM comments WHERE created_at >= datetime(\'now\', :interval)',
         );
         $stmt->execute([':interval' => $interval]);
@@ -78,7 +80,7 @@ final readonly class CommentsMetric implements MetricContract
 
     private function countBetweenPeriods(\PDO $pdo, string $fromInterval, string $toInterval): int
     {
-        $stmt = $pdo->prepare(
+        $stmt = Statement::prepare($pdo,
             'SELECT COUNT(*) FROM comments WHERE created_at >= datetime(\'now\', :from) AND created_at < datetime(\'now\', :to)',
         );
         $stmt->execute([':from' => $fromInterval, ':to' => $toInterval]);
@@ -91,7 +93,7 @@ final readonly class CommentsMetric implements MetricContract
      */
     private function countByStatus(\PDO $pdo, string $interval): array
     {
-        $stmt = $pdo->prepare(
+        $stmt = Statement::prepare($pdo,
             'SELECT status, COUNT(*) as cnt FROM comments WHERE created_at >= datetime(\'now\', :interval) GROUP BY status',
         );
         $stmt->execute([':interval' => $interval]);

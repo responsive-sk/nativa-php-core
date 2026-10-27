@@ -12,6 +12,7 @@ use Modules\Cardboard\Domain\Contracts\MetricContract;
 use Modules\Cardboard\Infrastructure\Attributes\AsMetricProvider;
 use Modules\Cardboard\Infrastructure\Registry\CardboardRegistry;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
+use Modules\Media\Infrastructure\Persistence\Statement;
 
 /**
  * MediaMetric — aggregated media uploads metric cards for the dashboard.
@@ -29,8 +30,8 @@ final readonly class MediaMetric implements MetricContract
         try {
             $pdo = DatabaseConnectionManager::instance()->connection('media');
 
-            $totalStmt = $pdo->query('SELECT COUNT(*) FROM assets');
-            $total = false !== $totalStmt ? (int) $totalStmt->fetchColumn() : 0;
+            $totalStmt = Statement::query($pdo, 'SELECT COUNT(*) FROM assets');
+            $total = (int) $totalStmt->fetchColumn();
             $newInPeriod = $this->countInPeriod($pdo, $period->sqlInterval());
             $newPreviously = $this->countBetweenPeriods(
                 $pdo,
@@ -52,12 +53,13 @@ final readonly class MediaMetric implements MetricContract
             );
         } catch (\Throwable) {
             // Database not ready — skip silently.
+            // @mago-expect lint:no-empty-catch-clause
         }
     }
 
     private function countInPeriod(\PDO $pdo, string $interval): int
     {
-        $stmt = $pdo->prepare(
+        $stmt = Statement::prepare($pdo,
             'SELECT COUNT(*) FROM assets WHERE created_at >= datetime(\'now\', :interval)',
         );
         $stmt->execute([':interval' => $interval]);
@@ -67,7 +69,7 @@ final readonly class MediaMetric implements MetricContract
 
     private function countBetweenPeriods(\PDO $pdo, string $fromInterval, string $toInterval): int
     {
-        $stmt = $pdo->prepare(
+        $stmt = Statement::prepare($pdo,
             'SELECT COUNT(*) FROM assets WHERE created_at >= datetime(\'now\', :from) AND created_at < datetime(\'now\', :to)',
         );
         $stmt->execute([':from' => $fromInterval, ':to' => $toInterval]);

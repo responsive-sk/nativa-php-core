@@ -12,6 +12,7 @@ use Modules\Core\Interfaces\HTTP\ThemeResolver;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Settings\Infrastructure\Persistence\Migrations\SettingsDatabaseMigrator;
 use Modules\Settings\Infrastructure\Persistence\Repositories\SettingsRepository;
+use Modules\Settings\Infrastructure\Persistence\Statement;
 use Modules\Settings\Interfaces\HTTP\SettingsServices;
 use Modules\Settings\Interfaces\HTTP\SettingsShellContextProvider;
 use Modules\Core\Interfaces\CLI\CliOutput;
@@ -310,7 +311,7 @@ final class SettingsShellContextProviderTest extends TestCase
     #[Test]
     public function aMissingLocaleKeyAbstains(): void
     {
-        $this->pdo->prepare('DELETE FROM settings WHERE setting_key = :key')->execute([':key' => 'locale']);
+        Statement::prepare($this->pdo, 'DELETE FROM settings WHERE setting_key = :key')->execute([':key' => 'locale']);
         SettingsServices::reset();
 
         $provider = new SettingsShellContextProvider();
@@ -348,7 +349,7 @@ final class SettingsShellContextProviderTest extends TestCase
     #[Test]
     public function aMissingThemeKeyAbstains(): void
     {
-        $this->pdo->prepare('DELETE FROM settings WHERE setting_key = :key')->execute([':key' => 'theme']);
+        Statement::prepare($this->pdo, 'DELETE FROM settings WHERE setting_key = :key')->execute([':key' => 'theme']);
         SettingsServices::reset();
 
         $this->assertNull((new SettingsShellContextProvider())->theme());
@@ -448,7 +449,7 @@ final class SettingsShellContextProviderTest extends TestCase
     private function seededPublicHrefs(): array
     {
         /** @var list<string> $hrefs */
-        $hrefs = $this->pdo->query(
+        $hrefs = Statement::query($this->pdo,
             "SELECT href FROM menu_items WHERE location IN ('header', 'footer')",
         )->fetchAll(\PDO::FETCH_COLUMN);
 
@@ -540,13 +541,13 @@ final class SettingsShellContextProviderTest extends TestCase
         $parent = null;
 
         if (null !== $parentLabel) {
-            $stmt = $this->pdo->prepare('SELECT id FROM menu_items WHERE label = :label AND location = :loc');
+            $stmt = Statement::prepare($this->pdo, 'SELECT id FROM menu_items WHERE label = :label AND location = :loc');
             $stmt->execute([':label' => $parentLabel, ':loc' => $location]);
             $parent = $stmt->fetchColumn();
             $this->assertIsString($parent, 'The parent row must exist before its child is inserted.');
         }
 
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'INSERT INTO menu_items (id, label, href, sort_order, location, icon, parent_item_id, is_active, created_at, updated_at)
              VALUES (:id, :label, :href, :sort, :loc, :icon, :parent, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
         );

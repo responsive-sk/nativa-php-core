@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Comments\Infrastructure\Persistence\Repositories;
 
 use Modules\Comments\Domain\Entities\Comment;
+use Modules\Comments\Infrastructure\Persistence\Statement;
 
 /**
  * CommentRepository — SQLite persistence for comments.
@@ -20,7 +21,7 @@ final readonly class CommentRepository
 
     public function findById(string $id): ?Comment
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM comments WHERE id = :id');
+        $stmt = Statement::prepare($this->pdo, 'SELECT * FROM comments WHERE id = :id');
         $stmt->execute(['id' => $id]);
         /** @var array<string, mixed>|false $row */
         $row = $stmt->fetch();
@@ -35,7 +36,7 @@ final readonly class CommentRepository
      */
     public function findByArticle(string $slug): array
     {
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'SELECT * FROM comments WHERE article_slug = :slug AND status = :status ORDER BY created_at ASC',
         );
         $stmt->execute(['slug' => $slug, 'status' => Comment::STATUS_APPROVED]);
@@ -50,7 +51,7 @@ final readonly class CommentRepository
      */
     public function findByStatus(string $status): array
     {
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'SELECT * FROM comments WHERE status = :status ORDER BY created_at DESC',
         );
         $stmt->execute(['status' => $status]);
@@ -65,17 +66,17 @@ final readonly class CommentRepository
      */
     public function all(): array
     {
-        $stmt = $this->pdo->query(
+        $stmt = Statement::query($this->pdo,
             'SELECT * FROM comments ORDER BY CASE status WHEN \'pending\' THEN 0 ELSE 1 END, created_at DESC',
         );
 
-        return false === $stmt ? [] : $this->hydrateAll($stmt);
+        return $this->hydrateAll($stmt);
     }
 
     public function insert(Comment $comment): void
     {
         $data = $comment->toArray();
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'INSERT INTO comments (id, article_slug, user_id, guest_name, guest_email, body, status, ip_address, created_at)
              VALUES (:id, :slug, :user_id, :guest_name, :guest_email, :body, :status, :ip, :created)',
         );
@@ -97,13 +98,13 @@ final readonly class CommentRepository
      */
     public function setStatus(string $id, string $status): void
     {
-        $stmt = $this->pdo->prepare('UPDATE comments SET status = :status WHERE id = :id');
+        $stmt = Statement::prepare($this->pdo, 'UPDATE comments SET status = :status WHERE id = :id');
         $stmt->execute(['status' => $status, 'id' => $id]);
     }
 
     public function delete(string $id): void
     {
-        $stmt = $this->pdo->prepare('DELETE FROM comments WHERE id = :id');
+        $stmt = Statement::prepare($this->pdo, 'DELETE FROM comments WHERE id = :id');
         $stmt->execute(['id' => $id]);
     }
 

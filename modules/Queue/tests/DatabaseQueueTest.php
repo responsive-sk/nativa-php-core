@@ -8,6 +8,7 @@ use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Queue\Application\Services\DatabaseQueue;
 use Modules\Queue\Application\Services\HandlerRegistry;
 use Modules\Queue\Infrastructure\Persistence\Migrations\QueueDatabaseMigrator;
+use Modules\Queue\Infrastructure\Persistence\Statement;
 use PDO;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -141,7 +142,7 @@ final class DatabaseQueueTest extends TestCase
         $this->assertSame(0, $this->countRows('jobs'));
 
         /** @var array<string, mixed>|false $failed */
-        $failed = $this->pdo->query('SELECT * FROM failed_jobs')->fetch(PDO::FETCH_ASSOC);
+        $failed = Statement::query($this->pdo, 'SELECT * FROM failed_jobs')->fetch(PDO::FETCH_ASSOC);
 
         $this->assertNotFalse($failed);
         $this->assertSame('always.fails', $failed['handler']);
@@ -184,7 +185,7 @@ final class DatabaseQueueTest extends TestCase
     private function jobRow(): array
     {
         /** @var array<string, mixed>|false $row */
-        $row = $this->pdo->query('SELECT * FROM jobs')->fetch(PDO::FETCH_ASSOC);
+        $row = Statement::query($this->pdo, 'SELECT * FROM jobs')->fetch(PDO::FETCH_ASSOC);
 
         $this->assertIsArray($row, 'expected exactly one queued job');
 
@@ -234,7 +235,7 @@ final class DatabaseQueueTest extends TestCase
         $this->assertSame(['processed' => 0, 'failed' => 1], $result);
 
         /** @var array<string, mixed>|false $failed */
-        $failed = $this->pdo->query('SELECT * FROM failed_jobs')->fetch(PDO::FETCH_ASSOC);
+        $failed = Statement::query($this->pdo, 'SELECT * FROM failed_jobs')->fetch(PDO::FETCH_ASSOC);
 
         $this->assertNotFalse($failed);
         $this->assertStringContainsString('nope.missing', (string) $failed['error']);
@@ -266,7 +267,7 @@ final class DatabaseQueueTest extends TestCase
         $this->queue->push('ok.handler');
 
         $poisonId = bin2hex(random_bytes(16));
-        $this->pdo->prepare(
+        Statement::prepare($this->pdo,
             "INSERT INTO jobs (id, queue, handler, payload, attempts, max_attempts, available_at)"
             . " VALUES (:id, 'default', 'ok.handler', '{not-json', 0, 3, '2000-01-01 00:00:00')",
         )->execute([':id' => $poisonId]);
@@ -279,7 +280,7 @@ final class DatabaseQueueTest extends TestCase
         $this->assertSame(0, $this->countRows('jobs'));
 
         /** @var array<string, mixed>|false $failed */
-        $failed = $this->pdo->query("SELECT * FROM failed_jobs WHERE id = '{$poisonId}'")->fetch(PDO::FETCH_ASSOC);
+        $failed = Statement::query($this->pdo, "SELECT * FROM failed_jobs WHERE id = '{$poisonId}'")->fetch(PDO::FETCH_ASSOC);
 
         $this->assertNotFalse($failed);
         $this->assertStringContainsString('Corrupt payload', (string) $failed['error']);
@@ -354,7 +355,7 @@ final class DatabaseQueueTest extends TestCase
 
     private function park(string $id, string $failedAtOffset): void
     {
-        $this->pdo->prepare(
+        Statement::prepare($this->pdo,
             "INSERT INTO failed_jobs (id, queue, handler, payload, attempts, failed_at, error)"
             . " VALUES (:id, 'default', 'probe.handler', '{}', 3, datetime('now', :offset), 'probe')",
         )->execute([':id' => $id, ':offset' => $failedAtOffset]);
@@ -362,6 +363,6 @@ final class DatabaseQueueTest extends TestCase
 
     private function countRows(string $table): int
     {
-        return (int) $this->pdo->query("SELECT COUNT(*) FROM {$table}")->fetchColumn();
+        return (int) Statement::query($this->pdo, "SELECT COUNT(*) FROM {$table}")->fetchColumn();
     }
 }

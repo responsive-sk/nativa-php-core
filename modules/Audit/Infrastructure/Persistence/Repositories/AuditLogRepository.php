@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Audit\Infrastructure\Persistence\Repositories;
 
 use Modules\Audit\Domain\Entities\AuditEntry;
+use Modules\Audit\Infrastructure\Persistence\Statement;
 
 /**
  * AuditLogRepository — append-only persistence for audit_log.
@@ -26,7 +27,7 @@ final readonly class AuditLogRepository
     public function insert(AuditEntry $entry): void
     {
         $data = $entry->toArray();
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'INSERT INTO audit_log (id, actor_user_id, actor_name, action, target, detail, ip_address, created_at)
              VALUES (:id, :actor_user_id, :actor_name, :action, :target, :detail, :ip_address, :created_at)',
         );
@@ -53,7 +54,7 @@ final readonly class AuditLogRepository
      */
     public function recent(int $limit): array
     {
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'SELECT * FROM audit_log ORDER BY created_at DESC, rowid DESC LIMIT :limit',
         );
         $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
@@ -73,8 +74,8 @@ final readonly class AuditLogRepository
      */
     public function count(): int
     {
-        $stmt = $this->pdo->query('SELECT COUNT(*) FROM audit_log');
+        $stmt = Statement::query($this->pdo, 'SELECT COUNT(*) FROM audit_log');
 
-        return false === $stmt ? 0 : (int) $stmt->fetchColumn();
+        return (int) $stmt->fetchColumn();
     }
 }

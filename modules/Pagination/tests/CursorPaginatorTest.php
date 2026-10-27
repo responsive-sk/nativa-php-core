@@ -23,6 +23,21 @@ use PHPUnit\Framework\TestCase;
  */
 final class CursorPaginatorTest extends TestCase
 {
+    /**
+     * `modules/` is the committed catalogue, not the installed slice: a fresh
+     * clone has no `src/Modules/Pagination`, so the class this file names is
+     * not autoloadable there. Every other module test skips in that shape, and
+     * the `Modules` CI job installs the catalogue and runs this file for real.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        if (!is_dir(APP_BASE_PATH . '/src/Modules/Pagination')) {
+            $this->markTestSkipped('Pagination is not installed.');
+        }
+    }
+
     #[Test]
     public function aFetchWithoutTheExtraRowIsTheLastPage(): void
     {

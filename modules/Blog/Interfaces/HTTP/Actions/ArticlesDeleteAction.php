@@ -30,7 +30,7 @@ final class ArticlesDeleteAction
     public function handle(Request $request): Response
     {
         $slug = (string) ($request->routeParam('slug') ?? '');
-        $localeRaw = is_string($request->query('locale')) ? $request->query('locale') : 'sk';
+        $localeRaw = $request->queryString('locale', 'sk');
         $localeParam = AdminLocale::raw($localeRaw);
         $locale = AdminLocale::canonical($localeRaw);
 

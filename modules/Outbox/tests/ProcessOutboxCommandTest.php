@@ -9,9 +9,9 @@ use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Outbox\Domain\Model\OutboxMessage;
 use Modules\Outbox\Infrastructure\Persistence\Migrations\OutboxDatabaseMigrator;
+use Modules\Outbox\Infrastructure\Persistence\Statement;
 use Modules\Outbox\Interfaces\CLI\Command\ProcessOutboxCommand;
 use Modules\Outbox\Interfaces\HTTP\OutboxServices;
-use PDO;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -177,7 +177,8 @@ final class ProcessOutboxCommandTest extends TestCase
      */
     private function seedProcessed(string $processedAt): void
     {
-        $statement = DatabaseConnectionManager::instance()->connection('outbox')->prepare(
+        $statement = Statement::prepare(
+            DatabaseConnectionManager::instance()->connection('outbox'),
             'INSERT INTO outbox_messages (id, event_type, event_payload, status, attempts, max_attempts, processed_at, created_at)'
             . ' VALUES (:id, :type, :payload, \'processed\', 1, 5, :processed, :processed)',
         );

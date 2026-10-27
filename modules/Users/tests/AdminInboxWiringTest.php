@@ -18,6 +18,7 @@ use Modules\Users\Application\Services\NotificationPayload;
 use Modules\Users\Infrastructure\Persistence\Migrations\UsersDatabaseMigrator;
 use Modules\Users\Infrastructure\Persistence\Repositories\RoleRepository;
 use Modules\Users\Infrastructure\Persistence\Repositories\UserRepository;
+use Modules\Users\Infrastructure\Persistence\Statement;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -223,7 +224,7 @@ final class AdminInboxWiringTest extends TestCase
         $writerRole = $roles->ensureRole('role-writer', 'writer', 'Moderator');
         $markAccess = $roles->ensurePermission('perm-mark', Permissions::MARK_ACCESS, 'Open the panel', 'panel');
 
-        $pdo->prepare('INSERT OR IGNORE INTO role_permissions (role_id, permission_id) VALUES (?, ?)')
+        Statement::prepare($pdo, 'INSERT OR IGNORE INTO role_permissions (role_id, permission_id) VALUES (?, ?)')
             ->execute([$writerRole, $markAccess]);
 
         foreach ([
@@ -244,7 +245,7 @@ final class AdminInboxWiringTest extends TestCase
         $this->users->assignRole('user-writer', $writerRole);
         $this->users->assignRole('user-disabled', $adminRole);
 
-        $pdo->prepare('UPDATE users SET is_active = 0 WHERE id = ?')->execute(['user-disabled']);
+        Statement::prepare($pdo, 'UPDATE users SET is_active = 0 WHERE id = ?')->execute(['user-disabled']);
     }
 
     private function recorder(bool $accepts = true): object

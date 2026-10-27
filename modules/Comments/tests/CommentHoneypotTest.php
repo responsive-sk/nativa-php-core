@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Comments\Tests;
 
 use Modules\Comments\Infrastructure\Persistence\Migrations\CommentsDatabaseMigrator;
+use Modules\Comments\Infrastructure\Persistence\Statement;
 use Modules\Comments\Interfaces\HTTP\Actions\CommentSubmitAction;
 use Modules\Comments\Interfaces\HTTP\CommentSection;
 use Modules\Comments\Interfaces\HTTP\CommentsServices;
@@ -154,8 +155,10 @@ final class CommentHoneypotTest extends TestCase
         self::assertSame('/blog/hello-world#comments', $response->getHeader('Location'));
         self::assertSame(1, $this->commentCount(), 'a clean submission must still reach the moderation queue');
 
-        $status = DatabaseConnectionManager::instance()->connection('comments')
-            ->query('SELECT status FROM comments')->fetchColumn();
+        $status = Statement::query(
+            DatabaseConnectionManager::instance()->connection('comments'),
+            'SELECT status FROM comments',
+        )->fetchColumn();
 
         self::assertSame('pending', $status, 'new comments are always pending — nothing is public until moderated');
     }
@@ -203,8 +206,10 @@ final class CommentHoneypotTest extends TestCase
 
     private function commentCount(): int
     {
-        return (int) DatabaseConnectionManager::instance()->connection('comments')
-            ->query('SELECT COUNT(*) FROM comments')->fetchColumn();
+        return (int) Statement::query(
+            DatabaseConnectionManager::instance()->connection('comments'),
+            'SELECT COUNT(*) FROM comments',
+        )->fetchColumn();
     }
 
     /**

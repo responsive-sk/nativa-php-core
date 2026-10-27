@@ -17,6 +17,7 @@ use Modules\Users\Infrastructure\Mail\NullPasswordResetMailer;
 use Modules\Users\Infrastructure\Mail\PasswordResetMailerFactory;
 use Modules\Users\Infrastructure\Persistence\Migrations\UsersDatabaseMigrator;
 use Modules\Users\Infrastructure\Persistence\Repositories\UserRepository;
+use Modules\Users\Infrastructure\Persistence\Statement;
 use Modules\Users\Interfaces\HTTP\Actions\Auth\PasswordResetRequestAction;
 use Modules\Users\Interfaces\HTTP\AuthServices;
 use PDO;
@@ -285,7 +286,7 @@ final class PasswordResetMailerTest extends TestCase
             /** @var list<array{email: string, token: string, ttl: int}> */
             public array $calls = [];
 
-            public function sendResetLink(string $email, string $token, int $ttlHours): void
+            public function sendResetLink(string $email, #[\SensitiveParameter] string $token, int $ttlHours): void
             {
                 $this->calls[] = ['email' => $email, 'token' => $token, 'ttl' => $ttlHours];
             }
@@ -308,7 +309,7 @@ final class PasswordResetMailerTest extends TestCase
         self::assertSame(1, $recorder->calls[0]['ttl']);
         self::assertMatchesRegularExpression('/^[0-9a-f]{64}$/', $recorder->calls[0]['token']);
 
-        $stored = $pdo->query('SELECT token FROM password_reset_tokens')->fetchColumn();
+        $stored = Statement::query($pdo, 'SELECT token FROM password_reset_tokens')->fetchColumn();
 
         self::assertSame(
             hash('sha256', $recorder->calls[0]['token']),
@@ -350,6 +351,9 @@ final class PasswordResetMailerTest extends TestCase
 
         $logFile = $this->tmpDir . '/factory.log';
         $logBefore = ini_get('error_log');
+        // Routing `error_log()` to a probe file is the only way to assert what
+        // the factory wrote; the previous value is restored in the finally.
+        // @mago-expect lint:no-ini-set
         ini_set('error_log', $logFile);
 
         try {
@@ -363,6 +367,7 @@ final class PasswordResetMailerTest extends TestCase
                 'a half-configured deployment gets the null mailer, not a broken link',
             );
         } finally {
+            // @mago-expect lint:no-ini-set
             ini_set('error_log', false === $logBefore ? '' : $logBefore);
         }
 
@@ -463,8 +468,10 @@ final class PasswordResetMailerTest extends TestCase
 
     private function resetTokenCount(): int
     {
-        return (int) DatabaseConnectionManager::instance()->connection('users')
-            ->query('SELECT COUNT(*) FROM password_reset_tokens')->fetchColumn();
+        return (int) Statement::query(
+            DatabaseConnectionManager::instance()->connection('users'),
+            'SELECT COUNT(*) FROM password_reset_tokens',
+        )->fetchColumn();
     }
 
     /**

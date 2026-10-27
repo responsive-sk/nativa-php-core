@@ -159,9 +159,9 @@ final class CoverGenerator
 
     /**
      * Deterministic snippet extraction (the evidence chain):
-     * front-matter `cover-code:` override → first ```diff block → first
-     * fenced block → null (pattern-only cover). Lines are hard-truncated to
-     * MAX_LINE_CHARS; rendering escapes them.
+     * front-matter `cover-code:` override → the first diff-fenced code block →
+     * the first fenced block → null (pattern-only cover). Lines are
+     * hard-truncated to MAX_LINE_CHARS; rendering escapes them.
      *
      * @param array<string, mixed> $meta
      *

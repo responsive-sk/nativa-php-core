@@ -16,6 +16,9 @@ namespace Modules\Questions\Domain\Entities;
  * rendered publicly until moderated. Guests carry a display name; signed-in
  * users carry author_user_id instead (guest_email is never stored).
  */
+// One question row is one entity: splitting the columns into a second object
+// would move the moderation state away from the text it moderates.
+// @mago-expect lint:too-many-properties
 final class Question
 {
     public const string STATUS_PENDING = 'pending';

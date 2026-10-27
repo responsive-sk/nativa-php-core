@@ -20,6 +20,8 @@ Plan: `.ai-factory/plans/feature-evaluate-mago-toolchain.md`.
 
 Measured 2026-10-22 with `mago 1.58.2` on PHP 8.5.11, over `mago.toml`'s scope
 (123 `.php` files + `bin/cms`, the same nine paths `phpstan.neon` analyses).
+The scope grew on 2026-10-27 — the table below is the kernel-scope measurement;
+[Scope extension](#scope-extension-2026-10-27) records what changed.
 
 ## Verdict at a glance
 
@@ -36,11 +38,191 @@ Reproduce any line with:
 make mago-spike                     # all four tools, always exit 0
 make mago-spike MAGO_ARGS=--strict  # exit non-zero when a tool does
 make mago-guard                     # the gate: guard only, --strict
+make mago-modules                   # the catalogue alone, always exit 0
 bin/build/mago-spike.sh --only=analyze
 ```
 
 Reports land in `storage/cache/mago-spike/` (gitignored): `<tool>.txt` and
 `summary.tsv`.
+
+### Scope extension, 2026-10-27
+
+`mago.toml`'s `[source] paths` now also name `modules/`: 360 `.php` files of
+committed catalogue, the module code `bin/cms module:add` copies into an
+install. It is shipped code, and `phpstan.neon` deliberately leaves it out (its
+`paths` comment says why), so lint and analyze are the only two tools that read
+it. Same binary, same PHP:
+
+| tool | kernel scope (2026-10-22) | + `modules/` (2026-10-27) |
+|---|---|---|
+| `mago lint` | 0 findings (22 resolved) | **0 findings** — `make mago-lint` stays green over the wider scope |
+| `mago analyze` | 367 issues / 184 errors | 1191 issues / 463 errors |
+| `mago format` | 124 of 124 files would change | unchanged — `[formatter] excludes` keeps the catalogue out |
+| `mago guard` | 0 issues | unchanged — the perimeter constrains the kernel, so `[guard] excludes` keeps the catalogue out |
+
+The analyzer delta is signal, not a configuration artifact: the same classes the
+kernel already reports show up in the catalogue — `prepare()` returning
+`PDOStatement|false` and called through with `->execute()`
+(`invalid-method-access`), and `APP_BASE_PATH` undefined in module tests that do
+not bootstrap `src/init.php` (`non-existent-constant`). The first of those was
+fixed the same day — 313 findings to 0, see
+[the `prepare()` class](#the-prepare-class-313-to-0). The rest stay unfixed for the
+reason the catalogue exists: it is re-imported on every module update, so a local
+fix becomes a merge conflict. `phpstan` remains the analysis gate; the analyzer
+count is a reading, and a bigger reading is the point of widening it.
+
+The linter is the one place the extension had to be qualified: `modules/Themes/`
+is a byte-verified mirror of `nativa-themes` (`bin/build/sync-themes.sh --check`
+fails on a changed byte) whose 5 `readable-literal` findings can only be fixed
+upstream, so `[linter] excludes` names that one directory. Everything else under
+`modules/` is lint-covered with no exception.
+
+### The catalogue's own reading
+
+A number for the catalogue alone is a different question from a number for the
+tree, so it has its own entry point: `make mago-modules`, i.e.
+`bin/build/mago-spike.sh --scope=modules`. It passes `modules` as a positional
+path — Mago then uses that *instead of* `[source] paths` — runs lint and analyze
+only, writes `storage/cache/mago-spike/modules/`, and exits 0 whatever it finds.
+
+The point is that it cannot become a gate by accident: `--max-issues` is refused
+with it (a ceiling is a gate, and the gates over this tree are already
+`mago-lint` and `mago-guard`), and `--strict` only warns that it is ignored. It
+is also not pushed through the same scope: the run is `lint` + `analyze`, because
+`format` is excluded from the catalogue by `mago.toml` and guard's perimeter is a
+statement about the kernel, not about what sits on the other side of it.
+
+Measured 2026-10-27: **0 lint findings, 884 analyzer issues (348 errors)**.
+The full-scope run above reports the same 884 at `modules/` locations, so this
+reading measures the catalogue itself rather than the distance between two
+scopes.
+
+CI publishes the reading on every push and pull request: the `module-quality`
+job runs `bin/build/mago-modules-report.sh`, which executes the same scope and
+renders its `summary.tsv` into the run summary — the analyzer's own breakdown
+line included, quoted rather than recomputed. That job carries
+`continue-on-error`, and the script exits 0 on every path ("no verified binary"
+is reported as such, not as zero findings), so the count is published and
+nothing is enforced. A job that could redden a pull request would be the gate
+this section says it is not.
+
+### The `prepare()` class, 313 to 0
+
+Anchored at 1384 issues / 802 errors, the catalogue's largest single class was
+`invalid-method-access`: 313 findings, every one of them the same defect read
+aloud. `PDO::prepare()` and `PDO::query()` are declared as returning
+`PDOStatement|false`, so `$stmt = $pdo->prepare(...); $stmt->execute();` is
+typed as a method call on `false`. The connections here run with
+`PDO::ERRMODE_EXCEPTION`, which makes the `false` branch unreachable at runtime —
+but the type says otherwise, and the count said 313.
+
+The fix is a checked `prepare()`/`query()` per module:
+`Modules\<Name>\Infrastructure\Persistence\Statement`, with two static methods
+that raise `RuntimeException` instead of returning `false`. Thirteen modules had
+SQL call sites, so there are thirteen copies — deliberately, because the
+catalogue's modules are independent slices that may not import each other, and a
+single helper in `Modules\Database` would drag a new file into the kernel slice
+that `extract-kernel --check` expects to match upstream.
+`tests/Architecture/StatementHelperContractTest.php` holds the thirteen to one
+shape: same bytes once the namespace line is normalised, the namespace derived
+from the directory, both guards intact, and the module set a ratchet.
+
+Every one of the 313 call sites now goes through it: 177 were `$this->pdo->…`,
+43 a local `$pdo`, 12 a `DatabaseConnectionManager::instance()->connection(…)`
+receiver, and the rest chained across lines. The helper also made 20 guards
+dead — `false === $stmt ? [] : $stmt->fetchAll()`, `if (false === $stmt) {
+return []; }` — which were removed in the same pass rather than left as code that
+can no longer run.
+
+Measured after: **`invalid-method-access` 313 → 0**, and `possibly-false-argument`
+15 → 1 as a side effect. The catalogue reading above moved from 1384 issues /
+802 errors to **1057 / 475**, and the whole-tree count from 1691 / 917 to
+**1364 / 590**. `make mago-lint` stayed at 0 findings, `make lint` covered the new
+files, and the module suite ran against an installed catalogue: 539 tests, 2266
+assertions, 0 failures (800 tests / 6210 assertions for the whole suite). The
+remaining findings are the classes this pass did not touch —
+`mixed-assignment`, `mixed-argument`, `non-existent-constant` in module tests —
+and they stay a reading.
+
+### `mixed-assignment`, a partial cut: 291 to 245
+
+`prepare()` was one defect wearing 313 hats. `mixed-assignment` is not: the 291
+findings measured before this pass were assignments of `mixed`, and they come
+from different places — 98 read `Request::body()` or `query()`, 79 an index into
+an untyped array, 20 a `json_decode()`, and the rest a `foreach` over an
+`array<string, mixed>` or a `get_object_vars()` of an object.
+
+One of those had a single cause and a single fix. `body()` and `query()` return
+`mixed`, so the idiom every module action used —
+
+    is_string($request->body('name')) ? $request->body('name') : ''
+
+— read the field twice, and the second read was still `mixed`: narrowing one call
+says nothing about the next. `Request` now carries `queryString()` and
+`bodyString()` beside the `header(): ?string` it already had, each reading once
+and declaring the default for a value that is not a string; 71 call sites in 21
+action classes use them.
+
+Measured after: **`mixed-assignment` 291 → 245**, and `mixed-argument` 197 → 73
+as a knock-on — a value typed `string` no longer arrives `mixed` at a typed
+parameter. The catalogue reading moved from 1057 issues / 475 errors to
+**884 / 348**, and the whole tree from 1364 / 590 to **1191 / 463**.
+`make mago-lint` stayed at 0, the suite passed (539 module tests, 804 for the
+whole tree), and `make extract-check` reports OK because `Request.php` is now a
+recorded divergence in `bin/build/kernel-divergence.txt`.
+
+The remaining 245 are the hard half. An index into `array<string, mixed>` is
+`mixed` because the array was never typed — the fix is a shape on the producer
+(`@return array{meta?: array{image?: string}}`), not a cast at the consumer, and
+a wrong shape there is worse than the warning; `json_decode()` needs the same
+decision once per site. That is a design pass through the module boundaries, not
+a mechanical one, which is why it is left on the table rather than half-done.
+
+### Which gates see the catalogue, and which see the kernel
+
+Extending `mago.toml` gave the catalogue one gate (`make mago-lint`) and no
+more. Every other gate in this tree was written for the kernel, and no single
+config states the split, so it is stated once, here.
+
+Static analysis and style:
+
+| gate | kernel (`src/`, `tests/`, `bin/`, `public/`) | `modules/` | what it checks |
+|---|---|---|---|
+| `composer phpstan` (level 9) | yes | **no** | types, over the kernel slice — `phpstan.neon` says why the catalogue is out |
+| `composer cs-fix-dry` | yes | **no** | style; restyling the catalogue makes the next re-import a merge |
+| `composer rector-dry` | yes | **no** | language-upgrade rewrites, same scope and same reason |
+| `make mago-lint` (ceiling 0) | yes | **yes**, minus `modules/Themes/` | the curated rule set, count gated |
+| `make mago-guard` | yes | **no** | kernel→module edges; the catalogue is the other side of the rule |
+| `make lint` (`php -l`) | yes | yes | parse errors over every tracked `.php` file outside `vendor/` — and only parse errors |
+| `make themes-check` | — | `modules/Themes/` only | byte identity with `nativa-themes`, not quality |
+| `make mago-modules` | — | yes, as a reading | informational: 0 findings, 884 analyzer issues, never fails |
+
+Runtime, model and supply chain:
+
+| gate | kernel | `modules/` | what it checks |
+|---|---|---|---|
+| `composer test` | `tests/` | `modules/*/tests/` | the `modules` suite skips a test whose module is not installed; CI's `modules` job installs the catalogue first, so there it runs |
+| `make modules-install` | — | every entry | closure order, refuses a cycle, installs into `src/Modules/` |
+| `make admin-smoke` | — | installed catalogue | boots the panel on temp DBs and walks the admin flows over HTTP |
+| `make lekalo-check` | the model under `lekalo/` | per-module model | the MODEL, not the PHP: `adapters 0` means nothing compares the two |
+| `make security-audit` | tracked files | tracked files | no tracked `.env`, no secret-shaped literal |
+| `make dist-check` | build + smoke | **no** | a clean clone builds and boots; the catalogue ships only with `build-dist.sh --with-catalogue` |
+
+One consequence follows, and it is not readable off any single config:
+
+- **The catalogue is not held to the kernel's analysis standard.** `phpstan`
+  level 9 stops at the kernel, and `mago analyze` has no ceiling — the
+  catalogue's 348 analyzer errors are a reading. `make mago-lint` (zero
+  findings, everything under `modules/` except the theme mirror) is the only
+  *static-analysis* gate over it; behaviour is covered by the module tests CI
+  installs the catalogue to run, and the theme mirror by `themes-check`'s byte
+  compare. `make lint` reaches the catalogue too, but `php -l` only answers
+  "does this parse".
+
+The split is held by three files that have to move together: `phpstan.neon`
+(the kernel paths), `mago.toml` (those paths plus `modules`, and the per-tool
+exclusions above), and `tests/Architecture/MagoScopeContractTest.php`, which
+fails when the first two disagree.
 
 ## Mago and Lekalo are different layers
 
@@ -52,7 +234,7 @@ short version; the Lekalo side is documented in `docs/modules.md`.
 | | Lekalo | Mago |
 |---|---|---|
 | what it is | a semantic model OF the system, written in `lekalo/` and locked by `lekalo.lock` | a PHP toolchain OVER the source: linter, analyzer, formatter, architectural guard |
-| reads | entities, commands, effects, queries, events, policies, endpoints, scenarios | the PHP files in `mago.toml`'s scope (the same paths as `phpstan.neon`) |
+| reads | entities, commands, effects, queries, events, policies, endpoints, scenarios | the PHP files in `mago.toml`'s scope (the paths `phpstan.neon` analyses, plus the `modules/` catalogue) |
 | answers | "is the model well-formed and self-consistent?" — every `ref` resolves, grammar holds, ids are unique, CLI contract versions match | "what does the code do that a written rule forbids?" — kernel→module edges, 570 lint findings at the default preset, formatting |
 | blind spot | the model↔code gap: `lekalo.lock` reports `adapters 0`, no PHP adapter, so a stale or even FALSE description still validates | intent: a name heuristic cannot tell a CSRF fixture from a password — 2 curated `@mago-expect` sites, reviewed |
 | the gate here | `make lekalo-check` = lock check + whole model + every module separately; CI job `Lint + PHPStan + Lekalo model` | `make mago-guard` (empty report) and `make mago-lint` (zero findings); CI jobs `kernel-dependency` and `curated-lint` |
@@ -328,12 +510,12 @@ Delete, in one commit:
 
 - `mago.toml` — the artifact already excludes it, so nothing a deployment runs
   depends on it
-- `bin/build/mago-spike.sh`
+- `bin/build/mago-spike.sh` and `bin/build/mago-modules-report.sh`
 - `tests/Architecture/MagoScopeContractTest.php`
-- the `mago-spike`, `mago-guard` and `mago-lint` targets and the `##@ Mago`
-  block in `Makefile`
-- the `kernel-dependency` and `curated-lint` CI jobs and their entries in the
-  workflow header
+- the `mago-spike`, `mago-modules`, `mago-guard` and `mago-lint` targets and
+  the `##@ Mago` block in `Makefile`
+- the `kernel-dependency`, `curated-lint` and `module-quality` CI jobs and
+  their entries in the workflow header
 - this document
 - `storage/cache/mago-spike/` (gitignored, so `rm -rf` locally)
 

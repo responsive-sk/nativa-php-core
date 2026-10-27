@@ -39,10 +39,10 @@ final class ArticlesIndexAction
         // Allowlisted at the boundary: the raw param is re-emitted into
         // row/filter/create URLs, so anything outside sk/en would reflect
         // verbatim (AdminLocale::raw() is the identity on legit values).
-        $localeRaw = AdminLocale::raw(is_string($request->query('locale')) ? $request->query('locale') : 'sk');
+        $localeRaw = AdminLocale::raw($request->queryString('locale', 'sk'));
         $locale = AdminLocale::canonical($localeRaw);
-        $search = is_string($request->query('q')) ? $request->query('q') : '';
-        $periodRaw = is_string($request->query('period')) ? $request->query('period') : '';
+        $search = $request->queryString('q');
+        $periodRaw = $request->queryString('period');
         $period = isset(self::PERIOD_DAYS[$periodRaw]) ? $periodRaw : '';
         $pageParam = $request->query('page');
         $page = max(1, (int) (is_string($pageParam) ? $pageParam : '1'));
@@ -74,7 +74,7 @@ final class ArticlesIndexAction
         }
 
         $toast = '';
-        $toastMessage = is_string($request->query('toast')) ? $request->query('toast') : '';
+        $toastMessage = $request->queryString('toast');
         if ('' !== $toastMessage) {
             $toast = AdminLayout::toast(urldecode($toastMessage));
         }
@@ -175,8 +175,8 @@ final class ArticlesIndexAction
      */
     private function sortState(Request $request): array
     {
-        $sortRaw = is_string($request->query('sort')) ? $request->query('sort') : '';
-        $dirRaw = is_string($request->query('dir')) ? $request->query('dir') : '';
+        $sortRaw = $request->queryString('sort');
+        $dirRaw = $request->queryString('dir');
         $sort = in_array($sortRaw, self::SORT_COLUMNS, true) ? $sortRaw : 'date';
         $dir = in_array($dirRaw, ['asc', 'desc'], true) ? $dirRaw : 'desc';
 

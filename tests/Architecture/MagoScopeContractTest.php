@@ -8,23 +8,30 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * MagoScopeContractTest — the spike measures the tree the gates measure.
+ * MagoScopeContractTest — the spike measures the tree the gates measure, plus
+ * the catalogue nothing else reads.
  *
  * `mago.toml` exists so `make mago-spike` reports numbers about *this* tree, and
  * a spike is only worth reading while its scope is the real one. The failure
  * this test exists for is quiet: drop `tests/` from `mago.toml` and every count
- * in `docs/mago-evaluation.md` improves — the analyzer's 189 errors, the
- * linter's 22 findings, the formatter's 123 files — while the report keeps
- * describing a narrower tree than `phpstan`, `php-cs-fixer` and `rector` gate.
- * Nothing else in the repo would notice.
+ * in `docs/mago-evaluation.md` improves — the analyzer's 1691 issues, the
+ * formatter's 139 files — while the report keeps describing a narrower tree
+ * than the one the catalogue and the kernel actually are. Nothing else in the
+ * repo would notice.
  *
  * So the contract is stated once and checked in both directions:
  *
- *  - `mago.toml`'s `[source] paths` must equal `phpstan.neon`'s `paths`, entry
+ *  - `mago.toml`'s `[source] paths` must cover `phpstan.neon`'s `paths`, entry
  *    for entry. `phpstan.neon` is the reference because it is the scope the
- *    project already defends in prose (installed module slices out, catalogue
- *    out, kernel tooling in) — a second list that agrees with it is a copy of a
- *    decision, not a new one.
+ *    project already defends in prose (installed module slices out, kernel
+ *    tooling in) — a second list that agrees with it is a copy of a decision,
+ *    not a new one.
+ *  - the only path `mago.toml` may add is `modules`, the committed catalogue.
+ *    That is a deliberate asymmetry, not an oversight: `phpstan.neon` leaves the
+ *    catalogue out because it is a verbatim import from the showcase and its
+ *    verification is `module:show`'s closure scan, while the linter and the
+ *    analyzer read it because a finding there is a finding in code an install
+ *    runs. Widening `phpstan` is a different decision with a different cost.
  *  - every path must exist, because a typo in `mago.toml` is silently an empty
  *    scope: Mago reports nothing about a directory it cannot find.
  *  - `php-version` must track the floor in `composer.json` (`^8.5` → `8.5`), so
@@ -44,7 +51,7 @@ use PHPUnit\Framework\TestCase;
 final class MagoScopeContractTest extends TestCase
 {
     #[Test]
-    public function magoScopeEqualsThePhpstanScope(): void
+    public function magoScopeCoversEveryPhpstanPath(): void
     {
         $phpstan = $this->phpstanPaths();
         $mago = $this->magoPaths();
@@ -56,9 +63,25 @@ final class MagoScopeContractTest extends TestCase
         sort($mago);
 
         self::assertSame(
-            $phpstan,
-            $mago,
-            'mago.toml [source] paths must equal phpstan.neon paths. A spike over a different tree reports different numbers for the same code.',
+            [],
+            array_values(array_diff($phpstan, $mago)),
+            'mago.toml [source] paths must include every phpstan.neon path. A spike over a narrower tree reports better numbers for the same code.',
+        );
+    }
+
+    #[Test]
+    public function magoScopeWidensThePhpstanScopeOnlyByTheCatalogue(): void
+    {
+        $phpstan = $this->phpstanPaths();
+        $mago = $this->magoPaths();
+
+        $extra = array_values(array_diff($mago, $phpstan));
+        sort($extra);
+
+        self::assertSame(
+            ['modules'],
+            $extra,
+            'mago.toml may only add the committed catalogue (`modules`) to phpstan\'s scope. Any other extra path is a scope decision nobody made.',
         );
     }
 

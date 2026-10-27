@@ -48,7 +48,7 @@ final readonly class MediaCloudinaryImportAction
 
     public function handle(Request $request): Response
     {
-        $folder = MediaService::normalizeFolder(is_string($request->body('folder')) ? $request->body('folder') : '');
+        $folder = MediaService::normalizeFolder($request->bodyString('folder'));
         $back = $this->url('media.cloudinary') . ('' !== $folder ? '?' . http_build_query(['folder' => $folder]) : '');
 
         $api = $this->api ?? MediaServices::cloudinaryApi();

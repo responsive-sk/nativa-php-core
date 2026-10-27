@@ -135,7 +135,7 @@ final readonly class EnsureAdminCommand
     /**
      * @return array{state: string, changes: list<string>, role: string}
      */
-    private function ensure(\PDO $pdo, string $email, string $password, string $name): array
+    private function ensure(\PDO $pdo, string $email, #[\SensitiveParameter] string $password, string $name): array
     {
         $role = 'admin';
         $roles = new RoleRepository($pdo);
@@ -228,6 +228,9 @@ final readonly class EnsureAdminCommand
     {
         $values = [
             'email'    => 'admin@example.test',
+            // The documented development default (see the class docblock), not a
+            // credential a deployment is expected to keep.
+            // @mago-expect lint:no-literal-password
             'password' => 'admin1234', // audit-ok: documented development default, see the class docblock
             'name'     => 'Admin',
         ];

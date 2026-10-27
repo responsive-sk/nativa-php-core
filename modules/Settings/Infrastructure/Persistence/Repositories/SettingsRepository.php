@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Modules\Settings\Infrastructure\Persistence\Repositories;
 
+use Modules\Settings\Infrastructure\Persistence\Statement;
+
 /**
  * SettingsRepository — key/value settings + design tokens persistence.
  */
@@ -41,7 +43,7 @@ final class SettingsRepository
             $stored = '';
         }
 
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'INSERT INTO settings (id, setting_key, setting_value, value_type, group_name, is_public, created_at, updated_at)
              VALUES (:id, :key, :value, :type, :group, :public, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
              ON CONFLICT(setting_key) DO UPDATE SET
@@ -65,7 +67,7 @@ final class SettingsRepository
 
     public function delete(string $key): void
     {
-        $this->pdo->prepare('DELETE FROM settings WHERE setting_key = :key')->execute([':key' => $key]);
+        Statement::prepare($this->pdo, 'DELETE FROM settings WHERE setting_key = :key')->execute([':key' => $key]);
         $this->cache = null;
     }
 
@@ -80,8 +82,8 @@ final class SettingsRepository
             return $this->cache;
         }
 
-        $stmt = $this->pdo->query('SELECT setting_key, setting_value, value_type FROM settings');
-        $rows = false === $stmt ? [] : $stmt->fetchAll();
+        $stmt = Statement::query($this->pdo, 'SELECT setting_key, setting_value, value_type FROM settings');
+        $rows = $stmt->fetchAll();
         $result = [];
 
         foreach ($rows as $row) {
@@ -98,10 +100,10 @@ final class SettingsRepository
      */
     public function publicOnly(): array
     {
-        $stmt = $this->pdo->query(
+        $stmt = Statement::query($this->pdo,
             'SELECT setting_key, setting_value, value_type FROM settings WHERE is_public = 1',
         );
-        $rows = false === $stmt ? [] : $stmt->fetchAll();
+        $rows = $stmt->fetchAll();
         $result = [];
 
         foreach ($rows as $row) {
@@ -118,8 +120,8 @@ final class SettingsRepository
      */
     public function designTokens(): array
     {
-        $stmt = $this->pdo->query('SELECT token_key, token_value FROM design_tokens');
-        $rows = false === $stmt ? [] : $stmt->fetchAll();
+        $stmt = Statement::query($this->pdo, 'SELECT token_key, token_value FROM design_tokens');
+        $rows = $stmt->fetchAll();
         $result = [];
 
         foreach ($rows as $row) {
@@ -138,7 +140,7 @@ final class SettingsRepository
         $encoded = json_encode($value);
         $json = false === $encoded ? '""' : $encoded;
 
-        $this->pdo->prepare(
+        Statement::prepare($this->pdo,
             'INSERT INTO design_tokens (id, token_key, token_value, created_at, updated_at)
              VALUES (:id, :key, :value, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
              ON CONFLICT(token_key) DO UPDATE SET token_value = excluded.token_value, updated_at = CURRENT_TIMESTAMP',

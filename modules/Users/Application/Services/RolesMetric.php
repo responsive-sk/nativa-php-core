@@ -36,6 +36,7 @@ final readonly class RolesMetric implements MetricContract
             $this->registerPermissionsCard($repo);
         } catch (\Throwable) {
             // Database not ready — skip silently.
+            // @mago-expect lint:no-empty-catch-clause
         }
     }
 

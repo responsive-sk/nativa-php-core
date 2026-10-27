@@ -9,6 +9,7 @@ use Modules\Security\Application\Services\RateLimiter;
 use Modules\Security\Domain\PasswordPolicy;
 use Modules\Users\Application\Services\AuthService;
 use Modules\Users\Infrastructure\Persistence\Repositories\UserRepository;
+use Modules\Users\Infrastructure\Persistence\Statement;
 use PDO;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -167,7 +168,7 @@ final class AuthServiceTest extends TestCase
         $this->assertGreaterThan(0, $refused['retryAfter'], 'a refusal must carry the remaining window');
         $this->assertSame(
             5,
-            (int) $this->pdo->query('SELECT COUNT(*) FROM users')->fetchColumn(),
+            (int) Statement::query($this->pdo, 'SELECT COUNT(*) FROM users')->fetchColumn(),
             'the refused registration must not have created an account',
         );
     }
@@ -185,6 +186,6 @@ final class AuthServiceTest extends TestCase
             $this->assertSame([], $result['errors'], 'registration ' . $i . ' from the local address must be accepted');
         }
 
-        $this->assertSame(6, (int) $this->pdo->query('SELECT COUNT(*) FROM users')->fetchColumn());
+        $this->assertSame(6, (int) Statement::query($this->pdo, 'SELECT COUNT(*) FROM users')->fetchColumn());
     }
 }

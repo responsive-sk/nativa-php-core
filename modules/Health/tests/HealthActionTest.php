@@ -136,7 +136,7 @@ final class HealthActionTest extends TestCase
                     name: 'filesystem',
                     status: HealthStatus::Healthy,
                     message: '1 storage directories accepted a write',
-                    duration: 8.20159912109375e-5,
+                    duration: 8.201_599_121_093_75e-5,
                 );
             }
         };
@@ -213,7 +213,7 @@ final class HealthActionTest extends TestCase
                     name: $this->name,
                     status: $this->status,
                     message: $this->message,
-                    duration: 0.00025,
+                    duration: 0.000_25,
                 );
             }
         };

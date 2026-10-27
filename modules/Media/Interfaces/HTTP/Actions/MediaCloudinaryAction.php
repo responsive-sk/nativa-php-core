@@ -56,8 +56,8 @@ final readonly class MediaCloudinaryAction
             ));
         }
 
-        $requested = MediaService::normalizeFolder(is_string($request->query('folder')) ? $request->query('folder') : '');
-        $cursor = is_string($request->query('c')) ? $request->query('c') : '';
+        $requested = MediaService::normalizeFolder($request->queryString('folder'));
+        $cursor = $request->queryString('c');
         $landing = MediaService::normalizeFolder($api->folder());
 
         // The whole account is a DELIBERATE request (`?root=1`), never what
@@ -135,6 +135,7 @@ final readonly class MediaCloudinaryAction
                 return $vars;
             } catch (\RuntimeException) {
                 // Fall through: the landing folder failed too.
+                // @mago-expect lint:no-empty-catch-clause
             }
         }
 

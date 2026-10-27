@@ -151,12 +151,16 @@ final class MailerTest extends TestCase
 
         $logFile = $this->tmpDir . '/factory.log';
         $before = ini_get('error_log');
+        // Routing `error_log()` to a probe file is the only way to assert what
+        // the factory wrote; the previous value is restored in the finally.
+        // @mago-expect lint:no-ini-set
         ini_set('error_log', $logFile);
 
         try {
             self::assertNull(MailerFactory::http());
             self::assertInstanceOf(NullMailer::class, MailerFactory::create());
         } finally {
+            // @mago-expect lint:no-ini-set
             ini_set('error_log', false === $before ? '' : $before);
         }
 
@@ -234,6 +238,9 @@ final class MailerTest extends TestCase
     {
         $logFile = $this->tmpDir . '/transport.log';
         $before = ini_get('error_log');
+        // Routing `error_log()` to a probe file is the only way to assert what
+        // the factory wrote; the previous value is restored in the finally.
+        // @mago-expect lint:no-ini-set
         ini_set('error_log', $logFile);
 
         try {
@@ -248,6 +255,7 @@ final class MailerTest extends TestCase
 
             self::assertFalse($mailer->send('owner@example.test', 'Hello', 'Body'));
         } finally {
+            // @mago-expect lint:no-ini-set
             ini_set('error_log', false === $before ? '' : $before);
         }
 

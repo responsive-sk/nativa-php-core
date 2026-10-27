@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Outbox\Infrastructure\Persistence\Repositories;
 
 use Modules\Outbox\Domain\Model\OutboxMessage;
+use Modules\Outbox\Infrastructure\Persistence\Statement;
 
 /**
  * SqliteOutboxRepository — SQLite implementation of the outbox repository.
@@ -20,7 +21,7 @@ final readonly class SqliteOutboxRepository
     {
         $data = $message->toArray();
 
-        $stmt = $this->pdo->prepare('
+        $stmt = Statement::prepare($this->pdo, '
             INSERT INTO outbox_messages (id, event_type, event_payload, metadata, status, attempts, max_attempts, last_attempt_at, processed_at, error_message, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ');
@@ -42,7 +43,7 @@ final readonly class SqliteOutboxRepository
 
     public function findById(string $id): ?OutboxMessage
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM outbox_messages WHERE id = ?');
+        $stmt = Statement::prepare($this->pdo, 'SELECT * FROM outbox_messages WHERE id = ?');
         $stmt->execute([$id]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
@@ -59,7 +60,7 @@ final readonly class SqliteOutboxRepository
      */
     public function findPending(int $limit = 100): array
     {
-        $stmt = $this->pdo->prepare('
+        $stmt = Statement::prepare($this->pdo, '
             SELECT * FROM outbox_messages
             WHERE status = ? AND attempts < max_attempts
             ORDER BY created_at ASC
@@ -82,7 +83,7 @@ final readonly class SqliteOutboxRepository
     {
         $data = $message->toArray();
 
-        $stmt = $this->pdo->prepare('
+        $stmt = Statement::prepare($this->pdo, '
             UPDATE outbox_messages
             SET status = ?, attempts = ?, last_attempt_at = ?, processed_at = ?, error_message = ?
             WHERE id = ?
@@ -100,7 +101,7 @@ final readonly class SqliteOutboxRepository
 
     public function delete(string $id): void
     {
-        $stmt = $this->pdo->prepare('DELETE FROM outbox_messages WHERE id = ?');
+        $stmt = Statement::prepare($this->pdo, 'DELETE FROM outbox_messages WHERE id = ?');
         $stmt->execute([$id]);
     }
 
@@ -112,12 +113,12 @@ final readonly class SqliteOutboxRepository
     public function listMessages(?string $status = null, int $limit = 100): array
     {
         if (null === $status) {
-            $stmt = $this->pdo->prepare(
+            $stmt = Statement::prepare($this->pdo,
                 'SELECT * FROM outbox_messages ORDER BY created_at DESC, rowid DESC LIMIT ?',
             );
             $stmt->execute([max(1, $limit)]);
         } else {
-            $stmt = $this->pdo->prepare(
+            $stmt = Statement::prepare($this->pdo,
                 'SELECT * FROM outbox_messages WHERE status = ? ORDER BY created_at DESC, rowid DESC LIMIT ?',
             );
             $stmt->execute([$status, max(1, $limit)]);
@@ -138,10 +139,10 @@ final readonly class SqliteOutboxRepository
     public function countTotal(?string $status = null): int
     {
         if (null === $status) {
-            return (int) $this->pdo->query('SELECT COUNT(*) FROM outbox_messages')->fetchColumn();
+            return (int) Statement::query($this->pdo, 'SELECT COUNT(*) FROM outbox_messages')->fetchColumn();
         }
 
-        $stmt = $this->pdo->prepare('SELECT COUNT(*) FROM outbox_messages WHERE status = ?');
+        $stmt = Statement::prepare($this->pdo, 'SELECT COUNT(*) FROM outbox_messages WHERE status = ?');
         $stmt->execute([$status]);
 
         return (int) $stmt->fetchColumn();
@@ -149,7 +150,7 @@ final readonly class SqliteOutboxRepository
 
     public function cleanProcessed(string $interval = '7 days'): int
     {
-        $stmt = $this->pdo->prepare('
+        $stmt = Statement::prepare($this->pdo, '
             DELETE FROM outbox_messages
             WHERE status = ? AND processed_at < datetime(\'now\', \'-\' || ?)
         ');
@@ -163,7 +164,7 @@ final readonly class SqliteOutboxRepository
      */
     public function countByStatus(): array
     {
-        $stmt = $this->pdo->query('
+        $stmt = Statement::query($this->pdo, '
             SELECT
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending,
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as processing,
@@ -172,9 +173,6 @@ final readonly class SqliteOutboxRepository
             FROM outbox_messages
         ');
 
-        if (false === $stmt) {
-            return ['pending' => 0, 'processing' => 0, 'processed' => 0, 'failed' => 0];
-        }
 
         $stmt->execute(['pending', 'processing', 'processed', 'failed']);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);

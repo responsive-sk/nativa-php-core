@@ -12,6 +12,7 @@ use Modules\Security\Domain\LocalClient;
 use Modules\Security\Domain\PasswordPolicy;
 use Modules\Users\Domain\Entities\User;
 use Modules\Users\Infrastructure\Persistence\Repositories\UserRepository;
+use Modules\Users\Infrastructure\Persistence\Statement;
 use Modules\Validation\Validation\Validator;
 
 /**
@@ -21,7 +22,7 @@ final readonly class AuthService
 {
     private const string REMEMBER_COOKIE = 'nativa_remember';
 
-    private const int REMEMBER_TTL = 2592000; // 30 days
+    private const int REMEMBER_TTL = 2_592_000; // 30 days
 
     // Idle session timeout (audit D-1) — a session is invalidated after this
     // many seconds without activity, even when the absolute lifetime (GC)
@@ -74,7 +75,13 @@ final readonly class AuthService
      *
      * @return array{user: User, errors: list<string>, retryAfter: int}
      */
-    public function register(string $name, string $email, string $password, string $confirmation, string $ip): array
+    public function register(
+        string $name,
+        string $email,
+        #[\SensitiveParameter] string $password,
+        #[\SensitiveParameter] string $confirmation,
+        string $ip,
+    ): array
     {
         $name = trim($name);
         $email = strtolower(trim($email));
@@ -169,7 +176,7 @@ final readonly class AuthService
      *
      * @return array{user: ?User, errors: list<string>}
      */
-    public function login(string $email, string $password, bool $remember, string $ip): array
+    public function login(string $email, #[\SensitiveParameter] string $password, bool $remember, string $ip): array
     {
         $email = strtolower(trim($email));
         $key = 'login:' . $ip . ':' . $email;
@@ -257,7 +264,7 @@ final readonly class AuthService
             setcookie(
                 $sessionName,
                 '',
-                ['expires' => time() - 42000, 'path' => $params['path'], 'domain' => $params['domain'], 'secure' => $params['secure'], 'httponly' => $params['httponly']],
+                ['expires' => time() - 42_000, 'path' => $params['path'], 'domain' => $params['domain'], 'secure' => $params['secure'], 'httponly' => $params['httponly']],
             );
         }
         session_destroy();
@@ -265,11 +272,11 @@ final readonly class AuthService
         // Clear remember-me cookie + DB token
         $token = $_COOKIE[self::REMEMBER_COOKIE] ?? null;
         if (is_string($token) && '' !== $token) {
-            $stmt = $this->pdo->prepare('DELETE FROM remember_tokens WHERE token_hash = :hash');
+            $stmt = Statement::prepare($this->pdo, 'DELETE FROM remember_tokens WHERE token_hash = :hash');
             $stmt->execute([':hash' => hash('sha256', $token)]);
         }
         // Same Secure flag as when the cookie was issued — audit finding F-5.
-        setcookie(self::REMEMBER_COOKIE, '', ['expires' => time() - 42000, 'path' => '/', 'domain' => '', 'secure' => Env::isHttps(), 'httponly' => true]);
+        setcookie(self::REMEMBER_COOKIE, '', ['expires' => time() - 42_000, 'path' => '/', 'domain' => '', 'secure' => Env::isHttps(), 'httponly' => true]);
     }
 
     /**
@@ -284,7 +291,7 @@ final readonly class AuthService
         }
 
         $hash = hash('sha256', $token);
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'SELECT user_id FROM remember_tokens WHERE token_hash = :hash AND expires_at > CURRENT_TIMESTAMP LIMIT 1',
         );
         $stmt->execute([':hash' => $hash]);
@@ -384,7 +391,7 @@ final readonly class AuthService
     {
         $token = bin2hex(random_bytes(32));
 
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'INSERT INTO remember_tokens (id, user_id, token_hash, expires_at, created_at)
              VALUES (:id, :uid, :hash, datetime(\'now\', \'+30 days\'), CURRENT_TIMESTAMP)',
         );
@@ -419,7 +426,7 @@ final readonly class AuthService
     private function persistSessionRow(string $userId, ?string $ip, ?string $userAgent): void
     {
         try {
-            $stmt = $this->pdo->prepare(
+            $stmt = Statement::prepare($this->pdo,
                 'INSERT INTO sessions (id, user_id, ip_address, user_agent, last_activity)
                  VALUES (:id, :uid, :ip, :ua, datetime(\'now\'))
                  ON CONFLICT(id) DO UPDATE SET
@@ -434,6 +441,7 @@ final readonly class AuthService
             ]);
         } catch (\Throwable) {
             // Best-effort — the table may not exist on a fresh DB yet.
+            // @mago-expect lint:no-empty-catch-clause
         }
     }
 
@@ -443,10 +451,11 @@ final readonly class AuthService
     private function deleteSessionRow(): void
     {
         try {
-            $stmt = $this->pdo->prepare('DELETE FROM sessions WHERE id = :id');
+            $stmt = Statement::prepare($this->pdo, 'DELETE FROM sessions WHERE id = :id');
             $stmt->execute([':id' => self::dbSessionKey()]);
         } catch (\Throwable) {
             // Best-effort.
+            // @mago-expect lint:no-empty-catch-clause
         }
     }
 

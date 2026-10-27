@@ -65,7 +65,7 @@ final class TagsManageAction
 
     public function create(Request $request): Response
     {
-        $tag = is_string($request->body('tag')) ? trim($request->body('tag')) : '';
+        $tag = trim($request->bodyString('tag'));
 
         if ('' === $tag) {
             return Response::redirect($this->url('tags.manage'));
@@ -88,8 +88,8 @@ final class TagsManageAction
 
     public function rename(Request $request): Response
     {
-        $oldTag = is_string($request->body('old_tag')) ? trim($request->body('old_tag')) : '';
-        $newTag = is_string($request->body('new_tag')) ? trim($request->body('new_tag')) : '';
+        $oldTag = trim($request->bodyString('old_tag'));
+        $newTag = trim($request->bodyString('new_tag'));
 
         if ('' === $oldTag || '' === $newTag || $oldTag === $newTag) {
             return Response::redirect($this->url('tags.manage'));
@@ -110,7 +110,7 @@ final class TagsManageAction
 
     public function delete(Request $request): Response
     {
-        $tag = is_string($request->body('tag')) ? trim($request->body('tag')) : '';
+        $tag = trim($request->bodyString('tag'));
 
         if ('' === $tag) {
             return Response::redirect($this->url('tags.manage'));
@@ -134,7 +134,7 @@ final class TagsManageAction
      */
     private function toast(Request $request): string
     {
-        $message = is_string($request->query('toast')) ? $request->query('toast') : '';
+        $message = $request->queryString('toast');
 
         return '' !== $message ? AdminLayout::toast(urldecode($message)) : '';
     }

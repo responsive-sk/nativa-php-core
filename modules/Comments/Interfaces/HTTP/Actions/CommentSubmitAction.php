@@ -12,7 +12,6 @@ use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Queue\Interfaces\HTTP\QueueServices;
 use Modules\Users\Application\Services\AdminNotificationHandler;
 use Modules\Users\Application\Services\NotificationPayload;
-use Modules\Users\Application\Services\NotifyJobs;
 
 /**
  * Comment submit action — POST /blog/{slug}/comments.

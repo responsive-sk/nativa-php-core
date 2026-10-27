@@ -6,6 +6,7 @@ namespace Modules\Comments\Tests;
 
 use Modules\Comments\Application\Services\CommentsMetric;
 use Modules\Comments\Domain\Entities\Comment;
+use Modules\Comments\Infrastructure\Persistence\Statement;
 use Modules\Comments\Interfaces\HTTP\Actions\CommentsAdminAction;
 use PDO;
 use PHPUnit\Framework\Attributes\Test;
@@ -68,7 +69,7 @@ final class CommentsStatusVocabularyTest extends TestCase
         $pdo = new PDO('sqlite::memory:');
         $pdo->exec('CREATE TABLE comments (status TEXT NOT NULL, created_at TEXT NOT NULL)');
 
-        $insert = $pdo->prepare('INSERT INTO comments (status, created_at) VALUES (:status, datetime(\'now\'))');
+        $insert = Statement::prepare($pdo, 'INSERT INTO comments (status, created_at) VALUES (:status, datetime(\'now\'))');
 
         foreach ([
             Comment::STATUS_PENDING,

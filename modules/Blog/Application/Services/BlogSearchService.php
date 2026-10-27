@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Blog\Application\Services;
 
 use Modules\Blog\Domain\Entities\SearchResult;
+use Modules\Blog\Infrastructure\Persistence\Statement;
 use Modules\Core\Application\Services\MarkdownRenderer;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 
@@ -67,12 +68,15 @@ final readonly class BlogSearchService
             return new SearchResult([], 0, 1, $perPage);
         }
 
+        // The name is the search domain's, not a credential's: an FTS token is
+        // a word the reader typed, split out of the query it arrived in.
+        // @mago-expect lint:sensitive-parameter
         $match = implode(' ', array_map(static fn (string $token): string => '"' . $token . '"*', $tokens));
 
         $pdo = $this->index($locale);
 
         // Count total matching rows
-        $countStmt = $pdo->prepare(
+        $countStmt = Statement::prepare($pdo,
             'SELECT COUNT(*) as cnt FROM blog_fts WHERE blog_fts MATCH :match',
         );
         $countStmt->execute([':match' => $match]);
@@ -84,7 +88,7 @@ final readonly class BlogSearchService
         $page = max(1, min($page, $totalPages));
         $offset = ($page - 1) * $perPage;
 
-        $stmt = $pdo->prepare(
+        $stmt = Statement::prepare($pdo,
             'SELECT slug FROM blog_fts WHERE blog_fts MATCH :match ORDER BY bm25(blog_fts, 10.0, 5.0, 3.0, 1.0) LIMIT :limit OFFSET :offset',
         );
         $stmt->bindValue(':match', $match, \PDO::PARAM_STR);
@@ -158,7 +162,7 @@ final readonly class BlogSearchService
         // tags/body get the 10.0/5.0/3.0/1.0 weights in the ORDER BY below.
         $pdo->exec('CREATE VIRTUAL TABLE blog_fts USING fts5(title, excerpt, tags, body, slug UNINDEXED)');
 
-        $insert = $pdo->prepare('INSERT INTO blog_fts (slug, title, excerpt, tags, body) VALUES (?, ?, ?, ?, ?)');
+        $insert = Statement::prepare($pdo, 'INSERT INTO blog_fts (slug, title, excerpt, tags, body) VALUES (?, ?, ?, ?, ?)');
         $renderer = new MarkdownRenderer();
 
         foreach ($this->articles->all($locale) as $article) {

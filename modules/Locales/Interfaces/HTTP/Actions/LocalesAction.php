@@ -460,6 +460,7 @@ final class LocalesAction
                 $imported++;
             } catch (\InvalidArgumentException) {
                 // Skip invalid keys/locales silently — counted via redirect total.
+                // @mago-expect lint:no-empty-catch-clause
             }
         }
 

@@ -65,7 +65,7 @@ final readonly class HttpPasswordResetMailer implements PasswordResetMailer
      */
     public function __construct(
         private string $endpoint,
-        private string $apiKey,
+        #[\SensitiveParameter] private string $apiKey,
         private string $from,
         private string $baseUrl,
         private ?\Closure $sender = null,
@@ -79,12 +79,12 @@ final readonly class HttpPasswordResetMailer implements PasswordResetMailer
      * contract, and a link built from a Host header the caller controls is a
      * phishing surface, not a convenience.
      */
-    public function resetLink(string $token): string
+    public function resetLink(#[\SensitiveParameter] string $token): string
     {
         return rtrim($this->baseUrl, '/') . self::RESET_PATH . '?token=' . $token;
     }
 
-    public function sendResetLink(string $email, string $token, int $ttlHours): void
+    public function sendResetLink(string $email, #[\SensitiveParameter] string $token, int $ttlHours): void
     {
         $payload = json_encode([
             'from'    => $this->from,

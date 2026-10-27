@@ -150,6 +150,9 @@ final class RuleParser
         return $parsed;
     }
 
+    // A rule-DSL token (`required|email` split at `:`), not a credential — the
+    // name is the parser's vocabulary, not a secret.
+    // @mago-expect lint:sensitive-parameter
     private function parseToken(string $token): RuleInterface
     {
         $token = trim($token);
@@ -189,6 +192,10 @@ final class RuleParser
             throw new InvalidArgumentException("Rule {$name} needs a numeric argument, got: {$args}");
         }
 
+        // The addition IS the cast: a numeric string becomes the `int|float`
+        // this method promises, while `(float)` would turn `max:5` into 5.0 in
+        // every rule message that prints it.
+        // @mago-expect lint:no-redundant-math
         return $args + 0;
     }
 

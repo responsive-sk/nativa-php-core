@@ -9,7 +9,6 @@ use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Queue\Infrastructure\Persistence\Migrations\QueueDatabaseMigrator;
 use Modules\Queue\Interfaces\HTTP\QueueServices;
-use PDO;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 

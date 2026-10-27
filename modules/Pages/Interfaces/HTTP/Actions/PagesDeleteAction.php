@@ -28,7 +28,7 @@ final class PagesDeleteAction
     public function handle(Request $request): Response
     {
         $slug = (string) ($request->routeParam('slug') ?? '');
-        $localeParam = is_string($request->query('locale')) ? $request->query('locale') : 'sk';
+        $localeParam = $request->queryString('locale', 'sk');
         $locale = ContentServices::mapper()->code($localeParam);
 
         if ('' !== $slug) {

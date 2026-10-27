@@ -34,7 +34,7 @@ identical:
 | declarations (rule 3, excluding the gates) | 238 | 238 |
 | distinct names (rule 3) | 202 | 202 |
 | values with 2+ names (rule 1) | **2** | **2** |
-| literal places (rule 2) | 496 | 496 |
+| literal places (rule 2) | 385 | 385 |
 
 ## Rule 1 — one string value, one name · absolute, 2 exemptions
 
@@ -89,26 +89,31 @@ writes down WHY.
 The list also fails **when an entry stops applying** — an exemption that
 stopped being a collision is rot in the ledger, not a free pass.
 
-## Rule 2 — a value spelled as a literal outside its owner · ratchet at 496
+## Rule 2 — a value spelled as a literal outside its owner · ratchet at 385
 
-A **ceiling, not a list.** 52 owned string values appear as raw literals on
-**496 places** across the tree. An absolute rule here would need 496
-exemptions, and a gate with 496 exemptions is not a gate:
+A **ceiling, not a list.** 50 owned string values appear as raw literals on
+**385 places** across the tree (measured 2026-10-27). An absolute rule here
+would need 385 exemptions, and a gate with 385 exemptions is not a gate:
 
 | filter | values | places | files |
 |---|---|---|---|
-| none | 52 | 496 | 112 |
-| length ≥ 4 | 48 | 444 | 108 |
-| length ≥ 8 | 26 | 87 | 42 |
-| contains `/` or `.` | 13 | 70 | 25 |
-| contains `/` | 4 | 41 | 19 |
+| none | 50 | 385 | 115 |
+| length ≥ 4 | 50 | 385 | 115 |
+| length ≥ 8 | 35 | 171 | 81 |
+| contains `/` or `.` | 11 | 57 | 27 |
+| contains `/` | 4 | 45 | 21 |
 
-The leading values are `'sk_SK'` (132 places), `'en'` (48) and `'home'` (36).
-A locale code, the default language and a route slug — data that appears in seed
-data, translations and URL tests, and belongs in no constant anyone would name.
-The largest single source is `Locales/…/SeedData.php` with **112 places on its
-own** — seed data is not a constant, and converting it would be worse rather
-than better.
+The `length ≥ 4` row is the `none` row today: every counted value is at least
+four characters, quotes included.
+
+The leading values are `'en'` (54 places), `'home'` (41) and `'/mark'` (30):
+a bare language code, a route slug and the panel's mount path — data that
+appears in seed data, translations and URL tests, and belongs in no constant
+anyone would name. The largest single source is `Locales/…/SeedData.php` with
+**28 places on its own** — seed data is not a constant, and converting it would
+be worse rather than better. `'sk_SK'` is no longer among them: a `xx_YY` code
+is data about a language and the ceiling skips it (`isLocaleCode()`), which is
+what took the number from 526 to 384.
 
 The ceiling moved 532 → 514 with task 2.2: reading `Question::STATUS_*` and
 `Comment::STATUS_*` in the admin actions and the comments metric retired 18
@@ -121,11 +126,22 @@ admin redirects now address routes by name, and the three that spelled the bare
 which did the same for HTML links and forms; the rest of both refactors is held
 by `AdminRouteUrlNamesTest`, which scans `href`, `action` and HTMX URLs. That is
 the only legal direction, and it moved as work rather than as an accounting
-change. The gate refuses the 497th.
+change.
+
+Then 526 → 384 with the locale decision (2026-10-27): 142 places spelled a
+`xx_YY` code, 84 of them in `Locales/…/SeedData.php`, and a locale code names a
+language rather than this tree's default — rule 2 skips it (`isLocaleCode()`)
+and those places left the count. Then 384 → 385 with the shared paginator
+(2026-10-27): `GET /mark/notifications` is the first list paged by
+`modules/Pagination`, and its one counted place is the action reading `?page=`
+off the request. That is a URL key, and no constant can absorb it without
+becoming the second name rule 1 exists to forbid — a rise of one on a new
+surface is the honest measurement, and the direction is still down. The gate
+refuses the 386th.
 
 ### Places that are counted on purpose and must stay counted
 
-Seven of the 496 are test literals that **look** like duplication and are not.
+Seven of the 385 are test literals that **look** like duplication and are not.
 They are `assertSame()` calls whose subject is the exact string that has to
 arrive in the database row:
 
@@ -146,14 +162,16 @@ They stay in the ceiling on purpose. Removing them from the count would make the
 number look better while the code gets weaker, which is the opposite of what a
 ratchet is for.
 
-### The bigger number is mostly data
+### The biggest block is still data
 
-The largest single value is `'sk_SK'` on **132** places, then `'en'` (48) and
-`'home'` (36). These are a locale code, a default language and a route slug —
-data that appears in seed data, translations and URL tests. Turning `sk_SK`
-into `LocaleService::SK_SK` would be a tautology dressed as a refactor. The
-ceiling counts them because counting them is honest; the consolidation work in
-Phase 2 does not touch them, and should not.
+The largest single value is `'en'` on **54** places, then `'home'` (41) and
+`'/mark'` (30) — 125 of the 385. A bare language code, a route slug and the
+panel's mount path: data that appears in seed data, translations and URL tests.
+Turning `en` into `LocaleService::EN` would be a tautology dressed as a
+refactor. The ceiling counts them because counting them is honest; the
+consolidation work in Phase 2 does not touch them, and should not. The 132
+places that spelled `'sk_SK'` are not counted at all, which is why this number
+fell by 141 in one edit.
 
 ## Rule 3 — the declaration count does not rise · ratchet at 238 / 202
 

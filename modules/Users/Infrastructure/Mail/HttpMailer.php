@@ -33,7 +33,7 @@ final readonly class HttpMailer implements Mailer
      */
     public function __construct(
         private string $endpoint,
-        private string $apiKey,
+        #[\SensitiveParameter] private string $apiKey,
         private string $from,
         private ?\Closure $sender = null,
     ) {

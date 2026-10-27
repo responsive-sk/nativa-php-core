@@ -12,6 +12,7 @@ use Modules\Cardboard\Domain\Contracts\MetricContract;
 use Modules\Cardboard\Infrastructure\Attributes\AsMetricProvider;
 use Modules\Cardboard\Infrastructure\Registry\CardboardRegistry;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
+use Modules\Users\Infrastructure\Persistence\Statement;
 
 /**
  * UsersMetric — aggregated user/session metric cards for the dashboard.
@@ -34,13 +35,14 @@ final readonly class UsersMetric implements MetricContract
             $this->registerSessionsCard($pdo, $period);
         } catch (\Throwable) {
             // Database not ready — skip silently.
+            // @mago-expect lint:no-empty-catch-clause
         }
     }
 
     private function registerUsersCard(\PDO $pdo, Period $period): void
     {
-        $totalStmt = $pdo->query('SELECT COUNT(*) FROM users');
-        $total = false !== $totalStmt ? (int) $totalStmt->fetchColumn() : 0;
+        $totalStmt = Statement::query($pdo, 'SELECT COUNT(*) FROM users');
+        $total = (int) $totalStmt->fetchColumn();
 
         $newInPeriod = $this->countInPeriod($pdo, 'users', 'created_at', $period->sqlInterval());
         $newPreviously = $this->countBetweenPeriods(
@@ -67,10 +69,10 @@ final readonly class UsersMetric implements MetricContract
 
     private function registerSessionsCard(\PDO $pdo, Period $period): void
     {
-        $activeStmt = $pdo->query(
+        $activeStmt = Statement::query($pdo,
             'SELECT COUNT(*) FROM sessions WHERE last_activity > datetime("now", "-30 minutes")',
         );
-        $active = false !== $activeStmt ? (int) $activeStmt->fetchColumn() : 0;
+        $active = (int) $activeStmt->fetchColumn();
 
         $newInPeriod = $this->countInPeriod($pdo, 'sessions', 'created_at', $period->sqlInterval());
         $newPreviously = $this->countBetweenPeriods(
@@ -96,7 +98,7 @@ final readonly class UsersMetric implements MetricContract
      */
     private function countInPeriod(\PDO $pdo, string $table, string $column, string $interval): int
     {
-        $stmt = $pdo->prepare(
+        $stmt = Statement::prepare($pdo,
             "SELECT COUNT(*) FROM {$table} WHERE {$column} >= datetime('now', :interval)",
         );
         $stmt->execute([':interval' => $interval]);
@@ -116,7 +118,7 @@ final readonly class UsersMetric implements MetricContract
         string $fromInterval,
         string $toInterval,
     ): int {
-        $stmt = $pdo->prepare(
+        $stmt = Statement::prepare($pdo,
             "SELECT COUNT(*) FROM {$table} WHERE {$column} >= datetime('now', :from) AND {$column} < datetime('now', :to)",
         );
         $stmt->execute([':from' => $fromInterval, ':to' => $toInterval]);

@@ -10,6 +10,7 @@ use Modules\Security\Domain\PasswordPolicy;
 use Modules\Users\Application\Services\PasswordResetService;
 use Modules\Users\Infrastructure\Mail\NullPasswordResetMailer;
 use Modules\Users\Infrastructure\Persistence\Repositories\UserRepository;
+use Modules\Users\Infrastructure\Persistence\Statement;
 use PDO;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -136,7 +137,7 @@ final class PasswordResetServiceTest extends TestCase
     public function validTokenResetsPasswordAndBurnsToken(): void
     {
         $token = bin2hex(random_bytes(32));
-        $this->pdo->prepare(
+        Statement::prepare($this->pdo,
             "INSERT INTO password_reset_tokens (id, email, token, expires_at, created_at)\n             VALUES (:id, :email, :token, datetime('now', '+1 hour'), CURRENT_TIMESTAMP)",
         )->execute([
             ':id'    => bin2hex(random_bytes(16)),

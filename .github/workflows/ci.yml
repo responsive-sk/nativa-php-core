@@ -107,6 +107,16 @@
 #                         this tree has met — `launch-editor`, through vite —
 #                         was found by a person reading (868adfd), which is
 #                         what a gate exists to stop being necessary.
+#  15. Module quality   — NOT a gate: `mago lint` + `mago analyze` over the
+#                         committed catalogue alone (`--scope=modules`), with
+#                         the counts published to the run summary. The lint
+#                         count is already gated at 0 by job 11 and the
+#                         perimeter by job 10, so what this job adds is a
+#                         number readers can see on every run — a module-quality
+#                         figure that lives only in a document goes stale the
+#                         day after it is measured. `continue-on-error`: a
+#                         publisher that can redden a pull request is a gate
+#                         wearing a different name.
 # =============================================================================
 
 name: CI
@@ -286,6 +296,11 @@ jobs:
   # CSRF fixtures). `--max-issues=0` fails the job on the first new finding, and
   # `unfulfilled-expect` counts as one, so a pragma cannot outlive its code.
   #
+  # The scope includes `modules/` — the committed catalogue `bin/cms module:add`
+  # copies into an install, which no other gate reads — except `modules/Themes/`,
+  # a byte-verified mirror of `nativa-themes` whose findings only upstream can
+  # fix (`mago.toml` [linter] excludes, and docs/mago-evaluation.md says why).
+  #
   # Same binary, same checksum, same cache key as the guard job above: no PHP
   # setup and no `composer install`, so the count is measured on the checkout a
   # deployment would get.
@@ -307,6 +322,39 @@ jobs:
 
       - name: Lint ceiling
         run: make mago-lint
+
+  # ---------------------------------------------------------------------------
+  # MODULE QUALITY — the catalogue's mago reading, published, never enforced
+  # ---------------------------------------------------------------------------
+  # `--scope=modules` answers "what does the catalogue look like?" instead of
+  # "may this merge?": lint and analyze over `modules/` only, reports under
+  # `storage/cache/mago-spike/modules/`, exit 0 whatever they find. The counts
+  # go into the run summary via `bin/build/mago-modules-report.sh`, which reads
+  # the spike's own `summary.tsv` rather than recomputing anything.
+  #
+  # No PHP setup and no `composer install`, like the two jobs above: lint and
+  # analyze are a Rust binary over `mago.toml`. `continue-on-error` is the
+  # second lock on the same door — the script already exits 0 on every path,
+  # and this keeps a future edit from turning the job into a required check.
+  # ---------------------------------------------------------------------------
+  module-quality:
+    name: Module quality (mago, published)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Cache mago
+        uses: actions/cache@v5
+        with:
+          path: storage/cache/mago-spike
+          key: mago-1.58.2-x86_64-unknown-linux-gnu
+
+      - name: Publish the catalogue's counts
+        run: bin/build/mago-modules-report.sh
 
   # ---------------------------------------------------------------------------
   # CODE STYLE — php-cs-fixer + Rector dry-runs

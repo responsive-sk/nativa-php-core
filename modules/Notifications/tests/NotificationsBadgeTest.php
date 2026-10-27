@@ -40,7 +40,7 @@ final class NotificationsBadgeTest extends TestCase
             $this->markTestSkipped('Notifications is not installed.');
         }
 
-        $this->session = $_SESSION;
+        $this->session = $_SESSION ?? [];
 
         $this->tmpDir = sys_get_temp_dir() . '/nativa-notifications-badge-' . bin2hex(random_bytes(6));
         mkdir($this->tmpDir, 0o775, true);

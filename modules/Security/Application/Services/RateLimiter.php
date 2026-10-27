@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Modules\Security\Application\Services;
 
+use Modules\Security\Infrastructure\Persistence\Statement;
+
 /**
  * RateLimiter — DB-backed atomic rate limiting.
  *
@@ -44,7 +46,7 @@ final readonly class RateLimiter
         $now = time();
         $expires = $now + $windowSeconds;
 
-        $stmt = $this->pdo->prepare(<<<'SQL'
+        $stmt = Statement::prepare($this->pdo, <<<'SQL'
                 INSERT INTO rate_limits ("key", count, expires)
                 VALUES (:key, 1, :expires)
                 ON CONFLICT("key") DO UPDATE SET
@@ -57,7 +59,7 @@ final readonly class RateLimiter
         // servers) — read the upserted count back instead. The upsert is a
         // single atomic statement, so this SELECT cannot observe a stale
         // count from a concurrent request.
-        $countStmt = $this->pdo->prepare('SELECT count FROM rate_limits WHERE "key" = :key');
+        $countStmt = Statement::prepare($this->pdo, 'SELECT count FROM rate_limits WHERE "key" = :key');
         $countStmt->execute(['key' => $key]);
         $count = (int) $countStmt->fetchColumn();
 
@@ -77,7 +79,7 @@ final readonly class RateLimiter
      */
     public function getRetryAfter(string $key): int
     {
-        $stmt = $this->pdo->prepare('SELECT expires FROM rate_limits WHERE "key" = :key');
+        $stmt = Statement::prepare($this->pdo, 'SELECT expires FROM rate_limits WHERE "key" = :key');
         $stmt->execute(['key' => $key]);
         /** @var array{expires: string}|false $row */
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
@@ -94,7 +96,7 @@ final readonly class RateLimiter
      */
     public function reset(string $key): void
     {
-        $this->pdo->prepare('DELETE FROM rate_limits WHERE "key" = :key')
+        Statement::prepare($this->pdo, 'DELETE FROM rate_limits WHERE "key" = :key')
             ->execute(['key' => $key]);
     }
 
@@ -103,7 +105,7 @@ final readonly class RateLimiter
      */
     public function recordLoginAttempt(string $email, string $ip): void
     {
-        $this->pdo->prepare('INSERT INTO login_attempts (id, email, ip_address, attempted_at) VALUES (:id, :email, :ip, :at)')
+        Statement::prepare($this->pdo, 'INSERT INTO login_attempts (id, email, ip_address, attempted_at) VALUES (:id, :email, :ip, :at)')
             ->execute([
                 'id'    => bin2hex(random_bytes(16)),
                 'email' => $email,
@@ -154,7 +156,7 @@ final readonly class RateLimiter
 
     private function tableExists(string $name): bool
     {
-        $stmt = $this->pdo->prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = :name");
+        $stmt = Statement::prepare($this->pdo, "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = :name");
         $stmt->execute(['name' => $name]);
 
         return false !== $stmt->fetchColumn();

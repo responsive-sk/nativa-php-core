@@ -35,13 +35,13 @@ final class MediaIndexAction
         $pageRaw = $request->query('page');
         $page = max(1, is_numeric($pageRaw) ? (int) $pageRaw : 1);
         $filters = self::filters();
-        $typeRaw = is_string($request->query('type')) ? $request->query('type') : '';
+        $typeRaw = $request->queryString('type');
         $type = array_key_exists($typeRaw, $filters) ? $typeRaw : '';
-        $sort = is_string($request->query('sort')) ? $request->query('sort') : 'newest';
-        $category = is_string($request->query('category')) ? $request->query('category') : '';
-        $tag = is_string($request->query('tag')) ? $request->query('tag') : '';
-        $source = self::source(is_string($request->query('source')) ? $request->query('source') : '');
-        $folder = MediaService::normalizeFolder(is_string($request->query('folder')) ? $request->query('folder') : '');
+        $sort = $request->queryString('sort', 'newest');
+        $category = $request->queryString('category');
+        $tag = $request->queryString('tag');
+        $source = self::source($request->queryString('source'));
+        $folder = MediaService::normalizeFolder($request->queryString('folder'));
 
         $service = MediaServices::media();
         $assets = $service->listWithSorting($sort, $type, $category, $tag, $page, self::PER_PAGE, $source, $folder);

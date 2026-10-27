@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Audit\Application\Services;
 
+use Modules\Audit\Infrastructure\Persistence\Statement;
 use Modules\Cardboard\Domain\Model\Card;
 use Modules\Cardboard\Domain\Model\CardLink;
 use Modules\Cardboard\Domain\Model\Charts\Bar;
@@ -54,12 +55,13 @@ final readonly class AuditMetric implements MetricContract
             );
         } catch (\Throwable) {
             // Database not ready — skip silently.
+            // @mago-expect lint:no-empty-catch-clause
         }
     }
 
     private function countInPeriod(\PDO $pdo, string $interval): int
     {
-        $stmt = $pdo->prepare(
+        $stmt = Statement::prepare($pdo,
             'SELECT COUNT(*) FROM audit_log WHERE created_at >= datetime(\'now\', :interval)',
         );
         $stmt->execute([':interval' => $interval]);
@@ -69,7 +71,7 @@ final readonly class AuditMetric implements MetricContract
 
     private function countBetweenPeriods(\PDO $pdo, string $fromInterval, string $toInterval): int
     {
-        $stmt = $pdo->prepare(
+        $stmt = Statement::prepare($pdo,
             'SELECT COUNT(*) FROM audit_log WHERE created_at >= datetime(\'now\', :from) AND created_at < datetime(\'now\', :to)',
         );
         $stmt->execute([':from' => $fromInterval, ':to' => $toInterval]);
@@ -84,7 +86,7 @@ final readonly class AuditMetric implements MetricContract
      */
     private function topActions(\PDO $pdo, string $interval): array
     {
-        $stmt = $pdo->prepare(
+        $stmt = Statement::prepare($pdo,
             'SELECT action, COUNT(*) as cnt FROM audit_log WHERE created_at >= datetime(\'now\', :interval) GROUP BY action ORDER BY cnt DESC LIMIT 5',
         );
         $stmt->execute([':interval' => $interval]);

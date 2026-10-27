@@ -418,16 +418,16 @@ final class AdminLayout
 
             return '<time datetime="' . $escaped . '">' . $mins . 'm ago</time>';
         }
-        if ($diff < 86400) {
+        if ($diff < 86_400) {
             $hours = (int) floor($diff / 3600);
 
             return '<time datetime="' . $escaped . '">' . $hours . 'h ago</time>';
         }
-        if ($diff < 172800) {
+        if ($diff < 172_800) {
             return '<time datetime="' . $escaped . '">yesterday</time>';
         }
-        if ($diff < 604800) {
-            $days = (int) floor($diff / 86400);
+        if ($diff < 604_800) {
+            $days = (int) floor($diff / 86_400);
 
             return '<time datetime="' . $escaped . '">' . $days . 'd ago</time>';
         }

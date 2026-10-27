@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Blog\Application\Services;
 
+use Modules\Blog\Infrastructure\Persistence\Statement;
 use Modules\Core\Application\Services\MarkdownRenderer;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 
@@ -116,7 +117,7 @@ final readonly class BlogAuthorResolver
     private function lookup(string $sql, array $params): ?array
     {
         try {
-            $stmt = $this->manager->connection('users')->prepare($sql);
+            $stmt = Statement::prepare($this->manager->connection('users'), $sql);
             $stmt->execute($params);
             $row = $stmt->fetch();
         } catch (\PDOException) {
@@ -146,10 +147,11 @@ final readonly class BlogAuthorResolver
     private function allActive(): array
     {
         try {
-            $stmt = $this->manager->connection('users')->query(
+            $stmt = Statement::query(
+                $this->manager->connection('users'),
                 'SELECT id, name, avatar, created_at FROM users WHERE is_active = 1',
             );
-            $rows = false === $stmt ? [] : $stmt->fetchAll();
+            $rows = $stmt->fetchAll();
         } catch (\PDOException) {
             return [];
         }

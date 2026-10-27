@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Blog\Application\Services;
 
+use Modules\Blog\Infrastructure\Persistence\Statement;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 
 /**
@@ -45,7 +46,7 @@ final class ViewCounter
      */
     public function record(string $slug): void
     {
-        $stmt = $this->pdo->prepare('INSERT INTO article_views (article_slug) VALUES (:slug)');
+        $stmt = Statement::prepare($this->pdo, 'INSERT INTO article_views (article_slug) VALUES (:slug)');
         $stmt->execute([':slug' => $slug]);
     }
 
@@ -54,7 +55,7 @@ final class ViewCounter
      */
     public function count(string $slug): int
     {
-        $stmt = $this->pdo->prepare('SELECT COUNT(*) FROM article_views WHERE article_slug = :slug');
+        $stmt = Statement::prepare($this->pdo, 'SELECT COUNT(*) FROM article_views WHERE article_slug = :slug');
         $stmt->execute([':slug' => $slug]);
 
         return (int) $stmt->fetchColumn();
@@ -74,8 +75,8 @@ final class ViewCounter
         }
 
         $placeholders = implode(',', array_fill(0, count($slugs), '?'));
-        $stmt = $this->pdo->prepare(
-            "SELECT article_slug, COUNT(*) as cnt FROM article_views WHERE article_slug IN ($placeholders) GROUP BY article_slug",
+        $stmt = Statement::prepare($this->pdo,
+            "SELECT article_slug, COUNT(*) as cnt FROM article_views WHERE article_slug IN ({$placeholders}) GROUP BY article_slug",
         );
         $stmt->execute($slugs);
 

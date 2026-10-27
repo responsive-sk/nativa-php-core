@@ -11,8 +11,9 @@
 # typed that day.
 # `docs/mago-evaluation.md` holds the numbers this file produced and the
 # adoption decision; `tests/Architecture/MagoScopeContractTest.php` keeps the
-# scope below equal to `phpstan.neon`'s, because a spike that measures a
-# narrower tree is a spike that answers a different question.
+# scope below at `phpstan.neon`'s paths plus `modules/` (and nothing else),
+# because a spike that measures a narrower tree is a spike that answers a
+# different question.
 #
 # Pinning `version` to a major is deliberate: a 2.x config schema change must
 # fail loudly here rather than quietly alter what the report means.
@@ -22,8 +23,8 @@ version = "1"
 php-version = "8.5"
 
 [source]
-# `phpstan.neon`'s `paths`, entry for entry. `src/Modules/<Name>` outside
-# Core/Database/Tooling is operator state (gitignored, present only where
+# `phpstan.neon`'s `paths`, entry for entry, plus `modules/`. `src/Modules/<Name>`
+# outside Core/Database/Tooling is operator state (gitignored, present only where
 # someone ran `bin/cms module:add`), so it is excluded by omission: naming only
 # the kernel keeps the verdict independent of what this checkout installed.
 paths = [
@@ -36,12 +37,16 @@ paths = [
     "public/index.php",
     "bin/cms",
     "tests",
+    # The committed catalogue: the module code `bin/cms module:add` copies into
+    # an install. It is shipped code that `phpstan.neon` deliberately leaves out
+    # (its comment says why), so lint and analyze are the only scope it gets.
+    "modules",
 ]
 
 # Dependencies Mago parses so it can resolve symbols, but never analyses, lints
 # or formats. Without it the analyzer reports PHPUnit's own classes as missing:
-# measured 2026-10-22, 603 issues (403 errors) without this line against 372
-# (189 errors) with it.
+# measured 2026-10-22 on the kernel scope, 603 issues (403 errors) without this
+# line against 372 (189 errors) with it.
 #
 # `src/init.php` is deliberately NOT listed, and that is a finding rather than
 # an oversight: including it turns all 53 `non-existent-constant` reports for
@@ -50,15 +55,28 @@ paths = [
 # the problem does not. See docs/mago-evaluation.md.
 includes = ["vendor"]
 
-# `storage` and `public/dist` are runtime/build artifacts, `Frontend` holds no
-# PHP, and `modules/` is the committed catalogue — a verbatim import from the
-# showcase that is re-imported on every module update, so reformatting or
-# analysing it would turn the next re-import into a merge. Same reason
-# `.php-cs-fixer.dist.php` excludes it.
-excludes = ["storage", "public/dist", "Frontend", "modules"]
+# `storage` and `public/dist` are runtime/build artifacts and `Frontend` holds no
+# PHP. `modules/` is NOT here: lint and analyze read the catalogue (see `paths`),
+# because a finding there is a finding in code an install runs. Only the
+# formatter keeps away from it — `[formatter] excludes` below — for the reason
+# `.php-cs-fixer.dist.php` gives: the catalogue is a verbatim import that the
+# next module update re-imports, so a rewrite becomes a merge.
+excludes = ["storage", "public/dist", "Frontend"]
+
+[formatter]
+# Reformatting the catalogue would turn the next module re-import into a merge;
+# `.php-cs-fixer.dist.php` excludes the same directory for the same reason.
+excludes = ["modules"]
 
 [linter]
 minimum-fail-level = "error"
+# Everything under `modules/` is linted except the theme catalogue. That tree is
+# a byte-verified mirror of `nativa-themes` — `bin/build/sync-themes.sh --check`
+# fails on a changed byte — so a finding there cannot be fixed here without
+# turning the next sync into a conflict. Measured 2026-10-27, it holds 5 such
+# findings (readable-literal on 18_000/42_500-style budget constants); they are
+# upstream's to fix. Analyze still reads it: its count is informational.
+excludes = ["modules/Themes"]
 
 # -----------------------------------------------------------------------------
 # Curated rule set — correctness kept, taste and convention switched off.
@@ -162,8 +180,11 @@ single-class-per-file = { enabled = false }
 mode = "default"
 # Kernel slice only: `tests`/`public`/`bin` are consumers of the rule, not
 # subjects of it, `src/Themes` is a tree the kernel renders for (permitted
-# above), and the two composition roots name modules on purpose.
-excludes = ["tests", "public", "bin", "src/Themes", "src/composition.php", "src/http.php"]
+# above), and the two composition roots name modules on purpose. `modules/` is
+# out because the perimeter below states a constraint on the KERNEL: modules are
+# the other side of it, and the model is a whitelist, so a module namespace
+# without a rule would report every one of its edges as a violation.
+excludes = ["tests", "public", "bin", "src/Themes", "src/composition.php", "src/http.php", "modules"]
 
 [guard.perimeter]
 

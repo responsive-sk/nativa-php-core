@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Blog\Application\Services;
 
+use Modules\Blog\Infrastructure\Persistence\Statement;
 use Modules\Cardboard\Domain\Model\Card;
 use Modules\Cardboard\Domain\Model\CardLink;
 use Modules\Cardboard\Domain\Model\Charts\Donut;
@@ -33,12 +34,14 @@ final readonly class BlogMetric implements MetricContract
             $this->registerViewsCard($period);
         } catch (\Throwable) {
             // blog.db not ready — skip views card.
+            // @mago-expect lint:no-empty-catch-clause
         }
 
         try {
             $this->registerArticlesCard($period);
         } catch (\Throwable) {
             // Blog articles not available — skip articles card.
+            // @mago-expect lint:no-empty-catch-clause
         }
     }
 
@@ -139,7 +142,7 @@ final readonly class BlogMetric implements MetricContract
      */
     private function countViewsInPeriod(\PDO $pdo, string $interval): int
     {
-        $stmt = $pdo->prepare(
+        $stmt = Statement::prepare($pdo,
             'SELECT COUNT(*) FROM article_views WHERE viewed_at >= datetime(\'now\', :interval)',
         );
         $stmt->execute([':interval' => $interval]);
@@ -152,7 +155,7 @@ final readonly class BlogMetric implements MetricContract
      */
     private function countViewsBetweenPeriods(\PDO $pdo, string $fromInterval, string $toInterval): int
     {
-        $stmt = $pdo->prepare(
+        $stmt = Statement::prepare($pdo,
             'SELECT COUNT(*) FROM article_views WHERE viewed_at >= datetime(\'now\', :from) AND viewed_at < datetime(\'now\', :to)',
         );
         $stmt->execute([':from' => $fromInterval, ':to' => $toInterval]);

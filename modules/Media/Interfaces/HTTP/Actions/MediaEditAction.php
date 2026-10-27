@@ -52,11 +52,11 @@ final class MediaEditAction
 
     private function handleSave(Request $request, MediaService $service, string $id): Response
     {
-        $altText = is_string($request->body('alt_text')) ? trim($request->body('alt_text')) : '';
-        $caption = is_string($request->body('caption')) ? trim($request->body('caption')) : '';
-        $category = is_string($request->body('category')) ? trim($request->body('category')) : '';
-        $folder = is_string($request->body('folder')) ? $request->body('folder') : '';
-        $rawTags = is_string($request->body('tags')) ? $request->body('tags') : '';
+        $altText = trim($request->bodyString('alt_text'));
+        $caption = trim($request->bodyString('caption'));
+        $category = trim($request->bodyString('category'));
+        $folder = $request->bodyString('folder');
+        $rawTags = $request->bodyString('tags');
         $tags = $this->parseTags($rawTags);
 
         // Update metadata (alt text + caption).

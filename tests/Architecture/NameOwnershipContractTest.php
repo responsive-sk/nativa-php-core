@@ -30,12 +30,12 @@ use RecursiveIteratorIterator;
  *    when an entry stops applying, so it cannot rot.
  * 2. **A value must not be spelled as a raw literal outside its owner.**
  *    A RATCHET, not a prohibition, and that is the measured conclusion rather
- *    than a compromise. 52 owned string values appear as literals on 496
- *    places across the tree. `'sk_SK'` alone is 132 of them and `'en'` 48:
- *    a locale code, the default language, spelled in seed data, translations
- *    and URL tests, which is data and not a second owner. A gate with 496
- *    exemptions is not a gate. 496 is a CEILING: every consolidation lowers it,
- *    and the gate refuses the 497th.
+ *    than a compromise. 50 owned string values appear as literals on 385
+ *    places across the tree. `'en'` alone is 54 of them, `'home'` 41 and
+ *    `'/mark'` 30: a bare language code, a route slug and the panel's mount
+ *    path, spelled in seed data, translations and URL tests, which is data and
+ *    not a second owner. A gate with 385 exemptions is not a gate. 385 is a
+ *    CEILING: every consolidation lowers it, and the gate refuses the 386th.
  * 3. **The declaration count must not rise.** Ratchet at 238/202. This is the
  *    rule that catches the cheapest wrong fix — "there are two names for this,
  *    let me add a third" — which is the complaint that started all of this.
@@ -62,7 +62,8 @@ use RecursiveIteratorIterator;
  * tree would make its result depend on which modules this checkout happens to
  * have installed — the exact defect `ModelCatalogueContractTest` was fixed for
  * two commits ago. So the roots below are the tracked surface, and the result
- * is verified identical on both shapes: 403 files, 54 values, 531 places.
+ * does not depend on which modules the checkout has installed (measured
+ * 2026-10-27: 50 values on 385 places across 115 files).
  *
  * Deliberately cheap and deliberately dumb, like `KernelShapeTest` beside it:
  * file listings and a tokeniser, compared. What it protects is narrower than
@@ -147,6 +148,11 @@ final class NameOwnershipContractTest extends TestCase
         // Counting them would let a theme move inflate a ceiling that exists to
         // measure production spellings. Rule 1 still reads this file.
         'tests/Architecture/ModuleCatalogueShapeTest.php',
+        // The Statement-helper gate. It must spell the thirteen module names
+        // whose helper copies it holds to one shape, and `MODULES` is the
+        // ratchet — those spellings are the SUBJECT of the test, not a duplicate
+        // it failed to notice. Rule 1 still reads this file.
+        'tests/Architecture/StatementHelperContractTest.php',
         // The drift gate beside the service it measures. It builds a fixture
         // catalogue out of temp directories, so it spells a group name, a theme
         // name and a flat module name — the layout it asserts, not a second

@@ -9,6 +9,7 @@ use Modules\Cardboard\Infrastructure\Registry\CardboardRegistry;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Outbox\Application\Services\OutboxMetric;
 use Modules\Outbox\Infrastructure\Persistence\Migrations\OutboxDatabaseMigrator;
+use Modules\Outbox\Infrastructure\Persistence\Statement;
 use PDO;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -101,7 +102,7 @@ final class OutboxMetricTest extends TestCase
 
     private function seed(string $status, ?string $processedAt, ?string $lastAttemptAt): void
     {
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'INSERT INTO outbox_messages (id, event_type, event_payload, status, attempts, max_attempts, processed_at, last_attempt_at, created_at)'
             . ' VALUES (:id, :type, :payload, :status, 0, 3, :processed, :attempted, :created)',
         );

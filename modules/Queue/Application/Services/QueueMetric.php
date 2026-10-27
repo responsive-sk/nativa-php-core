@@ -12,6 +12,7 @@ use Modules\Cardboard\Domain\Model\Trend;
 use Modules\Cardboard\Infrastructure\Attributes\AsMetricProvider;
 use Modules\Cardboard\Infrastructure\Registry\CardboardRegistry;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
+use Modules\Queue\Infrastructure\Persistence\Statement;
 use PDO;
 
 /**
@@ -60,6 +61,7 @@ final readonly class QueueMetric implements MetricContract
             );
         } catch (\Throwable) {
             // Database not ready — skip silently.
+            // @mago-expect lint:no-empty-catch-clause
         }
     }
 
@@ -68,7 +70,7 @@ final readonly class QueueMetric implements MetricContract
      */
     private function countReservable(PDO $pdo): int
     {
-        $stmt = $pdo->prepare(
+        $stmt = Statement::prepare($pdo,
             'SELECT COUNT(*) FROM jobs WHERE reserved_at IS NULL AND available_at <= :now',
         );
         $stmt->execute([':now' => date('Y-m-d H:i:s')]);
@@ -78,17 +80,17 @@ final readonly class QueueMetric implements MetricContract
 
     private function countReserved(PDO $pdo): int
     {
-        return (int) $pdo->query('SELECT COUNT(*) FROM jobs WHERE reserved_at IS NOT NULL')->fetchColumn();
+        return (int) Statement::query($pdo, 'SELECT COUNT(*) FROM jobs WHERE reserved_at IS NOT NULL')->fetchColumn();
     }
 
     private function countFailed(PDO $pdo): int
     {
-        return (int) $pdo->query('SELECT COUNT(*) FROM failed_jobs')->fetchColumn();
+        return (int) Statement::query($pdo, 'SELECT COUNT(*) FROM failed_jobs')->fetchColumn();
     }
 
     private function countPushedSince(PDO $pdo, string $interval): int
     {
-        $stmt = $pdo->prepare(
+        $stmt = Statement::prepare($pdo,
             'SELECT COUNT(*) FROM jobs WHERE created_at >= datetime(\'now\', :interval)',
         );
         $stmt->execute([':interval' => $interval]);
@@ -98,7 +100,7 @@ final readonly class QueueMetric implements MetricContract
 
     private function countPushedBetween(PDO $pdo, string $fromInterval, string $toInterval): int
     {
-        $stmt = $pdo->prepare(
+        $stmt = Statement::prepare($pdo,
             'SELECT COUNT(*) FROM jobs WHERE created_at >= datetime(\'now\', :from) AND created_at < datetime(\'now\', :to)',
         );
         $stmt->execute([':from' => $fromInterval, ':to' => $toInterval]);

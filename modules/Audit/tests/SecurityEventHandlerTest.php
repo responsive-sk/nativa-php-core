@@ -8,6 +8,7 @@ use Modules\Audit\Application\Services\AuditService;
 use Modules\Audit\Application\Services\SecurityEventHandler;
 use Modules\Audit\Infrastructure\Persistence\Migrations\AuditDatabaseMigrator;
 use Modules\Audit\Infrastructure\Persistence\Repositories\AuditLogRepository;
+use Modules\Audit\Infrastructure\Persistence\Statement;
 use Modules\Core\Domain\Permissions;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Outbox\Domain\Model\OutboxMessage;
@@ -151,7 +152,7 @@ final class SecurityEventHandlerTest extends TestCase
      */
     private function row(): array
     {
-        $row = $this->pdo->query(
+        $row = Statement::query($this->pdo,
             'SELECT actor_user_id, actor_name, target, detail, ip_address FROM audit_log',
         )->fetch(PDO::FETCH_ASSOC);
 

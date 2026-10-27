@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Cardboard\Application\Services;
 
+use Modules\Cardboard\Infrastructure\Persistence\Statement;
 use Modules\Core\Domain\Permissions;
 
 /**
@@ -299,7 +300,7 @@ final readonly class AdminNavService
      */
     public function allItems(): array
     {
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'SELECT id, label, href, sort_order, is_active, icon, parent_item_id FROM menu_items
              WHERE location = :loc ORDER BY sort_order ASC, created_at ASC',
         );
@@ -361,7 +362,7 @@ final readonly class AdminNavService
      */
     private function hasChildren(string $itemId): bool
     {
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'SELECT 1 FROM menu_items WHERE parent_item_id = :id AND location = :loc AND is_active = 1 LIMIT 1',
         );
         $stmt->execute([':id' => $itemId, ':loc' => 'admin']);

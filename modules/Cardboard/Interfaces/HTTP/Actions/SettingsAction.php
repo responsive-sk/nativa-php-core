@@ -566,8 +566,8 @@ final class SettingsAction
 
     public function saveTokens(Request $request): Response
     {
-        $key = is_string($request->body('token_key')) ? trim($request->body('token_key')) : '';
-        $value = is_string($request->body('token_value')) ? trim($request->body('token_value')) : '';
+        $key = trim($request->bodyString('token_key'));
+        $value = trim($request->bodyString('token_value'));
 
         if ('' !== $key && '' !== $value) {
             CardboardServices::settings()->setDesignToken($key, $value);
@@ -580,8 +580,8 @@ final class SettingsAction
 
     public function saveNav(Request $request): Response
     {
-        $label = is_string($request->body('label')) ? trim($request->body('label')) : '';
-        $href = is_string($request->body('href')) ? trim($request->body('href')) : '';
+        $label = trim($request->bodyString('label'));
+        $href = trim($request->bodyString('href'));
         $sortRaw = $request->body('sort_order');
         $sort = is_numeric($sortRaw) ? (int) $sortRaw : 0;
 
@@ -626,12 +626,12 @@ final class SettingsAction
 
     public function saveAdminNav(Request $request): Response
     {
-        $label = is_string($request->body('label')) ? trim($request->body('label')) : '';
-        $href = is_string($request->body('href')) ? trim($request->body('href')) : '';
+        $label = trim($request->bodyString('label'));
+        $href = trim($request->bodyString('href'));
         $sortRaw = $request->body('sort_order');
         $sort = is_numeric($sortRaw) ? (int) $sortRaw : 0;
-        $icon = is_string($request->body('icon')) ? $request->body('icon') : '';
-        $parentId = is_string($request->body('parent_item_id')) ? trim($request->body('parent_item_id')) : '';
+        $icon = $request->bodyString('icon');
+        $parentId = trim($request->bodyString('parent_item_id'));
 
         if ('' !== $icon && !IconRegistry::isValid($icon)) {
             $icon = '';
@@ -740,7 +740,7 @@ final class SettingsAction
      */
     private function reorderPairs(Request $request): array
     {
-        $json = is_string($request->body('items_json')) ? $request->body('items_json') : '';
+        $json = $request->bodyString('items_json');
         $items = '' !== $json ? json_decode($json, true) : null;
 
         if (!is_array($items)) {
@@ -765,7 +765,7 @@ final class SettingsAction
     public function updateAdminNavIcon(Request $request): Response
     {
         $id = $request->routeParam('id');
-        $icon = is_string($request->body('icon')) ? $request->body('icon') : '';
+        $icon = $request->bodyString('icon');
 
         if (null !== $id && IconRegistry::isValid($icon)) {
             CardboardServices::menu()->updateIcon($id, $icon);

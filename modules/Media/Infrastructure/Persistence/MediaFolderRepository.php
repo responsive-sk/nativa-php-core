@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Media\Infrastructure\Persistence;
 
+
 /**
  * MediaFolderRepository — the folder registry (`media_folders`) and the
  * subtree rewrites a folder operation performs on the asset rows.
@@ -46,11 +47,8 @@ final readonly class MediaFolderRepository
      */
     public function all(): array
     {
-        $stmt = $this->pdo->query('SELECT path FROM media_folders ORDER BY path');
+        $stmt = Statement::query($this->pdo, 'SELECT path FROM media_folders ORDER BY path');
 
-        if (false === $stmt) {
-            return [];
-        }
 
         /** @var list<string> $paths */
         $paths = $stmt->fetchAll(\PDO::FETCH_COLUMN);
@@ -60,7 +58,7 @@ final readonly class MediaFolderRepository
 
     public function exists(string $path): bool
     {
-        $stmt = $this->pdo->prepare('SELECT 1 FROM media_folders WHERE path = :path LIMIT 1');
+        $stmt = Statement::prepare($this->pdo, 'SELECT 1 FROM media_folders WHERE path = :path LIMIT 1');
         $stmt->execute([':path' => $path]);
 
         return false !== $stmt->fetchColumn();
@@ -71,7 +69,7 @@ final readonly class MediaFolderRepository
      */
     public function insert(string $path): bool
     {
-        $stmt = $this->pdo->prepare('INSERT OR IGNORE INTO media_folders (path) VALUES (:path)');
+        $stmt = Statement::prepare($this->pdo, 'INSERT OR IGNORE INTO media_folders (path) VALUES (:path)');
         $stmt->execute([':path' => $path]);
 
         return $stmt->rowCount() > 0;
@@ -98,7 +96,7 @@ final readonly class MediaFolderRepository
      */
     public function deleteSubtree(string $path): int
     {
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'DELETE FROM media_folders WHERE path = :path'
             . " OR substr(path, 1, length(:path)) = :path AND substr(path, length(:path) + 1, 1) = '/'",
         );
@@ -115,7 +113,7 @@ final readonly class MediaFolderRepository
      */
     public function subtreePaths(string $path): array
     {
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'SELECT path FROM media_folders WHERE path = :path'
             . " OR substr(path, 1, length(:path)) = :path AND substr(path, length(:path) + 1, 1) = '/'"
             . ' ORDER BY path',
@@ -135,7 +133,7 @@ final readonly class MediaFolderRepository
      */
     public function subtreeAssetIds(string $path): array
     {
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'SELECT id FROM assets WHERE (folder = :path'
             . " OR substr(folder, 1, length(:path)) = :path AND substr(folder, length(:path) + 1, 1) = '/')"
             . " AND provider != 'cloudinary' ORDER BY id",
@@ -234,7 +232,7 @@ final readonly class MediaFolderRepository
      */
     private function rewrite(string $sql, string $from, string $to, string $extraCondition): int
     {
-        $stmt = $this->pdo->prepare($sql . $extraCondition);
+        $stmt = Statement::prepare($this->pdo, $sql . $extraCondition);
         $stmt->execute([':from' => $from, ':to' => $to]);
 
         return $stmt->rowCount();
@@ -242,7 +240,7 @@ final readonly class MediaFolderRepository
 
     private function count(string $sql, string $path): int
     {
-        $stmt = $this->pdo->prepare($sql);
+        $stmt = Statement::prepare($this->pdo, $sql);
         $stmt->execute([':path' => $path]);
         $result = $stmt->fetchColumn();
 

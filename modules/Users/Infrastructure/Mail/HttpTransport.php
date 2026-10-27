@@ -68,7 +68,7 @@ final class HttpTransport
      *
      * @return list<string>
      */
-    public static function headers(string $apiKey): array
+    public static function headers(#[\SensitiveParameter] string $apiKey): array
     {
         $headers = [
             'Content-Type: application/json',

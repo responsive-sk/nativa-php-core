@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace Modules\Validation\Validation;
 
-use InvalidArgumentException;
 use Modules\Validation\Contracts\RuleInterface;
 use Modules\Validation\Contracts\ValidatorInterface;
 use Modules\Validation\Rules\Nullable;

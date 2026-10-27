@@ -270,7 +270,7 @@ final class PagesEditAction
 
     private function resolveLocale(Request $request): string
     {
-        $localeParam = is_string($request->query('locale')) ? $request->query('locale') : 'sk';
+        $localeParam = $request->queryString('locale', 'sk');
 
         return ContentServices::mapper()->code($localeParam);
     }

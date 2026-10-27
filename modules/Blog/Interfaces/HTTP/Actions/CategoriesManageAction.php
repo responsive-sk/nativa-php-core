@@ -65,7 +65,7 @@ final class CategoriesManageAction
 
     public function create(Request $request): Response
     {
-        $category = is_string($request->body('category')) ? trim($request->body('category')) : '';
+        $category = trim($request->bodyString('category'));
 
         if ('' === $category) {
             return Response::redirect($this->url('categories.manage'));
@@ -88,8 +88,8 @@ final class CategoriesManageAction
 
     public function rename(Request $request): Response
     {
-        $oldCategory = is_string($request->body('old_category')) ? trim($request->body('old_category')) : '';
-        $newCategory = is_string($request->body('new_category')) ? trim($request->body('new_category')) : '';
+        $oldCategory = trim($request->bodyString('old_category'));
+        $newCategory = trim($request->bodyString('new_category'));
 
         if ('' === $oldCategory || '' === $newCategory || $oldCategory === $newCategory) {
             return Response::redirect($this->url('categories.manage'));
@@ -121,7 +121,7 @@ final class CategoriesManageAction
 
     public function delete(Request $request): Response
     {
-        $category = is_string($request->body('category')) ? trim($request->body('category')) : '';
+        $category = trim($request->bodyString('category'));
 
         if ('' === $category) {
             return Response::redirect($this->url('categories.manage'));
@@ -153,7 +153,7 @@ final class CategoriesManageAction
      */
     private function toast(Request $request): string
     {
-        $message = is_string($request->query('toast')) ? $request->query('toast') : '';
+        $message = $request->queryString('toast');
 
         return '' !== $message ? AdminLayout::toast(urldecode($message)) : '';
     }

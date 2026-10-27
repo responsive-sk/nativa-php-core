@@ -6,6 +6,7 @@ namespace Modules\Queue\Tests;
 
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Queue\Infrastructure\Persistence\Migrations\QueueDatabaseMigrator;
+use Modules\Queue\Infrastructure\Persistence\Statement;
 use PDO;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -65,16 +66,16 @@ final class QueueDatabaseMigratorTest extends TestCase
         // Re-running is safe (the `bin/cms migrate` contract).
         $migrator->run($output);
 
-        $tables = $this->pdo
-            ->query("SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('jobs', 'failed_jobs')")
-            ->fetchAll(PDO::FETCH_COLUMN);
+        $tables = Statement::query(
+            $this->pdo,
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('jobs', 'failed_jobs')",
+        )->fetchAll(PDO::FETCH_COLUMN);
 
         sort($tables);
 
         $this->assertSame(['failed_jobs', 'jobs'], $tables);
 
-        $columns = $this->pdo
-            ->query('PRAGMA table_info(jobs)')
+        $columns = Statement::query($this->pdo, 'PRAGMA table_info(jobs)')
             ->fetchAll(PDO::FETCH_COLUMN, 1);
 
         foreach (['id', 'queue', 'handler', 'payload', 'attempts', 'max_attempts', 'reserved_at', 'available_at', 'created_at'] as $column) {

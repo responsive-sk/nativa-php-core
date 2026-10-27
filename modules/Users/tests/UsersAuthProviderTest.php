@@ -8,6 +8,7 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Outbox\Interfaces\HTTP\OutboxServices;
 use Modules\Core\Domain\Permissions;
+use Modules\Users\Infrastructure\Persistence\Statement;
 use Modules\Users\Interfaces\HTTP\UsersAuthProvider;
 use Modules\Users\Infrastructure\Persistence\Migrations\UsersDatabaseMigrator;
 use Modules\Users\Interfaces\HTTP\AuthServices;
@@ -108,6 +109,8 @@ final class UsersAuthProviderTest extends TestCase
     #[Test]
     public function aLoginEstablishedSessionResolvesToAnActiveIdentity(): void
     {
+        // A fixture password: the test asserts that this exact value logs in.
+        // @mago-expect lint:no-literal-password
         $id = $this->insertUser('provider-login', 'provider-login@example.test', password: 'correct-horse-battery');
 
         $result = AuthServices::auth()->login('provider-login@example.test', 'correct-horse-battery', false, '127.0.0.1');
@@ -247,11 +250,12 @@ final class UsersAuthProviderTest extends TestCase
         self::assertTrue(true, 'the event was dropped and the caller survived');
     }
 
-    private function insertUser(string $name, string $email, ?string $password = null): string
+    private function insertUser(string $name, string $email, #[\SensitiveParameter] ?string $password = null): string
     {
         $id = bin2hex(random_bytes(16));
 
-        $stmt = $this->pdo()->prepare(
+        $stmt = Statement::prepare(
+            $this->pdo(),
             'INSERT INTO users (id, name, email, password, is_active) VALUES (:id, :name, :email, :password, 1)',
         );
         $stmt->execute([

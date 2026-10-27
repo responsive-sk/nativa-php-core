@@ -167,3 +167,25 @@ DIVERGED Frontend/packages/erik/src/inline-editor-highlight.ts # Lint fix: unuse
 DIVERGED Frontend/packages/erik/src/inline-editor-preview.ts # Lint fix: unused identifiers removed (TS6133 failed typecheck; upstream carries the same unused bindings)
 DIVERGED Frontend/packages/starter/src/inline-editor-highlight.ts # Lint fix: unused identifiers removed (TS6133 failed typecheck; upstream carries the same unused bindings)
 DIVERGED Frontend/packages/starter/src/inline-editor-preview.ts # Lint fix: unused identifiers removed (TS6133 failed typecheck; upstream carries the same unused bindings)
+
+# --- Recorded 2026-10-27: differences --check found unrecorded ----------------
+# Not hand edits: each line names the commit that made the change, because the
+# record is only worth reading if the next person can weigh the decision. The
+# check fails in both directions, so a line here is also a promise not to
+# re-import that path from upstream without reviewing the difference.
+DIVERGED Frontend/packages/erik/src/erik.ts # 3f8fc5b: Erik's article reading rail and measure
+DIVERGED Frontend/packages/erik/src/erik/article.css # 3f8fc5b: the rail's styles, as above
+DIVERGED src/init.php # 4147809: mago lint — explicit octal (`0755` → `0o755`)
+DIVERGED src/Modules/Core/Infrastructure/Session/FileSessionHandler.php # 4147809: mago lint — explicit octal on `@mkdir`
+DIVERGED src/Modules/Database/Infrastructure/Persistence/DatabaseConnectionManager.php # 4147809: a refused WAL pragma is logged, not silently swallowed
+DIVERGED src/Modules/Core/Application/Services/DocsCatalog.php # 5954a63: the guide inventory is measured on this tree
+DIVERGED src/Modules/Core/Application/Services/CacheInvalidator.php # 23eec72: invalidates the pages a write changed, not the whole cache
+DIVERGED src/Modules/Core/Application/Services/MarkdownRenderer.php # 3d8e636: a `Časť I — Title` heading is split so a theme sets its own numbering
+DIVERGED src/Modules/Core/Interfaces/HTTP/Actions/DocsIndexAction.php # c6c08b9: a theme with a document surface composes the list
+DIVERGED src/Modules/Core/Infrastructure/Http/Request.php # 2026-10-27: queryString()/bodyString() — typed request reads beside header(); module actions use them instead of reading the field twice
+OWNED src/Modules/Core/Interfaces/HTTP/assets/scripts/docs-reader.js # 32d60a3: docs reader; upstream's docs surface is not in the slice
+OWNED src/Modules/Core/Domain/Contracts/SecurityEventSink.php # 4147809: the kernel's own security-event port
+OWNED src/Modules/Core/Domain/Contracts/Mailer.php # 5fcd2f8: mail contract for module-owned notifications
+OWNED src/Modules/Core/Domain/SubmitResult.php # 8c57c3c: submit answers as a type instead of an array
+OWNED src/Modules/Core/Domain/ThemeSetting.php # fea7c1e: a theme declares its admin-editable settings
+OWNED src/Modules/Core/Domain/ThemeSettingValues.php # fea7c1e: the values such settings hold

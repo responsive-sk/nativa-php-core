@@ -47,6 +47,9 @@ final class EnsureAdminCommandTest extends TestCase
 
     private string $email = 'admin@example.test';
 
+    // The command's documented development default: this fixture asserts that
+    // the value the CLI was told to use is the one it wrote.
+    // @mago-expect lint:no-literal-password
     private string $password = 'admin1234';
 
     protected function setUp(): void

@@ -13,6 +13,7 @@ use Modules\Cardboard\Infrastructure\Attributes\AsMetricProvider;
 use Modules\Cardboard\Infrastructure\Registry\CardboardRegistry;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Outbox\Infrastructure\Persistence\Repositories\SqliteOutboxRepository;
+use Modules\Outbox\Infrastructure\Persistence\Statement;
 use PDO;
 
 /**
@@ -63,12 +64,13 @@ final readonly class OutboxMetric implements MetricContract
             );
         } catch (\Throwable) {
             // Database not ready — skip silently.
+            // @mago-expect lint:no-empty-catch-clause
         }
     }
 
     private function countProcessedSince(PDO $pdo, string $interval): int
     {
-        $stmt = $pdo->prepare(
+        $stmt = Statement::prepare($pdo,
             'SELECT COUNT(*) FROM outbox_messages WHERE status = \'processed\' AND processed_at >= datetime(\'now\', :interval)',
         );
         $stmt->execute([':interval' => $interval]);
@@ -78,7 +80,7 @@ final readonly class OutboxMetric implements MetricContract
 
     private function countProcessedBetween(PDO $pdo, string $fromInterval, string $toInterval): int
     {
-        $stmt = $pdo->prepare(
+        $stmt = Statement::prepare($pdo,
             'SELECT COUNT(*) FROM outbox_messages WHERE status = \'processed\' AND processed_at >= datetime(\'now\', :from) AND processed_at < datetime(\'now\', :to)',
         );
         $stmt->execute([':from' => $fromInterval, ':to' => $toInterval]);
@@ -88,7 +90,7 @@ final readonly class OutboxMetric implements MetricContract
 
     private function countFailedSince(PDO $pdo, string $interval): int
     {
-        $stmt = $pdo->prepare(
+        $stmt = Statement::prepare($pdo,
             'SELECT COUNT(*) FROM outbox_messages WHERE status = \'failed\' AND last_attempt_at >= datetime(\'now\', :interval)',
         );
         $stmt->execute([':interval' => $interval]);

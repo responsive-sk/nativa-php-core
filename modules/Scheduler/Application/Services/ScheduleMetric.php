@@ -66,6 +66,7 @@ final readonly class ScheduleMetric implements MetricContract
             );
         } catch (\Throwable) {
             // Timetable not readable — skip silently.
+            // @mago-expect lint:no-empty-catch-clause
         }
     }
 }

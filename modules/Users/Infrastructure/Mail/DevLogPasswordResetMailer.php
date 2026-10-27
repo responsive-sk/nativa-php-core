@@ -27,7 +27,7 @@ final readonly class DevLogPasswordResetMailer implements PasswordResetMailer
     {
     }
 
-    public function sendResetLink(string $email, string $token, int $ttlHours): void
+    public function sendResetLink(string $email, #[\SensitiveParameter] string $token, int $ttlHours): void
     {
         $line = sprintf(
             "[%s] [mailer:dev] Password reset for %s → token: %s (valid %d h)\n",

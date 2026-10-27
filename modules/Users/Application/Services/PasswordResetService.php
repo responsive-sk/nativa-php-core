@@ -11,6 +11,7 @@ use Modules\Security\Domain\LocalClient;
 use Modules\Security\Domain\PasswordPolicy;
 use Modules\Users\Domain\Contracts\PasswordResetMailer;
 use Modules\Users\Infrastructure\Persistence\Repositories\UserRepository;
+use Modules\Users\Infrastructure\Persistence\Statement;
 use Modules\Validation\Validation\Validator;
 
 /**
@@ -87,10 +88,10 @@ final readonly class PasswordResetService
         $token = bin2hex(random_bytes(32));
 
         // Invalidate previous unused tokens for this email.
-        $this->pdo->prepare('DELETE FROM password_reset_tokens WHERE email = :email AND used_at IS NULL')
+        Statement::prepare($this->pdo, 'DELETE FROM password_reset_tokens WHERE email = :email AND used_at IS NULL')
             ->execute([':email' => $email]);
 
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'INSERT INTO password_reset_tokens (id, email, token, expires_at, created_at)
              VALUES (:id, :email, :token, datetime(\'now\', :ttl), CURRENT_TIMESTAMP)',
         );
@@ -140,7 +141,11 @@ final readonly class PasswordResetService
      *
      * @return list<string> errors (empty on success)
      */
-    public function reset(string $token, string $password, string $confirmation): array
+    public function reset(
+        #[\SensitiveParameter] string $token,
+        #[\SensitiveParameter] string $password,
+        #[\SensitiveParameter] string $confirmation,
+    ): array
     {
         // Same rule shape as AuthService::register() (minus the name/email
         // fields) and the same two legacy strings — an empty password
@@ -167,7 +172,7 @@ final readonly class PasswordResetService
         }
 
         $hash = hash('sha256', $token);
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'SELECT id, email FROM password_reset_tokens
              WHERE token = :hash AND used_at IS NULL AND expires_at > CURRENT_TIMESTAMP LIMIT 1',
         );
@@ -187,7 +192,7 @@ final readonly class PasswordResetService
 
         $this->users->updatePassword($user->id(), $this->hasher->hash($password));
 
-        $this->pdo->prepare('UPDATE password_reset_tokens SET used_at = CURRENT_TIMESTAMP WHERE id = :id')
+        Statement::prepare($this->pdo, 'UPDATE password_reset_tokens SET used_at = CURRENT_TIMESTAMP WHERE id = :id')
             ->execute([':id' => $row['id']]);
 
         return [];

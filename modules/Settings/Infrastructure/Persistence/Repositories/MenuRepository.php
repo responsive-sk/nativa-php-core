@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Modules\Settings\Infrastructure\Persistence\Repositories;
 
+use Modules\Settings\Infrastructure\Persistence\Statement;
+
 /**
  * MenuRepository — navigation menu items persistence.
  */
@@ -35,7 +37,7 @@ final readonly class MenuRepository
      */
     public function findByLocation(string $location): array
     {
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'SELECT * FROM menu_items
              WHERE location = :location AND is_active = 1
              ORDER BY sort_order ASC, created_at ASC',
@@ -74,7 +76,7 @@ final readonly class MenuRepository
      */
     public function delete(string $id): void
     {
-        $this->pdo->prepare('DELETE FROM menu_items WHERE id = :id OR parent_item_id = :id2')
+        Statement::prepare($this->pdo, 'DELETE FROM menu_items WHERE id = :id OR parent_item_id = :id2')
             ->execute([':id' => $id, ':id2' => $id]);
     }
 
@@ -93,7 +95,7 @@ final readonly class MenuRepository
     ): string {
         $id = bin2hex(random_bytes(16));
 
-        $this->pdo->prepare(
+        Statement::prepare($this->pdo,
             'INSERT INTO menu_items (id, label, href, parent_item_id, sort_order, location, external, target, icon, is_active, created_at, updated_at)
              VALUES (:id, :label, :href, :parent, :sort, :loc, :ext, :target, :icon, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
         )->execute([
@@ -116,7 +118,7 @@ final readonly class MenuRepository
      */
     public function updateIcon(string $id, string $icon): void
     {
-        $this->pdo->prepare(
+        Statement::prepare($this->pdo,
             'UPDATE menu_items SET icon = :icon, updated_at = CURRENT_TIMESTAMP WHERE id = :id',
         )->execute([':id' => $id, ':icon' => $icon]);
     }
@@ -126,7 +128,7 @@ final readonly class MenuRepository
      */
     public function toggleActive(string $id): void
     {
-        $this->pdo->prepare(
+        Statement::prepare($this->pdo,
             'UPDATE menu_items SET is_active = CASE WHEN is_active = 1 THEN 0 ELSE 1 END, updated_at = CURRENT_TIMESTAMP WHERE id = :id',
         )->execute([':id' => $id]);
     }
@@ -136,7 +138,7 @@ final readonly class MenuRepository
      */
     public function updateSortOrder(string $id, int $sortOrder): void
     {
-        $this->pdo->prepare(
+        Statement::prepare($this->pdo,
             'UPDATE menu_items SET sort_order = :sort, updated_at = CURRENT_TIMESTAMP WHERE id = :id',
         )->execute([':id' => $id, ':sort' => $sortOrder]);
     }
@@ -148,7 +150,7 @@ final readonly class MenuRepository
      */
     public function batchUpdateSortOrder(array $pairs): void
     {
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'UPDATE menu_items SET sort_order = :sort, updated_at = CURRENT_TIMESTAMP WHERE id = :id',
         );
 

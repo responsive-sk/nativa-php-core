@@ -378,6 +378,7 @@ final class GenerateImagesCommand
             AppPaths::instance()->ensureDir($dir);
         } catch (\RuntimeException) {
             // Fall through — file_put_contents below will fail loudly.
+            // @mago-expect lint:no-empty-catch-clause
         }
 
         return $dir . DIRECTORY_SEPARATOR . bin2hex(random_bytes(8)) . '.' . $extension;

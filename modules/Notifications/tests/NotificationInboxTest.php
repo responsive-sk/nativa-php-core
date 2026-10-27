@@ -8,6 +8,7 @@ use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Notifications\Application\Services\NotificationInbox;
 use Modules\Notifications\Infrastructure\Persistence\Migrations\NotificationsDatabaseMigrator;
+use Modules\Notifications\Infrastructure\Persistence\Statement;
 use Modules\Notifications\Interfaces\HTTP\NotificationsServices;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -231,7 +232,7 @@ final class NotificationInboxTest extends TestCase
         NotificationsServices::inbox()->push(['user-a'], 'comment', 'Through the facade', 'Body', '/mark/comments');
 
         $pdo = new \PDO('sqlite:' . $this->tmpDir . '/notifications.db');
-        $count = $pdo->query('SELECT COUNT(*) FROM notifications WHERE notifiable_id = \'user-a\'')->fetchColumn();
+        $count = Statement::query($pdo, 'SELECT COUNT(*) FROM notifications WHERE notifiable_id = \'user-a\'')->fetchColumn();
 
         self::assertSame(1, (int) $count);
     }
@@ -249,7 +250,7 @@ final class NotificationInboxTest extends TestCase
     private function pushAt(string $notifiableId, string $title, string $createdAt): void
     {
         $pdo = new \PDO('sqlite:' . $this->tmpDir . '/notifications.db');
-        $stmt = $pdo->prepare(
+        $stmt = Statement::prepare($pdo,
             'INSERT INTO notifications (id, notifiable_id, kind, title, body, href, read_at, created_at)'
             . ' VALUES (?, ?, ?, ?, ?, ?, NULL, ?)',
         );

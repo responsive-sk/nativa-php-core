@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Locales\Infrastructure\Persistence\Repositories;
 
 use Modules\Locales\Domain\Model\Translation;
+use Modules\Locales\Infrastructure\Persistence\Statement;
 
 /**
  * TranslationRepository — SQLite persistence for translations.
@@ -23,7 +24,7 @@ final readonly class TranslationRepository
      */
     public function findById(string $id): ?Translation
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM translations WHERE id = :id');
+        $stmt = Statement::prepare($this->pdo, 'SELECT * FROM translations WHERE id = :id');
         $stmt->execute(['id' => $id]);
         /** @var array<string, mixed>|false $row */
         $row = $stmt->fetch();
@@ -36,7 +37,7 @@ final readonly class TranslationRepository
      */
     public function findByKey(string $key, string $locale): ?Translation
     {
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'SELECT * FROM translations WHERE translation_key = :key AND locale = :locale',
         );
         $stmt->execute(['key' => $key, 'locale' => $locale]);
@@ -53,7 +54,7 @@ final readonly class TranslationRepository
      */
     public function findByLocale(string $locale): array
     {
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'SELECT * FROM translations WHERE locale = :locale ORDER BY translation_key ASC',
         );
         $stmt->execute(['locale' => $locale]);
@@ -68,7 +69,7 @@ final readonly class TranslationRepository
      */
     public function findByGroup(string $group, string $locale): array
     {
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'SELECT * FROM translations WHERE group_name = :group AND locale = :locale ORDER BY translation_key ASC',
         );
         $stmt->execute(['group' => $group, 'locale' => $locale]);
@@ -84,7 +85,7 @@ final readonly class TranslationRepository
     public function search(string $query, string $locale): array
     {
         $like = '%' . $query . '%';
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'SELECT * FROM translations WHERE locale = :locale AND (translation_key LIKE :query OR value LIKE :query2) ORDER BY translation_key ASC',
         );
         $stmt->execute(['locale' => $locale, 'query' => $like, 'query2' => $like]);
@@ -99,10 +100,10 @@ final readonly class TranslationRepository
      */
     public function findAllKeys(): array
     {
-        $stmt = $this->pdo->query('SELECT DISTINCT translation_key FROM translations ORDER BY translation_key ASC');
+        $stmt = Statement::query($this->pdo, 'SELECT DISTINCT translation_key FROM translations ORDER BY translation_key ASC');
 
         // array_values guarantees a list (FETCH_COLUMN may not be proven a list by PHPStan).
-        return false === $stmt ? [] : array_values($stmt->fetchAll(\PDO::FETCH_COLUMN, 0));
+        return array_values($stmt->fetchAll(\PDO::FETCH_COLUMN, 0));
     }
 
     /**
@@ -114,7 +115,7 @@ final readonly class TranslationRepository
         $existing = $this->findById($translation->id());
 
         if (null !== $existing) {
-            $stmt = $this->pdo->prepare(
+            $stmt = Statement::prepare($this->pdo,
                 'UPDATE translations SET value = :value, group_name = :group_name, updated_at = :updated_at WHERE id = :id',
             );
             $stmt->execute([
@@ -127,7 +128,7 @@ final readonly class TranslationRepository
             return;
         }
 
-        $stmt = $this->pdo->prepare(
+        $stmt = Statement::prepare($this->pdo,
             'INSERT INTO translations (id, translation_key, locale, value, group_name, created_at, updated_at)
              VALUES (:id, :key, :locale, :value, :group, :created, :updated)',
         );
@@ -147,7 +148,7 @@ final readonly class TranslationRepository
      */
     public function delete(string $id): void
     {
-        $stmt = $this->pdo->prepare('DELETE FROM translations WHERE id = :id');
+        $stmt = Statement::prepare($this->pdo, 'DELETE FROM translations WHERE id = :id');
         $stmt->execute(['id' => $id]);
     }
 
@@ -156,7 +157,7 @@ final readonly class TranslationRepository
      */
     public function count(string $locale): int
     {
-        $stmt = $this->pdo->prepare('SELECT COUNT(*) FROM translations WHERE locale = :locale');
+        $stmt = Statement::prepare($this->pdo, 'SELECT COUNT(*) FROM translations WHERE locale = :locale');
         $stmt->execute(['locale' => $locale]);
 
         return (int) $stmt->fetchColumn();

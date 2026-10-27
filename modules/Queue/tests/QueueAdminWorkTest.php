@@ -11,6 +11,7 @@ use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Core\Kernel\Contracts\RouterInterface;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Queue\Infrastructure\Persistence\Migrations\QueueDatabaseMigrator;
+use Modules\Queue\Infrastructure\Persistence\Statement;
 use Modules\Queue\Interfaces\HTTP\Actions\QueueAdminAction;
 use Modules\Queue\Interfaces\HTTP\QueueServices;
 use PDO;
@@ -155,9 +156,10 @@ final class QueueAdminWorkTest extends TestCase
 
         (new QueueAdminAction(self::router()))->process(Request::create('POST', '/mark/queue/work'));
 
-        $row = DatabaseConnectionManager::instance()->connection('audit')
-            ->query("SELECT action, detail FROM audit_log WHERE action = 'queue.work'")
-            ->fetch(PDO::FETCH_ASSOC);
+        $row = Statement::query(
+            DatabaseConnectionManager::instance()->connection('audit'),
+            "SELECT action, detail FROM audit_log WHERE action = 'queue.work'",
+        )->fetch(PDO::FETCH_ASSOC);
 
         self::assertIsArray($row, 'the panel run must leave an audit row');
         self::assertStringContainsString('Processed 1 job(s)', (string) $row['detail']);

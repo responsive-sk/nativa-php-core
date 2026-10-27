@@ -81,6 +81,7 @@ final readonly class ModulesStateMetric implements MetricContract
         } catch (\Throwable) {
             // No filesystem, no catalogue — skip silently, the way every other
             // provider does. A dashboard that 500s over a stat card helps nobody.
+            // @mago-expect lint:no-empty-catch-clause
         }
     }
 }
