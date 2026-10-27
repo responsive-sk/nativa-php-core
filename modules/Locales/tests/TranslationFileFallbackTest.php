@@ -32,13 +32,17 @@ use PHPUnit\Framework\TestCase;
  * that renders from the file must be visible, marked, and not editable in
  * place — editing it would create a row that silently shadows the file.
  *
- * Locale codes here are `en_US` and `de_DE`, not the tree's `sk_SK`: that value
- * is owned by `ContentLocaleMapper::FALLBACK_DEFAULT`, and
- * `NameOwnershipContractTest` counts every second spelling of an owned value
- * (measured: this file alone took the ceiling from 526 to 553 before the swap).
- * The chain this test covers does not care which code it runs on, so the
- * fixtures use codes no constant owns rather than a code whose meaning belongs
- * to another module. The keys and values are unowned for the same reason.
+ * The fixtures spell the tree's two real locales, `sk_SK` and `en_US`.
+ * `'sk_SK'` is also the value of `ContentLocaleMapper::FALLBACK_DEFAULT`, and
+ * this file first paid for that: it took `NameOwnershipContractTest`'s literal
+ * ceiling from 526 to 553, because the gate counted every second spelling of an
+ * owned value. The ceiling was not raised — the gate now skips locale-shaped
+ * literals on the grounds that a locale code is data about a language rather
+ * than a second name for a constant that happens to hold one
+ * (`isLocaleCode()`), and the measured 132 places that rule removed included 84
+ * in `SeedData`, which the gate's own message had been calling correct. The keys
+ * and values here are still unowned on purpose: a fixture that re-spells a
+ * constant's value is the duplicate that rule exists for.
  *
  * Like every module test this drives the INSTALLED copy and skips when the
  * module is not installed.
@@ -99,12 +103,12 @@ final class TranslationFileFallbackTest extends TestCase
     #[Test]
     public function theDatabaseWinsOverTheFile(): void
     {
-        $this->writeFile('en_US', ['nav.home' => 'Kotva z filu']);
-        $this->seedRow('nav.home', 'en_US', 'Kotva z databázy');
+        $this->writeFile('sk_SK', ['nav.home' => 'Kotva z filu']);
+        $this->seedRow('nav.home', 'sk_SK', 'Kotva z databázy');
 
         $this->assertSame(
             'Kotva z databázy',
-            $this->service->get('nav.home', 'en_US'),
+            $this->service->get('nav.home', 'sk_SK'),
             'A file value shadowed the row an admin can edit in the panel.',
         );
     }
@@ -112,11 +116,11 @@ final class TranslationFileFallbackTest extends TestCase
     #[Test]
     public function aRowTheDatabaseDoesNotHaveComesFromTheFile(): void
     {
-        $this->writeFile('en_US', ['nav.home' => 'Kotva z filu']);
+        $this->writeFile('sk_SK', ['nav.home' => 'Kotva z filu']);
 
         $this->assertSame(
             'Kotva z filu',
-            $this->service->get('nav.home', 'en_US'),
+            $this->service->get('nav.home', 'sk_SK'),
             'The file branch of the read chain returned nothing — a key with no row renders raw.',
         );
     }
@@ -124,19 +128,19 @@ final class TranslationFileFallbackTest extends TestCase
     #[Test]
     public function anUnknownKeyFallsThroughToTheDefaultAndThenToItsKey(): void
     {
-        $this->writeFile('en_US', ['nav.home' => 'Kotva z filu']);
+        $this->writeFile('sk_SK', ['nav.home' => 'Kotva z filu']);
 
-        $this->assertSame('Fallback', $this->service->get('nav.missing', 'en_US', 'Fallback'));
-        $this->assertSame('nav.missing', $this->service->get('nav.missing', 'en_US'));
+        $this->assertSame('Fallback', $this->service->get('nav.missing', 'sk_SK', 'Fallback'));
+        $this->assertSame('nav.missing', $this->service->get('nav.missing', 'sk_SK'));
     }
 
     #[Test]
     public function fileOnlyKeysAreListedWithTheFileSourceAndNoId(): void
     {
-        $this->seedRow('nav.blog', 'en_US', 'Články');
-        $this->writeFile('en_US', ['nav.blog' => 'Články z filu', 'forms.tagline' => 'Podnadpis z filu']);
+        $this->seedRow('nav.blog', 'sk_SK', 'Články');
+        $this->writeFile('sk_SK', ['nav.blog' => 'Články z filu', 'forms.tagline' => 'Podnadpis z filu']);
 
-        $listed = $this->service->list('en_US');
+        $listed = $this->service->list('sk_SK');
 
         $this->assertSame(['forms.tagline', 'nav.blog'], array_map(static fn ($row): string => $row->key, $listed));
 
@@ -154,12 +158,12 @@ final class TranslationFileFallbackTest extends TestCase
     #[Test]
     public function aKeyTheFileProvidesIsNotReportedAsMissing(): void
     {
-        $this->seedRow('nav.blog', 'de_DE', 'Články');
-        $this->writeFile('en_US', ['nav.blog' => 'Články']);
+        $this->seedRow('nav.blog', 'en_US', 'Články');
+        $this->writeFile('sk_SK', ['nav.blog' => 'Články']);
 
         $this->assertSame(
             [],
-            $this->service->getMissingKeys('en_US'),
+            $this->service->getMissingKeys('sk_SK'),
             'The file renders this key, so reporting it as missing asks the operator to fill it twice.',
         );
     }
@@ -167,28 +171,28 @@ final class TranslationFileFallbackTest extends TestCase
     #[Test]
     public function exportWritesTheLocalesRowsToItsFile(): void
     {
-        $this->seedRow('nav.home', 'en_US', 'Kotva', 'nav');
-        $this->seedRow('nav.cta', 'en_US', 'Začať', 'nav');
-        $this->seedRow('nav.home', 'de_DE', 'Heim', 'nav');
+        $this->seedRow('nav.home', 'sk_SK', 'Kotva', 'nav');
+        $this->seedRow('nav.cta', 'sk_SK', 'Začať', 'nav');
+        $this->seedRow('nav.home', 'en_US', 'Heim', 'nav');
 
-        $this->assertSame(2, $this->service->export('en_US'));
+        $this->assertSame(2, $this->service->export('sk_SK'));
 
         $this->assertSame(
             ['nav.cta' => 'Začať', 'nav.home' => 'Kotva'],
-            $this->loader->load('en_US'),
+            $this->loader->load('sk_SK'),
             'The exported file is the read chain\'s fallback source; it must hold exactly this locale\'s rows.',
         );
-        $this->assertFalse($this->loader->exists('de_DE'), 'Exporting one locale must not write another locale\'s file.');
+        $this->assertFalse($this->loader->exists('en_US'), 'Exporting one locale must not write another locale\'s file.');
     }
 
     #[Test]
     public function exportWritesNothingForALocaleWithoutRows(): void
     {
-        $this->seedRow('nav.home', 'en_US', 'Kotva');
+        $this->seedRow('nav.home', 'sk_SK', 'Kotva');
 
-        $this->assertSame(0, $this->service->export('de_DE'));
+        $this->assertSame(0, $this->service->export('en_US'));
         $this->assertFalse(
-            $this->loader->exists('de_DE'),
+            $this->loader->exists('en_US'),
             'An empty file would become the fallback that replaces a language with nothing.',
         );
     }
@@ -196,10 +200,10 @@ final class TranslationFileFallbackTest extends TestCase
     #[Test]
     public function theAdminTemplateMarksFileRowsAndDropsTheirEditLink(): void
     {
-        $this->writeFile('en_US', ['forms.tagline' => 'Podnadpis z filu']);
-        $this->seedRow('nav.home', 'en_US', 'Kotva');
+        $this->writeFile('sk_SK', ['forms.tagline' => 'Podnadpis z filu']);
+        $this->seedRow('nav.home', 'sk_SK', 'Kotva');
 
-        $rows = $this->service->list('en_US');
+        $rows = $this->service->list('sk_SK');
         $html = '';
 
         foreach ($rows as $row) {

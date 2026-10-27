@@ -201,8 +201,16 @@ final class NameOwnershipContractTest extends TestCase
      *
      * The number is measured, the direction is down, and the gate files' own
      * literals (the exemption reasons) are excluded from it.
+     *
+     * 526 → 384 with the locale decision: 132 counted places spelled `'sk_SK'`,
+     * 84 of them in `Locales/…/SeedData.php` — which the failure message above
+     * had been calling correct while the counter charged for it. A locale code
+     * names a language, not this tree's default, so rule 2 skips it
+     * (`isLocaleCode()`) and the ceiling drops by exactly those 132. Rule 1 still
+     * holds the value to one name, so a second constant with the same code is
+     * still reported.
      */
-    private const int MAX_LITERAL_PLACES = 526;
+    private const int MAX_LITERAL_PLACES = 384;
 
     /**
      * Rule 3 — measured 2026-10-17 on the tracked scope.
@@ -384,11 +392,45 @@ final class NameOwnershipContractTest extends TestCase
             sprintf(
                 '%d places spell an owned value as a raw literal; the ceiling is %d.'
                 . ' Every consolidation lowers this, so a rise means a new duplicate.'
-                . "\nThe largest single source is `Locales/…/SeedData.php`, where literals are"
-                . ' correct: seed data is not a constant, and making it one would be worse.',
+                . '\nLocale codes are not counted: `xx_YY` is data about a language, not a'
+                . ' second name for a constant, and `Locales/…/SeedData.php` spelling one 84'
+                . ' times is why (`isLocaleCode()`). A new duplicate in ordinary text still'
+                . ' counts.',
                 $places,
                 self::MAX_LITERAL_PLACES,
             ),
+        );
+    }
+
+    /**
+     * The locale decision, pinned.
+     *
+     * Without this, the exclusion in `literalPlaces()` is only a comment: a
+     * later "tidy-up" of that loop would leave every assertion green (the
+     * ceiling is a number, and the tree is under it again once nobody looks)
+     * while the counter silently went back to charging seed data. A rule that
+     * decides what IS a duplicate deserves an assertion that says so.
+     */
+    #[Test]
+    public function aLocaleCodeIsDataRatherThanARepeatedName(): void
+    {
+        [, $where] = $this->literalPlaces();
+
+        $offenders = [];
+
+        foreach ($where as $file => $literals) {
+            foreach ($literals as $literal) {
+                if (self::isLocaleCode($literal)) {
+                    $offenders[] = $file . ': ' . $literal;
+                }
+            }
+        }
+
+        self::assertSame(
+            [],
+            $offenders,
+            'A locale code is data about a language, not a second name for the constant that'
+            . ' happens to hold one — it must not be counted as a re-spelt owned value.',
         );
     }
 
@@ -491,12 +533,52 @@ final class NameOwnershipContractTest extends TestCase
                     continue;
                 }
 
+                // A locale code is data about a language, not a name for the
+                // constant that happens to hold one — see `isLocaleCode()`.
+                if (self::isLocaleCode($literal)) {
+                    continue;
+                }
+
                 $places++;
                 $where[$relative][] = $literal;
             }
         }
 
         return [$places, $where];
+    }
+
+    /**
+     * Whether the literal spells a locale code — data, not a second name for a
+     * constant.
+     *
+     * Rule 2 needed a decision here and the measurement supplied it: `'sk_SK'`
+     * was 132 of 526 counted places. 84 of those were
+     * `Locales/…/SeedData.php`, the file this gate's own failure message calls
+     * CORRECT ("seed data is not a constant, and making it one would be
+     * worse"); the rest were Locales fixtures, a shell-copy test and the
+     * themes' `html lang` assertions. One value, a quarter of the ceiling, and
+     * every counted place was right.
+     *
+     * The reason it is data: a locale code names a LANGUAGE, while the constant
+     * that owns it names this tree's DEFAULT language.
+     * `ContentLocaleMapper::FALLBACK_DEFAULT` is what makes `'sk_SK'` an owned
+     * value at all, but a test saying "resolve this key for `sk_SK`" is not
+     * renaming the default — and forcing it to import Core's content mapper
+     * would make a locale fixture describe a setting it has no opinion about.
+     * So the value leaves rule 2 (how many places re-spell it) and stays in
+     * rule 1 (how many NAMES it has): a second constant holding `sk_SK` is
+     * still the collision this file exists to report.
+     *
+     * Matched by shape rather than kept as a list, because a list of locale
+     * codes is another vocabulary to maintain and to rot —
+     * `MULTI_NAME_EXEMPTIONS` needs a staleness check for exactly that reason —
+     * while `xx_YY` is the shape every producer of a locale already uses.
+     */
+    private static function isLocaleCode(string $literal): bool
+    {
+        $bare = trim($literal, "\"'");
+
+        return 1 === preg_match('/^[a-z]{2}_[A-Z]{2}$/', $bare) ? true : false;
     }
 
     /**
