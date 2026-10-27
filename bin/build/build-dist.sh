@@ -93,7 +93,7 @@ APPLY_PROFILE=true
 #   ./vendor            the kernel runtime has zero Composer packages — this is
 #                       the claim the smoke test below is about to check
 #   ./bin/build         the tools that BUILT this artifact, including itself
-#   dev tool configs    phpstan/phpunit/rector/cs-fixer/mago/Makefile/composer.*
+#   dev tool configs    phpstan/phpunit/rector/cs-fixer/mago/toolchain/Makefile/composer.*
 #                       say how to develop and CHECK here, and shipping them
 #                       invites someone on the server to run `composer install`
 #                       against a tree that does not need it. `mago.toml` is in
@@ -138,6 +138,7 @@ EXCLUDES=(
     "./.php-cs-fixer.cache"
     "./.php-cs-fixer.dist.php"
     "./mago.toml"
+    "./toolchain.json"
     "./.phpunit.result.cache"
     "./.rector.cache"
     "./Makefile"
