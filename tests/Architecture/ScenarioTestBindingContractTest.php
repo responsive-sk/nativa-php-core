@@ -8,16 +8,25 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * ScenarioTestBindingContractTest — every openspec scenario names the test that
- * holds it.
+ * ScenarioTestBindingContractTest — every canonical openspec scenario names the
+ * test that holds it.
  *
- * Measured 2026-10-27: 57 scenarios across six spec files, none of them
- * carrying a machine-readable reference to the test that keeps them true.
- * Deleting or renaming such a test left `openspec validate --all` green,
+ * Measured 2026-10-27: 9 scenarios in `openspec/specs/validation/spec.md`, none
+ * of them carrying a machine-readable reference to the test that keeps them
+ * true. Deleting or renaming such a test left `openspec validate --all` green,
  * because the validator checks the model, not the code — the same gap Lekalo
  * has with `"adapters":[]`, which three PHPUnit contracts close by reading a
  * class AS TEXT (`ModelPayloadContractTest` is the pattern). This is that same
  * move on the openspec side.
+ *
+ * The scope is the CANONICAL specs, and that is the third state of one rule
+ * (`.gitignore` records all three): `/openspec/` was ignored, then the whole
+ * tree was tracked so this check could run in CI at all, and now `specs/` is
+ * tracked while `openspec/changes/` — proposals, drafts, and the verbatim
+ * `.ai-factory/plans/` migrations in its archive — is local again. A delta is
+ * therefore not readable here BY DESIGN: its scenarios are counted when the
+ * change lands in `specs/`, which is what keeps this a gate rather than a
+ * report whose result depends on which draft the checkout happens to carry.
  *
  * ## The convention
  *
@@ -32,33 +41,27 @@ use PHPUnit\Framework\TestCase;
  * forked grammar or a sidecar file. The probe directory was deleted after the
  * measurement.
  *
- * ## Where it runs
+ * ## Why there is no skip guard
  *
- * `/openspec/` is TRACKED as of 2026-10-27 — it was gitignored from 2026-10-14,
- * and `.gitignore` carries the reversal with its reason — so the specs are in
- * every clone and in CI, and this check runs in both. It did not always: while
- * the tree was ignored the four spec rules could only skip in CI, and the
- * `modules` job (which forbids a skip outright) excluded them by group. That
- * exclusion and the group are gone; the class is now held to the same no-skips
- * rule as everything else in that job.
- *
- * The skip guard stays anyway, worded so it cannot be read as a pass: a
- * checkout that removed the tree has nothing to bind, and the floor of files
- * and scenarios asserted whenever the tree IS there is what stops the check
- * from passing by reading nothing. Module tests use the same shape when their
- * module is not installed (`TaxonomyRegistryTest`). Four of the five tests
- * guard that way — the CI job-count ratchet does not, because it reads a
- * tracked file and is worth running even where the specs are absent.
+ * Everything this check reads is tracked — the canonical specs and the
+ * workflow — so it reads the same thing in CI as on a workstation, and it
+ * never calls `markTestSkipped()`. The shape `TaxonomyRegistryTest` needs for a
+ * module that may not be installed does not apply to a file in git: a moved or
+ * deleted spec tree is a walk that finds nothing, and the floor below turns
+ * that into a red check with the count in its message. (While the whole tree
+ * was gitignored, four of these rules could only skip in CI and the `modules`
+ * job had to exclude them by group to keep its no-skips rule; the exclusion
+ * and the group are both gone.)
  *
  * ## The ratchet
  *
- * 57 scenarios are unpinned today and that number is held EXACTLY: more
+ * 9 scenarios are unpinned today and that number is held EXACTLY: more
  * unpinned scenarios than the allowance fail, and fewer fail too, because
  * lowering it is part of the same change as the annotation that lowered it.
- * A new scenario can therefore never hide under the allowance — it arrives
- * without a pin and the count goes over. The phases are recorded in
- * `openspec/changes/scenario-test-binding/tasks.md`: canonical spec first
- * (57 → 48), then one capability per phase (→ 41 → 31 → 20 → 9 → 0).
+ * A new canonical scenario can therefore never hide under the allowance — it
+ * arrives without a pin and the count goes over. The phases of that work are
+ * recorded in the change (`openspec/changes/scenario-test-binding/tasks.md`,
+ * local like every change) and end at 0.
  *
  * The allowance is a method rather than a class constant for the reason
  * `SlovakProseContractTest` records: `NameOwnershipContractTest` ratchets the
@@ -72,48 +75,20 @@ use PHPUnit\Framework\TestCase;
 final class ScenarioTestBindingContractTest extends TestCase
 {
     /**
-     * The check cannot claim anything about a checkout without the spec tree.
-     * The guard is a method taking the root, so the "no specs here" path is
-     * reachable by a test rather than only by unplugging the repository.
-     */
-    #[Test]
-    public function theCheckSkipsWithoutTheSpecTree(): void
-    {
-        self::skipWithoutSpecTree();
-
-        $absent = self::skipReason(sys_get_temp_dir() . '/' . uniqid('nativa-php-core-no-openspec-', true));
-
-        self::assertNotNull(
-            $absent,
-            'A checkout without openspec/ must be skipped, not checked: with no spec tree there is'
-            . ' nothing to bind, and a check that reads nothing must not report a pass.',
-        );
-        self::assertStringContainsString('tracked', $absent, 'The skip has to name why the tree is missing.');
-        self::assertStringContainsString('not a pass', $absent, 'The skip has to refuse to be read as green.');
-
-        self::assertNull(
-            self::skipReason(self::root()),
-            'This checkout carries the spec tree, so the guard must not fire — the rest of this file'
-            . ' would be measuring nothing.',
-        );
-    }
-
-    /**
      * Every scenario is either pinned or inside the allowance, and the
      * allowance is exact.
      */
     #[Test]
     public function everyScenarioNamesATest(): void
     {
-        self::skipWithoutSpecTree();
-
         $scenarios = self::scenarios(self::root());
 
         self::assertGreaterThanOrEqual(
-            60,
+            9,
             count($scenarios),
-            'The spec walk found ' . count($scenarios) . ' scenarios — the roots moved or the parser'
-            . ' stopped matching, and this check would pass by reading almost nothing.',
+            'The spec walk found ' . count($scenarios) . ' scenarios — the roots moved, a spec file was'
+            . ' deleted, or the parser stopped matching, and this check would pass by reading almost'
+            . ' nothing.',
         );
 
         $unpinned = self::exemptions($scenarios);
@@ -150,8 +125,6 @@ final class ScenarioTestBindingContractTest extends TestCase
     #[Test]
     public function aPinResolvesToRealFileAndMethod(): void
     {
-        self::skipWithoutSpecTree();
-
         $problems = [];
 
         foreach (self::scenarios(self::root()) as $scenario) {
@@ -194,8 +167,6 @@ final class ScenarioTestBindingContractTest extends TestCase
     #[Test]
     public function anExemptionCarriesAReasonAndIsCounted(): void
     {
-        self::skipWithoutSpecTree();
-
         self::assertNull(
             self::exemptionReason('modules/Validation/tests/ValidatorTest.php::emptyPasswordReportsOnce'),
             'A test reference is not an exemption.',
@@ -231,7 +202,7 @@ final class ScenarioTestBindingContractTest extends TestCase
         // The allowance cannot hide a NEW scenario: one more unpinned scenario
         // pushes the count over, whatever headroom the phases left.
         $oneMore = [...$scenarios, [
-            'file' => 'openspec/changes/example/specs/example/spec.md',
+            'file' => 'openspec/specs/example/spec.md',
             'scenario' => 'A scenario that arrived without a pin',
             'pins' => [],
         ]];
@@ -270,42 +241,12 @@ final class ScenarioTestBindingContractTest extends TestCase
     }
 
     /**
-     * The four tests that read specs stop here on a checkout without them.
-     * `theBindingNeedsNoNewGate` deliberately does NOT call this: it reads the
-     * workflow, which is tracked, so the CI job-count ratchet works in CI even
-     * though the specs do not.
-     */
-    private static function skipWithoutSpecTree(): void
-    {
-        $reason = self::skipReason(self::root());
-
-        if (null !== $reason) {
-            self::markTestSkipped($reason);
-        }
-    }
-
-    /**
-     * Why this checkout cannot be checked, or null when it can.
-     */
-    private static function skipReason(string $root): ?string
-    {
-        if (is_dir($root . '/openspec/specs') || is_dir($root . '/openspec/changes')) {
-            return null;
-        }
-
-        return 'openspec/ is not in this checkout, so there is nothing to bind. The spec tree is'
-            . ' tracked (since 2026-10-27 — see .gitignore), so this is not a clone that never had'
-            . ' specs: the directory was removed here, and nothing can be measured against it.'
-            . ' Nothing was checked — and that is not a pass, it is a skip.';
-    }
-
-    /**
      * How many scenarios may stay unbound. Exact, and deliberately a method
      * (see the class docblock).
      */
     private static function exemptionAllowance(): int
     {
-        return 57;
+        return 9;
     }
 
     /**
@@ -322,9 +263,7 @@ final class ScenarioTestBindingContractTest extends TestCase
     }
 
     /**
-     * Every scenario in the canonical specs and in the change deltas, with the
-     * `PINS:` lines it carries. `archive/` is excluded: an archived change is
-     * history and is never edited again.
+     * Every scenario in the canonical specs, with the `PINS:` lines it carries.
      *
      * @return list<array{file: string, scenario: string, pins: list<string>}>
      */
@@ -450,23 +389,16 @@ final class ScenarioTestBindingContractTest extends TestCase
     }
 
     /**
-     * The canonical specs and the deltas of every non-archived change.
+     * The canonical specs — deliberately NOT the change deltas. Those are local
+     * (`.gitignore`), and reading them would make this check's result depend on
+     * the drafts a checkout happens to carry, which is the defect
+     * `ModelCatalogueContractTest` was fixed for.
      *
      * @return list<string>
      */
     private static function specFiles(string $root): array
     {
         $files = glob($root . '/openspec/specs/*/spec.md') ?: [];
-
-        foreach (glob($root . '/openspec/changes/*', GLOB_ONLYDIR) ?: [] as $change) {
-            if ('archive' === basename($change)) {
-                continue;
-            }
-
-            foreach (glob($change . '/specs/*/spec.md') ?: [] as $spec) {
-                $files[] = $spec;
-            }
-        }
 
         sort($files);
 

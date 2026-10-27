@@ -152,15 +152,20 @@ deciding which number fails; do not wire it into CI and leave that implied.
    ledger is `docs/name-ownership.md`; `NameOwnershipContractTest` counts the
    literals and fails on the ceiling.
 7. **The specs are the truth for what is being built.** `openspec/specs/` is
-   canonical, `openspec/changes/<change>/` carries a change's deltas; both are
-   tracked (since 2026-10-27). A scenario that has a test names it —
+   canonical and tracked; `openspec/changes/<change>/` is the working plan for
+   work in flight and is local (`.gitignore` records both decisions and why). A
+   canonical scenario that has a test names it —
    `- PINS: tests/Path/To/Test.php::method` — or says `- PINS: none — <reason>`
-   with the decision written out. `ScenarioTestBindingContractTest` enforces
-   both the pins and the count.
+   with the decision written out. `ScenarioTestBindingContractTest` enforces the
+   pins and the count, and reads `specs/` only, so a delta's scenarios join the
+   count when the change lands. Landing is `openspec archive <change>`: it
+   updates the canonical spec, and a delta left behind is a requirement nobody
+   shares.
 8. **Internal tooling stays out of git:** `.agents/`, `.ai-factory.json`,
-   `.ai-factory/{plans,evolutions,skill-context}`. Committed on purpose:
-   `.ai-factory/config.yaml`, `.ai-factory/patches/`, `.ai-factory/extensions/`,
-   `openspec/`, and the agent files `.codex/` and this one.
+   `.ai-factory/{plans,evolutions,skill-context}`, `openspec/changes/`.
+   Committed on purpose: `.ai-factory/config.yaml`, `.ai-factory/patches/`,
+   `.ai-factory/extensions/`, `openspec/specs/`, `openspec/config.yaml`, and the
+   agent files `.codex/` and this one.
 9. **Commit messages** are `type(scope): subject` — `feat`, `fix`, `docs`,
    `refactor`, `test`, `chore`, `ci`, `build`, `style`, `perf` — with the
    description in English, and **no agent footer**.
@@ -186,7 +191,7 @@ deciding which number fails; do not wire it into CI and leave that implied.
 | how a module is catalogued, installed, removed | `docs/modules.md` |
 | the measured boot state, round by round | `docs/kernel-status.md` · `docs/kernel-status/` |
 | why a rule in `.gitignore` exists | `.gitignore` — every rule carries its reason |
-| what is being built, and what a test holds | `openspec/specs/` · `openspec/changes/` |
+| what is being built, and what a test holds | `openspec/specs/` (shared) · `openspec/changes/` (local plans) |
 | why mago's scope and ceilings are what they are | `docs/mago-evaluation.md` |
 | which names are owned, and every exemption | `docs/name-ownership.md` |
 | the kernel's approved shape | `docs/kernel-shape.md` |

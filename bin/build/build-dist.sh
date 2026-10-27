@@ -110,11 +110,11 @@ APPLY_PROFILE=true
 #   ./.lekalo ./.freebuff  local tool caches
 #   ./.agents ./.ai-factory ./.ai-factory.json ./openspec
 #                       agent tooling and the plan/spec tree: plans,
-#                       references and the factory config are how this tree is
-#                       BUILT, not how it runs. The factory runtime and the
-#                       skills are gitignored; `openspec/` is tracked as of
-#                       2026-10-27 and excluded here on the `mago.toml`
-#                       argument instead — nothing in the artifact reads it
+#                       references, requirements and the factory config are how
+#                       this tree is BUILT, not how it runs. The factory runtime
+#                       and the skills are gitignored, `openspec/specs/` is
+#                       tracked, and both are excluded here on the `mago.toml`
+#                       argument — nothing in the artifact reads them
 #   ./lekalo* ./.gitignore  the Lekalo IR model and the repo's ignore rules are
 #                       how this tree is DEVELOPED, not how it runs
 EXCLUDES=(

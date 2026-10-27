@@ -114,23 +114,32 @@ src/Modules/*
 /.ai-factory/plans/
 /.ai-factory/evolutions/
 /.ai-factory/skill-context/
-# OpenSpec plans and specs WERE ignored here (decision 2026-10-14: "internal
-# tooling too, they stay local and never go to GitHub") and are TRACKED as of
-# 2026-10-27. The reversal is written down because a reader who finds one of
-# the two rules in an older commit should not have to date the commits to know
-# which one holds.
+# OpenSpec: the canonical specs are history, a change is not. This is the third
+# state of one rule, so all three are written down — the two earlier ones read as
+# contradictions on their own, and a reader should not have to date the commits
+# to know which one holds.
 #
-# Why it changed: the specs are the surface the work is JUDGED against, and
-# only the machine that wrote them had them. `ScenarioTestBindingContractTest`
-# binds each scenario to the test that keeps it true, and in CI it could only
-# SKIP — a clone carried no spec tree at all — so the binding protected one
-# checkout, and the `modules` job had to exclude the check by group to keep its
-# no-skips rule intact. A second developer met `.ai-factory/config.yaml`
-# pointing `paths.plans` at a directory they did not have. Plans and specs are
-# how this tree is BUILT, and being unable to build it is a stronger reason to
-# commit than a preference for keeping it local. The deployable artifact still
-# excludes the tree (bin/build/build-dist.sh): how this tree is built is not
-# how it runs, and that distinction is the one that matters here.
+#   2026-10-14  `/openspec/` ignored ("internal tooling too, they stay local")
+#   2026-10-27  the whole tree tracked: the specs are the surface the work is
+#               JUDGED against, and a clone without them made
+#               `ScenarioTestBindingContractTest` SKIP in CI — a check that
+#               protects one machine is not a gate, and `.ai-factory/config.yaml`
+#               pointed `paths.plans` at a directory a second developer did not
+#               have
+#   2026-10-27  split to what is below: `specs/` and `config.yaml` are the
+#               shared truth, `changes/` is the working plan again
+#
+# Why a change stays local: a proposal is how the work is organised while it is
+# in flight, and the archived ones are `.ai-factory/plans/` migrated verbatim —
+# `changes/archive/2026-10-12-settings-theme-switch/proposal.md` still opens
+# with the raw request it came from ("super > funguje nam v settings zmena tem
+# ?") and carries its own "do not edit, history only" header. Those originals
+# under `.ai-factory/plans/` are ignored above, so tracking the copies would make
+# this rule the only difference between two copies of one text. What a clone
+# needs is the requirement and the test that holds it, and that is `specs/` —
+# which is also why the binding gate reads exactly that: a delta is a draft, and
+# its scenarios are counted when the change lands in `specs/`.
+/openspec/changes/
 # Deployable build output (bin/build/build-dist.sh). An artifact, exactly like
 # /public/dist/ above: produced by a script, never committed. A trailing
 # comment on the pattern line does NOT work here — gitignore has no comment
