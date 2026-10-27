@@ -123,7 +123,19 @@ FILE_RE='\.(php|phtml|js|mjs|cjs|ts|tsx|jsx|json|ya?ml|sh|ini|conf)$'
 # ignore the gate. `(^|/)(tests|fixtures)/` and not `^tests/`: the catalogue's
 # own tests live under `modules/<Name>/tests/`, and the first run of this gate
 # proved the difference — three findings, all three in a test fixture.
-SKIP_RE='(^|/)(tests|fixtures)/|^docs/|^storage/blog/|^\.agents/|^vendor/|node_modules/'
+#
+# `^\.ai-factory/extensions/` is vendored, like `.agents/` and `vendor/`: that
+# tree ships an upstream extension beside the project config (782 files, its own
+# `validate.yml`, versioned with the project rather than re-fetched per machine)
+# and its fixtures name synthetic credentials under several naming conventions
+# at once — `scripts/*.test.mjs`, `scripts/*-smoke.mjs`,
+# `rtk-ai-tester-ab/scenarios-evidence.mjs`. Measured, not guessed: the run that
+# vendored that tree reported 18 findings, every one a value like
+# 'must-not-pass-through' or 'AB-SYNTH-TOKEN-7f3a91c2', and annotating them
+# would be the kind of fix a re-vendor erases. Skipped as a tree, so no rule
+# here has to follow a vendor's file naming. The rest of `.ai-factory/` — the
+# project config above all — stays in scope.
+SKIP_RE='(^|/)(tests|fixtures)/|^docs/|^storage/blog/|^\.agents/|^\.ai-factory/extensions/|^vendor/|node_modules/'
 
 hits=""
 scanned=0
