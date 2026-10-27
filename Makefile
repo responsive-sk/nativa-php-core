@@ -23,6 +23,15 @@ help: ## Show available targets
 install: ## Install PHP dev dependencies (the kernel runtime itself has none)
 	$(COMPOSER) install
 
+##@ Toolchain
+# One registry for what this tree is checked with: `toolchain.json` — every tool
+# pin, every target with the question it answers and whether it can fail, and
+# every CI job. `tests/Architecture/ToolchainRegistryContractTest` fails when the
+# registry and the Makefile, the workflow or a pin's own script drift apart in
+# either direction; this target is the reading side of the same file.
+gates: ## Print the toolchain registry: every pin, gate and the question it answers
+	@$(PHP) bin/ops/toolchain-report.php
+
 ##@ Quality
 lint: ## Lint all PHP files (php -l) — non-zero on a real syntax error
 	@find src modules public tests bin -name '*.php' -not -path '*/vendor/*' -print0 | xargs -0 -n1 $(PHP) -l >/dev/null

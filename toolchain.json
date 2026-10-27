@@ -1,0 +1,356 @@
+{
+  "schema_version": 1,
+  "why": "One registry for what this tree is checked with and by what, so the same fact stops living on four sides of the repository. Every tool pin is stated once here and asserted against the file that actually uses it; every make target is a gate or is not, with the question it answers; every CI job is named. tests/Architecture/ToolchainRegistryContractTest.php fails on any drift in either direction, so a new gate, a new job or a version bump cannot happen silently. Read by `make gates`.",
+  "tools": [
+    {
+      "name": "mago",
+      "version": "1.58.2",
+      "target": "x86_64-unknown-linux-gnu",
+      "sha256": "80b6e6ed3cd2fe2da348f9cd83d23e638f2ccd44988d48bebd766c20ccd30dc2",
+      "why": "lint and guard are gates, analyze is a reading, format is excluded; see docs/mago-evaluation.md",
+      "needles": {
+        "files": [
+          "bin/build/mago-spike.sh"
+        ],
+        "strings": [
+          "MAGO_VERSION=\"{{version}}\"",
+          "MAGO_TARGET=\"{{target}}\"",
+          "MAGO_ARCHIVE_SHA256=\"{{sha256}}\""
+        ]
+      },
+      "cache": {
+        "path": ".github/workflows/ci.yml",
+        "key_prefix": "mago"
+      }
+    },
+    {
+      "name": "lekalo",
+      "version": "v0.6.5",
+      "target": "x86_64-unknown-linux-gnu",
+      "sha256": "27cdb64ae99d7180530a05fbc722834c129e73faa693ddafc8c08b60e7794694",
+      "why": "the model gate; same version and checksum as nativa-minimal's install step, so the two projects cannot validate against different binaries",
+      "needles": {
+        "files": [
+          ".github/workflows/ci.yml"
+        ],
+        "strings": [
+          "version={{version}}",
+          "{{sha256}}"
+        ]
+      }
+    }
+  ],
+  "gates": [
+    {
+      "target": "lint",
+      "tier": "kernel",
+      "can_fail": true,
+      "answers": "does every tracked .php file outside vendor/ parse (php -l) — kernel and catalogue",
+      "ci": [
+        {
+          "job": "analysis",
+          "note": "the same target on a fresh checkout"
+        }
+      ]
+    },
+    {
+      "target": "test",
+      "tier": "kernel",
+      "can_fail": true,
+      "answers": "does the tree behave (PHPUnit: tests/ plus modules/*/tests/)"
+    },
+    {
+      "target": "analyze",
+      "tier": "kernel",
+      "can_fail": true,
+      "answers": "types (phpstan level 9), language rewrites (rector dry) and style (cs-fixer dry) over the kernel"
+    },
+    {
+      "target": "mago-lint",
+      "tier": "kernel",
+      "can_fail": true,
+      "answers": "the curated lint rules, ceiling zero, over kernel and catalogue",
+      "ci": [
+        {
+          "job": "curated-lint",
+          "note": "the gate, as against the spike report"
+        }
+      ]
+    },
+    {
+      "target": "mago-guard",
+      "tier": "kernel",
+      "can_fail": true,
+      "answers": "does a kernel file name a module, inline FQCNs included",
+      "ci": [
+        {
+          "job": "kernel-dependency",
+          "note": "no PHP setup, no composer install"
+        }
+      ]
+    },
+    {
+      "target": "extract-check",
+      "tier": "kernel",
+      "can_fail": true,
+      "answers": "does this tree still match the upstream kernel slice",
+      "ci": [
+        {
+          "job": "extract-check",
+          "note": "against ../nativa-minimal"
+        }
+      ]
+    },
+    {
+      "target": "kernel-size",
+      "tier": "kernel",
+      "can_fail": false,
+      "answers": "the kernel shape: bytes, files, layers, interface/concrete split"
+    },
+    {
+      "target": "mago-modules",
+      "tier": "catalogue",
+      "can_fail": false,
+      "answers": "the catalogue alone: lint + analyze, never a gate"
+    },
+    {
+      "target": "themes-check",
+      "tier": "catalogue",
+      "can_fail": true,
+      "answers": "is modules/Themes byte-identical to the nativa-themes checkout"
+    },
+    {
+      "target": "themes-sync",
+      "tier": "catalogue",
+      "can_fail": false,
+      "answers": "copies the theme modules from the nativa-themes checkout"
+    },
+    {
+      "target": "modules-install",
+      "tier": "catalogue",
+      "can_fail": true,
+      "answers": "does every catalogued module install in closure order (refuses a cycle)"
+    },
+    {
+      "target": "admin-smoke",
+      "tier": "catalogue",
+      "can_fail": true,
+      "answers": "does the booted panel walk its admin flows over HTTP on temp databases"
+    },
+    {
+      "target": "dist-check",
+      "tier": "dist",
+      "can_fail": true,
+      "answers": "does a clean clone build a green artifact",
+      "ci": [
+        {
+          "job": "dist",
+          "note": "a clone of HEAD, not the working tree"
+        }
+      ]
+    },
+    {
+      "target": "dist-profile-test",
+      "tier": "dist",
+      "can_fail": true,
+      "answers": "do the three deployment-profile branches answer skip / skip / fail",
+      "ci": [
+        {
+          "job": "dist",
+          "note": "beside dist-check"
+        }
+      ]
+    },
+    {
+      "target": "assets",
+      "tier": "dist",
+      "can_fail": false,
+      "answers": "builds the theme bundles in-tree (pnpm workspace under Frontend/packages)"
+    },
+    {
+      "target": "assets-import",
+      "tier": "dist",
+      "can_fail": false,
+      "answers": "copies the showcase's built bundles when pnpm is not available"
+    },
+    {
+      "target": "security-audit",
+      "tier": "repo",
+      "can_fail": true,
+      "answers": "no tracked .env and no secret-shaped literal in tracked code",
+      "ci": [
+        {
+          "job": "security-audit",
+          "note": "tracked tree only"
+        }
+      ]
+    },
+    {
+      "target": "dependency-audit",
+      "tier": "repo",
+      "can_fail": true,
+      "answers": "no high/critical advisories in composer.lock or the pnpm lockfile",
+      "ci": [
+        {
+          "job": "dependency-audit",
+          "note": "both lockfiles"
+        }
+      ]
+    },
+    {
+      "target": "lekalo-check",
+      "tier": "repo",
+      "can_fail": true,
+      "answers": "is the model well-formed: lock, whole model, and every module on its own",
+      "ci": [
+        {
+          "job": "analysis",
+          "note": "in the Lint + PHPStan + Lekalo model job"
+        }
+      ]
+    },
+    {
+      "target": "lekalo-module",
+      "tier": "repo",
+      "can_fail": true,
+      "answers": "one module's own Lekalo report (MODULE=<id>)"
+    },
+    {
+      "target": "workspace-audit",
+      "tier": "repo",
+      "can_fail": true,
+      "answers": "is the pnpm workspace root at Frontend/packages, with no monorepo tooling"
+    },
+    {
+      "target": "lekalo-verify",
+      "tier": "repo",
+      "can_fail": false,
+      "answers": "read-only Lekalo verification report"
+    },
+    {
+      "target": "lekalo-reports",
+      "tier": "repo",
+      "can_fail": false,
+      "answers": "coupling and architecture-profile reports as markdown"
+    },
+    {
+      "target": "lekalo-doctor",
+      "tier": "repo",
+      "can_fail": false,
+      "answers": "read-only Lekalo readiness report"
+    },
+    {
+      "target": "impact-report",
+      "tier": "repo",
+      "can_fail": false,
+      "answers": "the Lekalo change radius for the working tree (BASE=<ref>)"
+    },
+    {
+      "target": "gates",
+      "tier": "workflow",
+      "can_fail": false,
+      "answers": "prints this registry: every pin, every gate and the question it answers"
+    },
+    {
+      "target": "help",
+      "tier": "workflow",
+      "can_fail": false,
+      "answers": "which targets exist, grouped by section"
+    },
+    {
+      "target": "install",
+      "tier": "workflow",
+      "can_fail": false,
+      "answers": "are the PHP dev dependencies installed (the kernel runtime has none)"
+    },
+    {
+      "target": "dev",
+      "tier": "workflow",
+      "can_fail": false,
+      "answers": "a local dev server on :8000"
+    },
+    {
+      "target": "mago-spike",
+      "tier": "workflow",
+      "can_fail": false,
+      "answers": "all four Mago tools over the phpstan scope, informational"
+    }
+  ],
+  "ci_jobs": [
+    {
+      "key": "analysis",
+      "name": "Lint + PHPStan + Lekalo model",
+      "can_fail": true
+    },
+    {
+      "key": "kernel-dependency",
+      "name": "Kernel dependency (mago guard)",
+      "can_fail": true
+    },
+    {
+      "key": "curated-lint",
+      "name": "Curated lint count (mago lint)",
+      "can_fail": true
+    },
+    {
+      "key": "module-quality",
+      "name": "Module quality (mago, published)",
+      "can_fail": false
+    },
+    {
+      "key": "code-style",
+      "name": "Code style",
+      "can_fail": true
+    },
+    {
+      "key": "security-audit",
+      "name": "Security audit (tracked tree)",
+      "can_fail": true
+    },
+    {
+      "key": "dependency-audit",
+      "name": "Dependency audit (composer + pnpm)",
+      "can_fail": true
+    },
+    {
+      "key": "tests",
+      "name": "PHPUnit",
+      "can_fail": true
+    },
+    {
+      "key": "modules",
+      "name": "Modules (catalogue installed)",
+      "can_fail": true
+    },
+    {
+      "key": "admin-smoke",
+      "name": "Admin flows (booted server)",
+      "can_fail": true
+    },
+    {
+      "key": "assets",
+      "name": "Assets (pnpm)",
+      "can_fail": true
+    },
+    {
+      "key": "boot",
+      "name": "Boot (kernel-only, no vendor)",
+      "can_fail": true
+    },
+    {
+      "key": "dist",
+      "name": "Dist artifact (clean clone)",
+      "can_fail": true
+    },
+    {
+      "key": "themes-check",
+      "name": "Themes-check (catalogue vs nativa-themes)",
+      "can_fail": true
+    },
+    {
+      "key": "extract-check",
+      "name": "Extract-check",
+      "can_fail": true
+    }
+  ]
+}
