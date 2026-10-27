@@ -27,6 +27,7 @@ use Modules\Validation\Validation\Validator;
  * - POST /mark/locales/{id}/edit      edit submit
  * - POST /mark/locales/{id}/delete    delete
  * - POST /mark/locales/import         JSON import
+ * - POST /mark/locales/export         JSON export (database rows → the locale file)
  *
  * All state changes are CSRF-protected by CsrfMiddleware and validated
  * before any write (invalid locale/key re-render with an error).
@@ -38,6 +39,7 @@ use Modules\Validation\Validation\Validator;
 #[Route(path: '/mark/locales/{id}/edit', method: 'POST', name: 'mark.locales.edit.submit', handlerMethod: 'editSubmit')]
 #[Route(path: '/mark/locales/{id}/delete', method: 'POST', name: 'mark.locales.delete', handlerMethod: 'delete')]
 #[Route(path: '/mark/locales/import', method: 'POST', name: 'mark.locales.import', handlerMethod: 'import')]
+#[Route(path: '/mark/locales/export', method: 'POST', name: 'mark.locales.export', handlerMethod: 'export')]
 final class LocalesAction
 {
     use ResolvesRouteUrls;
@@ -65,17 +67,15 @@ final class LocalesAction
         $group = $this->stringParam($request->query('group', ''));
         $search = $this->stringParam($request->query('q', ''));
 
-        if ('' !== $search) {
-            $translations = $service->search($search, $activeLocale);
-        } elseif ('' !== $group) {
-            $translations = $service->getByGroup($group, $activeLocale);
-        } else {
-            $translations = $service->getAll($activeLocale);
-        }
+        // `list()` rather than a repository call: it merges the database rows
+        // with the keys only the locale file carries, so a key that renders
+        // before it has a row is visible (and editable) in the panel.
+        $translations = $service->list($activeLocale, $group, $search);
 
         $imported = $this->importedCount($request);
+        $exported = $this->exportedCount($request);
 
-        $content = $this->listHtml($activeLocale, $group, $search, $translations, $imported);
+        $content = $this->listHtml($activeLocale, $group, $search, $translations, $imported, $exported);
 
         return Response::html(AdminLayout::render(
             'Translations',
@@ -204,6 +204,25 @@ final class LocalesAction
     }
 
     /**
+     * Export the locale's database rows to its JSON file — the other half of
+     * the read chain, so an operator can seed the fallback source from the
+     * panel instead of hand-writing it.
+     *
+     * No cache flush: exporting writes a file the fallback reads; no page in
+     * the page cache renders differently because of it.
+     */
+    public function export(Request $request): Response
+    {
+        $candidate = $this->stringParam($request->body('locale', ''));
+        $locale = LocalesServices::locale()->isAvailable($candidate) ? $candidate : Locale::default()->code();
+
+        $exported = LocalesServices::translations()->export($locale);
+        self::audit('locales.export', 'locale:' . $locale, 'Exported ' . $exported . ' translations', $request->getClientIp());
+
+        return Response::redirect($this->url('mark.locales') . '?locale=' . urlencode($locale) . '&exported=' . $exported);
+    }
+
+    /**
      * Import translations from an uploaded JSON file (flat or grouped format).
      */
     public function import(Request $request): Response
@@ -299,6 +318,7 @@ final class LocalesAction
         string $search,
         array $translations,
         int $imported,
+        ?int $exported = null,
     ): string {
         $rows = '';
         $csrf = AdminLayout::csrfField();
@@ -310,7 +330,7 @@ final class LocalesAction
             $rowGroup = AdminLayout::e($translation->group);
             $iconEdit = AdminLayout::iconEdit();
             $iconDelete = AdminLayout::iconDelete();
-            $rows .= ViewRenderer::render('Modules/Locales/Interfaces/HTTP/templates/locales-edit.phtml', ['url' => $this->urlBuilder(), 'csrf' => $csrf, 'iconDelete' => $iconDelete, 'iconEdit' => $iconEdit, 'id' => $id, 'key' => $key, 'rowGroup' => $rowGroup, 'value' => $value]);
+            $rows .= ViewRenderer::render('Modules/Locales/Interfaces/HTTP/templates/locales-edit.phtml', ['url' => $this->urlBuilder(), 'csrf' => $csrf, 'iconDelete' => $iconDelete, 'iconEdit' => $iconEdit, 'id' => $id, 'key' => $key, 'rowGroup' => $rowGroup, 'value' => $value, 'source' => $translation->source]);
         }
 
         $table = '' === $rows
@@ -318,15 +338,17 @@ final class LocalesAction
             : '<table class="m-table"><thead><tr><th>Key</th><th>Value</th><th>Group</th><th></th></tr></thead><tbody>'
                 . $rows . '</tbody></table>';
 
-        return $this->filterBar($activeLocale, $group, $search, $imported)
+        return $this->filterBar($activeLocale, $group, $search, $imported, $exported)
             . $table
-            . $this->importForm();
+            . $this->importForm()
+            . $this->exportForm($activeLocale);
     }
 
     /**
-     * Locale switcher + group filter + search bar.
+     * Locale switcher + group filter + search bar, with the import/export
+     * notices above it.
      */
-    private function filterBar(string $activeLocale, string $group, string $search, int $imported): string
+    private function filterBar(string $activeLocale, string $group, string $search, int $imported, ?int $exported = null): string
     {
         $localeTabs = '';
 
@@ -344,8 +366,14 @@ final class LocalesAction
         $importNotice = $imported > 0
             ? '<div class="m-alert m-alert-success">Import completed: ' . $imported . ' translations.</div>'
             : '';
+        $exportNotice = match (true) {
+            null === $exported => '',
+            0 === $exported => '<div class="m-alert m-alert-warning">Nothing to export — this locale has no database rows yet.</div>',
+            default => '<div class="m-alert m-alert-success">Exported ' . $exported . ' translations to <code>storage/locales/' . AdminLayout::e($activeLocale) . '.json</code>.</div>',
+        };
 
         return $importNotice
+            . $exportNotice
             . '<div class="m-filter-row">'
             . '<div class="m-filter-bar">' . $localeTabs . '</div>'
             . '<form method="GET" action="' . AdminLayout::e($this->url('mark.locales')) . '" class="m-filter-form">'
@@ -353,6 +381,24 @@ final class LocalesAction
             . '<input type="text" name="group" class="m-input" placeholder="group (nav, home…)" value="' . $groupValue . '">'
             . '<input type="text" name="q" class="m-input" placeholder="Search…" value="' . $searchValue . '">'
             . '<button class="m-btn m-btn-sm" type="submit">Filter</button>'
+            . '</form></div>';
+    }
+
+    /**
+     * JSON export form — writes the locale's rows to `storage/locales/<locale>.json`,
+     * the file the read chain falls back to for a key with no row.
+     */
+    private function exportForm(string $locale): string
+    {
+        $csrf = AdminLayout::csrfField();
+
+        return '<div class="m-card">'
+            . '<h2 class="m-heading">Export JSON</h2>'
+            . '<p class="m-muted m-hint">Writes this locale\'s database rows to <code>storage/locales/' . AdminLayout::e($locale) . '.json</code>. That file is the fallback for a key the database does not carry — a fresh install, a restored database, or a key shipped before its migration — so a missing row renders words instead of the raw key.</p>'
+            . '<form class="m-form" method="POST" action="' . AdminLayout::e($this->url('mark.locales.export')) . '">'
+            . $csrf
+            . '<input type="hidden" name="locale" value="' . AdminLayout::e($locale) . '">'
+            . '<div><button class="m-btn" type="submit">Export to JSON</button></div>'
             . '</form></div>';
     }
 
@@ -494,6 +540,18 @@ final class LocalesAction
         $imported = $request->query('imported');
 
         return '' === $search && is_numeric($imported) ? (int) $imported : 0;
+    }
+
+    /**
+     * The export notice's number, or null when this request is not an export
+     * response — which is what separates "exported nothing" from "just
+     * listing".
+     */
+    private function exportedCount(Request $request): ?int
+    {
+        $exported = $request->query('exported');
+
+        return is_numeric($exported) ? (int) $exported : null;
     }
 
     private function messageBox(string $message): string

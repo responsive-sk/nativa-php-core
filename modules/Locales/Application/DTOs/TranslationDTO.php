@@ -9,6 +9,11 @@ namespace Modules\Locales\Application\DTOs;
  *
  * Immutable snapshot of a translation used for admin list rendering,
  * JSON export and API responses.
+ *
+ * `source` says where the row came from: a `translations` database row
+ * (`database`, the default, so every existing construction site is unchanged)
+ * or the locale's JSON file (`file`, which carries no id and is therefore not
+ * editable in place).
  */
 final readonly class TranslationDTO
 {
@@ -20,6 +25,7 @@ final readonly class TranslationDTO
         public string $group,
         public string $createdAt,
         public string $updatedAt,
+        public string $source = 'database',
     ) {
     }
 
