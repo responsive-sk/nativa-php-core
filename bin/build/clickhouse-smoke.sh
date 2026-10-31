@@ -11,9 +11,11 @@
 #
 # What it walks, in order: the dry run (no server contacted), attach, a read
 # through the inferred table, a read while a live connection holds an
-# uncheckpointed WAL, the status read-back, the `user_files` refusal, the
-# `--typed` table and its warning, and the write gate (refused without
-# `--write`, accepted with it, and the row is really there afterwards).
+# uncheckpointed WAL, `--checkpoint` folding that WAL in and truncating it, a
+# write through ClickHouse during that same WAL, the status read-back, the
+# `user_files` refusal, the `--typed` table and its warning, and the write gate
+# (refused without `--write`, accepted with it, and the row is really there
+# afterwards).
 #
 # It never touches `storage/data/`: the fixtures are a temp directory, every
 # `DB_*` the run needs points into it, and the server is a throwaway one in
@@ -84,6 +86,32 @@ expect_not_contains() {
         *"$needle"*) bad "$label — output still holds '$needle': $(short "$LAST_OUT")" ;;
         *) ok "$label" ;;
     esac
+}
+
+# A `name=<number>` marker printed by the PHP blocks that keep a connection
+# open: the PHP side cannot assert, so it reports and the shell decides.
+marker_value() {
+    printf '%s\n' "$LAST_OUT" | sed -n "s/^$1=\([0-9][0-9]*\)$/\1/p" | head -1
+}
+
+expect_marker_positive() {
+    local label="$1" marker="$2" value
+    value="$(marker_value "$marker")"
+    if [ -n "$value" ] && [ "$value" -gt 0 ]; then
+        ok "$label ($marker=$value)"
+    else
+        bad "$label — $marker=${value:-missing}: $(short "$LAST_OUT")"
+    fi
+}
+
+expect_marker_zero() {
+    local label="$1" marker="$2" value
+    value="$(marker_value "$marker")"
+    if [ "$value" = 0 ]; then
+        ok "$label"
+    else
+        bad "$label — $marker=${value:-missing}: $(short "$LAST_OUT")"
+    fi
 }
 
 cleanup() {
@@ -280,40 +308,80 @@ run php bin/cms clickhouse:query 'SELECT count() AS n FROM nativa_smoke.article_
 expect_code 'a SELECT through the attached database exits 0' 0
 expect_contains 'the server reads both fixture rows' '{"n":2}'
 
-# 3b — the WAL read, which is the measured claim the `attach` warning is about.
-# A live PDO connection writes one more row with `wal_autocheckpoint = 0` and
-# stays open while `clickhouse:query` reads the same file, so that row exists
-# only in `wal.db-wal`. A read that missed the WAL would answer 1; the measured
-# answer is 2. The script asserts the WAL was non-empty at read time as well,
-# because "reads the row" would otherwise pass on a file SQLite had already
-# checkpointed behind our back.
-run php bin/cms clickhouse:attach --db wal
-expect_code 'attach of the WAL fixture exits 0' 0
-
-# shellcheck disable=SC2016 # php -r's own quoting, and $argv/$status are PHP's
+# 3b — the WAL half, all in one process on purpose: a read of a row that is
+# only in the WAL, `--checkpoint` folding it into the file, and a write through
+# ClickHouse while the kernel's own connection is still open. Reopening the
+# connection between the steps would lose the subject every time — closing the
+# last connection checkpoints the file, which is the state these checks test
+# against. So PHP holds the handle, shells out to `bin/cms`, and prints plain
+# `name=value` markers; the shell asserts them.
+# shellcheck disable=SC2016 # php -r's own quoting; $argv and the markers are PHP's
 run php -r '
 $path = $argv[1];
+$wal = $path . "-wal";
+$walBytes = static function () use ($wal): int {
+    clearstatcache();
+    return is_file($wal) ? (int) filesize($wal) : 0;
+};
+$command = static function (string $arguments): array {
+    $lines = [];
+    $status = 0;
+    exec("php bin/cms " . $arguments . " 2>&1", $lines, $status);
+    return [$status, implode("\n", $lines)];
+};
+$readCount = "clickhouse:query " . escapeshellarg("SELECT count() AS n FROM nativa_wal.article_views");
+
 $pdo = new PDO("sqlite:" . $path);
 $pdo->exec("PRAGMA journal_mode=WAL");
 $pdo->exec("PRAGMA wal_autocheckpoint=0");
 $insert = $pdo->prepare("INSERT INTO article_views (id, viewed_at) VALUES (?, ?)");
 $insert->execute([2, "2026-01-02 11:30:00"]);
-clearstatcache();
-$wal = $path . "-wal";
-printf("wal-bytes=%d\n", is_file($wal) ? (int) filesize($wal) : 0);
-exec("php bin/cms clickhouse:query " . escapeshellarg("SELECT count() AS n FROM nativa_wal.article_views") . " 2>&1", $lines, $status);
-echo implode("\n", $lines), "\n";
-exit($status);
-' "$DB_WAL"
-expect_code 'a SELECT with the writing connection still open exits 0' 0
-expect_contains 'the server reads the row that exists only in the WAL' '{"n":2}'
+printf("wal-before=%d\n", $walBytes());
 
-WAL_BYTES="$(printf '%s\n' "$LAST_OUT" | sed -n 's/^wal-bytes=\([0-9][0-9]*\)$/\1/p' | head -1)"
-if [ -n "$WAL_BYTES" ] && [ "$WAL_BYTES" -gt 0 ]; then
-    ok "the WAL was non-empty at read time ($WAL_BYTES bytes)"
-else
-    bad "the WAL was not non-empty at read time — wal-bytes=${WAL_BYTES:-missing}: $(short "$LAST_OUT")"
-fi
+[$status, $out] = $command("clickhouse:attach --db wal");
+echo "attach-exit=", $status, "\n", $out, "\n";
+
+[$status, $out] = $command($readCount);
+echo "read-before-exit=", $status, "\n", $out, "\n";
+
+[$status, $out] = $command("clickhouse:attach --db wal --checkpoint");
+echo "checkpoint-exit=", $status, "\n", $out, "\n";
+printf("wal-after-checkpoint=%d\n", $walBytes());
+
+[$status, $out] = $command($readCount);
+echo "read-after-checkpoint-exit=", $status, "\n", $out, "\n";
+
+// ClickHouse reads double quotes as identifiers, so the literal needs real
+// single quotes — built with chr(39) because this PHP program itself sits in
+// shell single quotes.
+$insertSql = "INSERT INTO nativa_wal.article_views (id, viewed_at) VALUES (3, "
+    . chr(39) . "2026-01-03 09:00:00" . chr(39) . ")";
+[$status, $out] = $command("clickhouse:query " . escapeshellarg($insertSql) . " --write");
+echo "write-exit=", $status, "\n", $out, "\n";
+
+[$status, $out] = $command($readCount);
+echo "read-after-write-exit=", $status, "\n", $out, "\n";
+
+echo "kernel-count-after-write=", (int) $pdo->query("SELECT count(*) FROM article_views")->fetchColumn(), "\n";
+printf("wal-after-write=%d\n", $walBytes());
+' "$DB_WAL"
+expect_code 'the WAL scenario exits 0' 0
+expect_marker_positive 'the WAL was non-empty before the read' wal-before
+expect_contains 'the attach without --checkpoint exits 0' 'attach-exit=0'
+expect_contains 'a non-empty WAL is reported before anything is folded' 'bytes in the WAL'
+expect_contains 'the read before the checkpoint exits 0' 'read-before-exit=0'
+expect_contains 'the server reads the row that exists only in the WAL' '{"n":2}'
+expect_contains '--checkpoint reports what it folded in' 'Checkpointed '
+expect_contains 'the checkpointed attach exits 0' 'checkpoint-exit=0'
+expect_marker_zero 'the checkpoint truncated the WAL' wal-after-checkpoint
+expect_contains 'the read after the checkpoint exits 0' 'read-after-checkpoint-exit=0'
+expect_contains 'the write during the WAL exits 0' 'write-exit=0'
+expect_contains 'the write warning is printed for the ClickHouse write' 'WARNING: a write locks the whole SQLite file'
+expect_contains 'the read after the write exits 0' 'read-after-write-exit=0'
+expect_contains 'the server reads the row ClickHouse wrote' '{"n":3}'
+expect_contains 'the kernel connection sees the row ClickHouse wrote' 'kernel-count-after-write=3'
+expect_marker_positive 'the ClickHouse write went through the WAL' wal-after-write
+expect_not_contains 'no read fell back to the checkpointed row alone' '{"n":1}'
 
 # 4 — status reads the path back from the server. Other kernel databases are
 # deliberately not attached in this run, so the assertion is this database's
@@ -380,4 +448,4 @@ if [ "$FAILED" != 0 ]; then
     exit 1
 fi
 
-echo "clickhouse-smoke: OK — attach, status, query, the WAL read, --typed and the write gate against $CLICKHOUSE_URL"
+echo "clickhouse-smoke: OK — attach, status, query, the WAL read, --checkpoint, --typed and the write gate against $CLICKHOUSE_URL"

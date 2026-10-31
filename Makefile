@@ -144,9 +144,10 @@ admin-smoke: ## Boot the panel with temp DBs and walk the admin flows over HTTP
 # The bridge against a server this target starts: the DDL, the status
 # read-back, the `user_files` refusal, `--typed` and the write gate are facts
 # about ClickHouse, not about this tree, so `composer test` cannot see them.
-# Not in CI: it needs a ClickHouse binary (CLICKHOUSE_BIN=…) or an existing
-# server (CLICKHOUSE_URL=… + CLICKHOUSE_USER_FILES=…).
-clickhouse-smoke: ## Smoke the bridge against a local ClickHouse (attach, status, query, WAL read, --typed, --write)
+# CI runs it as an optional, non-blocking job with a pinned, cached release
+# (toolchain.json). Locally it needs CLICKHOUSE_BIN=… or an existing server
+# (CLICKHOUSE_URL=… + CLICKHOUSE_USER_FILES=…).
+clickhouse-smoke: ## Smoke the bridge against a local ClickHouse (attach, status, query, WAL, --checkpoint, --typed, --write)
 	@bin/build/clickhouse-smoke.sh
 
 ##@ Distribution

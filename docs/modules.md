@@ -943,7 +943,7 @@ file the site is actively serving.
 (it works on a machine with no server). `--force` drops and re-creates a
 database, because ClickHouse cannot re-point an engine; the SQLite file is
 untouched. `--checkpoint` runs `PRAGMA wal_checkpoint(TRUNCATE)` through a
-read-only handle before attaching, and without it a non-empty `<file>-wal` is
+own connection before attaching, and without it a non-empty `<file>-wal` is
 reported rather than ignored — although **measured on 26.11.1.973, ClickHouse
 reads the WAL pages through SQLite**, so the warning is about file-level
 copies, not about the attached database. `--typed` writes explicit
@@ -964,8 +964,8 @@ job: `make clickhouse-smoke` (`bin/build/clickhouse-smoke.sh`) starts a
 throwaway server from `CLICKHOUSE_BIN`, or uses an existing one through
 `CLICKHOUSE_URL` + `CLICKHOUSE_USER_FILES`, and asserts attach, the status
 read-back, a read with a live uncheckpointed WAL, the `PATH_ACCESS_DENIED`
-refusal, `--typed` and the write gate. It is not in CI because it needs a
-ClickHouse binary.
+refusal, `--typed` and the write gate. CI runs it as an optional, non-blocking
+job, with the release pinned and cached in `toolchain.json`.
 
 **Removal has nothing to report.** The module creates no file under
 `storage/`: the objects it creates live inside ClickHouse, and
