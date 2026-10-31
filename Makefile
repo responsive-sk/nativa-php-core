@@ -146,7 +146,7 @@ admin-smoke: ## Boot the panel with temp DBs and walk the admin flows over HTTP
 # about ClickHouse, not about this tree, so `composer test` cannot see them.
 # Not in CI: it needs a ClickHouse binary (CLICKHOUSE_BIN=…) or an existing
 # server (CLICKHOUSE_URL=… + CLICKHOUSE_USER_FILES=…).
-clickhouse-smoke: ## Smoke the bridge against a local ClickHouse (attach, status, query, --typed, --write)
+clickhouse-smoke: ## Smoke the bridge against a local ClickHouse (attach, status, query, WAL read, --typed, --write)
 	@bin/build/clickhouse-smoke.sh
 
 ##@ Distribution

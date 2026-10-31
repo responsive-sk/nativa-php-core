@@ -10,8 +10,9 @@
 # reviewer's memory.
 #
 # What it walks, in order: the dry run (no server contacted), attach, a read
-# through the inferred table, the status read-back, the `user_files` refusal,
-# the `--typed` table and its warning, and the write gate (refused without
+# through the inferred table, a read while a live connection holds an
+# uncheckpointed WAL, the status read-back, the `user_files` refusal, the
+# `--typed` table and its warning, and the write gate (refused without
 # `--write`, accepted with it, and the row is really there afterwards).
 #
 # It never touches `storage/data/`: the fixtures are a temp directory, every
@@ -91,7 +92,8 @@ cleanup() {
         # about statements that change the file, not about the flag being there.
         php bin/cms clickhouse:query 'DROP TABLE IF EXISTS nativa_smoke__article_views' --write >/dev/null 2>&1 || true
         php bin/cms clickhouse:query 'DROP DATABASE IF EXISTS nativa_smoke' --write >/dev/null 2>&1 || true
-        rm -f "$FIXTURES/smoke.db"
+        php bin/cms clickhouse:query 'DROP DATABASE IF EXISTS nativa_wal' --write >/dev/null 2>&1 || true
+        rm -f "$FIXTURES/smoke.db" "$FIXTURES/wal.db" "$FIXTURES/wal.db-wal" "$FIXTURES/wal.db-shm"
     fi
 
     if [ -n "$SERVER_PID" ]; then
@@ -133,6 +135,16 @@ $insert = $pdo->prepare("INSERT INTO article_views (id, viewed_at) VALUES (?, ?)
 $insert->execute([1, "2026-01-01 10:00:00"]);
 $insert->execute([2, "2026-01-02 11:30:00"]);
 ' "$FIXTURES/smoke.db"
+
+# A second file for the WAL read: one checkpointed row, written in rollback
+# mode and closed, so what is on disk before the read is a file with no WAL.
+# shellcheck disable=SC2016 # the same reason as above: php -r's own quoting
+php -r '
+$pdo = new PDO("sqlite:" . $argv[1]);
+$pdo->exec("CREATE TABLE article_views (id INTEGER PRIMARY KEY, viewed_at DATETIME)");
+$insert = $pdo->prepare("INSERT INTO article_views (id, viewed_at) VALUES (?, ?)");
+$insert->execute([1, "2026-01-01 10:00:00"]);
+' "$FIXTURES/wal.db"
 
 # Outside the server's `user_files` on purpose: the engine has to refuse it.
 # A server of our own sees this temp file and refuses it; an external server
@@ -235,6 +247,7 @@ export CLICKHOUSE_CONNECT_TIMEOUT=2
 export CLICKHOUSE_TIMEOUT=20
 export CLICKHOUSE_DATABASE_PREFIX=nativa_
 export DB_SMOKE="$FIXTURES/smoke.db"
+export DB_WAL="$FIXTURES/wal.db"
 
 if [ "$EXTERNAL" = 0 ]; then
     export DB_OUTSIDE="$OUTSIDE"
@@ -266,6 +279,41 @@ expect_code 'attach is idempotent' 0
 run php bin/cms clickhouse:query 'SELECT count() AS n FROM nativa_smoke.article_views'
 expect_code 'a SELECT through the attached database exits 0' 0
 expect_contains 'the server reads both fixture rows' '{"n":2}'
+
+# 3b — the WAL read, which is the measured claim the `attach` warning is about.
+# A live PDO connection writes one more row with `wal_autocheckpoint = 0` and
+# stays open while `clickhouse:query` reads the same file, so that row exists
+# only in `wal.db-wal`. A read that missed the WAL would answer 1; the measured
+# answer is 2. The script asserts the WAL was non-empty at read time as well,
+# because "reads the row" would otherwise pass on a file SQLite had already
+# checkpointed behind our back.
+run php bin/cms clickhouse:attach --db wal
+expect_code 'attach of the WAL fixture exits 0' 0
+
+# shellcheck disable=SC2016 # php -r's own quoting, and $argv/$status are PHP's
+run php -r '
+$path = $argv[1];
+$pdo = new PDO("sqlite:" . $path);
+$pdo->exec("PRAGMA journal_mode=WAL");
+$pdo->exec("PRAGMA wal_autocheckpoint=0");
+$insert = $pdo->prepare("INSERT INTO article_views (id, viewed_at) VALUES (?, ?)");
+$insert->execute([2, "2026-01-02 11:30:00"]);
+clearstatcache();
+$wal = $path . "-wal";
+printf("wal-bytes=%d\n", is_file($wal) ? (int) filesize($wal) : 0);
+exec("php bin/cms clickhouse:query " . escapeshellarg("SELECT count() AS n FROM nativa_wal.article_views") . " 2>&1", $lines, $status);
+echo implode("\n", $lines), "\n";
+exit($status);
+' "$DB_WAL"
+expect_code 'a SELECT with the writing connection still open exits 0' 0
+expect_contains 'the server reads the row that exists only in the WAL' '{"n":2}'
+
+WAL_BYTES="$(printf '%s\n' "$LAST_OUT" | sed -n 's/^wal-bytes=\([0-9][0-9]*\)$/\1/p' | head -1)"
+if [ -n "$WAL_BYTES" ] && [ "$WAL_BYTES" -gt 0 ]; then
+    ok "the WAL was non-empty at read time ($WAL_BYTES bytes)"
+else
+    bad "the WAL was not non-empty at read time — wal-bytes=${WAL_BYTES:-missing}: $(short "$LAST_OUT")"
+fi
 
 # 4 — status reads the path back from the server. Other kernel databases are
 # deliberately not attached in this run, so the assertion is this database's
@@ -332,4 +380,4 @@ if [ "$FAILED" != 0 ]; then
     exit 1
 fi
 
-echo "clickhouse-smoke: OK — attach, status, query, --typed and the write gate against $CLICKHOUSE_URL"
+echo "clickhouse-smoke: OK — attach, status, query, the WAL read, --typed and the write gate against $CLICKHOUSE_URL"
