@@ -161,7 +161,7 @@
       "target": "clickhouse-smoke",
       "tier": "catalogue",
       "can_fail": true,
-      "answers": "does the bridge attach, read a live WAL, type and gate writes against a real ClickHouse server",
+      "answers": "does the bridge attach, read a live WAL, refuse a concurrent writer, type and gate writes against a real ClickHouse server",
       "ci": [
         {
           "job": "clickhouse-smoke",

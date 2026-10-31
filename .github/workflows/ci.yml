@@ -125,7 +125,9 @@
 #                         `--checkpoint`, the typed table, the `user_files`
 #                         refusal and the write gate meet a real engine.
 #                         `continue-on-error`, for the same reason as job 15:
-#                         it reports on every push and blocks nothing.
+#                         it reports on every push and blocks nothing. The
+#                         target writes the run summary itself — result, check
+#                         count and the server version it asked for.
 # =============================================================================
 
 name: CI

@@ -111,23 +111,29 @@ CLICKHOUSE_URL=http://127.0.0.1:8123 \
 
 Without `CLICKHOUSE_URL` the target starts a throwaway server in `mktemp -d`
 (HTTP `18123` on loopback, its own `user_files`), seeds two PDO fixtures, and
-asserts 43 checks: the dry run, attach and its idempotency, a read through the
+asserts 49 checks: the dry run, attach and its idempotency, a read through the
 inferred table, a read of a row that exists only in an uncheckpointed WAL,
 `--checkpoint` folding that row in and truncating `<file>-wal` while the
-writing connection stays open, the status read-back, the `PATH_ACCESS_DENIED`
-refusal for a file outside `user_files`, the `--typed` table with its per-column
-warning, and the write gate (refused without `--write`, accepted with it, the
-row visible through ClickHouse and through the kernel's own connection, and
-the WAL non-empty afterwards). It never opens `storage/data/`: every fixture is
-in the temp directory and every `DB_*` points there.
+writing connection stays open, a write through ClickHouse during that same
+WAL, a second writer refused while a kernel `BEGIN IMMEDIATE` holds the write
+lock (the kernel's row still commits, the refused one never appears), the
+status read-back, the `PATH_ACCESS_DENIED` refusal for a file outside
+`user_files`, the `--typed` table with its per-column warning, and the write
+gate (refused without `--write`, accepted with it, the row visible through
+ClickHouse and through the kernel's own connection, and the WAL non-empty
+afterwards). It never opens `storage/data/`: every fixture is in the temp
+directory and every `DB_*` points there.
 
 The engine is pinned: `toolchain.json` names the release, its sha256 and the
 cache key, and CI runs the target as an optional job (`continue-on-error`, so a
-red run reports without blocking a merge).
+red run reports without blocking a merge). That job publishes the result to the
+run summary — passed or failed, `49 checks`, and the server version it actually
+asked (`SELECT version()`), so the run page answers "which engine, how many
+checks" without opening the log.
 
 What the target does not cover stays manual: whether `SHOW CREATE DATABASE`
-stays parseable across builds, and an `INSERT` from a second writer while the
-kernel is mid-write.
+stays parseable across builds, and a crash mid-transaction leaving a WAL with
+no live writer.
 
 ## What the measurement changed
 

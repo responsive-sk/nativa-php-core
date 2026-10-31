@@ -12,7 +12,9 @@
 # What it walks, in order: the dry run (no server contacted), attach, a read
 # through the inferred table, a read while a live connection holds an
 # uncheckpointed WAL, `--checkpoint` folding that WAL in and truncating it, a
-# write through ClickHouse during that same WAL, the status read-back, the
+# write through ClickHouse during that same WAL, a write from ClickHouse while
+# a kernel transaction holds the write lock (refused by the engine, and the
+# kernel's own row still commits afterwards), the status read-back, the
 # `user_files` refusal, the `--typed` table and its warning, and the write gate
 # (refused without `--write`, accepted with it, and the row is really there
 # afterwards).
@@ -41,11 +43,18 @@ cd "$(dirname "$0")/../.."
 PORT="${SMOKE_CLICKHOUSE_PORT:-18123}"
 TMP="$(mktemp -d)"
 FAILED=0
+CHECKS_OK=0
+CHECKS_FAILED=0
 SERVER_PID=''
+SERVER_VERSION=''
 EXTERNAL=0
 
-ok() { printf 'ok    %s\n' "$1"; }
+ok() {
+    CHECKS_OK=$((CHECKS_OK + 1))
+    printf 'ok    %s\n' "$1"
+}
 bad() {
+    CHECKS_FAILED=$((CHECKS_FAILED + 1))
     printf '::error::%s\n' "$1"
     FAILED=1
 }
@@ -364,6 +373,26 @@ echo "read-after-write-exit=", $status, "\n", $out, "\n";
 
 echo "kernel-count-after-write=", (int) $pdo->query("SELECT count(*) FROM article_views")->fetchColumn(), "\n";
 printf("wal-after-write=%d\n", $walBytes());
+
+// A kernel write that has NOT committed: BEGIN IMMEDIATE takes the write lock
+// and the row sits in the WAL while the transaction stays open across the
+// ClickHouse INSERT below. This is the one state a filesystem copy cannot
+// reproduce and a second writer must not be allowed to interleave with.
+$pdo->exec("BEGIN IMMEDIATE");
+$insert->execute([4, "2026-01-04 10:00:00"]);
+printf("wal-in-transaction=%d\n", $walBytes());
+
+$busySql = "INSERT INTO nativa_wal.article_views (id, viewed_at) VALUES (5, "
+    . chr(39) . "2026-01-05 09:00:00" . chr(39) . ")";
+[$status, $out] = $command("clickhouse:query " . escapeshellarg($busySql) . " --write");
+echo "concurrent-exit=", $status, "\n", $out, "\n";
+
+$pdo->commit();
+
+echo "kernel-count-after-commit=", (int) $pdo->query("SELECT count(*) FROM article_views")->fetchColumn(), "\n";
+
+[$status, $out] = $command($readCount);
+echo "read-after-commit-exit=", $status, "\n", $out, "\n";
 ' "$DB_WAL"
 expect_code 'the WAL scenario exits 0' 0
 expect_marker_positive 'the WAL was non-empty before the read' wal-before
@@ -382,6 +411,12 @@ expect_contains 'the server reads the row ClickHouse wrote' '{"n":3}'
 expect_contains 'the kernel connection sees the row ClickHouse wrote' 'kernel-count-after-write=3'
 expect_marker_positive 'the ClickHouse write went through the WAL' wal-after-write
 expect_not_contains 'no read fell back to the checkpointed row alone' '{"n":1}'
+expect_marker_positive 'a kernel write in flight is in the WAL' wal-in-transaction
+expect_contains 'a concurrent ClickHouse write is refused' 'concurrent-exit=1'
+expect_contains 'the refusal is the engine'"'"'s own lock' 'database is locked'
+expect_contains 'the kernel transaction commits' 'kernel-count-after-commit=4'
+expect_contains 'the committed row is readable through ClickHouse' '{"n":4}'
+expect_not_contains 'the refused concurrent row never appears' '{"n":5}'
 
 # 4 — status reads the path back from the server. Other kernel databases are
 # deliberately not attached in this run, so the assertion is this database's
@@ -442,10 +477,43 @@ expect_contains 'the write warning is printed' 'WARNING: a write locks the whole
 run php bin/cms clickhouse:query 'SELECT count() AS n FROM nativa_smoke.article_views'
 expect_contains 'the written row is readable through ClickHouse' '{"n":3}'
 
+# The version comes from the server, not from the binary's --version: an
+# external server answers for itself, and the point of the line is which engine
+# the checks just met.
+SERVER_VERSION="$(php bin/cms clickhouse:query 'SELECT version()' 2>/dev/null \
+    | sed -n 's/.*"version()":"\([^"]*\)".*/\1/p' | head -1)"
+SERVER_VERSION="${SERVER_VERSION:-unknown}"
+
+# The job summary, when a workflow is running this: a report with the two
+# numbers a reader looks for, so a red optional job is diagnosable from the run
+# page instead of from 49 log lines. Local runs print the same line instead.
+write_summary() {
+    local status="$1"
+
+    if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+        {
+            printf '## ClickHouse smoke\n\n'
+            printf '| | |\n|---|---|\n'
+            printf '| Result | %s |\n' "$status"
+            printf '| Checks | %d passed, %d failed |\n' "$CHECKS_OK" "$CHECKS_FAILED"
+            printf '| Server | ClickHouse %s |\n' "$SERVER_VERSION"
+            printf '| Target | %s |\n' "$CLICKHOUSE_URL"
+            if [ "$EXTERNAL" = 1 ]; then
+                printf '| Mode | an existing server |\n'
+            else
+                printf '| Mode | a throwaway server started by the target |\n'
+            fi
+            printf '\nFull output in the job log.\n'
+        } >>"$GITHUB_STEP_SUMMARY"
+    fi
+}
+
 echo
 if [ "$FAILED" != 0 ]; then
-    echo "clickhouse-smoke: FAILED"
+    write_summary failed
+    echo "clickhouse-smoke: FAILED — $CHECKS_OK passed, $CHECKS_FAILED failed, ClickHouse $SERVER_VERSION"
     exit 1
 fi
 
-echo "clickhouse-smoke: OK — attach, status, query, the WAL read, --checkpoint, --typed and the write gate against $CLICKHOUSE_URL"
+write_summary passed
+echo "clickhouse-smoke: OK — $CHECKS_OK checks against ClickHouse $SERVER_VERSION: attach, status, query, the WAL read, --checkpoint, the concurrent-writer refusal, --typed and the write gate at $CLICKHOUSE_URL"

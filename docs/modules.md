@@ -963,9 +963,10 @@ and the DDL without a network. The server-side facts are a command instead of a
 job: `make clickhouse-smoke` (`bin/build/clickhouse-smoke.sh`) starts a
 throwaway server from `CLICKHOUSE_BIN`, or uses an existing one through
 `CLICKHOUSE_URL` + `CLICKHOUSE_USER_FILES`, and asserts attach, the status
-read-back, a read with a live uncheckpointed WAL, the `PATH_ACCESS_DENIED`
-refusal, `--typed` and the write gate. CI runs it as an optional, non-blocking
-job, with the release pinned and cached in `toolchain.json`.
+read-back, a read with a live uncheckpointed WAL, a second writer refused while
+a kernel transaction holds the lock, the `PATH_ACCESS_DENIED` refusal,
+`--typed` and the write gate. CI runs it as an optional, non-blocking job, with
+the release pinned and cached in `toolchain.json`.
 
 **Removal has nothing to report.** The module creates no file under
 `storage/`: the objects it creates live inside ClickHouse, and

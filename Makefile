@@ -147,7 +147,7 @@ admin-smoke: ## Boot the panel with temp DBs and walk the admin flows over HTTP
 # CI runs it as an optional, non-blocking job with a pinned, cached release
 # (toolchain.json). Locally it needs CLICKHOUSE_BIN=… or an existing server
 # (CLICKHOUSE_URL=… + CLICKHOUSE_USER_FILES=…).
-clickhouse-smoke: ## Smoke the bridge against a local ClickHouse (attach, status, query, WAL, --checkpoint, --typed, --write)
+clickhouse-smoke: ## Smoke the bridge against a local ClickHouse (attach, status, query, WAL, --checkpoint, concurrent write, --typed, --write)
 	@bin/build/clickhouse-smoke.sh
 
 ##@ Distribution
