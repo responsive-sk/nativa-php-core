@@ -117,6 +117,15 @@
 #                         day after it is measured. `continue-on-error`: a
 #                         publisher that can redden a pull request is a gate
 #                         wearing a different name.
+#  16. ClickHouse smoke — OPTIONAL: `make clickhouse-smoke` against a released
+#                         ClickHouse server, downloaded once and cached by
+#                         version (`toolchain.json` pins the version and the
+#                         checksum). The suite drives the transport seam, so
+#                         this is where the DDL, a live uncheckpointed WAL,
+#                         `--checkpoint`, the typed table, the `user_files`
+#                         refusal and the write gate meet a real engine.
+#                         `continue-on-error`, for the same reason as job 15:
+#                         it reports on every push and blocks nothing.
 # =============================================================================
 
 name: CI
@@ -738,6 +747,70 @@ jobs:
       # `make admin-smoke` on a workstation.
       - name: The admin flows over HTTP
         run: bin/build/admin-smoke.sh
+
+  # ---------------------------------------------------------------------------
+  # CLICKHOUSE SMOKE — OPTIONAL: a real server, and nothing blocks on it
+  # ---------------------------------------------------------------------------
+  # The bridge's command tests drive `ClickHouseTransport`, so the suite cannot
+  # see the engine's own answers: whether the DDL is accepted, whether a row in
+  # an uncheckpointed WAL is read, whether `--checkpoint` truncates it, whether
+  # a file outside `user_files` is refused. `make clickhouse-smoke` asks those
+  # of a server it starts itself; this job supplies the binary from a release,
+  # verified against the checksum `toolchain.json` pins, and cached by version
+  # so the 253 MB download happens once per pin.
+  #
+  # `continue-on-error` IS the "optional": the smoke needs a binary, a server
+  # and loopback ports, so a red run is a report rather than a merge blocker.
+  clickhouse-smoke:
+    name: ClickHouse smoke (optional — real server)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: json, mbstring, pdo, pdo_sqlite, sqlite3
+          coverage: none
+
+      - name: Cache the ClickHouse release
+        id: clickhouse-cache
+        uses: actions/cache@v5
+        with:
+          path: storage/cache/clickhouse-smoke/clickhouse-common-static-26.10.2.103-amd64.tgz
+          key: clickhouse-26.10.2.103-x86_64-unknown-linux-gnu
+
+      - name: Download the ClickHouse release
+        if: steps.clickhouse-cache.outputs.cache-hit != 'true'
+        env:
+          CLICKHOUSE_VERSION: "26.10.2.103"
+          CLICKHOUSE_SHA256: "ec811478449184dea496ba17c3f76fdd3aeb2013dd5041676bd00041fed98d17"
+        run: |
+          mkdir -p storage/cache/clickhouse-smoke
+          curl -fsSL -o "storage/cache/clickhouse-smoke/clickhouse-common-static-$CLICKHOUSE_VERSION-amd64.tgz" \
+            "https://github.com/ClickHouse/ClickHouse/releases/download/v$CLICKHOUSE_VERSION-stable/clickhouse-common-static-$CLICKHOUSE_VERSION-amd64.tgz"
+          echo "$CLICKHOUSE_SHA256  storage/cache/clickhouse-smoke/clickhouse-common-static-$CLICKHOUSE_VERSION-amd64.tgz" | sha256sum -c -
+
+      # The release ships one static binary inside the tarball; the smoke takes
+      # its path, never a server on PATH, so the pin is the one that runs.
+      - name: Unpack the ClickHouse binary
+        run: |
+          mkdir -p storage/cache/clickhouse-smoke/extract
+          tar -xzf storage/cache/clickhouse-smoke/clickhouse-common-static-26.10.2.103-amd64.tgz -C storage/cache/clickhouse-smoke/extract
+          install -m 0755 storage/cache/clickhouse-smoke/extract/clickhouse-common-static-26.10.2.103/usr/bin/clickhouse storage/cache/clickhouse-smoke/clickhouse
+
+      - name: Install the Clickhouse module
+        run: php bin/cms module:add Clickhouse
+
+      - name: Run the smoke
+        run: make clickhouse-smoke
+        env:
+          CLICKHOUSE_BIN: ${{ github.workspace }}/storage/cache/clickhouse-smoke/clickhouse
 
   # ---------------------------------------------------------------------------
   # ASSETS — the committed pnpm workspace builds here

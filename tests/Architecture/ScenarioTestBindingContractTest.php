@@ -232,11 +232,11 @@ final class ScenarioTestBindingContractTest extends TestCase
 
         self::assertIsInt($jobs, 'The job keys are not where this check looks for them.');
         self::assertSame(
-            15,
+            16,
             $jobs,
-            'CI runs 15 jobs and this capability promised not to add a 16th: it rides in the existing'
-            . ' `tests` job. Grow the toolchain on purpose and raise this number in that change, not'
-            . ' silently here.',
+            'CI runs 16 jobs. The 16th is the optional ClickHouse smoke (`continue-on-error`), not'
+            . ' a gate this binding rides in — it was added with its pin in `toolchain.json`. Grow the'
+            . ' toolchain on purpose and raise this number in that change, not silently here.',
         );
     }
 
