@@ -22,7 +22,7 @@ use RuntimeException;
  * and the checkpoint live here instead of in both commands.
  *
  * A checkpoint is explicit (proposal, Decision 6): it is `TRUNCATE`, it runs
- * through a read-only handle, and no default path calls it.
+ * on its own connection, and no default path calls it.
  */
 final class SqliteJournal
 {
@@ -53,7 +53,15 @@ final class SqliteJournal
     }
 
     /**
-     * `PRAGMA wal_checkpoint(TRUNCATE)` through a read-only handle.
+     * `PRAGMA wal_checkpoint(TRUNCATE)` on its own connection.
+     *
+     * Read-write on purpose, and measured: a read-only handle answers
+     * `SQLSTATE[HY000]: General error: 10 disk I/O error` (2026-10-31, PHP's
+     * pdo_sqlite), because folding the WAL in writes the database file and
+     * resets `<file>-wal`. The pragma changes no rows; it moves committed
+     * pages home. A second connection is fine — SQLite serialises it against
+     * the kernel's own writers, which is what makes this usable while the
+     * site is serving.
      *
      * @return bool false when the file is gone or the handle cannot be opened
      *
@@ -66,13 +74,7 @@ final class SqliteJournal
         }
 
         try {
-            $pdo = new PDO(
-                'sqlite:' . $databasePath,
-                null,
-                null,
-                [PDO::SQLITE_ATTR_OPEN_FLAGS => PDO::SQLITE_OPEN_READONLY],
-            );
-            $pdo->query('PRAGMA query_only = ON');
+            $pdo = new PDO('sqlite:' . $databasePath);
             $pdo->query('PRAGMA wal_checkpoint(TRUNCATE)');
         } catch (PDOException $exception) {
             throw new RuntimeException(

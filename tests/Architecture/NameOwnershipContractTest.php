@@ -278,9 +278,11 @@ final class NameOwnershipContractTest extends TestCase
      * reason). The six command option-name arrays and the transport's retry
      * status list were inlined rather than made constants, and the test's
      * prefix stopped being a constant once the gate showed that owning
-     * `nativa_` charged ten places for it.
+     * `nativa_` charged ten places for it. 261 with `SqliteJournalTest`: its
+     * guard is the same `MODULE` constant every module test declares, and the
+     * name already existed, so only the declaration count moves.
      */
-    private const int MAX_DECLARATIONS = 260;
+    private const int MAX_DECLARATIONS = 261;
 
     /**
      * 203 → 204 with MAX_DECLARATIONS: `ModuleTreeState::IGNORED` is a name as
