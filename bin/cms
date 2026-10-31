@@ -22,6 +22,12 @@ declare(strict_types = 1);
  *   queue:prune              drop failed jobs older than an interval (needs the Queue module)
  *   outbox:process           deliver pending outbox messages and prune them (needs the Outbox module)
  *   generate-images          render article preview images (needs the Blog module)
+ *   clickhouse:attach        attach the kernel's SQLite files as ClickHouse databases
+ *                            (needs the Clickhouse module)
+ *   clickhouse:status        the server's view of the attached databases, and drift
+ *                            (needs the Clickhouse module)
+ *   clickhouse:query "<sql>" run one statement (read-only unless --write)
+ *                            (needs the Clickhouse module)
  *   user:admin [email] [password]  create or repair an administrator (needs the Users module)
  *   discovery:clear          delete the discovery cache (rebuilt on the next request)
  *   discovery:status         whether the discovery cache exists and is fresh
@@ -357,6 +363,11 @@ function usage(): void
     out('  outbox:process [--limit=N] [--prune-interval="7 days"] [--no-prune]');
     out('                            deliver pending outbox messages and prune processed ones');
     out('  generate-images [-s|--slug S] [-f|--format FMT]  render article preview images');
+    out('  clickhouse:attach [--db=<name>] [--prefix=<p>] [--dry-run] [--force] [--checkpoint]');
+    out('                            attach every storage/data/*.db as a ClickHouse database');
+    out('  clickhouse:status         the server\'s view of the attached databases, and drift');
+    out('  clickhouse:query "<sql>" [--db=<name>] [--write] [--format=JSONEachRow|TSV]');
+    out('                            run one statement (read-only unless --write)');
     out('  user:admin [email] [password] [--name=NAME]');
     out('                            create or repair an administrator (defaults admin@example.test / admin1234)');
     out('  settings:profile [--file=PATH]');
@@ -504,6 +515,66 @@ function cmdGenerateImages(array $argv): void
 
     exit($command->run(
         array_merge(['generate-images'], array_slice($argv, 2)),
+        output(),
+    ));
+}
+
+/**
+ * Attach the kernel's SQLite files as ClickHouse databases.
+ *
+ * A module command, guarded the way the Blog command is: a kernel-only tree
+ * has no Clickhouse slice to load, and the guard names the install.
+ *
+ * @param list<string> $argv the full argv; options start at index 2
+ */
+function cmdClickhouseAttach(array $argv): void
+{
+    if (!class_exists(\Modules\Clickhouse\Interfaces\CLI\Command\AttachCommand::class)) {
+        fail('clickhouse:attach needs the Clickhouse module (bin/cms module:add Clickhouse).');
+    }
+
+    $command = new \Modules\Clickhouse\Interfaces\CLI\Command\AttachCommand();
+
+    exit($command->run(
+        array_merge(['clickhouse:attach'], array_slice($argv, 2)),
+        output(),
+    ));
+}
+
+/**
+ * Report what the ClickHouse server sees, and anything that drifted.
+ *
+ * @param list<string> $argv the full argv; options start at index 2
+ */
+function cmdClickhouseStatus(array $argv): void
+{
+    if (!class_exists(\Modules\Clickhouse\Interfaces\CLI\Command\StatusCommand::class)) {
+        fail('clickhouse:status needs the Clickhouse module (bin/cms module:add Clickhouse).');
+    }
+
+    $command = new \Modules\Clickhouse\Interfaces\CLI\Command\StatusCommand();
+
+    exit($command->run(
+        array_merge(['clickhouse:status'], array_slice($argv, 2)),
+        output(),
+    ));
+}
+
+/**
+ * Run one statement against the server — read-only unless `--write`.
+ *
+ * @param list<string> $argv the full argv; the statement starts at index 2
+ */
+function cmdClickhouseQuery(array $argv): void
+{
+    if (!class_exists(\Modules\Clickhouse\Interfaces\CLI\Command\QueryCommand::class)) {
+        fail('clickhouse:query needs the Clickhouse module (bin/cms module:add Clickhouse).');
+    }
+
+    $command = new \Modules\Clickhouse\Interfaces\CLI\Command\QueryCommand();
+
+    exit($command->run(
+        array_merge(['clickhouse:query'], array_slice($argv, 2)),
         output(),
     ));
 }
@@ -749,6 +820,21 @@ function main(array $argv): void
 
         case 'generate-images':
             cmdGenerateImages($argv);
+
+            break;
+
+        case 'clickhouse:attach':
+            cmdClickhouseAttach($argv);
+
+            break;
+
+        case 'clickhouse:status':
+            cmdClickhouseStatus($argv);
+
+            break;
+
+        case 'clickhouse:query':
+            cmdClickhouseQuery($argv);
 
             break;
 
