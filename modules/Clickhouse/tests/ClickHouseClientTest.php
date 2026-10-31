@@ -40,7 +40,7 @@ final class ClickHouseClientTest extends TestCase
     #[Test]
     public function selectReadsOneObjectPerLine(): void
     {
-        $transport = new RecordingClickHouseTransport(["{\"n\":1}\n{\"n\":2}\n"]);
+        $transport = $this->transport(["{\"n\":1}\n{\"n\":2}\n"]);
         $rows = (new ClickHouseClient($transport))->select('SELECT number AS n FROM numbers(2)');
 
         self::assertSame([['n' => 1], ['n' => 2]], $rows);
@@ -54,7 +54,7 @@ final class ClickHouseClientTest extends TestCase
     #[Test]
     public function aNewlineInsideAStringStaysOneRow(): void
     {
-        $transport = new RecordingClickHouseTransport(["{\"note\":\"line1\\nline2\"}\n"]);
+        $transport = $this->transport(["{\"note\":\"line1\\nline2\"}\n"]);
         $rows = (new ClickHouseClient($transport))->select('SELECT note FROM t');
 
         self::assertCount(1, $rows);
@@ -64,7 +64,7 @@ final class ClickHouseClientTest extends TestCase
     #[Test]
     public function anEmptyBodyIsZeroRows(): void
     {
-        $transport = new RecordingClickHouseTransport(['']);
+        $transport = $this->transport(['']);
 
         self::assertSame([], (new ClickHouseClient($transport))->select('SELECT 1 WHERE 0'));
     }
@@ -77,7 +77,7 @@ final class ClickHouseClientTest extends TestCase
     #[Test]
     public function aJsonArrayBodyIsRefusedOutLoud(): void
     {
-        $transport = new RecordingClickHouseTransport(['[{"n":1},{"n":2}]']);
+        $transport = $this->transport(['[{"n":1},{"n":2}]']);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('select() needs JSONEachRow');
@@ -88,7 +88,7 @@ final class ClickHouseClientTest extends TestCase
     #[Test]
     public function selectAppendsTheFormatOnlyWhenTheStatementHasNone(): void
     {
-        $transport = new RecordingClickHouseTransport(["{\"n\":1}\n", "{\"n\":1}\n"]);
+        $transport = $this->transport(["{\"n\":1}\n", "{\"n\":1}\n"]);
         $client = new ClickHouseClient($transport);
 
         $client->select('SELECT 1 AS n;');
@@ -101,7 +101,7 @@ final class ClickHouseClientTest extends TestCase
     #[Test]
     public function emitSendsTheStatementVerbatimAndReturnsTheBody(): void
     {
-        $transport = new RecordingClickHouseTransport(['']);
+        $transport = $this->transport(['']);
 
         $body = (new ClickHouseClient($transport))->emit("CREATE DATABASE IF NOT EXISTS nativa_blog ENGINE = SQLite('/tmp/blog.db')");
 
@@ -115,7 +115,7 @@ final class ClickHouseClientTest extends TestCase
     #[Test]
     public function insertSendsOneJsonObjectPerRow(): void
     {
-        $transport = new RecordingClickHouseTransport(['']);
+        $transport = $this->transport(['']);
 
         (new ClickHouseClient($transport))->insert('nativa_blog.article_views', [
             ['article_slug' => 'a"b', 'viewed_at' => '2026-10-28 10:00:00'],
@@ -141,7 +141,7 @@ final class ClickHouseClientTest extends TestCase
     #[Test]
     public function insertOfNoRowsMakesNoRequest(): void
     {
-        $transport = new RecordingClickHouseTransport([]);
+        $transport = $this->transport([]);
 
         self::assertSame('', (new ClickHouseClient($transport))->insert('t', []));
         self::assertSame([], $transport->calls);
@@ -150,7 +150,7 @@ final class ClickHouseClientTest extends TestCase
     #[Test]
     public function pingIsFalseOnATransportFailure(): void
     {
-        $transport = new RecordingClickHouseTransport([ClickHouseError::fromTransport('Connection refused')]);
+        $transport = $this->transport([ClickHouseError::fromTransport('Connection refused')]);
 
         self::assertFalse((new ClickHouseClient($transport))->ping());
     }
@@ -158,7 +158,7 @@ final class ClickHouseClientTest extends TestCase
     #[Test]
     public function databasesAndTablesReadTheNameColumn(): void
     {
-        $transport = new RecordingClickHouseTransport([
+        $transport = $this->transport([
             "{\"name\":\"default\"}\n{\"name\":\"nativa_blog\"}\n",
             "{\"name\":\"article_views\"}\n",
             "{\"statement\":\"CREATE DATABASE nativa_blog\\nENGINE = SQLite('/srv/blog.db')\"}\n",
@@ -172,33 +172,42 @@ final class ClickHouseClientTest extends TestCase
             $client->createDatabase('nativa_blog'),
         );
     }
-}
-
-/**
- * The test seam: records every statement, answers from a queue.
- */
-final class RecordingClickHouseTransport implements ClickHouseTransport
-{
-    /** @var list<array{sql: string, database: string}> */
-    public array $calls = [];
 
     /**
+     * The seam: records every statement and answers from a queue.
+     *
+     * Anonymous on purpose: PHPUnit loads this file in a kernel-only checkout
+     * too, where the module is absent — a file-scope `implements
+     * ClickHouseTransport` would fail at class declaration before setUp() can
+     * skip it. Only calling the factory resolves the interface.
+     *
      * @param list<string|Throwable> $answers in order; an empty queue answers ''
      */
-    public function __construct(private array $answers = [])
+    private function transport(array $answers = []): ClickHouseTransport
     {
-    }
+        return new class($answers) implements ClickHouseTransport {
+            /** @var list<array{sql: string, database: string}> */
+            public array $calls = [];
 
-    public function execute(string $sql, string $database = ''): string
-    {
-        $this->calls[] = ['sql' => $sql, 'database' => $database];
+            /**
+             * @param list<string|Throwable> $answers
+             */
+            public function __construct(private array $answers = [])
+            {
+            }
 
-        $answer = array_shift($this->answers);
+            public function execute(string $sql, string $database = ''): string
+            {
+                $this->calls[] = ['sql' => $sql, 'database' => $database];
 
-        if ($answer instanceof Throwable) {
-            throw $answer;
-        }
+                $answer = array_shift($this->answers);
 
-        return $answer ?? '';
+                if ($answer instanceof Throwable) {
+                    throw $answer;
+                }
+
+                return $answer ?? '';
+            }
+        };
     }
 }

@@ -36,13 +36,17 @@ final class QueryCommandTest extends TestCase
 
     protected function tearDown(): void
     {
-        ClickhouseServices::reset();
+        // PHPUnit runs tearDown() even when setUp() skipped, so in a
+        // kernel-only checkout this class does not exist yet.
+        if (class_exists(ClickhouseServices::class)) {
+            ClickhouseServices::reset();
+        }
     }
 
     #[Test]
     public function aSelectRunsAndItsRowsArePrinted(): void
     {
-        $transport = new QueryRecordingTransport(["{\"n\":1}\n{\"n\":2}\n"]);
+        $transport = $this->transport(["{\"n\":1}\n{\"n\":2}\n"]);
         $output = new QueryCollector();
 
         $exit = $this->command($transport)->run(['clickhouse:query', 'SELECT number AS n FROM numbers(2)'], $output);
@@ -55,7 +59,7 @@ final class QueryCommandTest extends TestCase
     #[Test]
     public function aWriteWithoutTheFlagNeverReachesTheServer(): void
     {
-        $transport = new QueryRecordingTransport();
+        $transport = $this->transport();
         $output = new QueryCollector();
 
         $exit = $this->command($transport)->run(['clickhouse:query', 'INSERT INTO t VALUES (1)'], $output);
@@ -68,7 +72,7 @@ final class QueryCommandTest extends TestCase
     #[Test]
     public function aWriteWithTheFlagWarnsAndRuns(): void
     {
-        $transport = new QueryRecordingTransport(['']);
+        $transport = $this->transport(['']);
         $output = new QueryCollector();
 
         $exit = $this->command($transport)->run(
@@ -85,7 +89,7 @@ final class QueryCommandTest extends TestCase
     #[Test]
     public function tsvPrintsTheBodiesLinesVerbatim(): void
     {
-        $transport = new QueryRecordingTransport(["1\tone\n2\ttwo\n"]);
+        $transport = $this->transport(["1\tone\n2\ttwo\n"]);
         $output = new QueryCollector();
 
         $exit = $this->command($transport)->run(
@@ -101,7 +105,7 @@ final class QueryCommandTest extends TestCase
     #[Test]
     public function theDatabaseFlagBecomesTheRequestParameterNotSql(): void
     {
-        $transport = new QueryRecordingTransport(["{\"n\":1}\n"]);
+        $transport = $this->transport(["{\"n\":1}\n"]);
         $output = new QueryCollector();
 
         $exit = $this->command($transport)->run(
@@ -117,7 +121,7 @@ final class QueryCommandTest extends TestCase
     #[Test]
     public function aServerErrorPrintsTheSingleLineAndExitsOne(): void
     {
-        $transport = new QueryRecordingTransport([
+        $transport = $this->transport([
             ClickHouseError::fromResponse("Code: 60. DB::Exception: Table default.x doesn't exist.\n"),
         ]);
         $output = new QueryCollector();
@@ -133,7 +137,7 @@ final class QueryCommandTest extends TestCase
     {
         $output = new QueryCollector();
 
-        $exit = $this->command(new QueryRecordingTransport())->run(
+        $exit = $this->command($this->transport())->run(
             ['clickhouse:query', 'SELECT 1', '--format=csv'],
             $output,
         );
@@ -147,7 +151,7 @@ final class QueryCommandTest extends TestCase
     {
         $output = new QueryCollector();
 
-        $exit = $this->command(new QueryRecordingTransport())->run(
+        $exit = $this->command($this->transport())->run(
             ['clickhouse:query', 'SELECT 1', 'SELECT 2'],
             $output,
         );
@@ -160,39 +164,48 @@ final class QueryCommandTest extends TestCase
     {
         return new QueryCommand(new ClickHouseClient($transport));
     }
-}
-
-/**
- * Records the statement and the database parameter; answers from a queue.
- */
-final class QueryRecordingTransport implements ClickHouseTransport
-{
-    /** @var list<array{sql: string, database: string}> */
-    public array $calls = [];
 
     /**
-     * @param list<string|Throwable> $answers
+     * The seam: records every statement and answers from a queue.
+     *
+     * Anonymous on purpose: PHPUnit loads this file in a kernel-only checkout
+     * too, where the module is absent — a file-scope `implements
+     * ClickHouseTransport` would fail at class declaration before setUp() can
+     * skip it. Only calling the factory resolves the interface.
+     *
+     * @param list<string|Throwable> $answers in order; an empty queue answers ''
      */
-    public function __construct(private array $answers = [])
+    private function transport(array $answers = []): ClickHouseTransport
     {
-    }
+        return new class($answers) implements ClickHouseTransport {
+            /** @var list<array{sql: string, database: string}> */
+            public array $calls = [];
 
-    public function execute(string $sql, string $database = ''): string
-    {
-        $this->calls[] = ['sql' => $sql, 'database' => $database];
+            /**
+             * @param list<string|Throwable> $answers
+             */
+            public function __construct(private array $answers = [])
+            {
+            }
 
-        $answer = array_shift($this->answers);
+            public function execute(string $sql, string $database = ''): string
+            {
+                $this->calls[] = ['sql' => $sql, 'database' => $database];
 
-        if ($answer instanceof Throwable) {
-            throw $answer;
-        }
+                $answer = array_shift($this->answers);
 
-        return $answer ?? '';
+                if ($answer instanceof Throwable) {
+                    throw $answer;
+                }
+
+                return $answer ?? '';
+            }
+        };
     }
 }
 
 /**
- * A CliOutput that keeps every line.
+ * A CliOutput that keeps every printed line, so a test can assert on the output.
  */
 final class QueryCollector implements CliOutput
 {

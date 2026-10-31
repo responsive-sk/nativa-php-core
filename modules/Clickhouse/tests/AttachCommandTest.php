@@ -56,7 +56,12 @@ final class AttachCommandTest extends TestCase
 
         $this->previousEnv = [];
 
-        ClickhouseServices::reset();
+        // PHPUnit runs tearDown() even when setUp() skipped, so in a
+        // kernel-only checkout this class does not exist yet.
+        if (class_exists(ClickhouseServices::class)) {
+            ClickhouseServices::reset();
+        }
+
         Env::reset();
         Env::loadImmutable('');
         AppPaths::resetInstance();
@@ -66,7 +71,7 @@ final class AttachCommandTest extends TestCase
     public function aDryRunPrintsTheStatementAndWritesNothing(): void
     {
         $path = $this->database('zattach');
-        $transport = new CommandRecordingTransport();
+        $transport = $this->transport();
         $output = $this->collector();
 
         $exit = $this->command($transport)->run(
@@ -199,6 +204,44 @@ final class AttachCommandTest extends TestCase
     {
         return new CommandCollector();
     }
+
+    /**
+     * The seam: records every statement and answers from a queue.
+     *
+     * Anonymous on purpose: PHPUnit loads this file in a kernel-only checkout
+     * too, where the module is absent — a file-scope `implements
+     * ClickHouseTransport` would fail at class declaration before setUp() can
+     * skip it. Only calling the factory resolves the interface.
+     *
+     * @param list<string|Throwable> $answers in order; an empty queue answers ''
+     */
+    private function transport(array $answers = []): ClickHouseTransport
+    {
+        return new class($answers) implements ClickHouseTransport {
+            /** @var list<array{sql: string, database: string}> */
+            public array $calls = [];
+
+            /**
+             * @param list<string|Throwable> $answers
+             */
+            public function __construct(private array $answers = [])
+            {
+            }
+
+            public function execute(string $sql, string $database = ''): string
+            {
+                $this->calls[] = ['sql' => $sql, 'database' => $database];
+
+                $answer = array_shift($this->answers);
+
+                if ($answer instanceof Throwable) {
+                    throw $answer;
+                }
+
+                return $answer ?? '';
+            }
+        };
+    }
 }
 
 /**
@@ -217,34 +260,5 @@ final class CommandCollector implements CliOutput
     public function text(): string
     {
         return implode("\n", $this->lines);
-    }
-}
-
-/**
- * Records what the command sent, so "nothing was sent" is assertable.
- */
-final class CommandRecordingTransport implements ClickHouseTransport
-{
-    /** @var list<array{sql: string, database: string}> */
-    public array $calls = [];
-
-    /**
-     * @param list<string|Throwable> $answers
-     */
-    public function __construct(private array $answers = [])
-    {
-    }
-
-    public function execute(string $sql, string $database = ''): string
-    {
-        $this->calls[] = ['sql' => $sql, 'database' => $database];
-
-        $answer = array_shift($this->answers);
-
-        if ($answer instanceof Throwable) {
-            throw $answer;
-        }
-
-        return $answer ?? '';
     }
 }

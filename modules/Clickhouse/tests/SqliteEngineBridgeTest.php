@@ -209,7 +209,7 @@ final class SqliteEngineBridgeTest extends TestCase
     {
         $path = (string) realpath($this->temporaryDatabase('zapply'));
         $attachment = new SqliteAttachment('nativa_zapply', $path, basename($path));
-        $transport = new BridgeRecordingTransport(['', "{\"name\":\"article_views\"}\n"]);
+        $transport = $this->transport(['', "{\"name\":\"article_views\"}\n"]);
 
         (new SqliteEngineBridge())->apply(new ClickHouseClient($transport), [$attachment], false);
 
@@ -222,7 +222,7 @@ final class SqliteEngineBridgeTest extends TestCase
     public function forceDropsBeforeItCreates(): void
     {
         $attachment = new SqliteAttachment('nativa_zforce', '/srv/zforce.db', 'zforce.db');
-        $transport = new BridgeRecordingTransport(['', '', "{\"name\":\"t\"}\n"]);
+        $transport = $this->transport(['', '', "{\"name\":\"t\"}\n"]);
 
         (new SqliteEngineBridge())->apply(new ClickHouseClient($transport), [$attachment], true);
 
@@ -234,7 +234,7 @@ final class SqliteEngineBridgeTest extends TestCase
     public function driftNamesABackendThatReadsADifferentPath(): void
     {
         $attachment = new SqliteAttachment('nativa_blog', '/new/storage/blog.db', 'blog.db');
-        $transport = new BridgeRecordingTransport([
+        $transport = $this->transport([
             "{\"name\":\"nativa_blog\"}\n",
             "{\"statement\":\"CREATE DATABASE nativa_blog\\nENGINE = SQLite('/old/storage/blog.db')\"}\n",
         ]);
@@ -250,7 +250,7 @@ final class SqliteEngineBridgeTest extends TestCase
     public function driftNamesALocalFileThatIsNotAttached(): void
     {
         $attachment = new SqliteAttachment('nativa_blog', '/srv/blog.db', 'blog.db');
-        $transport = new BridgeRecordingTransport(["{\"name\":\"default\"}\n"]);
+        $transport = $this->transport(["{\"name\":\"default\"}\n"]);
 
         $lines = (new SqliteEngineBridge())->drift(new ClickHouseClient($transport), [$attachment]);
 
@@ -261,7 +261,7 @@ final class SqliteEngineBridgeTest extends TestCase
     public function anAgreeingServerHasNoDrift(): void
     {
         $attachment = new SqliteAttachment('nativa_blog', '/srv/blog.db', 'blog.db');
-        $transport = new BridgeRecordingTransport([
+        $transport = $this->transport([
             "{\"name\":\"nativa_blog\"}\n",
             "{\"statement\":\"CREATE DATABASE nativa_blog\\nENGINE = SQLite('/srv/blog.db')\"}\n",
         ]);
@@ -318,34 +318,42 @@ final class SqliteEngineBridgeTest extends TestCase
         $this->previousEnv[$key] = getenv($key) ?: '';
         putenv($key . '=' . $path);
     }
-}
-
-/**
- * The bridge's recording transport — named apart from the client test's so a
- * filtered run can load either file alone.
- */
-final class BridgeRecordingTransport implements ClickHouseTransport
-{
-    /** @var list<array{sql: string, database: string}> */
-    public array $calls = [];
 
     /**
-     * @param list<string|Throwable> $answers
+     * The seam: records every statement and answers from a queue.
+     *
+     * Anonymous on purpose: PHPUnit loads this file in a kernel-only checkout
+     * too, where the module is absent — a file-scope `implements
+     * ClickHouseTransport` would fail at class declaration before setUp() can
+     * skip it. Only calling the factory resolves the interface.
+     *
+     * @param list<string|Throwable> $answers in order; an empty queue answers ''
      */
-    public function __construct(private array $answers = [])
+    private function transport(array $answers = []): ClickHouseTransport
     {
-    }
+        return new class($answers) implements ClickHouseTransport {
+            /** @var list<array{sql: string, database: string}> */
+            public array $calls = [];
 
-    public function execute(string $sql, string $database = ''): string
-    {
-        $this->calls[] = ['sql' => $sql, 'database' => $database];
+            /**
+             * @param list<string|Throwable> $answers
+             */
+            public function __construct(private array $answers = [])
+            {
+            }
 
-        $answer = array_shift($this->answers);
+            public function execute(string $sql, string $database = ''): string
+            {
+                $this->calls[] = ['sql' => $sql, 'database' => $database];
 
-        if ($answer instanceof Throwable) {
-            throw $answer;
-        }
+                $answer = array_shift($this->answers);
 
-        return $answer ?? '';
+                if ($answer instanceof Throwable) {
+                    throw $answer;
+                }
+
+                return $answer ?? '';
+            }
+        };
     }
 }

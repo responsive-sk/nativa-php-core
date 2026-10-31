@@ -47,7 +47,12 @@ final class StatusCommandTest extends TestCase
 
         $this->previousEnv = [];
 
-        ClickhouseServices::reset();
+        // PHPUnit runs tearDown() even when setUp() skipped, so in a
+        // kernel-only checkout this class does not exist yet.
+        if (class_exists(ClickhouseServices::class)) {
+            ClickhouseServices::reset();
+        }
+
         Env::reset();
         Env::loadImmutable('');
         AppPaths::resetInstance();
@@ -56,7 +61,7 @@ final class StatusCommandTest extends TestCase
     #[Test]
     public function aServerThatAgreesReportsNoDriftAndExitsZero(): void
     {
-        $stub = new StatusStubTransport(true, $this->attachedNames());
+        $stub = $this->server(true, $this->attachedNames());
         $output = new StatusCollector();
 
         $exit = $this->command($stub)->run(['clickhouse:status'], $output);
@@ -70,7 +75,7 @@ final class StatusCommandTest extends TestCase
     public function aServerThatReadsADifferentPathIsDriftAndExitsOne(): void
     {
         $names = $this->attachedNames();
-        $stub = new StatusStubTransport(true, $names, ['nativa_blog' => '/moved/blog.db']);
+        $stub = $this->server(true, $names, ['nativa_blog' => '/moved/blog.db']);
         $output = new StatusCollector();
 
         $exit = $this->command($stub)->run(['clickhouse:status'], $output);
@@ -84,7 +89,7 @@ final class StatusCommandTest extends TestCase
     #[Test]
     public function anUnreachableServerExitsOneBeforeListingAnything(): void
     {
-        $stub = new StatusStubTransport(false, []);
+        $stub = $this->server(false, []);
         $output = new StatusCollector();
 
         $exit = $this->command($stub)->run(['clickhouse:status'], $output);
@@ -121,58 +126,68 @@ final class StatusCommandTest extends TestCase
         putenv($name . '=' . $value);
         Env::reset();
     }
-}
-
-/**
- * A server-shaped stub: three query families, and a path map for drift.
- */
-final class StatusStubTransport implements ClickHouseTransport
-{
     /**
+     * A server-shaped stub: three query families, and a path map for drift.
+     *
+     * Anonymous on purpose: PHPUnit loads this file in a kernel-only checkout
+     * where the module is absent, and a file-scope `implements
+     * ClickHouseTransport` would fail at class declaration before setUp() could
+     * skip it.
+     *
      * @param list<string>          $databases what system.databases answers
      * @param array<string, string> $paths     database → path the server claims
      */
-    public function __construct(
-        private readonly bool $reachable,
-        private readonly array $databases,
-        private readonly array $paths = [],
-    ) {
-    }
-
-    public function execute(string $sql, string $database = ''): string
+    private function server(bool $reachable, array $databases, array $paths = []): ClickHouseTransport
     {
-        if (!$this->reachable) {
-            throw ClickHouseError::fromTransport('Connection refused');
-        }
+        return new class($reachable, $databases, $paths) implements ClickHouseTransport {
+            /**
+             * @param list<string>          $databases
+             * @param array<string, string> $paths
+             */
+            public function __construct(
+                private readonly bool $reachable,
+                private readonly array $databases,
+                private readonly array $paths = [],
+            ) {
+            }
 
-        if (str_contains($sql, 'system.databases')) {
-            return implode('', array_map(
-                static fn (string $name): string => json_encode(['name' => $name], JSON_THROW_ON_ERROR) . "\n",
-                $this->databases,
-            ));
-        }
+            public function execute(string $sql, string $database = ''): string
+            {
+                if (!$this->reachable) {
+                    throw ClickHouseError::fromTransport('Connection refused');
+                }
 
-        if (1 === preg_match('/SHOW CREATE DATABASE (\S+)/i', $sql, $matches)) {
-            $name = $matches[1];
-            $path = $this->paths[$name] ?? $this->localPath($name);
+                if (str_contains($sql, 'system.databases')) {
+                    return implode('', array_map(
+                        static fn (string $name): string => json_encode(['name' => $name], JSON_THROW_ON_ERROR) . "\n",
+                        $this->databases,
+                    ));
+                }
 
-            return json_encode(
-                ['statement' => 'CREATE DATABASE ' . $name . "\nENGINE = SQLite('" . $path . "')"],
-                JSON_THROW_ON_ERROR,
-            ) . "\n";
-        }
+                if (1 === preg_match('/SHOW CREATE DATABASE (\S+)/i', $sql, $matches)) {
+                    $name = $matches[1];
+                    $path = $this->paths[$name] ?? $this->localPath($name);
 
-        if (str_starts_with($sql, 'SHOW TABLES')) {
-            return "{\"name\":\"events\"}\n";
-        }
+                    return json_encode(
+                        ['statement' => 'CREATE DATABASE ' . $name . "\nENGINE = SQLite('" . $path . "')"],
+                        JSON_THROW_ON_ERROR,
+                    ) . "\n";
+                }
 
-        return '{"1":1}' . "\n";
+                if (str_starts_with($sql, 'SHOW TABLES')) {
+                    return "{\"name\":\"events\"}\n";
+                }
+
+                return '{"1":1}' . "\n";
+            }
+
+            private function localPath(string $database): string
+            {
+                return AppPaths::instance()->database(substr($database, strlen('nativa_')));
+            }
+        };
     }
 
-    private function localPath(string $database): string
-    {
-        return AppPaths::instance()->database(substr($database, strlen('nativa_')));
-    }
 }
 
 /**
