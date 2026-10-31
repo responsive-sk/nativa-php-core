@@ -959,7 +959,12 @@ read path. A value that does not parse is rejected when read
 
 **No CI job needs a server.** The transport is the seam: the module's tests
 run against a recording implementation, so `composer test` covers the commands
-and the DDL without a network, and `make` gained no target for it.
+and the DDL without a network. The server-side facts are a command instead of a
+job: `make clickhouse-smoke` (`bin/build/clickhouse-smoke.sh`) starts a
+throwaway server from `CLICKHOUSE_BIN`, or uses an existing one through
+`CLICKHOUSE_URL` + `CLICKHOUSE_USER_FILES`, and asserts attach, the status
+read-back, the `PATH_ACCESS_DENIED` refusal, `--typed` and the write gate. It
+is not in CI because it needs a ClickHouse binary.
 
 **Removal has nothing to report.** The module creates no file under
 `storage/`: the objects it creates live inside ClickHouse, and
@@ -967,9 +972,9 @@ and the DDL without a network, and `make` gained no target for it.
 
 The server-side behaviour of the engine itself — whether `SHOW CREATE
 DATABASE` is stable enough to parse on the target build, how `''` parses into a
-`DateTime`, and what `INSERT` does on a WAL file — is recorded as **not
-measured** in `docs/kernel-status/09-clickhouse-sqlite-bridge.md`; no ClickHouse
-server was reachable in the environment that wrote this round.
+`DateTime`, and what `INSERT` does on a WAL file — was measured on 26.11.1.973
+and is recorded in `docs/kernel-status/09-clickhouse-sqlite-bridge.md`;
+`make clickhouse-smoke` re-runs the parts a fixture can hold.
 
 ## Dashboard stat cards for Queue / Outbox / Schedule (measured 2026-10-13)
 

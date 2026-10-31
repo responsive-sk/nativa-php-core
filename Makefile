@@ -141,6 +141,14 @@ modules-install: ## Install every catalogued module (closure order; refuses a cy
 admin-smoke: ## Boot the panel with temp DBs and walk the admin flows over HTTP
 	bin/build/admin-smoke.sh
 
+# The bridge against a server this target starts: the DDL, the status
+# read-back, the `user_files` refusal, `--typed` and the write gate are facts
+# about ClickHouse, not about this tree, so `composer test` cannot see them.
+# Not in CI: it needs a ClickHouse binary (CLICKHOUSE_BIN=…) or an existing
+# server (CLICKHOUSE_URL=… + CLICKHOUSE_USER_FILES=…).
+clickhouse-smoke: ## Smoke the bridge against a local ClickHouse (attach, status, query, --typed, --write)
+	@bin/build/clickhouse-smoke.sh
+
 ##@ Distribution
 # A clone of HEAD, not the working tree: `build-dist.sh` copies what is on disk,
 # and the claim being tested is that a FRESH CLONE builds a green artifact — no

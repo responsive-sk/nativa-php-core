@@ -138,6 +138,12 @@
       "answers": "does the booted panel walk its admin flows over HTTP on temp databases"
     },
     {
+      "target": "clickhouse-smoke",
+      "tier": "catalogue",
+      "can_fail": true,
+      "answers": "does the bridge attach, read, type and gate writes against a real ClickHouse server"
+    },
+    {
       "target": "dist-check",
       "tier": "dist",
       "can_fail": true,
