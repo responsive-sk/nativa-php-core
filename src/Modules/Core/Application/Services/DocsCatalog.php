@@ -11,7 +11,7 @@ use Modules\Core\Infrastructure\Paths\AppPaths;
  *
  * The repository's `docs/` directory is not a documentation set, it is a mixed
  * bag, and the difference is measured rather than stylistic. Measured on THIS
- * tree, 2026-10-22: six top-level guides, seven parts under `kernel-status/`,
+ * tree, 2026-10-22: six top-level guides, nine parts under `kernel-status/`,
  * and three article drafts under `clanky/`. The families the upstream tree
  * carries and this one does not (`security-audit-*`, `security-pentest-*`,
  * `security-checklist-*`, `PR-summary-*`, `rhythm-score-matrix`,
@@ -107,6 +107,7 @@ final readonly class DocsCatalog
         'kernel-status/06-auth-discovery-and-mail-transport' => 'kernel-status/06-auth-discovery-and-mail-transport.md',
         'kernel-status/07-ci-modules-gate' => 'kernel-status/07-ci-modules-gate.md',
         'kernel-status/08-docs-surface-and-reader-layout' => 'kernel-status/08-docs-surface-and-reader-layout.md',
+        'kernel-status/09-clickhouse-sqlite-bridge' => 'kernel-status/09-clickhouse-sqlite-bridge.md',
         'mago-evaluation' => 'mago-evaluation.md',
         'kernel-shape' => 'kernel-shape.md',
         'name-ownership' => 'name-ownership.md',

@@ -34,6 +34,9 @@ that changed.
 | `php bin/cms queue:prune [--interval="30 days"] [--dry-run]` | drop failed jobs older than the interval — never part of `queue:work` (see below) |
 | `php bin/cms discovery:clear` | delete the discovery cache (`storage/cache/discovery.php`); the next request rescans |
 | `php bin/cms discovery:status` | whether the discovery cache exists, is fresh, and how many routes it holds |
+| `php bin/cms clickhouse:attach [--db=<name>] [--prefix=<p>] [--dry-run] [--force] [--checkpoint] [--typed]` | attach every `storage/data/*.db` as a ClickHouse database (see below) |
+| `php bin/cms clickhouse:status` | the server's view of the attached databases, and drift |
+| `php bin/cms clickhouse:query "<sql>" [--db=<name>] [--write] [--format=JSONEachRow\|TSV]` | run one statement (read-only unless `--write`) |
 
 ## Catalogue vs slice: drift, measured (task 4.1, 2026-10-17)
 
@@ -903,6 +906,70 @@ retained, not how.
 A worker run never prunes. `workingTheQueueNeverPrunesAFailedJob()` says so, and
 the gate asserts the command through `bin/cms` rather than the service: if the
 dispatch case went away, every module test would still pass.
+
+## The Clickhouse bridge — `bin/cms clickhouse:*` (2026-10-28)
+
+`modules/Clickhouse/` is a catalogue module: `php bin/cms module:add Clickhouse`
+installs the slice, and nothing in the kernel names it. The module has two
+halves — a zero-dependency HTTP client (`curl` behind a `ClickHouseTransport`
+interface) and a bridge that turns the kernel's SQLite files into ClickHouse
+databases through the documented `CREATE DATABASE … ENGINE = SQLite('<path>')`.
+
+**Catalogue vs slice, as everywhere else.** The source is
+`modules/Clickhouse/`; `src/Modules/Clickhouse/` is the installed copy the
+running process loads, written by `module:add` and removed by `module:remove`.
+The module imports `Modules\Core\*` only, and `module:show Clickhouse` prints
+that closed set.
+
+**The path is resolved on the ClickHouse host.** `attach` writes an absolute
+path into the DDL, but the server is what opens the file — so `storage/data/`
+has to be reachable there under the same spelling, usually through a bind
+mount. Two server-side rules were measured on 26.11.1.973 and neither is on
+the doc page: the file must live inside ClickHouse's `user_files`
+directory (otherwise `PATH_ACCESS_DENIED`), and a relative path is accepted and
+stored as written, which is why `attach` refuses one. Filesystem permissions
+are the engine's only access control. `status` reads the path back from
+`SHOW CREATE DATABASE` and prints a drift line when it differs from the local
+file; `system.databases.engine_full` is empty for these databases, so
+`SHOW CREATE` is the only source.
+
+**Read-only by default.** `clickhouse:query` accepts `SELECT`, `WITH`, `SHOW`,
+`DESCRIBE` and `EXPLAIN`; anything else needs `--write`, which prints the
+whole-file-lock warning first. The reason is not politeness: the kernel's own
+connections use WAL and a second writer would be a second journal owner on a
+file the site is actively serving.
+
+**Flags that change behaviour.** `--dry-run` prints the DDL and sends nothing
+(it works on a machine with no server). `--force` drops and re-creates a
+database, because ClickHouse cannot re-point an engine; the SQLite file is
+untouched. `--checkpoint` runs `PRAGMA wal_checkpoint(TRUNCATE)` through a
+read-only handle before attaching, and without it a non-empty `<file>-wal` is
+reported rather than ignored — although **measured on 26.11.1.973, ClickHouse
+reads the WAL pages through SQLite**, so the warning is about file-level
+copies, not about the attached database. `--typed` writes explicit
+`CREATE TABLE` definitions for tables whose declarations name a type inference
+cannot express (`DATETIME`, `UUID`, `DECIMAL(…)`, `FixedString(…)`, the integer
+widths), with one warning per typed column. An explicit table cannot be created
+inside the attached database — the engine already exposes every table
+implicitly, so it answers `TABLE_ALREADY_EXISTS` and does not implement `DROP
+TABLE` — so it is created in the server's default database as
+`<prefix><name>__<table>` (`nativa_blog__article_views`), and that is the typed
+read path. A value that does not parse is rejected when read
+(`CANNOT_PARSE_DATETIME` for `''` as `DateTime`), not coerced.
+
+**No CI job needs a server.** The transport is the seam: the module's tests
+run against a recording implementation, so `composer test` covers the commands
+and the DDL without a network, and `make` gained no target for it.
+
+**Removal has nothing to report.** The module creates no file under
+`storage/`: the objects it creates live inside ClickHouse, and
+`module:remove Clickhouse` therefore prints "no leftover data".
+
+The server-side behaviour of the engine itself — whether `SHOW CREATE
+DATABASE` is stable enough to parse on the target build, how `''` parses into a
+`DateTime`, and what `INSERT` does on a WAL file — is recorded as **not
+measured** in `docs/kernel-status/09-clickhouse-sqlite-bridge.md`; no ClickHouse
+server was reachable in the environment that wrote this round.
 
 ## Dashboard stat cards for Queue / Outbox / Schedule (measured 2026-10-13)
 
