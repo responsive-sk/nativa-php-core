@@ -269,8 +269,18 @@ final class NameOwnershipContractTest extends TestCase
      * duplicate this feature first introduced — a hardcoded `/mark/questions`
      * beside `QuestionsBadge::NAV_HREF` — was removed by carrying the panel
      * path in the payload, which is why rule 2 stayed at 526.
+     *
+     * 260 with the Clickhouse module: its seven module tests carry the
+     * `MODULE` guard every module test in the tree declares, `NAME_PATTERN` is
+     * the one regex the bridge validates a prefix and a name with, and
+     * `MAX_ATTEMPTS`/`BASE_DELAY_MS` are the retry numbers the transport owns
+     * (the same two names `CloudinaryApi` already declares, for the same
+     * reason). The six command option-name arrays and the transport's retry
+     * status list were inlined rather than made constants, and the test's
+     * prefix stopped being a constant once the gate showed that owning
+     * `nativa_` charged ten places for it.
      */
-    private const int MAX_DECLARATIONS = 250;
+    private const int MAX_DECLARATIONS = 260;
 
     /**
      * 203 → 204 with MAX_DECLARATIONS: `ModuleTreeState::IGNORED` is a name as
@@ -296,8 +306,12 @@ final class NameOwnershipContractTest extends TestCase
      * design — one name for "the job this producer pushes" — and
      * `TIMEOUT_SECONDS` moved with the shared HTTP transport rather than
      * arriving new.
+     *
+     * 210 with the Clickhouse module: `NAME_PATTERN` is the only new name. The
+     * seven `MODULE` guards reuse the module-test idiom, and the transport's
+     * `MAX_ATTEMPTS`/`BASE_DELAY_MS` are names `CloudinaryApi` already owns.
      */
-    private const int MAX_NAMES = 209;
+    private const int MAX_NAMES = 210;
 
     /**
      * `name => modules/<Name>` or `modules/<Group>/<Name>`, resolved once. A

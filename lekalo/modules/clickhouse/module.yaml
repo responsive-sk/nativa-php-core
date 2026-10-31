@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "clickhouse",
+      "kind": "module",
+      "version": 1,
+      "description": "Clickhouse — a zero-dependency HTTP client for ClickHouse and the SQLite database-engine bridge: three bin/cms commands (attach/status/query) that turn the kernel's storage/data/*.db files into ClickHouse databases without an export or a copy, read-only by default."
+    }
+  ]
+}

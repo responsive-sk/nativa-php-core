@@ -6,7 +6,7 @@ number here is **measured**, and the test fails when a number and the tree
 disagree. A row that is not measured is a wish.
 
 The rule the gate cannot check is worth stating too: a class constant is a
-**good** tool for most of this tree. 238 declarations, and the large majority
+**good** tool for most of this tree. 260 declarations, and the large majority
 are private technical invariants — `CoverGenerator::WIDTH`, `MAX_RETRIES`,
 `IDLE_TIMEOUT` — which are facts about the code, not configuration and not
 identifiers. Those are correct as they are and the gate leaves them alone. The
@@ -16,8 +16,8 @@ it should not be.
 ## What is counted, and what is not
 
 Scope: `src/Modules/{Core,Database,KernelTheme,Tooling}`, `src/Themes`,
-`modules`, `tests`, `bin`, `public` (minus `public/dist`). 412 non-gate files
-plus the three gate files — 415 scanned: rule 1 reads all of them, while the
+`modules`, `tests`, `bin`, `public` (minus `public/dist`). 523 non-gate files
+plus the 18 gate files — 541 scanned: rule 1 reads all of them, while the
 two counts exclude the gates for the reason below.
 
 `src/Modules/<Name>` for any other module is **gitignored operator state**. A
@@ -30,11 +30,11 @@ identical:
 
 | | full tree | kernel-only |
 |---|---|---|
-| files (rule 1 scan) | 415 | 415 |
-| declarations (rule 3, excluding the gates) | 238 | 238 |
-| distinct names (rule 3) | 202 | 202 |
+| files (rule 1 scan) | 541 | 541 |
+| declarations (rule 3, excluding the gates) | 260 | 260 |
+| distinct names (rule 3) | 210 | 210 |
 | values with 2+ names (rule 1) | **2** | **2** |
-| literal places (rule 2) | 385 | 385 |
+| literal places (rule 2) | 384 | 384 |
 
 ## Rule 1 — one string value, one name · absolute, 2 exemptions
 
