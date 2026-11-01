@@ -102,16 +102,17 @@ hyprland --verify-config
 # config ok
 ```
 
-Je to použiteľná brána, nie len výpis >
-na kópii configu s nedokončeným `hl.bind(` >
+Je to použiteľná brána, nie len výpis.
+Dôkaz je merateľný.
+Na kópii configu s nedokončeným `hl.bind(` >
 na riadku 370 skončil `hyprland --verify-config` s kódom 1 >
-a hláškou `unexpected symbol near <eof>` >
-čistý config skončil s kódom 0 a `config ok`.
+a hláškou `unexpected symbol near <eof>`.
+Čistý config skončil s kódom 0 a `config ok`.
 Chyba sa teda hlási s číslom riadku a dá sa použiť v skripte.
-Len ju nikto nespúšťa za teba >
-za uložením configu nestojí git hook ani CI.
-`hyprctl configerrors` je náprotivok pre bežiacu session >
-a v tejto session vracia prázdny výstup.
+Len ju nikto nespúšťa za teba.
+Za uložením configu nestojí git hook ani CI.
+`hyprctl configerrors` je náprotivok pre bežiacu session.
+V tejto session vracia prázdny výstup.
 
 Reload je preto dôležitejší než v XFCE.
 Zmeral som ho priamo: do configu pribudla dočasná skratka `SUPER + F20` >
@@ -186,8 +187,7 @@ cez Lua vrstvu a jej správanie sa dá zmeniť bez rekompilácie.
 
 Postup má štyri kroky a ani jeden z nich nie je „reštartuj session".
 
-**1.
-Zisti, či je kombinácia voľná.**
+**Prvý krok:** zisti, či je kombinácia voľná.
 
 ```bash
 hyprctl binds | grep -B3 -A5 -E 'key: A$'
@@ -196,11 +196,10 @@ hyprctl binds | grep -B3 -A5 -E 'key: A$'
 Ak príkaz nič nevráti, `Super + A` nie je obsadené.
 Keď vráti, prečítaj `modmask`: `64` je Super, `8` Alt, `4` Ctrl >
 `1` Shift.
-`key: A` s `modmask: 64` je teda `Super + >
-A` kým `modmask: 0` je holé `A`.
+`key: A` s `modmask: 64` je teda `Super + A`.
+Holé `A` má `modmask: 0`.
 
-**2.
-Pridaj riadok do configu, pod existujúce skratky.**
+**Druhý krok:** pridaj riadok do configu, pod existujúce skratky.
 
 Pomocná funkcia `bind` je `local` na riadku 152 toho istého súboru >
 takže platí až do konca >
@@ -213,8 +212,7 @@ bind("SUPER + A", hl.dsp.exec_cmd("pavucontrol"), "Zvuk - pavucontrol")
 
 Prvý argument je kombinácia, druhý akcia, tretí popis.
 Ak by si volal `hl.bind` priamo a nie cez túto pomocnú funkciu >
-popis musí byť v tabuľke: `hl.bind(keys, action, { description = "..."
-})`.
+popis musí byť v tabuľke: `hl.bind(keys, action, { description = "..." })`.
 
 Akcie, ktoré pokryjú väčšinu potrieb:
 
@@ -226,8 +224,7 @@ Akcie, ktoré pokryjú väčšinu potrieb:
 | prejsť na plochu | `hl.dsp.focus({ workspace = 3 })` |
 | celá obrazovka | `hl.dsp.window.fullscreen()` |
 
-**3.
-Over to bez toho, aby si ohrozil session.**
+**Tretí krok:** over to bez toho, aby si ohrozil session.
 
 ```bash
 hyprland --verify-config                     # config ok, exit 0
@@ -242,8 +239,7 @@ Ak počet skratiek stúpol a popis sa nenašiel >
 popis skončil mimo tabuľky volieb >
 presne ten prípad z časti III.
 
-**4.
-Stlač kombináciu.**
+**Štvrtý krok:** stlač kombináciu.
 Ak sa nič nestane, `hyprctl configerrors` povie, či config prešiel.
 Ak prešiel a skratka je v `hyprctl binds` >
 problém je skôr v akcii než v klávese >
@@ -310,10 +306,9 @@ to je jediná skupina okien, kde má zmysel, aby si určovali veľkosť samé.
 ## Časť VI > Čo compositor nerobí
 
 Toto je najčastejšie miesto, kde človek po inštalácii zostane stáť.
-Hyprland nekreslí panel, nespravuje tapetu >
-nezamyká obrazovku a nerobí screenshoty.
-Každá z tých vecí je samostatný program >
-ktorý sa musí nainštalovať a spustiť.
+Hyprland nekreslí panel a nespravuje tapetu.
+Nezamyká obrazovku a nerobí screenshoty.
+Každá z tých vecí je samostatný program, ktorý sa musí nainštalovať a spustiť.
 Tabuľka z tohto stroja:
 
 | úloha | program | stav |
@@ -434,11 +429,11 @@ v tom, že prostredie je teraz program, ktorý udržiavam.
 Panel, tapeta, zámok >
 screenshot aj jas sú osobitné programy >
 s vlastnými konfiguráciami a vlastnými spôsobmi zlyhania.
-XFCE malo jedného správcu nastavení, ktorý vedel o všetkom >
-tu sú štyri súbory v `~/.config/hypr` (`hyprland.lua`, `hyprpaper.conf` >
-`hypridle.conf`, `hyprlock.conf`) >
-k tomu waybar s vlastným `config.jsonc` a `style.css` >
-a jeden `busctl` príkaz, ktorým sa dá zistiť, čo z toho naozaj beží.
+XFCE malo jedného správcu nastavení, ktorý vedel o všetkom.
+Tu sú štyri súbory v `~/.config/hypr` >
+`hyprland.lua`, `hyprpaper.conf`, `hypridle.conf` a `hyprlock.conf`.
+K tomu waybar s vlastným `config.jsonc` a `style.css`.
+A jeden `busctl` príkaz, ktorým sa dá zistiť, čo z toho naozaj beží.
 
 Zostáva jedna vec, ktorú by som nemenil: XFCE session je stále v greeteri.
 Dobré prostredie sa pozná podľa toho, že sa z neho dá odísť >
