@@ -109,6 +109,16 @@ an interface in `src/Modules/Core/` >
 and a module owns the implementation.
 ```
 
+#### Scenario: A new sentence starts its own line
+
+- GIVEN a paragraph of two sentences
+- WHEN the written form is applied
+- THEN the first sentence ends its line, and the second starts the next one
+- AND neither line carries a separator, because a period already ended the
+  sentence
+
+- PINS: tests/Content/ProseRhythmContractTest.php::everySentenceStartsItsOwnLine
+
 #### Scenario: A converted file carries no em dash
 
 - GIVEN a file listed as wrapped

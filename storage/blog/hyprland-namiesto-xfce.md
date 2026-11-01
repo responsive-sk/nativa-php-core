@@ -19,10 +19,9 @@ aby zlyhanie znamenalo preinštalovanie.
 
 Toto je zápis merania, nie návod na obdivovanie animácií.
 Zaujímalo ma jediné >
-**koľko z návykov >
-z XFCE sa dá preniesť a čo zvyšok stojí.** Čísla nižšie sú prečítané >
-z bežiacej session 28.
-októbra 2026, nie z dokumentácie.
+**koľko z návykov z XFCE sa dá preniesť a čo zvyšok stojí.**
+Čísla nižšie sú prečítané z bežiacej session 28. októbra 2026 >
+nie z dokumentácie.
 
 ---
 
@@ -214,8 +213,8 @@ bind("SUPER + A", hl.dsp.exec_cmd("pavucontrol"), "Zvuk - pavucontrol")
 
 Prvý argument je kombinácia, druhý akcia, tretí popis.
 Ak by si volal `hl.bind` priamo a nie cez túto pomocnú funkciu >
-popis musí byť v tabuľke >
-`hl.bind(keys, action, { description = "..." })`.
+popis musí byť v tabuľke: `hl.bind(keys, action, { description = "..."
+})`.
 
 Akcie, ktoré pokryjú väčšinu potrieb:
 
@@ -244,8 +243,8 @@ popis skončil mimo tabuľky volieb >
 presne ten prípad z časti III.
 
 **4.
-Stlač kombináciu.** Ak sa nič nestane, `hyprctl configerrors` povie >
-či config prešiel.
+Stlač kombináciu.**
+Ak sa nič nestane, `hyprctl configerrors` povie, či config prešiel.
 Ak prešiel a skratka je v `hyprctl binds` >
 problém je skôr v akcii než v klávese >
 napríklad program neexistuje, čo sa overí cez `command -v pavucontrol`.
@@ -269,8 +268,8 @@ inak pri zamknutej obrazovke nereagujú a pri podržaní sa nezopakujú.
 ## Časť V > Tiling: čo zmizne a čo je za to
 
 Dlaždicový správca okien nerobí nič, čo by XFCE nevedelo; robí to inak.
-Základné pravidlo: **okno nemá voľnú polohu >
-má suseda.** Z toho vyplýva zoznam vecí, ktoré prestanú dávať zmysel.
+Základné pravidlo: **okno nemá voľnú polohu, má suseda.**
+Z toho vyplýva zoznam vecí, ktoré prestanú dávať zmysel.
 
 | zvyk z XFCE | čo je tu namiesto neho |
 |---|---|
@@ -371,20 +370,20 @@ Každý config pre compositor obsahuje aspoň tri riadky >
 ktoré nedávajú zmysel, kým človek nepozná dôvod.
 Toto sú moje:
 
-**`suppress_event = "maximize"` >
-pre všetky okná.** Tiling okno nemá maximalizovaný stav; aplikácie >
+**`suppress_event = "maximize"` pre všetky okná.**
+Tiling okno nemá maximalizovaný stav; aplikácie >
 ktoré ho nastavujú (prehliadače, Electron), by inak posielali požiadavky >
 na ktoré compositor nemá čo odpovedať.
 
-**`fix-xwayland-drags` s prázdnym `class` >
-a `title`.** Pravidlo matchuje `class = "^$"`, `title = "^$"` >
-`xwayland = true`, `float = true`.
+**`fix-xwayland-drags` s prázdnym `class` a `title`.**
+Pravidlo matchuje `class = "^$"`, `title = "^$"`, `xwayland = true` >
+`float = true`.
 Sú to anonymné X11 okná, ktoré XWayland vytvára počas ťahania >
 bez pravidla `no_focus` kradnú fokus pri každom `drag` >
 a okno pod kurzorom prestane reagovať.
 
-**`move-hyprland-run`.** Utilita >
-ktorú compositor použije pri `hyprland-run`, je plávajúce okno >
+**`move-hyprland-run`.**
+Utilita, ktorú compositor použije pri `hyprland-run`, je plávajúce okno >
 pravidlo ju presunie na `20 monitor_h-120`, teda doľava dole >
 aby nezakryla stred obrazovky.
 

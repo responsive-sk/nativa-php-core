@@ -195,7 +195,14 @@ deciding which number fails; do not wire it into CI and leave that implied.
     The break falls on a clause boundary, never inside one: verb and object stay
     together, a noun keeps its attribute (`je náprotivok pre bežiacu session`),
     and a longer line is preferred to a broken phrase. A sentence that ends
-    starts a new line with no separator, because the period already ended it.
+    starts a new line with no separator, because the period already ended it:
+
+    ```text
+    Na tomto stroji bol doteraz ako okenný manažér XFCE.
+    Dnes je to Hyprland 0.56.2, ale XFCE sa neodstránilo >
+    jedna session vedľa druhej.
+    ```
+
     No line leaves a preposition, a conjunction or an auxiliary at its end.
 
     The separator replaces the punctuation at the break instead of joining it:

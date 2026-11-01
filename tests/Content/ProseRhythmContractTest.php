@@ -161,7 +161,9 @@ final class ProseRhythmContractTest extends TestCase
                 foreach ($lines as $index => $line) {
                     $last = $index === count($lines) - 1;
                     $hasSeparator = str_ends_with($line, ' >');
-                    $endsSentence = 1 === preg_match('/[.!?:]$/u', (string) preg_replace('/\s>$/', '', $line));
+                    $bare = (string) preg_replace('/\s>$/', '', $line);
+                    $bare = rtrim($bare, '*_`„“\"\')]»');
+                    $endsSentence = 1 === preg_match('/[.!?]$/u', $bare);
 
                     if ($last && $hasSeparator) {
                         $problems[] = sprintf('%s: last line of a paragraph ends with the separator: %s', $file, $line);
@@ -191,6 +193,27 @@ final class ProseRhythmContractTest extends TestCase
         }
 
         self::assertSame([], $problems, "The separator belongs inside a sentence, at the end of the line it closes:\n" . implode("\n", $problems));
+    }
+
+    #[Test]
+    public function everySentenceStartsItsOwnLine(): void
+    {
+        $problems = [];
+
+        foreach (self::wrapped() as $file) {
+            foreach (self::paragraphs($file) as $paragraph) {
+                foreach ($paragraph['lines'] as $line) {
+                    $masked = (string) preg_replace('/`[^`]*`/u', '@', $line);
+                    $masked = (string) preg_replace('/\s>$/', '', $masked);
+
+                    if (1 === preg_match('/[.!?][)\]"»“*`]*\s+\p{Lu}/u', $masked)) {
+                        $problems[] = sprintf('%s: a new sentence shares the line: %s', $file, $line);
+                    }
+                }
+            }
+        }
+
+        self::assertSame([], $problems, "Every sentence starts on its own line, with no separator:\n" . implode("\n", $problems));
     }
 
     #[Test]

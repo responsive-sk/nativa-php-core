@@ -33,7 +33,7 @@ The shape is always the same three parts:
 | the registry that finds implementations | kernel | `ShellContextProviderRegistry` |
 | the implementation | module | `Settings` supplies the site's own answers |
 
-**Absence is a first-class answer.** >
+**Absence is a first-class answer.**
 With no provider installed the tree still renders >
 the registry returns nothing and every surface degrades to what the kernel >
 can say on its own.
