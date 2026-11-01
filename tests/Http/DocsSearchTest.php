@@ -142,6 +142,29 @@ final class DocsSearchTest extends TestCase
         self::assertStringNotContainsString('action="/docs" role="search"', $blogPath);
     }
 
+    /**
+     * The index carries the field too, so the search is discoverable from the
+     * page a reader lands on rather than only from the header above it.
+     */
+    #[Test]
+    public function theIndexCarriesItsOwnField(): void
+    {
+        $method = new ReflectionMethod(DocsIndexAction::class, 'handle');
+        $response = $method->invoke(new DocsIndexAction(), Request::create('GET', '/docs'));
+
+        self::assertInstanceOf(Response::class, $response);
+
+        $body = $response->getContent();
+
+        self::assertStringContainsString('action="/docs" role="search"', $body);
+        self::assertMatchesRegularExpression(
+            '#<input[^>]*name="q"#',
+            $body,
+            'The index rendered no field of its own, so the guides are only searchable from the'
+            . ' header — which a reader on a phone has to open a menu to reach.',
+        );
+    }
+
     /** The query as the action answers it, through its own route. */
     private static function search(string $query): string
     {

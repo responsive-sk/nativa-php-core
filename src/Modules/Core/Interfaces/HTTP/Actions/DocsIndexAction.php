@@ -72,11 +72,18 @@ final readonly class DocsIndexAction
         // A theme with its own document surface composes the list; the
         // generic `{prefix}-section` markup stays the floor for every theme
         // that has no vocabulary for it.
+        //
+        // The field is prepended by the ACTION rather than composed by the
+        // theme: a theme is a byte-copy of `nativa-themes` (`make themes-check`),
+        // so the index's search box cannot be written into one without drift. It
+        // goes above the list, outside the theme's section, so the markup below
+        // stays exactly what the theme authored.
         return Response::html(FrontendLayout::render(
             'Documentation — Nativa',
-            $module instanceof DocsPageTheme
-                ? $module->docsIndex($this->catalog->entries())
-                : $this->content($module->prefix()),
+            $this->searchField($module->prefix(), '')
+                . ($module instanceof DocsPageTheme
+                    ? $module->docsIndex($this->catalog->entries())
+                    : $this->content($module->prefix())),
             description: 'The guides that ship with the repository, rendered by the site.',
             currentPath: $request->getPathInfo(),
             lang: DocsCatalog::LANGUAGE,
