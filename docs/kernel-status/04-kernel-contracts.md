@@ -1,4 +1,4 @@
-# Kernel contracts — the shape that can shrink but not silently grow (2026-10-15)
+# Kernel contracts > the shape that can shrink but not silently grow (2026-10-15)
 
 `src/Modules/Core` + `src/Modules/Database` became a **contract kernel plus a
 minimal runtime**: pure interfaces and their discovery attributes as the surface
@@ -15,7 +15,7 @@ inventory: `docs/kernel-shape.md`.
 | Core concrete classes | 67 | **59** | −8 |
 | Core interfaces | 10 | 10 | — (published FQCNs never moved) |
 
-## 1 — Measure before touching anything
+## 1 > Measure before touching anything
 
 `bin/build/kernel-size.sh` + `make kernel-size` print the per-layer bytes, the
 file counts and the interface/concrete split on demand, with `baseline:
@@ -24,7 +24,7 @@ file counts and the interface/concrete split on demand, with `baseline:
 importers, bucket (`contract` / `runtime` / `tooling` / `dead`) — and the bucket
 column is what the shape guard reads as the approval record.
 
-## 2 — The guard that did not exist here
+## 2 > The guard that did not exist here
 
 `KernelCouplingTest` + `Tests\Support\KernelCoupling` were **upstream-only**;
 `find`/`grep` found zero hits in this tree, so "no kernel file imports a module"
@@ -40,7 +40,7 @@ names the module") is true again. `KERNEL_MODULES` now also carries `Tooling`,
 which both treats tooling → Core as kernel self-talk and makes the scanner walk
 the one directory added after it was written.
 
-## 3 — What the kernel never calls
+## 3 > What the kernel never calls
 
 **11 793 B left outright**, each deletion re-proven by grep rather than inferred:
 
@@ -57,7 +57,7 @@ ship route-less symfony commands, and `$actionDirs` is all of `src/Modules`.
 Its comment (and this file's Boot 19 prose, and `ci.yml`) now cite those as the
 live reason rather than the kernel's own, which are deleted.
 
-## 4 — The tooling leaves `Modules\Core`
+## 4 > The tooling leaves `Modules\Core`
 
 **26 167 B relocated**, not deleted: `ModuleCatalog`, `ModuleInstaller` and
 `ModuleManifest` now live in `src/Modules/Tooling/` under `Modules\Tooling`.
@@ -88,7 +88,7 @@ cms: Module 'Tooling' is the kernel itself — it cannot be removed.   (exit 1)
 harmless, it carries no `#[Route]`, and `mayDeclareRoute()` skips what cannot
 declare one.
 
-## 5 — Locking the shape
+## 5 > Locking the shape
 
 `tests/Architecture/KernelShapeTest.php` — two rules, both proven failing on a
 real violation before being trusted:
@@ -120,7 +120,7 @@ the `AssetManager` inventory row reported `UNINVENTORIED`. Probes removed.
 CI's `Extract-check` job is the one gate that cannot run anywhere but here: the
 upstream repo is private (Boot 20).
 
-## 6 — The gate nobody wired (2026-10-15, `fix/mark-access-control`)
+## 6 > The gate nobody wired (2026-10-15, `fix/mark-access-control`)
 
 The port existed, the middleware existed, the policy table existed — and
 nothing joined them, because **`Kernel::addMiddleware()` had no callers**.

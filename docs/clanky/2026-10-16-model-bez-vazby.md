@@ -1,10 +1,10 @@
-# Článok: model, ktorý nikto nespúšťal — a väzba, ktorá chýbala
+# Článok: model, ktorý nikto nespúšťal > a väzba, ktorá chýbala
 
 **16. októbra 2026**
 
 ---
 
-## Časť I — Dilema, ktorú bolo lacnejšie zmerať než vyriešiť
+## Časť I > Dilema, ktorú bolo lacnejšie zmerať než vyriešiť
 
 O 20:47 padla otázka, ktorá vyzerá ako otázka o organizácii súborov:
 
@@ -24,7 +24,7 @@ trvalo potom **16 minút** — a to je zdravý pomer, nie zlý: číslo bolo lac
 
 ---
 
-## Časť II — Čo povie jeden `module:remove`
+## Časť II > Čo povie jeden `module:remove`
 
 Model je dnes **21 adresárov, jeden na modul** — to znamená, že je už po moduloch
 rozdelený, len leží inde. Veľkosti ukazujú, že väčšina z toho sú skoro prázdne obálky:
@@ -83,7 +83,7 @@ presun, ani reorganizácia, ani nový priečinok.
 
 ---
 
-## Časť III — Prečo presun do `modules/<Name>/lekalo/` nič neopraví
+## Časť III > Prečo presun do `modules/<Name>/lekalo/` nič neopraví
 
 Dva dôvody, oba merateľné, nie odhadnuté.
 
@@ -113,7 +113,7 @@ To je celý rozdiel medzi presunom a opravou: **presun bez väzby je presun prob
 
 ---
 
-## Časť IV — Väzba, ktorá stála pár riadkov
+## Časť IV > Väzba, ktorá stála pár riadkov
 
 Rozhodnutie znelo „väzba + presun", v tomto poradí. Väzba je test v štýle
 `KernelContractTest` — dva zoznamy adresárov proti sebe, žiadny adaptér, žiadny zásah do
@@ -151,7 +151,7 @@ po   väzbe:  375 testov / 1635 asercií / 1 skip      (+4 testy, +41 asercií =
 
 ---
 
-## Časť V — Kde to skončilo: `429` o 21:05:07
+## Časť V > Kde to skončilo: `429` o 21:05:07
 
 Toto je časť, ktorú by predošlý článok nazval záznamom, o ktorom vie len stroj, ktorý ho
 napísal.

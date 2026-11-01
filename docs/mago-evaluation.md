@@ -1,4 +1,4 @@
-# Mago in `nativa-php-core` — evaluation
+# Mago in `nativa-php-core` > evaluation
 
 **Question:** can this tree use [Mago](https://github.com/carthage-software/mago) —
 the Rust PHP toolchain — and for what?

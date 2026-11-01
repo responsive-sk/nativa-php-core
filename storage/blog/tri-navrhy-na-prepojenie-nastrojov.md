@@ -24,7 +24,7 @@ o úroveň vyššie, nie nový nástroj.
 
 ---
 
-## Časť I — Tri návrhy, v poradí podľa toho, čo je v sázke
+## Časť I > Tri návrhy, v poradí podľa toho, čo je v sázke
 
 | # | návrh | čo to rieši | cena |
 |---|---|---|---|
@@ -38,7 +38,7 @@ Preto je plán napísaný pre B a A s C zostávajú ako samostatné, menšie zme
 
 ---
 
-## Časť II — Návrh B: väzba scénar ↔ test
+## Časť II > Návrh B: väzba scénar ↔ test
 
 ### Čo je dnes zlé
 
@@ -141,7 +141,7 @@ v specoch** a jeden nový kontraktný test.
 
 ---
 
-## Časť III — Návrh A: jeden registr nástrojov, brán a pinov
+## Časť III > Návrh A: jeden registr nástrojov, brán a pinov
 
 Dnes sa verzia `mago` píše na štyri miesta (konštanta v
 `bin/build/mago-spike.sh` a tri cache key-e v `ci.yml`), `lekalo` na dve,
@@ -183,7 +183,7 @@ takto pomenované zámerne.
 
 ---
 
-## Časť IV — Návrh C: rozhodnutie o vlastníctve, nie o nástroji
+## Časť IV > Návrh C: rozhodnutie o vlastníctve, nie o nástroji
 
 Tri prekryvy z mapy nie sú problém, kým sa dá odpovedať na otázku „kto je
 vlastník a kedy ten druhý odíde". Dnes sa na to odpovedá z hlavy, takže:
@@ -207,7 +207,7 @@ Toto nie je článok, to je polstrana v registri z návrhu A. Preto samostatne.
 
 ---
 
-## Časť V — Čo som zapísal
+## Časť V > Čo som zapísal
 
 Pre B som napísal openspec change
 `openspec/changes/scenario-test-binding/`: `proposal.md` s dôvodom a dopadom,

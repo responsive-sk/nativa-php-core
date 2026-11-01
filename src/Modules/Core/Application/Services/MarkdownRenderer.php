@@ -115,6 +115,15 @@ final class MarkdownRenderer
             return ['html' => "<hr>\n", 'next' => $i + 1];
         }
 
+        // The responsive.sk separator ends the sentence, never starts a line:
+        // `prvý bod >` closes the line and the next one begins on a new line.
+        // A bare `>` on its own line is the older shape; it renders as the
+        // character in a paragraph of its own instead of becoming an empty
+        // blockquote (a bar, with the text after it swallowed into the quote).
+        if ('>' === trim($line)) {
+            return ['html' => "<p>&gt;</p>\n", 'next' => $i + 1];
+        }
+
         // Blockquote — consecutive > lines merge into one paragraph.
         if (1 === preg_match('/^\s*>/', $line)) {
             return $this->renderBlockquote($lines, $count, $i);
@@ -190,20 +199,22 @@ final class MarkdownRenderer
         );
         $id = '' !== $anchor ? ' id="' . $anchor . '"' : '';
 
-        // A level-2 heading of the `Časť I — Title` shape is a section label,
+        // A level-2 heading of the `Časť I > Title` shape is a section label,
         // not a sentence: split it so a theme can set the numbering quietly
-        // instead of repeating it at display size on every section. Only
-        // plain text is split — inline markup stays one run rather than being
-        // cut in the middle of a tag.
-        if (2 === $level && !str_contains($text, '<')) {
-            $parts = preg_split('/\s+[—–]\s+/u', $text, 2);
+        // instead of repeating it at display size on every section. The split
+        // runs on the RAW heading text, before inline(), so a title carrying
+        // `code` still splits; each part is inlined on its own, and the
+        // separator span echoes the character that was written instead of
+        // inserting one (no em dash comes out of this renderer).
+        if (2 === $level) {
+            $parts = preg_split('/\s+([>—–])\s+/u', $match[2], 2, PREG_SPLIT_DELIM_CAPTURE);
 
-            if (is_array($parts) && 2 === count($parts)
-                && '' !== trim($parts[0]) && '' !== trim($parts[1])
-                && strlen(trim($parts[0])) <= 24) {
-                $text = '<span data-heading-prefix>' . trim($parts[0]) . '</span>'
-                    . '<span data-heading-dash> — </span>'
-                    . '<span data-heading-title>' . trim($parts[1]) . '</span>';
+            if (is_array($parts) && 3 === count($parts)
+                && '' !== trim($parts[0]) && '' !== trim($parts[2])
+                && mb_strlen(trim($parts[0]), 'UTF-8') <= 24) {
+                $text = '<span data-heading-prefix>' . $this->inline(trim($parts[0])) . '</span>'
+                    . '<span data-heading-dash> ' . $this->inline(trim($parts[1])) . ' </span>'
+                    . '<span data-heading-title>' . $this->inline(trim($parts[2])) . '</span>';
             }
         }
 
@@ -364,8 +375,21 @@ final class MarkdownRenderer
             $i++;
         }
 
+        // The separator glyph stays at the end of its line and the next line
+        // starts below it: `sentence >` then `next sentence` renders as
+        // `sentence &gt;<br>next sentence`. A blank line still ends the
+        // paragraph, which is the ordinary Markdown rule and reads the same.
+        $html = '';
+        $breaks = false;
+
+        foreach ($paragraph as $index => $line) {
+            $line = rtrim($line);
+            $html .= 0 === $index ? $this->inline($line) : ($breaks ? '<br>' : ' ') . $this->inline($line);
+            $breaks = 1 === preg_match('/\s>$/', $line);
+        }
+
         return [
-            'html' => '<p>' . $this->inline(implode(' ', $paragraph)) . '</p>' . "\n",
+            'html' => '<p>' . $html . '</p>' . "\n",
             'next' => $i,
         ];
     }

@@ -9,7 +9,7 @@ category: "Architektúra"
 published: true
 ---
 
-## Časť I — Poznámka, ktorá vyzerá ako sťažnosť na poriadok
+## Časť I > Poznámka, ktorá vyzerá ako sťažnosť na poriadok
 
 > „teraz mame 3 subory v src > vcera bol len init ...“
 
@@ -43,7 +43,7 @@ nemôže byť v tom druhom.
 
 ---
 
-## Časť II — HTTP request, krok za krokom
+## Časť II > HTTP request, krok za krokom
 
 ### 1. Web server → `public/index.php`
 
@@ -60,7 +60,7 @@ To je celý front controller. Žiadne `use`, žiadne middleware, žiadna pipelin
 Je to jediné miesto, ktoré SAPI pozná; keby sa sem vrátil wiring, každý ďalší
 vstupný bod (test harness, CLI, budúci worker) by mal druhú kópiu.
 
-### 2. `src/http.php` — early logging a bootstrap
+### 2. `src/http.php` > early logging a bootstrap
 
 `http.php` sa začne načítať a **prvé, čo urobí, je early error logging**:
 
@@ -81,7 +81,7 @@ require_once __DIR__ . '/init.php';
 require_once __DIR__ . '/composition.php';
 ```
 
-### 3. `src/init.php` — čo znamená „init“
+### 3. `src/init.php` > čo znamená „init“
 
 `init.php` je **generický bootstrap**, nie HTTP bootstrap. V poradí robí:
 
@@ -105,7 +105,7 @@ anonymná home page nemá dôvod zapisovať session súbor.
 `run_http_application()`, každý CLI príkaz a každý test by sa pokúsil odpovedať
 na fiktívny request.
 
-### 4. `src/composition.php` — párovanie, ktoré discovery nevie
+### 4. `src/composition.php` > párovanie, ktoré discovery nevie
 
 `composition.php` pri načítaní **nič nevykoná**. Definuje iba dve funkcie:
 
@@ -133,7 +133,7 @@ DisposalRegistry::disposeAll();
 
 `http_kernel()` postaví svet v presnom poradí:
 
-#### 5a. Migrácie — `Bootstrapper::boot()`
+#### 5a. Migrácie > `Bootstrapper::boot()`
 
 `Bootstrapper` najprv overí, že `storage/{data,logs,cache,sessions,uploads}`
 existujú a sú **zapisovateľné**. To nie je dekorácia: neúspešný zápis do
@@ -146,12 +146,12 @@ vtedy, keď aspoň jeden migrátor naozaj bežal — prázdny strom tak zostane
 „ozbrojený“ pre prvý modul, ktorý migrátor prinesie. S nainštalovanými modulmi
 to vytvorí ich tabuľky; v kernel-only strome len tabuľky jadra.
 
-#### 5b. Párovanie handlerov — `wire_module_handlers()`
+#### 5b. Párovanie handlerov > `wire_module_handlers()`
 
 Až teraz, po migráciách, sa zaregistrujú handlery. Poradie je dôležité: handler
 môže potrebovať tabuľku, ktorú migrácia práve vytvorila.
 
-#### 5c. Discovery — `DiscoveryCache`
+#### 5c. Discovery > `DiscoveryCache`
 
 ```php
 $discovery = DiscoveryCache::fromAppPaths();
@@ -170,7 +170,7 @@ middleware sa načítajú bez skenovania. Akákoľvek chyba cache (corrupt súbo
 zmenený fingerprint) padá do `catch` a urobí **priamy scan**. Corrupt cache
 teda stojí jeden scan, nie 500.
 
-#### 5d. `Kernel` — objavená časť pipeline
+#### 5d. `Kernel` > objavená časť pipeline
 
 ```php
 $kernel = new Kernel($router);
@@ -191,7 +191,7 @@ V tomto strome to sú:
 `SecurityHeadersMiddleware` je teda najvrchnejší: dopĺňa CSP nonce aj do
 odpovede, ktorá prišla z page cache.
 
-#### 5e. Explicitný wiring — tri stavy, ktoré discovery nevie skonštruovať
+#### 5e. Explicitný wiring > tri stavy, ktoré discovery nevie skonštruovať
 
 ```php
 // 1. Rate limiting — potrebuje limiter factory a PDO
@@ -214,7 +214,7 @@ návratový typ factory je `object`, nie `SecurityRateLimiter`. Typ v anotácii 
 totiž vyhodnocuje **aj keď je `new` za guardom** — a v kernel-only checkoute
 bez `Modules\Security` by to bol fatal.
 
-### 6. `Kernel::handle()` — cibuľa middleware
+### 6. `Kernel::handle()` > cibuľa middleware
 
 `Kernel` zoberie zoznam middleware a zabalí ich od konca:
 
@@ -236,7 +236,7 @@ Poradie nie je náhodné:
 Každý middleware môže request buď obslúžiť sám (cache hit, 429, redirect na
 login), alebo zavolať `$next($request)`.
 
-### 7. Dispatch — od cesty k akcii
+### 7. Dispatch > od cesty k akcii
 
 Keď request prejde celou cibuľou, `Kernel::dispatch()`:
 
@@ -251,7 +251,7 @@ Keď request prejde celou cibuľou, `Kernel::dispatch()`:
 5. **zavolá handler** (`handle()` alebo `handlerMethod` z atribútu);
 6. **normalizuje výsledok** — `Response`, pole → JSON, skalár → HTML.
 
-### 8. `HomepageAction` — ako vznikne Boson home page
+### 8. `HomepageAction` > ako vznikne Boson home page
 
 Pre `GET /` sa matchne `HomepageAction`:
 
@@ -288,7 +288,7 @@ jeden zlyhá.
 
 ---
 
-## Časť III — Kde presne zasahuje page cache
+## Časť III > Kde presne zasahuje page cache
 
 `PageCacheMiddleware` sedí medzi rate limitom a auth. Jeho pravidlo:
 
@@ -326,7 +326,7 @@ potvrdil: prvý request po štarte bol MISS (uložil), druhý už `X-Cache: HIT`
 
 ---
 
-## Časť IV — Ako tečie CLI
+## Časť IV > Ako tečie CLI
 
 `bin/cms` je druhý vstupný bod a **nemá nič z HTTP**:
 
@@ -348,7 +348,7 @@ by bolo klamstvo o tom, čo príkaz robí.
 
 ---
 
-## Časť V — Prečo teda tri súbory
+## Časť V > Prečo teda tri súbory
 
 | Súbor | Kto ho načítava | Čo v ňom musí byť |
 |---|---|---|
@@ -381,7 +381,7 @@ viditeľné — nie o tom, koľko súborov aplikácia potrebuje.
 
 ---
 
-## Časť VI — Overenie, že tok je naozaj ten istý
+## Časť VI > Overenie, že tok je naozaj ten istý
 
 Po presune wiringu z `index.php` do `http.php`:
 

@@ -1,4 +1,4 @@
-# Tree history — the shape, landing by landing
+# Tree history > the shape, landing by landing
 
 `kernel-status` records **rounds of work**: what was measured, what changed, what
 the change measured. This guide records something narrower and harder to
@@ -154,7 +154,7 @@ git ls-tree -r --name-only $c | wc -l
 # when a module entered the catalogue
 git log --diff-filter=A --date=short --format='%ad %h %s' -- modules/Boson | tail -1
 
-# when a path first existed at all (`tail -1` — git log is newest first)
+# when a path first existed at all (`tail -1` > git log is newest first)
 git log --diff-filter=A --date=short --format='%ad %h %s' -- tests/Architecture | tail -1
 ```
 

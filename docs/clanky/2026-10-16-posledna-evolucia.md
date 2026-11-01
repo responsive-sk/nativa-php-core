@@ -4,7 +4,7 @@
 
 ---
 
-## Časť I — `evolutions/` je prázdny. Niekto to spozoruje, nikto to nespraví
+## Časť I > `evolutions/` je prázdny. Niekto to spozoruje, nikto to nespraví
 
 V tomto repozitári sú štyri priečinky pod `.ai-factory/`:
 
@@ -42,7 +42,7 @@ Najbližším skutočným artefaktom je preto nie evolúcia, ale **posledný pat
 
 ---
 
-## Časť II — čo ten posledný patch nechal otvorené
+## Časť II > čo ten posledný patch nechal otvorené
 
 Patch je písaný vzorne. Namiesto „zrevidujme ten diff" robí to, čo má:
 
@@ -147,7 +147,7 @@ adminovú plochu), lint, PHPStan L9 aj Lekalo exit 0. Oba PR zelené 8/8.
 
 ---
 
-## Časť III — čo sa dnes prekročilo (Boot 32)
+## Časť III > čo sa dnes prekročilo (Boot 32)
 
 **15 commitov** do `mastera`, dva mergnuté PR-y. Päť vecí, každá s meraním.
 
@@ -202,7 +202,7 @@ bolo **0**. Dnes je brána, s pinnutým checksumom zdieľaným s `nativa-minimal
 
 ---
 
-## Časť IV — päť chýb, ktoré našlo behanie a nie čítanie
+## Časť IV > päť chýb, ktoré našlo behanie a nie čítanie
 
 Toto je najcennejšia časť dnešného dňa, pretože každá z nich prešla lintom, PHPStanom
 aj recenziou očí.
@@ -231,7 +231,7 @@ Log má teraz na mieste vetu, prečo sa to stalo. Oprava čísla bez dôvodu by 
 
 ---
 
-## Časť V — tri veci, z ktorých sa jedna v priebehu dňa zavrela
+## Časť V > tri veci, z ktorých sa jedna v priebehu dňa zavrela
 
 Časť II hovorila o vetvách, ktoré nikto neuzavrel; odvtedy sú zavreté. Nech je ale
 súladné, aby aj toto bolo napísané:

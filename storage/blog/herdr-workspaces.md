@@ -9,7 +9,7 @@ category: "Nástroje"
 published: true
 ---
 
-## Časť I — Otázka, ktorá vyzerala ako áno/nie
+## Časť I > Otázka, ktorá vyzerala ako áno/nie
 
 Prišla veta, ktorá sa dá zodpovedať jedným slovom a pritom nijako nepomôcť:
 
@@ -26,7 +26,7 @@ skratky.
 
 ---
 
-## Časť II — Tri slová, ktoré Herdr rozlišuje
+## Časť II > Tri slová, ktoré Herdr rozlišuje
 
 Herdr je terminálový správca pracovných priestorov pre kódovacích agentov.
 Topológia má tri úrovne a každá má vlastné ID:
@@ -66,7 +66,7 @@ užívateľ práve kurzor.
 
 ---
 
-## Časť III — Čo bolo v session namerané
+## Časť III > Čo bolo v session namerané
 
 Pred akýmkoľvek presúvaním súborov alebo repozitárov sa vyplatí pozrieť, čo v session
 naozaj je:
@@ -110,7 +110,7 @@ a vie ich otvoriť aj zavrieť bez toho, aby sa čokoľvek stratilo.
 
 ---
 
-## Časť IV — Tri úrovne, ako sa dostať k druhému repozitáru
+## Časť IV > Tri úrovne, ako sa dostať k druhému repozitáru
 
 ### 1. Workspace na repozitár
 
@@ -151,7 +151,7 @@ ktorých sa nedá čítať diff ani log.
 
 ---
 
-## Časť V — Hub: jeden workspace, viac repozitárov
+## Časť V > Hub: jeden workspace, viac repozitárov
 
 Ďalšia otázka prišla hneď po tom, ako hub vznikol: môže taký workspace obsahovať
 viac rôznych repozitárov, alebo je to len adresár, v ktorom sa nič gitové nedeje?
@@ -222,7 +222,7 @@ workspace na repozitár je zrozumiteľnejší.
 
 ---
 
-## Časť VI — Worktree: druhý checkout toho istého repozitára
+## Časť VI > Worktree: druhý checkout toho istého repozitára
 
 Workspace rieší „iný repozitár". Worktree rieši „iná vetva toho istého repozitára bez
 rozbitia hlavného checkoutu":
@@ -245,7 +245,7 @@ git index a jeden pracovný strom.** Dva worktree nie. Preto:
 
 ---
 
-## Časť VII — Agenti: jeden pane, jeden agent
+## Časť VII > Agenti: jeden pane, jeden agent
 
 `agent start` nezakladá layout. Vyžaduje existujúci pane, ktorý je na
 interaktívnom shell prompte, a v ňom rozpozná zadaný typ agenta:
@@ -276,7 +276,7 @@ naozaj čaká.
 
 ---
 
-## Časť VIII — Rozhodovacia tabuľka
+## Časť VIII > Rozhodovacia tabuľka
 
 | chcem | primitívum |
 |---|---|
@@ -293,7 +293,7 @@ checkoutom sú bezplatné na čítanie a drahé na zápis.
 
 ---
 
-## Časť IX — Pasce, ktoré nie sú chyby
+## Časť IX > Pasce, ktoré nie sú chyby
 
 **Holé `herdr` neotváraj na prieskum.** Spustí alebo pripojí TUI. Objavovanie
 začína na `herdr --help` a pokračuje skupinou bez podpríkazu (`herdr workspace`,
@@ -325,7 +325,7 @@ Výber stroja v TUI príkazy z panu neprepína.
 
 ---
 
-## Časť X — Recepty
+## Časť X > Recepty
 
 **Dva repozitáre vedľa seba, každý s agentom.**
 
@@ -365,7 +365,7 @@ výsledok nečaká odhadom, ale `wait-output`.
 
 ---
 
-## Časť XI — Čo z toho zostáva
+## Časť XI > Čo z toho zostáva
 
 Workspace nie je „väčší pane". Je to hranica, na ktorej sa dá bezpečne povedať
 „toto je iný repozitár, s iným git kontextom a iným agentom". Worktree je hranica

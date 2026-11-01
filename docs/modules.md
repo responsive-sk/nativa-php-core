@@ -1,4 +1,4 @@
-# Modules — adding and removing
+# Modules > adding and removing
 
 A module is a slice of the application that can be installed and, provably,
 removed again. The catalogue is `modules/<Name>/`; installation copies the
@@ -227,7 +227,7 @@ check run against a removed-but-remembered class is a green run of a file that
 no longer exists — the same stale-bytecode lesson
 `docs/kernel-status/01-import-and-edge-cuts.md` records for edits.
 
-## The Lekalo model — what it is, and what it does not check
+## The Lekalo model > what it is, and what it does not check
 
 `lekalo/` is a **semantic model of this codebase**: entities, commands, effects,
 queries, events, policies, endpoints and scenarios, described in Lekalo's
@@ -770,7 +770,7 @@ the scan still reports the closure, which is the honest dependency).
 due path driven at a fixed 13:00 against the real outbox.db —
 `Executed: outbox:drain`, exit 0.
 
-## The queue's worker — `bin/cms queue:work` (measured 2026-10-16)
+## The queue's worker > `bin/cms queue:work` (measured 2026-10-16)
 
 `DatabaseQueue::work()` shipped with exactly one call site in the tree: an
 inline `php` heredoc inside `bin/build/admin-smoke.sh`. The queue therefore had
@@ -872,7 +872,7 @@ one that has parked something exits **1**. That distinction is the contract
 make a queue:work run red — training an operator to ignore the number that
 means something.
 
-## The queue's retention — `bin/cms queue:prune` (measured 2026-10-16)
+## The queue's retention > `bin/cms queue:prune` (measured 2026-10-16)
 
 `failed_jobs` had no retention of any kind. Measured before changing anything:
 four parked rows spanning two hours to a year, and every one of them survived a
@@ -907,7 +907,7 @@ A worker run never prunes. `workingTheQueueNeverPrunesAFailedJob()` says so, and
 the gate asserts the command through `bin/cms` rather than the service: if the
 dispatch case went away, every module test would still pass.
 
-## The Clickhouse bridge — `bin/cms clickhouse:*` (2026-10-28)
+## The Clickhouse bridge > `bin/cms clickhouse:*` (2026-10-28)
 
 `modules/Clickhouse/` is a catalogue module: `php bin/cms module:add Clickhouse`
 installs the slice, and nothing in the kernel names it. The module has two

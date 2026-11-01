@@ -1,4 +1,4 @@
-# 10 — The auth provider nobody had to list (2026-10-16, the deferred half of §6)
+# 10 > The auth provider nobody had to list (2026-10-16, the deferred half of §6)
 
 §6 wired the `/mark` gate explicitly and deferred `#[AsAuthProvider]` discovery
 for a stated reason: the registry would have to construct a middleware with
@@ -97,7 +97,7 @@ baseline the whole table is measured against.
 
 ---
 
-# 11 — A real transport for reset links, and the fallback that stays forbidden (2026-10-16)
+# 11 > A real transport for reset links, and the fallback that stays forbidden (2026-10-16)
 
 §7 removed the leak and left an honest dead end: in production the null mailer
 was the only implementation, so a reset link reached nobody, and the docs said

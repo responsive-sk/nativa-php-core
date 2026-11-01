@@ -1,4 +1,4 @@
-# Themes — where a theme lives and what a theme module must carry
+# Themes > where a theme lives and what a theme module must carry
 
 Measured 2026-10-21 on `master`. This page is the audit that `temy-v-nativa-themes.md`
 (Fáza 0) asks for before any theme moves out of this repository. Nothing here is a

@@ -1,4 +1,4 @@
-# Kernel shape — the inventory
+# Kernel shape > the inventory
 
 Measured: 2026-10-15 · Baseline: **338 192 B / 79 files** (10 interface / 67 concrete, Core)
 

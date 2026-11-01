@@ -1,4 +1,4 @@
-# Name ownership — one name, one owner
+# Name ownership > one name, one owner
 
 Ledger for `tests/Architecture/NameOwnershipContractTest.php` and the theme
 half of the same rule in `tests/Theme/ThemeClassOwnershipTest.php`. Every
@@ -36,7 +36,7 @@ identical:
 | values with 2+ names (rule 1) | **2** | **2** |
 | literal places (rule 2) | 384 | 384 |
 
-## Rule 1 — one string value, one name · absolute, 2 exemptions
+## Rule 1 > one string value, one name · absolute, 2 exemptions
 
 Two names for one string value means two owners, and nothing reports the
 rename: one of them is a permission nobody can ever be granted, a theme
@@ -89,7 +89,7 @@ writes down WHY.
 The list also fails **when an entry stops applying** — an exemption that
 stopped being a collision is rot in the ledger, not a free pass.
 
-## Rule 2 — a value spelled as a literal outside its owner · ratchet at 385
+## Rule 2 > a value spelled as a literal outside its owner · ratchet at 385
 
 A **ceiling, not a list.** 50 owned string values appear as raw literals on
 **385 places** across the tree (measured 2026-10-27). An absolute rule here
@@ -173,7 +173,7 @@ consolidation work in Phase 2 does not touch them, and should not. The 132
 places that spelled `'sk_SK'` are not counted at all, which is why this number
 fell by 141 in one edit.
 
-## Rule 3 — the declaration count does not rise · ratchet at 238 / 202
+## Rule 3 > the declaration count does not rise · ratchet at 238 / 202
 
 This is the rule that catches the cheapest wrong fix: *"there are two names for
 this, let me add a third."* That is the complaint this whole ledger started
@@ -211,7 +211,7 @@ name count stayed 202: one name left and one arrived.
 That is the only direction this ratchet is ever supposed to move, and it moved
 on its own.
 
-## Rule 4 — a CSS class belongs to one theme · measured 2026-10-17
+## Rule 4 > a CSS class belongs to one theme · measured 2026-10-17
 
 Same rule, different vocabulary: a class a theme defines is a name the theme
 owns. `tests/Theme/ThemeClassOwnershipTest.php` reads every stylesheet a theme

@@ -1,4 +1,4 @@
-# Boot 21 — an article written by the module, and a dist you can deploy
+# Boot 21 > an article written by the module, and a dist you can deploy
 
 Two deliverables, one artifact each: content created through the Blog module's
 own write path, and a deployable tree produced by a packaging script.
@@ -87,7 +87,7 @@ The last row is the interesting one: the admin theme's stylesheet comes from
 that `make assets` output, the module catalogue, the migrator runner and the
 zero-dependency runtime all work in the same tree.
 
-## Two `Modules` trees — and why the artifact ships one of them
+## Two `Modules` trees > and why the artifact ships one of them
 
 The first version of this script shipped both, and the first person to open
 `dist/` asked the obvious question: *"modules twice?"*. They are not copies of
@@ -136,7 +136,7 @@ brings instead of leaving it to be discovered inside the artifact:
     2 drifted, 2 not installed
 ```
 
-# Boot 22 — testing the `erik` theme, and the asset defect it found
+# Boot 22 > testing the `erik` theme, and the asset defect it found
 
 The question was "can we test the erik theme too?" — and testing it is what
 found the bug, because the theme **rendered**: `er-` classes, correct markup,
@@ -280,7 +280,7 @@ installed, exactly as `TaxonomyRegistryTest` guards on Blog. Suite in this
 state: 24 tests, 49 assertions, 6 skips. `bin/cms module:add Erik` puts it back
 and all six run.
 
-# Boot 23 — the menu nobody asked for (2026-10-12)
+# Boot 23 > the menu nobody asked for (2026-10-12)
 
 The Mono work ended with a styled page and a navbar carrying a brand and
 nothing else. The vendored CSS was fine; the document simply had no
@@ -362,7 +362,7 @@ with the theme's own meatball — a checkbox plus a label, still no JS.)**
 - `phpunit` 28/28 (6 skips), `phpstan`, `rector --dry-run`, `php-cs-fixer --dry-run` clean; `extract-kernel --check` OK (246 identical, 42 recorded divergences — the new file needed no entry).
 - 4 of those tests are new (`modules/Settings/tests/SettingsShellContextProviderTest.php`): the header and footer answers, the active item under a nested path, and the abstentions. They build their own temp `config.db` with the Settings migrator — not `DatabaseMigrator`, which would run every module's migrator and touch the working tree's real databases — and **3 of the 4 fail when `navigation()` is reverted to `[]`**, so the silent-empty answer that caused this cannot come back unnoticed.
 
-# Boot 24 — the admin link a visitor may not see, and the prose that ate discovery (2026-10-12)
+# Boot 24 > the admin link a visitor may not see, and the prose that ate discovery (2026-10-12)
 
 Two asks: hide the admin link from anonymous readers while editors keep it, and
 close the trap Boot 23 recorded and left open. The first one turned out to have a
@@ -450,7 +450,7 @@ resolving as the type name `Demo\of`.
 - the negative checks, so the two new rules cannot be dropped unnoticed: with the cache rule removed **2 of the 8** `tests/Cache/PageCacheServiceTest.php` cases fail (the editor's page lands in the cache), and with `HEAD`'s resolver **3 of the 12** discovery cases fail;
 - `extract-kernel --check` OK (243 identical, 45 recorded divergences) — the three kernel files this boot rewrote (`PageCacheService`, `MiddlewareRegistry`, `MarkdownBlockRegistry`) are recorded as DIVERGED with their reasons. Upstream still carries both defects; the record is what says so.
 
-# Boot 25 — mono gets the meatball, and two seeded links that were 404s (2026-10-12)
+# Boot 25 > mono gets the meatball, and two seeded links that were 404s (2026-10-12)
 
 Reported as "the mono nav has no menu on mobile; cardboard has one". Measured
 first, and the strip Boot 23 added **was** there in this checkout: at 390px and
@@ -524,7 +524,7 @@ seeds idempotently and never rewrites what an operator may have edited.
 - 1280px unchanged: menu visible, toggle `display:none`;
 - `phpunit` 56 tests (6 skipped), `phpstan`, `rector --dry-run`, `php-cs-fixer --dry-run` and `php -l` clean; `extract-kernel --check` unchanged (the mono theme and the Settings migrator are module-owned, not part of the kernel slice).
 
-# Boot 20 — CardboardKit merges into Cardboard (single admin module)
+# Boot 20 > CardboardKit merges into Cardboard (single admin module)
 
 Boot 14 split the admin overlay into a leaf kit + admin app to break the
 `Cardboard ↔ everything` cycle. The two namespaces (`CardboardKit` vs

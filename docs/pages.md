@@ -1,4 +1,4 @@
-# Pages — static content in two locales
+# Pages > static content in two locales
 
 The `Pages` module serves the site's evergreen content: an about page, a
 contact page, a landing page. It is the smallest useful module and the first

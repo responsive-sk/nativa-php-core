@@ -82,7 +82,7 @@ a to je definícia chyby, ktorá sa nedá odchytiť testom, ktorý beží len na
 jednom súborovom systéme. Opravené v kontrakte: `copyTree()` najprv vytvorí
 cieľ, potom kopíruje.
 
-## Nulová závislosť runtime — a ako sme ju vyvrátili
+## Nulová závislosť runtime > a ako sme ju vyvrátili
 
 Hlavné tvrdenie jadra je, že runtime má **nula** Composer balíkov. `src/init.php`
 preto inštaluje vlastný PSR-4 fallback autoloader pre strom bez `vendor/`.

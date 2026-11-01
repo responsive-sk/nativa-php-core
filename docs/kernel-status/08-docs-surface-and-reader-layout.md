@@ -1,4 +1,4 @@
-# Part 08 — the docs surface that served nothing, and the reader layout it got
+# Part 08 > the docs surface that served nothing, and the reader layout it got
 
 **Boot 45.** One round, two questions: *what does `/docs` actually publish?* and,
 asked while the first was being answered, *why do its lines run the width of a

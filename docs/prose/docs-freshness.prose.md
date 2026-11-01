@@ -1,4 +1,4 @@
-# Docs freshness — draft experiment, NOT published
+# Docs freshness > draft experiment, NOT published
 
 > DRAFT. This file is the Task 0 experiment of
 > `.ai-factory/plans/feature-docs-prose-structure.md` and is deliberately NOT

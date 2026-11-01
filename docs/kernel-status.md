@@ -1,4 +1,4 @@
-# Kernel status — the measured log, indexed
+# Kernel status > the measured log, indexed
 
 This is the index of the log this tree keeps about what it **actually does**
 when it is booted — not what the plan intends it to do. Every status code in

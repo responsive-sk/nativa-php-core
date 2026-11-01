@@ -23,7 +23,7 @@ meraní, nie na vkuse.
 
 ---
 
-## Časť I — Čo Rust naozaj hovorí (a čo mu pripisujeme)
+## Časť I > Čo Rust naozaj hovorí (a čo mu pripisujeme)
 
 Rust nemá problém s dvoma hodnotami. Má problém s dvoma **inými** vecami:
 
@@ -52,7 +52,7 @@ Takže prvý argument nie je kompromis, je to zhoda s Rustom: **predikát je
 
 ---
 
-## Časť II — Merané v tomto strome
+## Časť II > Merané v tomto strome
 
 Skript nad `git ls-files` (produkčný rozsah `src/` + `modules/`, testy vynechané),
 23. októbra 2026:
@@ -78,7 +78,7 @@ A **98 predikátov zo 238** je presne tá polovica, kde by enum bol dekorácia:
 
 ---
 
-## Časť III — Argument 1: predikát sa nedá obohatiť
+## Časť III > Argument 1: predikát sa nedá obohatiť
 
 ```php
 // src/Modules/Core/Domain/ThemePreference.php
@@ -108,7 +108,7 @@ použiteľné, žiadna tretia.
 
 ---
 
-## Časť IV — Argument 2: dôvod má lepší domov než signatúra
+## Časť IV > Argument 2: dôvod má lepší domov než signatúra
 
 Toto je jadro celej dilemy a je to zároveň miesto, kde C-éčkový model zlyhal
 a kde ho Nativa opravuje inak než Rust.
@@ -174,7 +174,7 @@ Bez toho by bol lož.
 
 ---
 
-## Časť V — Argument 3: boolean sa nedá uložiť nesprávne
+## Časť V > Argument 3: boolean sa nedá uložiť nesprávne
 
 Tretí argument je o hranici procesu, nie o počte stavov.
 
@@ -223,7 +223,7 @@ alebo do HTTP odpovede, musí mať meno — a to meno potrebuje validáciu, nie
 
 ---
 
-## Časť VI — Kde by bool bol klamstvo (a jedno miesto, kde ním už je)
+## Časť VI > Kde by bool bol klamstvo (a jedno miesto, kde ním už je)
 
 Tri miesta v tomto strome, kde by boolean zjedol informáciu:
 
@@ -260,7 +260,7 @@ neho sedí `findFailed(): ?array`, ktoré ten dôvod vráti — boolean je len
 
 ---
 
-## Časť VII — Pravidlo, ktoré z toho vychádza
+## Časť VII > Pravidlo, ktoré z toho vychádza
 
 Skôr než napíšeš `: bool`, tri otázky v tomto poradí:
 
@@ -276,7 +276,7 @@ odpoveď. Vo vnútri, kde sa stav ukladá alebo posiela, musí mať meno.
 
 ---
 
-## Časť VIII — Prečo je to FreeBSD mindset a nie Rust mindset
+## Časť VIII > Prečo je to FreeBSD mindset a nie Rust mindset
 
 FreeBSD drží základ malý a primitíva ostré: `open()` vráti file descriptor alebo
 `-1`, `errno` povie prečo. To nie je nedbalosť, je to rozhodnutie, že **dôvod

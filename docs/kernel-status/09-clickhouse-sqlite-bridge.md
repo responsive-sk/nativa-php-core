@@ -1,4 +1,4 @@
-# Part 09 — the ClickHouse client, and the SQLite engine as the bridge
+# Part 09 > the ClickHouse client, and the SQLite engine as the bridge
 
 **Boot 46.** One round, one question: *can ClickHouse read the kernel's live
 SQLite files without an export, a copy or a second schema?* The documentation
@@ -91,7 +91,7 @@ kernel-shaped SQLite files created with PDO, and every step below went through
 | 3 — `TEXT` `''` as `DateTime` | The explicit-table path needs a **normal** database: inside the attached database `CREATE TABLE` answers error 57 `TABLE_ALREADY_EXISTS` (every table is implicit) and `DROP TABLE` answers error 48 `NOT_IMPLEMENTED`. An explicit table in `default` is accepted, `DESCRIBE` shows `DateTime`, and reading the `''` row throws error 41 `CANNOT_PARSE_DATETIME` — an exception, not an epoch and not a silent coercion. |
 | 4 — `INSERT` on a WAL file | With a live PDO connection holding 8 272 bytes in `-wal` (`wal_autocheckpoint = 0`), the attached database still read both rows, including the one only in the WAL. `INSERT` through ClickHouse exited 0; `count()` became 3; a fresh kernel PDO connection saw all three rows; the WAL stayed non-empty (16 512 bytes). No failure, no block, no lost pages. |
 
-## Re-running it — `make clickhouse-smoke` (2026-10-31)
+## Re-running it > `make clickhouse-smoke` (2026-10-31)
 
 The table above was measured by hand. The parts a fixture can hold are now one
 command, so a later change meets the same engine instead of a memory of it:
@@ -102,7 +102,7 @@ curl -L -o /tmp/clickhouse https://builds.clickhouse.com/master/amd64/clickhouse
 chmod +x /tmp/clickhouse
 CLICKHOUSE_BIN=/tmp/clickhouse make clickhouse-smoke
 
-# or a server already running — CLICKHOUSE_USER_FILES must name a directory on
+# or a server already running > CLICKHOUSE_USER_FILES must name a directory on
 # ITS filesystem this shell can write to, because the fixture has to be inside
 # user_files (that rule is one of the checks)
 CLICKHOUSE_URL=http://127.0.0.1:8123 \

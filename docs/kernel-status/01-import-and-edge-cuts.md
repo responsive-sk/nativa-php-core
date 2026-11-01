@@ -1,4 +1,4 @@
-# The import and the edge cuts — Boots 1 to 15 (measured 2026-10-11)
+# The import and the edge cuts > Boots 1 to 15 (measured 2026-10-11)
 
 This document records what this tree **actually does** when it is booted, not what
 the plan intends it to do. Every status code below was read back off this checkout
@@ -25,7 +25,7 @@ import. The import carries the showcase's coupling: **34 non-kernel
 ledger in `../nativa-minimal` (`tests/Architecture/KernelCouplingTest.php`)
 asserts in both directions.
 
-## Boot 1 — no `vendor/` (a production-shaped tree)
+## Boot 1 > no `vendor/` (a production-shaped tree)
 
 Every surface answers **500**, and the cause is named in the application log:
 
@@ -49,7 +49,7 @@ is why `../nativa-minimal`'s dist works: `bin/build/build-dist.sh` excludes
 guard belongs in that repo's architecture suite; this tree inherits the defect
 rather than owning it.
 
-## Boot 2 — `composer install`, BEFORE the first edge was cut
+## Boot 2 > `composer install`, BEFORE the first edge was cut
 
 | Surface | Status | First cause | Ledger answer |
 |---|---|---|---|
@@ -66,7 +66,7 @@ them and one — `/mark` — for the reason the plan gives: a kernel with no `Us
 module has no admin route to protect, so it is *not found* rather than
 *forbidden*.
 
-## Boot 3 — the first edge cut: the shell port (2026-10-11)
+## Boot 3 > the first edge cut: the shell port (2026-10-11)
 
 `ThemeResolver`, `ContentServices` and `FrontendLayout` no longer import
 `Settings` or `Locales`. They ask a kernel-owned port instead.
@@ -138,7 +138,7 @@ throwaway provider was installed, measured, and deleted:
 4. **The admin/SEO meta strings** in `HomepageAction` and `ErrorPageRenderer` still
    name the showcase (`Nativa Starter — Home`).
 
-## Boot 4 — the home surface stays in the kernel (2026-10-11)
+## Boot 4 > the home surface stays in the kernel (2026-10-11)
 
 `HomepageAction` no longer imports `Blog` or `Locales`. The showcase home
 (hero + feature sections + latest articles, copy through the translation
@@ -179,7 +179,7 @@ lines from before the cut.
 home title is kernel-named since this step, the error pages are not — gap #4
 narrowed, not closed.
 
-## Boot 5 — the middleware lose their module imports (2026-10-11)
+## Boot 5 > the middleware lose their module imports (2026-10-11)
 
 `AuthMiddleware` (6 edges), `RateLimitMiddleware` (4) and
 `PageCacheMiddleware` (1) no longer import `Users`, `Outbox`, `Security` or
@@ -236,7 +236,7 @@ bypass, GET cached, POST skipped). ALL GREEN. The harness lives in `/tmp`,
 not in the tree: without the PHPUnit harness (task 2.1) a committed test
 could not run anywhere.
 
-## Boot 6 — the sitemap lists what the kernel serves (2026-10-11)
+## Boot 6 > the sitemap lists what the kernel serves (2026-10-11)
 
 `SitemapAction` no longer imports `Blog` (×3) or `Pages`. The article
 enumeration was Blog's half, the page enumeration Pages', the author profiles
@@ -264,7 +264,7 @@ still lists `/en/` from `ContentLocaleMapper::LANGUAGES` while no `/en/`
 route exists — the port has `languages()`, nothing in the mapper reads it
 yet.
 
-## Boot 7 — serving uploads leaves the kernel (2026-10-11)
+## Boot 7 > serving uploads leaves the kernel (2026-10-11)
 
 `ServeUploadedFileAction` is deleted. The upload allowlist is Media's policy
 and serving uploads is Media's route — the `M` row said so, and with no Media
@@ -290,7 +290,7 @@ The ledger: **9 → 8 edges (7 → 6 files)**. Remaining: `SeedCommand`
 
 No new `[KERNEL] Error` (35 = 35).
 
-## Boot 8 — the seed command leaves the kernel (2026-10-11)
+## Boot 8 > the seed command leaves the kernel (2026-10-11)
 
 `SeedCommand` is deleted. Seeding writes hashed credentials, roles and
 permissions — a kernel with no auth has nothing to seed, and the permission
@@ -315,7 +315,7 @@ theme it may not have is the same bug class this tree exists to kill
 (a page rendering another theme's answer). `ThemeKernel` falls back, the
 provider votes, the merge rule keeps every other kernel default.
 
-## Boot 9 — zero edges (2026-10-11)
+## Boot 9 > zero edges (2026-10-11)
 
 The last four rows are gone, and the count the tree exists to move reads
 **0**: no kernel file imports a module anymore (`Database` excluded — it is
@@ -346,7 +346,7 @@ fixture.
 
 All six surfaces unchanged (`/` 200 Mono through `/mark` 404), log 35 = 35.
 
-## Boot 10 — the harness (2026-10-11)
+## Boot 10 > the harness (2026-10-11)
 
 `composer test` is green: **7 tests, 13 assertions, ~1 s, in-process** —
 the six surfaces no longer need six curls through `:8000` and the lifecycle
@@ -388,7 +388,7 @@ All six surfaces unchanged, log 35 = 35. Task 2.1's `extract-kernel.sh`
 still does not exist — but when it does, there is now a `tests/` worth
 adopting instead of bringing one.
 
-## Boot 11 — the extraction guard (2026-10-11)
+## Boot 11 > the extraction guard (2026-10-11)
 
 Task 2.1 closes the gap its own text names: the baseline commit carried the
 tree without `tests/`/`phpunit.xml`/`phpstan.neon`/`Makefile`, and `composer
@@ -438,7 +438,7 @@ grew during this boot, entirely from harness construction probes (the
 session-after-output fatal and the first-version OOM, all from `php -r` /
 PHPUnit processes — none from a served request).
 
-## Boot 12 — the kernel theme gets a design (2026-10-11)
+## Boot 12 > the kernel theme gets a design (2026-10-11)
 
 Task 2.2: a trimmed design that renders from `ShellContext` alone, plain
 CSS, no build, registered as the default. The registration was already true
@@ -481,7 +481,7 @@ Deliberately not this task: `starter` as an addable module (no starter
 slice exists in this tree; packaging it is minimal-side work) and the
 `cs-fixer`/`rector` configs from Boot 11.
 
-## Boot 13 — the last showcase strings (2026-10-11)
+## Boot 13 > the last showcase strings (2026-10-11)
 
 Gap #4 closes: a grep for `Nativa Starter|nativa_starter` across the tree
 now hits only history (this log), the harness assertion that guards it,
@@ -511,7 +511,7 @@ Gates: `phpstan` clean, `composer test` 11/29, `--check` green (58
 identical, 37 recorded). HTTP: all seven surfaces answer (`/llms.txt` 200,
 792 B, kernel copy with absolute links); `/` back at 22934 B.
 
-## Boot 14 — the admin stack installs (2026-10-11)
+## Boot 14 > the admin stack installs (2026-10-11)
 
 The catalogue had one installable module and one that refused with nine
 missing dependencies. It now has **sixteen**, and Cardboard — the real
@@ -593,7 +593,7 @@ are **unverified beyond install + route**: their own acceptance suites (if
 any) were not run — this boot proves the graph installs and serves, not that
 the admin CRUD flows are correct.
 
-## Boot 15 — the admin gets its stylesheet (2026-10-11)
+## Boot 15 > the admin gets its stylesheet (2026-10-11)
 
 The report was "`/mark` works but has no pnpm assets". Measured, it was
 worse and more specific than that:

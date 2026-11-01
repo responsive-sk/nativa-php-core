@@ -1,10 +1,10 @@
-# Článok: slovenský web, anglická stránka — a šiesta funkcia portu
+# Článok: slovenský web, anglická stránka > a šiesta funkcia portu
 
 **17. októbra 2026**
 
 ---
 
-## Časť I — Tri riadky, ktoré si odporujú
+## Časť I > Tri riadky, ktoré si odporujú
 
 Kolo sa začalo kontrolou, ktorá nemala nič nájsť. Miesto toho narazila na tri riadky,
 ktoré sa navzájom vylučujú:
@@ -42,7 +42,7 @@ pomenovalo, čo tá podlaha znamená na slovenskom webe.
 
 ---
 
-## Časť II — Prečo to nebola chyba témy
+## Časť II > Prečo to nebola chyba témy
 
 Prvý inštinkt je ísť do témy a prečítať Locales odtiaľ. To by bolo rýchle a **nesprávne**,
 a dôvod je merateľný: téma, ktorá si importuje modul, je presne tá väzba, ktorú tento
@@ -73,7 +73,7 @@ položka zoznamu, ktorý existoval celý čas**.
 
 ---
 
-## Časť III — Rozšírenie portu, nie nová trieda jadra
+## Časť III > Rozšírenie portu, nie nová trieda jadra
 
 Rozhodnutie, ktoré padlo: texty doplní jadro z Locales. A hneď prvé obmedzenie, ktoré
 to určilo, nie je technické ale procesné — `KernelShapeTest` robí z **novej konkrétnej
@@ -113,7 +113,7 @@ prepisujúce.
 
 ---
 
-## Časť IV — Negatívne kontroly
+## Časť IV > Negatívne kontroly
 
 Brána, ktorá nevie spadnúť, nie je brána. Obe polovice pravidla zjednotenia preto boli
 najprv rozbité zámerne:
@@ -131,7 +131,7 @@ vôbec a hodnotu má zapísanú v sebe. Až zápis značky **cez** seed to rozl�
 
 ---
 
-## Časť V — Čo z toho vyšlo, merané na bežiacom serveri
+## Časť V > Čo z toho vyšlo, merané na bežiacom serveri
 
 ```
 GET /                       HTTP 200 · 54 330 bajtov
@@ -211,7 +211,7 @@ tak, ako to pomenoval predošlý článok, a presne to sa ani týmto kolom nezme
 
 ---
 
-## Dodatok, ten istý deň neskôr — ten istý defekt, o jednu tému ďalej
+## Dodatok, ten istý deň neskôr > ten istý defekt, o jednu tému ďalej
 
 Medzi písaním tohto článku a jeho dodatkom bola `config.db` zapísaná o **01:31**
 (`updated_at` 23:31 UTC): `theme` sa prepol z `jednotka` na `mono` a `admin_layout`

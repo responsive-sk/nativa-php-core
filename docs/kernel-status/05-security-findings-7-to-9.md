@@ -1,4 +1,4 @@
-# 7 — The reset token in the log (2026-10-15, security-audit finding #1)
+# 7 > The reset token in the log (2026-10-15, security-audit finding #1)
 
 The audit of the public routes and the CSRF flow left one medium finding that
 mattered more than its label: `PasswordResetService::requestReset()` appended
@@ -85,7 +85,7 @@ running during this round.
 
 ---
 
-# 8 — The comment form's bot defense (2026-10-15, security-audit finding #2)
+# 8 > The comment form's bot defense (2026-10-15, security-audit finding #2)
 
 **Finding #2 as first written was wrong in its first half, and the correction
 is the useful part.** It claimed `POST /blog/{slug}/comments` carried "only the
@@ -152,7 +152,7 @@ against `src/Modules/`, so a catalogue edit alone is invisible to the suite.
 
 ---
 
-# 9 — Password policy, submit throttles, the CSRF origin check (2026-10-16, security-audit findings #3–#8)
+# 9 > Password policy, submit throttles, the CSRF origin check (2026-10-16, security-audit findings #3–#8)
 
 This round continued the audit §7/§8 started. The first thing it did was
 re-verify every remaining premise against the code, and that mattered: §8 had

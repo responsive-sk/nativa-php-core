@@ -27,7 +27,7 @@ skillov pod `.agents/skills`, 16 kontraktných testov pod `tests/Architecture`
 
 ---
 
-## Časť I — Čo vlastní ktorý nástroj
+## Časť I > Čo vlastní ktorý nástroj
 
 | nástroj | otázka, na ktorú odpovedá | kde žije | brána? |
 |---|---|---|---|
@@ -73,7 +73,7 @@ a nie brána, ktorá by niečo zachránila pred mergom.
 
 ---
 
-## Časť II — Ktorá brána môže padnúť a ktorá len meria
+## Časť II > Ktorá brána môže padnúť a ktorá len meria
 
 15 CI jobov, presne ako sa volajú:
 
@@ -112,7 +112,7 @@ a ignoruje sa na tretí.
 
 ---
 
-## Časť III — Tri miesta, kde to isté vlastní viac než jeden nástroj
+## Časť III > Tri miesta, kde to isté vlastní viac než jeden nástroj
 
 **1. `mago guard` a `KernelCouplingTest` tvrdia to isté pravidlo.** Jedno
 pravidlo, dvaja vlastníci. Guard je pritom prísnejší: na nezmenenom strome
@@ -139,7 +139,7 @@ mieste vyrobí dva rôzne pinované nástroje v jednom behu.
 
 ---
 
-## Časť IV — Dve diery, ktoré mapa ukázala
+## Časť IV > Dve diery, ktoré mapa ukázala
 
 Prvá: **model a kód porovnáva len test, nie nástroj.** `adapters 0`
 znamená, že model, ktorý by celý zostatol, prejde. Most medzi vrstvami sú tri
@@ -161,7 +161,7 @@ Obe diery sú jedna téma: **dátové vrstvy, ktoré nikto neporovnáva s kódom
 
 ---
 
-## Časť V — Čo z toho vyplýva pre prispievateľa
+## Časť V > Čo z toho vyplýva pre prispievateľa
 
 Lokálne prejde päť príkazov a v CI ich beží pätnásť. `boot`, `dist`,
 `themes-check` a `extract-check` sa lokálne púšťajú len vtedy, keď máš dôvod:

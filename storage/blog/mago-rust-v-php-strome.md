@@ -22,7 +22,7 @@ ktoré ich oddelilo — a odpovedá na obe.
 
 ---
 
-## Časť I — Prečo bola podmienka „Rust“
+## Časť I > Prečo bola podmienka „Rust“
 
 Nie preto, že by Rust robil kód správnejším. PHP kód je rovnaký, nech ho
 parsuje čokoľvek. Rozdiel je v tom, **kde beží kontrola**:
@@ -44,7 +44,7 @@ a každý z nich má inú mieru pravdy.
 
 ---
 
-## Časť II — Štyri nástroje, jeden parser
+## Časť II > Štyri nástroje, jeden parser
 
 Meranie prebehlo 22. októbra 2026 s `mago 1.58.2` na PHP 8.5.11. Scope bol
 presne ten istý ako pri `phpstan.neon`: 123 `.php` súborov plus `bin/cms`,
@@ -64,7 +64,7 @@ verdikty nie sú „áno“ a prečo posledný nie je marketing.
 
 ---
 
-## Časť III — Inštalácia: Composer áno, ale voliteľne
+## Časť III > Inštalácia: Composer áno, ale voliteľne
 
 Mago sa dá nainštalovať cez Composer:
 
@@ -97,7 +97,7 @@ ktoré má parsovať.
 
 ---
 
-## Časť IV — Rýchlosť: 0,19 s proti trom sekundám
+## Časť IV > Rýchlosť: 0,19 s proti trom sekundám
 
 Namerané wall time na tom istom checkoute:
 
@@ -121,7 +121,7 @@ je porovnanie s tým, čo je v CI.
 
 ---
 
-## Časť V — Analyzátor: 189 errorov, dva skutočné
+## Časť V > Analyzátor: 189 errorov, dva skutočné
 
 Prvý pohľad vyzerá ako katastrofa: PHPStan level 9 je zelený na nule
 a Mago hlási 189 errorov. Druhý pohľad ukáže, že väčšina z nich nie je
@@ -156,7 +156,7 @@ pravdy je lepšia než väčšia verzia šumu.
 
 ---
 
-## Časť VI — Linter: 570 návrhov, nula po kurátorovaní
+## Časť VI > Linter: 570 návrhov, nula po kurátorovaní
 
 Default preset Mago je názorový. Na tomto strome hlási **570** nálezov:
 
@@ -200,7 +200,7 @@ nález cez `unfulfilled-expect` — takže ani výnimky nemôžu zhrdzavieť.
 
 ---
 
-## Časť VII — Formátovač: 124 z 124 súborov
+## Časť VII > Formátovač: 124 z 124 súborov
 
 `mago format --dry-run` by prepísal **všetkých 124** súborov v scope.
 To nie je „rýchlejší `php-cs-fixer`“, to je iný štýl.
@@ -223,7 +223,7 @@ zámerne. To je samostatný plán s vlastným diffom, nie prepínač.
 
 ---
 
-## Časť VIII — Guard: jediná vec, ktorá naozaj pridala hodnotu
+## Časť VIII > Guard: jediná vec, ktorá naozaj pridala hodnotu
 
 `mago guard` tvrdí vetu, ktorú už drží `KernelCouplingTest`: **súbor
 v kernelu nesmie menovať modul.** Rozdiel je v tom, ako to vidí.
@@ -257,7 +257,7 @@ duplicita.
 
 ---
 
-## Časť IX — Verdikt: čo znamená „Rust“ v praxi
+## Časť IX > Verdikt: čo znamená „Rust“ v praxi
 
 | vrstva | Mago | prečo |
 |---|---|---|
@@ -278,7 +278,7 @@ a voliteľné moduly — a to Mago v tomto strome ešte nevidí.
 
 ---
 
-## Časť X — Ako si to zopakovať
+## Časť X > Ako si to zopakovať
 
 ```bash
 make mago-spike                     # štyri nástroje, vždy exit 0

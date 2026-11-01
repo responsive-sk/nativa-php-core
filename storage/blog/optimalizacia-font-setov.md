@@ -9,7 +9,7 @@ category: "Nástroje"
 published: true
 ---
 
-## Časť I — Symptóm, ktorý vyzerá ako chyba prehliadača
+## Časť I > Symptóm, ktorý vyzerá ako chyba prehliadača
 
 Veta „Čo z toho zostáva" je nadpis. Veľké `Č` v nej bolo vykreslené iným
 písmom než zvyšok slova — fallbackom, ktorý má diakritiku, kým náš webfont ju
@@ -23,7 +23,7 @@ istého súboru**.
 
 ---
 
-## Časť II — Čo bolo v súboroch
+## Časť II > Čo bolo v súboroch
 
 Dva fonty, ktoré Boson reálne sťahuje, boli *latin-only* subset-y:
 
@@ -42,7 +42,7 @@ odlišujú slovenčinu od angličtiny, a to je najhorší možný výber: text j
 
 ---
 
-## Časť III — Nástroje, ktoré tam boli, a čo naozaj robia
+## Časť III > Nástroje, ktoré tam boli, a čo naozaj robia
 
 V `/home/evan/dev/10` sú dva python nástroje a zoznam fontov. Prešiel som ich
 CLI, aby som vedel, či problém vedia vyriešiť:
@@ -72,7 +72,7 @@ v menšom balení. Nástroj nebol zlý; len na tento problém nesedel.
 
 ---
 
-## Časť IV — Jednosmernosť subsettingu
+## Časť IV > Jednosmernosť subsettingu
 
 Subset je deštruktívna operácia: vstup `F`, sada `S` → `F|S`. Nikdy
 `F ∪ D`. Preto sa „oprava font setu" nedá spraviť tým istým prístrojom, ktorý
@@ -97,7 +97,7 @@ tvar, ktorý by tam bol, keby subset nikdy neodrezal.
 
 ---
 
-## Časť V — Ako sa overí „ten istý build"
+## Časť V > Ako sa overí „ten istý build"
 
 Dve merania stačili.
 
@@ -124,7 +124,7 @@ aj advance** pre spoločné glyfy → donor je ten istý build.
 
 ---
 
-## Časť VI — Transplantácia bez zmeny metrík
+## Časť VI > Transplantácia bez zmeny metrík
 
 Merge robil `fontTools` (engine, na ktorom stoja aj interné skripty; ich CLI
 na to nemá príkaz). Postup na jeden súbor:
@@ -133,7 +133,7 @@ na to nemá príkaz). Postup na jeden súbor:
 # 1. chýbajúce znaky: tie, ktoré v cmap nie sú
 missing = [c for c in "ÁÄČĎ…žĚŘŮěřů" if ord(c) not in dst_cmap]
 
-# 2. pre každý znak skopíruj glyf z donoru — aj komponenty, ak je zložený
+# 2. pre každý znak skopíruj glyf z donoru > aj komponenty, ak je zložený
 # 3. pridaj advance do hmtx a záznam do každého unicode cmap podtably
 # 4. dopočítaj maxp.numGlyphs a hhea.numberOfHMetrics
 # 5. ulož ako woff2
@@ -175,14 +175,14 @@ CSS smeruje na tú istú 400 URL, takže obe váhy sú opravené jedným súboro
 
 ---
 
-## Časť VII — Prečo to aj tak nefungovalo
+## Časť VII > Prečo to aj tak nefungovalo
 
 Po merge bolo pokrytie čisté (`missing: none`) a headless test v čerstvom
 Chromiu ukazoval správne šírky. A predsa: na obrazovke fallback. Príčina bola
 v `public/.htaccess`:
 
 ```apache
-# Web fonts (1 year, immutable — self-hosted woff2 never changes; a new font
+# Web fonts (1 year, immutable > self-hosted woff2 never changes; a new font
 # ships under a new URL).
 Header set Cache-Control "public, max-age=31536000, immutable"
 ```
@@ -206,7 +206,7 @@ v cache.
 
 ---
 
-## Časť VIII — Druhá pasca: nie CSS, ale bundle
+## Časť VIII > Druhá pasca: nie CSS, ale bundle
 
 Zdrojové `modules/Themes/Boson/assets/critical/boson.css` som mal opravené,
 testy zelené — a stránka aj tak inlinovala staré URL. Boson totiž pri
@@ -234,7 +234,7 @@ len jedna z nich je minifikovaná.
 
 ---
 
-## Časť IX — Dôkaz, ktorý nie je „vyzerá to dobre"
+## Časť IX > Dôkaz, ktorý nie je „vyzerá to dobre"
 
 Pokrytie v cmap hovorí, že glyf existuje. Nehovorí, že ho prehliadač použije.
 Preto posledné meranie: koľko má znak **advance** v prehliadači vs. v tabuľke
@@ -265,7 +265,7 @@ to regresia a nie je to predmetom tejto opravy. Podstatné je, že 15.03 nie je
 
 ---
 
-## Časť X — Čo by mal nástroj vedieť, aby toto robil sám
+## Časť X > Čo by mal nástroj vedieť, aby toto robil sám
 
 Interné skripty sú subsettery a to je v poriadku — len ich CLI končí pri
 `F|S`. Chýbajúci režim je malý a presne ohraničený:
@@ -295,7 +295,7 @@ hlásil.
 
 ---
 
-## Časť XI — Zhrnutie v piatich vetách
+## Časť XI > Zhrnutie v piatich vetách
 
 Subset je jednosmerný, takže oprava vyžaduje buď plný zdroj tej istej verzie,
 alebo donor z toho istého buildu. Transplantácia glyfov je presná len vtedy, keď

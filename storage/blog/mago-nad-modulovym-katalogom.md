@@ -23,7 +23,7 @@ súborov v katalógu a dva nové nástroje (`make mago-modules`,
 
 ---
 
-## Časť I — Prečo katalóg nikto nemeral
+## Časť I > Prečo katalóg nikto nemeral
 
 Tri konfigurácie hovoria to isté tromi rôznymi slovami:
 
@@ -46,7 +46,7 @@ môže menovať katalóg bez toho, aby sa niečo prepisovalo — a čo je dôle�
 
 ---
 
-## Časť II — Čo presne sa zmenilo
+## Časť II > Čo presne sa zmenilo
 
 Do `[source] paths` pribudol riadok `"modules"` a z `[source] excludes` zmizol.
 Zvyšok je o tom, čo **nie**:
@@ -64,7 +64,7 @@ obsahovať všetky cesty `phpstan.neon` a **jediné, čo smie pribudnúť navyš
 
 ---
 
-## Časť III — Prvé meranie
+## Časť III > Prvé meranie
 
 Mago 1.58.2, PHP 8.5, ten istý binárny súbor, len o 360 súborov širší scope:
 
@@ -88,7 +88,7 @@ tretí.
 
 ---
 
-## Časť IV — `invalid-method-access`: 313 → 0
+## Časť IV > `invalid-method-access`: 313 → 0
 
 Najväčšia jediná trieda v katalógu bola 313 nálezov `invalid-method-access` a
 všetky boli ten istý defekt povedaný 313-krát:
@@ -126,7 +126,7 @@ Výsledok: **313 → 0**, a vedľajším efektom `possibly-false-argument` 15 �
 
 ---
 
-## Časť V — `mixed-assignment`: 291 → 245 (úprimne, čiastočne)
+## Časť V > `mixed-assignment`: 291 → 245 (úprimne, čiastočne)
 
 Druhá najväčšia trieda vyzerá ako jedna, ale jedna nie je. 291 nálezov
 „priradenie `mixed` do premennej“ má rôzne zdroje: 98 čítaní
@@ -161,7 +161,7 @@ vyrobiť 245 miest, kde sa typ len tvári.
 
 ---
 
-## Časť VI — Ktoré brány vidia moduly a ktoré jadro
+## Časť VI > Ktoré brány vidia moduly a ktoré jadro
 
 Rozšírenie scope dalo katalógu **jednu** bránu a nič viac. Zvyšok brán stromu
 bol napísaný pre jadro a nikde to nebolo napísané spolu, takže teraz je to v
@@ -192,7 +192,7 @@ merge.
 
 ---
 
-## Časť VII — Dopad
+## Časť VII > Dopad
 
 | meranie | pred | po |
 |---|---|---|

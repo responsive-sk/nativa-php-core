@@ -1,4 +1,4 @@
-# Booleans — when `true`/`false` is the whole answer
+# Booleans > when `true`/`false` is the whole answer
 
 A `bool` is honest when the question has two values and the reason for `no` is
 either not needed or has somewhere else to live. Everything below is that

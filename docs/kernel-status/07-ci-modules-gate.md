@@ -1,4 +1,4 @@
-# Boot 26 — the gate that could not see the catalogue (2026-10-16)
+# Boot 26 > the gate that could not see the catalogue (2026-10-16)
 
 The security work of §7–§11 landed behind a CI workflow that stayed **green if
 any of it were deleted**. Every guard those rounds added lives in a module or
@@ -141,7 +141,7 @@ Negative control: with `Mono` removed, the step prints `active theme: kernel
 | `make lint` / `make lekalo-check` / `make extract-check` | clean; 23 rules, 0 errors; OK (222 identical, 66 recorded — unchanged, the slice does not carry the catalogue) |
 | `module:show` over all 19 catalogue entries | acyclic; the loop converges |
 
-## Boot 27 — the live sweep the suite cannot do
+## Boot 27 > the live sweep the suite cannot do
 
 `php -S 127.0.0.1:8301`, `APP_ENV=production`, a real session and a real CSRF
 token scraped from the real forms, and **every database a temp file**
@@ -181,7 +181,7 @@ Drift cured by the trip: `module:remove Outbox --force` + `module:add Outbox`
 re-installed the slice verbatim from the catalogue, so the two stale test files
 noted above now match it.
 
-## Boot 28 — the panel, booted, as a gate
+## Boot 28 > the panel, booted, as a gate
 
 Boot 27's matrix was measured by hand, and a measurement nobody re-runs is a
 memory. It is now `bin/build/admin-smoke.sh`, run by a fifth CI job
@@ -223,7 +223,7 @@ Verified by replaying both jobs' `run` blocks in order against a fresh
 | `modules` (build → install → migrate → theme → suite → assert) | **exit 0**: `Installed (19)` from 18 catalogue entries in four rounds, `active theme: mono (bundle available: yes)`, `318 tests, 1339 assertions, 1 skip`, assertion `318 tests ran, 1 skipped, 38 catalogue test classes expected` |
 | `shellcheck` on both scripts / `actionlint` on the workflow | clean |
 
-## Boot 29 — the gate reaches the content flows
+## Boot 29 > the gate reaches the content flows
 
 The admin gate stopped at the panel's account surfaces, which is not where an
 operator lives: the two editors they use every day are the article and the
@@ -255,7 +255,7 @@ Verified: 45 checks, exit 0 on this tree and again on a fresh `git worktree`
 (catalogue installed there, `storage/` byte-identical afterwards, no
 `smoke-*` file left anywhere); `shellcheck` and `actionlint` clean.
 
-## Boot 30 — the gate reaches the anonymous world, and the workers
+## Boot 30 > the gate reaches the anonymous world, and the workers
 
 Boot 29's gate stopped at the panel: every flow it walked needed an admin
 session. The one mutation a stranger can make — a comment — and the two things
@@ -335,7 +335,7 @@ overwrites an installed slice, so the cure is a remove-and-add, not an edit —
 and the degraded-tree probe needed exactly that, so it left the tree cured:
 `diff -rq modules/Outbox src/Modules/Outbox` is empty again.
 
-## Boot 31 — the worker an operator can actually run
+## Boot 31 > the worker an operator can actually run
 
 Boot 30 closed with a note it promised to **delete rather than reword** when a
 producer landed. The producer did not land — but the measurement behind the
@@ -550,7 +550,7 @@ total:
   `docs/modules.md` quotes `outbox:process`'s exit contract as if it were
   reachable.
 
-## Boot 32 — the first real producer, and a model that could not check it
+## Boot 32 > the first real producer, and a model that could not check it
 
 Boot 30 wrote a note to be **deleted rather than reworded** when a producer
 landed. This is that round.
@@ -683,7 +683,7 @@ second measured instance of the failure it describes.
 
 ---
 
-## Boot 33 — two branches the reconciliation never closed
+## Boot 33 > two branches the reconciliation never closed
 
 The 2026-10-16 01:22 theme-branch reconciliation ended with a measured merge
 attempt and one sentence: *"Verdicts are the user's."* The attempt was made, the
@@ -784,7 +784,7 @@ on the machine that wrote it — the same failure as `evolutions/` being empty a
 
 ---
 
-## Boot 34 — the delete the model described, performed
+## Boot 34 > the delete the model described, performed
 
 Boot 32 closed this round's record by naming a defect and refusing to fix it in
 the same breath: *"Deleting an article orphans its cover … the model's own
@@ -889,7 +889,7 @@ delete a test on purpose rather than quietly reintroduce the over-delete.
 
 ---
 
-## Boot 35 — the queued reset link, measured instead of parked
+## Boot 35 > the queued reset link, measured instead of parked
 
 Boot 32 recorded this as *"the queued reset link stays an operator decision …
 the options remain 'accept and document', 'redact sensitive payloads in the
@@ -923,7 +923,7 @@ SHA-256, so a handler running an hour later cannot reconstruct the plaintext
 that belongs in the link. Any design that retries delivery has to carry the
 secret across the delay.
 
-### And the cost is not only risk — the gain is smaller than it looks
+### And the cost is not only risk > the gain is smaller than it looks
 
 `HttpPasswordResetMailer::sendResetLink()` sends synchronously, **catches
 `\Throwable`, logs, and returns**. A non-2xx is logged, not raised. So a
@@ -953,7 +953,7 @@ arrives. That is the honest cost, and it is the smaller of the two.
 
 ---
 
-## Boot 36 — what a Lekalo adapter would actually cost
+## Boot 36 > what a Lekalo adapter would actually cost
 
 `lekalo doctor` reports two **blocked** checks, both `nextAction:
 resolve-adapters`: `adapters.inventory` (`targets-without-adapters`) and
@@ -975,7 +975,7 @@ do not exist in v1** — only `path:` and `exec:`. So an adapter is not somethin
 Lekalo ships; it is something a project builds. The protocol is documented at
 `ichinya/lekalo` → `docs/target-protocol.md`.
 
-### A reference PHP adapter exists — and it is not a starting point
+### A reference PHP adapter exists > and it is not a starting point
 
 `adapters/php-laravel`, and it sizes the work exactly:
 
@@ -1028,7 +1028,7 @@ being optional and this round's recommendation is wrong.
 
 ---
 
-## Boot 37 — the retention `failed_jobs` never had
+## Boot 37 > the retention `failed_jobs` never had
 
 Boot 35 found that `failed_jobs` is emptied only by `DatabaseQueue::forget()` —
 an explicit admin action — and named a retention sweep as worth doing "on its
@@ -1117,7 +1117,7 @@ CLI in the gate at all.
 
 ---
 
-## Boot 38 — the model's module set, pinned; and where the model may live
+## Boot 38 > the model's module set, pinned; and where the model may live
 
 Boot 32 recorded that the model described a delete the code did not perform.
 Boot 36 measured what an adapter to catch that class of drift would cost
@@ -1185,7 +1185,7 @@ pattern (a list that grows silently is the check weakening).
 | suite after | **375 tests, 1635 assertions**, 1 skip — the +4 tests and +41 assertions are this file exactly |
 | negative control | slice directory deleted → the test fails, naming the module; `_probe/` model directory added → it fails from the other side |
 
-### And then the obvious next step — measured, and reverted
+### And then the obvious next step > measured, and reverted
 
 The follow-up is to let each module own its slice: move `lekalo/modules/<name>/`
 to `modules/<Name>/lekalo/`. It was attempted on a fingerprinted tree (64 files,
@@ -1236,7 +1236,7 @@ back at 272 sources, 250 definitions and the same digest `5d50cd7a…`, with
 
 ---
 
-## Boot 39 — the refusal event's payload, bound to the vocabulary that owns it
+## Boot 39 > the refusal event's payload, bound to the vocabulary that owns it
 
 Boot 38 closed with one thing a test could still bind without an adapter, and
 named the rest as adapter-shaped. This round found that the same round had left
@@ -1335,7 +1335,7 @@ Each mutation reverted, both edited files compared by sha256 rather than by
 
 ---
 
-## Boot 40 — the vocabulary half-fixed, and the arm-by-arm check it was missing
+## Boot 40 > the vocabulary half-fixed, and the arm-by-arm check it was missing
 
 Boot 39's own docstring gave this away and nobody re-read it as a claim to test:
 `ip` was put back on the two refusal arms *because "the Audit handler reads it
@@ -1434,7 +1434,7 @@ then failed as it should.
 
 ---
 
-## Boot 41 — the blog slice's own claims, and the article half of the payload binding
+## Boot 41 > the blog slice's own claims, and the article half of the payload binding
 
 Boot 40 closed with "the other payloads are still unbound", naming the article
 vocabulary as the modelling question Boot 39 left open. This round answered it and
@@ -1510,7 +1510,7 @@ style changes), because a repair invalidates the run before it: red, restored, g
   its slice (Boot 38), the reset link deliberately not queued (Boot 35), and
   Griffe's hero correct and green but not chosen (Boot 33).
 
-## Boot 42 — the copy port, and the English homepage on a Slovak site
+## Boot 42 > the copy port, and the English homepage on a Slovak site
 
 ### Measured before anything changed
 
@@ -1570,7 +1570,7 @@ already carries.
 | `make lint` | clean |
 | live `GET /` | 200 — `<h1>Minimálny PHP 8.5 starter kit</h1>`, both `je-section__title` headings (*Menej vrstiev*, *Super rýchle PHP*), 6 cards with Slovak titles and bodies, action buttons *Prejsť na blog* / *Otvoriť admin*, and `<title>` still the site name |
 
-### The same round, continued an hour later — the two themes that still read short keys
+### The same round, continued an hour later > the two themes that still read short keys
 
 `config.db` was written at **01:31** (settings `updated_at` 23:31 UTC): `theme`
 went from `jednotka` to `mono` and `admin_layout` to `compact`. Not by this
@@ -1612,13 +1612,13 @@ way `HomepageAction` merges it): eyebrow `Nativa Minimal`, title `Postavte Nieč
 Skvelé`, both buttons `Prejsť na blog` / `Otvoriť admin`, and **0** of its four
 English defaults left.
 
-### Negative control — the continuation
+### Negative control > the continuation
 
 | control | result |
 |---|---|
 | the group key dropped from erik's and mono's title chain | red — 4 failures across both suites, restored byte-identical |
 
-### Verified — the continuation (2026-10-17, all exit 0)
+### Verified > the continuation (2026-10-17, all exit 0)
 
 | Gate | Result |
 |---|---|
@@ -1627,7 +1627,7 @@ English defaults left.
 | `make lint` | clean |
 | `make lekalo-check` | 22 modules valid on their own, whole project valid |
 
-### Task 2.6 — five exemptions, three of them wrong
+### Task 2.6 > five exemptions, three of them wrong
 
 The round's last task took rule 1's allow-list from five entries to two. The
 plan predicted all five would collapse into one owner; measurement said two, and
@@ -1721,7 +1721,7 @@ const declarations rose above 239 (now 240).
 
 ---
 
-## Boot 43 — the prefix every theme links to, and the article a deployment could not see
+## Boot 43 > the prefix every theme links to, and the article a deployment could not see
 
 ### Measured before anything changed
 
@@ -1806,7 +1806,7 @@ them served.
 
 ---
 
-## Boot 44 — the question that began it, measured
+## Boot 44 > the question that began it, measured
 
 The request was four words long: *"mam vela CONST premennych a neviem ci je to
 OK pristup"*. This round answers it, and the answer is not the one the question

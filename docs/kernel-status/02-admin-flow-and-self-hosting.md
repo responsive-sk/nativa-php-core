@@ -1,4 +1,4 @@
-# Boot 16 — the admin CRUD flow, and the marker that ate its tables
+# Boot 16 > the admin CRUD flow, and the marker that ate its tables
 
 Verifying the admin flow end to end (the last item Boot 15 left open) found
 the write path broken — and not by the admin code.
@@ -74,7 +74,7 @@ registered for event type: security.auth.attempt` — a second, separate gap
 table had been hiding. Recorded, not fixed here: the login itself answers
 302 → `/mark` and holds the session regardless.
 
-# Boot 17 — the pnpm workspace comes home
+# Boot 17 > the pnpm workspace comes home
 
 Boot 15 answered "`/mark` works but has no pnpm assets" by importing a
 **build** and keeping the tree Node-free. That left the honest objection
@@ -119,7 +119,7 @@ rather than merely present: **250 identical / 38 recorded divergences** (was
 both the stage and the walk — without it the check compared a dependency
 store and reported every file as "exists only here".
 
-# Boot 17b — `bin/cms migrate`
+# Boot 17b > `bin/cms migrate`
 
 Boot 16 gave the tree a way to *recover* from a stale migration marker and no
 way to *force* one. `bin/cms` was four `module:*` commands by design, and the
@@ -137,7 +137,7 @@ php bin/cms migrate
 Verified against the Boot 16 failure state: `audit_log` dropped by hand,
 `migrate` recreated it, exit 0; an unknown command still exits 1.
 
-# Boot 18 — the two silent gaps the admin flow exposed
+# Boot 18 > the two silent gaps the admin flow exposed
 
 Both were found by reading the log after the Boot 16 fix, and both share a
 shape: an operation answered 302, and nothing happened.
@@ -205,7 +205,7 @@ read as "the fix did nothing". The files were correct the whole time; the
 server needed a restart. Same class of trap as the Boot 1 opcache incident,
 same lesson: restart before believing a null result.
 
-# Boot 19 — CI, and the zero-dependency claim it falsified
+# Boot 19 > CI, and the zero-dependency claim it falsified
 
 `.github/workflows/ci.yml` — six jobs, each mirroring what the showcase's CI
 does for its own tree, on the shape a fresh clone actually has (kernel-only:
@@ -368,7 +368,7 @@ theme that was *designed*, not just one that works. (`bin/build/extract-kernel.s
 runs as `make extract-check`; a CI run would need a credential for the private
 upstream — see Boot 20, below.)
 
-# Boot 20 — the extract-check linkage that was added and removed, and the four files upstream had not committed
+# Boot 20 > the extract-check linkage that was added and removed, and the four files upstream had not committed
 
 The `extract-check` job printed `NOT RUN` and exited 0 because the guard diffs
 this tree against `../nativa-minimal` and a runner has no checkout of it. The
