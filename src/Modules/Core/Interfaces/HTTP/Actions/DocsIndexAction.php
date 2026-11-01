@@ -78,12 +78,21 @@ final readonly class DocsIndexAction
         // so the index's search box cannot be written into one without drift. It
         // goes above the list, outside the theme's section, so the markup below
         // stays exactly what the theme authored.
+        //
+        // That placement is also why the block carries `data-docs-index` and a
+        // small rule set of its own: a theme's page block assumes it is the
+        // first thing under the header and pads its top accordingly, and the
+        // field the kernel put there turns that padding into a second gap. See
+        // `indexStyle()` for the numbers and what is trimmed.
         return Response::html(FrontendLayout::render(
             'Documentation — Nativa',
-            $this->searchField($module->prefix(), '')
+            self::indexStyle()
+                . '<div data-docs-index>'
+                . $this->searchField($module->prefix(), '')
                 . ($module instanceof DocsPageTheme
                     ? $module->docsIndex($this->catalog->entries())
-                    : $this->content($module->prefix())),
+                    : $this->content($module->prefix()))
+                . '</div>',
             description: 'The guides that ship with the repository, rendered by the site.',
             currentPath: $request->getPathInfo(),
             lang: DocsCatalog::LANGUAGE,
@@ -152,13 +161,24 @@ final readonly class DocsIndexAction
     }
 
     /**
-     * The search surface: the count, the field to refine it, and one row per hit.
+     * The search surface: the count, the field to refine it, and one row per hit,
+     * in a single section.
      *
-     * It is composed in the kernel's own fallback vocabulary rather than through
-     * `DocsPageTheme::docsIndex()` for two reasons: the theme's index heading
-     * says "Documentation" whatever was typed, and its empty state says no guide
-     * is published, which is the wrong sentence for a query with no hits. A hit
-     * that found nothing has to say so in its own words.
+     * It is the kernel's own markup rather than `DocsPageTheme::docsIndex()`, and
+     * the reason is measured on the rendered page: that method is the INDEX, so
+     * it opens with its own page head (label, an `<h1>` reading "Documentation"
+     * whatever was typed, and the subtitle about the guides that ship with the
+     * repository) inside a `{prefix}-page` block. Composed under the kernel's
+     * summary it put a second heading over the hits and more than three hundred
+     * pixels of padding between the count and the first row, because a section's
+     * bottom gap (8 rem), a page's top padding (4 em), a page head (3 em + 2.5
+     * em) and a list margin (3 em) all stack. A reader who typed a word had to
+     * scroll to find out whether it matched.
+     *
+     * The theme cannot be asked for a search-shaped variant instead: it is a
+     * byte-copy of `nativa-themes` (`make themes-check`), so the choice is its
+     * index surface or this one, and the miss sentence the theme carries —"no
+     * guides are published" — is the wrong sentence for a query.
      *
      * @param list<array{key: string, title: string, description: string}> $results
      */
@@ -172,7 +192,7 @@ final readonly class DocsIndexAction
             . '<p>'
             . (0 === $count
                 ? 'No guide matches "' . $escaped . '".'
-                : $count . (1 === $count ? ' guide matches “' : ' guides match "') . $escaped . '".')
+                : $count . (1 === $count ? ' guide matches "' : ' guides match "') . $escaped . '".')
             . '</p>'
             . $this->searchField($prefix, $query);
 
@@ -180,7 +200,19 @@ final readonly class DocsIndexAction
             return $html . '</section>';
         }
 
-        $html .= '<div class="' . $prefix . '-article__body"><ul>';
+        return $html . $this->hits($prefix, $results) . '</section>';
+    }
+
+    /**
+     * The hits themselves, in the vocabulary the theme already styles for a
+     * guide's body, so the rows sit under the field instead of behind a second
+     * page header.
+     *
+     * @param list<array{key: string, title: string, description: string}> $results
+     */
+    private function hits(string $prefix, array $results): string
+    {
+        $html = '<div class="' . $prefix . '-article__body"><ul>';
 
         foreach ($results as $result) {
             $html .= '<li>'
@@ -190,7 +222,35 @@ final readonly class DocsIndexAction
                 . '</li>';
         }
 
-        return $html . '</ul></div></section>';
+        return $html . '</ul></div>';
+    }
+
+    /**
+     * The index's own rules, keyed on the attribute the kernel just put around
+     * the block.
+     *
+     * Two gaps on `/docs` are the kernel's to fix, because the kernel created
+     * them: the field sits above the theme's page block, so the theme's top
+     * padding (4 em on Boson) no longer separates the block from the header but
+     * doubles the space the field already took, and the field's own bottom
+     * margin (3 em) is followed straight away by that padding. Measured at 1440
+     * px: the label sat 170 px under the field and the first card 630 px down a
+     * 1300 px viewport, so a reader saw one card and scrolled for the rest. The
+     * field keeps its top margin — the band under the header is the theme's —
+     * and loses the bottom one to the wrapper's 1.5 rem. Everything below the
+     * label (the head's padding, the list's margin, the card grid) is the
+     * theme's rhythm and is left alone.
+     *
+     * The `<style>` carries the CSP nonce placeholder, which
+     * `SecurityHeadersMiddleware` replaces on every HTML response, so the rule
+     * set is not blocked by `style-src`, and a page cache keeps no stale nonce.
+     */
+    private static function indexStyle(): string
+    {
+        return '<style nonce="__CSP_NONCE_PLACEHOLDER__">'
+            . '[data-docs-index] form{margin:3em 0 1.5rem}'
+            . '[data-docs-index]>*:last-child{padding-top:0}'
+            . '</style>';
     }
 
     /**

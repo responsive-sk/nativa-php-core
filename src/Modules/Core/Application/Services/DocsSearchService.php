@@ -69,8 +69,10 @@ final readonly class DocsSearchService
             $title = mb_strtolower($entry['title'], 'UTF-8');
             $body = mb_strtolower($guide['body'], 'UTF-8');
             $score = 0;
-            $matched = false;
 
+            // Every token has to stand somewhere: one that does not takes the
+            // whole guide out of the list, which is the AND the blog's FTS
+            // query also asks for.
             foreach ($tokens as $token) {
                 $inTitle = $this->occurrences($title, $token);
                 $inBody = $this->occurrences($body, $token);
@@ -80,11 +82,6 @@ final readonly class DocsSearchService
                 }
 
                 $score += $inTitle * self::TITLE_WEIGHT + $inBody;
-                $matched = true;
-            }
-
-            if (!$matched) {
-                continue;
             }
 
             $hits[] = [
@@ -120,10 +117,15 @@ final readonly class DocsSearchService
      */
     private function occurrences(string $haystack, string $token): int
     {
-        return preg_match_all(
+        $count = preg_match_all(
             '/(?<![\p{L}\p{N}])' . preg_quote($token, '/') . '(?![\p{L}\p{N}])/u',
             $haystack,
         );
+
+        // The pattern is built from a quoted literal and is always valid, so a
+        // failure here would be a broken UTF-8 subject rather than a bad regex;
+        // no occurrences is the honest count for it either way.
+        return false === $count ? 0 : $count;
     }
 
     /**

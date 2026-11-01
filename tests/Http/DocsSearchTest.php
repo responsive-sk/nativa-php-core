@@ -143,6 +143,44 @@ final class DocsSearchTest extends TestCase
     }
 
     /**
+     * The hits come straight after the count, under one heading.
+     *
+     * The theme's `docsIndex()` is the INDEX: it opens with a page head that
+     * reads "Documentation" whatever was typed, and its block carries the page's
+     * top padding, the head's own padding and the list's margin. Composed under
+     * the kernel's summary that put a second `<h1>` over the results and more than
+     * three hundred pixels of air between the count and the first row, so a reader
+     * had to scroll to learn whether the word matched at all. This pins the
+     * opposite: one heading on the page, and the first hit inside the summary's
+     * own section.
+     */
+    #[Test]
+    public function theHitsFollowTheCountUnderOneHeading(): void
+    {
+        $body = self::search('guide');
+
+        self::assertSame(
+            1,
+            substr_count($body, '<h1'),
+            'The search page carries a second top-level heading, which is the theme index composed under the summary.',
+        );
+        self::assertStringContainsString('Search</h1>', $body);
+        self::assertStringContainsString('guides match', $body);
+        // The class names are asserted with their `class="…"` context: the
+        // theme's stylesheet is inlined into the page, so a bare `.bo-page` or
+        // `bo-docs__item` search would hit the CSS rather than the markup.
+        self::assertStringNotContainsString('class="bo-page bo-docs"', $body, 'The theme page head is the index surface, not a search page.');
+        self::assertStringNotContainsString('class="bo-docs__item"', $body, 'The index cards are the index surface, not a search page.');
+
+        $summary = strpos($body, 'guides match');
+        $firstHit = strpos($body, '<div class="bo-article__body"><ul>');
+
+        self::assertIsInt($summary);
+        self::assertIsInt($firstHit);
+        self::assertGreaterThan($summary, $firstHit, 'The hits render before the count.');
+    }
+
+    /**
      * The index carries the field too, so the search is discoverable from the
      * page a reader lands on rather than only from the header above it.
      */
@@ -157,6 +195,17 @@ final class DocsSearchTest extends TestCase
         $body = $response->getContent();
 
         self::assertStringContainsString('action="/docs" role="search"', $body);
+        self::assertStringContainsString(
+            '<style nonce="__CSP_NONCE_PLACEHOLDER__">',
+            $body,
+            'The index trims its own gaps with an inline rule set; without the nonce placeholder,
+            style-src blocks it and the block is 40 px lower than measured.',
+        );
+        self::assertStringContainsString(
+            '<div data-docs-index>',
+            $body,
+            'The rule set is keyed on this wrapper, so dropping it leaves the rules matching nothing.',
+        );
         self::assertMatchesRegularExpression(
             '#<input[^>]*name="q"#',
             $body,
