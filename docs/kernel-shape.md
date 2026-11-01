@@ -102,6 +102,7 @@ exactly the movement the table exists to record.
 | `src/Modules/Core/Application/Services/DiscoveryCache.php` | 12570 | Application | concrete | 2 | runtime |
 | `src/Modules/Core/Application/Services/DisposalRegistry.php` | 2295 | Application | concrete | 3 | runtime |
 | `src/Modules/Core/Application/Services/DocsCatalog.php` | 15865 | Application | concrete | 0 | runtime |
+| `src/Modules/Core/Application/Services/DocsSearchService.php` | 6912 | Application | concrete | 1 | runtime |
 | `src/Modules/Core/Application/Services/MarkdownRenderer.php` | 17425 | Application | concrete | 12 | runtime |
 | `src/Modules/Core/Application/Services/ModuleCatalog.php` | 13453 | Application | concrete | 1 | tooling |
 | `src/Modules/Core/Application/Services/ModuleInstaller.php` | 8494 | Application | concrete | 4 | tooling |

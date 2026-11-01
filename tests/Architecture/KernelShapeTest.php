@@ -71,6 +71,7 @@ final class KernelShapeTest extends TestCase
         'src/Modules/Core/Application/Services/DiscoveryCache.php',
         'src/Modules/Core/Application/Services/DisposalRegistry.php',
         'src/Modules/Core/Application/Services/DocsCatalog.php',
+        'src/Modules/Core/Application/Services/DocsSearchService.php',
         'src/Modules/Core/Application/Services/MarkdownRenderer.php',
         'src/Modules/Core/Application/Services/PageCacheService.php',
         'src/Modules/Core/Application/Services/PreferenceVote.php',
@@ -148,7 +149,7 @@ final class KernelShapeTest extends TestCase
      * the "`ok` ⇒ no errors" invariant now in its constructors. It is a
      * `contract` row in docs/kernel-shape.md and stores nothing.
      */
-    private const int MAX_APPROVED = 65;
+    private const int MAX_APPROVED = 66;
 
     /**
      * Rule 1: every `.php` file under `src/Modules/Core` is an interface, enum

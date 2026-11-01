@@ -160,7 +160,7 @@ final class FrontendLayout
 
         $bundle = $themeModule->name();
         $jsKey = $themeModule->jsKey();
-        $pageChrome = $themeModule->header($shellContext)
+        $pageChrome = self::routeSearch($themeModule->header($shellContext), $currentPath)
             . $themeModule->pageWrap($content)
             . $themeModule->footer($shellContext);
 
@@ -183,6 +183,45 @@ final class FrontendLayout
             self::themeToggleScript(),
             self::jsTag($bundle, $jsKey),
             $pageChrome,
+        );
+    }
+
+    /**
+     * Point the shell's search field at the surface the reader is standing on.
+     *
+     * The header's field is the THEME's markup, and a theme here is a byte-copy
+     * of `nativa-themes` — `make themes-check` fails a hand edit, and the next
+     * `themes-sync` would overwrite it. Routing is the kernel's decision anyway:
+     * `/docs` answers `GET /docs?q=` since the guides learnt to search, so a
+     * reader on a guide who types into the header must land in the guides rather
+     * than in the blog's corpus, which never contained them.
+     *
+     * The rewrite runs on the theme's own output and matches exact attributes, so
+     * a theme whose markup differs is left alone rather than half-edited: a miss
+     * changes nothing, and the field keeps the destination it shipped with.
+     */
+    private static function routeSearch(string $header, string $currentPath): string
+    {
+        if (!str_starts_with($currentPath, '/docs')) {
+            return $header;
+        }
+
+        return str_replace(
+            [
+                'action="/blog"',
+                'placeholder="Search articles"',
+                '>Search articles</label>',
+                'placeholder="Search"',
+                '>Search</label>',
+            ],
+            [
+                'action="/docs"',
+                'placeholder="Search guides"',
+                '>Search guides</label>',
+                'placeholder="Search guides"',
+                '>Search guides</label>',
+            ],
+            $header,
         );
     }
 

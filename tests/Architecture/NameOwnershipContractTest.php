@@ -281,8 +281,17 @@ final class NameOwnershipContractTest extends TestCase
      * `nativa_` charged ten places for it. 261 with `SqliteJournalTest`: its
      * guard is the same `MODULE` constant every module test declares, and the
      * name already existed, so only the declaration count moves.
+     *
+     * 266 with the docs search: `DocsSearchService` owns four numbers for four
+     * different surfaces — `MAX_QUERY_LENGTH` (what one field may carry),
+     * `MAX_TOKENS` (six words is a sentence, not a search), `SNIPPET_LIMIT` (how
+     * much of a matched line a card shows) and `TITLE_WEIGHT` (how many body
+     * hits one title hit is worth). `DocsSearchTest::THEME` is the theme-test
+     * idiom that already names `boson` in `BosonThemeTest`, not a second name
+     * for it. None of the five is a second spelling of a value that already had
+     * one, which is the rise this ratchet refuses.
      */
-    private const int MAX_DECLARATIONS = 261;
+    private const int MAX_DECLARATIONS = 266;
 
     /**
      * 203 → 204 with MAX_DECLARATIONS: `ModuleTreeState::IGNORED` is a name as
@@ -312,8 +321,15 @@ final class NameOwnershipContractTest extends TestCase
      * 210 with the Clickhouse module: `NAME_PATTERN` is the only new name. The
      * seven `MODULE` guards reuse the module-test idiom, and the transport's
      * `MAX_ATTEMPTS`/`BASE_DELAY_MS` are names `CloudinaryApi` already owns.
+     *
+     * 212 with the docs search: only TWO names are new — `MAX_QUERY_LENGTH`
+     * (one field, one budget, and the blog's own cap is a different number) and
+     * `MAX_TOKENS` (a six-word search is a sentence, not a query). `SNIPPET_LIMIT`
+     * and `TITLE_WEIGHT` reuse names the tree already holds, `THEME` is the
+     * theme-test idiom, and neither of the two is a second name for a value that
+     * already had one.
      */
-    private const int MAX_NAMES = 210;
+    private const int MAX_NAMES = 212;
 
     /**
      * `name => modules/<Name>` or `modules/<Group>/<Name>`, resolved once. A
