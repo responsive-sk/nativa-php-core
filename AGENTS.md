@@ -205,6 +205,10 @@ deciding which number fails; do not wire it into CI and leave that implied.
 
     No line leaves a preposition, a conjunction or an auxiliary at its end.
 
+    The rhythm itself, the pause that earns a paragraph and the tempo of
+    sentence lengths, is written in `docs/prose-rhythm.md`; it is an aid for the
+    author, never a gate, and the ported numbers come from `nativa-minimal`.
+
     The separator replaces the punctuation at the break instead of joining it:
     write `the active theme > the default locale`, never
     `the active theme, > the default locale`. A comma and a `>` in the same

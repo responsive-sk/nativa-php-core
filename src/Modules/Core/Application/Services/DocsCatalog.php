@@ -94,6 +94,7 @@ final readonly class DocsCatalog
     private const array PUBLISHED = [
         'intro' => 'intro.md',
         'core-philosophy' => 'core-philosophy.md',
+        'prose-rhythm' => 'prose-rhythm.md',
         'boolean-vocabulary' => 'boolean-vocabulary.md',
         'modules' => 'modules.md',
         'pages' => 'pages.md',

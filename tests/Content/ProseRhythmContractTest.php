@@ -33,6 +33,7 @@ final class ProseRhythmContractTest extends TestCase
     {
         return [
             'docs/core-philosophy.md',
+            'docs/prose-rhythm.md',
             'storage/blog/ako-prispievat-cez-pull-request.md',
             'storage/blog/boolean-nestaci-a-predsa-staci.md',
             'storage/blog/herdr-workspaces.md',
