@@ -375,17 +375,22 @@ final class MarkdownRenderer
             $i++;
         }
 
-        // The separator glyph stays at the end of its line and the next line
-        // starts below it: `sentence >` then `next sentence` renders as
-        // `sentence &gt;<br>next sentence`. A blank line still ends the
-        // paragraph, which is the ordinary Markdown rule and reads the same.
+        // A source line ends where the reader should see a line end, in two
+        // shapes: the separator, which marks a sentence that continues
+        // (`sentence >` then `next part` renders as `sentence &gt;<br>next
+        // part`), and a sentence that is finished, because the rule is one
+        // sentence per line and joining them would undo the rhythm. Any other
+        // break is a soft wrap and joins with a space, and a blank line still
+        // ends the paragraph.
         $html = '';
         $breaks = false;
 
         foreach ($paragraph as $index => $line) {
             $line = rtrim($line);
             $html .= 0 === $index ? $this->inline($line) : ($breaks ? '<br>' : ' ') . $this->inline($line);
-            $breaks = 1 === preg_match('/\s>$/', $line);
+            $bare = rtrim($line, '*_`„“"\')]»');
+            $breaks = 1 === preg_match('/\s>$/', $line)
+                || 1 === preg_match('/[.!?…]$/u', $bare);
         }
 
         return [

@@ -31,6 +31,15 @@ one.
 
 - PINS: tests/Content/MarkdownSeparatorTest.php::theSeparatorStaysAtTheEndOfItsLine
 
+#### Scenario: A sentence that ended starts its line on the page
+
+- GIVEN two sentences on their own source lines, the first ending with a period
+- WHEN the renderer runs
+- THEN the output breaks between them (`<br>`) with no separator glyph
+- AND a soft wrap without either shape still joins with a space
+
+- PINS: tests/Content/MarkdownSeparatorTest.php::aNewSentenceStartsOnItsOwnLine
+
 #### Scenario: A blank line still ends the paragraph
 
 - GIVEN `prvý bod >` followed by a blank line and `druhý bod`

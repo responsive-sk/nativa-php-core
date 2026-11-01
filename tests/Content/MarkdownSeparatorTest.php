@@ -30,6 +30,26 @@ final class MarkdownSeparatorTest extends TestCase
     }
 
     #[Test]
+    public function aNewSentenceStartsOnItsOwnLine(): void
+    {
+        $html = (new MarkdownRenderer())->render("Prvá veta.\nDruhá veta.\n");
+
+        $this->assertSame(
+            "<p>Prvá veta.<br>Druhá veta.</p>\n",
+            $html,
+            'One sentence per line is the written form, so the renderer keeps the line.',
+        );
+    }
+
+    #[Test]
+    public function aSoftWrapStillJoinsWithASpace(): void
+    {
+        $html = (new MarkdownRenderer())->render("A long clause that\ncontinues here.\n");
+
+        $this->assertSame("<p>A long clause that continues here.</p>\n", $html);
+    }
+
+    #[Test]
     public function aBlankLineEndsTheParagraphAfterTheSeparator(): void
     {
         $html = (new MarkdownRenderer())->render("prvý bod >\n\ndruhý bod\n");
