@@ -209,22 +209,22 @@ final class ProseRhythmContractTest extends TestCase
             $run = 1;
             $counted = false;
 
-            for ($index = 1, $size = count($words); $index < $size; ++$index) {
+            for ($index = 1, $size = count($words); $index < $size; $index++) {
                 if (abs($words[$index] - $words[$index - 1]) <= 5) {
-                    ++$run;
+                    $run++;
                 } else {
                     $run = 1;
                     $counted = false;
                 }
 
                 if ($run >= 5 && !$counted) {
-                    ++$metronome;
+                    $metronome++;
                     $counted = true;
                 }
             }
 
             if (count($words) >= 4 && min($words) > 10) {
-                ++$noShort;
+                $noShort++;
             }
         }
 
@@ -598,7 +598,7 @@ final class ProseRhythmContractTest extends TestCase
                 $masked = (string) preg_replace('/(?<=\d):(?=\d)/u', '', $masked);
 
                 if (1 === preg_match('/:\s*\S/u', $masked)) {
-                    ++$count;
+                    $count++;
                 }
             }
         }
