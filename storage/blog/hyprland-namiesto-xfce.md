@@ -196,8 +196,8 @@ hyprctl binds | grep -B3 -A5 -E 'key: A$'
 Ak príkaz nič nevráti, `Super + A` nie je obsadené.
 Keď vráti, prečítaj `modmask`: `64` je Super, `8` Alt, `4` Ctrl >
 `1` Shift.
-`key: A` s `modmask: 64` je teda `Super + A` >
-kým `modmask: 0` je holé `A`.
+`key: A` s `modmask: 64` je teda `Super + >
+A` kým `modmask: 0` je holé `A`.
 
 **2.
 Pridaj riadok do configu, pod existujúce skratky.**

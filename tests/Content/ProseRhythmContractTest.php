@@ -33,7 +33,19 @@ final class ProseRhythmContractTest extends TestCase
     {
         return [
             'docs/core-philosophy.md',
+            'storage/blog/ako-prispievat-cez-pull-request.md',
+            'storage/blog/boolean-nestaci-a-predsa-staci.md',
+            'storage/blog/herdr-workspaces.md',
             'storage/blog/hyprland-namiesto-xfce.md',
+            'storage/blog/mago-nad-modulovym-katalogom.md',
+            'storage/blog/mago-rust-v-php-strome.md',
+            'storage/blog/nativa-php-core.md',
+            'storage/blog/optimalizacia-font-setov.md',
+            'storage/blog/php2shell-tri-dni-tri-cve.md',
+            'storage/blog/sest-nastrojov-a-jedna-otazka.md',
+            'storage/blog/siesta-funkcia-portu.md',
+            'storage/blog/tri-navrhy-na-prepojenie-nastrojov.md',
+            'storage/blog/tri-subory-v-src.md',
         ];
     }
 
@@ -141,9 +153,14 @@ final class ProseRhythmContractTest extends TestCase
         self::assertNotSame([], self::wrapped(), 'The wrapped list is empty, so this check reads nothing.');
 
         foreach (self::wrapped() as $file) {
+            $content = (string) @file_get_contents(self::root() . '/' . $file);
+            // Prose only: a sample of code or of a tool's output keeps whatever
+            // the tool prints, and the dash there is data, not writing.
+            $content = (string) preg_replace('/^```.*?^```$/msu', '', $content);
+
             self::assertStringNotContainsString(
                 '—',
-                (string) @file_get_contents(self::root() . '/' . $file),
+                $content,
                 sprintf('%s still carries an em dash; the separator is `>`.', $file),
             );
         }
