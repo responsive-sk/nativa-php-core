@@ -50,7 +50,8 @@ a zároveň dôvod, prečo mohli zostať nástroje, na ktoré som zvyknutý >
 Všetky fungujú aj pod Waylandom (cez XWayland, ak nemajú natívny režim) >
 takže prechod nezačína hľadaním nového terminálu.
 
-Monitor sa pripojí sám: `HDMI-A-1`, `1680x1050@59.883`, `scale: 1` >
+Monitor sa pripojí sám:
+`HDMI-A-1`, `1680x1050@59.883`, `scale: 1` >
 rozlíšenie z `preferred` režimu, poloha `auto`.
 V `hyprctl monitors` je ešte jeden údaj, ktorý stojí za pozornosť >
 `reserved: 0 30 0 0`.
@@ -87,7 +88,8 @@ je to skript, ktorý volá API `hl`:
 | pravidlo pre okno | `hl.window_rule({ match = { class = "..." }, float = true })` |
 | gesto | `hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })` |
 
-Dôsledok je praktický: cyklus >
+Dôsledok je praktický:
+cyklus >
 ktorý generuje desať skratiek pre pracovné plochy >
 nie je desať skopírovaných riadkov, ale `for i = 1, 10 do`.
 Tabuľka skratiek v tomto configu takto vznikla pre plochy >
@@ -115,7 +117,8 @@ Za uložením configu nestojí git hook ani CI.
 V tejto session vracia prázdny výstup.
 
 Reload je preto dôležitejší než v XFCE.
-Zmeral som ho priamo: do configu pribudla dočasná skratka `SUPER + F20` >
+Zmeral som ho priamo:
+do configu pribudla dočasná skratka `SUPER + F20` >
 `hyprctl reload`, v `hyprctl binds` bolo **111** položiek >
 po vrátení súboru späť na 18 271 bajtov a ďalšom reloade **110**.
 Zoznam sa nezmnožuje, hoci sa celý súbor vyhodnotí odznova >
@@ -187,19 +190,22 @@ cez Lua vrstvu a jej správanie sa dá zmeniť bez rekompilácie.
 
 Postup má štyri kroky a ani jeden z nich nie je „reštartuj session".
 
-**Prvý krok:** zisti, či je kombinácia voľná.
+**Prvý krok:**
+zisti, či je kombinácia voľná.
 
 ```bash
 hyprctl binds | grep -B3 -A5 -E 'key: A$'
 ```
 
 Ak príkaz nič nevráti, `Super + A` nie je obsadené.
-Keď vráti, prečítaj `modmask`: `64` je Super, `8` Alt, `4` Ctrl >
+Keď vráti, prečítaj `modmask`:
+`64` je Super, `8` Alt, `4` Ctrl >
 `1` Shift.
 `key: A` s `modmask: 64` je teda `Super + A`.
 Holé `A` má `modmask: 0`.
 
-**Druhý krok:** pridaj riadok do configu, pod existujúce skratky.
+**Druhý krok:**
+pridaj riadok do configu, pod existujúce skratky.
 
 Pomocná funkcia `bind` je `local` na riadku 152 toho istého súboru >
 takže platí až do konca >
@@ -212,7 +218,8 @@ bind("SUPER + A", hl.dsp.exec_cmd("pavucontrol"), "Zvuk - pavucontrol")
 
 Prvý argument je kombinácia, druhý akcia, tretí popis.
 Ak by si volal `hl.bind` priamo a nie cez túto pomocnú funkciu >
-popis musí byť v tabuľke: `hl.bind(keys, action, { description = "..." })`.
+popis musí byť v tabuľke:
+`hl.bind(keys, action, { description = "..." })`.
 
 Akcie, ktoré pokryjú väčšinu potrieb:
 
@@ -224,7 +231,8 @@ Akcie, ktoré pokryjú väčšinu potrieb:
 | prejsť na plochu | `hl.dsp.focus({ workspace = 3 })` |
 | celá obrazovka | `hl.dsp.window.fullscreen()` |
 
-**Tretí krok:** over to bez toho, aby si ohrozil session.
+**Tretí krok:**
+over to bez toho, aby si ohrozil session.
 
 ```bash
 hyprland --verify-config                     # config ok, exit 0
@@ -239,21 +247,25 @@ Ak počet skratiek stúpol a popis sa nenašiel >
 popis skončil mimo tabuľky volieb >
 presne ten prípad z časti III.
 
-**Štvrtý krok:** stlač kombináciu.
+**Štvrtý krok:**
+stlač kombináciu.
 Ak sa nič nestane, `hyprctl configerrors` povie, či config prešiel.
 Ak prešiel a skratka je v `hyprctl binds` >
 problém je skôr v akcii než v klávese >
 napríklad program neexistuje, čo sa overí cez `command -v pavucontrol`.
 
-Odstránenie je ten istý postup opačne: zmaž riadok, `hyprctl reload` >
+Odstránenie je ten istý postup opačne:
+zmaž riadok, `hyprctl reload` >
 počet skratiek sa vráti na 110.
-Celý príklad som takto odmeral: 110 pred pridaním, 111 po ňom >
+Celý príklad som takto odmeral:
+110 pred pridaním, 111 po ňom >
 110 po vymazaní a súbor bajtovo rovnaký s pôvodným.
 
 Dve veci sa pri tom ľahko pokazia.
 Názov klávesy >
 špeciálne klávesy majú mená typu `XF86AudioRaiseVolume`, myš `mouse:272`.
-A popis na nesprávnej pozícii: `hl.bind` očakáva tabuľku volieb >
+A popis na nesprávnej pozícii:
+`hl.bind` očakáva tabuľku volieb >
 takže reťazec na jej mieste sa jednoducho ignoruje >
 a skratka ostane bez popisu.
 Mediálne klávesy navyše potrebujú `{ locked = true, repeating = true }` >
@@ -264,7 +276,8 @@ inak pri zamknutej obrazovke nereagujú a pri podržaní sa nezopakujú.
 ## Časť V > Tiling: čo zmizne a čo je za to
 
 Dlaždicový správca okien nerobí nič, čo by XFCE nevedelo; robí to inak.
-Základné pravidlo: **okno nemá voľnú polohu, má suseda.**
+Základné pravidlo:
+**okno nemá voľnú polohu, má suseda.**
 Z toho vyplýva zoznam vecí, ktoré prestanú dávať zmysel.
 
 | zvyk z XFCE | čo je tu namiesto neho |
@@ -279,7 +292,8 @@ Pracovných plôch je desať a plochy nie sú „obrazovky" >
 ale menovité zoznamy okien.
 Plocha 10 je pod klávesou `0`, čo je detail >
 ktorý pri desiatich skratkách vznikne sám.
-Špeciálna plocha `magic` je scratchpad: `Super + S` ju zobrazí >
+Špeciálna plocha `magic` je scratchpad:
+`Super + S` ju zobrazí >
 `Super + Shift + S` do nej pošle okno.
 Rovnaká myšlienka ako „rolovačka" v paneli XFCE, len bez panelu.
 
@@ -290,7 +304,8 @@ Dve veci, ktoré tu majú zmysel hneď:
 - **pseudotiling** (`Super + P`) : okno si drží šírku, akú malo, a nové okná
   sa delia len o zvyšok.
 
-Nepríjemná stránka je rovnaká ako všade v tiling správcoch: aplikácia >
+Nepríjemná stránka je rovnaká ako všade v tiling správcoch:
+aplikácia >
 ktorá si vypýta konkrétnu veľkosť okna, ju nedostane.
 Preto má config pravidlo `suppress-maximize-events` >
 pre všetky triedy okien >
@@ -345,7 +360,8 @@ command -v grim >/dev/null || {
   hyprctl notify 2 5000 0 'Chýba grim/slurp - sudo pacman -S grim slurp'; exit 0; }
 ```
 
-Rovnaký vzor je pri jase: skratky `XF86MonBrightnessUp/Down` existujú >
+Rovnaký vzor je pri jase:
+skratky `XF86MonBrightnessUp/Down` existujú >
 ale `brightnessctl` na tomto stroji nie je nainštalovaný >
 takže klávesy nerobia nič.
 Na desktope je to správne správanie >
@@ -403,7 +419,7 @@ hyprctl clients                     # čo je otvorené a na ktorej ploche
 ```
 
 `hyprctl` je zároveň dokumentácia >
-`hyprctl getoption general:gaps_in` vráti hodnotu aj príznak `set:` >
+`hyprctl getoption general:gaps_in` vráti hodnotu aj príznak `set:`
 `4` a `set: true` znamenajú, že ju config naozaj nastavil >
 kým `decoration:dim_inactive` vracia `false` a `set: false`, teda default >
 ktorý nikto neprepísal.
@@ -435,6 +451,7 @@ Tu sú štyri súbory v `~/.config/hypr` >
 K tomu waybar s vlastným `config.jsonc` a `style.css`.
 A jeden `busctl` príkaz, ktorým sa dá zistiť, čo z toho naozaj beží.
 
-Zostáva jedna vec, ktorú by som nemenil: XFCE session je stále v greeteri.
+Zostáva jedna vec, ktorú by som nemenil:
+XFCE session je stále v greeteri.
 Dobré prostredie sa pozná podľa toho, že sa z neho dá odísť >
 a že ten odchod nie je preinštalovanie.

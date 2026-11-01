@@ -85,7 +85,8 @@ To je náhrada za exhaustiveness, nie jej ekvivalent >
 a v Časti VII je miesto, kde to naozaj bolí.
 
 A **98 predikátov zo 238** je presne tá polovica >
-kde by enum bol dekorácia: `isResolvable()` odpovedá na otázku >
+kde by enum bol dekorácia:
+`isResolvable()` odpovedá na otázku >
 ktorá nemá tretiu možnosť.
 
 ---
@@ -113,12 +114,14 @@ Typ by narástol o vetvu, ktorú nikto nemôže obslúžiť >
 a čitateľ by musel overiť, že tá vetva naozaj neexistuje.
 To je horší typ, nie lepší.
 
-Rovnaké príklady v strome: `HandlerRegistry::has(): bool` >
+Rovnaké príklady v strome:
+`HandlerRegistry::has(): bool` >
 `ThemeRegistry::has(): bool`, `DocsCatalog::has(): bool`.
 Všetky sú „mám kľúč?"
 dve odpovede, obe použiteľné, žiadna tretia.
 
-**Toto je prvý argument:** boolean je správny >
+**Toto je prvý argument:
+** boolean je správny >
 keď je otázka úplná a odpoveď `false` nie je skratka pre nič >
 je to celá informácia.
 
@@ -132,7 +135,8 @@ kde C-éčkový model zlyhal a kde ho Nativa opravuje inak než Rust.
 POSIX syscall vracia `-1` a nastaví `errno`.
 Status je boolean („podarilo sa"), dôvod je mimo neho.
 Rust to opravil tým, že dôvod presunul **do návratovej hodnoty**.
-Nativa robí tretiu vec: dôvod presunul **do trvalého záznamu**.
+Nativa robí tretiu vec:
+dôvod presunul **do trvalého záznamu**.
 
 Reálny prípad z tohto týždňa >
 notifikácia operátorovi:
@@ -181,16 +185,19 @@ aj v docblocku >
 („the return value is discarded by the worker; a job fails by throwing").
 Notifikácia, ktorá sa neodoslala >
 preto **zmizne z fronty a nič sa nereštartuje**.
-To je zámer: druhý mail za ten istý komentár je horší než chýbajúci mail >
+To je zámer:
+druhý mail za ten istý komentár je horší než chýbajúci mail >
 ktorý je aj tak v logu.
 
 Keby `send()` vrátil `Result<Delivered, NotDelivered>` >
 handler by musel urobiť `match` >
-a v oboch ramenách by urobil to isté: nič.
+a v oboch ramenách by urobil to isté:
+nič.
 Typ by sľuboval rozhodnutie, ktoré volajúcemu nepatrí.
 
 **Tento argument má však tvrdú podmienku >
-bez ktorej sa zrúti:** dôvod musí byť dohľadateľný aj po smrti procesu.
+bez ktorej sa zrúti:
+** dôvod musí byť dohľadateľný aj po smrti procesu.
 `error_log` je minimum >
 v tomto strome k nemu patrí `failed_jobs` (payload + error >
 viditeľné v `/mark/queue`) a auditná tabuľka.
@@ -246,7 +253,8 @@ neznámy stav by sa stal tichou zlúčeninou dvoch rôznych vecí.
 To je presne ten druh chyby >
 ktorý typový systém Rustu nekompromisne odmietne.
 
-**Rozhodujúce pravidlo:** boolean je bezpečný >
+**Rozhodujúce pravidlo:
+** boolean je bezpečný >
 keď ho nikto neukladá a nikto neposiela cez hranicu procesu.
 V okamihu, keď ide do databázy, do queue payloadu alebo do HTTP odpovede >
 musí mať meno >
@@ -282,7 +290,8 @@ return ['ok' => false, 'errors' => ['Comment body is required.']];
 To je `Result` prezlečený za pole.
 Invariant „`ok === true` ⇒ `errors` je prázdne" nie je v type >
 je v hlavách volajúcich, a dva kľúče sa môžu rozísť.
-Merané: takýto tvar je v štyroch súboroch (`Comments`, `Media` dva >
+Merané:
+takýto tvar je v štyroch súboroch (`Comments`, `Media` dva >
 `Users`).
 Nie je to bug >
 je to cena za to, že strom nemá `Result` typ.
@@ -291,7 +300,8 @@ Keby ho mal, toto by bol jeho prvý kandidát.
 Podobne `retryFailed(): bool` stráca dôvod, prečo retry neprešiel.
 Ale vedľa neho sedí `findFailed(): ?array`, ktoré ten dôvod vráti >
 boolean je len „riadok existoval", detail je dostupný inou otázkou.
-To je ten správny tvar: **bool pre rozhodnutie >
+To je ten správny tvar:
+**bool pre rozhodnutie >
 bohatšia otázka pre obrazovku.**
 
 ---
@@ -306,7 +316,8 @@ Skôr než napíšeš `: bool`, tri otázky v tomto poradí:
 | 2 | Prežije hodnota **proces** (DB, queue, HTTP, session)? | `enum` + validácia + `match` s `default` | pokračuj |
 | 3 | Sú dve odpovede **celý vesmír** otázky? | `bool` | `enum` |
 
-A jedna veta, ktorá to celé drží: **bool navonok >
+A jedna veta, ktorá to celé drží:
+**bool navonok >
 slovná zásoba dovnútra**.
 Na hranici, kde volajúci nemá čo robiť s dôvodom >
 je boolean najmenšia čestná odpoveď.
@@ -324,7 +335,8 @@ Rust na to isté miesto dal typ >
 a je to lepšie pre kompilátor, ale nie zadarmo >
 každý volajúci musí vetvu napísať, aj keď ju nemá ako obslúžiť.
 
-responsive.sk je ten istý postoj z druhej strany: malý web >
+responsive.sk je ten istý postoj z druhej strany:
+malý web >
 ktorý musí bežať na zdieľanom hostingu bez démona >
 kde kód číta jeden človek o druhej ráno.
 Tomu vyhovuje `if (!$ok)` s logom, nie `match` s tromi ramenami >
@@ -333,7 +345,8 @@ z ktorých dve robia to isté.
 Ale pozor >
 to nie je ospravedlnenie pre `int`.
 `bool` je už typ s dvoma hodnotami; problém C-éčka bol `int` a `errno`.
-Nativa si z FreeBSD berie primitívnosť, nie neistotu: `bool` tam >
+Nativa si z FreeBSD berie primitívnosť, nie neistotu:
+`bool` tam >
 kde je otázka úplná, `string` slovník tam, kde sa stav ukladá >
 a `error_log` + `failed_jobs` + audit tam >
 kde by `errno` bol globálna premenná.
@@ -362,7 +375,8 @@ v ktorej notifikácia vznikala >
 `wants` 1, zvyšok výsledky operácií), 171 nullable návratov >
 4 súbory s tvarom `ok`/`errors`, 2 trojstavové slovníky a 1 `enum`.
 Príklady v článku sú skopírované z kódu >
-ktorý v tej chvíli prechádzal bránami: 706 testov / 5808 asercií >
+ktorý v tej chvíli prechádzal bránami:
+706 testov / 5808 asercií >
 phpstan 0, cs 0, rector 0, mago-guard 0.
 Ak niektoré číslo už neplatí, je to dôvod na ďalšie meranie >
 nie na vymazanie odseku.*

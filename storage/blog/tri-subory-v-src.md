@@ -36,7 +36,8 @@ do stromu ho prinieslo CLI kolo 16. októbra (queue worker >
 a `outbox:process`), keď sa ukázalo >
 že párovanie Audit↔Outbox nesmie žiť len v tom procese >
 ktorý obsluhuje HTTP.
-Dnešná zmena pridala tretí súbor: `http.php`.
+Dnešná zmena pridala tretí súbor:
+`http.php`.
 Ten presunul wiring z `public/index.php`, ktorý mal dovtedy 210 riadkov.
 
 Takže „včera bol len init“ je pravda o stave **spred** CLI kola, nie o včerajšku
@@ -154,7 +155,8 @@ DisposalRegistry::disposeAll();
 `Bootstrapper` najprv overí >
 že `storage/{data,logs,cache,sessions,uploads}` existujú >
 a sú **zapisovateľné**.
-To nie je dekorácia: neúspešný zápis do `cache/` znamená >
+To nie je dekorácia:
+neúspešný zápis do `cache/` znamená >
 že sa marker migrácií nikdy nezapíše >
 a celá schéma sa bude spúšťať pri každom requeste >
 z 500 sa stane timeout.
@@ -170,7 +172,8 @@ v kernel-only strome len tabuľky jadra.
 #### 5b. Párovanie handlerov > `wire_module_handlers()`
 
 Až teraz, po migráciách, sa zaregistrujú handlery.
-Poradie je dôležité: handler môže potrebovať tabuľku >
+Poradie je dôležité:
+handler môže potrebovať tabuľku >
 ktorú migrácia práve vytvorila.
 
 #### 5c. Discovery > `DiscoveryCache`
@@ -297,7 +300,8 @@ return Response::html(FrontendLayout::render(
 ));
 ```
 
-Dôležité je, čo tam **nie je**: žiadny `use Modules\Blog` >
+Dôležité je, čo tam **nie je**:
+žiadny `use Modules\Blog` >
 žiadny `Modules\Settings`.
 Texty, menu a názov webu idú cez `ShellContextProvider` port >
 kto ich vlastní, odpovie.
@@ -342,7 +346,8 @@ sha256("GET|/||sk_SK")
 TTL je 300 sekúnd.
 Pri cache hite sa vráti telo a hlavičky a `SecurityHeadersMiddleware` >
 (ktorý je **vonku**) nahradí `__CSP_NONCE_PLACEHOLDER__` čerstvým nonce.
-Cache sa nevypisuje ručne: každý zápis v admine volá `CacheInvalidator` >
+Cache sa nevypisuje ručne:
+každý zápis v admine volá `CacheInvalidator` >
 takže po editácii sa nezobrazí stará stránka.
 
 Zapnúť sa dá bez rebuildu:
@@ -401,7 +406,8 @@ Keby sa `composition.php` zlúčil do `http.php` >
 CLI by muselo načítať HTTP vrstvu alebo by párovanie chýbalo v workeri >
 Boot 16.
 
-**Poznámka k tvaru:** ak ide o estetiku koreňa `src/` >
+**Poznámka k tvaru:
+** ak ide o estetiku koreňa `src/` >
 súbor sa dá presunúť bez zmeny toku:
 
 ```
@@ -441,6 +447,7 @@ GET /      200, X-Cache: HIT, <main class="bo-main">, "Keep PHP. Drop the framew
 GET /blog  200
 ```
 
-To je celý dôkaz, ktorý tento článok potrebuje: front controller je kratší >
+To je celý dôkaz, ktorý tento článok potrebuje:
+front controller je kratší >
 tok je rovnaký a každá vrstva je na mieste >
 kde ju daný proces naozaj potrebuje.

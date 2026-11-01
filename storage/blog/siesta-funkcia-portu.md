@@ -58,7 +58,8 @@ Toto kolo len pomenovalo, čo tá podlaha znamená na slovenskom webe.
 ## Časť II > Prečo to nebola chyba témy
 
 Prvý inštinkt je ísť do témy a prečítať Locales odtiaľ.
-To by bolo rýchle a **nesprávne**, a dôvod je merateľný: téma >
+To by bolo rýchle a **nesprávne**, a dôvod je merateľný:
+téma >
 ktorá si importuje modul, je presne tá väzba >
 ktorú tento strom odstraňuje.
 Všetky štyri témy v strome to majú vyriešené rovnako >
@@ -94,7 +95,8 @@ ktorý existoval celý čas**.
 
 ## Časť III > Rozšírenie portu, nie nová trieda jadra
 
-Rozhodnutie, ktoré padlo: texty doplní jadro z Locales.
+Rozhodnutie, ktoré padlo:
+texty doplní jadro z Locales.
 A hneď prvé obmedzenie, ktoré to určilo, nie je technické ale procesné >
 `KernelShapeTest` robí z **novej konkrétnej triedy >
 v jadre** schvaľovací akt:
@@ -151,7 +153,8 @@ Obe polovice pravidla zjednotenia preto boli najprv rozbité zámerne:
 | databáza sa stane zdrojom (do zasiateho riadku sa zapíše `MARKER-SK`) | **`MARKER-SK`** : port číta tabuľku, neopakuje zapamätanú konštantu |
 | všetko vrátené späť | **bajt na bajt identické**, zelená |
 
-Tretia kontrola je tá, ktorá má cenu aj mimo tohto kola: test >
+Tretia kontrola je tá, ktorá má cenu aj mimo tohto kola:
+test >
 ktorý by tvrdil „port odpovedá `Minimálny PHP 8.5 starter kit`" >
 je zelený aj vtedy >
 keď port nečíta databázu vôbec a hodnotu má zapísanú v sebe.
@@ -204,14 +207,16 @@ nie proti tej v pracovnom strome, ktorá je stav operátora a nie fixture.
 ## Čo z toho plynie
 
 Najdrahšia vec na tejto chybe nebola jej oprava.
-Bolo to **ticho**: celá zmena prešla štyrmi bránami, všetkými zelenými >
+Bolo to **ticho**:
+celá zmena prešla štyrmi bránami, všetkými zelenými >
 a web pritom hovoril iným jazykom, než aký mal nastavený.
 Nikde v reťazci nebola chyba >
 bola tam len neprítomnosť >
 a neprítomnosť je v tomto strome definovaná ako fallback.
 
 Preto k oprave patrí aj trvalá väzba >
-ktorá tú neprítomnosť spraví viditeľnou: test, ktorý porovná **kľúče >
+ktorá tú neprítomnosť spraví viditeľnou:
+test, ktorý porovná **kľúče >
 ktoré téma v tomto strome vykresľuje**, s kľúčmi >
 ktoré skupina `home` naozaj nesie, v oboch jazykoch.
 Kým platí „nevadí, keď riadok chýba", musí existovať niečo, čo povie >
@@ -258,7 +263,8 @@ a presne to sa ani týmto kolom nezmenilo.
 ## Dodatok, ten istý deň neskôr > ten istý defekt, o jednu tému ďalej
 
 Medzi písaním tohto článku a jeho dodatkom bola `config.db` zapísaná >
-o **01:31** (`updated_at` 23:31 UTC) >
+o **01:
+31** (`updated_at` 23:31 UTC) >
 `theme` sa prepol z `jednotka` na `mono` a `admin_layout` na `compact`.
 Nie touto session >
 tá do tej databázy nikdy nezapisovala >
@@ -279,7 +285,8 @@ v tej istej databáze, preložené v OBOCH jazykoch:
 ```
 
 Presne ten istý defekt ako na začiatku tohto článku >
-len o jednu tému ďalej: riadky existovali a **ani jedna z dvoch tém >
+len o jednu tému ďalej:
+riadky existovali a **ani jedna z dvoch tém >
 ktoré hero vykresľujú z `PageContext::$copy`, nečítala kľúče >
 pod ktorými tie riadky ležia**.
 `jednotka` ich čítala odjakživa >
@@ -295,7 +302,8 @@ vlastný reťazec témy ako podlaha**.
 | `mono` | titulok v hero / lede / tlačidlo | `home.title`, `home.message`, `home.cta_start` |
 | `mono` | popis odkazu na case slide | `home.read_article` (šípka zostáva v markupe, nie v prekladanom reťazci) |
 
-Na živo, s webom na `mono`: `<h1>Postavte Niečo Skvelé</h1>` >
+Na živo, s webom na `mono`:
+`<h1>Postavte Niečo Skvelé</h1>` >
 slovenský lede, `>Začať</a>` a na oboch case slidoch `Čítať článok →` >
 `Discover more` aj `Read More` sú na **nule**.
 `erik` sa na front dostane len prepnutím témy >

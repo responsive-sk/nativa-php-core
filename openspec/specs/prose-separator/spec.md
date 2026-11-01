@@ -160,3 +160,83 @@ and a module owns the implementation.
 - THEN every line stays within 100 characters
 
 - PINS: tests/Content/ProseRhythmContractTest.php::noLineExceedsTheWidth
+
+### Requirement: A colon ends its line
+
+A colon in prose SHALL close the line it appears on, and the text it
+introduces SHALL start on the next line. A line that ends with a colon SHALL
+NOT also carry the separator, because the colon already says that the sentence
+continues, and the number of colons that keep their text on the line SHALL
+only fall: the corpus carries them, and the conversion pass lowers them one
+file at a time.
+
+```text
+popis musí byť v tabuľke:
+`hl.bind(keys, action, { description = "..." })`.
+```
+
+#### Scenario: The text after a colon starts on the next line
+
+- GIVEN a sentence that introduces a list, a value or an explanation
+- WHEN the text follows the colon on the same line
+- THEN the line is reported, and the next line is where the text belongs
+
+- PINS: tests/Content/ProseRhythmContractTest.php::aColonEndsItsLine
+
+#### Scenario: A colon does not wear the separator too
+
+- GIVEN a line that ends with a colon
+- WHEN the rhythm check reads the separator after it
+- THEN the doubled mark is reported
+
+- PINS: tests/Content/ProseRhythmContractTest.php::aLineEndsWithTheSeparatorOnlyInsideItsSentence
+
+### Requirement: Tempo is measured, and its counts only fall
+
+The rhythm check SHALL measure the sentence tempo of every wrapped file, and
+SHALL hold the three shapes that a metronome and a wall of text take from the
+outside: the middle sentence of a file SHALL stay between 5 and 25 words, a
+file SHALL contain at least one sentence under 10 words, and the counts below
+SHALL never rise above the value frozen for that file.
+
+- a sentence over 40 words,
+- a run of five sentences whose lengths stay within five words of each other,
+- a paragraph of four or more sentences with no sentence under 10 words.
+
+The phase targets that `nativa-minimal` measured stay advice, because the
+corpus here already contains those defects, and a gate on the whole tempo would
+enforce a rule this repository does not satisfy. `docs/prose-rhythm.md` names
+the numbers and says which half is a gate.
+
+#### Scenario: The middle sentence stays inside the envelope
+
+- GIVEN a wrapped file
+- WHEN the rhythm check measures the length of its sentences
+- THEN a median below 5 or above 25 words is reported
+
+- PINS: tests/Content/ProseRhythmContractTest.php::tempoStaysInsideTheEnvelope
+
+#### Scenario: A file keeps one short sentence
+
+- GIVEN a wrapped file
+- WHEN the rhythm check looks for its shortest sentence
+- THEN a file whose shortest sentence is over 10 words is reported
+
+- PINS: tests/Content/ProseRhythmContractTest.php::tempoStaysInsideTheEnvelope
+
+#### Scenario: A new metronome run fails the build
+
+- GIVEN a file with frozen tempo counts
+- WHEN an edit adds a sentence over 40 words, a run of five, or a paragraph
+  without a short beat
+- THEN the count above the frozen value is reported
+
+- PINS: tests/Content/ProseRhythmContractTest.php::tempoDoesNotRegress
+
+#### Scenario: A newly wrapped file needs its own counts
+
+- GIVEN a file added to the wrapped list
+- WHEN the rhythm check looks for its frozen counts
+- THEN a missing baseline row is reported
+
+- PINS: tests/Content/ProseRhythmContractTest.php::tempoDoesNotRegress

@@ -15,7 +15,8 @@ Katalóg `modules/` >
 kód >
 ktorý `bin/cms module:add` skopíruje do inštalácie a ktorý tam naozaj beží >
 neanalyzoval nikto.
-Nebola to otázka vkusu, bol to scope: `phpstan` >
+Nebola to otázka vkusu, bol to scope:
+`phpstan` >
 `php-cs-fixer` >
 aj `rector` mali `modules/` vylúčené >
 a vo svojich konfiguráciách mali napísané prečo.
@@ -23,7 +24,8 @@ Tá poznámka je správna a nezmenila sa.
 Zmenilo sa len to, že **Mago tú dieru teraz zaplnilo** >
 a článok je záznam o tom, čo v nej bolo.
 
-Zmena je v commite `f129ca0`: 127 súborov, +2119 / −471 >
+Zmena je v commite `f129ca0`:
+127 súborov, +2119 / −471 >
 z toho 13 nových súborov v katalógu >
 a dva nové nástroje (`make mago-modules` >
 `bin/build/mago-modules-report.sh`).
@@ -41,7 +43,8 @@ Tri konfigurácie hovoria to isté tromi rôznymi slovami:
 | `rector.php` | ten istý dôvod, tá istá veta |
 
 Každá z nich je obhájiteľná.
-Súčet je však toto: **360 PHP súborov, ktoré inštalácia spustí >
+Súčet je však toto:
+**360 PHP súborov, ktoré inštalácia spustí >
 a žiadny nástroj na nich nič nemeria.**
 (Dnes je v katalógu 373 `.php` súborov >
 trinásť pribudlo v tomto commite, zvyšok je ten istý kód.)
@@ -100,7 +103,8 @@ takže nešlo o nový druh problému, len o nový výskyt známeho.
 Dôležité je, že **`analyze` zostal meraním, nie bránou.**
 Brána nad katalógom je len jedna trieda nálezov >
 `lint`, s limitom 0 >
-a to je zásadné: brána, ktorá padá na číslo, ktoré nikto netriedil >
+a to je zásadné:
+brána, ktorá padá na číslo, ktoré nikto netriedil >
 padá prvý deň a ignoruje sa na tretí.
 
 ---
@@ -130,7 +134,8 @@ s dvomi statickými metódami >
 ktoré vyhodia `RuntimeException` namiesto toho, aby vrátili `false`.
 
 Prečo trinásť kópií a nie jedna zdieľaná trieda?
-Pretože platia dve pravidlá súčasne: moduly sú samostatné slicy >
+Pretože platia dve pravidlá súčasne:
+moduly sú samostatné slicy >
 ktoré **nesmú** importovať jeden druhý >
 a jedna trieda v `Modules\Database` by do jadra pridala súbor >
 ktorý `extract-kernel --check` porovnáva s upstreamom.
@@ -141,12 +146,15 @@ rovnaké bajty po normalizácii namespace, namespace odvodený z adresára >
 obe poistky a zoznam modulov ako ratchet.
 
 Popri tom zmizlo 20 už mŕtvych guardov typu `false === $stmt ?
-[] : $stmt->fetchAll()`.
-Neboli neškodné: keby zostali >
+[] :
+$stmt->fetchAll()`.
+Neboli neškodné:
+keby zostali >
 vyrobili by 20 nových nálezov `redundant-comparison` >
 a `impossible-condition` a časť výhry by sa sama zjedla.
 
-Výsledok: **313 → 0** >
+Výsledok:
+**313 → 0** >
 a vedľajším efektom `possibly-false-argument` 15 → 1.
 
 ---
@@ -154,7 +162,8 @@ a vedľajším efektom `possibly-false-argument` 15 → 1.
 ## Časť V > `mixed-assignment`: 291 → 245 (úprimne, čiastočne)
 
 Druhá najväčšia trieda vyzerá ako jedna, ale jedna nie je.
-291 nálezov „priradenie `mixed` do premennej“ má rôzne zdroje: 98 čítaní >
+291 nálezov „priradenie `mixed` do premennej“ má rôzne zdroje:
+98 čítaní >
 `Request::body()`/`query()`, 79 prístup do indexu netypovaného poľa, 20 >
 `json_decode()`, zvyšok `foreach` cez `array<string, mixed>` alebo `get_object_vars()`.
 
@@ -237,7 +246,8 @@ a celý job má `continue-on-error`.
 | `mixed-argument` (katalóg) | 197 | **73** |
 | `mago lint` (katalóg) | : | **0** |
 
-Overené: `make mago-lint` 0, `make mago-guard` 0, `make lint` čistý >
+Overené:
+`make mago-lint` 0, `make mago-guard` 0, `make lint` čistý >
 `make extract-check` OK (206 identických, 82 zaznamenaných divergencií) >
 phpstan a php-cs-fixer čisté, architektonické testy 94/94 >
 celá sada **804 testov / 6242 asertov** >

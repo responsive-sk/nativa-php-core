@@ -91,6 +91,7 @@ Vzor je `TaxonomyRegistryTest` pri Blogu.
 ## Prečo to funguje
 
 Pravidlá vyššie nie sú byrokracia, ale skratky k zelenému PR.
-Každé z nich vzniklo z konkrétneho pádu: cyklus v grafe modulov >
+Každé z nich vzniklo z konkrétneho pádu:
+cyklus v grafe modulov >
 test červený len v CI, stylesheet, ktorý chýbal potichu.
 Dodrž ich a review sa bude venovať myšlienke zmeny, nie jej baleniu.

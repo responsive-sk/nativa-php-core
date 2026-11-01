@@ -33,6 +33,13 @@ and the closing fence stays on a line of its own.
 The renderer joins a soft wrap with a space >
 so glue here would silently erase the structure.
 
+**A colon ends its line.**
+When a sentence introduces a list, a value or an explanation >
+the colon closes the line and the next line says what it introduced.
+The separator is not needed there >
+because a colon already told the reader that the sentence continues.
+A colon followed by the separator wears the same mark twice.
+
 A wall of text is a broken rhythm, not a long thought.
 
 ## Tempo
@@ -40,7 +47,7 @@ A wall of text is a broken rhythm, not a long thought.
 Sentence length is a design decision, not an accident.
 Short sentences carry tension and longer ones release it.
 A run of identical lengths reads like a metronome nobody asked for.
-`nativa-minimal` measured the target per phase in words per sentence: >
+`nativa-minimal` measured the target per phase in words per sentence:
 INTRO 5 to 15, HMLA 8 to 15, SLNKO 15 to 25, NOC in the middle, TÉMA 10 to 20.
 This tree has no phase headings >
 so the numbers are a shape rather than a checklist.
@@ -65,10 +72,33 @@ and `hello-world` fails several checks.
 Forcing those numbers into a build would enforce a rule >
 that the repository itself does not satisfy.
 The same holds here.
-The rhythm tests in this tree check the mechanical half: the separator, one >
-sentence per line and no dangling function word.
+The rhythm tests in this tree check the mechanical half.
+That is the separator, one sentence per line, no dangling function word >
+and a colon that ends its own line.
+They also measure the tempo, in the three shapes below.
 A test that decided where a sentence may be cut >
 would be judging the reader's ear with a string matcher.
+
+## What the tests hold
+
+`ProseRhythmContractTest` measures the sentence tempo of every wrapped file.
+Three things in it are not taste.
+
+The middle sentence of a file stays between 5 and 25 words >
+the envelope of the four phase targets above.
+Every file has at least one sentence under 10 words >
+so its longest have something to lean on.
+
+The three ways a run of sentences goes flat are frozen per file.
+One is a sentence over 40 words >
+another a run of five sentences of the same length >
+the third a paragraph of four with no short beat in it.
+Frozen means the count may fall and never rise.
+Writing that fixes a paragraph lowers it >
+a conversion that adds one fails the build.
+
+The phase numbers themselves stay advice >
+because the corpus that measures them is the corpus they would reject.
 
 ## Where it comes from
 

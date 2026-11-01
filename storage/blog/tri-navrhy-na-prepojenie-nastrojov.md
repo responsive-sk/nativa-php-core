@@ -101,7 +101,8 @@ a pre každý `#### Scenario:` vyžaduje:
 3. **Metóda existuje** : v tom súbore je `function <názov>(`.
 4. **`none` má dôvod** a je započítané v ratchete, ktorý smie len klesať.
 
-Prečo text a nie reflexia: tie isté dôvody >
+Prečo text a nie reflexia:
+tie isté dôvody >
 aké má `ModelPayloadContractTest` >
 súbor je v `modules/`, ktorý `phpstan.neon` neanalyzuje, a test >
 ktorý by katalóg načítal, by spravil výsledok brány závislým od toho >
@@ -114,12 +115,14 @@ plány a specy zostávajú lokálne a na GitHub nejdú).
 Test, ktorý číta `openspec/specs/**`, preto v CI nenájde nič >
 a to nie je chyba návrhu, to je vlastnosť stromu.
 Väzba musí tú neprítomnosť zvládnuť rovnako >
-ako ju zvládajú modulové testy: keď modul nie je nainštalovaný >
+ako ju zvládajú modulové testy:
+keď modul nie je nainštalovaný >
 test skippuje, nepadá.
 Vzor je `TaxonomyRegistryTest` pri Blogu >
 a `KernelOnlyBootTest` pri Cardboarde.
 
-Čo to znamená čestne: **väzba je lokálna brána, nie CI brána.**
+Čo to znamená čestne:
+**väzba je lokálna brána, nie CI brána.**
 Chráni toho, kto spec edituje >
 teda presne to miesto, kde scénar vzniká >
 a v CI je nečinná.
@@ -143,7 +146,8 @@ Dnes je v strome **57 scénarov v 6 súboroch**:
 
 Preto to nie je jedna zmena, ale zmena s fázami >
 **ratchet začína na 48** (kanonický spec priviazaný hneď >
-delty zapísané ako `PINS: none >
+delty zapísané ako `PINS:
+none >
 not yet annotated` s počtom), a každá ďalšia fáza priviaže jednu capability a zníži ratchet.
 Brána je zelená od prvého dňa a nedá sa do nej schovať nový scénar >
 ten prichádza bez výnimky a bez pin-u neprejde.
@@ -155,11 +159,13 @@ Pri deviatich scénaroch kanonického specu existuje v `ValidatorTest.php` >
 12 testovacích metód, takže väčšina sa priviaže hneď >
 ale „Errors flatten in field-then-rule order" zrejme vlastný test nemá >
 pretože ho dnes kryje `customMessagesUseFieldRuleKeys()` len implicitne.
-A presne tu sa rozhoduje medzi dvoma čestnými odpoveďami: dopísať test >
+A presne tu sa rozhoduje medzi dvoma čestnými odpoveďami:
+dopísať test >
 alebo zapísať `PINS: none` s dôvodom.
 Obe sú rozhodnutie; ticho nie je.
 
-Cena je tiež merateľná: štyri riadky na scénar >
+Cena je tiež merateľná:
+štyri riadky na scénar >
 teda **do 230 riadkov v specoch** a jeden nový kontraktný test.
 
 ---
@@ -173,7 +179,8 @@ v `##@` blokoch `Makefile` a v `docs/`.
 Každé z tých miest má iného čitateľa >
 takže sa to nedá len tak spojiť do jedného odseku.
 
-Návrh: jeden strojovo čitateľný súbor (`toolchain.json`) >
+Návrh:
+jeden strojovo čitateľný súbor (`toolchain.json`) >
 v ňom pre každý nástroj pin (verzia, target, sha256, plus „ihly" >
 literály s `{{version}}`, ktoré musia sedieť v súbore >
 ktorý ten pin naozaj používa) a pre každú bránu riadok (target, tier >
@@ -186,7 +193,8 @@ PHP v tomto strome nemá TOML parser (runtime je zero-dependency) >
 a vlastný mini-parser by bol ďalší kód, ktorý nikto netestuje.
 `toolchain.json` číta `json_decode()`, ktorý tam už je.
 
-Druhá vec, ktorú návrh preháňal: CI si cache key z registra **neberie** >
+Druhá vec, ktorú návrh preháňal:
+CI si cache key z registra **neberie** >
 stále ho píše samo (trikrát v `ci.yml`).
 Registr ten zápis vlastní a kontraktný test ho stráži >
 bump v jednej strane bez druhej je červený >
@@ -254,13 +262,15 @@ a delta spec `specs/spec-binding/spec.md` s požiadavkami na väzbu.
 `openspec validate --all` je zelený, takže to nie je poznámka v šuplíku >
 je to change, ktorý sa dá archivovať až vtedy, keď je hotový.
 
-Aj to má jednu úprimnú vadu: ten plán je **v gitignorovanom strome** >
+Aj to má jednu úprimnú vadu:
+ten plán je **v gitignorovanom strome** >
 takže do GitHubu sa nedostane.
 Trvalý záznam o ňom je tento článok >
 a ak si plán má niekedy prečítať niekto iný než ja na tomto počítači >
 je to rozhodnutie o `openspec/` v `.gitignore`, nie o pláne samotnom.
 
-A takto to dopadlo: **A je hotové** >
+A takto to dopadlo:
+**A je hotové** >
 `toolchain.json`, `make gates` a `ToolchainRegistryContractTest` >
 ktorý padne pri rozjazde s `Makefile`, `ci.yml` alebo s pinom v skripte.
 **B má fázu 0 hotovú** >

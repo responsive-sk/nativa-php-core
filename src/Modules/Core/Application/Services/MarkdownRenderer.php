@@ -375,13 +375,13 @@ final class MarkdownRenderer
             $i++;
         }
 
-        // A source line ends where the reader should see a line end, in two
+        // A source line ends where the reader should see a line end, in three
         // shapes: the separator, which marks a sentence that continues
         // (`sentence >` then `next part` renders as `sentence &gt;<br>next
-        // part`), and a sentence that is finished, because the rule is one
-        // sentence per line and joining them would undo the rhythm. Any other
-        // break is a soft wrap and joins with a space, and a blank line still
-        // ends the paragraph.
+        // part`), a sentence that is finished, because the rule is one sentence
+        // per line and joining them would undo the rhythm, and a colon, which
+        // introduces what the next line says. Any other break is a soft wrap
+        // and joins with a space, and a blank line still ends the paragraph.
         $html = '';
         $breaks = false;
 
@@ -390,7 +390,7 @@ final class MarkdownRenderer
             $html .= 0 === $index ? $this->inline($line) : ($breaks ? '<br>' : ' ') . $this->inline($line);
             $bare = rtrim($line, '*_`„“"\')]»');
             $breaks = 1 === preg_match('/\s>$/', $line)
-                || 1 === preg_match('/[.!?…]$/u', $bare);
+                || 1 === preg_match('/[.!?…:]$/u', $bare);
         }
 
         return [

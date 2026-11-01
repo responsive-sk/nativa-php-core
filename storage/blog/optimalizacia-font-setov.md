@@ -14,7 +14,8 @@ published: true
 Veta „Čo z toho zostáva" je nadpis.
 Veľké `Č` v nej bolo vykreslené iným písmom než zvyšok slova >
 fallbackom, ktorý má diakritiku, kým náš webfont ju nemá.
-Prehliadač sa nezbláznil; urobil presne to, čo má: pre znak >
+Prehliadač sa nezbláznil; urobil presne to, čo má:
+pre znak >
 ktorý v fonte chýba, siahol po ďalšej rodine v `font-family` reťazi.
 
 Otázka teda nebola „prečo to blbne" >
@@ -41,7 +42,8 @@ Prvých osemnásť je slovenská sada (mäkké spoluhlásky a dlhé slabikotvorn
 `á ä é í ó ô ú ý` tam boli >
 tie sú v latin-1 a do `latin` subsetu patria.
 Chýbali teda presne tie znaky, ktoré odlišujú slovenčinu od angličtiny >
-a to je najhorší možný výber: text je čitý >
+a to je najhorší možný výber:
+text je čitý >
 len občas „prepne písmo" a pri skenovaní to vyzerá ako rozbitý layout.
 
 ---
@@ -59,7 +61,8 @@ Prešiel som ich CLI, aby som vedel, či problém vedia vyriešiť:
 | `FontGenerator/create_font_from_html.py` | jazykové sady `sk-minimal`…`cz-full` | subset podľa vopred definovanej sady |
 | `FontGenerator/analyze_font.py` | font → zoznam znakov po blokoch | diagnostika pokrytia |
 
-Všetky štyri „generátory" robia jednu operáciu: **odoberajú glyfy**.
+Všetky štyri „generátory" robia jednu operáciu:
+**odoberajú glyfy**.
 `pyftsubset` je jednosmerný >
 zo vstupu vyberie znaky, ktoré tam sú; ak tam >
 nie sú nemá ich odkiaľ vziať.
@@ -81,7 +84,8 @@ Nástroj nebol zlý; len na tento problém nesedel.
 
 ## Časť IV > Jednosmernosť subsettingu
 
-Subset je deštruktívna operácia: vstup `F`, sada `S` → `F|S`.
+Subset je deštruktívna operácia:
+vstup `F`, sada `S` → `F|S`.
 Nikdy `F ∪ D`.
 Preto sa „oprava font setu" nedá spraviť tým istým prístrojom >
 ktorý ho pokazil.
@@ -92,7 +96,8 @@ Dá sa to len jednou z troch ciest:
 3. **Druhá rodina s `unicode-range`** : kosmeticky viditeľné, ale bez tofu.
 
 Cesta 1 je najčistejšia, ak plný zdroj existuje v tej istej verzii.
-Tu neexistoval: na disku bolo Inter 3.019 a Roboto Condensed 1.1 >
+Tu neexistoval:
+na disku bolo Inter 3.019 a Roboto Condensed 1.1 >
 kým súbory v projekte sú 4.001 a 3.008.
 Cesta 3 by znamenala, že v každom slove s diakritikou máme iné písmo.
 
@@ -153,7 +158,8 @@ missing = [c for c in "ÁÄČĎ…žĚŘŮěřů" if ord(c) not in dst_cmap]
 # 5. ulož ako woff2
 ```
 
-A to, čo sa **nesmie** stať: prepočítať `hhea` >
+A to, čo sa **nesmie** stať:
+prepočítať `hhea` >
 `OS/2` (`xAvgCharWidth`) alebo `hmtx` existujúcich glyfov.
 Tie čísla totiž nie sú dekorácia >
 Boson má na nich postavený CLS fix:
@@ -197,7 +203,8 @@ takže obe váhy sú opravené jedným súborom.
 
 Po merge bolo pokrytie čisté (`missing: none`) >
 a headless test v čerstvom Chromiu ukazoval správne šírky.
-A predsa: na obrazovke fallback.
+A predsa:
+na obrazovke fallback.
 Príčina bola v `public/.htaccess`:
 
 ```apache
@@ -249,7 +256,8 @@ cd Frontend/packages && pnpm --filter @nativa/theme-boson run build
 ```
 
 `public/dist/` je gitignored build artefakt.
-To znamená dve veci: v gite je zmena len v CSS a fontoch (správne) >
+To znamená dve veci:
+v gite je zmena len v CSS a fontoch (správne) >
 a na stroji bez buildu sa inlinuje zdrojové CSS >
 ktoré je tiež už správne.
 Obe cesty teda vedú k opraveným URL, len jedna z nich je minifikovaná.
@@ -260,7 +268,8 @@ Obe cesty teda vedú k opraveným URL, len jedna z nich je minifikovaná.
 
 Pokrytie v cmap hovorí, že glyf existuje.
 Nehovorí, že ho prehliadač použije.
-Preto posledné meranie: koľko má znak **advance** v prehliadači vs.
+Preto posledné meranie:
+koľko má znak **advance** v prehliadači vs.
 v tabuľke fontu.
 Ak by prehliadač siahol po fallbacku, šírka by bola iná.
 
@@ -335,5 +344,6 @@ inak sa rozpadne metricky zladený fallback a vráti sa CLS >
 ktorý má `size-adjust` odstrániť.
 Fonty sa v tomto projekte servírujú immutable na rok >
 takže opravený font **musí** prísť na novej URL.
-A testovať treba aj to, čo sa nesťahuje z disku: bundle, cache a to >
+A testovať treba aj to, čo sa nesťahuje z disku:
+bundle, cache a to >
 ktorý súbor prehliadač naozaj použil.

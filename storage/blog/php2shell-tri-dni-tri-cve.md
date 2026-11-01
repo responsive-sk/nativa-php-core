@@ -35,7 +35,8 @@ je to prevod jedného týždňa verejných advisory do konkrétnych riadkov.
 | 23. 10. | PHP vydáva **informačný** advisory k `CVE-2026-115560` : tretia cesta k spusteniu kódu, tentokrát cez `session.upload_progress`. Bez opravy, tá príde v riadnom vydaní. |
 
 Dve veci z tej osi stoja za zapamätanie.
-Prvá: od úniku po zneužitie to boli **hodiny**, nie týždne >
+Prvá:
+od úniku po zneužitie to boli **hodiny**, nie týždne >
 čo je pri RCE v interpreteri skôr pravidlo než prekvapenie.
 Druhá >
 `CVE-2026-109618` a `109619` **nie sú** v CISA KEV katalógu (stav k 22.
@@ -63,7 +64,8 @@ a pri `opcache.preload` alebo pri dlhovekých FPM workeroch nezanikne.
 
 PHP v advisore uvádza >
 že **žiadna konfigurácia tieto dve CVE nezmierňuje**.
-To je výnimočné a treba to brať doslova: `disable_functions` >
+To je výnimočné a treba to brať doslova:
+`disable_functions` >
 `open_basedir` ani WAF nie sú odpoveď.
 Odpoveď je verzia.
 
@@ -139,7 +141,8 @@ zelené CI nehovorí nič o verzii na serveri, ktorý obsluhuje čitateľov.
 Toto je jediná položka zoznamu, ktorú z repozitára nezistíte >
 a je to tá najdôležitejšia.
 
-Ešte jedna vec, ktorá sa ukázala ako užitočná: `composer audit` >
+Ešte jedna vec, ktorá sa ukázala ako užitočná:
+`composer audit` >
 ktorý sme do CI pridali v ten istý deň, **túto triedu problémov nekryje**.
 Audit číta `composer.lock` a `pnpm-lock.yaml`; interpreter nie je balík.
 Pri stroji bez runtime závislostí je teda „dependency audit zelený" >
@@ -150,7 +153,8 @@ pravdivé a súčasne nepoužiteľné ako odpoveď na otázku „som zraniteľn�
 ## Tretia CVE: `session.upload_progress`
 
 Dva dni po oprave prišiel advisory, ktorý už nebol o jadre requestu >
-ale o jednej voliteľnej funkcii: `session.upload_progress` >
+ale o jednej voliteľnej funkcii:
+`session.upload_progress` >
 mechanizmus, ktorý PHP plní do `$_SESSION` >
 aby aplikácia mohla kresliť progress bar nahrávania.
 Je **zapnutý defaultne**.
@@ -171,10 +175,12 @@ Keby ste to riešili v kóde, riešili by ste symptóm toho istého mechanizmu >
 ktorý útočník používa.
 
 **Zmerané >
-v tomto strome:** `git grep upload_progress` vráti **0** výskytov >
+v tomto strome:
+** `git grep upload_progress` vráti **0** výskytov >
 funkcia nie je použitá nikde v trackovanom kóde.
 Session nastavuje `config/session.php` >
-ktorý v repe **je** (deväť `ini_set` volaní: `name`, `use_strict_mode` >
+ktorý v repe **je** (deväť `ini_set` volaní:
+`name`, `use_strict_mode` >
 `use_only_cookies`, `cookie_httponly`, `cookie_samesite` >
 `cookie_secure` podľa HTTPS, `gc_maxlifetime`, `auto_start`, `save_path`) >
 a ani jedno z nich nie je `session.serialize_handler`.
@@ -185,7 +191,8 @@ ani jeden; ostatné `ini_set` v produkte sú `log_errors` >
 súboroch** nainštalovaného slice (CSRF, layout, page cache, locale >
 settings, auth).
 
-To znamená: prvú a druhú podmienku strom sám nevytvára >
+To znamená:
+prvú a druhú podmienku strom sám nevytvára >
 handler ostáva na `php`, čo je default.
 Štvrtú >
 zapnutý `upload_progress` >
@@ -201,7 +208,8 @@ Bezpečnostná diera nemusí byť v tom, čo ste napísali.
 
 Ak by ste mitigáciu dali >
 do PHP kódu (`ini_set('session.upload_progress.enabled', '0')`) >
-nesplnili by ste nič: exploit **je** `ini_set`.
+nesplnili by ste nič:
+exploit **je** `ini_set`.
 Musí to byť administratívna hodnota, ktorú aplikácia nemôže prepísať.
 
 ```ini
@@ -223,7 +231,8 @@ php-fpm -i | grep -E 'session\.(upload_progress|serialize_handler)'
 
 ### Kde to v tomto repe žije
 
-Jedna direktíva, jeden súbor: `deploy/php/99-nativa-session.ini`.
+Jedna direktíva, jeden súbor:
+`deploy/php/99-nativa-session.ini`.
 Inštalácia je kopírovanie, nie editácia `php.ini` >
 a to je celý rozdiel medzi mitigáciou, ktorá sa dá reviewovať v PR >
 a mitigáciou, ktorá existuje len na jednom serveri:
@@ -325,9 +334,11 @@ Tri vety, ktoré by som chcel mať napísané minulý pondelok:
 
 ---
 
-*Merané 24. októbra 2026 na tomto stroji: PHP `8.5.12` (build 21.
+*Merané 24. októbra 2026 na tomto stroji:
+PHP `8.5.12` (build 21.
 10.
-20:05) >
+20:
+05) >
 `composer.json` s `"php": "^8.5"` v čase merania a `^8.5.12` po oprave >
 `PHP_VERSION: "8.5"` v CI >
 0 výskytov `session.upload_progress` v trackovanom kóde >
@@ -340,8 +351,10 @@ kde je riadok 1453 `;session.upload_progress.enabled = On` >
 teda default, nikým neprepísaný.
 Fakty o CVE sú z advisory PHP >
 z [FAQ >
-watchTowr](https://watchtowr.com/intelligence/php-cve-2026-109618-faq/) >
-a z [php.net/releases](https://www.php.net/releases/) >
+watchTowr](https:
+//watchtowr.com/intelligence/php-cve-2026-109618-faq/) >
+a z [php.net/releases](https:
+//www.php.net/releases/) >
 čísla o strome sú z behu, nie z dokumentácie.
 Ak niektoré už neplatí, je to dôvod na ďalšie meranie >
 nie na vymazanie odseku.*

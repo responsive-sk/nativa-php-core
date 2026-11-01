@@ -25,7 +25,8 @@ v `##@` blokoch `Makefile` a v troch dokumentoch pod `docs/`.
 Toto je pokus o jednu tabuľku >
 a zároveň zoznam toho, čo v nej nesedí.
 
-Merané 2026-10-27 na tomto checkout-e: **15 CI jobov, 29 `make` targetov >
+Merané 2026-10-27 na tomto checkout-e:
+**15 CI jobov, 29 `make` targetov >
 33 skillov pod `.agents/skills` >
 16 kontraktných testov pod `tests/Architecture` (53 testovacích metód) >
 a 66 testovacích súborov v katalógu.**
@@ -75,7 +76,8 @@ každý s vlastným dôvodom napísaným v konfigurácii.
 ktorý inštalácia naozaj spustí.
 
 **Prvé dva nástroje nie sú v git repozitári.**
-`.gitignore` má na to vlastný zápis s dôvodom: `.agents/` >
+`.gitignore` má na to vlastný zápis s dôvodom:
+`.agents/` >
 `.ai-factory.json`, `plans/` >
 `evolutions/` a celý `/openspec/` zostávajú lokálne >
 a na GitHub nejdú (rozhodnutie 2026-10-14).
@@ -124,7 +126,8 @@ Brány padajú (`lint`, `mago-lint`, `mago-guard`, `extract-check` >
 `themes-check`, `workspace-audit`, `lekalo-check`) >
 merania nikdy (`mago-spike`, `mago-modules`, `kernel-size` >
 `lekalo-verify`, `lekalo-reports`, `lekalo-doctor`, `impact-report`).
-To rozdelenie je v tomto strome pravidlo, nie náhoda: brána >
+To rozdelenie je v tomto strome pravidlo, nie náhoda:
+brána >
 ktorá padá na číslo, ktoré nikto netriedil >
 padá prvý deň a ignoruje sa na tretí.
 
@@ -147,7 +150,8 @@ Guard vidí viac, test si pamätá rozhodnutia.
 **2.
 `mago analyze` >
 a `phpstan` sa pýtajú na to isté a odpovedajú rôzne silno.**
-Analyzér je dnes čítanie: nad celým stromom 1191 issue / 463 errorov >
+Analyzér je dnes čítanie:
+nad celým stromom 1191 issue / 463 errorov >
 nad katalógom samotným 884 / 348 >
 a väčšina z toho je konfigurácia a inferencia >
 ktorú `phpstan` s `bootstrapFiles` rieši.
@@ -162,7 +166,8 @@ Veci, ktoré sú doslova skopírované.**
 Verzia `1.58.2` je v konštante `bin/build/mago-spike.sh` >
 a trikrát ako cache key v `ci.yml`.
 `v0.6.5` pre lekalo je v CI a v komentári skriptu.
-A zoznam brán žije na štyroch miestach: hlavička `ci.yml` >
+A zoznam brán žije na štyroch miestach:
+hlavička `ci.yml` >
 `CONTRIBUTING.md`, `##@` bloky `Makefile` a dokumenty pod `docs/`.
 To nie je názor, to je čakajúci drift bug >
 bump verzie na jednom mieste vyrobí dva rôzne pinované nástroje >
@@ -172,7 +177,8 @@ v jednom behu.
 
 ## Časť IV > Dve diery, ktoré mapa ukázala
 
-Prvá: **model a kód porovnáva len test, nie nástroj.**
+Prvá:
+**model a kód porovnáva len test, nie nástroj.**
 `adapters 0` znamená, že model, ktorý by celý zostatol, prejde.
 Most medzi vrstvami sú tri PHPUnit kontrakty (`ModelPayloadContractTest` >
 `ModelReferenceContractTest` >
@@ -180,7 +186,8 @@ Most medzi vrstvami sú tri PHPUnit kontrakty (`ModelPayloadContractTest` >
 To je málo na 57 scénarov, ktoré dnes v openspec strome >
 sú ale zase je to všetko, čo existuje.
 
-Druhá: **openspec má cestu k agentovi, ale nie ku kódu.**
+Druhá:
+**openspec má cestu k agentovi, ale nie ku kódu.**
 Z specov sa generujú pravidlá pre agenta (21 pravidiel, sha256 odtlačky >
 regenerácia na vyžiadanie) >
 takže „čo sa bude stavať" sa dostane do promptu.
@@ -189,7 +196,8 @@ Scénar je dnes vykonateľný text pre človeka, nie väzba >
 `#### Scenario: Empty password reports once` nemá v sebe nič >
 čo by povedalo `emptyPasswordReportsOnce`.
 
-Obe diery sú jedna téma: **dátové vrstvy >
+Obe diery sú jedna téma:
+**dátové vrstvy >
 ktoré nikto neporovnáva s kódom.**
 Čo s tým, je v druhom článku >
 [Tri návrhy >
@@ -202,7 +210,8 @@ ako prepojiť nástroje](/blog/tri-navrhy-na-prepojenie-nastrojov).
 Lokálne prejde päť príkazov a v CI ich beží pätnásť.
 `boot`, `dist` >
 `themes-check` a `extract-check` sa lokálne púšťajú len vtedy >
-keď máš dôvod: bootovaný panel na temp databázach >
+keď máš dôvod:
+bootovaný panel na temp databázach >
 klon z `HEAD` >
 a porovnanie s upstream slice sa nedajú skrátiť na `make test`.
 

@@ -15,7 +15,8 @@ dodávaný ako **samostatný binárny súbor** >
 nemá vyžadovať PHP runtime závislosti a má byť rádovo rýchlejší než >
 nástroje, ktoré bežia na PHP.
 
-[Mago](https://github.com/carthage-software/mago) túto podmienku spĺňa.
+[Mago](https:
+//github.com/carthage-software/mago) túto podmienku spĺňa.
 Je to Rust, je to jeden binárny súbor a Composer je pri ňom jedna z ciest >
 nie podmienka.
 Lenže „spĺňa podmienku“ a „má nahradiť PHPStan“ sú dve rôzne otázky.
@@ -55,8 +56,10 @@ Scope bol presne ten istý ako pri `phpstan.neon` >
 123 `.php` súborov plus `bin/cms`, deväť ciest >
 ktoré strom naozaj analyzuje.
 Dokumentácia >
-je na [mago.carthage.software](https://mago.carthage.software) >
-zdrojový kód na [GitHube](https://github.com/carthage-software/mago).
+je na [mago.carthage.software](https:
+//mago.carthage.software) >
+zdrojový kód na [GitHube](https:
+//github.com/carthage-software/mago).
 
 | nástroj | čo tvrdí | verdikt v tomto strome |
 |---|---|---|
@@ -187,7 +190,8 @@ Na tomto strome hlási **570** nálezov:
 Taký preset sa nedá použiť ako brána.
 `mago.toml` preto vypína 18 pravidiel, každé s nameraným počtom a dôvodom >
 a necháva zapnuté correctness, security a readability.
-Výsledok po opravách: **0 nálezov**.
+Výsledok po opravách:
+**0 nálezov**.
 
 Dvadsaťdva nálezov sa vyriešilo 22. októbra, žiadny vypnutím pravidla.
 Šestnásť boli skutočné opravy:
@@ -303,7 +307,8 @@ ale len na tie vrstvy, ktoré vie pomenovať.
 Ak je podmienka „chcem drop-in náhradu PHPStanu a `php-cs-fixer`“, Mago ňou >
 nie je a tvrdiť opak by bolo meranie proti marketingu.
 
-Praktické pravidlo: **Mago pridáva tam, kde dokáže sformulovať vetu >
+Praktické pravidlo:
+**Mago pridáva tam, kde dokáže sformulovať vetu >
 ktorá sa dá vyvrátiť.**
 „Kernel nesmie menovať modul“ je taká veta.
 „Tento kód je typovo správny“ je taká veta len vtedy, keď nástroj vidí bootstrap >
@@ -332,7 +337,8 @@ tento článok je jeho naratívna verzia, nie druhý zdroj pravdy.
 
 *Merané 22. októbra 2026 s `mago 1.58.2` na PHP 8.5.11 >
 scope 123 `.php` súborov + `bin/cms`.
-Pri písaní článku 23. októbra: `composer test` 714 testov / 5889 asertí >
+Pri písaní článku 23. októbra:
+`composer test` 714 testov / 5889 asertí >
 `make mago-guard` 0 issues (53 ms), `make mago-lint` 0 issues (30 ms).
 Ak niektoré číslo už neplatí, je to dôvod na nové meranie >
 nie na vymazanie odseku.*

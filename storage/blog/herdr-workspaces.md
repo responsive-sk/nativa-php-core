@@ -206,7 +206,8 @@ Každý taký pane má vlastný shell >
 vlastný git kontext a môže v ňom bežať vlastný agent.
 Hub je teda legitímny spôsob, ako mať päť repozitárov v jednom okne.
 
-Cena za to je jedna vec a je merateľná: **hub nemá metadáta repozitára.**
+Cena za to je jedna vec a je merateľná:
+**hub nemá metadáta repozitára.**
 
 ```bash
 herdr workspace get w7
@@ -297,7 +298,8 @@ Podporovaných kindov je dvadsaťštyri (`pi`, `claude`, `codex`, `gemini` >
 `muse`) a meno agenta musí sedieť na `[a-z][a-z0-9_-]{0,31}` >
 a byť unikátne medzi živými agentmi.
 
-Stavy, s ktorými sa dá počítať: `idle`, `working`, `blocked`, `done` >
+Stavy, s ktorými sa dá počítať:
+`idle`, `working`, `blocked`, `done` >
 `unknown`.
 Dve upozornenia, ktoré vyzerajú ako formalita a nie sú:
 
@@ -422,7 +424,8 @@ Worktree je hranica druhá >
 v rámci jedného repozitára >
 a je to jediná hranica, ktorá oddelí dva git indexy.
 
-Zvyšok je disciplína: čítať ID z odpovedí namiesto ich hádania >
+Zvyšok je disciplína:
+čítať ID z odpovedí namiesto ich hádania >
 nedeliť pany tým istým smerom do nekonečna >
 neodpovedať na `blocked` naslepo a nepliesť si metadáta workspace >
 s pracovným adresárom panu.

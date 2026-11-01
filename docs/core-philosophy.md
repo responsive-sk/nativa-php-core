@@ -18,7 +18,8 @@ which a line scan cannot see.
 ## 1. The kernel holds the port, not the service
 
 A surface the kernel must render without any module installed still needs >
-an answer: the site name, the active theme, the default locale >
+an answer:
+the site name, the active theme, the default locale >
 the navigation menu.
 The kernel therefore owns the **port** >
 an interface in `src/Modules/Core/` >
@@ -52,9 +53,11 @@ the one place allowed to name modules) wires the adapter.
 
 ## 2. A module is a slice that can leave
 
-The catalogue in `modules/<Name>/` is the source: tracked in git >
+The catalogue in `modules/<Name>/` is the source:
+tracked in git >
 edited by an author.
-`src/Modules/<Name>/` is the installed slice: generated, untracked >
+`src/Modules/<Name>/` is the installed slice:
+generated, untracked >
 the copy the running app loads.
 `bin/cms module:add <Name>` copies one to the other >
 `bin/cms module:remove <Name>` deletes the slice again.
@@ -66,7 +69,8 @@ Both halves are checked, and neither is a convention:
 - `module:remove` refuses while any remaining installed module still imports the
   name, names the importing file, and leaves the slice untouched.
 
-The round trip is the proof: `modules/Scratch` is one route >
+The round trip is the proof:
+`modules/Scratch` is one route >
 zero non-kernel imports >
 and the tree hashes byte-identically before and after `add` → `request` → >
 `remove`.

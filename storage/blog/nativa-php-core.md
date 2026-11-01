@@ -9,20 +9,23 @@ category: "Architektúra"
 published: true
 ---
 
-**Nativa PHP Core** je kernel-only strom: dve modulové vetvy idú celé >
+**Nativa PHP Core** je kernel-only strom:
+dve modulové vetvy idú celé >
 `Modules\Core` a `Modules\Database` >
 plus jedna téma.
 Všetko ostatné je modul >
 ktorý sa do stromu **skopíruje** (`bin/cms module:add`) >
 a dá sa **preukázateľne odstrániť** (`bin/cms module:remove`).
-Tento článok je o tom, čo z toho vyplýva: o pravidlách >
+Tento článok je o tom, čo z toho vyplýva:
+o pravidlách >
 ktoré držia hranicu, o meraniach, ktoré ich overujú, a o dvoch veciach >
 ktoré sme museli najprv vyvrátiť, aby sme im mohli veriť.
 
 ## Prečo existuje samostatný strom
 
 Showcase je plná stránka a plná stránka **nemôže** demonštrovať >
-že niečo je odstrániteľné: to, na čom by to demonštrovala >
+že niečo je odstrániteľné:
+to, na čom by to demonštrovala >
 je vždy nainštalované.
 Tvrdiť „modul je voliteľný" >
 a mať ho pritom napevno prepojený v jadre je presne tá chyba >
@@ -69,7 +72,8 @@ prichádzajú z portu `ShellContextProvider` >
 ktorý jadro **objaví** cez atribút `#[AsShellContextProvider]`.
 Ak nie je nainštalovaný **žiadny** provider, strom sa aj tak vykreslí.
 
-To je najdôležitejšia časť návrhu: `null` nie je chyba, je to odpoveď.
+To je najdôležitejšia časť návrhu:
+`null` nie je chyba, je to odpoveď.
 Tá istá schéma sa opakuje pri autentifikácii >
 rate limitera a prekladaní locales >
 port vlastní jadro, implementácia prichádza s modulom.
@@ -96,7 +100,8 @@ teda odovzdal ten súbor vo chvíli, keď cieľ ešte neexistoval.
 Na jednej stanici test prešiel, v CI padol >
 a to je definícia chyby, ktorá sa nedá odchytiť testom >
 ktorý beží len na jednom súborovom systéme.
-Opravené v kontrakte: `copyTree()` najprv vytvorí cieľ, potom kopíruje.
+Opravené v kontrakte:
+`copyTree()` najprv vytvorí cieľ, potom kopíruje.
 
 ## Nulová závislosť runtime > a ako sme ju vyvrátili
 
@@ -104,7 +109,8 @@ Hlavné tvrdenie jadra je, že runtime má **nula** Composer balíkov.
 `src/init.php` preto inštaluje vlastný PSR-4 fallback autoloader >
 pre strom bez `vendor/`.
 Aby to nebolo len tvrdenie, má CI job >
-ktorý naschvál **nerobí** `composer install`: keby ho robil >
+ktorý naschvál **nerobí** `composer install`:
+keby ho robil >
 nikdy by tú vlastnosť neotestoval.
 
 Ten job tvrdenie vyvrátil.
@@ -123,7 +129,8 @@ skôr než sa nejaká trieda načíta.
 Je naschvál zhovievavý >
 v smere vynechania (falošný pozitív stojí jedno reflexné čítanie >
 falošný negatív by ticho zahodil reálnu routu).
-Namerané po oprave, v stromoch bez `vendor/`: `/`, `/sitemap.xml` >
+Namerané po oprave, v stromoch bez `vendor/`:
+`/`, `/sitemap.xml` >
 `/robots.txt`, `/docs` → **200**; `/nope` a `/mark` → **404** (nikdy 403 >
 admin je modul); `module:add` → `200` → `module:remove` → `404` >
 a to aj so **14 nainštalovanými modulmi**.
@@ -141,7 +148,8 @@ a to v oboch smeroch.
 Nelegovaná ručná úprava padne rovnako ako upstream zmena >
 ktorú nikto neprešiel.
 
-Aktuálny stav: **246 identických, 42 zapísaných divergencií**.
+Aktuálny stav:
+**246 identických, 42 zapísaných divergencií**.
 Číslo nie je dekorácia >
 je to zoznam miest, kde sa jadro od showcase líši, s dôvodom pri každom.
 
