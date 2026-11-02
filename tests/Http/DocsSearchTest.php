@@ -11,6 +11,7 @@ use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Actions\DocsIndexAction;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\ThemeKernel;
+use Modules\Core\Interfaces\HTTP\ThemeResolver;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
@@ -175,6 +176,13 @@ final class DocsSearchTest extends TestCase
     {
         $body = self::search('guide');
 
+        // GET /docs renders in the ACTIVE theme, whatever the deployment picked
+        // (the modules job picks mono). The vocabulary is that theme's, so it is
+        // read here instead of assumed: a prefix spelled into this file would
+        // pin the test to one theme and call a correct page a failure under
+        // another.
+        $prefix = ThemeKernel::for((new ThemeResolver())->resolvePath('/'))->prefix();
+
         self::assertSame(
             1,
             substr_count($body, '<h1'),
@@ -185,11 +193,11 @@ final class DocsSearchTest extends TestCase
         // The class names are asserted with their `class="…"` context: the
         // theme's stylesheet is inlined into the page, so a bare `.bo-page` or
         // `bo-docs__item` search would hit the CSS rather than the markup.
-        self::assertStringNotContainsString('class="bo-page bo-docs"', $body, 'The theme page head is the index surface, not a search page.');
-        self::assertStringNotContainsString('class="bo-docs__item"', $body, 'The index cards are the index surface, not a search page.');
+        self::assertStringNotContainsString('class="' . $prefix . '-page ' . $prefix . '-docs"', $body, 'The theme page head is the index surface, not a search page.');
+        self::assertStringNotContainsString('class="' . $prefix . '-docs__item"', $body, 'The index cards are the index surface, not a search page.');
 
         $summary = strpos($body, 'guides match');
-        $firstHit = strpos($body, '<div class="bo-article__body"><ul>');
+        $firstHit = strpos($body, '<div class="' . $prefix . '-article__body"><ul>');
 
         self::assertIsInt($summary);
         self::assertIsInt($firstHit);
