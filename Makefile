@@ -9,7 +9,11 @@
 PHP ?= php
 COMPOSER ?= composer
 MINIMAL_ROOT ?= ../nativa-minimal
-THEMES_ROOT ?= ../nativa-themes
+# Empty by default: the theme script fetches the nativa-themes repository's HEAD
+# into storage/cache and compares against that. A sibling clone can be behind,
+# which is how a green local `make themes-check` shipped a red CI job; set this
+# only to compare against a checkout you mean to measure.
+THEMES_ROOT ?=
 LEKALO ?= $(shell command -v lekalo 2>/dev/null || echo "$$HOME/.cargo/bin/lekalo")
 # Modules the advisory coupling / architecture-profile reports cover (two, not
 # one: a single module says nothing about whether the shape holds elsewhere).
@@ -126,11 +130,11 @@ extract-check: ## Verify this tree against the upstream kernel slice
 # here is their copy, because `bin/cms module:add` installs from this tree.
 # `themes-check` is the gate — a hand edit under modules/Themes/ is drift, not
 # a fix, and `themes-sync` is how a reviewed change lands.
-themes-check: ## Verify the theme catalogue against the nativa-themes checkout
-	bin/build/sync-themes.sh --check --from $(THEMES_ROOT)
+themes-check: ## Verify the theme catalogue against the nativa-themes repository
+	bin/build/sync-themes.sh --check $(if $(THEMES_ROOT),--from $(THEMES_ROOT),)
 
-themes-sync: ## Copy modules/Themes from the nativa-themes checkout
-	bin/build/sync-themes.sh --write --from $(THEMES_ROOT)
+themes-sync: ## Copy modules/Themes from the nativa-themes repository
+	bin/build/sync-themes.sh --write $(if $(THEMES_ROOT),--from $(THEMES_ROOT),)
 
 ##@ Catalogue
 # The same two steps the `modules` and `admin-smoke` CI jobs run, so a red job

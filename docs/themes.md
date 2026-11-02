@@ -136,11 +136,19 @@ as before — nothing about the tool changed. What changed is where a fix belong
 **Why a script and not a submodule.** A submodule pins one commit, but `module:add` and
 `make assets` need files, not a pin: every clone would still need `--recursive` before either
 worked, and a missing initialisation reads as "no themes". The script needs the checkout only
-when it runs, accepts both a sibling clone (`../nativa-themes`) and the CI location
-(`.upstream/nativa-themes`), and its `--check` is one command with a non-zero exit. The cost is
+when it runs, and `--check` is one command with a non-zero exit. The cost is
 that no commit id is written down anywhere — the catalogue's bytes *are* the pin, and `--check`
 is what compares them. That is a weaker guarantee than a submodule's pin, so it has to run in
 CI (Fáza 3.3), not only on the machine that remembers it.
+
+Where the checkout comes from is the part that failed once. The default used to be a sibling
+clone (`../nativa-themes`), and a clone that was behind reported `identical=19` while CI, with a
+fresh checkout, reported Boson's critical CSS as `changed` — the gate measured the neighbour
+rather than the repository. Without `--from` the script now clones `evan70/nativa-themes` into
+the gitignored `storage/cache/nativa-themes` and fast-forwards it on every run, so a developer
+and CI compare the same bytes; the report line carries the commit it saw (`@6d3ef9c`). `--from`
+still takes an explicit path, which is how CI hands over the checkout it already made and how a
+contributor measures a local branch on purpose.
 
 The gallery stays at the repository root and is a **consumer**: `modules/` is not a pnpm
 package and Vite reads only its explicit inputs, so nothing collides; moving the gallery into

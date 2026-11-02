@@ -23,11 +23,20 @@
 #       directory, then copy its files back. Deleting first is deliberate — a
 #       file removed upstream must not survive here as a stale extra.
 #
-# Theme repository location: `--from <dir>`, default `.upstream/nativa-themes`
-# next to this checkout. A sibling clone is the normal case, so the Makefile
-# passes `--from ../nativa-themes`; CI checks the repository out into
-# `.upstream/` and needs no flag. `.git` inside a theme directory is skipped:
-# the catalogue is source, not a nested repository.
+# Theme repository location: `--from <dir>` for an explicit checkout (CI passes
+# its own), otherwise the repository's HEAD, cloned into the gitignored
+# `storage/cache/nativa-themes` and fast-forwarded on each run.
+#
+# The default used to be a sibling clone (`../nativa-themes`), and that is how a
+# stale copy passed here and failed in CI: Boson's critical CSS was synced from
+# a checkout that was behind, `make themes-check` reported identical, and the
+# pushed commit went red against the fresh clone. A gate that compares against
+# whatever happens to sit next to it measures the neighbour, not the repository.
+# Only the explicit `--from` still trusts a path, because the caller named it.
+#
+# `git` is needed for the fetch path; `--from` keeps the coreutils-only path
+# CI uses. `.git` inside a theme directory is skipped: the catalogue is source,
+# not a nested repository.
 #
 # No dependencies beyond bash + coreutils, same as `bin/cms` and
 # `extract-kernel.sh`: the tool that guards the tree runs where `vendor/` may
@@ -39,6 +48,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 THEMES_ROOT=""
 MODE=""
+THEMES_URL="https://github.com/evan70/nativa-themes"
+THEMES_CACHE="$ROOT/storage/cache/nativa-themes"
 
 # The catalogue is an allow-list, not a glob: a new theme has to be named here
 # (and in the contract in docs/themes.md) before this script will copy it. A
@@ -71,9 +82,42 @@ hash_file() {
     fi
 }
 
+# The checkout the gate compares against, and the commit it is at.
+#
+# `--from` wins outright: CI hands its own checkout in, and a contributor
+# comparing against a local branch can too. Without it the repository's HEAD is
+# fetched, so both sides of a code review compare the same bytes.
+fetch_source() {
+    if [ -d "$THEMES_ROOT/.git" ]; then
+        if git -C "$THEMES_ROOT" fetch --quiet --depth 1 origin >/dev/null 2>&1; then
+            git -C "$THEMES_ROOT" reset --quiet --hard FETCH_HEAD >/dev/null 2>&1 \
+                || fail "could not move the cached theme clone to the fetched commit"
+        else
+            printf 'sync-themes: could not reach %s; comparing against the cached clone\n' "$THEMES_URL" >&2
+        fi
+
+        return
+    fi
+
+    mkdir -p "$(dirname "$THEMES_ROOT")"
+    git clone --quiet --depth 1 "$THEMES_URL" "$THEMES_ROOT" >&2 \
+        || fail "cannot fetch $THEMES_URL and no cached clone exists (pass --from <dir>)" 2
+}
+
+# `@<commit>` when the source is a git checkout, so the line itself names what
+# was compared: a report of a red gate carries the upstream commit it saw.
+source_revision() {
+    if [ -d "$THEMES_ROOT/.git" ]; then
+        local sha
+        sha="$(git -C "$THEMES_ROOT" rev-parse --short HEAD 2>/dev/null)" \
+            && printf '@%s' "$sha"
+    fi
+}
+
 resolve_source() {
     if [ -z "$THEMES_ROOT" ]; then
-        THEMES_ROOT="$ROOT/.upstream/nativa-themes"
+        THEMES_ROOT="$THEMES_CACHE"
+        fetch_source
     fi
     [ -d "$THEMES_ROOT/modules/Themes" ] \
         || fail "no theme repository at $THEMES_ROOT (expected modules/Themes/; pass --from)" 2
@@ -176,7 +220,7 @@ cmd_check() {
         fi
     done
 
-    echo "sync-themes --check: identical=$total_identical diverged=$total_diverged (source: $THEMES_ROOT)"
+    echo "sync-themes --check: identical=$total_identical diverged=$total_diverged (source: $THEMES_ROOT$(source_revision))"
     if [ "$total_diverged" -gt 0 ]; then
         echo "sync-themes: the catalogue is not the repository's copy — run 'make themes-sync' or revert the edit." >&2
         exit 1
