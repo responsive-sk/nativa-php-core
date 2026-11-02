@@ -93,6 +93,16 @@ final class BlogServices
      * blog title claim a name the rest of the page did not use the moment a
      * different site name was configured.
      */
+    /**
+     * The word this module calls itself, for the surfaces that have to name it:
+     * the structured data on the two listings, and the tests that assert it.
+     * One owner, so the next surface does not spell it a fourth time.
+     */
+    public static function label(): string
+    {
+        return 'Blog';
+    }
+
     public static function brandSuffix(): string
     {
         return \Modules\Core\Application\Services\ShellContextProviderRegistry::siteName()

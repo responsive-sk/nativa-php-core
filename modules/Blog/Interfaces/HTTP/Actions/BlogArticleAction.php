@@ -269,6 +269,7 @@ final class BlogArticleAction
             $ogImage,
             is_string($meta['author'] ?? null) ? $meta['author'] : '',
             BlogServices::brandSuffix(),
+            BlogServices::label(),
         );
 
         return Response::html(FrontendLayout::render(

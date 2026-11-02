@@ -164,9 +164,9 @@ final class FrontendLayout
             . $themeModule->pageWrap($content)
             . $themeModule->footer($shellContext);
 
-        // Byte-parity with the legacy heredoc: every head segment sits on
-        // its own heredoc line in document() (multi-line segments keep
-        // their own newlines, empty segments emit the bare indent line).
+        // Every head segment is handed to document() as bytes, not as a row:
+        // the row is what headTags() decides, so a segment that answers with
+        // nothing leaves no blank line behind.
         return self::document(
             $titleEscaped,
             $descriptionEscaped,
@@ -243,8 +243,13 @@ final class FrontendLayout
             $inlineCss = InlineCss::files($criticalCss);
         }
 
+        // The bytes between the tags are the build's own, untouched: the theme
+        // tests in `modules/Themes` compare them to the stylesheet on disk, and
+        // that copy is byte-verified against nativa-themes (`make themes-check`).
+        // So `</style>` stays flush left and the stylesheet's trailing newline
+        // stays with it; the rows around the block are this file's to indent.
         return self::fontPreloads($inlineCss)
-            . '<style nonce="__CSP_NONCE_PLACEHOLDER__">' . "\n" . $inlineCss . "\n" . '</style>' . "\n";
+            . '    <style nonce="__CSP_NONCE_PLACEHOLDER__">' . "\n" . $inlineCss . "\n" . '</style>' . "\n";
     }
 
     /**
@@ -277,7 +282,7 @@ final class FrontendLayout
                 continue;
             }
 
-            $tags .= '<link rel="preload" href="' . self::e($url) . '" as="font" type="font/woff2" crossorigin>' . "\n";
+            $tags .= '    <link rel="preload" href="' . self::e($url) . '" as="font" type="font/woff2" crossorigin>' . "\n";
         }
 
         return $tags;
@@ -316,28 +321,32 @@ final class FrontendLayout
     }
 
     /**
-     * The shared theme-init block, verbatim as it has always been emitted
-     * (comment, indentation and all) for every theme that does not override
-     * it — restoring the persisted choice before first paint to avoid a
-     * flash of the wrong colour mode.
+     * The shared theme-init block, verbatim in what it does for every theme
+     * that does not override it: restore the persisted choice before first
+     * paint to avoid a flash of the wrong colour mode.
+     *
+     * Its own four-space indent is part of the literal so the block sits on
+     * the same column as the head rows around it. It used to arrive at mixed
+     * depths (the comment one step in, the `<script>` flush left) because the
+     * heredoc's closing indent was the only thing deciding the column.
      */
     private static function sharedThemeInitScript(): string
     {
         return <<<'HTML'
-            <!-- Sync theme init — FOUC prevention: restore the persisted theme
-                 (or the OS preference) before first paint. Falls back to the
-                 dark default when neither is available (Chrome 70 baseline). -->
-            <script nonce="__CSP_NONCE_PLACEHOLDER__">
-                (function() {
-                    try {
-                        var theme = localStorage.getItem('nativa-theme');
-                        if (!theme) {
-                            theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-                        }
-                        document.documentElement.setAttribute('data-theme', theme);
-                    } catch (e) {}
-                })();
-            </script>
+                <!-- Sync theme init — FOUC prevention: restore the persisted theme
+                     (or the OS preference) before first paint. Falls back to the
+                     dark default when neither is available (Chrome 70 baseline). -->
+                <script nonce="__CSP_NONCE_PLACEHOLDER__">
+                    (function() {
+                        try {
+                            var theme = localStorage.getItem('nativa-theme');
+                            if (!theme) {
+                                theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                            }
+                            document.documentElement.setAttribute('data-theme', theme);
+                        } catch (e) {}
+                    })();
+                </script>
             HTML;
     }
 
@@ -367,6 +376,32 @@ final class FrontendLayout
     }
 
     /**
+     * The tag rows of `<head>`, one line each, four spaces in, and no row at
+     * all for a segment that answered with nothing.
+     *
+     * `document()` used to interpolate every builder on its own heredoc line,
+     * so the row existed whether or not the builder had anything to put in it:
+     * no hreflang pair, no feed, no `noindex`, no structured data still left a
+     * line holding four spaces, and a builder that ended in `\n` left a second,
+     * empty one beside it. That is why the page source carried a gap between
+     * `og:url` and the next tag; the rows are decided here now, from the bytes.
+     */
+    private static function headTags(string ...$segments): string
+    {
+        $lines = [];
+
+        foreach ($segments as $segment) {
+            foreach (explode("\n", $segment) as $line) {
+                if ('' !== trim($line)) {
+                    $lines[] = '    ' . $line;
+                }
+            }
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /**
      * Assemble the final HTML document (head + body). The $pageChrome
      * carries 12 leading spaces from the legacy heredoc — the theme modules
      * reproduce them for byte parity (theme-as-module golden masters).
@@ -388,6 +423,25 @@ final class FrontendLayout
         string $jsTag,
         string $pageChrome,
     ): string {
+        // The line break between two rows is the heredoc's, so a segment that
+        // keeps a trailing newline of its own prints one empty row beside it.
+        $styleTag = rtrim($styleTag);
+        $themeInitScript = rtrim($themeInitScript);
+        $pageChrome = rtrim($pageChrome);
+        // The deferred bundle is the body's only optional row. It rides the
+        // toggle script's line so a tree with no build (the kernel theme) has
+        // no row to leave empty.
+        $jsTag = '' === trim($jsTag) ? '' : "\n    " . rtrim($jsTag);
+
+        $headTags = self::headTags(
+            $canonicalTag,
+            $hreflangTags,
+            $ogTags,
+            $noindexTag,
+            $structuredTag,
+            $feedTags,
+        );
+
         return <<<HTML
         <!DOCTYPE html>
         <html lang="{$htmlLang}">
@@ -400,20 +454,14 @@ final class FrontendLayout
             <link rel="apple-touch-icon" href="/apple-touch-icon.png">
             <title>{$titleEscaped}</title>
             <meta name="description" content="{$descriptionEscaped}">
-            {$canonicalTag}
-            {$hreflangTags}
-            {$ogTags}
-            {$noindexTag}
-            {$structuredTag}
-            {$feedTags}
-            {$styleTag}
-            {$themeInitScript}
+        {$headTags}
+        {$styleTag}
+        {$themeInitScript}
         </head>
         <body class="{$bundle}-shell">
             {$pageChrome}
             <!-- Theme toggle handler — flips data-theme on <html>, persisted to localStorage -->
-            <script nonce="__CSP_NONCE_PLACEHOLDER__">{$themeToggleScript}</script>
-            {$jsTag}
+            <script nonce="__CSP_NONCE_PLACEHOLDER__">{$themeToggleScript}</script>{$jsTag}
         </body>
         </html>
         HTML;

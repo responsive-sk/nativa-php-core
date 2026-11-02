@@ -244,12 +244,23 @@ final readonly class BlogArticleHelper
      */
     public static function feedLinks(string $locale): array
     {
-        $prefix = ContentServices::mapper()->urlPrefix($locale);
+        $path = self::blogPath($locale);
 
         return [
-            'atom' => $prefix . '/blog/feed.atom',
-            'rss' => $prefix . '/blog/feed.xml',
+            'atom' => $path . '/feed.atom',
+            'rss' => $path . '/feed.xml',
         ];
+    }
+
+    /**
+     * The blog index path for a locale (`/blog`, `/en/blog`).
+     *
+     * One owner for a path three surfaces now need: the index itself, the feed
+     * links beside it, and the category trail whose parent entry is this URL.
+     */
+    public static function blogPath(string $locale): string
+    {
+        return ContentServices::mapper()->urlPrefix($locale) . '/blog';
     }
 
     /**

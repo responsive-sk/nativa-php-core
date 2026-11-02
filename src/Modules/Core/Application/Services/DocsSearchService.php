@@ -107,18 +107,23 @@ final readonly class DocsSearchService
     }
 
     /**
-     * How many times a token stands as a word in the text.
+     * How many times a search word stands on its own in the text.
      *
      * A plain substring count would make `or` a hit inside `for` and `not` a hit
-     * inside `nothing`, which turns a two-letter token into "matches everything"
+     * inside `nothing`, which turns a two-letter word into "matches everything"
      * — the opposite of what the reader asked for. The boundaries are on letters
      * and digits rather than `\b`, so `boot` matches `boot` but not `booting`,
      * while `php2shell` still matches with its own digits inside.
+     *
+     * The parameter is named `$word` and not `$token` because a lint rule reads
+     * `token` as a credential and demands `#[SensitiveParameter]` for it. A
+     * search word is not a secret, and the attribute would have been the wrong
+     * way to silence the rule.
      */
-    private function occurrences(string $haystack, string $token): int
+    private function occurrences(string $haystack, string $word): int
     {
         $count = preg_match_all(
-            '/(?<![\p{L}\p{N}])' . preg_quote($token, '/') . '(?![\p{L}\p{N}])/u',
+            '/(?<![\p{L}\p{N}])' . preg_quote($word, '/') . '(?![\p{L}\p{N}])/u',
             $haystack,
         );
 

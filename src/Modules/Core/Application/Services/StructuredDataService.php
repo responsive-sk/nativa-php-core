@@ -50,6 +50,10 @@ final class StructuredDataService
     /**
      * Article + BreadcrumbList for a blog article page. $published is the
      * front-matter date (YYYY-MM-DD), $image an absolute cover URL or null.
+     *
+     * $blogName is the section's own word for itself, passed in for the same
+     * reason as everywhere else here: the kernel renders the trail, the module
+     * that owns the section names it.
      */
     public static function article(
         string $title,
@@ -59,6 +63,7 @@ final class StructuredDataService
         ?string $image,
         string $authorName,
         string $siteName,
+        string $blogName,
     ): string {
         $article = [
             '@context'         => 'https://schema.org',
@@ -80,16 +85,96 @@ final class StructuredDataService
         // https://host/en/blog/slug → https://host/en/blog).
         $blogUrl = (string) substr($url, 0, (int) strrpos($url, '/'));
 
-        $breadcrumb = [
+        return self::encode([
+            $article,
+            self::breadcrumb([
+                ['name' => $blogName, 'url' => $blogUrl],
+                ['name' => $title],
+            ]),
+        ]);
+    }
+
+    /**
+     * A listing page: a `CollectionPage` plus the Home > name trail.
+     *
+     * $homeUrl is passed rather than derived from $url because a listing is
+     * locale-prefixed (`/en/blog`) and the root it hangs under is not. The name
+     * is the caller's: a kernel service does not know what the module that owns
+     * the listing calls itself.
+     */
+    public static function collection(
+        string $name,
+        string $url,
+        string $homeUrl,
+    ): string {
+        return self::encode([
+            [
+                '@context' => 'https://schema.org',
+                '@type'    => 'CollectionPage',
+                'name'     => $name,
+                'url'      => $url,
+            ],
+            self::breadcrumb([
+                ['name' => 'Home', 'url' => $homeUrl],
+                ['name' => $name],
+            ]),
+        ]);
+    }
+
+    /**
+     * A category listing: `CollectionPage` plus the parent > Category trail.
+     *
+     * The parent URL and label are the caller's, not a substring of $url: the
+     * category path (`/en/blog/categories/nastroje`) carries the locale prefix,
+     * and cutting it at a guessed separator is how the trail ends up pointing at
+     * `/en/blog/`.
+     */
+    public static function category(string $name, string $url, string $parentName, string $parentUrl): string
+    {
+        return self::encode([
+            [
+                '@context' => 'https://schema.org',
+                '@type'    => 'CollectionPage',
+                'name'     => $name,
+                'url'      => $url,
+            ],
+            self::breadcrumb([
+                ['name' => $parentName, 'url' => $parentUrl],
+                ['name' => $name],
+            ]),
+        ]);
+    }
+
+    /**
+     * BreadcrumbList from a name/url trail.
+     *
+     * The last crumb is the page itself and carries no `item`, which is what
+     * schema.org's own example does: repeating the current URL there is a
+     * self-link rather than a step.
+     *
+     * @param list<array{name: string, url?: string}> $trail
+     *
+     * @return array<string, mixed>
+     */
+    private static function breadcrumb(array $trail): array
+    {
+        $items = [];
+
+        foreach ($trail as $position => $crumb) {
+            $item = ['@type' => 'ListItem', 'position' => $position + 1, 'name' => $crumb['name']];
+
+            if (isset($crumb['url'])) {
+                $item['item'] = $crumb['url'];
+            }
+
+            $items[] = $item;
+        }
+
+        return [
             '@context'        => 'https://schema.org',
             '@type'           => 'BreadcrumbList',
-            'itemListElement' => [
-                ['@type' => 'ListItem', 'position' => 1, 'name' => 'Blog', 'item' => $blogUrl],
-                ['@type' => 'ListItem', 'position' => 2, 'name' => $title],
-            ],
+            'itemListElement' => $items,
         ];
-
-        return self::encode([$article, $breadcrumb]);
     }
 
     /**

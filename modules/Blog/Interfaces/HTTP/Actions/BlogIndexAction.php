@@ -8,11 +8,11 @@ use Modules\Blog\Application\BlogServices;
 use Modules\Blog\Application\Services\BlogArticleHelper;
 use Modules\Blog\Application\Services\BlogArticlesService;
 use Modules\Blog\Application\Services\BlogSearchService;
+use Modules\Core\Application\Services\StructuredDataService;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
-use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\PageContext;
 use Modules\Core\Interfaces\HTTP\ThemeKernel;
@@ -53,22 +53,36 @@ final class BlogIndexAction
             );
         }
 
+        // The index announces the blog; a result list does not, for the same
+        // reason it carries no canonical: one corpus answers both /blog?q=x and
+        // /en/blog?q=x.
+        $canonical = '' === $query ? $request->absoluteUrl($this->indexPath($locale)) : null;
+
         $hreflang = null;
-        if ('' === $query) {
+        if (null !== $canonical) {
             $baseUrl = $request->absoluteUrl('');
-            $hreflang = [
-                'sk' => $baseUrl . '/blog',
-                'en' => $baseUrl . '/en/blog',
-                'x-default' => $baseUrl . '/blog',
-            ];
+            $hreflang = [];
+
+            foreach (['sk', 'en'] as $code) {
+                $hreflang[$code] = $baseUrl . BlogArticleHelper::blogPath($code);
+            }
+
+            $hreflang['x-default'] = $baseUrl . BlogArticleHelper::blogPath('sk');
         }
 
         return Response::html(FrontendLayout::render(
             '' !== $query ? 'Search ... ' . BlogServices::brandSuffix() : 'Blog ... ' . BlogServices::brandSuffix(),
             $content,
             currentPath: $request->getPathInfo(),
-            canonicalUrl: '' !== $query ? null : $request->absoluteUrl($this->indexPath($locale)),
+            canonicalUrl: $canonical,
             hreflangLinks: $hreflang,
+            structuredData: null !== $canonical
+                ? StructuredDataService::collection(
+                    BlogServices::label(),
+                    $canonical,
+                    $request->absoluteUrl('/'),
+                )
+                : null,
             feedLinks: BlogArticleHelper::feedLinks($locale),
             theme: $theme,
         ));
@@ -91,6 +105,6 @@ final class BlogIndexAction
 
     private function indexPath(string $locale): string
     {
-        return ContentServices::mapper()->urlPrefix($locale) . '/blog';
+        return BlogArticleHelper::blogPath($locale);
     }
 }

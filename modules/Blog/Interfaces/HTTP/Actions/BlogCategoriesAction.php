@@ -9,6 +9,7 @@ use Modules\Blog\Application\Services\BlogArticleHelper;
 use Modules\Blog\Application\Services\BlogArticlesService;
 use Modules\Blog\Domain\Entities\Article;
 use Modules\Core\Application\Services\MarkdownRenderer;
+use Modules\Core\Application\Services\StructuredDataService;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
@@ -26,6 +27,11 @@ use Modules\Locales\Interfaces\HTTP\LocalesServices;
  * folded). Both pages are search-like surfaces: noindex + no canonical.
  * Theme-aware: moonshine renders the card grid + sidebar, starter a simple
  * heading + card grid.
+ *
+ * The filtered list (`show`) also announces itself as a `CollectionPage` with
+ * a Blog > Category trail. It stays noindex, so a crawler ignores the block
+ * today; keeping the markup truthful beside the page is what makes lifting
+ * that noindex a one-line decision rather than a rewrite.
  */
 #[Route(path: '/blog/categories', method: 'GET', name: 'blog.categories', handlerMethod: 'index')]
 #[Route(path: '/blog/categories/{category}', method: 'GET', name: 'blog.categories.show', handlerMethod: 'show')]
@@ -102,6 +108,12 @@ final class BlogCategoriesAction
             $content,
             currentPath: $request->getPathInfo(),
             noindex: true,
+            structuredData: StructuredDataService::category(
+                $category,
+                $request->absoluteUrl($request->getPathInfo()),
+                BlogServices::label(),
+                $request->absoluteUrl(BlogArticleHelper::blogPath($locale)),
+            ),
             feedLinks: BlogArticleHelper::feedLinks($locale),
             theme: $theme,
         ));
