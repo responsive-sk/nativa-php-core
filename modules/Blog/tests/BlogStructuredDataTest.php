@@ -23,9 +23,10 @@ use PHPUnit\Framework\TestCase;
  * ## Two things this file is careful about
  *
  * - **Blog is a module.** A kernel-only tree has no index to render, so the
- *   suite skips rather than fails (guard setUp AND tearDown: PHPUnit runs
- *   tearDown after a skipped setUp). It lives beside the code for that reason,
- *   not under `tests/`, which is inside PHPStan's scope.
+ *   suite skips rather than fails. It lives beside the code for that reason,
+ *   not under `tests/`, which is inside PHPStan's scope. The guard sits in
+ *   setUp() alone: PHPUnit still runs tearDown() after a skipped setUp(), so a
+ *   tearDown() that skipped again would report the skip as a failure.
  * - **The trail is asserted by shape, not by host.** `Request::create()`
  *   answers `http://localhost`, and a test that pinned that would break the
  *   moment the harness changes host.
@@ -36,13 +37,6 @@ final class BlogStructuredDataTest extends TestCase
     {
         if (!class_exists(BlogIndexAction::class)) {
             $this->markTestSkipped('Blog is not installed — the index under test is a Blog action.');
-        }
-    }
-
-    protected function tearDown(): void
-    {
-        if (!class_exists(BlogIndexAction::class)) {
-            $this->markTestSkipped('Blog is not installed — nothing was rendered.');
         }
     }
 

@@ -10,6 +10,7 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Actions\DocsIndexAction;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
+use Modules\Core\Interfaces\HTTP\ThemeKernel;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
@@ -32,6 +33,21 @@ final class DocsSearchTest extends TestCase
 {
     /** The theme-test idiom: the theme is named once, as every theme test names it. */
     private const string THEME = 'boson';
+
+    /**
+     * Every assertion here measures `boson`'s own markup: the header field it
+     * ships, the `bo-` cards its index composes. A kernel-only tree renders the
+     * fallback theme instead, which carries none of them, so the suite skips
+     * rather than failing on a surface it cannot see. `ThemeKernel::for()`
+     * answers with the kernel default when the theme module is absent, which is
+     * the measurement: no module, no named theme.
+     */
+    protected function setUp(): void
+    {
+        if (ThemeKernel::for(self::THEME)->name() !== self::THEME) {
+            $this->markTestSkipped(self::THEME . ' is not installed, so its header and index markup do not exist here.');
+        }
+    }
 
     /**
      * A word from a guide's body comes back with that guide's own URL, and
