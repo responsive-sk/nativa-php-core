@@ -484,6 +484,60 @@ final class GriffeThemeTest extends TestCase
         $this->assertStringNotContainsString('<script>A', $html);
     }
 
+    /**
+     * The blog's search control lives in the page, because this shell has none:
+     * without it `/blog` is searchable only by typing `?q=` by hand.
+     */
+    #[Test]
+    public function theBlogIndexCarriesASearchField(): void
+    {
+        $html = (new GriffeTheme())->blogIndex(PageContext::forBlogIndex(
+            Request::create('GET', '/blog'),
+            'griffe',
+            'sk_SK',
+            [self::article('alpha', 'Alpha Client')],
+        ));
+
+        $this->assertStringContainsString('role="search"', $html);
+        $this->assertStringContainsString('action="/blog"', $html);
+        $this->assertStringContainsString('name="q"', $html);
+    }
+
+    #[Test]
+    public function theBlogSearchCarriesTheQueryEscaped(): void
+    {
+        $html = (new GriffeTheme())->blogSearch(PageContext::forBlogSearch(
+            Request::create('GET', '/blog?q=%3Cb%3E'),
+            'griffe',
+            'sk_SK',
+            '<b>',
+            [self::article('alpha', 'Alpha Client')],
+        ));
+
+        $this->assertStringContainsString('value="&lt;b&gt;"', $html);
+        $this->assertStringNotContainsString('value="<b>"', $html);
+    }
+
+    /**
+     * The field posts to the locale's blog base, never to the path it was
+     * rendered on: LocaleMiddleware strips `/en` before routing, so an English
+     * reader's `getPathInfo()` is `/blog` and posting there would search the
+     * default corpus instead of the one they are reading.
+     */
+    #[Test]
+    public function theSearchFieldPostsToTheLocalesBlogBase(): void
+    {
+        $english = (new GriffeTheme())->blogIndex(PageContext::forBlogIndex(
+            Request::create('GET', '/blog'),
+            'griffe',
+            'en_US',
+            [self::article('alpha', 'Alpha Client')],
+        ));
+
+        $this->assertStringContainsString('action="/en/blog"', $english);
+        $this->assertStringNotContainsString('action="/blog"', $english);
+    }
+
     private static function bodyOf(string $html): string
     {
         $cut = strpos($html, '<script');

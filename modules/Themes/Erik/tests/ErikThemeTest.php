@@ -620,6 +620,67 @@ final class ErikThemeTest extends TestCase
         return AppPaths::instance()->public(ltrim($url, '/'));
     }
 
+    /**
+     * The blog's search control lives in the page, because this shell has none:
+     * without it `/blog` is searchable only by typing `?q=` by hand.
+     */
+    #[Test]
+    public function theBlogIndexCarriesASearchField(): void
+    {
+        $html = (new ErikTheme())->blogIndex(PageContext::forBlogIndex(
+            Request::create('GET', '/blog'),
+            self::THEME,
+            'sk',
+            [self::article('a', 'Alpha')],
+        ));
+
+        $this->assertStringContainsString('role="search"', $html);
+        $this->assertStringContainsString('action="/blog"', $html);
+        $this->assertStringContainsString('name="q"', $html);
+    }
+
+    #[Test]
+    public function theBlogSearchCarriesTheQueryEscaped(): void
+    {
+        $html = (new ErikTheme())->blogSearch(PageContext::forBlogSearch(
+            Request::create('GET', '/blog?q=%3Cb%3E'),
+            self::THEME,
+            'sk',
+            '<b>',
+            [self::article('a', 'Alpha')],
+        ));
+
+        $this->assertStringContainsString('value="&lt;b&gt;"', $html);
+        $this->assertStringNotContainsString('value="<b>"', $html);
+    }
+
+    /**
+     * The field posts to the locale's blog base, never to the path it was
+     * rendered on: LocaleMiddleware strips `/en` before routing, so an English
+     * reader's `getPathInfo()` is `/blog` and posting there would search the
+     * default corpus instead of the one they are reading.
+     */
+    #[Test]
+    public function theSearchFieldPostsToTheLocalesBlogBase(): void
+    {
+        $english = (new ErikTheme())->blogIndex(PageContext::forBlogIndex(
+            Request::create('GET', '/blog'),
+            self::THEME,
+            'en_US',
+            [self::article('a', 'Alpha')],
+        ));
+        $slovak = (new ErikTheme())->blogIndex(PageContext::forBlogIndex(
+            Request::create('GET', '/blog'),
+            self::THEME,
+            'sk_SK',
+            [self::article('a', 'Alpha')],
+        ));
+
+        $this->assertStringContainsString('action="/en/blog"', $english);
+        $this->assertStringNotContainsString('action="/blog"', $english);
+        $this->assertStringContainsString('action="/blog"', $slovak);
+    }
+
     private static function article(string $slug, string $title): object
     {
         $article = new \stdClass();

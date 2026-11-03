@@ -283,7 +283,7 @@ final class MonoThemeTest extends TestCase
     {
         $facade = 'Modules\\Blog\\Application\\BlogServices';
 
-        $context = PageContext::forHomepage(Request::create('GET', '/'), 'mono', 'en', copy: ['title' => 'Hero']);
+        $context = PageContext::forHomepage(Request::create('GET', '/'), 'mono', 'en_US', copy: ['title' => 'Hero']);
 
         $html = (new MonoTheme())->homepage($context);
 
@@ -368,7 +368,7 @@ final class MonoThemeTest extends TestCase
         $this->assertStringContainsString('>Read More →</a>', $html, 'The case slide keeps its own label with no home.read_article row.');
 
         $bare = (new MonoTheme())->homepage(
-            PageContext::forHomepage(Request::create('GET', '/'), 'mono', 'en'),
+            PageContext::forHomepage(Request::create('GET', '/'), 'mono', 'en_US'),
         );
 
         // The title's wrapper differs between the two copies of this theme, so
@@ -587,6 +587,60 @@ final class MonoThemeTest extends TestCase
         $this->assertLessThan($meatball, $toggle, 'Upstream order: theme switcher first, meatball last — the meatball stays the final control.');
     }
 
+    /**
+     * The blog's search control lives in the page, because this shell carries
+     * none: without it `/blog` is searchable only by typing `?q=` by hand.
+     */
+    #[Test]
+    public function theBlogIndexCarriesASearchField(): void
+    {
+        $html = (new MonoTheme())->blogIndex(PageContext::forBlogIndex(
+            Request::create('GET', '/blog'),
+            'mono',
+            'sk_SK',
+            [self::article('alpha', 'Alpha Client')],
+        ));
+
+        $this->assertStringContainsString('role="search"', $html);
+        $this->assertStringContainsString('action="/blog"', $html);
+        $this->assertStringContainsString('name="q"', $html);
+    }
+
+    #[Test]
+    public function theBlogSearchCarriesTheQueryEscaped(): void
+    {
+        $html = (new MonoTheme())->blogSearch(PageContext::forBlogSearch(
+            Request::create('GET', '/blog?q=%3Cb%3E'),
+            'mono',
+            'sk_SK',
+            '<b>',
+            [self::article('alpha', 'Alpha Client')],
+        ));
+
+        $this->assertStringContainsString('value="&lt;b&gt;"', $html);
+        $this->assertStringNotContainsString('value="<b>"', $html);
+    }
+
+    /**
+     * The field posts to the locale's blog base, never to the path it was
+     * rendered on: LocaleMiddleware strips `/en` before routing, so an English
+     * reader's `getPathInfo()` is `/blog` and posting there would search the
+     * default corpus instead of the one they are reading.
+     */
+    #[Test]
+    public function theSearchFieldPostsToTheLocalesBlogBase(): void
+    {
+        $english = (new MonoTheme())->blogIndex(PageContext::forBlogIndex(
+            Request::create('GET', '/blog'),
+            'mono',
+            'en_US',
+            [self::article('alpha', 'Alpha Client')],
+        ));
+
+        $this->assertStringContainsString('action="/en/blog"', $english);
+        $this->assertStringNotContainsString('action="/blog"', $english);
+    }
+
     private static function article(string $slug, string $title, ?string $image = null): object
     {
         $article = new \stdClass();
@@ -605,7 +659,7 @@ final class MonoThemeTest extends TestCase
         return PageContext::forHomepage(
             Request::create('GET', '/'),
             'mono',
-            'en',
+            'en_US',
             copy: ['title' => 'Mono upstream', 'lede' => 'Business first.', 'cta' => 'Discover more'],
             blogHref: '/blog',
             heroSrc: 'https://example.test/hero.webp',

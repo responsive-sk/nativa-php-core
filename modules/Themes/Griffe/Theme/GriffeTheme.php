@@ -575,12 +575,40 @@ final class GriffeTheme implements ThemeModule, ThemeSettings
 
     public function blogIndex(PageContext $context): string
     {
-        return self::section('Blog', $this->caseCards($context->articles) . self::pager($context));
+        return self::section(
+            'Blog',
+            self::searchForm($context, '') . $this->caseCards($context->articles) . self::pager($context),
+        );
     }
 
     public function blogSearch(PageContext $context): string
     {
-        return self::section('Search: ' . $context->query, self::links($context->results));
+        return self::section(
+            'Search: ' . $context->query,
+            self::searchForm($context, $context->query) . self::links($context->results),
+        );
+    }
+
+    /**
+     * The blog's search control, under the title and above the cards.
+     *
+     * This theme's shell carries no field, so without this the blog would be
+     * searchable only by typing `?q=` by hand. The action is the locale's blog
+     * base, never `getPathInfo()`: LocaleMiddleware strips the `/en` prefix
+     * before routing, so the path here is `/blog` even for an English reader,
+     * and posting to it would search the default corpus. Boson's shell builds
+     * the same address from the same mapper. The button reuses `gr-btn`, the
+     * theme's own control.
+     */
+    private static function searchForm(PageContext $context, string $query): string
+    {
+        return '<form role="search" method="get" action="'
+            . self::e(ContentServices::mapper()->urlPrefix($context->locale) . '/blog') . '">'
+            . '<label for="gr-blog-search">Search articles</label>'
+            . '<input id="gr-blog-search" name="q" type="search"'
+            . ' placeholder="Search articles" value="' . self::e($query) . '" autocomplete="off">'
+            . '<button class="gr-btn" type="submit">Search</button>'
+            . '</form>';
     }
 
     /**
