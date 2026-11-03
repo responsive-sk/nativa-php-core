@@ -131,32 +131,7 @@ final class FrontendLayout
         // rather than emitting `<html lang="">`, which reads as no language.
         $htmlLang = $lang ?? ShellContextProviderRegistry::htmlLang() ?? 'en';
 
-        [$headerNav, $footerNav] = self::navData($currentPath);
-        // The ACTIVE locale, not the default one. `defaultLocale()` answers
-        // which locale owns the content root; passing it as the active value
-        // pinned every theme's language switcher to the default entry, so an
-        // English page showed Slovak as current. A tree without a locale
-        // provider has no active answer, and the default is then the only
-        // honest fallback.
-        $activeLocale = ShellContextProviderRegistry::activeLocale()
-            ?? ShellContextProviderRegistry::defaultLocale()
-            ?? '';
-
-        // The theme module is resolved BEFORE the shell context because the
-        // context now carries the theme's own settings: the stored rows are
-        // the port's answer, the defaults and the accepted values are the
-        // theme's, and only the module can supply the second half.
-        $themeModule = ThemeKernel::for($theme ?? ThemeResolver::PUBLIC_THEME);
-        $shellContext = self::shellContext(
-            $siteName,
-            $headerNav,
-            $footerNav,
-            $currentPath,
-            $localeLinks,
-            $activeLocale,
-            ShellContextProviderRegistry::languages(),
-            self::themeSettings($themeModule),
-        );
+        [$themeModule, $shellContext] = self::chrome($siteName, $currentPath, $localeLinks, $theme);
 
         $bundle = $themeModule->name();
         $jsKey = $themeModule->jsKey();
@@ -184,6 +159,78 @@ final class FrontendLayout
             self::jsTag($bundle, $jsKey),
             $pageChrome,
         );
+    }
+
+    /**
+     * The active theme module and the shell context its chrome renders from.
+     *
+     * One owner for the answer because two callers ask the same question: the
+     * page shell, and `headerCarriesSearchField()`, which decides whether the
+     * kernel has to compose a search field of its own. The second caller renders
+     * the header and nothing else, so a page never pays for a second shell.
+     *
+     * @param array<string, string>|null $localeLinks
+     *
+     * @return array{ThemeModule, ShellContext}
+     */
+    private static function chrome(string $siteName, string $currentPath, ?array $localeLinks, ?string $theme): array
+    {
+        // The ACTIVE locale, not the default one. `defaultLocale()` answers
+        // which locale owns the content root; passing it as the active value
+        // pinned every theme's language switcher to the default entry, so an
+        // English page showed Slovak as current. A tree without a locale
+        // provider has no active answer, and the default is then the only
+        // honest fallback.
+        $activeLocale = ShellContextProviderRegistry::activeLocale()
+            ?? ShellContextProviderRegistry::defaultLocale()
+            ?? '';
+
+        // The theme module is resolved BEFORE the shell context because the
+        // context now carries the theme's own settings: the stored rows are
+        // the port's answer, the defaults and the accepted values are the
+        // theme's, and only the module can supply the second half.
+        $themeModule = ThemeKernel::for($theme ?? ThemeResolver::PUBLIC_THEME);
+        [$headerNav, $footerNav] = self::navData($currentPath);
+
+        return [
+            $themeModule,
+            self::shellContext(
+                $siteName,
+                $headerNav,
+                $footerNav,
+                $currentPath,
+                $localeLinks,
+                $activeLocale,
+                ShellContextProviderRegistry::languages(),
+                self::themeSettings($themeModule),
+            ),
+        ];
+    }
+
+    /**
+     * Does the theme's shell carry a search field on this path?
+     *
+     * The kernel asks before composing one of its own, because the answer is the
+     * theme's: Boson ships a field in its header and a second behind the menu
+     * toggle, while Jednotka, Erik, Griffe and Mono ship none at all. A kernel
+     * that assumed every shell has one left those four themes with no way into
+     * `GET /docs?q=` from the page.
+     *
+     * The field is recognised by `name="q"`, the name every destination in this
+     * tree consumes. A theme that names its input something else is read as "no
+     * field", which costs a second input rather than a lost one, and is why the
+     * kernel's own field is the one used when this answers false.
+     */
+    public static function headerCarriesSearchField(string $currentPath = '/', ?string $theme = null): bool
+    {
+        [$themeModule, $shellContext] = self::chrome(
+            ShellContextProviderRegistry::siteName() ?? self::DEFAULT_SITE_NAME,
+            $currentPath,
+            null,
+            $theme,
+        );
+
+        return str_contains($themeModule->header($shellContext), 'name="q"');
     }
 
     /**

@@ -8,7 +8,8 @@ publishes, the query it answers, and the fields that lead a reader to it.
 The guides are a catalogue, not a directory listing, and the search is not a
 second list: both read through `DocsCatalog`, so a document nobody published
 can neither be a page nor a hit. A reader standing in the guides searches the
-guides, whether they type in the header's field or in the field on the index.
+guides: from the shell's field where the theme ships one, and from the index's
+own where it does not.
 
 ## Requirements
 
@@ -38,14 +39,14 @@ token SHALL fall back to the index rather than to a result list.
 
 - PINS: tests/Http/DocsSearchTest.php::syntaxInTheQueryIsOnlyPunctuation
 
-#### Scenario: The field keeps the query and escapes it
+#### Scenario: The query comes back escaped
 
 - GIVEN a query carrying markup
 - WHEN the results render
-- THEN the input carries the query back
+- THEN the query is carried back in the sentence
 - AND the markup is escaped rather than emitted
 
-- PINS: tests/Http/DocsSearchTest.php::theFieldKeepsTheQueryAndEscapesIt
+- PINS: tests/Http/DocsSearchTest.php::theQueryComesBackEscaped
 
 ### Requirement: A miss says so in its own words
 
@@ -64,7 +65,7 @@ deployment without `docs/` and false of a word that does not appear in them.
 
 ### Requirement: The search surface is one heading and one section
 
-The count, the field and the hits SHALL be rendered by the kernel, in a single
+The count and the hits SHALL be rendered by the kernel, in a single
 section, and the hits SHALL follow the count without a theme page block between
 them. `DocsPageTheme::docsIndex()` SHALL NOT compose the results: it is the
 index surface, so it opens with a page head reading "Documentation" whatever
@@ -82,12 +83,16 @@ air between a count and the first row.
 
 - PINS: tests/Http/DocsSearchTest.php::theHitsFollowTheCountUnderOneHeading
 
-### Requirement: The field follows the section
+### Requirement: One field, routed by section
 
 The header's search field SHALL submit to `/docs` while the reader is inside
 `/docs`, and SHALL keep the theme's own destination everywhere else. The index
-SHALL carry a field of its own, because the header's field sits behind a menu on
-a phone and a page a reader lands on must be searchable from the page.
+SHALL compose a field of its own only when the theme's shell carries none: on
+`/docs` a shell's field already posts `q` to the same URL, so a second one would
+be the same input twice. The answer is the theme's, read from the shell the
+kernel is about to render, because the catalogue disagrees: Boson ships a header
+field and a second copy behind the menu toggle, while a theme without either
+leaves `/docs` searchable only by typing the URL.
 
 #### Scenario: The header field is routed by section
 
@@ -98,10 +103,35 @@ a phone and a page a reader lands on must be searchable from the page.
 
 - PINS: tests/Http/DocsSearchTest.php::theHeaderFieldFollowsTheSection
 
-#### Scenario: The index carries its own field
+#### Scenario: The index adds no field beside the shell's
 
-- GIVEN a request for `/docs` without a query
+- GIVEN a theme whose shell carries a search field
 - WHEN the index renders
-- THEN it carries a search field posting to `/docs`
+- THEN the page carries exactly the shell's fields
+- AND the kernel's section carries no form
 
-- PINS: tests/Http/DocsSearchTest.php::theIndexCarriesItsOwnField
+- PINS: tests/Http/DocsSearchTest.php::theIndexAddsNoSecondField
+
+#### Scenario: A theme without a shell field gets one on the index
+
+- GIVEN a theme whose shell carries no search field
+- WHEN the index renders
+- THEN the kernel's section carries a field posting to `/docs`
+
+- PINS: tests/Http/DocsSearchTest.php::aThemeWithoutAShellFieldGetsOneOnTheIndex
+
+#### Scenario: A miss stays refinable without a shell field
+
+- GIVEN a theme whose shell carries no search field
+- WHEN a query carrying markup returns no hits
+- THEN the field carries the query back escaped
+
+- PINS: tests/Http/DocsSearchTest.php::aMissIsStillRefinableWithoutAShellField
+
+#### Scenario: The index is searchable whatever the theme
+
+- GIVEN an active theme, with or without a field in its shell
+- WHEN a request for `/docs` without a query renders
+- THEN the page carries a search field posting to `/docs`
+
+- PINS: tests/Http/DocsSearchTest.php::theIndexIsAlwaysSearchableFromItsPage

@@ -11,6 +11,7 @@ use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Actions\DocsIndexAction;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\ThemeKernel;
+use Modules\Core\Interfaces\HTTP\ThemeRegistry;
 use Modules\Core\Interfaces\HTTP\ThemeResolver;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -104,22 +105,21 @@ final class DocsSearchTest extends TestCase
     }
 
     /**
-     * The field comes back with the query in it, escaped. A search box that
-     * renders its own input unescaped is an injection point with a form around
-     * it, and a box that drops the query makes a reader retype it to narrow a
-     * miss.
+     * The query comes back in the sentence, escaped. A page that echoes what was
+     * typed unescaped is an injection point with a result list under it, and a
+     * page that drops the query leaves a reader guessing what they asked.
      */
     #[Test]
-    public function theFieldKeepsTheQueryAndEscapesIt(): void
+    public function theQueryComesBackEscaped(): void
     {
         $body = self::search('prose"><script>alert(1)</script>');
 
         self::assertStringNotContainsString('<script>alert(1)</script>', $body);
         self::assertStringContainsString('&lt;script&gt;', $body);
         self::assertMatchesRegularExpression(
-            '#<input[^>]*name="q"[^>]*value="[^"]*prose#',
+            '#(No guide matches|guides? matches?) "[^"]*prose#',
             $body,
-            'The field lost the query it was asked to narrow.',
+            'The page lost the query it was asked to narrow, so the reader cannot see what it answered.',
         );
     }
 
@@ -205,37 +205,179 @@ final class DocsSearchTest extends TestCase
     }
 
     /**
-     * The index carries the field too, so the search is discoverable from the
-     * page a reader lands on rather than only from the header above it.
+     * One field, not two: the kernel adds a form only when the shell has none.
+     *
+     * The index used to compose a field under the header's, and on `/docs` both
+     * asked `q` of the same URL: the same input twice on one page. The answer is
+     * not "remove ours" but "ask the shell", because the themes disagree: Boson
+     * ships a header field, Jednotka, Erik, Griffe and Mono ship none. The
+     * difference between the page and the shell is therefore one field at most,
+     * and exactly one when the shell has none.
      */
     #[Test]
-    public function theIndexCarriesItsOwnField(): void
+    public function theIndexAddsNoSecondField(): void
     {
+        $request = Request::create('GET', '/docs');
+        $theme = (new ThemeResolver())->resolve($request);
+        $shellHasField = FrontendLayout::headerCarriesSearchField('/docs', $theme);
+
         $method = new ReflectionMethod(DocsIndexAction::class, 'handle');
-        $response = $method->invoke(new DocsIndexAction(), Request::create('GET', '/docs'));
+        $response = $method->invoke(new DocsIndexAction(), $request);
 
         self::assertInstanceOf(Response::class, $response);
 
         $body = $response->getContent();
 
-        self::assertStringContainsString('action="/docs" role="search"', $body);
-        self::assertStringContainsString(
-            '<style nonce="__CSP_NONCE_PLACEHOLDER__">',
-            $body,
-            'The index trims its own gaps with an inline rule set; without the nonce placeholder,
-            style-src blocks it and the block is 40 px lower than measured.',
+        // The shell alone, rendered for the same path and the same theme: the
+        // difference between the two counts is what the kernel contributed.
+        $shell = FrontendLayout::render('t', 'c', currentPath: '/docs', theme: $theme);
+
+        self::assertSame(
+            substr_count($shell, 'name="q"'),
+            substr_count($body, 'name="q"') - ($shellHasField ? 0 : 1),
+            'The index composed more than the one field a shell without its own leaves it, so `/docs` carries the same input twice.',
         );
-        self::assertStringContainsString(
-            '<div data-docs-index>',
-            $body,
-            'The rule set is keyed on this wrapper, so dropping it leaves the rules matching nothing.',
+
+        // The kernel's own section, read directly under both answers: a shell
+        // with a field gets nothing from the kernel, a shell without one gets a
+        // single form posting to the route this action reads.
+        $content = new ReflectionMethod(DocsIndexAction::class, 'content');
+        $withShellField = $content->invoke(new DocsIndexAction(), 'bo', true);
+        $withoutShellField = $content->invoke(new DocsIndexAction(), 'bo', false);
+        self::assertIsString($withShellField);
+        self::assertIsString($withoutShellField);
+
+        self::assertStringNotContainsString('<form', $withShellField, 'The shell already carries a field; the index added a second one.');
+        self::assertStringContainsString('action="/docs" role="search"', $withoutShellField);
+        self::assertSame(
+            1,
+            substr_count($withoutShellField, 'name="q"'),
+            'The index compensates a shell without a field with one input, not two.',
         );
+
+        // Nor a wrapper of its own: the theme's page block is the whole page,
+        // so `/docs` starts at the padding every other page block keeps.
+        self::assertStringNotContainsString(
+            'data-docs-index',
+            $body,
+            'The index is wrapped in a kernel block of its own, which is where a rule set that'
+            . ' changes its top padding would live; the page block the theme ships is the page.',
+        );
+    }
+
+    /**
+     * A theme without a field in its shell still gets one on the index.
+     *
+     * A theme whose header carries no search input at all leaves `/docs`
+     * searchable only by typing the URL, which is what the index's field used to
+     * prevent for every theme. The question and the answer are checked together:
+     * the probe says no, and the kernel's section then carries the field.
+     */
+    #[Test]
+    public function aThemeWithoutAShellFieldGetsOneOnTheIndex(): void
+    {
+        $theme = self::themeWithoutShellField();
+
+        if (null === $theme) {
+            $this->markTestSkipped('Every installed theme ships a search field in its shell, so there is no compensation to measure.');
+        }
+
+        self::assertFalse(
+            FrontendLayout::headerCarriesSearchField('/docs', $theme),
+            'This theme ships a search field in its header, so it no longer measures the compensation.',
+        );
+
+        $content = new ReflectionMethod(DocsIndexAction::class, 'content');
+        $markup = $content->invoke(new DocsIndexAction(), ThemeKernel::for($theme)->prefix(), false);
+        self::assertIsString($markup);
+
+        self::assertStringContainsString('action="/docs" role="search"', $markup);
         self::assertMatchesRegularExpression(
             '#<input[^>]*name="q"#',
-            $body,
-            'The index rendered no field of its own, so the guides are only searchable from the'
-            . ' header — which a reader on a phone has to open a menu to reach.',
+            $markup,
+            'A theme whose shell has no field left `/docs` with no search input at all.',
         );
+
+        // The two halves together, as the page a reader under this theme gets:
+        // the shell, which has no field, and the kernel's section, which now
+        // carries the one the page would otherwise lack.
+        $page = FrontendLayout::render('Documentation', $markup, currentPath: '/docs', theme: $theme);
+
+        self::assertSame(
+            1,
+            substr_count($page, 'name="q"'),
+            'The page under a shell-less theme carries a number of search inputs other than one.',
+        );
+    }
+
+    /**
+     * A miss on such a theme is still refinable in place.
+     *
+     * The kernel's field on the results page carries the query back, escaped, so
+     * narrowing a miss does not mean retyping it from memory: the same promise
+     * the shell's own field keeps on the themes that have one.
+     */
+    #[Test]
+    public function aMissIsStillRefinableWithoutAShellField(): void
+    {
+        $theme = self::themeWithoutShellField();
+
+        if (null === $theme) {
+            $this->markTestSkipped('Every installed theme ships a search field in its shell, so there is no field to pre-fill.');
+        }
+
+        $searchContent = new ReflectionMethod(DocsIndexAction::class, 'searchContent');
+        $markup = $searchContent->invoke(new DocsIndexAction(), ThemeKernel::for($theme)->prefix(), 'prose"><x', [], false);
+        self::assertIsString($markup);
+
+        self::assertStringNotContainsString('<x', $markup);
+        self::assertMatchesRegularExpression(
+            '#<input[^>]*name="q"[^>]*value="prose&quot;&gt;&lt;x"#',
+            $markup,
+            'The field a shell-less theme gets on a miss dropped the query, so narrowing it means retyping it.',
+        );
+    }
+
+    /**
+     * Whatever theme the deployment picked, `/docs` has a way in.
+     *
+     * The de-duplication is only worth having if it did not trade a duplicate
+     * for no field at all, and the four themes without a header field are the
+     * ones no other test in this file renders end to end.
+     */
+    #[Test]
+    public function theIndexIsAlwaysSearchableFromItsPage(): void
+    {
+        $request = Request::create('GET', '/docs');
+        $method = new ReflectionMethod(DocsIndexAction::class, 'handle');
+        $response = $method->invoke(new DocsIndexAction(), $request);
+
+        self::assertInstanceOf(Response::class, $response);
+
+        self::assertMatchesRegularExpression(
+            '#<input[^>]*name="q"#',
+            $response->getContent(),
+            'The page carries no search input: the theme has none in its shell and the kernel composed none either.',
+        );
+    }
+
+    /**
+     * An installed theme whose shell carries no search field, or null.
+     *
+     * Found rather than named: a theme's name is declared by that theme's own
+     * test (`THEME`), and a second spelling here would be a duplicate the
+     * ownership gate counts. WHICH theme answers is not the subject; that the
+     * page it renders still gets a field is.
+     */
+    private static function themeWithoutShellField(): ?string
+    {
+        foreach (array_keys(ThemeRegistry::all()) as $theme) {
+            if (!FrontendLayout::headerCarriesSearchField('/docs', $theme)) {
+                return $theme;
+            }
+        }
+
+        return null;
     }
 
     /** The query as the action answers it, through its own route. */

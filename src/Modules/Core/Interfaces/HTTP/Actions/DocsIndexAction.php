@@ -57,10 +57,17 @@ final readonly class DocsIndexAction
         $module = ThemeKernel::for($theme);
         $query = trim($request->queryString('q'));
 
+        // Whether the page needs a field of its own is the THEME's answer, not
+        // ours: `headerCarriesSearchField()` renders the shell and looks for the
+        // input. Asking beats assuming, because assuming every shell has one is
+        // what left four of the five bundled themes with no way into
+        // `GET /docs?q=` once the index stopped composing it.
+        $shellHasField = FrontendLayout::headerCarriesSearchField($request->getPathInfo(), $theme);
+
         if ('' !== $query) {
             return Response::html(FrontendLayout::render(
                 'Search — Documentation',
-                $this->searchContent($module->prefix(), $query, $this->search->search($query)),
+                $this->searchContent($module->prefix(), $query, $this->search->search($query), $shellHasField),
                 description: 'Search the guides that ship with the repository.',
                 currentPath: $request->getPathInfo(),
                 lang: DocsCatalog::LANGUAGE,
@@ -73,26 +80,25 @@ final readonly class DocsIndexAction
         // generic `{prefix}-section` markup stays the floor for every theme
         // that has no vocabulary for it.
         //
-        // The field is prepended by the ACTION rather than composed by the
-        // theme: a theme is a byte-copy of `nativa-themes` (`make themes-check`),
-        // so the index's search box cannot be written into one without drift. It
-        // goes above the list, outside the theme's section, so the markup below
-        // stays exactly what the theme authored.
+        // No field is prepended while the shell has one. On `/docs` the header's
+        // field is routed here by `FrontendLayout` (`GET /docs?q=`), so a second
+        // input beside it would be the same query in two boxes with one
+        // destination. A shell that carries none gets the kernel's field back,
+        // because the alternative is a page searchable only by typing the URL:
+        // inside the section that holds the count and the rows when this tree
+        // composes the list, and above the block for a `DocsPageTheme`, which
+        // owns that markup and cannot be edited here (`make themes-check`).
         //
-        // That placement is also why the block carries `data-docs-index` and a
-        // small rule set of its own: a theme's page block assumes it is the
-        // first thing under the header and pads its top accordingly, and the
-        // field the kernel put there turns that padding into a second gap. See
-        // `indexStyle()` for the numbers and what is trimmed.
+        // No wrapper and no rule set of our own. A kernel rule that zeroed the
+        // page's top padding (the old `indexStyle()`) made `/docs` open 4em
+        // higher than `/blog`, which is two surfaces of one site reading at two
+        // different heights.
         return Response::html(FrontendLayout::render(
             'Documentation — Nativa',
-            self::indexStyle()
-                . '<div data-docs-index>'
-                . $this->searchField($module->prefix(), '')
-                . ($module instanceof DocsPageTheme
-                    ? $module->docsIndex($this->catalog->entries())
-                    : $this->content($module->prefix()))
-                . '</div>',
+            $module instanceof DocsPageTheme
+                ? ($shellHasField ? '' : $this->searchField($module->prefix(), ''))
+                    . $module->docsIndex($this->catalog->entries())
+                : $this->content($module->prefix(), $shellHasField),
             description: 'The guides that ship with the repository, rendered by the site.',
             currentPath: $request->getPathInfo(),
             lang: DocsCatalog::LANGUAGE,
@@ -111,10 +117,11 @@ final readonly class DocsIndexAction
      * readable column without a rule in its stylesheet — see
      * `DocsPageAction::readerLayout()` for the rule set that travels with it.
      */
-    private function content(string $prefix): string
+    private function content(string $prefix, bool $shellHasField): string
     {
         $html = '<section class="' . $prefix . '-section" data-docs-prose>'
-            . '<h1 class="' . $prefix . '-section__title">Documentation</h1>';
+            . '<h1 class="' . $prefix . '-section__title">Documentation</h1>'
+            . ($shellHasField ? '' : $this->searchField($prefix, ''));
 
         $entries = $this->catalog->entries();
 
@@ -161,8 +168,13 @@ final readonly class DocsIndexAction
     }
 
     /**
-     * The search surface: the count, the field to refine it, and one row per hit,
-     * in a single section.
+     * The search surface: the count and one row per hit, in a single section.
+     *
+     * The field the reader refines the query with is the shell's when the shell
+     * has one, routed here by section. A theme without one gets the kernel's
+     * field under the count, pre-filled with what was typed, because a miss a
+     * reader cannot narrow is a dead end. `searchField()` is where that markup
+     * lives.
      *
      * It is the kernel's own markup rather than `DocsPageTheme::docsIndex()`, and
      * the reason is measured on the rendered page: that method is the INDEX, so
@@ -182,7 +194,7 @@ final readonly class DocsIndexAction
      *
      * @param list<array{key: string, title: string, description: string}> $results
      */
-    private function searchContent(string $prefix, string $query, array $results): string
+    private function searchContent(string $prefix, string $query, array $results, bool $shellHasField): string
     {
         $count = count($results);
         $escaped = FrontendLayout::e($query);
@@ -194,7 +206,7 @@ final readonly class DocsIndexAction
                 ? 'No guide matches "' . $escaped . '".'
                 : $count . (1 === $count ? ' guide matches "' : ' guides match "') . $escaped . '".')
             . '</p>'
-            . $this->searchField($prefix, $query);
+            . ($shellHasField ? '' : $this->searchField($prefix, $query));
 
         if (0 === $count) {
             return $html . '</section>';
@@ -205,7 +217,7 @@ final readonly class DocsIndexAction
 
     /**
      * The hits themselves, in the vocabulary the theme already styles for a
-     * guide's body, so the rows sit under the field instead of behind a second
+     * guide's body, so the rows sit under the count instead of behind a second
      * page header.
      *
      * @param list<array{key: string, title: string, description: string}> $results
@@ -226,38 +238,13 @@ final readonly class DocsIndexAction
     }
 
     /**
-     * The index's own rules, keyed on the attribute the kernel just put around
-     * the block.
+     * The field a shell without one leaves the page.
      *
-     * Two gaps on `/docs` are the kernel's to fix, because the kernel created
-     * them: the field sits above the theme's page block, so the theme's top
-     * padding (4 em on Boson) no longer separates the block from the header but
-     * doubles the space the field already took, and the field's own bottom
-     * margin (3 em) is followed straight away by that padding. Measured at 1440
-     * px: the label sat 170 px under the field and the first card 630 px down a
-     * 1300 px viewport, so a reader saw one card and scrolled for the rest. The
-     * field keeps its top margin — the band under the header is the theme's —
-     * and loses the bottom one to the wrapper's 1.5 rem. Everything below the
-     * label (the head's padding, the list's margin, the card grid) is the
-     * theme's rhythm and is left alone.
-     *
-     * The `<style>` carries the CSP nonce placeholder, which
-     * `SecurityHeadersMiddleware` replaces on every HTML response, so the rule
-     * set is not blocked by `style-src`, and a page cache keeps no stale nonce.
-     */
-    private static function indexStyle(): string
-    {
-        return '<style nonce="__CSP_NONCE_PLACEHOLDER__">'
-            . '[data-docs-index] form{margin:3em 0 1.5rem}'
-            . '[data-docs-index]>*:last-child{padding-top:0}'
-            . '</style>';
-    }
-
-    /**
-     * The field itself, so a miss can be narrowed without going back to the
-     * header. `{prefix}-search-form` is the vocabulary the themes already style
-     * for the blog's field, so the guides' field arrives styled in every theme
-     * that has one and readable in the rest.
+     * `{prefix}-search-form` is the vocabulary the themes already style for the
+     * blog's field, so the guides' field arrives styled in every theme that has
+     * one and readable in the rest. `action="/docs"` is the route this action
+     * answers and `name="q"` is the query it reads, so field and route cannot
+     * drift apart.
      */
     private function searchField(string $prefix, string $query): string
     {
