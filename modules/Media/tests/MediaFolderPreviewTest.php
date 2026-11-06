@@ -116,6 +116,40 @@ final class MediaFolderPreviewTest extends TestCase
     }
 
     /**
+     * The transport is bounded: a page asks for at most a batch of previews
+     * at once, so a hundred folders cannot open a hundred sockets from one
+     * request. Keys survive the split, because the preview map is keyed by
+     * folder path.
+     */
+    #[Test]
+    public function theFetchIsSplitIntoBoundedBatches(): void
+    {
+        $urls = [];
+        for ($i = 1; $i <= 8; ++$i) {
+            $urls['folder-' . $i] = 'https://api.test/' . $i;
+        }
+
+        $batches = CloudinaryApi::chunkRequests($urls, 6);
+
+        self::assertCount(2, $batches);
+        self::assertSame(['folder-1', 'folder-2', 'folder-3', 'folder-4', 'folder-5', 'folder-6'], array_keys($batches[0]));
+        self::assertSame(['folder-7', 'folder-8'], array_keys($batches[1]));
+        self::assertSame('https://api.test/7', $batches[1]['folder-7']);
+    }
+
+    /**
+     * A bound of zero would mean "ask for nothing", which is never what a
+     * caller wants: it degrades to one URL at a time instead.
+     */
+    #[Test]
+    public function aBoundOfZeroAsksForOneUrlAtATime(): void
+    {
+        $batches = CloudinaryApi::chunkRequests(['a' => 'u1', 'b' => 'u2'], 0);
+
+        self::assertSame([['a' => 'u1'], ['b' => 'u2']], $batches);
+    }
+
+    /**
      * One request per tile, because a page-wide search cannot answer per
      * folder: the expression scopes the search and `resource_type:image`
      * keeps a video out of a picture tile.

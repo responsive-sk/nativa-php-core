@@ -306,18 +306,34 @@ readonly class CloudinaryApi
     }
 
     /**
-     * One GET per URL, all in flight at once, returning the bodies that
-     * answered 200 OK.
+     * One GET per URL, at most one batch of them in flight, returning the
+     * bodies that answered 200 OK.
+     *
+     * A folder tile needs one answer per folder, so a page with many folders
+     * asks for many answers at once. Unbounded, that is one socket and one
+     * Admin API call per folder: a hundred folders mean a hundred calls in
+     * one request, which is how a 429 and a file-descriptor limit arrive.
+     * The fetch is latency-bound rather than throughput-bound, so a batch
+     * costs a round trip and the batches in a row cost a little more than
+     * the slowest one; the page still renders, and a folder that never
+     * answered keeps its glyph.
      *
      * Simpler than get() on purpose: no retry loop, because every caller
      * hands these URLs to a tile that already has a fallback. A failure is an
      * absent key, not an exception, and a rate limit just leaves glyphs.
      *
-     * @param array<string, string> $urls key => absolute URL
+     * The default is 12: measured on the account's eight root folders, an
+     * unbounded fetch answers in about 0.9 s and a bound of six in about
+     * 1.6 s, because the second batch waits for the first, while a bound of
+     * 12 answers the whole page in one batch. It still caps the sockets a
+     * large account can open, and a caller with a reason may ask for
+     * another bound.
      *
-     * @return array<string, string> key => response body
+     * @param array<string, string> $urls key => URL
+     *
+     * @return array<string, string> key => body, only for 200 answers
      */
-    private function getMany(array $urls): array
+    private function getMany(array $urls, int $concurrency = 12): array
     {
         if ([] === $urls) {
             return [];
@@ -327,6 +343,43 @@ readonly class CloudinaryApi
             return [];
         }
 
+        $bodies = [];
+
+        foreach (self::chunkRequests($urls, $concurrency) as $batch) {
+            foreach ($this->runBatch($batch) as $key => $body) {
+                $bodies[$key] = $body;
+            }
+        }
+
+        return $bodies;
+    }
+
+    /**
+     * Split the requested URLs into the batches the transport runs.
+     *
+     * Separated from the transfer because a network call cannot be asserted
+     * offline: this is the decision, and the test pins the order, the keys
+     * and the degenerate bound. A bound of zero or less would mean "ask for
+     * nothing", which no caller wants, so it becomes one URL at a time.
+     *
+     * @param array<string, string> $urls key => URL
+     *
+     * @return list<array<string, string>>
+     */
+    public static function chunkRequests(array $urls, int $concurrency): array
+    {
+        return array_chunk($urls, max(1, $concurrency), true);
+    }
+
+    /**
+     * One batch of transfers, all started together.
+     *
+     * @param array<string, string> $urls key => URL
+     *
+     * @return array<string, string> key => body, only for 200 answers
+     */
+    private function runBatch(array $urls): array
+    {
         $multi = curl_multi_init();
         $handles = [];
 
