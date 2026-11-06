@@ -133,7 +133,9 @@ final class MediaFolderPreviewTest extends TestCase
 
     /**
      * A tile is 34px, so the preview asks for a 68px square crop instead of
-     * the original: no folder glance downloads a full-size asset.
+     * the original: no folder glance downloads a full-size asset. The format
+     * and quality are the CDN's to choose, because `f_auto` is what turns a
+     * png into the webp or avif the browser accepts.
      */
     #[Test]
     public function thePreviewIsACroppedSquare(): void
@@ -141,12 +143,27 @@ final class MediaFolderPreviewTest extends TestCase
         $api = new CloudinaryApi('demo', 'key', 'secret');
 
         self::assertSame(
-            'https://res.cloudinary.com/demo/image/upload/c_fill,w_68,h_68/blog/photo.jpg',
+            'https://res.cloudinary.com/demo/image/upload/c_fill,w_68,h_68,f_auto,q_auto/blog/photo.jpg',
             $api->thumbUrl('blog/photo.jpg'),
         );
         self::assertSame(
-            'https://res.cloudinary.com/demo/image/upload/c_fill,w_200,h_200/blog/photo.jpg',
+            'https://res.cloudinary.com/demo/image/upload/c_fill,w_200,h_200,f_auto,q_auto/blog/photo.jpg',
             $api->thumbUrl('blog/photo.jpg', 200),
+        );
+    }
+
+    /**
+     * The grid shows the same asset at 300px, so the size a caller asks for
+     * reaches the URL instead of being silently the tile default.
+     */
+    #[Test]
+    public function aCardAsksForItsOwnEdge(): void
+    {
+        $api = new CloudinaryApi('demo', 'key', 'secret');
+
+        self::assertStringContainsString(
+            '/c_fill,w_300,h_300,f_auto,q_auto/',
+            $api->thumbUrl('blog/photo.jpg', 300),
         );
     }
 

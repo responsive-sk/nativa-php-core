@@ -20,7 +20,7 @@ $placeholderSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" f
             <input type="checkbox" name="public_ids[]" value="<?php echo $publicId; ?>">
         </label>
         <?php if ($isImage): ?>
-        <a href="<?php echo $thumbUrl; ?>" target="_blank" rel="noopener" class="m-media-card__thumb">
+        <a href="<?php echo $fullUrl; ?>" target="_blank" rel="noopener" class="m-media-card__thumb">
             <img src="<?php echo $thumbUrl; ?>" alt="<?php echo $label; ?>" class="m-media-card__thumb-img">
         </a>
         <?php else: ?>

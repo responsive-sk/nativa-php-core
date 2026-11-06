@@ -132,21 +132,25 @@ final class MediaServices
     }
 
     /**
-     * The URL a tile should load for an asset: a small cloudinary crop when
-     * the file is remote, the stored file itself when it is local.
+     * The URL a tile should load for an asset: a cropped cloudinary square
+     * when the file is remote, the stored file itself when it is local.
      *
-     * A folder tile is 34px. Asking Cloudinary for the original would make a
-     * glance at the library download megabytes, so the remote side answers
-     * with the same 68px square the CDN browser uses. Local files have no
-     * resize step, and '' means "render the glyph" the way urlFor() does.
+     * Asking Cloudinary for the original would make a glance at the library
+     * download megabytes, so the remote side answers with a square crop. The
+     * edge is the caller's, because two surfaces show two sizes: a folder
+     * tile is 34px (68 on a 2x screen), and a card in the grid is 150px tall,
+     * which asks for 300. Local files have no resize step, and '' means
+     * "render the placeholder" the way urlFor() does. A null edge is the
+     * tile default, so that number stays owned by the client and not
+     * re-spelt here.
      */
-    public static function previewUrl(MediaAsset $asset): string
+    public static function previewUrl(MediaAsset $asset, ?int $edge = null): string
     {
         if ('cloudinary' !== $asset->provider()) {
             return self::urlFor($asset);
         }
 
-        return self::cloudinaryApi()?->thumbUrl($asset->path()) ?? '';
+        return self::cloudinaryApi()?->thumbUrl($asset->path(), $edge) ?? '';
     }
 
     /**

@@ -365,11 +365,16 @@ final readonly class MediaCloudinaryAction
                 continue;
             }
 
+            $isImage = 'image' === (is_string($resource['resource_type'] ?? null) ? $resource['resource_type'] : '');
+
             $html .= ViewRenderer::render('Modules/Media/Interfaces/HTTP/templates/media-cloudinary-card.phtml', [
                 'publicId' => AdminLayout::e($publicId),
-                'thumbUrl' => AdminLayout::e($api->url($publicId)),
+                // The card is 150px tall, so the grid asks for a 300px square
+                // and the anchor still opens the original.
+                'thumbUrl' => AdminLayout::e($isImage ? $api->thumbUrl($publicId, 300) : $api->url($publicId)),
+                'fullUrl'  => AdminLayout::e($api->url($publicId)),
                 'label'    => AdminLayout::e($this->label($resource, $publicId)),
-                'isImage'  => 'image' === (is_string($resource['resource_type'] ?? null) ? $resource['resource_type'] : ''),
+                'isImage'  => $isImage,
                 'tracked'  => isset($trackedPaths[$publicId]),
             ]);
         }

@@ -169,14 +169,17 @@ readonly class CloudinaryApi
      * A folder tile is 34px, so THUMB_SIZE is 68: a 2x screen keeps its
      * pixels, and a glance at a folder never downloads the original. The
      * transform is part of the URL, so Cloudinary crops and caches it, and
-     * the asset itself is never modified.
+     * the asset itself is never modified. `f_auto,q_auto` lets the CDN pick
+     * the format the browser actually accepts (avif or webp) and the quality
+     * for that format, which is free bytes on every card.
      */
     public function thumbUrl(string $publicId, ?int $size = null): string
     {
         $edge = max(1, $size ?? self::THUMB_SIZE);
 
         return 'https://res.cloudinary.com/' . rawurlencode($this->cloudName)
-            . '/image/upload/c_fill,w_' . $edge . ',h_' . $edge . '/' . self::encodePath($publicId);
+            . '/image/upload/c_fill,w_' . $edge . ',h_' . $edge . ',f_auto,q_auto/'
+            . self::encodePath($publicId);
     }
 
     /**

@@ -164,16 +164,27 @@ final class MediaIndexAction
      * or its URL cannot be resolved in this environment (an unconfigured
      * Cloudinary — see MediaServices::urlFor()).
      */
+    /**
+     * A card's thumbnail: the crop, never the original.
+     *
+     * The card is 150px tall, so the remote side answers with a 300px square
+     * (2x) and a page of 50 files costs kilobytes instead of the originals.
+     * `$url` stays as the fallback for a provider that cannot build a preview
+     * here (a cloudinary row without credentials), which is also what decides
+     * the placeholder. Lazy loading keeps a long page from decoding every
+     * image at once.
+     */
     private function thumbHtml(MediaAsset $asset, string $url): string
     {
         if ('' === $url || !$asset->isImage()) {
             return '<div class="m-media-card__thumb-icon">' . self::placeholderSvg() . '</div>';
         }
 
-        $urlEscaped = AdminLayout::e($url);
+        $preview = MediaServices::previewUrl($asset, 300);
+        $urlEscaped = AdminLayout::e('' !== $preview ? $preview : $url);
         $nameEscaped = AdminLayout::e($asset->originalName());
 
-        return "<img src=\"{$urlEscaped}\" alt=\"{$nameEscaped}\" class=\"m-media-card__thumb-img\">";
+        return "<img src=\"{$urlEscaped}\" alt=\"{$nameEscaped}\" loading=\"lazy\" class=\"m-media-card__thumb-img\">";
     }
 
     private static function placeholderSvg(): string
