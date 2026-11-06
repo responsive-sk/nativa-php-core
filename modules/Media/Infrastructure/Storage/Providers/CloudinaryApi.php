@@ -39,6 +39,11 @@ readonly class CloudinaryApi
 
     private const int BASE_DELAY_MS = 200;
 
+    /** The folder tile's square, doubled for a 2x screen. */
+    private const int THUMB_SIZE = 68;
+
+
+
     /**
      * @param string $baseUrl Injectable for tests; the production default is the real API
      */
@@ -92,6 +97,86 @@ readonly class CloudinaryApi
         }
 
         return $this->endpoint('/resources/search', $query);
+    }
+
+    /**
+     * One delivery URL per child folder, one request each, all in flight
+     * together.
+     *
+     * The exact answer costs one request per tile: eight sequential Search
+     * requests measured 5.6s on the account root, the same eight in parallel
+     * measured 1.6s. A single page-wide search would be one request but a
+     * wrong answer: this API rejects `sort_by`, and the account's first page
+     * of images belongs to two busy folders, so most siblings silently lost
+     * their preview (7 tiles had one, then 2). Every tile keeps its own
+     * answer here.
+     *
+     * A child with no image is absent from the answer and keeps its glyph,
+     * and so is a request that failed: painting a tile is not the moment to
+     * fail the page.
+     *
+     * @param list<string> $childPaths
+     *
+     * @return array<string, string> child path => thumbnail URL
+     */
+    public function folderPreviews(array $childPaths): array
+    {
+        if ([] === $childPaths) {
+            return [];
+        }
+
+        $urls = [];
+        foreach ($childPaths as $path) {
+            $urls[$path] = $this->firstImageUrl($path);
+        }
+
+        $previews = [];
+        foreach ($this->getMany($urls) as $path => $body) {
+            try {
+                $listing = self::parseSearch($body);
+            } catch (\RuntimeException) {
+                continue;
+            }
+
+            $publicId = is_string($listing['resources'][0]['public_id'] ?? null)
+                ? $listing['resources'][0]['public_id']
+                : '';
+
+            if ('' !== $publicId) {
+                $previews[$path] = $this->thumbUrl($publicId);
+            }
+        }
+
+        return $previews;
+    }
+
+    /**
+     * The exact request one folder's preview is read from — public so the
+     * expression can be asserted offline, the same seam searchUrl() gives the
+     * folder scoping: `resource_type:image` keeps a video out of a tile.
+     */
+    public function firstImageUrl(string $folderPath): string
+    {
+        return $this->endpoint('/resources/search', [
+            'expression'  => 'folder:' . $folderPath . ' AND resource_type:image',
+            'max_results' => 1,
+        ]);
+    }
+
+    /**
+     * The delivery URL for a public id as a cropped square thumbnail.
+     *
+     * A folder tile is 34px, so THUMB_SIZE is 68: a 2x screen keeps its
+     * pixels, and a glance at a folder never downloads the original. The
+     * transform is part of the URL, so Cloudinary crops and caches it, and
+     * the asset itself is never modified.
+     */
+    public function thumbUrl(string $publicId, ?int $size = null): string
+    {
+        $edge = max(1, $size ?? self::THUMB_SIZE);
+
+        return 'https://res.cloudinary.com/' . rawurlencode($this->cloudName)
+            . '/image/upload/c_fill,w_' . $edge . ',h_' . $edge . '/' . self::encodePath($publicId);
     }
 
     /**
@@ -215,6 +300,69 @@ readonly class CloudinaryApi
 
             throw new \RuntimeException(self::errorMessage($result['httpCode'], $result['response']));
         }
+    }
+
+    /**
+     * One GET per URL, all in flight at once, returning the bodies that
+     * answered 200 OK.
+     *
+     * Simpler than get() on purpose: no retry loop, because every caller
+     * hands these URLs to a tile that already has a fallback. A failure is an
+     * absent key, not an exception, and a rate limit just leaves glyphs.
+     *
+     * @param array<string, string> $urls key => absolute URL
+     *
+     * @return array<string, string> key => response body
+     */
+    private function getMany(array $urls): array
+    {
+        if ([] === $urls) {
+            return [];
+        }
+
+        if ('' === $this->cloudName || '' === $this->apiKey || '' === $this->apiSecret) {
+            return [];
+        }
+
+        $multi = curl_multi_init();
+        $handles = [];
+
+        foreach ($urls as $key => $url) {
+            $ch = curl_init();
+            curl_setopt_array($ch, [
+                CURLOPT_URL            => $url,
+                CURLOPT_HTTPGET        => true,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_USERPWD        => $this->apiKey . ':' . $this->apiSecret,
+                CURLOPT_CONNECTTIMEOUT => self::CONNECT_TIMEOUT,
+                CURLOPT_TIMEOUT        => self::TIMEOUT,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_MAXREDIRS      => 3,
+            ]);
+            curl_multi_add_handle($multi, $ch);
+            $handles[$key] = $ch;
+        }
+
+        do {
+            $status = curl_multi_exec($multi, $running);
+            if ($running > 0) {
+                curl_multi_select($multi, 1.0);
+            }
+        } while ($running > 0 && CURLM_OK === $status);
+
+        $bodies = [];
+        foreach ($handles as $key => $ch) {
+            $body = curl_multi_getcontent($ch);
+            if (200 === (int) curl_getinfo($ch, CURLINFO_HTTP_CODE) && is_string($body)) {
+                $bodies[$key] = $body;
+            }
+
+            curl_multi_remove_handle($multi, $ch);
+        }
+
+        curl_multi_close($multi);
+
+        return $bodies;
     }
 
     /**

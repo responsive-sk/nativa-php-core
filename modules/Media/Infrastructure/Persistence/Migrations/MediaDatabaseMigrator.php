@@ -140,9 +140,10 @@ final readonly class MediaDatabaseMigrator implements MigratorInterface
      *
      * The backfill registers every distinct folder of a local asset, so a
      * library that already had folders keeps them. Cloudinary rows are
-     * excluded on purpose: their `folder` records where the remote file lives
-     * (`samples/food` is not a folder of this library), and registering it
-     * would offer a folder this installation cannot organise.
+     * excluded on purpose: a remote file's `folder` is where the provider put
+     * it, and that path is shown from the asset row itself. Registering it
+     * here would make it a folder this installation can create, rename and
+     * delete, while the files in it stay under the provider's control.
      *
      * Both statements are idempotent — INSERT OR IGNORE plus a SELECT that
      * cannot produce a duplicate — so the migrator stays safe to re-run on a

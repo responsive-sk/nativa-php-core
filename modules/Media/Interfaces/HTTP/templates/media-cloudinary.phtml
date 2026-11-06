@@ -32,6 +32,7 @@ if (!isset($viewRendererGuard)) {
             <input type="hidden" name="folder" value="<?php echo $currentFolder; ?>">
             <div class="m-toolbar">
                 <button class="m-btn m-btn-primary m-btn-sm" type="submit">Import selected</button>
+                <button class="m-btn m-btn-sm" type="submit" formaction="<?php echo $url('media.cloudinary.delete'); ?>" data-confirm="Delete the selected files from Cloudinary? This cannot be undone.">Delete selected</button>
                 <span class="m-muted">A checked file becomes a tracked row here — its bytes stay on Cloudinary.</span>
             </div>
             <div class="m-media-grid"><?php echo $cardsHtml; ?></div>

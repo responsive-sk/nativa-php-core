@@ -11,7 +11,9 @@ use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Kernel\Contracts\RouterInterface;
+use Modules\Media\Application\Services\CloudinaryFolderPreviews;
 use Modules\Media\Application\Services\MediaService;
+use Modules\Media\Infrastructure\Cache\CloudinaryPreviewCache;
 use Modules\Media\Infrastructure\Storage\Providers\CloudinaryApi;
 use Modules\Media\Interfaces\HTTP\MediaIcons;
 use Modules\Media\Interfaces\HTTP\MediaServices;
@@ -107,7 +109,7 @@ final readonly class MediaCloudinaryAction
         return [
             'noticeHtml'    => $this->notice($request),
             'crumbsHtml'    => $this->crumbs('', '', true),
-            'foldersHtml'   => $this->folderTiles($rootFolders, '', true),
+            'foldersHtml'   => $this->folderTiles($api, $rootFolders, '', true),
             'cardsHtml'     => '',
             'summaryHtml'   => '<span class="m-muted">' . count($rootFolders) . ' folders in the library — open one to see its files.</span>',
             'csrf'          => '',
@@ -156,7 +158,7 @@ final readonly class MediaCloudinaryAction
         return [
             'noticeHtml'    => '',
             'crumbsHtml'    => $this->crumbs($folder, MediaService::normalizeFolder($api->folder()), false),
-            'foldersHtml'   => $this->folderTiles($api->folders($folder), $folder, false),
+            'foldersHtml'   => $this->folderTiles($api, $api->folders($folder), $folder, false),
             'cardsHtml'     => $this->cardsHtml($api, $listing['resources']),
             'summaryHtml'   => '<span class="m-muted">' . AdminLayout::e((string) $listing['total_count']) . ' resources in this folder</span>',
             'csrf'          => AdminLayout::csrfField(),
@@ -183,11 +185,27 @@ final readonly class MediaCloudinaryAction
     }
 
     /**
-     * The PRG markers the import redirects back with — a redirect nobody
-     * renders is a silent no-op.
+     * The PRG markers the import and delete redirects come back with — a
+     * redirect nobody renders is a silent no-op.
      */
     private function notice(Request $request): string
     {
+        $deleted = $request->query('deleted');
+
+        if (is_string($deleted) && is_numeric($deleted)) {
+            $rows = $request->query('rows');
+            $failed = $request->query('failed');
+            $rowCount = is_string($rows) && is_numeric($rows) ? (int) $rows : 0;
+            $failedCount = is_string($failed) && is_numeric($failed) ? (int) $failed : 0;
+
+            $message = sprintf('Deleted %d from Cloudinary, forgot %d tracked row(s).', (int) $deleted, $rowCount);
+            if ($failedCount > 0) {
+                $message .= sprintf(' %d could not be deleted.', $failedCount);
+            }
+
+            return AdminLayout::messages([$message], $failedCount > 0 ? 'err' : 'ok');
+        }
+
         $imported = $request->query('imported');
         $skipped = $request->query('skipped');
 
@@ -201,13 +219,16 @@ final readonly class MediaCloudinaryAction
 
         $error = $request->query('error');
         if ('selection' === $error) {
-            return AdminLayout::messages(['Select at least one file to import.'], 'err');
+            return AdminLayout::messages(['Select at least one file first.'], 'err');
         }
         if ('too-many' === $error) {
-            return AdminLayout::messages(['An import takes at most 50 files at a time.'], 'err');
+            return AdminLayout::messages(['One batch takes at most 50 files at a time.'], 'err');
         }
         if ('unreachable' === $error) {
             return AdminLayout::messages(['The Cloudinary library could not be reached — nothing was imported.'], 'err');
+        }
+        if ('unconfigured' === $error) {
+            return AdminLayout::messages(['Cloudinary is not configured, so nothing can be deleted.'], 'err');
         }
 
         return '';
@@ -280,20 +301,32 @@ final readonly class MediaCloudinaryAction
      *
      * @param list<array{name: string, path: string}> $folders
      */
-    private function folderTiles(array $folders, string $currentFolder, bool $atRoot): string
+    private function folderTiles(CloudinaryApi $api, array $folders, string $currentFolder, bool $atRoot): string
     {
         if ([] === $folders) {
             return '';
         }
 
+        // Cached previews cost no request at all; the folders without a fresh
+        // entry are fetched in one parallel batch. '' means "no image", so
+        // the tile keeps its glyph.
+        $previews = (new CloudinaryFolderPreviews(new CloudinaryPreviewCache()))
+            ->previewsFor($api, array_column($folders, 'path'));
+
         $tiles = '';
         foreach ($folders as $child) {
             $href = AdminLayout::e($this->url('media.cloudinary') . '?' . http_build_query(['folder' => $child['path']]));
             $isCurrent = !$atRoot && $child['path'] === $currentFolder;
-            $tiles .= '<a class="m-folder-card' . ($isCurrent ? ' m-folder-card--active' : '') . '" href="' . $href . '">'
-                . '<span class="m-folder-card__icon">' . MediaIcons::folder() . '</span>'
-                . '<span class="m-folder-card__name">' . AdminLayout::e($child['name']) . '</span>'
-                . '</a>';
+
+            $tiles .= ViewRenderer::render('Modules/Media/Interfaces/HTTP/templates/media-folder-tile.phtml', [
+                'class'      => 'm-folder-card' . ($isCurrent ? ' m-folder-card--active' : ''),
+                'href'       => $href,
+                'linkAttrs'  => '',
+                'previewUrl' => AdminLayout::e($previews[$child['path']] ?? ''),
+                'icon'       => MediaIcons::folder(),
+                'name'       => AdminLayout::e($child['name']),
+                'count'      => '',
+            ]);
         }
 
         return ViewRenderer::render('Modules/Media/Interfaces/HTTP/templates/media-folders.phtml', [

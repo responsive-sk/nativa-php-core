@@ -6,6 +6,7 @@ namespace Modules\Media\Application\Services;
 
 use Modules\Core\Infrastructure\Storage\LocalStorageProvider;
 use Modules\Media\Domain\Model\MediaAsset;
+use Modules\Media\Infrastructure\Cache\CloudinaryPreviewCache;
 use Modules\Media\Infrastructure\Persistence\MediaFolderRepository;
 use Modules\Media\Infrastructure\Persistence\MediaRepository;
 use Modules\Media\Infrastructure\Storage\Providers\CloudinaryProvider;
@@ -85,10 +86,21 @@ final readonly class MediaService
             mimeType: $result['mime_type'],
             uploadedBy: $uploadedBy,
             provider: $provider ?: $storage->getName(),
-            folder: 'local' === $storage->getName() ? self::normalizeFolder($folder) : '',
+            // A local upload is filed where the form said; a remote one is
+            // filed where the provider actually put it, so the library shows
+            // the same tree the CDN does instead of a flat root.
+            folder: 'local' === $storage->getName()
+                ? self::normalizeFolder($folder)
+                : self::folderFromPath($result['path']),
         );
 
         $this->repository->insert($asset);
+
+        // A new remote file can be the one a folder tile shows, so the
+        // previews the library cached a moment ago are no longer true.
+        if ('cloudinary' === $storage->getName()) {
+            $this->forgetCloudinaryPreviews();
+        }
 
         return $asset;
     }
@@ -140,6 +152,48 @@ final readonly class MediaService
         $deletedIds = array_map(static fn (MediaAsset $a) => $a->id(), array_slice($assets, 0, $deleted));
 
         return $deletedIds;
+    }
+
+    /**
+     * Delete remote resources by public id, tracked rows included.
+     *
+     * The library browser shows the CDN's own answers, so an id it posts may
+     * or may not have a row in media.db. A row is forgotten only after the
+     * remote delete succeeded: a failed destroy keeps the row (and its file)
+     * instead of promising a deletion that did not happen. Whatever the
+     * caller does with the counts, the remote side is the part that decides
+     * whether the row is still true.
+     *
+     * @param list<string> $publicIds
+     *
+     * @return array{deleted: int, failed: int, rows: int}
+     */
+    public function deleteRemoteResources(MediaProviderInterface $provider, array $publicIds): array
+    {
+        $deleted = 0;
+        $failed = 0;
+        $rows = 0;
+
+        foreach ($publicIds as $publicId) {
+            if (!$provider->delete($publicId)) {
+                ++$failed;
+
+                continue;
+            }
+
+            ++$deleted;
+            $asset = $this->repository->findByPath($publicId);
+            if (null === $asset) {
+                continue;
+            }
+
+            $this->repository->deleteTagsForAsset($asset->id());
+            if ($this->repository->delete($asset->id())) {
+                ++$rows;
+            }
+        }
+
+        return ['deleted' => $deleted, 'failed' => $failed, 'rows' => $rows];
     }
 
     public function updateMetadata(string $id, string $altText, string $caption): bool
@@ -380,6 +434,18 @@ final readonly class MediaService
     }
 
     /**
+     * One image per folder, for the folder tiles.
+     *
+     * @param list<string> $folders
+     *
+     * @return array<string, MediaAsset> folder path => newest image in it
+     */
+    public function folderPreviews(array $folders): array
+    {
+        return $this->repository->folderPreviews($folders);
+    }
+
+    /**
      * Resolve a source pill to concrete provider names for the IN clause.
      * '' (no filter) returns an empty list — "no constraint", not
      * "match nothing" — and the legacy empty provider is folded into
@@ -396,6 +462,21 @@ final readonly class MediaService
             'cloudinary' => 'cloudinary' === $default ? ['cloudinary', ''] : ['cloudinary'],
             default => [],
         };
+    }
+
+    /**
+     * The folder a stored path lives in: everything before the last slash.
+     *
+     * A remote provider answers with the path it wrote to (Cloudinary's
+     * public id is `folder/name`, `parent/child/name` for nested folders),
+     * so the containing folder is the part the library should file it under.
+     * A path with no slash was written at the root and has no folder.
+     */
+    public static function folderFromPath(string $path): string
+    {
+        $slash = strrpos($path, '/');
+
+        return false === $slash ? '' : self::normalizeFolder(substr($path, 0, $slash));
     }
 
     /**
@@ -471,6 +552,19 @@ final readonly class MediaService
             // is the only part of this operation the caller can act on.
             // @mago-expect lint:no-empty-catch-clause
         }
+
+        // Whatever the row's provider, the library's cached previews may have
+        // shown this file, and the local rows share the same cache file.
+        $this->forgetCloudinaryPreviews();
+    }
+
+    /**
+     * Drop the folder tiles' cached previews after a write that can change
+     * them (see CloudinaryPreviewCache).
+     */
+    private function forgetCloudinaryPreviews(): void
+    {
+        (new CloudinaryPreviewCache())->forget();
     }
 
     private function isImageMimeType(string $mime): bool

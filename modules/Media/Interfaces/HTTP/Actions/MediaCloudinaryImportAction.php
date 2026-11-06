@@ -13,6 +13,7 @@ use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Kernel\Contracts\RouterInterface;
 use Modules\Media\Application\Services\MediaService;
 use Modules\Media\Infrastructure\Storage\Providers\CloudinaryApi;
+use Modules\Media\Interfaces\HTTP\MediaCloudinarySelection;
 use Modules\Media\Interfaces\HTTP\MediaServices;
 
 /**
@@ -23,16 +24,14 @@ use Modules\Media\Interfaces\HTTP\MediaServices;
  * server-side through CloudinaryApi::byIds(), because a form that accepts
  * numbers from the browser eventually accepts somebody else's numbers.
  *
- * Idempotent on `path`, capped at MAX_IMPORT ids per run, audited as
- * `media.import`, and it always redirects back with the counts so the
- * browse page can paint them.
+ * Idempotent on `path`, capped at MediaCloudinarySelection::MAX_IDS ids per
+ * run, audited as `media.import`, and it always redirects back with the
+ * counts so the browse page can paint them.
  */
 #[Route(path: '/mark/media/cloudinary/import', method: 'POST', name: 'media.cloudinary.import')]
 final readonly class MediaCloudinaryImportAction
 {
     use ResolvesRouteUrls;
-
-    private const int MAX_IMPORT = 50;
 
     /**
      * @param CloudinaryApi|null $api Test seam: CI has no credentials, so a
@@ -56,11 +55,11 @@ final readonly class MediaCloudinaryImportAction
             return Response::redirect($back);
         }
 
-        $ids = $this->publicIds($request);
+        $ids = MediaCloudinarySelection::publicIds($request);
         if ([] === $ids) {
             return Response::redirect(self::withParams($back, ['error' => 'selection']));
         }
-        if (count($ids) > self::MAX_IMPORT) {
+        if (count($ids) > MediaCloudinarySelection::MAX_IDS) {
             return Response::redirect(self::withParams($back, ['error' => 'too-many']));
         }
 
@@ -85,37 +84,6 @@ final readonly class MediaCloudinaryImportAction
         );
 
         return Response::redirect(self::withParams($back, ['imported' => $imported, 'skipped' => $skipped]));
-    }
-
-    /**
-     * The ids the browser posted, de-duplicated and shape-checked. The API
-     * re-resolves them anyway — this only keeps obvious junk off the wire.
-     *
-     * @return list<string>
-     */
-    private function publicIds(Request $request): array
-    {
-        $raw = $request->body('public_ids');
-        if (!is_array($raw)) {
-            return [];
-        }
-
-        $ids = [];
-        foreach ($raw as $value) {
-            if (!is_string($value)) {
-                continue;
-            }
-            $id = trim($value);
-            if ('' === $id || strlen($id) > 255 || str_contains($id, '..')) {
-                continue;
-            }
-            if (1 === preg_match('/[\x00-\x1F\x7F]/', $id)) {
-                continue;
-            }
-            $ids[$id] = $id;
-        }
-
-        return array_values($ids);
     }
 
     private function actor(): string

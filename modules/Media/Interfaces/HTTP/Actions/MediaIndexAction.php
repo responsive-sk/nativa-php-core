@@ -378,15 +378,24 @@ final class MediaIndexAction
             return '';
         }
 
+        // One image per folder, so a tile answers "what is in there" before
+        // it is opened. A folder with no image keeps its glyph.
+        $previews = MediaServices::media()->folderPreviews(array_keys($counts));
+
         $tiles = '';
         foreach ($counts as $path => $count) {
             $href = AdminLayout::e($this->buildFilterUrl($type, $sort, $category, $tag, $source, $path));
-            $class = $path === $currentFolder ? 'm-folder-card m-folder-card--active' : 'm-folder-card';
-            $tiles .= '<a class="' . $class . '" href="' . $href . '" hx-get="' . $href . '" hx-target="#media-content" hx-swap="outerHTML" hx-push-url="true">'
-                . '<span class="m-folder-card__icon">' . MediaIcons::folder() . '</span>'
-                . '<span class="m-folder-card__name">' . AdminLayout::e($path) . '</span>'
-                . '<span class="m-badge m-badge-gray">' . $count . '</span>'
-                . '</a>';
+            $asset = $previews[$path] ?? null;
+
+            $tiles .= ViewRenderer::render('Modules/Media/Interfaces/HTTP/templates/media-folder-tile.phtml', [
+                'class'      => $path === $currentFolder ? 'm-folder-card m-folder-card--active' : 'm-folder-card',
+                'href'       => $href,
+                'linkAttrs'  => 'hx-get="' . $href . '" hx-target="#media-content" hx-swap="outerHTML" hx-push-url="true"',
+                'previewUrl' => null !== $asset ? AdminLayout::e(MediaServices::previewUrl($asset)) : '',
+                'icon'       => MediaIcons::folder(),
+                'name'       => AdminLayout::e($path),
+                'count'      => (string) $count,
+            ]);
         }
 
         return ViewRenderer::render('Modules/Media/Interfaces/HTTP/templates/media-folders.phtml', [

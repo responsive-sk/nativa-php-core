@@ -132,6 +132,24 @@ final class MediaServices
     }
 
     /**
+     * The URL a tile should load for an asset: a small cloudinary crop when
+     * the file is remote, the stored file itself when it is local.
+     *
+     * A folder tile is 34px. Asking Cloudinary for the original would make a
+     * glance at the library download megabytes, so the remote side answers
+     * with the same 68px square the CDN browser uses. Local files have no
+     * resize step, and '' means "render the glyph" the way urlFor() does.
+     */
+    public static function previewUrl(MediaAsset $asset): string
+    {
+        if ('cloudinary' !== $asset->provider()) {
+            return self::urlFor($asset);
+        }
+
+        return self::cloudinaryApi()?->thumbUrl($asset->path()) ?? '';
+    }
+
+    /**
      * Reset cached instances (test isolation).
      */
     public static function reset(): void

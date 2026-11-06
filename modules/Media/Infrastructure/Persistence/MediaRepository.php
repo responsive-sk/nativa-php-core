@@ -127,6 +127,54 @@ final readonly class MediaRepository
     }
 
     /**
+     * One image per folder, for the folder tiles.
+     *
+     * Not filtered by the active type/category/tag: a tile's preview answers
+     * "what is in this folder", not "what survives the current filter". A
+     * folder holding no image is absent from the answer, and its tile keeps
+     * the folder glyph.
+     *
+     * @param list<string> $folders
+     *
+     * @return array<string, MediaAsset> folder path => newest image in it
+     */
+    public function folderPreviews(array $folders): array
+    {
+        if ([] === $folders) {
+            return [];
+        }
+
+        $names = [];
+        $params = [];
+        foreach (array_values($folders) as $index => $folder) {
+            $name = ':preview_' . $index;
+            $names[] = $name;
+            $params[$name] = $folder;
+        }
+
+        $sql = 'SELECT * FROM ('
+            . 'SELECT a.*, ROW_NUMBER() OVER (PARTITION BY a.folder ORDER BY a.created_at DESC) AS rn '
+            . 'FROM assets a WHERE a.folder IN (' . implode(', ', $names) . ") AND a.mime_type LIKE 'image/%'"
+            . ') WHERE rn = 1';
+
+        $stmt = Statement::prepare($this->pdo, $sql);
+        $this->bindFilterParams($stmt, $params);
+        $stmt->execute();
+
+        $previews = [];
+        /** @var array<int, array<string, mixed>> $rows */
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        foreach ($rows as $row) {
+            $asset = MediaAsset::fromRow($row);
+            if ('' !== $asset->folder()) {
+                $previews[$asset->folder()] = $asset;
+            }
+        }
+
+        return $previews;
+    }
+
+    /**
      * Distinct non-empty folders, optionally restricted to resolved providers.
      *
      * @param list<string> $providers

@@ -8,6 +8,7 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Core\Interfaces\HTTP\Router;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
+use Modules\Media\Domain\Model\MediaAsset;
 use Modules\Media\Infrastructure\Persistence\Migrations\MediaDatabaseMigrator;
 use Modules\Media\Interfaces\HTTP\Actions\MediaIndexAction;
 use Modules\Media\Interfaces\HTTP\MediaServices;
@@ -122,11 +123,42 @@ final class MediaIndexRenderingTest extends TestCase
         }
     }
 
+    /**
+     * A folder tile carries one image from the folder, so the grid answers
+     * "what is in there" before the folder is opened.
+     */
+    #[Test]
+    public function aFolderTileCarriesAPreviewImage(): void
+    {
+        MediaServices::repository()->insert(MediaAsset::create(
+            filename: 'cover.png',
+            originalName: 'cover.png',
+            path: 'photos/cover.png',
+            size: 100,
+            mimeType: 'image/png',
+            uploadedBy: 'test',
+            provider: 'local',
+            folder: 'photos',
+        ));
+
+        $response = $this->action()->handle($this->htmxRequest('/mark/media'));
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertStringContainsString('class="m-folder-card__thumb"', $response->getContent());
+        self::assertStringContainsString('photos/cover.png', $response->getContent());
+    }
+
     private function action(): MediaIndexAction
     {
         $router = Router::fromEntries([], [
             ['path' => '/mark/media', 'method' => 'GET', 'name' => 'media.index', 'handlerMethod' => null, 'action' => MediaIndexAction::class],
             ['path' => '/mark/media/upload', 'method' => 'GET', 'name' => 'media.upload', 'handlerMethod' => null, 'action' => MediaIndexAction::class],
+            // A rendered card links to its edit page, so the tile test needs
+            // the name a card resolves.
+            ['path' => '/mark/media/{id}/edit', 'method' => 'GET|POST', 'name' => 'media.edit', 'handlerMethod' => null, 'action' => MediaIndexAction::class],
+            ['path' => '/mark/media/{id}/delete', 'method' => 'POST', 'name' => 'media.delete', 'handlerMethod' => null, 'action' => MediaIndexAction::class],
+            // The select-all script posts a batch delete by name too.
+            ['path' => '/mark/media/batch-delete', 'method' => 'POST', 'name' => 'media.batch-delete', 'handlerMethod' => null, 'action' => MediaIndexAction::class],
             // The folder manager is part of the same page: its forms resolve
             // these names, so the router has to know them too.
             ['path' => '/mark/media/folders/create', 'method' => 'POST', 'name' => 'media.folder-create', 'handlerMethod' => null, 'action' => MediaIndexAction::class],
