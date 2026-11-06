@@ -290,8 +290,15 @@ final class NameOwnershipContractTest extends TestCase
      * idiom that already names `boson` in `BosonThemeTest`, not a second name
      * for it. None of the five is a second spelling of a value that already had
      * one, which is the rise this ratchet refuses.
+     *
+     * 269 with the Cloudinary library: four values its new surfaces own —
+     * `MAX_IDS` (how many public ids one delete may carry, checked in both
+     * callers), `THUMB_SIZE` (the 68px square a 34px tile asks the CDN for)
+     * and the preview cache's own `TTL` and `FILE`. None is a second spelling
+     * of a value that already had one: the cache writes its own file, and a
+     * folder glance's five minutes is not the page cache's staleness rule.
      */
-    private const int MAX_DECLARATIONS = 266;
+    private const int MAX_DECLARATIONS = 269;
 
     /**
      * 203 → 204 with MAX_DECLARATIONS: `ModuleTreeState::IGNORED` is a name as
@@ -328,8 +335,14 @@ final class NameOwnershipContractTest extends TestCase
      * and `TITLE_WEIGHT` reuse names the tree already holds, `THEME` is the
      * theme-test idiom, and neither of the two is a second name for a value that
      * already had one.
+     *
+     * 214 with the Cloudinary library: three of the four new declarations carry
+     * new names (`MAX_IDS`, `THUMB_SIZE`, `TTL`). `FILE` is the name
+     * `DiscoveryCache` already owns and is reused by design, because both
+     * caches write one JSON file under `storage/cache` and the name says what
+     * the constant is, not which cache declares it.
      */
-    private const int MAX_NAMES = 212;
+    private const int MAX_NAMES = 214;
 
     /**
      * `name => modules/<Name>` or `modules/<Group>/<Name>`, resolved once. A

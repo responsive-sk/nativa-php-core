@@ -6,7 +6,7 @@ number here is **measured**, and the test fails when a number and the tree
 disagree. A row that is not measured is a wish.
 
 The rule the gate cannot check is worth stating too: a class constant is a
-**good** tool for most of this tree. 260 declarations, and the large majority
+**good** tool for most of this tree. 269 declarations, and the large majority
 are private technical invariants — `CoverGenerator::WIDTH`, `MAX_RETRIES`,
 `IDLE_TIMEOUT` — which are facts about the code, not configuration and not
 identifiers. Those are correct as they are and the gate leaves them alone. The
@@ -31,8 +31,8 @@ identical:
 | | full tree | kernel-only |
 |---|---|---|
 | files (rule 1 scan) | 541 | 541 |
-| declarations (rule 3, excluding the gates) | 260 | 260 |
-| distinct names (rule 3) | 210 | 210 |
+| declarations (rule 3, excluding the gates) | 269 | 269 |
+| distinct names (rule 3) | 214 | 214 |
 | values with 2+ names (rule 1) | **2** | **2** |
 | literal places (rule 2) | 384 | 384 |
 
@@ -208,8 +208,17 @@ Down once more: 239 → 238 when task 0.3 deleted the Settings provider's
 `ADMIN_PATH` constant and `AdminRoutePolicy` gained `DEFAULT_PREFIX` in its
 place — one default for one panel, not two spellings of one name. The distinct
 name count stayed 202: one name left and one arrived.
-That is the only direction this ratchet is ever supposed to move, and it moved
-on its own.
+Up once more: 266 → 269 and 212 → 214 for the Cloudinary library, which owns
+four values its new surfaces need. `MAX_IDS` bounds one delete call in both
+callers, `THUMB_SIZE` is the 68px square a 34px tile asks the CDN for, and the
+preview cache names its own `TTL` and `FILE`. `FILE` is the name
+`DiscoveryCache` already holds and is reused on purpose: both caches write one
+JSON file under `storage/cache`, and the constant names the thing, not the
+class that declares it. The other three are new names, and none of the four is
+a second spelling of a value that already had one.
+
+That direction is the one this ratchet exists to refuse; the downs are the
+direction it is supposed to move, and those it took on its own.
 
 ## Rule 4 > a CSS class belongs to one theme · measured 2026-10-17
 
