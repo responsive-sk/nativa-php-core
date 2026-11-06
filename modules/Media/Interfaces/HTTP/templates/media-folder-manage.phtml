@@ -10,6 +10,10 @@ declare(strict_types = 1);
  * they live here instead of inside a tile: a `<form>` nested in an `<a>` is
  * invalid HTML that browsers resolve by silently dropping one of the two, and
  * which one they drop depends on the parser.
+ *
+ * The card reads as a table: the summary is its header, the create form a
+ * strip under it, and every folder one row. The rows are rendered by the
+ * action (`folderManageRow()`) because each carries its own CSRF field.
  */
 
 if (!isset($viewRendererGuard)) {
@@ -21,13 +25,18 @@ if (!isset($viewRendererGuard)) {
          jednotka contents strip painted 25px off-screen inside a closed
          summary). Collapsing is the user's choice, not the default. -->
     <details class="m-card m-folder-manage" open>
-        <summary class="m-folder-manage__summary">Manage folders <span class="m-badge m-badge-gray"><?php echo $folderCount; ?></span></summary>
+        <summary class="m-folder-manage__summary">
+            <span class="m-folder-manage__title">Manage folders</span>
+            <span class="m-badge m-badge-gray"><?php echo $folderCount; ?></span>
+        </summary>
         <form class="m-folder-manage__create" method="post" action="<?php echo $url('media.folder-create'); ?>">
             <?php echo $csrf; ?>
-            <label class="m-label" for="folder-new">New folder</label>
-            <input class="m-input m-input--compact" id="folder-new" type="text" name="path" placeholder="photos/2026" required>
-            <button class="m-btn m-btn--sm" type="submit">Create folder</button>
-            <p class="m-muted m-folder-manage__hint">A folder exists as soon as it is created, even before a file lands in it.</p>
+            <label class="m-folder-manage__label" for="folder-new">New folder</label>
+            <div class="m-folder-manage__inline">
+                <input class="m-input" id="folder-new" type="text" name="path" placeholder="photos/2026" required>
+                <button class="m-btn m-btn-primary m-btn-sm" type="submit">Create folder</button>
+            </div>
+            <p class="m-hint">A folder exists as soon as it is created, even before a file lands in it.</p>
         </form>
-        <?php echo $rows; ?>
+        <div class="m-folder-manage__rows"><?php echo $rows; ?></div>
     </details>

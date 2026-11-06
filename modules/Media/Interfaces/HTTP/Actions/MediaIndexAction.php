@@ -330,6 +330,12 @@ final class MediaIndexAction
 
     /**
      * One folder's rename field and delete control.
+     *
+     * The path is the row's label, not the input's value: prefilling the
+     * input with the path showed the same string twice and made "rename"
+     * read as "edit this path in place". The field starts empty with the
+     * current path as its placeholder, so it can only be submitted as an
+     * actual new name.
      */
     private function folderManageRow(string $path): string
     {
@@ -341,15 +347,18 @@ final class MediaIndexAction
             . '<form class="m-folder-row__rename" method="post" action="' . AdminLayout::e($this->url('media.folder-rename')) . '">'
             . $csrf
             . '<input type="hidden" name="from" value="' . $escaped . '">'
-            . '<label class="m-label" for="' . AdminLayout::e((string) $id) . '">' . $escaped . '</label>'
-            . '<input class="m-input m-input--compact" id="' . AdminLayout::e((string) $id) . '" type="text" name="to" value="' . $escaped . '" required>'
-            . '<button class="m-btn m-btn--sm" type="submit">Rename</button>'
+            . '<label class="m-folder-row__name" for="' . AdminLayout::e((string) $id) . '">'
+            . '<span class="m-folder-row__icon">' . MediaIcons::folder() . '</span>'
+            . '<span class="m-folder-row__path">' . $escaped . '</span>'
+            . '</label>'
+            . '<input class="m-input m-folder-row__input" id="' . AdminLayout::e((string) $id) . '" type="text" name="to" placeholder="New path" required>'
+            . '<button class="m-btn m-btn-sm" type="submit">Rename</button>'
             . '</form>'
             . '<form class="m-folder-row__delete" method="post" action="' . AdminLayout::e($this->url('media.folder-delete')) . '">'
             . $csrf
             . '<input type="hidden" name="path" value="' . $escaped . '">'
-            . '<label class="m-check"><input type="checkbox" name="cascade" value="1"> delete its files too</label>'
-            . '<button class="m-btn m-btn--sm m-btn--danger" type="submit">Delete</button>'
+            . '<label class="m-folder-row__cascade"><input type="checkbox" name="cascade" value="1"> delete its files too</label>'
+            . '<button class="m-btn m-btn-sm m-btn-error" type="submit">Delete</button>'
             . '</form>'
             . '</div>';
     }
