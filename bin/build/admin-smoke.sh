@@ -282,6 +282,35 @@ check 'admin GET /mark' '/mark' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
 check 'admin GET /mark/users' '/mark/users' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
 check 'admin GET /mark/roles' '/mark/roles' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
 
+# EVERY admin page that renders without a parameter, opened the way a session
+# opens it. The list is DERIVED from the route attributes, not spelled here: a
+# second copy of a path is the duplication this tree refuses, and the scan is
+# the router's own, so a page added tomorrow is opened tomorrow.
+#
+# The reason is one defect and it is not hypothetical. `/mark/questions`
+# rendered a `static fn` that reached for `$this->url()`, which PHP only
+# refuses when the line runs: the panel answered 500 to the first browser while
+# every static gate and the whole suite were green, because a closure body is
+# not a type and a page that renders is not a page a gate opened (Boot 47).
+ADMIN_PAGES="$(php -r '
+require "src/init.php";
+$pages = [];
+foreach ((new Modules\Core\Interfaces\HTTP\Router([APP_BASE_PATH . "/src/Modules"]))->toEntries() as $entry) {
+    if ("GET" === $entry["method"] && str_starts_with($entry["path"], "/mark") && !str_contains($entry["path"], "{")) {
+        $pages[] = $entry["path"];
+    }
+}
+sort($pages);
+echo implode(" ", $pages);' 2>/dev/null)"
+
+if [ -z "$ADMIN_PAGES" ]; then
+    bad 'the route scan found no admin page to open — the router refused to load'
+fi
+
+for page in $ADMIN_PAGES; do
+    check "admin GET $page" "$page" 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+done
+
 # The module list answers 200 through a BOOTED server, and that is the whole
 # reason this line exists. The page was written with its #[Route] attributes on
 # `handle()` instead of on the class: `Router::discover()` reads

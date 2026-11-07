@@ -312,7 +312,12 @@ final class QuestionsAdminAction
 
     private function filterBar(?string $status): string
     {
-        $pill = static fn (string $label, ?string $value): string => '<a class="m-pill'
+        // NOT `static fn`: the pill's href comes from `$this->url()`, and a
+        // static closure has no `$this` to reach. PHP only says so when the
+        // line runs, so the panel answered 500 on the first request that
+        // rendered it while every static gate, and the smoke's own list of
+        // pages, passed. `admin-smoke.sh` opens this page now.
+        $pill = fn (string $label, ?string $value): string => '<a class="m-pill'
             . ($value === $status ? ' m-pill-active' : '') . '" href="'
             . AdminLayout::e(null === $value ? $this->url('mark.questions') : $this->url('mark.questions') . '?status=' . rawurlencode($value))
             . '">' . $label . '</a>';
