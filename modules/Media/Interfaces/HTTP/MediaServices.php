@@ -6,6 +6,7 @@ namespace Modules\Media\Interfaces\HTTP;
 
 use Modules\Core\Infrastructure\Env;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
+use Modules\Media\Application\Services\LocalThumbnail;
 use Modules\Media\Application\Services\MediaFolderService;
 use Modules\Media\Application\Services\MediaService;
 use Modules\Media\Domain\Model\MediaAsset;
@@ -133,21 +134,23 @@ final class MediaServices
 
     /**
      * The URL a tile should load for an asset: a cropped cloudinary square
-     * when the file is remote, the stored file itself when it is local.
+     * when the file is remote, the square written beside a local upload, and
+     * the stored file itself when neither exists.
      *
      * Asking Cloudinary for the original would make a glance at the library
      * download megabytes, so the remote side answers with a square crop. The
      * edge is the caller's, because two surfaces show two sizes: a folder
      * tile is 34px (68 on a 2x screen), and a card in the grid is 150px tall,
-     * which asks for 300. Local files have no resize step, and '' means
-     * "render the placeholder" the way urlFor() does. A null edge is the
-     * tile default, so that number stays owned by the client and not
-     * re-spelt here.
+     * which asks for 300. A local file gets one square at store time when
+     * ext-gd is present, and has no resize step when it is not, so the
+     * original stays the answer there. '' means "render the placeholder"
+     * the way urlFor() does. A null edge is the tile default, so that number
+     * stays owned by the client and not re-spelt here.
      */
     public static function previewUrl(MediaAsset $asset, ?int $edge = null): string
     {
         if ('cloudinary' !== $asset->provider()) {
-            return self::urlFor($asset);
+            return LocalThumbnail::url($asset->path()) ?? self::urlFor($asset);
         }
 
         return self::cloudinaryApi()?->thumbUrl($asset->path(), $edge) ?? '';

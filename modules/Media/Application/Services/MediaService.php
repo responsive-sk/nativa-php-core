@@ -94,6 +94,13 @@ final readonly class MediaService
                 : self::folderFromPath($result['path']),
         );
 
+        // A local upload has no delivery-time resize, so its 300px square is
+        // written here, once, and every tile loads that from now on. Without
+        // ext-gd nothing is written and the original is served as before.
+        if ('local' === $storage->getName() && $this->isImageMimeType($result['mime_type'])) {
+            LocalThumbnail::write($result['path']);
+        }
+
         $this->repository->insert($asset);
 
         // A new remote file can be the one a folder tile shows, so the
@@ -547,6 +554,9 @@ final readonly class MediaService
         try {
             $storage = self::resolveProvider($asset->provider(), $this->storage);
             $storage->delete($asset->path());
+            // A local row may have a square beside it; deleting the original
+            // alone would leave a file nothing points at.
+            LocalThumbnail::forget($asset->path());
         } catch (\RuntimeException) {
             // Deliberately swallowed: the row is deleted regardless, which
             // is the only part of this operation the caller can act on.

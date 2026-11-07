@@ -551,7 +551,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ env.PHP_VERSION }}
-          extensions: json, mbstring, pdo, pdo_sqlite, sqlite3
+          extensions: json, mbstring, pdo, pdo_sqlite, sqlite3, gd  # gd is optional at runtime; the media squares are proven here
           tools: composer:v2
           coverage: none
 
