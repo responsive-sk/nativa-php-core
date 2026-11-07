@@ -1,11 +1,12 @@
 ---
 title: "Kontakt"
 published: true
+form: contact
 seo_title: "Kontakt"
-seo_description: "Ako sa s nami spojiť: otázka pod stránkou, repozitár na GitHube alebo e-mail."
+seo_description: "Ako sa s nami spojiť: formulár priamo na stránke, otázka pod stránkou, repozitár na GitHube alebo e-mail."
 ---
 
-Najrýchlejšia cesta je **otázka priamo pod touto stránkou** — formulár je na konci textu a odpoveď dostanete tu, verejne, aby sa na ňu dalo odkázať.
+Napíšte nám cez **formulár na konci textu**: správa príde e-mailom a odpovieme na adresu, ktorú doň necháte. Ak chcete odpoveď verejne, aby sa na ňu dalo odkázať, položte ju ako **otázku pod stránkou**.
 
 ## Kde nás ešte zastihnete
 
