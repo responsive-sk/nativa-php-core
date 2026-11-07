@@ -71,6 +71,7 @@ final class StatementHelperContractTest extends TestCase
         'Cardboard',
         'Clickhouse',
         'Comments',
+        'Forms',
         'Locales',
         'Media',
         'Notifications',

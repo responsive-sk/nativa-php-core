@@ -146,6 +146,8 @@ final class PagesEditAction
             'seo_description' => is_string($meta['seo_description'] ?? null) ? $meta['seo_description'] : '',
             'image'           => is_string($meta['image'] ?? null) ? $meta['image'] : '',
             'translation'     => is_string($meta['translation'] ?? null) ? $meta['translation'] : '',
+            'form'            => is_string($meta['form'] ?? null) ? $meta['form'] : '',
+            'form_submitted'  => '1',
             'published'       => true === ($meta['published'] ?? false) ? '1' : '',
             'body'            => $page['body'],
         ];
@@ -169,6 +171,8 @@ final class PagesEditAction
             . '<input type="text" id="slug" name="slug" value="' . $slugEscaped . '" placeholder="changing it renames the page — old URLs keep working">'
             . '<label for="translation">Translation slug (the paired page\'s slug in the other language)</label>'
             . '<input type="text" id="translation" name="translation" value="' . $e('translation') . '" placeholder="slug-of-translated-version">'
+            . '<label for="form">Embedded form slug (optional)</label>'
+            . '<input type="text" id="form" name="form" value="' . $e('form') . '" placeholder="contact" maxlength="80">'
             . '<label for="seo_title">SEO title</label>'
             . '<input type="text" id="seo_title" name="seo_title" value="' . $e('seo_title') . '">'
             . '<label for="seo_description">SEO description</label>'
@@ -196,6 +200,10 @@ final class PagesEditAction
             'title'           => trim($str($request->body('title'))),
             'slug'            => trim($str($request->body('slug'))),
             'translation'     => trim($str($request->body('translation'))),
+            // Absent and empty are different answers: an unrelated edit that
+            // does not submit the field must keep the page's embedded form.
+            'form'            => strtolower(trim($str($request->body('form')))),
+            'form_submitted'  => null !== $request->body('form') ? '1' : '',
             'seo_title'       => trim($str($request->body('seo_title'))),
             'seo_description' => trim($str($request->body('seo_description'))),
             'image'           => trim($str($request->body('image'))),
@@ -221,11 +229,13 @@ final class PagesEditAction
                 'title'       => 'required',
                 'body'        => 'required',
                 'translation' => 'regex:/^[a-z0-9][a-z0-9_-]*$/',
+                'form'        => 'regex:/^[a-z0-9][a-z0-9_-]{0,79}$/',
             ],
             [
                 'title.required'    => 'Title is required.',
                 'body.required'     => 'Content is required.',
                 'translation.regex' => 'Translation slug must be URL-safe.',
+                'form.regex'        => 'The form slug must be lowercase letters, digits, `_` or `-` (max 80).',
             ],
         )->all();
     }
@@ -263,6 +273,17 @@ final class PagesEditAction
             $meta['translation'] = $data['translation'];
         } else {
             unset($meta['translation']);
+        }
+
+        // Only touch `form:` when the editor submitted it: this form is also
+        // posted by paths that do not know the key, and the field's whole job
+        // is to survive those.
+        if ('1' === ($data['form_submitted'] ?? '')) {
+            if ('' !== $data['form']) {
+                $meta['form'] = $data['form'];
+            } else {
+                unset($meta['form']);
+            }
         }
 
         return $meta;

@@ -44,7 +44,7 @@ default. Front matter carries the page's own fields:
 | `seo_title`, `seo_description` | overrides; empty means the title and the site default |
 | `translation` | the *other* locale's slug for this page |
 | `aliases` | previous slugs, as a flow list (`["old-slug"]`) |
-| `form` | a form slug embedded at the end of the body |
+| `form` | a form slug embedded at the end of the body (see [`docs/forms.md`](forms.md)) |
 
 `translation` is resolved, not merely declared: the paired page must actually
 exist, or the key is "no pair" — the same rule the blog holds. `aliases` is

@@ -1,0 +1,18 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "forms",
+      "kind": "module",
+      "version": 1,
+      "description": "Forms — admin-authored form definitions per locale, rendered into pages and articles through the kernel markdown block seam, with a throttled public submission endpoint, a per-form inbox and a queue-depth badge.",
+      "imports": [
+        "audit",
+        "blog",
+        "pages",
+        "security",
+        "users"
+      ]
+    }
+  ]
+}

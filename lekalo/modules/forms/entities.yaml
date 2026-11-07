@@ -1,0 +1,147 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "forms.field_type",
+      "kind": "enum",
+      "version": 1,
+      "description": "The closed vocabulary of field types a definition may declare. `checkbox` is one consent statement, not a multi-value group, so every field submits a single string",
+      "values": [
+        { "value": "text", "description": "Single-line free text" },
+        { "value": "email", "description": "Single-line address, validated with a mail filter" },
+        { "value": "textarea", "description": "Multi-line free text" },
+        { "value": "select", "description": "One answer from a declared option list, rendered as a select" },
+        { "value": "radio", "description": "One answer from a declared option list, rendered as radios" },
+        { "value": "checkbox", "description": "One consent statement, submitted as 1 or absent" }
+      ]
+    },
+    {
+      "id": "forms.submission_status",
+      "kind": "enum",
+      "version": 1,
+      "description": "Queue state of a stored submission. Handling is the work that clears the badge, so a handled row stays in the inbox as the record of what was dealt with",
+      "values": [
+        { "value": "new", "description": "Waiting for a moderator; the nav badge counts these" },
+        { "value": "handled", "description": "Dealt with; still listed in the inbox, no longer in the count" }
+      ]
+    },
+    {
+      "id": "forms.field_key",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Submission key of a declared field: lowercase letters, digits, `_` and `-`, at most 40 characters, unique within the form, never one of the reserved transport keys (form_return, form_website, _token)",
+      "base": "string"
+    },
+    {
+      "id": "forms.field_label",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Human label rendered beside the field and used in the validation message",
+      "base": "string"
+    },
+    {
+      "id": "forms.field_options",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Declared answers of a select or radio field, one to ten entries; refused on every other type and never present on a consent box",
+      "base": "string"
+    },
+    {
+      "id": "forms.field_required",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Whether an empty answer is refused; a required consent box must be submitted as 1",
+      "base": "boolean"
+    },
+    {
+      "id": "forms.payload",
+      "kind": "scalar",
+      "version": 1,
+      "description": "The submitted answers as a JSON object keyed by field key, stored raw and escaped at render time; undeclared keys are dropped before storage",
+      "base": "string"
+    },
+    {
+      "id": "forms.ip_address",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Submitter IP captured for the per-form throttle (never rendered in the inbox)",
+      "base": "string"
+    },
+    {
+      "id": "forms.title",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Reader-facing form title, at most 120 characters",
+      "base": "string"
+    },
+    {
+      "id": "forms.intro",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Optional introductory copy rendered under the title",
+      "base": "string"
+    },
+    {
+      "id": "forms.success_message",
+      "kind": "scalar",
+      "version": 1,
+      "description": "Confirmation copy painted when the redirect carries form-sent=1",
+      "base": "string"
+    },
+    {
+      "id": "forms.fields_json",
+      "kind": "scalar",
+      "version": 1,
+      "description": "The ordered field list stored as JSON, validated on the way in and on the way out so a stored schema that no longer parses renders nothing",
+      "base": "string"
+    },
+    {
+      "id": "forms.field",
+      "kind": "value-object",
+      "version": 1,
+      "description": "One declared field: key, label, type and the rules that apply to its answer",
+      "fields": [
+        { "name": "key", "type": { "ref": "forms.field_key" }, "required": true },
+        { "name": "label", "type": { "ref": "forms.field_label" }, "required": true },
+        { "name": "type", "type": { "ref": "forms.field_type" }, "required": true },
+        { "name": "required", "type": { "ref": "forms.field_required" }, "required": true },
+        { "name": "options", "type": { "optional": { "ref": "forms.field_options" } } }
+      ]
+    },
+    {
+      "id": "forms.form",
+      "kind": "entity",
+      "version": 1,
+      "description": "A form definition, unique per (slug, locale): the same reader-facing name exists once in each language",
+      "fields": [
+        { "name": "id", "type": { "ref": "users.identifier" }, "required": true },
+        { "name": "slug", "type": { "ref": "blog.slug" }, "required": true },
+        { "name": "locale", "type": { "ref": "blog.locale" }, "required": true },
+        { "name": "title", "type": { "ref": "forms.title" }, "required": true },
+        { "name": "intro", "type": { "optional": { "ref": "forms.intro" } } },
+        { "name": "success_message", "type": { "optional": { "ref": "forms.success_message" } } },
+        { "name": "fields", "type": { "ref": "forms.fields_json" }, "required": true },
+        { "name": "published", "type": { "ref": "pages.published" }, "required": true },
+        { "name": "created_at", "type": { "optional": { "ref": "blog.timestamp" } } }
+      ],
+      "identity": ["id"]
+    },
+    {
+      "id": "forms.submission",
+      "kind": "entity",
+      "version": 1,
+      "description": "One stored answer set, attached to its definition by id so a rename keeps it and a delete takes it",
+      "fields": [
+        { "name": "id", "type": { "ref": "users.identifier" }, "required": true },
+        { "name": "form_id", "type": { "ref": "forms.form" }, "required": true },
+        { "name": "locale", "type": { "ref": "blog.locale" }, "required": true },
+        { "name": "payload", "type": { "ref": "forms.payload" }, "required": true },
+        { "name": "status", "type": { "ref": "forms.submission_status" }, "required": true },
+        { "name": "ip_address", "type": { "optional": { "ref": "forms.ip_address" } } },
+        { "name": "created_at", "type": { "optional": { "ref": "blog.timestamp" } } },
+        { "name": "handled_at", "type": { "optional": { "ref": "blog.timestamp" } } }
+      ],
+      "identity": ["id"]
+    }
+  ]
+}

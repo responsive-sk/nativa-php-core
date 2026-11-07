@@ -1,0 +1,76 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "forms.create",
+      "kind": "command",
+      "version": 1,
+      "description": "Create a form definition in one locale, with its fields normalised and validated by the schema owner (/mark/forms/create)",
+      "input": [
+        { "name": "slug", "type": { "ref": "blog.slug" }, "required": true },
+        { "name": "locale", "type": { "ref": "blog.locale" }, "required": true },
+        { "name": "title", "type": { "ref": "forms.title" }, "required": true },
+        { "name": "fields", "type": { "ref": "forms.fields_json" }, "required": true }
+      ]
+    },
+    {
+      "id": "forms.update",
+      "kind": "command",
+      "version": 1,
+      "description": "Edit a definition by id (/mark/forms/{slug}/edit). A slug change keeps the submissions attached, because they reference the id",
+      "input": [
+        { "name": "id", "type": { "ref": "users.identifier" }, "required": true },
+        { "name": "slug", "type": { "ref": "blog.slug" }, "required": true },
+        { "name": "fields", "type": { "ref": "forms.fields_json" }, "required": true }
+      ]
+    },
+    {
+      "id": "forms.publish",
+      "kind": "command",
+      "version": 1,
+      "description": "Flip the published state of a definition (/mark/forms/{slug}/publish, POST) so a draft stops rendering in published pages",
+      "input": [
+        { "name": "id", "type": { "ref": "users.identifier" }, "required": true }
+      ]
+    },
+    {
+      "id": "forms.delete",
+      "kind": "command",
+      "version": 1,
+      "description": "Delete a definition and its submissions in one transaction (/mark/forms/{slug}/delete, POST)",
+      "input": [
+        { "name": "id", "type": { "ref": "users.identifier" }, "required": true }
+      ]
+    },
+    {
+      "id": "forms.submit",
+      "kind": "command",
+      "version": 1,
+      "description": "Send one answer set to a published definition (POST /forms/{slug}), CSRF enforced globally, honeypot checked before the lookup and the per-IP window before any write",
+      "input": [
+        { "name": "slug", "type": { "ref": "blog.slug" }, "required": true },
+        { "name": "locale", "type": { "ref": "blog.locale" }, "required": true },
+        { "name": "payload", "type": { "ref": "forms.payload" }, "required": true },
+        { "name": "ip_address", "type": { "optional": { "ref": "forms.ip_address" } } }
+      ]
+    },
+    {
+      "id": "forms.handle_submission",
+      "kind": "command",
+      "version": 1,
+      "description": "Mark one submission handled (/mark/forms/{slug}/submissions/{id}/handled, POST) — the action that clears it from the nav badge",
+      "input": [
+        { "name": "id", "type": { "ref": "users.identifier" }, "required": true }
+      ]
+    },
+    {
+      "id": "forms.delete_submission",
+      "kind": "command",
+      "version": 1,
+      "description": "Delete one submission (/mark/forms/{slug}/submissions/{id}/delete, POST); the page cache is flushed because the result bars change",
+      "input": [
+        { "name": "id", "type": { "ref": "users.identifier" }, "required": true }
+      ]
+    }
+  ]
+}

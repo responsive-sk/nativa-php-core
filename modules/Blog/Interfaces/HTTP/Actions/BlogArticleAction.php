@@ -107,7 +107,12 @@ final class BlogArticleAction
         // native markup instead of the starter default.
         $bodyHtml = $renderer->render(
             $this->withEmbeddedForm($parsed['body'], $meta),
-            new MarkdownBlockContext($locale, ThemeKernel::for($theme)->prefix()),
+            new MarkdownBlockContext(
+                $locale,
+                ThemeKernel::for($theme)->prefix(),
+                $request->getPathInfo(),
+                $this->blockState($request),
+            ),
         );
 
         // One ThemeKernel call per surface — page composition lives in the
@@ -625,6 +630,25 @@ final class BlogArticleAction
      *
      * @param array<string, mixed> $meta
      */
+    /**
+     * The re-render state `FormSubmitAction` handed over, keyed by block.
+     *
+     * Same three attributes `PageViewAction` reads: the endpoint dispatches to
+     * whichever surface embeds the form, so both must pass the reader's own
+     * errors and words through to the block that will paint them.
+     *
+     * @return array<string, array{errors: list<string>, invalid: list<string>, old: array<string, string>, sent: bool}>
+     */
+    private function blockState(Request $request): array
+    {
+        return ['forms' => [
+            'errors'  => $request->getAttribute('form_errors', []),
+            'invalid' => $request->getAttribute('form_invalid', []),
+            'old'     => $request->getAttribute('form_old', []),
+            'sent'    => '1' === $request->query('form-sent'),
+        ]];
+    }
+
     private function withEmbeddedForm(string $body, array $meta): string
     {
         $slug = is_string($meta['form'] ?? null) ? trim($meta['form']) : '';

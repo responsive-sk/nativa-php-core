@@ -30,12 +30,12 @@ use RecursiveIteratorIterator;
  *    when an entry stops applying, so it cannot rot.
  * 2. **A value must not be spelled as a raw literal outside its owner.**
  *    A RATCHET, not a prohibition, and that is the measured conclusion rather
- *    than a compromise. 50 owned string values appear as literals on 385
+ *    than a compromise. 50 owned string values appear as literals on 404
  *    places across the tree. `'en'` alone is 54 of them, `'home'` 41 and
  *    `'/mark'` 30: a bare language code, a route slug and the panel's mount
  *    path, spelled in seed data, translations and URL tests, which is data and
- *    not a second owner. A gate with 385 exemptions is not a gate. 385 is a
- *    CEILING: every consolidation lowers it, and the gate refuses the 386th.
+ *    not a second owner. A gate with 404 exemptions is not a gate. 404 is a
+ *    CEILING: every consolidation lowers it, and the gate refuses the 405th.
  * 3. **The declaration count must not rise.** Ratchet at 238/202. This is the
  *    rule that catches the cheapest wrong fix — "there are two names for this,
  *    let me add a third" — which is the complaint that started all of this.
@@ -153,6 +153,11 @@ final class NameOwnershipContractTest extends TestCase
         // ratchet — those spellings are the SUBJECT of the test, not a duplicate
         // it failed to notice. Rule 1 still reads this file.
         'tests/Architecture/StatementHelperContractTest.php',
+        // The admin-class gate. It spells the module whose markup it reads
+        // (`Cardboard`) and nothing else; that spelling is the SUBJECT of the
+        // test, not a duplicate it failed to notice, and the module name has an
+        // owner in the catalogue, which this file asks instead of guessing.
+        'tests/Architecture/AdminClassContractTest.php',
         // The drift gate beside the service it measures. It builds a fixture
         // catalogue out of temp directories, so it spells a group name, a theme
         // name and a flat module name — the layout it asserts, not a second
@@ -231,8 +236,22 @@ final class NameOwnershipContractTest extends TestCase
      * the action spells its own key once, and the test FOLLOWS the link the page
      * rendered instead of rebuilding it from a query array. A rise of one on a
      * new surface is the honest measurement; the four that went away were not.
+     *
+     * 385 → 404 with the Forms module: a whole new surface, not a second
+     * spelling. The nine route attributes spell their own paths (that IS the
+     * path's owner), `FormsBadge::NAV_HREF` carries the panel href the nav
+     * reads, the two stored status words are declared once and read by the
+     * repository, and the tests name the theme prefix and one bare `en`
+     * fixture. Nineteen places across two tables and nine routes, measured
+     * rather than exempted.
+     *
+     * The first draft of that module measured 610, and the rise was not the
+     * new surface: `FormFieldType` declared `TEXT = 'text'` and `EMAIL =
+     * 'email'`, so the gate charged every place in the tree that spells either
+     * word. The fix was the vocabulary, an enum whose cases own their tokens,
+     * not the ceiling.
      */
-    private const int MAX_LITERAL_PLACES = 385;
+    private const int MAX_LITERAL_PLACES = 404;
 
     /**
      * Rule 3 — measured 2026-10-17 on the tracked scope.
@@ -297,8 +316,18 @@ final class NameOwnershipContractTest extends TestCase
      * and the preview cache's own `TTL` and `FILE`. None is a second spelling
      * of a value that already had one: the cache writes its own file, and a
      * folder glance's five minutes is not the page cache's staleness rule.
+     *
+     * 284 with the Forms module: fifteen declarations, every one a value the
+     * module is the owner of. `FormSchema` carries the seven limits its own
+     * design table states (20 fields, 10 options of 80, a 120-character label,
+     * a 5 000 ceiling, a 500 default and the three keys the form itself uses),
+     * `FormSubmission` names its two stored states, and `FormsBadge::NAV_HREF`,
+     * `FormResultsService::WINDOW`, the two `PATTERN`s and the submit action's
+     * `RATE_LIMIT`/`RATE_WINDOW` own one fact each. Four of those names the
+     * tree already held (`PATTERN` twice, `RATE_LIMIT`, `RATE_WINDOW`), which
+     * is why the distinct-name count moved by eleven rather than fifteen.
      */
-    private const int MAX_DECLARATIONS = 269;
+    private const int MAX_DECLARATIONS = 284;
 
     /**
      * 203 → 204 with MAX_DECLARATIONS: `ModuleTreeState::IGNORED` is a name as
@@ -341,8 +370,16 @@ final class NameOwnershipContractTest extends TestCase
      * `DiscoveryCache` already owns and is reused by design, because both
      * caches write one JSON file under `storage/cache` and the name says what
      * the constant is, not which cache declares it.
+     *
+     * 225 with the Forms module: eleven names nothing else in the tree names,
+     * each the limit of a different surface (`MAX_FIELDS` is the shape of one
+     * definition, `MAX_OPTIONS` one field's list, `MAX_LABEL_LENGTH` one
+     * label). The other four declarations reuse names the tree already owns,
+     * and the field-type vocabulary arrived as an enum rather than as six
+     * constants: `'text'` and `'email'` are ordinary words, and owning them as
+     * constants charged 182 unrelated places in the tree (Boot 47).
      */
-    private const int MAX_NAMES = 214;
+    private const int MAX_NAMES = 225;
 
     /**
      * `name => modules/<Name>` or `modules/<Group>/<Name>`, resolved once. A

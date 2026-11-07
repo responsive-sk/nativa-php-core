@@ -94,7 +94,12 @@ final class PageViewAction
         $renderer = new MarkdownRenderer();
         $bodyHtml = $renderer->render(
             $this->withEmbeddedForm($page['body'], $page['meta']),
-            new MarkdownBlockContext($locale, ThemeKernel::for($theme)->prefix()),
+            new MarkdownBlockContext(
+                $locale,
+                ThemeKernel::for($theme)->prefix(),
+                $request->getPathInfo(),
+                $this->blockState($request),
+            ),
         );
 
         $title = $this->pageTitle($page, $slug);
@@ -264,6 +269,27 @@ final class PageViewAction
             $prefix,
             '1' === $request->query('question-sent'),
         );
+    }
+
+    /**
+     * The re-render state a submission action handed over, keyed by block.
+     *
+     * `form_errors`, `form_invalid` and `form_old` are written by
+     * `FormSubmitAction` before it dispatches here, exactly as
+     * `question_errors` and `question_old` are written by
+     * `QuestionSubmitAction`. They stay request attributes rather than
+     * rendered parameters, so this action names no Forms class.
+     *
+     * @return array<string, array{errors: list<string>, invalid: list<string>, old: array<string, string>, sent: bool}>
+     */
+    private function blockState(Request $request): array
+    {
+        return ['forms' => [
+            'errors'  => $request->getAttribute('form_errors', []),
+            'invalid' => $request->getAttribute('form_invalid', []),
+            'old'     => $request->getAttribute('form_old', []),
+            'sent'    => '1' === $request->query('form-sent'),
+        ]];
     }
 
     private function resolveLocale(Request $request): string

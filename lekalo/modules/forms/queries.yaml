@@ -1,0 +1,37 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "forms.find_published",
+      "kind": "query",
+      "version": 1,
+      "description": "The one definition a public placeholder may render: exact locale, then the configured default; a draft, an unknown slug or an unparseable field list resolves to nothing",
+      "reads": ["forms.form"],
+      "returns": { "ref": "forms.form" }
+    },
+    {
+      "id": "forms.list_for_locale",
+      "kind": "query",
+      "version": 1,
+      "description": "Every definition of one locale, ordered by title — the admin index and the locale toggle",
+      "reads": ["forms.form"],
+      "returns": { "ref": "forms.form" }
+    },
+    {
+      "id": "forms.inbox",
+      "kind": "query",
+      "version": 1,
+      "description": "Every submission of one definition, newest first, in both states — the inbox is also the record of what was handled",
+      "reads": ["forms.submission"],
+      "returns": { "ref": "forms.submission" }
+    },
+    {
+      "id": "forms.new_count",
+      "kind": "query",
+      "version": 1,
+      "description": "How many submissions are waiting, as one COUNT over the status index; the nav badge asks this on every admin page and answers 0 when the table is absent",
+      "reads": ["forms.submission"],
+      "returns": { "ref": "blog.count" }
+    }
+  ]
+}

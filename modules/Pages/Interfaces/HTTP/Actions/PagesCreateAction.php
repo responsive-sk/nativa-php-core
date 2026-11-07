@@ -124,13 +124,14 @@ final class PagesCreateAction
         $titleValue = $e('title');
         $slugValue = $e('slug');
         $translationValue = $e('translation');
+        $formValue = $e('form');
         $seoTitleValue = $e('seo_title');
         $seoDescValue = $e('seo_description');
         $imageValue = $e('image');
         $publishedChecked = '1' === ($data['published'] ?? '') ? 'checked' : '';
         $bodyValue = $e('body');
 
-        return ViewRenderer::render('Modules/Pages/Interfaces/HTTP/templates/page-create.phtml', ['bodyValue' => $bodyValue, 'imageValue' => $imageValue, 'localeInput' => $localeInput, 'publishedChecked' => $publishedChecked, 'seoDescValue' => $seoDescValue, 'seoTitleValue' => $seoTitleValue, 'slugValue' => $slugValue, 'titleValue' => $titleValue, 'translationValue' => $translationValue]);
+        return ViewRenderer::render('Modules/Pages/Interfaces/HTTP/templates/page-create.phtml', ['formValue' => $formValue, 'bodyValue' => $bodyValue, 'imageValue' => $imageValue, 'localeInput' => $localeInput, 'publishedChecked' => $publishedChecked, 'seoDescValue' => $seoDescValue, 'seoTitleValue' => $seoTitleValue, 'slugValue' => $slugValue, 'titleValue' => $titleValue, 'translationValue' => $translationValue]);
     }
 
     /**
@@ -144,6 +145,7 @@ final class PagesCreateAction
             'title'           => trim($str($request->body('title'))),
             'slug'            => trim($str($request->body('slug'))),
             'translation'     => trim($str($request->body('translation'))),
+            'form'            => strtolower(trim($str($request->body('form')))),
             'seo_title'       => trim($str($request->body('seo_title'))),
             'seo_description' => trim($str($request->body('seo_description'))),
             'image'           => trim($str($request->body('image'))),
@@ -169,11 +171,13 @@ final class PagesCreateAction
                 'title'       => 'required',
                 'body'        => 'required',
                 'translation' => 'regex:/^[a-z0-9][a-z0-9_-]*$/',
+                'form'        => 'regex:/^[a-z0-9][a-z0-9_-]{0,79}$/',
             ],
             [
                 'title.required'   => 'Title is required.',
                 'body.required'    => 'Content is required.',
                 'translation.regex' => 'Translation slug must be URL-safe.',
+                'form.regex'        => 'The form slug must be lowercase letters, digits, `_` or `-` (max 80).',
             ],
         )->all();
     }
@@ -198,6 +202,10 @@ final class PagesCreateAction
 
         if ('' !== $data['translation']) {
             $meta['translation'] = $data['translation'];
+        }
+
+        if ('' !== $data['form']) {
+            $meta['form'] = $data['form'];
         }
 
         return $meta;

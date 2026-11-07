@@ -1,0 +1,33 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "forms.embed_lifecycle",
+      "kind": "scenario",
+      "version": 1,
+      "description": "A definition authored in the panel renders inside a page and comes back with the reader's answers",
+      "summary": "Given an editor creates a published definition in the panel and a page names it (through its form: front matter or a {{form:slug}} placeholder), the served page carries the active theme's prefixed form markup and a hidden return path; a valid submission stores one new row and redirects to that page with form-sent=1 and the form anchor, where the confirmation and any result bars are painted from the stored answers. An edit to the definition flushes the page cache in the same request, because that markup is already cached."
+    },
+    {
+      "id": "forms.invalid_submission_keeps_the_reader_on_the_page",
+      "kind": "scenario",
+      "version": 1,
+      "description": "A refused answer set is re-rendered, not redirected, and the reader's words survive",
+      "summary": "Given a submission that fails the schema (a missing required answer, a malformed address, an option outside the list, an unchecked required consent box), the endpoint writes nothing and dispatches to the page or article action that embeds the form, which re-renders it with the messages, the invalid field keys marked aria-invalid and the old input. With no usable return target there is nothing to re-render, so the response is 400 with no Location header rather than a silent trip to the home page."
+    },
+    {
+      "id": "forms.queue_is_badged",
+      "kind": "scenario",
+      "version": 1,
+      "description": "The inbox depth is visible from anywhere in the panel, and only the work waiting is counted",
+      "summary": "Given submissions waiting on one form, every admin page carries their number on the Forms navigation item; marking one handled decrements it without removing the row from the inbox, deleting one removes the row and flushes the page cache because the result bars change, and a missing database answers 0 instead of blanking the sidebar."
+    },
+    {
+      "id": "forms.removed_module_leaves_the_placeholder",
+      "kind": "scenario",
+      "version": 1,
+      "description": "Removing the module does not rewrite content, and the documented limitation is the answer",
+      "summary": "Given a published page whose body carries {{form:slug}}, removing the Forms module leaves the raw placeholder on the page instead of deleting the definition or editing the page: no kernel file names the module, the block is discovered only when installed, and docs/forms.md records what removal leaves behind."
+    }
+  ]
+}

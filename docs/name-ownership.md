@@ -6,7 +6,7 @@ number here is **measured**, and the test fails when a number and the tree
 disagree. A row that is not measured is a wish.
 
 The rule the gate cannot check is worth stating too: a class constant is a
-**good** tool for most of this tree. 269 declarations, and the large majority
+**good** tool for most of this tree. 284 declarations, and the large majority
 are private technical invariants — `CoverGenerator::WIDTH`, `MAX_RETRIES`,
 `IDLE_TIMEOUT` — which are facts about the code, not configuration and not
 identifiers. Those are correct as they are and the gate leaves them alone. The
@@ -16,8 +16,8 @@ it should not be.
 ## What is counted, and what is not
 
 Scope: `src/Modules/{Core,Database,KernelTheme,Tooling}`, `src/Themes`,
-`modules`, `tests`, `bin`, `public` (minus `public/dist`). 523 non-gate files
-plus the 18 gate files — 541 scanned: rule 1 reads all of them, while the
+`modules`, `tests`, `bin`, `public` (minus `public/dist`). 575 non-gate files
+plus the 18 gate files — 593 scanned: rule 1 reads all of them, while the
 two counts exclude the gates for the reason below.
 
 `src/Modules/<Name>` for any other module is **gitignored operator state**. A
@@ -30,11 +30,11 @@ identical:
 
 | | full tree | kernel-only |
 |---|---|---|
-| files (rule 1 scan) | 541 | 541 |
-| declarations (rule 3, excluding the gates) | 269 | 269 |
-| distinct names (rule 3) | 214 | 214 |
+| files (rule 1 scan) | 593 | 593 |
+| declarations (rule 3, excluding the gates) | 284 | 284 |
+| distinct names (rule 3) | 225 | 225 |
 | values with 2+ names (rule 1) | **2** | **2** |
-| literal places (rule 2) | 384 | 384 |
+| literal places (rule 2) | 404 | 404 |
 
 ## Rule 1 > one string value, one name · absolute, 2 exemptions
 
@@ -89,16 +89,26 @@ writes down WHY.
 The list also fails **when an entry stops applying** — an exemption that
 stopped being a collision is rot in the ledger, not a free pass.
 
-## Rule 2 > a value spelled as a literal outside its owner · ratchet at 385
+**A closed vocabulary is an enum, not six constants.** `FormFieldType` first
+declared `TEXT = 'text'` and `EMAIL = 'email'`, and rule 2 then charged 182
+places that spell either word for a different fact: the mail settings, the user
+records, a theme's CSS assertion. The vocabulary became a backed enum, whose
+cases own their tokens without claiming an English word for the whole tree; the
+tree already had the idiom in `Cardboard\Domain\Model\Period` and
+`Health\Value\HealthStatus` (Boot 47). The cost is stated rather than hidden:
+rule 1 does not see enum cases, so two cases with one backing value is a review
+question and not a gate failure.
+
+## Rule 2 > a value spelled as a literal outside its owner · ratchet at 404
 
 A **ceiling, not a list.** 50 owned string values appear as raw literals on
-**385 places** across the tree (measured 2026-10-27). An absolute rule here
-would need 385 exemptions, and a gate with 385 exemptions is not a gate:
+**404 places** across the tree (measured 2026-11-07). An absolute rule here
+would need 404 exemptions, and a gate with 404 exemptions is not a gate:
 
 | filter | values | places | files |
 |---|---|---|---|
-| none | 50 | 385 | 115 |
-| length ≥ 4 | 50 | 385 | 115 |
+| none | 50 | 404 | 123 |
+| length ≥ 4 | 50 | 404 | 123 |
 | length ≥ 8 | 35 | 171 | 81 |
 | contains `/` or `.` | 11 | 57 | 27 |
 | contains `/` | 4 | 45 | 21 |
@@ -114,6 +124,11 @@ anyone would name. The largest single source is `Locales/…/SeedData.php` with
 be worse rather than better. `'sk_SK'` is no longer among them: a `xx_YY` code
 is data about a language and the ceiling skips it (`isLocaleCode()`), which is
 what took the number from 526 to 384.
+
+The ceiling moved 269 → 284 declarations and 214 → 225 names with the Forms
+module, whose fifteen constants each own one limit of a definition (Boot 47);
+the leading places there are the nine route attributes spelling their own paths
+and two stored status words, a new surface measured rather than exempted.
 
 The ceiling moved 532 → 514 with task 2.2: reading `Question::STATUS_*` and
 `Comment::STATUS_*` in the admin actions and the comments metric retired 18

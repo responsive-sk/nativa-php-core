@@ -1,0 +1,45 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "forms.honeypot_is_silent",
+      "kind": "policy",
+      "version": 1,
+      "description": "A submit whose honeypot field is filled is discarded before the definition lookup: the response is an ordinary redirect and nothing is stored, so a bot learns nothing about which slugs exist",
+      "applies_to": ["forms.submit"],
+      "decision": "deny"
+    },
+    {
+      "id": "forms.throttled_per_ip",
+      "kind": "policy",
+      "version": 1,
+      "description": "A submit from an address that already sent five answers to this form in five minutes is refused with 429 and no Location header, before any write",
+      "applies_to": ["forms.submit"],
+      "decision": "deny"
+    },
+    {
+      "id": "forms.definition_must_be_published",
+      "kind": "policy",
+      "version": 1,
+      "description": "A submit is refused unless the definition is published, in the resolved locale and has a parseable field list — an unknown or draft slug answers 404, never a redirect",
+      "applies_to": ["forms.submit"],
+      "decision": "deny"
+    },
+    {
+      "id": "forms.answers_must_match_the_schema",
+      "kind": "policy",
+      "version": 1,
+      "description": "Only declared keys are stored, and each answer must satisfy its field's required, e-mail, length and option rules; a failure re-renders the embedding subject with the messages and the old input, and writes nothing",
+      "applies_to": ["forms.submit"],
+      "decision": "deny"
+    },
+    {
+      "id": "forms.return_path_must_be_published",
+      "kind": "policy",
+      "version": 1,
+      "description": "form_return is untrusted: it is accepted only as a local path naming a published page or article. On success an unusable path falls back to the locale home; on failure it answers 400 instead of guessing a page",
+      "applies_to": ["forms.submit"],
+      "decision": "deny"
+    }
+  ]
+}

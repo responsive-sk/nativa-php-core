@@ -21,6 +21,9 @@ if (!isset($viewRendererGuard)) {
         <label for="translation">Translation slug (the paired page's slug in the other language, optional)</label>
         <input type="text" id="translation" name="translation" value="<?php echo $translationValue; ?>" placeholder="slug-of-translated-version">
 
+        <label for="form">Embedded form slug (optional)</label>
+        <input type="text" id="form" name="form" value="<?php echo $formValue; ?>" placeholder="contact" maxlength="80">
+
         <label for="seo_title">SEO title</label>
         <input type="text" id="seo_title" name="seo_title" value="<?php echo $seoTitleValue; ?>" placeholder="Custom title for search engines">
 
