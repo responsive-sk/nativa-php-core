@@ -105,7 +105,7 @@ final class BulkActions
     public static function headerCell(): string
     {
         return '<th class="m-bulk__cell">'
-            . '<input type="checkbox" class="m-bulk__check m-bulk__select-all"'
+            . '<input type="checkbox" class="m-bulk__check"'
             . ' aria-label="Select all">'
             . '</th>';
     }
@@ -135,7 +135,7 @@ final class BulkActions
             . '<input type="hidden" name="_token" value="' . AdminLayout::e($token) . '">'
             . '<input type="hidden" name="entity" value="' . $escapedEntity . '">'
             . $localeInput
-            . '<button type="submit" class="m-btn m-btn-error m-btn--sm"'
+            . '<button type="submit" class="m-btn m-btn-error m-btn-sm"'
             . ' data-confirm="Delete selected items?">'
             . 'Delete selected'
             . '</button>'

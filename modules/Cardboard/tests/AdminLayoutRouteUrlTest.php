@@ -98,8 +98,7 @@ final class AdminLayoutRouteUrlTest extends TestCase
             [
                 'settingsTabs' => AdminLayout::settingsTabs($this->url(), 'modules'),
                 'intro'        => '',
-                'rows'         => '',
-                'fixableHtml'  => '',
+                'panel'        => '<div id="modules-panel"></div>',
             ],
         );
 

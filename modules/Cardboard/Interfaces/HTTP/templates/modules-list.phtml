@@ -15,8 +15,4 @@ if (!isset($viewRendererGuard)) {
 
             <p class="m-muted"><?= $intro ?></p>
 
-            <div class="m-table-scroll"><table class="m-table m-table--wide" id="modules-table"><thead><tr><th>Module</th><th>State</th><th>Drifted files</th><th></th></tr></thead><tbody><?php echo $rows; ?></tbody></table></div>
-
-            <?php if ('' !== $fixableHtml): ?>
-            <div class="m-table-toolbar"><p class="m-muted"><?= $fixableHtml ?></p></div>
-            <?php endif; ?>
+            <?= $panel ?>

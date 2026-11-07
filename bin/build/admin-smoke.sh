@@ -51,7 +51,7 @@ export SMOKE_AUTHOR_PASSWORD='Smoke-Author-2026!' # audit-ok: smoke fixture
 export SMOKE_USER_EMAIL='smoke-user@example.test'
 export SMOKE_USER_PASSWORD='Smoke-User-2026!' # audit-ok: smoke fixture
 
-for db in users outbox config audit blog comments locales media questions queue; do
+for db in users outbox config audit blog comments forms locales media questions queue; do
     export "DB_$(printf '%s' "$db" | tr '[:lower:]' '[:upper:]')=$TMP/$db.db"
 done
 
@@ -156,7 +156,7 @@ trap cleanup EXIT
 # filed under a group (`src/Modules/Themes/<Name>`), and a path check would
 # report it missing while the tree is complete.
 installed_names=" $(php bin/cms module:list | sed -n 's/^Installed ([0-9]*): //p' | tr ',' ' ') "
-for module in Audit Cardboard Comments Outbox Queue Scheduler Security Users; do
+for module in Audit Cardboard Comments Forms Outbox Queue Scheduler Security Users; do
     case "$installed_names" in
         *" $module "*) ;;
         *)
@@ -298,8 +298,72 @@ check 'admin GET /mark/roles' '/mark/roles' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
 check 'admin GET /mark/settings/modules' '/mark/settings/modules' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
 body_has 'the module list names an installed module' 'Cardboard'
 body_has 'the module list has a drifted-files column' 'Drifted files'
+body_has 'an installed row offers uninstall' 'Uninstall'
+body_has 'an absent row offers install' '/mark/settings/modules/Scratch/install'
 
 ADMIN_TOKEN="$(token)"
+
+# Install and uninstall through the panel, on the lifecycle fixture: `Scratch`
+# is catalogued and `install-catalogue.sh` deliberately leaves it out, so a
+# slice that exists afterwards was copied by THIS request. The directory is the
+# assertion, not the status — 302 is also the answer for a refused step.
+if [ -d src/Modules/Scratch ]; then
+    bad 'Scratch was already installed before the panel install (a leaked fixture)'
+fi
+
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/modules/Scratch/install" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/modules/{name}/install' 302 "$got"
+if [ -d src/Modules/Scratch ]; then
+    ok 'the panel install copied the slice'
+else
+    bad 'the panel install left no slice behind'
+fi
+
+# The same step as an htmx request: no redirect, the panel fragment back — the
+# button swaps `#modules-panel` in place, and the fragment must therefore be the
+# panel and not a whole document.
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/modules/Scratch/uninstall" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE" -H 'HX-Request: true')"
+want 'htmx POST /mark/settings/modules/{name}/uninstall' 200 "$got"
+if grep -q 'id="modules-panel"' "$TMP/last.out" && ! grep -q '<html' "$TMP/last.out"; then
+    ok 'the htmx response is the panel fragment, not a page'
+else
+    bad 'the htmx response is not the panel fragment'
+fi
+if [ -d src/Modules/Scratch ]; then
+    bad 'the panel uninstall left the slice behind'
+else
+    ok 'the panel uninstall removed the slice'
+fi
+
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/modules/Scratch/install" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/modules/{name}/install (rerun)' 302 "$got"
+if [ -d src/Modules/Scratch ]; then
+    ok 'the non-htmx install still copies the slice'
+else
+    bad 'the non-htmx install left no slice behind'
+fi
+
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/modules/Scratch/uninstall" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/modules/{name}/uninstall' 302 "$got"
+if [ -d src/Modules/Scratch ]; then
+    bad 'the panel uninstall left the slice behind'
+else
+    ok 'the panel uninstall removed the slice'
+fi
+
+# An unknown name is refused before any path is built from it.
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/modules/__nope__/install" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/modules/{name}/install for an unknown name' 302 "$got"
+if [ -d src/Modules/__nope__ ]; then
+    bad 'an unknown module name created a directory'
+else
+    ok 'an unknown module name created nothing'
+fi
 
 # A user is created and deleted through the panel: the row is the assertion, not
 # the status — 302 is also the answer for an id that does not exist (Boot 27).
@@ -599,6 +663,101 @@ got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/pages/$PAGE/de
 want 'admin POST /mark/pages/{slug}/delete' 302 "$got"
 if find storage -name "$PAGE.md" | grep -q .; then bad 'the page file survived the delete'; else ok 'the page file is gone'; fi
 check 'the deleted page is 404' "/$PAGE" 404
+
+# ---------------------------------------------------------------------------
+# Forms: a definition created in the panel, embedded in a page, submitted
+# through the public endpoint, read back in the inbox, then removed again.
+# ---------------------------------------------------------------------------
+FORM="smoke-form-$RAND"
+FPAGE="smoke-form-page-$RAND"
+
+check 'admin GET /mark/forms' '/mark/forms' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+ADMIN_TOKEN="$(token)"
+
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/forms/create?locale=sk" \
+    --data-urlencode "title=Smoke form $RAND" \
+    --data-urlencode "slug=$FORM" \
+    --data-urlencode 'intro=Written by the admin smoke gate.' \
+    --data-urlencode 'published=1' \
+    --data-urlencode 'locale=sk_SK' \
+    --data-urlencode 'fields[0][key]=name' \
+    --data-urlencode 'fields[0][label]=Your name' \
+    --data-urlencode 'fields[0][type]=text' \
+    --data-urlencode 'fields[0][required]=1' \
+    --data-urlencode 'fields[0][max]=120' \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/forms/create' 302 "$got"
+
+row="$(dbq DB_FORMS "SELECT COUNT(*) FROM forms WHERE slug = '$FORM'")"
+want 'the form definition row exists' 1 "$row"
+
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/pages/create?locale=sk" \
+    --data-urlencode "title=Form page $RAND" \
+    --data-urlencode "slug=$FPAGE" \
+    --data-urlencode 'body=Contact us below.' \
+    --data-urlencode "form=$FORM" \
+    --data-urlencode 'published=1' --data-urlencode 'locale=sk_SK' \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/pages/create with a form slug' 302 "$got"
+
+# The reader's browser: its own jar, and the token the page itself rendered.
+# The jar is on the RENDER too, so the token the reader posts belongs to the
+# session that received it — a page fetched without its jar carries a token
+# whose session cookie is gone, and CsrfMiddleware answers 403.
+check 'the page with the embedded form is served' "/$FPAGE" 200 \
+    -b "$TMP/public.jar" -c "$TMP/public.jar"
+PUBLIC_TOKEN="$(token)"
+
+if grep -q -- '-form__form' "$TMP/last.out"; then
+    ok 'the page carries the theme-prefixed form markup'
+else
+    bad 'the form markup is missing from the page'
+fi
+
+if grep -q "Smoke form $RAND" "$TMP/last.out"; then
+    ok 'the page carries the definition title'
+else
+    bad 'the definition title is missing from the page'
+fi
+
+got="$(status -c "$TMP/public.jar" -b "$TMP/public.jar" -X POST "$BASE/forms/$FORM" \
+    --data-urlencode 'name=Smoke reader' \
+    --data-urlencode "form_return=/$FPAGE" \
+    --data-urlencode "_token=$PUBLIC_TOKEN" -H "Origin: $BASE")"
+want 'public POST /forms/{slug}' 302 "$got"
+
+stored="$(dbq DB_FORMS "SELECT COUNT(*) FROM form_submissions WHERE form_slug = '$FORM'")"
+want 'the submission row is stored' 1 "$stored"
+
+check 'the page with the confirmation is served' "/$FPAGE?form-sent=1" 200
+if grep -q 'Thank you' "$TMP/last.out"; then
+    ok 'the confirmation is painted after the redirect'
+else
+    bad 'the confirmation is missing after the redirect'
+fi
+
+check 'admin GET /mark/forms/{slug}/submissions' "/mark/forms/$FORM/submissions?locale=sk" 200 \
+    -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+if grep -q 'Smoke reader' "$TMP/last.out"; then
+    ok 'the inbox lists the submission'
+else
+    bad 'the submission is missing from the inbox'
+fi
+
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/forms/$FORM/delete?locale=sk" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/forms/{slug}/delete' 302 "$got"
+
+gone="$(dbq DB_FORMS "SELECT COUNT(*) FROM forms WHERE slug = '$FORM'")"
+want 'the deleted definition row is gone' 0 "$gone"
+left="$(dbq DB_FORMS "SELECT COUNT(*) FROM form_submissions WHERE form_slug = '$FORM'")"
+want 'the deleted definition took its submissions' 0 "$left"
+
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/pages/$FPAGE/delete" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/pages/{slug}/delete (form page)' 302 "$got"
+if find storage -name "$FPAGE.md" | grep -q .; then bad 'the form page file survived the delete'; else ok 'the form page file is gone'; fi
 
 tree_files > "$TMP/tree-after.txt"
 if diff -q "$TMP/tree-before.txt" "$TMP/tree-after.txt" > /dev/null; then

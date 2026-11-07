@@ -38,6 +38,28 @@ that changed.
 | `php bin/cms clickhouse:status` | the server's view of the attached databases, and drift |
 | `php bin/cms clickhouse:query "<sql>" [--db=<name>] [--write] [--format=JSONEachRow\|TSV]` | run one statement (read-only unless `--write`) |
 
+### The panel takes the same three steps
+
+`GET /mark/settings/modules` lists every catalogued module beside its installed
+slice and puts one button on each row, for the state that row is in:
+
+| state | button | route |
+|---|---|---|
+| `not-installed` | Install | `POST /mark/settings/modules/{name}/install` |
+| `identical` | Uninstall | `POST /mark/settings/modules/{name}/uninstall` |
+| `drifted` | Reinstall and Uninstall | `POST /mark/settings/modules/{name}/reinstall` |
+
+Every one is a POST behind the admin's CSRF token, because each replaces or
+deletes the slice the running site boots from. The button that appears is the
+state's, so the ordinary row has nothing a stray click can destroy.
+
+Install obeys the same closure rule as `module:add`: a module with a missing
+dependency is refused before anything is copied, and the installer's own message
+is what the page shows. Uninstall is **never** forced from the panel: a slice
+another module imports is a refusal that names the holders, and `--force` stays
+a CLI decision made by someone who knows what depends on what. Neither step
+touches module data, and uninstall reports what it left on disk.
+
 ## Catalogue vs slice: drift, measured (task 4.1, 2026-10-17)
 
 `modules/<Name>/` is the **source**: it is tracked in git, an author edits it,
