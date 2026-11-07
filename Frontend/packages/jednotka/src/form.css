@@ -92,6 +92,10 @@
 .je-form__field {
   display: grid;
   gap: 6px;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
 @supports not ((gap: 1px) and (inset: 0)) {
@@ -127,8 +131,13 @@
 }
 
 .je-form__input:focus {
-  outline: none;
+  outline: 2px solid var(--form-accent);
+  outline-offset: 1px;
   border-color: var(--form-accent);
+}
+
+.je-form__input::placeholder {
+  color: var(--form-hint);
 }
 
 .je-form__input[aria-invalid='true'] {
@@ -150,12 +159,33 @@ textarea.je-form__input {
   display: none;
 }
 
+.je-form__errors {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+@supports not ((gap: 1px) and (inset: 0)) {
+  .je-form__errors {
+    gap: 0;
+  }
+
+  .je-form__errors > * {
+    margin-bottom: 8px;
+  }
+
+  .je-form__errors > *:last-child {
+    margin-bottom: 0;
+  }
+}
+
 .je-form__error {
   margin: 0;
   padding: 8px 12px;
   font-size: 13px;
   color: var(--form-error-ink);
   background: var(--form-error-bg);
+  border-left: 3px solid var(--form-error-ink);
   border-radius: var(--form-radius);
 }
 
@@ -165,7 +195,7 @@ textarea.je-form__input {
   font-family: inherit;
   font-size: 14px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--form-accent-ink);
   background: var(--form-accent-bg);
   border: 0;
   border-radius: var(--form-radius);
@@ -173,8 +203,14 @@ textarea.je-form__input {
   transition: background 150ms ease;
 }
 
-.je-form__submit:hover {
+.je-form__submit:hover,
+.je-form__submit:active {
   background: var(--form-accent-hover);
+}
+
+.je-form__submit:focus-visible {
+  outline: 2px solid var(--form-accent);
+  outline-offset: 2px;
 }
 
 .je-form__thanks {
@@ -212,11 +248,17 @@ textarea.je-form__input {
 .je-form__option {
   display: flex;
   gap: 8px;
-  align-items: center;
+  align-items: flex-start;
   margin-top: 8px;
   font-size: 14px;
   color: var(--form-ink);
   cursor: pointer;
+}
+
+.je-form__option > input {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  accent-color: var(--form-accent);
 }
 
 @supports not ((gap: 1px) and (inset: 0)) {
@@ -271,7 +313,7 @@ textarea.je-form__input {
   height: 10px;
   background: var(--form-page-bg);
   border: 1px solid var(--form-border);
-  border-radius: 5px;
+  border-radius: 999px;
   overflow: hidden;
 }
 
@@ -292,3 +334,10 @@ textarea.je-form__input {
 }
 
 /* jednotka override — none. The caricature keeps the starter geometry. */
+
+@media (max-width: 560px) {
+  .je-form {
+    margin: 24px 0;
+    padding: 16px;
+  }
+}

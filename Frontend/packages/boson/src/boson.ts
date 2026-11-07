@@ -23,3 +23,9 @@
 
 import '../../../../modules/Themes/Boson/assets/critical/boson.css'
 import '../../../../modules/Themes/Boson/assets/scripts/boson.js'
+
+/* Embedded form block (Forms module), `bo-` prefix. The module's stylesheet
+   styles the questions and comments blocks and predates this one, so the form
+   lives here, next to the build that ships it, and the module stays a
+   byte-verified copy of nativa-themes. */
+import './form.css'

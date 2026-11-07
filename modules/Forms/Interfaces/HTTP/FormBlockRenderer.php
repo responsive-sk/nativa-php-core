@@ -68,17 +68,29 @@ final readonly class FormBlockRenderer
     }
 
     /**
+     * The validation summary, announced as a region.
+     *
+     * A failed submission re-renders the page the reader was on, so nothing
+     * moves their focus to the message above the form: without a live region
+     * the only signal is that the page came back. `role="alert"` is that
+     * signal, and the wrapper is why the messages are one region instead of
+     * one announcement per field.
+     *
      * @param list<string> $errors
      */
     private static function errors(array $errors, string $prefix): string
     {
-        $html = '';
+        if ([] === $errors) {
+            return '';
+        }
+
+        $html = '<div class="' . $prefix . '-form__errors" role="alert">';
 
         foreach ($errors as $error) {
             $html .= '<p class="' . $prefix . '-form__error">' . FrontendLayout::e($error) . '</p>';
         }
 
-        return $html;
+        return $html . '</div>';
     }
 
     /**
@@ -143,6 +155,16 @@ final readonly class FormBlockRenderer
                 . ' value="1"' . $checked . $required . $invalidAttr . '> '
                 . FrontendLayout::e($field->label) . $requiredMark
                 . '</label></div>';
+        }
+
+        // A select is ONE control with ONE accessible name, so it takes the
+        // ordinary label. A fieldset is what a group of controls needs, and
+        // that is the radio list only: shipping a fieldset around a select put
+        // the browser's own border, padding and `min-inline-size` around the
+        // field, which every theme then had to reset.
+        if ($field->type->isChoice() && 'select' === $field->type->choiceWidget()) {
+            return '<div class="' . $prefix . '-form__field">' . $label
+                . self::choices($field, $prefix, $slug, $value, $invalidAttr, $required) . '</div>';
         }
 
         if ($field->type->isChoice()) {
