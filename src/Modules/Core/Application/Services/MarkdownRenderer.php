@@ -375,6 +375,18 @@ final class MarkdownRenderer
             $i++;
         }
 
+        // A paragraph that is nothing but a block placeholder is not a
+        // paragraph. `{{form:<slug>}}` expands to a `<section>`, so wrapping it
+        // in `<p>` shipped `<p><section>` on every page carrying a form —
+        // nesting the browser silently closes, one empty paragraph beside each
+        // block. The placeholder is left bare and the expansion lands where its
+        // own markup expects to. A placeholder INSIDE a sentence keeps its
+        // paragraph, because that text is a sentence with a block in it.
+        if (1 === \count($paragraph)
+            && 1 === preg_match('/^\s*\{\{[a-z0-9_-]+:[^{}]*\}\}\s*$/', $paragraph[0])) {
+            return ['html' => trim($paragraph[0]) . "\n", 'next' => $i];
+        }
+
         // A source line ends where the reader should see a line end, in three
         // shapes: the separator, which marks a sentence that continues
         // (`sentence >` then `next part` renders as `sentence &gt;<br>next
