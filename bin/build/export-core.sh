@@ -61,7 +61,11 @@ step() {
 }
 
 cleanup() {
-    [ -n "$CLEANUP" ] && rm -rf "$CLEANUP"
+    # An `if`, not `[ -n ] && rm`: a trap that ends on a false test returns 1,
+    # and bash makes the EXIT trap's status the script's status.
+    if [ -n "$CLEANUP" ]; then
+        rm -rf "$CLEANUP"
+    fi
 }
 trap cleanup EXIT
 

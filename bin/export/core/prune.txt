@@ -53,5 +53,12 @@ bin/build/lekalo-modules.sh
 bin/build/mago-modules-report.sh
 bin/ops/lekalo-reports.php
 
+# The generator belongs to the source repository: the export has no profile to
+# read and nothing to publish from its own copy.
+bin/build/export-core.sh
+bin/build/publish-core.sh
+bin/ops/export-core-registry.php
+bin/ops/export-core-verify.php
+
 # The profile itself, after it has been moved into place.
 bin/export
