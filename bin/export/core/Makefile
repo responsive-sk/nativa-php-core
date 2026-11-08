@@ -1,7 +1,7 @@
 # Nativa Core — the kernel, the module catalogue and the theme builds.
 #
-# This file is GENERATED into the nativa-core repository by
-# `bin/build/export-core.sh` from nativa-php-core. A target that cannot run
+# This file is GENERATED into the nativa-core repository from nativa-php-core.
+# `.nativa-core-export.json` names the commit it came from. A target that cannot run
 # here (against a sibling checkout or the source tree's architectural model)
 # is not listed, because a red gate on a fresh clone teaches a reader that the
 # gates do not hold. The source repository keeps the full Makefile.
@@ -12,7 +12,6 @@
 PHP ?= php
 COMPOSER ?= composer
 MAGO_ARGS ?=
-LEKALO_MODULES ?=
 
 ##@ Help
 help: ## Show available targets
