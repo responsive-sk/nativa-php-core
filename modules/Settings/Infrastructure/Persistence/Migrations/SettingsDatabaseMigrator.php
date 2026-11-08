@@ -52,6 +52,7 @@ final readonly class SettingsDatabaseMigrator implements MigratorInterface
         ['Comments', '/mark/comments', 'admin', 100, 'message'],
         ['Questions', '/mark/questions', 'admin', 102, 'help-circle'],
         ['Forms', '/mark/forms', 'admin', 105, 'inbox'],
+        ['Outbox', '/mark/outbox', 'admin', 108, 'inbox'],
         ['Audit', '/mark/audit', 'admin', 110, 'clipboard'],
     ];
 

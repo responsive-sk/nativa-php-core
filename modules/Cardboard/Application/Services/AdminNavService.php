@@ -42,6 +42,7 @@ final readonly class AdminNavService
         ['id' => '_comments',  'label' => 'Comments',  'href' => '/mark/comments', 'sort_order' => 100, 'is_active' => true, 'icon' => 'message', 'parent_id' => null],
         ['id' => '_questions', 'label' => 'Questions', 'href' => '/mark/questions', 'sort_order' => 102, 'is_active' => true, 'icon' => 'help-circle', 'parent_id' => null],
         ['id' => '_forms',     'label' => 'Forms',     'href' => '/mark/forms', 'sort_order' => 105, 'is_active' => true, 'icon' => 'inbox', 'parent_id' => null],
+        ['id' => '_outbox',    'label' => 'Outbox',    'href' => '/mark/outbox', 'sort_order' => 108, 'is_active' => true, 'icon' => 'inbox', 'parent_id' => null],
         ['id' => '_audit',     'label' => 'Audit',     'href' => '/mark/audit', 'sort_order' => 110, 'is_active' => true, 'icon' => 'clipboard', 'parent_id' => null],
     ];
 
@@ -253,6 +254,7 @@ final readonly class AdminNavService
             '/mark/questions' => Permissions::CONTENT,
             '/mark/media' => Permissions::CONTENT,
             '/mark/forms' => Permissions::CONTENT,
+            '/mark/outbox' => Permissions::ROLES,
             '/mark/bulk-publish' => Permissions::CONTENT,
             '/mark/bulk-delete' => Permissions::CONTENT,
             '/mark/locales' => Permissions::SETTINGS,

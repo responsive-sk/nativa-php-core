@@ -95,6 +95,7 @@ final class AdminRoutePolicy
         '/mark/questions'        => Permissions::CONTENT,
         '/mark/media'            => Permissions::CONTENT,
         '/mark/forms'            => Permissions::CONTENT,
+        '/mark/outbox'           => Permissions::ROLES,
 
         // Bulk actions: the COARSE check only. The POST body names the entity,
         // and that choice is attacker-controlled, so `permissionForEntity()`

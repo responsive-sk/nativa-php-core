@@ -61,6 +61,7 @@ final class IconRegistry
         '_tags'      => 'tag',
         '_comments'  => 'message',
         '_forms'     => 'inbox',
+        '_outbox'    => 'inbox',
         '_audit'     => 'clipboard',
     ];
 
