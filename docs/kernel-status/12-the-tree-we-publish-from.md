@@ -20,7 +20,7 @@ marker naming that commit, and is replaced wholesale by the next export.
 ## What the export carries
 
 `bin/export/core/prune.txt` is the decision, one path and one reason per line.
-Measured on the first export: **26 paths pruned**, **1 053 files** in the
+Measured on the first export: **30 paths pruned**, **1 047 files** in the
 tree.
 
 | pruned | why |
@@ -29,7 +29,7 @@ tree.
 | `lekalo/`, `lekalo.lock`, `openspec/` | the model and the plans; no exported target reads them |
 | `.ai-factory/`, `.codex/`, `AGENTS.md`, `CONTRIBUTING.md` | agent tooling and this tree's rules; the export ships its own short `AGENTS.md` |
 | `Makefile`, `toolchain.json`, `phpunit.xml`, `.gitignore`, `README.md`, `.github/workflows/ci.yml` | each names something the export does not have, so each is replaced by `bin/export/core/<same name>` |
-| `bin/build/{extract-kernel,sync-themes,kernel-size,render-theme-pages,lekalo-modules,mago-modules-report}.sh`, `bin/build/kernel-divergence.txt`, `bin/ops/lekalo-reports.php` | they keep this tree in step with a sibling checkout, or measure this tree |
+| `bin/build/{extract-kernel,sync-themes,kernel-size,render-theme-pages,lekalo-modules,mago-modules-report,export-core,publish-core}.sh`, `bin/build/kernel-divergence.txt`, `bin/ops/{lekalo-reports,export-core-registry,export-core-verify}.php` | they keep this tree in step with a sibling checkout, measure this tree, or generate and publish the export itself |
 
 Everything else travels whole: `src/` (Core, Database, Tooling, KernelTheme,
 `src/Themes/kernel`), `modules/`, `Frontend/packages/`, `public/` (including the
@@ -65,8 +65,8 @@ accepts the rename without a network round trip.
 
 | measured | value |
 |---|---|
-| files in the tree | 1 053 (no vendor, no node_modules, no `dist/`) |
-| pruned paths | 26 |
+| files in the tree | 1 047 (no vendor, no node_modules, no `dist/`) |
+| pruned paths | 30 |
 | exported Make targets | 18, all present in the source Makefile |
 | exported CI jobs | 9, every `make` call an exported target |
 | excluded tests | 13 |
