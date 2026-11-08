@@ -193,3 +193,23 @@ OWNED src/Modules/Core/Domain/Contracts/Mailer.php # 5fcd2f8: mail contract for 
 OWNED src/Modules/Core/Domain/SubmitResult.php # 8c57c3c: submit answers as a type instead of an array
 OWNED src/Modules/Core/Domain/ThemeSetting.php # fea7c1e: a theme declares its admin-editable settings
 OWNED src/Modules/Core/Domain/ThemeSettingValues.php # fea7c1e: the values such settings hold
+
+# --- Recorded 2026-11-08: differences --check found unrecorded ----------------
+# The generated theme sheets, the two panel stylesheets and the two kernel
+# surfaces below landed here after the last import; upstream has not taken
+# them, so each line names the commit that decided the difference.
+DIVERGED Frontend/packages/basic/src/questions.css # b2ce15d: generated from the starter by bin/generate/generate-questions-css.mjs
+DIVERGED Frontend/packages/basic/src/form.css # b2ce15d: generated from the starter by bin/generate/generate-form-css.mjs
+DIVERGED Frontend/packages/erik/src/erik/questions.css # b2ce15d: generated copy, as above
+DIVERGED Frontend/packages/erik/src/erik/form.css # b2ce15d: generated copy; backfills the fieldset reset and the label padding the hand copies lacked
+DIVERGED Frontend/packages/jednotka/src/questions.css # b2ce15d: generated copy, as above
+DIVERGED Frontend/packages/jednotka/src/form.css # b2ce15d: generated copy, as above
+DIVERGED Frontend/packages/magazine/src/magazine/questions.css # b2ce15d: generated copy, as above
+DIVERGED Frontend/packages/magazine/src/magazine/form.css # b2ce15d: generated copy, as above
+DIVERGED Frontend/packages/moonshine/src/moonshine/questions.css # b2ce15d: generated copy, as above
+DIVERGED Frontend/packages/moonshine/src/moonshine/form.css # b2ce15d: generated copy, as above
+DIVERGED Frontend/packages/starter/src/form.css # 6121113: the embedded form block as shipped, with the radio-group fieldset reset
+DIVERGED Frontend/packages/moonshine/src/mark/data.css # 3319f03: the media folder manager's header, strip and rows
+DIVERGED Frontend/packages/moonshine/src/mark/components.css # 01b6fe9: module install and remove in the panel
+DIVERGED Frontend/packages/erik/src/erik/tokens.css # c4871db: the fallback is matched by average advance, not x-height, and Bold has its own face
+DIVERGED src/Modules/Core/Interfaces/HTTP/Markdown/MarkdownBlockContext.php # f6abd94: a form block from the page's own front matter
