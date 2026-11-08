@@ -135,6 +135,15 @@ final class FormsCrudTest extends TestCase
     }
 
     #[Test]
+    public function theEditorHasAFormSaveButton(): void
+    {
+        $response = (new FormsCreateAction($this->router))->handle(Request::create('GET', '/mark/forms/create', ['locale' => 'sk']));
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertStringContainsString('<button type="submit" class="m-btn m-btn-primary">Save form</button>', $response->getContent());
+    }
+
+    #[Test]
     public function theIndexIsServed(): void
     {
         (new FormsCreateAction($this->router))->handle(self::post('/mark/forms/create', self::body('contact')));
