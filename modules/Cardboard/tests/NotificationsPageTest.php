@@ -280,6 +280,31 @@ final class NotificationsPageTest extends TestCase
         self::assertSame(302, $all->getStatusCode(), 'marking the inbox read must not fail on a missing table');
     }
 
+    /**
+     * The other half of "an unmigrated inbox is not an outage": the badge
+     * answering zero is one thing (`NotificationsBadgeTest`), and the page a
+     * moderator actually opens has to SAY that the database is missing
+     * instead of showing an empty inbox that looks like good news.
+     */
+    #[Test]
+    public function anUnmigratedInboxExplainsItself(): void
+    {
+        $this->signIn('user-a');
+
+        putenv('DB_NOTIFICATIONS=' . $this->tmpDir . '/never-migrated.db');
+        DatabaseConnectionManager::resetInstance();
+        NotificationsServices::reset();
+
+        $response = $this->action()->handle($this->request('GET', '/mark/notifications'));
+
+        self::assertSame(200, $response->getStatusCode(), 'a missing table must not be an error page');
+        self::assertStringContainsString(
+            'has not been created',
+            $response->getContent(),
+            'the page must explain the missing database rather than imply an empty, read inbox',
+        );
+    }
+
     private function action(): NotificationsAction
     {
         $router = Router::fromEntries([], [
