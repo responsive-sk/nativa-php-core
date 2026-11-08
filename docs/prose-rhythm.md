@@ -79,6 +79,31 @@ They also measure the tempo, in the three shapes below.
 A test that decided where a sentence may be cut >
 would be judging the reader's ear with a string matcher.
 
+## A control, not a law
+
+The separator is a control here, not a law.
+It exists so that a break inside a sentence is visible on the page >
+and a phrase cut in the wrong place is then easy to see and easy to fix.
+That is training work, and the glyph has no claim on the prose once it is done.
+
+Retiring it is a known job with a measured price.
+It is one condition in `MarkdownRenderer::renderParagraph` >
+prose that drops the trailing ` >` from 1 048 lines in fifteen files >
+and the canonical `openspec/specs/prose-separator/` retired through a change >
+with `MarkdownSeparatorTest` going along with it.
+
+The page would not go flat.
+A sentence that ends already breaks the line.
+The period at its end is all that the break needs.
+That half of the rhythm does not depend on the glyph.
+What the separator adds is the break in the middle of a sentence >
+which is the one a reader does not need to see at all.
+
+The headings keep the glyph either way.
+The 157 headings that split a prefix from a title >
+like `## Časť I > Tri riadky, ktoré si odporujú` >
+use the character as a heading shape rather than as a rhythm mark.
+
 ## What the tests hold
 
 `ProseRhythmContractTest` measures the sentence tempo of every wrapped file.
