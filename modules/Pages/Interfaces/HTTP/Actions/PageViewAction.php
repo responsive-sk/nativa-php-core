@@ -114,14 +114,17 @@ final class PageViewAction
 
         $prefix = ThemeKernel::for($theme)->prefix();
 
+        // The reader-questions block sits at the end of a page exactly as it sits at
+        // the end of an article — INSIDE the theme's container, which is what
+        // `articleTail()` does for an article. Appended after `</section>` it is a
+        // sibling of the container instead of its child, so a theme that gives the
+        // page its width on `.…-section` (Boson's `.bo-section`) renders the whole
+        // questions box edge to edge.
         $content = '<section class="' . $prefix . '-section">'
             . '<h1 class="' . $prefix . '-section__title">' . FrontendLayout::e($title) . '</h1>'
             . '<div class="' . $prefix . '-article__body">' . $bodyHtml . '</div>'
+            . $this->questionBlock($request, $slug, $locale, $prefix)
             . '</section>';
-
-        // The reader-questions block sits at the end of a page exactly as it sits at
-        // the end of an article.
-        $content .= $this->questionBlock($request, $slug, $locale, $prefix);
 
         $desc = '' !== $seoDescription ? $seoDescription : 'Nativa Minimal';
 
