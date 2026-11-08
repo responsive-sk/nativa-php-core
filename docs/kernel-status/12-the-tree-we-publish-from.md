@@ -66,6 +66,7 @@ accepts the rename without a network round trip.
 | measured | value |
 |---|---|
 | files in the tree | 1 047 (no vendor, no node_modules, no `dist/`) |
+| size on disk | 9,3M, the tree the dry run would push |
 | pruned paths | 30 |
 | exported Make targets | 18, all present in the source Makefile |
 | exported CI jobs | 9, every `make` call an exported target |
@@ -74,6 +75,11 @@ accepts the rename without a network round trip.
 | skipped in that run | 787, because no module is installed in a fresh export |
 | `composer validate` | valid, lock hash included |
 | `php bin/cms module:list` | 26 catalogued modules, 5 themes |
+
+The preflight the dry run stands on: `gh auth status` names `evan70`, that
+account is `admin` of `responsive-sk`, and `gh repo view
+responsive-sk/nativa-core` reports the name does not exist yet. So the first
+`--yes` takes the create branch rather than the replace branch.
 
 The 787 skips are the export's shape, not a defect: the catalogue is a
 catalogue, `src/Modules/<Name>` is gitignored, and a module test skips when its
