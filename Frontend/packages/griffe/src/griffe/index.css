@@ -17,3 +17,11 @@
 @import './reveal.css';
 @import './blog.css';
 @import './footer.css';
+
+/* Reader questions block (Questions module) — `gr-`, copied from starter. The
+   renderer builds every class from the active theme's prefix, so without this
+   file the block matched nothing on a griffe page. */
+@import './questions.css';
+
+/* Embedded form block (Forms module) — `gr-`, copied from starter. */
+@import './form.css';
