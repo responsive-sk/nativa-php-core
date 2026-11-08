@@ -82,7 +82,7 @@ const styles = css`
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    font-family: 'Roboto Condensed', sans-serif;
+    font-family: 'Roboto Condensed', 'Roboto Condensed Fallback', sans-serif;
     font-size: 24px;
     font-weight: 700;
     color: white;

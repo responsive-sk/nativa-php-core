@@ -136,7 +136,7 @@ const styles = css`
   /* Tag */
   .slide-tag {
     display: inline-block;
-    font-family: 'Roboto Condensed', sans-serif;
+    font-family: 'Roboto Condensed', 'Roboto Condensed Fallback', sans-serif;
     font-size: 14px;
     font-weight: 600;
     letter-spacing: 0.2em;
@@ -163,7 +163,7 @@ const styles = css`
 
   .title-text {
     display: block;
-    font-family: 'Roboto Condensed', sans-serif;
+    font-family: 'Roboto Condensed', 'Roboto Condensed Fallback', sans-serif;
     font-weight: 700;
     font-size: clamp(3rem, 8vw, 5.5rem);
     line-height: 1.1;
@@ -321,7 +321,7 @@ const styles = css`
     position: fixed;
     bottom: 84px;
     right: 40px;
-    font-family: 'Roboto Condensed', sans-serif;
+    font-family: 'Roboto Condensed', 'Roboto Condensed Fallback', sans-serif;
     font-size: 14px;
     color: rgba(255, 255, 255, 0.6);
     z-index: 100;

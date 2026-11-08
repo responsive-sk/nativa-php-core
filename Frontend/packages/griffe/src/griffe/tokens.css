@@ -16,7 +16,7 @@
     --gr-max: 1200px;
     --gr-gap: 1.5rem;
     --gr-radius: 14px;
-    --gr-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    --gr-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, "Inter Fallback", Roboto, sans-serif;
     --gr-display: clamp(2.5rem, 7vw, 5.5rem);
     --gr-ease: cubic-bezier(.22, .61, .21, 1);
 }
