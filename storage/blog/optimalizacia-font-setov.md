@@ -32,7 +32,7 @@ Dva fonty, ktoré Boson reálne sťahuje, boli *latin-only* subset-y:
 
 ```
 public/fonts/inter-400.woff2               upm 2048   cmap 230   chýba 24
-public/fonts/roboto-condensed-400.woff2    upm 2048   cmap 363   chýba 24
+public/fonts/roboto-condensed-400.woff2    upm 2048   cmap 229   chýba 24
 
 chýba: Č Ď Ĺ Ľ Ň Ŕ Š Ť Ž   č ď ĺ ľ ň ŕ š ť ž   Ě Ř Ů   ě ř ů
 ```
@@ -223,12 +223,23 @@ Oprava preto nie je „prepíš súbor", ale **nová URL s obsahom v názve**:
 
 ```
 /fonts/inter-400-0c9c05bd.woff2
-/fonts/roboto-condensed-400-65efc7a5.woff2
+/fonts/roboto-condensed-400-c05481f9.woff2
 ```
 
 Staré súbory zostali na svojich URL s pôvodnými bajtmi >
-používa ich griffe a admin, a mazanie by znamenalo 404 pre každé HTML >
+mazanie by znamenalo 404 pre každé HTML >
 ktoré má ešte starú URL v cache.
+Neostali však len ako mŕtva váha:
+`Frontend/packages/griffe/src/styles/fonts.css` ukazoval práve na ne >
+takže na griffe stránke prišlo každé `Č` v nadpise `Časť` z fallbacku >
+až do novembra.
+V novembri ten súbor ukázal na tie isté dve hashované URL >
+ktoré Boson používa od októbra.
+Súbor `roboto-condensed-400-c05481f9.woff2` potom dostal ešte jednu adresu >
+`roboto-condensed-400-99aca383.woff2` >
+lebo v ňom chýbal glyf `space` a medzery v nadpisoch kreslil fallback.
+Admin ich nikdy nesťahoval >
+jeho písmo je Gilroy z `public/fonts/mark`.
 
 ---
 
