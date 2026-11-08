@@ -22,6 +22,8 @@ use PHPUnit\Framework\TestCase;
  *
  * The measurement this table was frozen from, 2026-11-08: 1 083 occurrences in
  * 24 files, `docs/kernel-status/07-ci-modules-gate.md` carrying 224 of them.
+ * `kernel-status/10` was converted the same day and its row is gone, because a
+ * document that is not in the table is held to zero.
  * That is why the gate starts here instead of at zero: a check that is red on
  * the tree it ships cannot be told apart from one that is broken.
  *
@@ -32,8 +34,8 @@ use PHPUnit\Framework\TestCase;
 final class EmDashContractTest extends TestCase
 {
     /**
-     * The frozen count per document. Lower a row when a document is converted;
-     * never raise one.
+     * The frozen count per document. Lower a row when a document is converted,
+     * or drop it entirely when the count reaches zero; never raise one.
      *
      * @return array<string, int>
      */
@@ -56,7 +58,6 @@ final class EmDashContractTest extends TestCase
             'docs/kernel-status/07-ci-modules-gate.md' => 224,
             'docs/kernel-status/08-docs-surface-and-reader-layout.md' => 18,
             'docs/kernel-status/09-clickhouse-sqlite-bridge.md' => 16,
-            'docs/kernel-status/10-forms-and-the-token-with-no-session.md' => 2,
             'docs/mago-evaluation.md' => 79,
             'docs/modules.md' => 140,
             'docs/name-ownership.md' => 36,

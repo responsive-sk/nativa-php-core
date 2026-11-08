@@ -40,7 +40,7 @@ this round added.
 **A schema that owns its vocabulary, as an enum.** `FormFieldType` was first a
 class of string constants, and that was a defect the ownership gate measured
 immediately: `TEXT = 'text'` and `EMAIL = 'email'` charged 182 unrelated places
-in the tree — mail settings, user records, theme assertions — as re-spellings of
+in the tree (mail settings, user records, theme assertions) as re-spellings of
 a value this module owns. The vocabulary is a backed enum now, so a case owns
 its token without claiming an English word, and every limit stays a constant on
 `FormSchema`: 20
