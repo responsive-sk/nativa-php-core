@@ -303,6 +303,11 @@ if [ "$CHECK" != true ]; then
     exit 0
 fi
 
+# Counted here, before the suite: the run leaves a result cache, an error log and
+# a session behind, and a summary that names the tree after the run would report
+# three files the export does not carry.
+exported_files="$(find "$TARGET" -type f -not -path '*/.git/*' | wc -l | tr -d ' ')"
+
 step "Linting every exported PHP file"
 find "$TARGET" -name '*.php' -not -path '*/vendor/*' -print0 | xargs -0 -n1 php -l >/dev/null
 
@@ -342,4 +347,4 @@ done < "$STAGE/phpunit.exclude"
 
 step "OK — export is green ($tests_before tests discovered)"
 echo "    commit:  $SHORT"
-echo "    files:   $(find "$TARGET" -type f -not -path '*/.git/*' -not -path '*/vendor/*' | wc -l | tr -d ' ')"
+echo "    files:   $exported_files"
