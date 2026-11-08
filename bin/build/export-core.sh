@@ -270,7 +270,7 @@ php -r '
 ' "$TARGET" "$STAGE"
 
 step "Generating the exported toolchain registry"
-php "$TARGET/bin/ops/export-core-registry.php" \
+php "$ROOT/bin/ops/export-core-registry.php" \
     --root="$TARGET" \
     --registry="$STAGE/toolchain.source.json" \
     --makefile="$TARGET/Makefile" \
