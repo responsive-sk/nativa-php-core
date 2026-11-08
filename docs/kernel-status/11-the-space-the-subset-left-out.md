@@ -31,6 +31,8 @@ survive the font table.
 | line box from 280 to 560 px wide, webfont blocked | 192 / 154 / 154 / 154 / 115 / 115 / 115 / 115 px, identical to the loaded run |
 | `public/dist/griffe/assets/griffe-KiqZ3wI6.css` | 25 426 B against a 27 000 budget; the two fallback rules are 204 B and 215 B of it |
 | themes shipping a metric fallback | griffe, boson, erik; mono ships none because it ships no `@font-face` |
+| JetBrains Mono against the mono fallback, 100 px in Chromium | 1080.188 px wide and 113 px tall either way |
+| the same, from the tables | 0.6 em per glyph against Liberation Mono's 0.6001 em |
 
 The fallback numbers, per theme and per face:
 
@@ -70,6 +72,15 @@ is one face per weight: Gilroy Regular and Bold are 1.6 % apart in width, and
 a shared face left the bold headings narrow enough that the browser
 synthesised the weight and widened them again by an amount no font table
 describes.
+
+**The mono face needs no pair, and that is measured.** JetBrains Mono advances
+0.6 em per glyph; Liberation Mono, the local face that answers on a Linux
+desktop, advances 0.6001 em, so the two are 0.02 % apart and a `size-adjust`
+for them would sit at 100 % and move nothing. Chromium agrees: the same string
+at 100 px measures 1080.188 px wide and 113 px tall with the webfont and with
+the request blocked. That is why `--font-mono` is the one griffe stack
+without a `Fallback` family: an omission would be a defect, and this is the
+measurement that makes it a decision.
 
 **The budget moved with a reason.** Griffe's frozen stylesheet had a 23 000
 byte ceiling from before it shipped the question and form blocks. It measures
