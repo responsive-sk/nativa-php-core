@@ -76,7 +76,10 @@ dbq() { php -r 'echo (new PDO("sqlite:" . getenv($argv[1])))->query($argv[2])->f
 # file and it says so, because an unexplained one would be the first thing
 # somebody deletes.
 # shellcheck disable=SC2016 # the same reason as dbq above: php -r's own quoting
-db_exec() { php -r 'exec((new PDO("sqlite:" . getenv($argv[1])))->exec($argv[2]));' "$1" "$2"; }
+# The PDO call is the whole program: its return value (the affected row count) is
+# not fed to PHP's exec(), which would run that integer as a shell command and
+# print `sh: line 1: 1: command not found` into the gate's output.
+db_exec() { php -r '(new PDO("sqlite:" . getenv($argv[1])))->exec($argv[2]);' "$1" "$2"; }
 
 # One assertion, one report line: `want <label> <expected> <actual>`.
 want() {
