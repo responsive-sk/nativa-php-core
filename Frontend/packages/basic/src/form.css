@@ -47,7 +47,7 @@
   --form-error-ink: var(--ba-error-ink);
   --form-accent-ink: #ffffff;
   --form-radius: 6px;
-/* --- end palette --- */
+  /* --- end palette --- */
 }
 
 .ba-form {
@@ -92,6 +92,10 @@
 .ba-form__field {
   display: grid;
   gap: 6px;
+  /* A radio group is a fieldset, and a fieldset arrives with a groove border,
+     padding and `min-inline-size: min-content` from the browser. That box is
+     the theme's to remove once, here, instead of every rule having to work
+     around a frame nobody asked for. */
   min-inline-size: 0;
   margin: 0;
   padding: 0;
@@ -109,6 +113,7 @@
 }
 
 .ba-form__label {
+  padding: 0;
   font-size: 13px;
   font-weight: 600;
   color: var(--form-ink);
@@ -130,6 +135,11 @@
   border-radius: var(--form-radius);
 }
 
+/*
+ * The focus state keeps an outline. `outline: none` plus a 1px border colour is
+ * a change most people cannot see on a white input, and it is the difference
+ * between a keyboard user finding the field and losing it.
+ */
 .ba-form__input:focus {
   outline: 2px solid var(--form-accent);
   outline-offset: 1px;
@@ -159,6 +169,8 @@ textarea.ba-form__input {
   display: none;
 }
 
+/* The summary is one region (renderer emits role="alert" on it), so the
+   messages are spaced by their container rather than by each message. */
 .ba-form__errors {
   display: grid;
   gap: 8px;
@@ -248,6 +260,8 @@ textarea.ba-form__input {
 .ba-form__option {
   display: flex;
   gap: 8px;
+  /* Top-aligned, because the consent statement wraps to two or three lines on
+     a phone and a box centred against them floats in the middle of the text. */
   align-items: flex-start;
   margin-top: 8px;
   font-size: 14px;

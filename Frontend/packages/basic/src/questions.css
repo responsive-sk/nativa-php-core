@@ -34,8 +34,7 @@
  */
 
 :root {
-  
-/* --- palette (generated) --- */
+  /* --- palette (generated) --- */
   --questions-ink: var(--ba-ink);
   --questions-muted: var(--ba-muted);
   --questions-border: var(--ba-border);
@@ -50,7 +49,7 @@
   --questions-radius: 6px;
   --questions-width: 720px;
   --questions-form-width: 520px;
-/* --- end palette --- */
+  /* --- end palette --- */
 }
 
 .ba-questions {
