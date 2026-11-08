@@ -175,9 +175,11 @@ final class EmDashContractTest extends TestCase
      * Em dashes in one document's prose: fenced blocks and inline code are
      * stripped first, because there the character is data rather than writing.
      *
-     * Named `emDashesIn` and not `count`: PHP 8.5.12 segfaults while compiling a
-     * class that declares a method called `count`, with or without a body, and
-     * the crash takes the whole PHPUnit run with it (exit 139, no message).
+     * Named `emDashesIn` and not `count`: `TestCase::count()` is final, so a test
+     * that declares its own `count()` is a compile-time fatal, and with Xdebug
+     * 3.5.3 loaded that fatal can take the whole run down with no output at all
+     * (measured on PHP 8.5.12, reported to the Xdebug tracker). Any other name is
+     * a legal private helper.
      */
     private static function emDashesIn(string $file): int
     {
