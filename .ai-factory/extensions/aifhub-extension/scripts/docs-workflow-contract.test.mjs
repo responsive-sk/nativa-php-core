@@ -735,6 +735,34 @@ describe('complete OpenSpec workflow documentation contract', () => {
     }
   });
 
+  it('keeps the cumulative 2.20 release contract, schema pin and deferred boundaries', async () => {
+    const metadata = JSON.parse(await readRepoFile('aifhub-extension.json'));
+    const manifest = JSON.parse(await readRepoFile('extension.json'));
+    assert.equal(metadata.sources['ai-factory'].version, '2.20.0');
+    assert.equal(metadata.sources['ai-factory'].baselineVersion, '2.20.0');
+    assert.equal(metadata.sources['ai-factory'].lastSync, '2026-10-30');
+    assert.equal(manifest.$schema, 'https://raw.githubusercontent.com/lee-to/ai-factory/2.20.0/schemas/extension.schema.json');
+    const notes = metadata.sources['ai-factory'].notes;
+    for (const text of ['64 commits and 124 changed files', 'c38ff6ffe183ccf39b01774be892fcf64d9169c1',
+      'skill-targets.ts', 'skills-migration.ts', 'installer.ts', 'extension-ops.ts', 'injections.ts',
+      'transformer.ts', 'template.ts', 'config.ts', 'agents.ts', 'src/utils/fs.ts', 'init.ts', 'update.ts',
+      'upgrade.ts', 'extension.ts', 'aif-plan', 'aif-explore', 'aif-improve', 'aif-review', 'aif-distillation',
+      'aif-reference', 'aif-implement', 'aif-verify', 'aif-fix', 'aif-archive', 'aif-commit', 'aif-evolve',
+      'aif-roadmap', 'aif-rules-check', 'aif-architecture', 'aif-warmup', 'aif-qa-check', 'antigravity',
+      'ai-tester', 'extension.schema.json', 'package.json', 'plugin.json', 'docs/*', '.github/ai-review',
+      'adapter', 'retain', 'no-op', 'v220', 'a82b8a0b834df2047e71857476f72ed66c6472d7', 'Post-#199'])
+      assertIncludes(notes, text, '2.20 cumulative surface audit');
+    for (const file of ['README.md', 'docs/README.md', 'docs/usage.md', 'docs/openspec-compatibility.md', 'docs/context-loading-policy.md']) {
+      const body = await readRepoFile(file);
+      assertIncludes(body, '2.20', file);
+      assertIncludes(body, 'v220', file === 'docs/context-loading-policy.md' ? 'context policy links v220 audit' : file);
+    }
+    const compatibility = await readRepoFile('docs/openspec-compatibility.md');
+    assert.ok(compatibility.indexOf('## AI Factory 2.20 Reviewed Release') < compatibility.indexOf('## AI Factory 2.19 Reviewed Release'));
+    for (const text of ['review-validation-failed', 'workflow.improve_check', 'assertNoConfiguredRuntimeOrphans', 'Deferred post-#199', 'LPAC-sandbox'])
+      assertIncludes(compatibility, text, '2.20 ownership and deferred contract');
+  });
+
   it('documents the published AI Factory 2.19.0 release, selectable 2.18.1/2.19.0 executable targets, and ownership boundaries', async () => {
     const metadata = JSON.parse(await readRepoFile('aifhub-extension.json'));
     const manifest = JSON.parse(await readRepoFile('extension.json'));
@@ -750,9 +778,9 @@ describe('complete OpenSpec workflow documentation contract', () => {
     const combinedDocs = [readme, changelog, usage, compatibility, docsIndex, contextPolicy, mcpDocs, handoff].join('\n');
 
     assert.equal(metadata.compat['ai-factory'], '>=2.11.0 <3.0.0', 'aifhub-extension.json compat.ai-factory');
-    assert.equal(metadata.sources['ai-factory'].version, '2.19.0', 'aifhub-extension.json sources.ai-factory.version');
-    assert.equal(metadata.sources['ai-factory'].baselineVersion, '2.19.0', 'aifhub-extension.json sources.ai-factory.baselineVersion');
-    assert.equal(metadata.sources['ai-factory'].lastSync, '2026-09-13', 'aifhub-extension.json sources.ai-factory.lastSync');
+    assert.equal(metadata.sources['ai-factory'].version, '2.20.0', 'aifhub-extension.json sources.ai-factory.version');
+    assert.equal(metadata.sources['ai-factory'].baselineVersion, '2.20.0', 'aifhub-extension.json sources.ai-factory.baselineVersion');
+    assert.equal(metadata.sources['ai-factory'].lastSync, '2026-10-30', 'aifhub-extension.json sources.ai-factory.lastSync');
     assertIncludes(metadata.sources['ai-factory'].notes, 'published AI Factory 2.19.0 release', 'aifhub-extension.json sources.ai-factory.notes');
     assertIncludes(metadata.sources['ai-factory'].notes, 'e144f95c89de0d0cb6c9b38dbe8c2907b00dc5ce', '2.19 release custody: exact tag commit');
     assertIncludes(metadata.sources['ai-factory'].notes, 'matching the npm ai-factory@2.19.0 gitHead', '2.19 release custody: npm provenance');
@@ -1133,7 +1161,7 @@ describe('complete OpenSpec workflow documentation contract', () => {
     );
   });
 
-  it('documents the cumulative exact-tagged OpenSpec 1.13.0 baseline, custody and adapter boundary', async () => {
+  it('documents the cumulative exact-tagged OpenSpec 1.15.0 baseline, custody and adapter boundary', async () => {
     const metadata = JSON.parse(await readRepoFile('aifhub-extension.json'));
     const readme = await readRepoFile('README.md');
     const compatibility = await readRepoFile('docs/openspec-compatibility.md');
@@ -1144,13 +1172,13 @@ describe('complete OpenSpec workflow documentation contract', () => {
     const combinedDocs = [readme, compatibility, validation, docsIndex, changelog].join('\n');
     const readmeCompatibility = extractSection(readme, '## OpenSpec Compatibility');
 
-    assert.equal(openspec.version, '1.13.0');
+    assert.equal(openspec.version, '1.15.0');
     assert.equal(openspec.baselineVersion, '1.3.1');
     assert.equal(openspec.supportedRange, '>=1.3.1 <2.0.0');
-    assert.deepEqual(openspec.reviewedStableVersions, ['1.3.1', '1.4.0', '1.4.1', '1.5.0', '1.6.0', '1.7.0', '1.8.0', '1.9.0', '1.10.0', '1.11.0', '1.12.0', '1.13.0']);
+    assert.deepEqual(openspec.reviewedStableVersions, ['1.3.1', '1.4.0', '1.4.1', '1.5.0', '1.6.0', '1.7.0', '1.8.0', '1.9.0', '1.10.0', '1.11.0', '1.12.0', '1.13.0', '1.13.1', '1.13.2', '1.14.0', '1.14.1', '1.14.2', '1.14.3', '1.15.0']);
     assert.deepEqual(openspec.reviewedPrereleaseVersions, ['1.6.0-beta.1']);
-    assert.equal(openspec.lastSync, '2026-09-13');
-    assertIncludes(openspec.notes, 'upstream OpenSpec 1.3.1 through 1.13.0', 'aifhub-extension.json');
+    assert.equal(openspec.lastSync, '2026-10-30');
+    assertIncludes(openspec.notes, 'upstream OpenSpec 1.3.1 through 1.15.0', 'aifhub-extension.json');
     assertIncludes(openspec.notes, 'adapter-only', 'aifhub-extension.json');
 
     assertIncludes(
@@ -1158,10 +1186,12 @@ describe('complete OpenSpec workflow documentation contract', () => {
       `The reviewed OpenSpec baseline is OpenSpec \`${openspec.version}\``,
       'README.md OpenSpec Compatibility reviewed baseline'
     );
-    assertIncludes(docsIndex, 'OpenSpec 1.13.0', 'docs/README.md');
+    assertIncludes(docsIndex, 'OpenSpec 1.15.0', 'docs/README.md');
 
     for (const expected of [
-      'OpenSpec 1.13.0 Reviewed Baseline',
+      'OpenSpec 1.15.0 Reviewed Baseline',
+      'Exact 1.15.0 Custody and Evidence Boundary',
+      'resolved upstream in 1.13.1',
       'Exact 1.10.0 Custody and Evidence Boundary',
       'Exact 1.10.0 CLI Matrix',
       '1.10.0 Source Classification',
@@ -1522,7 +1552,8 @@ describe('complete OpenSpec workflow documentation contract', () => {
     assertIncludes(contextPolicy, 'raw paths found in `index.json`', 'docs/context-loading-policy.md index boundary');
     assertNotIncludes(contextPolicy, 'Files in that directory are safe to delete', 'docs/context-loading-policy.md broad cleanup wording');
 
-    assertIncludes(canonicalSkill, 'version: "1.3.0"', 'skills/aif-mode/SKILL.md version');
+    // reason: aif-mode 1.3.0 -> 1.3.1 — HLV 1.1.0 instruction fix (patch increment per rules/skills.md)
+    assertIncludes(canonicalSkill, 'version: "1.3.1"', 'skills/aif-mode/SKILL.md version');
     assertIncludes(canonicalSkill, 'openspec-change-<safe-id>.md', 'skills/aif-mode/SKILL.md cleanup boundary');
     assertIncludes(canonicalSkill, 'normal bounded failure report', 'skills/aif-mode/SKILL.md failure-report exception');
     assertIncludes(canonicalSkill, 'selected `codex-app` runtime uses `$aif-mode`', 'skills/aif-mode/SKILL.md Codex invocation guidance');

@@ -23,17 +23,18 @@ Use the built-in `/aif-plan` skill as the canonical planning entrypoint for this
 Resolve the artifact profile and parse the leading planning mode before creating a plan directory or writing any planning artifact.
 
 - Recognize only a command-position mode token: `fast`, `full`, or `ultra`. Remove that one leading token from the request body; preserve every later occurrence of those words byte-for-byte, including casing, punctuation, internal whitespace, and line breaks.
-- Absence of an explicit `ultra` token keeps the existing default, `fast`, or `full` behavior. Do not enable ultra from extension baseline metadata.
-- For explicit `ultra`, use the dependency-free shared resolver in `scripts/ai-factory-version-resolver.mjs` before any write. Resolution precedence is: injected test toolchain/version, then project-managed `.ai-factory.json.version`, then bounded CLI evidence only when the executable provenance is proven to match the same project installation.
+- Resolve `resolved_mode` with `resolveAiFactoryWorkflowMode()` from `scripts/ai-factory-version-resolver.mjs`: leading `fast`/`full`/`ultra` token > `workflow.plan_mode` (`ask|fast|full|ultra`) > `ask`. Invalid config emits bounded `WARN [ai-factory-workflow-mode-invalid]` and falls back to `ask`; never echo the invalid value. Interactive `ask` asks full/fast before dispatch. Handoff non-interactive mode resolves config first, then falls back from `ask` to `fast`. Do not enable ultra from extension baseline metadata.
+- For every resolved `ultra` (explicit token OR `workflow.plan_mode: ultra` without a token), call `resolveAiFactoryUltraSupport()` using the dependency-free shared resolver in `scripts/ai-factory-version-resolver.mjs` before any write. Resolution precedence is: injected test toolchain/version, then project-managed `.ai-factory.json.version`, then bounded CLI evidence only when the executable provenance is proven to match the same project installation.
+- `resolveAiFactoryWorkflowSupport(input, { command: 'plan', workflow, ...versionOptions })` combines mode resolution and this same read-only gate. A false `ok` is a no-write stop; it never authorizes persistence itself.
 - A global or PATH-only `ai-factory --version` is not authoritative. When stable project metadata exists, unverified global/PATH-only CLI evidence is ignored with a bounded `ai-factory-cli-provenance-unverified` warning and does not override the project version.
 - Missing, malformed, prerelease, unsupported `<2.18.0`, or provenance-matched CLI/project mismatch results fail closed and create no plan, change, bundle, companion, runtime-state, or research artifact.
 - On that failure emit only a bounded diagnostic with `mode`, `profile`, `version`, `source`, and stable `code`, followed by the actionable handoff `/aif-plan full <request>`. Never include the request body, research body, provider output, credentials, raw stdout, or raw stderr in the diagnostic.
 
-For stable AI Factory `>=2.18.0`, route explicit `ultra` by the resolved artifact profile:
+For stable AI Factory `>=2.18.0`, route resolved `ultra` by the resolved artifact profile:
 
 - In OpenSpec-native mode, `ultra` is a depth profile over the canonical OpenSpec change. Apply the upstream Ultra Detail Gate to exact files and symbols, ordered edits, contracts and data flow, failure handling, bounded logging, tests, acceptance criteria, rollback, and verification detail in `design.md` and `tasks.md`.
 - OpenSpec-native `ultra` still writes only `proposal.md`, `design.md`, `tasks.md`, and applicable delta specs. It MUST NOT create `index.md`, `phase-NN-*.md`, companion files, or an active standalone `<!-- aif:plan-mode:ultra -->` anywhere under the canonical change.
-- In legacy AI Factory-only mode, explicit `ultra` remains upstream-owned. Hand control to the upstream `aif-plan` ultra workflow before AIFHub classic companion normalization; do not create or synchronize a sibling classic plan or companion files.
+- In legacy AI Factory-only mode, resolved `ultra` remains upstream-owned (including explicit `/aif-plan ultra`). Hand control to the upstream `aif-plan` ultra workflow before AIFHub classic companion normalization; do not create or synchronize a sibling classic plan or companion files.
 
 ### Research and interface choices
 
@@ -122,6 +123,8 @@ If the task is docs/tooling-only and does not change product or workflow behavio
 
 When a behavior change removes the final requirement of a capability and the selected OpenSpec CLI is `>=1.8.0`, add native `retire_capabilities: true` to `openspec/changes/<change-id>/.openspec.yaml`, preserving the selected `schema` and other existing metadata. Do this only when the user's request explicitly authorizes capability retirement. Planning must not infer retirement merely because a `REMOVED` delta would leave the base capability empty. For an older supported CLI, record the required OpenSpec upgrade as a blocking archive prerequisite instead of writing unsupported retirement metadata.
 
+For OpenSpec 1.14.x/1.15.0 strict validation, keep ADDED requirement body text at most 500 characters (heading excluded); put examples and edge cases in scenarios, explanatory prose in proposal.md or design.md, and use durable requirement/scenario names. MODIFIED delta bodies and `## Purpose` have separate upstream rules. Do not add unsupported `.openspec.yaml` keys such as `skip_design`; preserve user metadata and explain unknown-key findings instead of stripping it. Keep delta prose inside recognized sections; valid lowercase `x-` metadata extensions are exempt since 1.14.2.
+
 #### Task Intake Normalization
 
 Before normalizing task content, preserve the explicit planning request as canonical raw source when one was supplied:
@@ -142,6 +145,19 @@ Reconcile requirements before exploring an implementation:
 - When repository data, configuration, fixtures, schemas, or content define the real contract, plan at least one representative existing artifact through the primary verification path instead of relying only on synthetic fixtures.
 
 Add an exact `## Requirements Reconciliation` section to `proposal.md` when multiple authoritative sources materially constrain the work, a conflict was resolved by an explicit user or project decision, independent behavior dimensions exist, or a representative real artifact is required. Keep it compact: declared authority, cited decisions with source paths, the applicable combination table, and verification evidence. Omit the complete heading and body for simple work where none of these signals applies; never emit a placeholder section. The heading is a fixed English compatibility token parsed by downstream workflow checks: do not translate or rename it, and preserve an existing section verbatim during replanning.
+
+#### Optional requirement ambiguity lint (opt-in, advisory)
+
+- OpenSpec-native only; legacy classic mode never runs this scan. This scan never replaces `## Requirements Reconciliation`, requirement reconciliation gates, or the upstream conflict STOP semantics: a `suspected_requirement_revision_conflict` finding describes suspected ambiguity inside one presented requirement with exactly two source refs and never authorizes editing requirements or deciding for the owner. Cross-source plan-level conflicts stay with the reconciliation gate.
+- Run the scan only when the user enabled it (`aifhub.requirementLint.enabled: true`); never enable it automatically and skip it entirely without an explicit opt-in. Invoke only the installed command:
+
+```bash
+ai-factory aifhub-requirement-lint --change <change-id> --enabled true --file <requirement-source> [--file <requirement-source> ...] --json
+```
+
+- Scan only requirement sources the user or the planning context explicitly presented. Every finding cites an exact source ref and carries a proposed clarifying question: present that question to the user instead of answering it; never insert a numeric SLA, never rewrite the requirement text, never send questions automatically, and never edit canonical artifacts from the lint output.
+- A `none` result means nothing was found in the presented scope only; it is never a readiness, verification, or approval signal. When the lint is disabled or unavailable, or reports a failed, stale, abstained (`abstained: true` — the assessor declined, which is not a zero-findings result), or a coverage that is not `full` (partial or none — e.g. every presented source was missing) run, state `advisory scan was not performed` with the bounded reason and continue with unchanged planning behavior; this neither blocks nor unblocks a required gate.
+- Skip findings whose exact source refs were already surfaced by `## Requirements Reconciliation` or an upstream reconciliation gate instead of presenting them twice. When a reconciliation gate already stopped the workflow, a skipped or not-performed scan is not a no-problems signal.
 
 After preserving the raw request, normalize the task into these fields:
 

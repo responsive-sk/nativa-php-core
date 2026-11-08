@@ -15,6 +15,13 @@ const execFileAsync = promisify(execFile);
 
 const WRAPPER_COMMANDS = [
   {
+    name: 'aifhub-gate-coverage',
+    description: 'Inspect required gate coverage without changing evidence or authorizing progression.',
+    module: './commands/aifhub-gate-coverage.mjs',
+    script: 'aif-gate-coverage.mjs',
+    args: ['--change', 'add-oauth', '--require', 'review,security', '--json']
+  },
+  {
     name: 'aifhub-providers',
     description: 'Inspect and run configured AIFHub validation and semantic model providers.',
     module: './commands/aifhub-providers.mjs',
@@ -153,6 +160,20 @@ const WRAPPER_COMMANDS = [
     module: './commands/aifhub-context-dedup.mjs',
     script: 'context-dedup.mjs',
     args: ['status', '--json']
+  },
+  {
+    name: 'aifhub-docs-readability',
+    description: 'Run opt-in non-blocking readability diagnostics for documents bound to an OpenSpec change without changing evidence or authorizing progression.',
+    module: './commands/aifhub-docs-readability.mjs',
+    script: 'docs-readability.mjs',
+    args: ['--change', 'add-oauth', '--enabled', 'true', '--file', 'docs/usage.md', '--json']
+  },
+  {
+    name: 'aifhub-requirement-lint',
+    description: 'Run opt-in advisory requirement ambiguity diagnostics for presented requirement sources without changing evidence or authorizing progression.',
+    module: './commands/aifhub-requirement-lint.mjs',
+    script: 'requirement-lint.mjs',
+    args: ['--change', 'add-oauth', '--enabled', 'true', '--file', 'openspec/changes/add-oauth/proposal.md', '--json']
   }
 ];
 
@@ -192,6 +213,32 @@ async function copyInstalledCommandLayout(userProjectDir) {
   await copyFile(
     path.join(REPO_ROOT, 'scripts', 'execution-provenance.mjs'),
     path.join(extensionDir, 'scripts', 'execution-provenance.mjs')
+  );
+  await copyFile(
+    path.join(REPO_ROOT, 'scripts', 'prompt-assets.mjs'),
+    path.join(extensionDir, 'scripts', 'prompt-assets.mjs')
+  );
+  await copyFile(
+    path.join(REPO_ROOT, 'scripts', 'prompt-reference-graph.mjs'),
+    path.join(extensionDir, 'scripts', 'prompt-reference-graph.mjs')
+  );
+  // post-update-init rebases composition baselines; the import closure must
+  // resolve inside the fake installed extension.
+  await copyFile(
+    path.join(REPO_ROOT, 'scripts', 'instruction-composition.mjs'),
+    path.join(extensionDir, 'scripts', 'instruction-composition.mjs')
+  );
+  await copyFile(
+    path.join(REPO_ROOT, 'scripts', 'workflow-state-store.mjs'),
+    path.join(extensionDir, 'scripts', 'workflow-state-store.mjs')
+  );
+  await copyFile(
+    path.join(REPO_ROOT, 'scripts', 'qa-manifest-store.mjs'),
+    path.join(extensionDir, 'scripts', 'qa-manifest-store.mjs')
+  );
+  await copyFile(
+    path.join(REPO_ROOT, 'scripts', 'aif-gate-result.mjs'),
+    path.join(extensionDir, 'scripts', 'aif-gate-result.mjs')
   );
 
   for (const command of WRAPPER_COMMANDS) {
@@ -591,7 +638,8 @@ describe('AIFHub wrapper guidance contract', () => {
         'ai-factory aifhub-write-gate-evidence --change add-oauth-login --gate rules',
         'ai-factory aifhub-migrate-legacy-plans <change-id> --dry-run',
         'ai-factory aifhub-migrate-legacy-plans --all --dry-run',
-        'ai-factory aifhub-done-finalizer --change <change-id> --json'
+        'ai-factory aifhub-done-finalizer --change <change-id> --json',
+        'ai-factory aifhub-requirement-lint --change <id> [--enabled true|false]'
       ]],
       ['docs/openspec-validation.md', [
         'ai-factory aifhub-write-gate-evidence --change add-oauth-login --gate rules',
@@ -646,7 +694,8 @@ describe('AIFHub wrapper guidance contract', () => {
         'ai-factory aifhub-migrate-legacy-plans --all --dry-run'
       ]],
       ['injections/core/aif-improve-plan-folder.md', [
-        'ai-factory aifhub-migrate-legacy-plans <change-id> --dry-run'
+        'ai-factory aifhub-migrate-legacy-plans <change-id> --dry-run',
+        'ai-factory aifhub-requirement-lint --change <change-id> --enabled true'
       ]],
       ['injections/core/aif-implement-plan-folder.md', [
         'ai-factory aifhub-migrate-legacy-plans <change-id> --dry-run'
@@ -655,7 +704,8 @@ describe('AIFHub wrapper guidance contract', () => {
         'ai-factory aifhub-migrate-legacy-plans <change-id> --dry-run'
       ]],
       ['injections/core/aif-plan-plan-folder.md', [
-        'ai-factory aifhub-mode status --json'
+        'ai-factory aifhub-mode status --json',
+        'ai-factory aifhub-requirement-lint --change <change-id> --enabled true'
       ]],
       ['agent-files/codex/aifhub-plan-polisher.toml', [
         'ai-factory aifhub-mode status --json'

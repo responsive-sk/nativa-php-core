@@ -7,12 +7,13 @@ import { fileURLToPath } from 'node:url';
 import { runProviderProcess } from './provider-process.mjs';
 import { providerRevision, readProviderFile } from './provider-files.mjs';
 import { normalizeProviderPolicies, parseProviderConfig, providerGate } from './provider-policy.mjs';
-import { normalizeHlvResult, runHlvOperation } from './hlv-provider.mjs';
+import { HLV_COMMAND_CONTRACT, normalizeHlvResult, runHlvOperation } from './hlv-provider.mjs';
 import { negotiateProviderCapabilities, runProviderCommand, runProviders, validateNeutralTrace } from './aifhub-providers.mjs';
 import { normalizeSemanticEvidence } from './semantic-provider-contract.mjs';
-import { renderConfigForMode } from './aif-artifact-sync.mjs';
+import { initializeEnabledTools, renderConfigForMode } from './aif-artifact-sync.mjs';
 
 const fixtures = fileURLToPath(new URL('../test/fixtures/validation-providers/', import.meta.url));
+const { sources: { hlv: hlvSource } } = JSON.parse(await readFile(new URL('../aifhub-extension.json', import.meta.url), 'utf8'));
 const roots = [];
 afterEach(async () => { for (const root of roots.splice(0)) await rm(root, { recursive: true, force: true }); });
 async function project(kind = 'openspec-native') {
@@ -28,8 +29,8 @@ async function project(kind = 'openspec-native') {
 function fixtureRunner(env = {}, calls = []) {
   return async (executable, args, options) => {
     calls.push([...args]);
-    if (executable !== 'hlv') return runProviderProcess(executable, args, options);
-    return runProviderProcess(process.execPath, [path.join(fixtures, 'fake-hlv.mjs'), ...args],
+    if (!['hlv', 'lekalo'].includes(executable)) return runProviderProcess(executable, args, options);
+    return runProviderProcess(process.execPath, [path.join(fixtures, `fake-${executable}.mjs`), ...args],
       { ...options, env: { ...process.env, ...env } });
   };
 }
@@ -124,7 +125,7 @@ for (const kind of ['openspec-native', 'adopt']) test(`${kind}: real process ver
   assert.equal(bytes.includes('fixture-secret'), false);
   assert.equal(bytes.includes('private'), false);
   assert.equal(bytes.includes(rootDir), false);
-  assert.equal(JSON.parse(bytes).toolVersion, '1.0.0');
+  assert.equal(JSON.parse(bytes).toolVersion, hlvSource.version);
   const timestamp = (await stat(evidencePath)).mtimeMs;
   await runProviders({ ...options, phase: 'verify', write: true });
   assert.equal(await readFile(evidencePath, 'utf8'), bytes);
@@ -153,12 +154,98 @@ test('required unavailable/unsupported providers block; optional results degrade
     assert.equal(result.blocking, policy === 'required');
     assert.equal(result.providers[0].status, 'unsupported');
     assert.equal(result.providers[0].toolVersion, '0.3.0');
-    assert.equal(result.providers[1].reason, 'protocol_unpublished');
+    assert.equal(result.providers[1].reason, 'layout_missing');
     assert.ok(await readProviderFile(rootDir, '.ai-factory/qa/provider-composition/providers/lekalo-verify.json'));
   }
   assert.equal(providerGate('unavailable', 'optional').status, 'warn');
   assert.equal(providerGate('unavailable', 'required').blocking, true);
   assert.equal(providerGate('warn', 'required').blocking, false);
+});
+
+test('HLV contract matches the reviewed source ledger', () => {
+  assert.equal(HLV_COMMAND_CONTRACT.toolVersion, hlvSource.version);
+  assert.equal(HLV_COMMAND_CONTRACT.version, hlvSource.version);
+  assert.equal(HLV_COMMAND_CONTRACT.source, hlvSource.url);
+  assert.equal(hlvSource.baselineVersion, hlvSource.version);
+});
+
+test('HLV rejects the old 1.0.0 CLI before validation', async () => {
+  const rootDir = await project();
+  const calls = [];
+  const result = await runProviders({ rootDir, phase: 'verify',
+    runProcess: fixtureRunner({ AIF_TEST_HLV_VERSION: '1.0.0' }, calls) });
+  assert.equal(result.blocking, true);
+  assert.equal(result.providers[0].status, 'unsupported');
+  assert.equal(result.providers[0].reason, 'tool_version');
+  assert.equal(result.providers[0].toolVersion, '1.0.0');
+  assert.equal(calls.some(args => args.includes('check')), false);
+});
+
+test('saved HLV evidence from the old contract requires re-validation at the same source revision', async () => {
+  const rootDir = await project();
+  const options = { rootDir, changeId: 'provider-composition', runProcess: fixtureRunner() };
+  assert.equal((await runProviders({ ...options, phase: 'verify', write: true })).blocking, false);
+  const evidencePath = path.join(rootDir, '.ai-factory/qa/provider-composition/providers/hlv-verify.json');
+  const current = JSON.parse(await readFile(evidencePath, 'utf8'));
+  for (const oldContract of [
+    { ...current.commandContract, version: '1.0.0' },
+    { ...current.commandContract, source: 'https://github.com/lee-to/hlv/tree/v1.0.0' }
+  ]) {
+    await writeFile(evidencePath, JSON.stringify({ ...current, commandContract: oldContract }));
+    const result = await runProviders({ ...options, phase: 'done', readOnly: true });
+    assert.equal(result.blocking, true);
+    assert.equal(result.providers[0].operations[0].reason, 'validation_evidence_missing_or_stale');
+  }
+  assert.equal((await runProviders({ ...options, phase: 'verify', write: true })).blocking, false);
+  assert.equal((await runProviders({ ...options, phase: 'done', readOnly: true })).blocking, false);
+});
+
+test('additive HLV check/status fields never change normalized evidence or persist nested content', () => {
+  const check = { diagnostics: [], errors: 0, warnings: 0, infos: 0, strictness: 'standard', exit_code: 0 };
+  const status = { project: 'fixture-secret', history_count: 0 };
+  const extra = { structural_only: false, structural_status: 'passed', execution_evidence: {
+    status: 'not_configured', bindings: [{ artifact_ref: '/private/fixture-secret', reason: 'fixture-secret' }]
+  } };
+  for (const [operation, payload] of [['validate', check], ['status', status]]) {
+    const result = normalizeHlvResult(operation, { ...payload, ...extra }, 0);
+    assert.deepEqual(result, normalizeHlvResult(operation, payload, 0));
+    assert.doesNotMatch(JSON.stringify(result), /fixture-secret|structural_|execution_evidence/);
+  }
+});
+
+test('EVD codes retain fail/warn semantics, counts, strictness and exit agreement', () => {
+  for (const code of ['EVD-001', 'EVD-010', 'EVD-020', 'EVD-030', 'EVD-040']) {
+    for (const severity of ['error', 'warning']) {
+      const errors = severity === 'error' ? 1 : 0;
+      const payload = { diagnostics: [{ code, severity }], errors, warnings: 1 - errors, infos: 0,
+        strictness: errors ? 'strict' : 'standard', exit_code: errors,
+        structural_only: false, structural_status: 'passed', execution_evidence: { status: 'stale', bindings: [] } };
+      const result = normalizeHlvResult('validate', payload, errors);
+      assert.equal(result.status, errors ? 'fail' : 'warn');
+      assert.deepEqual(result.diagnostics, [{ code, severity }]);
+      assert.throws(() => normalizeHlvResult('validate', { ...payload, errors: errors + 1 }, errors));
+      assert.throws(() => normalizeHlvResult('validate', { ...payload, strictness: 'unknown' }, errors));
+      assert.throws(() => normalizeHlvResult('validate', payload, 2));
+    }
+  }
+  assert.equal(normalizeHlvResult('doctor', {
+    diagnostics: [{ code: 'DOC-080', severity: 'error' }], exit_code: 1
+  }, 1).status, 'unsupported');
+});
+
+for (const severity of ['error', 'warning']) test(`HLV EVD ${severity} survives the process boundary and gates done readiness`, async () => {
+  const rootDir = await project();
+  const calls = [];
+  const options = { rootDir, changeId: 'provider-composition',
+    runProcess: fixtureRunner({ AIF_TEST_HLV_EVD: severity }, calls) };
+  const result = await runProviders({ ...options, phase: 'verify', write: true });
+  assert.equal(result.providers[0].status, severity === 'error' ? 'fail' : 'warn');
+  assert.equal(result.blocking, severity === 'error');
+  assert.deepEqual(result.providers[0].operations[0].diagnostics, [{ code: 'EVD-020', severity }]);
+  assert.equal((await runProviders({ ...options, phase: 'done', readOnly: true })).blocking, severity === 'error');
+  const bytes = await readFile(path.join(rootDir, '.ai-factory/qa/provider-composition/providers/hlv-verify.json'), 'utf8');
+  assert.doesNotMatch(bytes, /fixture-secret|structural_|execution_evidence/);
+  assert.equal(calls.some(args => args.includes('--structural-only') || args.includes('evidence')), false);
 });
 
 test('diagnostic codes survive while nested provider text and both raw streams remain ephemeral', async () => {
@@ -290,4 +377,41 @@ test('CLI rejects unsafe identifiers without echoing them and sync stays unsuppo
   assert.deepEqual(await runProviderCommand(['verify', '--change', '../fixture-secret', '--write', '--json']),
     { exitCode: 2, stdout: '', stderr: 'Invalid provider command arguments.\n' });
   assert.equal((await runHlvOperation('sync', '.', {}, {})).status, 'unsupported');
+});
+
+for (const verdict of ['ready', 'degraded', 'blocked']) test('Lekalo child process '+verdict+' normalizes before gates and never caches validation', async () => {
+  const rootDir = await project();
+  await writeFile(path.join(rootDir, '.ai-factory/config.yaml'), 'aifhub:\n  tools:\n    openspec: true\n    hlv: false\n    lekalo: true\n');
+  const { projectYaml } = await import('../test/fixtures/validation-providers/fake-lekalo.mjs');
+  await mkdir(path.join(rootDir, 'lekalo'));
+  await writeFile(path.join(rootDir, 'lekalo/project.yaml'), projectYaml);
+  const calls = [], options = { rootDir, phase: 'verify', changeId: 'lekalo-fixture', write: true,
+    runProcess: fixtureRunner({ AIF_TEST_LEKALO_VERDICT: verdict, AIF_TEST_LEKALO_RECEIPT: 'error', AIF_TEST_LEKALO_ADDITIVE: '1' }, calls) };
+  const before = await providerRevision(rootDir);
+  const result = await runProviders(options);
+  assert.equal(result.blocking, verdict === 'blocked', JSON.stringify(result));
+  const evidence = result.providers[0];
+  assert.equal(evidence.status, verdict === 'blocked' ? 'fail' : 'warn');
+  assert.equal(evidence.operations[0].diagnostics[0].code, 'LEK-SEM-001');
+  assert.equal(evidence.operations[0].diagnostics[0].severity, 'error');
+  assert.deepEqual(calls.find(args => args[0] === 'validate'), ['validate', '--no-cache', '--project', rootDir]);
+  assert.deepEqual(await providerRevision(rootDir), before);
+  const saved = await readFile(path.join(rootDir, '.ai-factory/qa/lekalo-fixture/providers/lekalo-verify.json'), 'utf8');
+  assert.doesNotMatch(saved, /fixture-secret|private|token=/);
+});
+test('Lekalo native adopt fixture is idempotent, dry-run safe and refuses a conflict', async () => {
+  const rootDir = await project();
+  await writeFile(path.join(rootDir, '.ai-factory/config.yaml'), 'aifhub:\n  tools:\n    openspec: false\n    hlv: false\n    lekalo: true\n');
+  const calls = [], options = { rootDir, runProcess: fixtureRunner({}, calls) };
+  assert.equal((await initializeEnabledTools({ ...options, dryRun: true })).lekalo.state, 'would-create');
+  assert.deepEqual(calls, []);
+  assert.equal((await initializeEnabledTools(options)).lekalo.state, 'created');
+  assert.equal((await initializeEnabledTools(options)).lekalo.state, 'preserved');
+  assert.equal(calls.filter(args => args[0] === 'init').length, 1);
+  const conflict = await project();
+  await writeFile(path.join(conflict, '.ai-factory/config.yaml'), 'aifhub:\n  tools:\n    openspec: false\n    hlv: false\n    lekalo: true\n');
+  await mkdir(path.join(conflict, 'lekalo'));
+  await writeFile(path.join(conflict, 'lekalo/project.yaml'), 'conflicting user file');
+  assert.equal((await initializeEnabledTools({ rootDir: conflict, runProcess: () => assert.fail('spawn') })).ok, false);
+  assert.equal(await readFile(path.join(conflict, 'lekalo/project.yaml'), 'utf8'), 'conflicting user file');
 });

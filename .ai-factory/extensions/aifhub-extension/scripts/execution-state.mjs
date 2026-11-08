@@ -24,24 +24,39 @@ async function loadRuntime() {
 }
 
 const common=['change_id','run_id'], mutation=[...common,'actor','version'];
+// Composition binding rides as optional input next to context-bearing actions;
+// it never enters the budget/fingerprint identity (contract decision 13).
+const composition=['instruction_composition_digest','instruction_composition_status'];
 const contracts={
   diagnostics:[[],[]],
-  start:[[...common,'task_id','owner','worker','role','scope'],['context_paths']],
-  'batch-start':[[...common,'owner','worker','role','manifest','preflight_paths'],['context_paths']],
+  start:[[...common,'task_id','owner','worker','role','scope'],['context_paths',...composition]],
+  'batch-start':[[...common,'owner','worker','role','manifest','preflight_paths'],['context_paths',...composition]],
   resume:[common,[]], inspect:[['change_id'],['run_id']],
-  checkpoint:[[...mutation,'progress'],[]], result:[[...mutation,'result'],[]], accept:[[...mutation,'result_digest'],[]],
+  checkpoint:[[...mutation,'progress'],[...composition]], result:[[...mutation,'result'],[...composition]], accept:[[...mutation,'result_digest'],[...composition]],
   'batch-seal':[[...mutation,'evidence'],[]],
   'batch-result':[[...mutation,'task_id','seal_digest','result'],[]],
   'batch-accept':[[...mutation,'task_id','seal_digest','result_digest'],[]],
   'batch-close':[[...mutation,'seal_digest'],[]],
-  interrupt:[[...mutation,'recovery_id','reason','execution_state'],['evidence']],
+  interrupt:[[...mutation,'recovery_id','reason','execution_state'],['evidence',...composition]],
   'stop-confirm':[[...mutation,'recovery_id','confirmation_id','evidence'],[]],
   upgrade:[['change_id','actor','upgrade_id','predecessor_inventory_digest'],[]],
-  'attempt-begin':[[...mutation,'finding_id','hypothesis','check','environment_revision','input_paths'],[]],
+  'attempt-begin':[[...mutation,'finding_id','hypothesis','check','environment_revision','input_paths'],[...composition]],
   'attempt-check':[[...mutation,'finding_id','hypothesis','check','environment_revision','input_paths'],[]],
   'attempt-finish':[[...mutation,'attempt_id','outcome','evidence'],[]],
 };
 const now=()=>new Date().toISOString();
+// Elapsed segments are measured on the monotonic process clock; wall ISO stamps
+// stay correlation-only. Rounded to whole milliseconds so the persisted value
+// stays a nonnegative safe integer.
+const perfNow=()=>performance.now();
+const measuredMs=(start)=>Math.max(0,Math.round(perfNow()-start));
+// Stage-2 stamp (#270): only commands that really rewrite the run record add a
+// stamp; failed transitions never persist one because they never save the run.
+function stamp(run,action) {
+  const timings=run.timings??(run.timings={});
+  const stamps=timings.stamps??(timings.stamps=[]);
+  stamps.push({action,at:now()});
+}
 const same=(a,b)=>canonical(a)===canonical(b);
 const sourceRecord=s=>({...s.namespace,namespace_digest:s.namespace_digest});
 const refs=(store,paths)=>store.references(assertAuxiliaryPaths(paths));
@@ -79,12 +94,17 @@ function view(run) {
     lifecycle:run.lifecycle??(reserves(run)?'active':'closed'),execution_state:run.execution_state??'unknown',
     base_revision:run.initial_worktree.head,context_digest:run.context.digest,checkpoint_digest:digest(run.checkpoint.worktree),
     scope:run.scope,progress:run.checkpoint.progress,result:run.result??null,accepted_by:run.accepted_by??null,source:run.source??null};
+  // Historical records project without the fields (undefined never renders).
+  if(run.instruction_composition_digest!==undefined)base.instruction_composition_digest=run.instruction_composition_digest;
+  if(run.instruction_composition_status!==undefined)base.instruction_composition_status=run.instruction_composition_status;
   if(run.kind==='batch')Object.assign(base,{items:run.items,seal_digest:run.seal?.digest??null,closure:run.closure??null});
   if(run.recovery)Object.assign(base,{recovery_id:run.recovery.recovery_id,pending_attempts:run.recovery.pending_attempts,drift:run.recovery.drift});
   return base;
 }
 function receipt(run,action,input,key,extra={}) {
-  const output={schema:RUN_SCHEMA,change_id:run.change_id,run_id:run.run_id,kind:run.kind,lifecycle:run.lifecycle,execution_state:run.execution_state,version:run.version,...extra};
+  const output={schema:RUN_SCHEMA,change_id:run.change_id,run_id:run.run_id,kind:run.kind,lifecycle:run.lifecycle,execution_state:run.execution_state,version:run.version,
+    ...(run.instruction_composition_digest!==undefined?{instruction_composition_digest:run.instruction_composition_digest}:{}),
+    ...(run.instruction_composition_status!==undefined?{instruction_composition_status:run.instruction_composition_status}:{}),...extra};
   output.receipt_digest=digest(output);
   run.receipts[key]={action,input_digest:digest(input),submitted_version:input.version,output}; return output;
 }
@@ -97,7 +117,9 @@ function advance(run) { run.version++; run.updated_at=now(); }
 async function saveRun(store,filename,run) { await validateHistoricalRun(store,run); await store.save(filename,run); }
 function resultEnvelope(run,task,payload,snapshot,evidence) {
   const value={...payload,change_id:run.change_id,task_id:task,run_id:run.run_id,base_revision:snapshot.head,
-    context_digest:run.context.digest,worktree_digest:digest(snapshot),evidence_digests:evidence,payload_digest:digest(payload),submitted_version:run.version};
+    context_digest:run.context.digest,worktree_digest:digest(snapshot),evidence_digests:evidence,payload_digest:digest(payload),submitted_version:run.version,
+    ...(run.instruction_composition_digest!==undefined?{instruction_composition_digest:run.instruction_composition_digest}:{}),
+    ...(run.instruction_composition_status!==undefined?{instruction_composition_status:run.instruction_composition_status}:{})};
   return {...value,digest:digest(value)};
 }
 function transactionId(action,input) { return digest(`${action}:${input.run_id??''}:${input.recovery_id??input.upgrade_id??''}`).slice(0,64); }
@@ -110,6 +132,12 @@ export async function executionCommand(action,input,options={}) {
     return helperDiagnostics();
   }
   await loadRuntime();
+  if (typeof action === 'string' && action.startsWith('lifecycle-')) {
+    return (await import('./host-lifecycle.mjs')).lifecycleCommand(action, input, { ...options, lifecycleFreshness });
+  }
+  if (typeof action === 'string' && action.startsWith('delivery-')) {
+    return (await import('./host-delivery.mjs')).deliveryCommand(action, input, options);
+  }
   if (typeof action === 'string' && action.startsWith('isolation-')) {
     return (await import('./isolated-execution.mjs')).isolatedExecutionCommand(action, input, options, executionCommand);
   }
@@ -119,8 +147,11 @@ export async function executionCommand(action,input,options={}) {
   const starting=['start','batch-start'].includes(action), readOnly=['inspect','resume','attempt-check'].includes(action);
   // Prepared admission is historical intent; worker resume still checks freshness.
   const prepared=starting?await readTransaction(store,folder,transactionId(action,input)):null;
-  let preflight;
+  let preflight, preflightTiming=null;
   if(starting && prepared?.state!=='prepared') {
+    // Setup segment 1 (#270): fresh preflight before any lock. A prepared
+    // replay skips this branch entirely and never writes timings.
+    const startedAt=now(), start=perfNow();
     identifier(input.owner); identifier(input.worker);
     const extra=assertAuxiliaryPaths(stringList(input.context_paths??[])).slice().sort();
     const source=await resolveExecutionSource(store,change,input.role,extra);
@@ -133,8 +164,10 @@ export async function executionCommand(action,input,options={}) {
       requireValue(stringList(input.preflight_paths).length>0,'missing-preflight'); preflightRefs=await refs(store,input.preflight_paths);
     } else { identifier(input.task_id); selectExecutionTask(source,input.task_id,input.role,extra); scope=await validateExecutionScope(store,input.scope,source); }
     preflight={source,scope,extra,refs:preflightRefs};
+    preflightTiming={started_at:startedAt,ended_at:now(),elapsed_ms:measuredMs(start)};
   }
   async function execute() {
+    const admissionStart=now(), admissionStartPerf=starting?perfNow():null;
     const pending=await pendingTransactions(store), txId=transactionId(action,input);
     if(action!=='inspect' && pending.length) {
       requireValue(!readOnly && pending.length===1 && pending[0].folder===folder && pending[0].tx.id===txId && pending[0].tx.action===action && pending[0].tx.input_digest===digest(input),'pending-transaction',true);
@@ -147,6 +180,8 @@ export async function executionCommand(action,input,options={}) {
         return {schema:run.schema,change_id:change,run_id:id,kind:run.kind??'single',version:run.version,status:run.status,
           lifecycle:run.lifecycle??(reserves(run)?'active':'closed'),execution_state:run.execution_state??'unknown',
           context_digest:run.context.digest,checkpoint_digest:digest(run.checkpoint.worktree),record_digest:digest(run),
+          ...(run.instruction_composition_digest!==undefined?{instruction_composition_digest:run.instruction_composition_digest}:{}),
+          ...(run.instruction_composition_status!==undefined?{instruction_composition_status:run.instruction_composition_status}:{}),
           pending_attempts:(h.ledger?.attempts??[]).filter(a=>a.run_id===id && a.outcome==='pending').map(a=>a.attempt_id),
           recovery_id:run.recovery?.recovery_id??null,pending_transactions:pending.filter(p=>p.folder===folder).map(p=>p.tx.id),historical:true};
       }
@@ -162,19 +197,31 @@ export async function executionCommand(action,input,options={}) {
       if(h.source)requireValue(same(h.source.source,sourceRecord(preflight.source)),'state-source-collision',true);
       const all=await catalogue(store); requireValue(all.length<1000,'execution-catalogue-full',true);
       requireValue(!all.some(r=>reserves(r) && r.scope.some(a=>preflight.scope.some(b=>overlap(a,b)))),'scope-reserved',true);
-      const selected=await resolveExecutionSource(store,change,input.role,preflight.extra);
-      requireValue(!selected.delegated && same(sourceRecord(selected),sourceRecord(preflight.source)) && selected.context.digest===preflight.source.context.digest,'stale-admission',true);
+      const selected=preflight.source;
       await validateExecutionScope(store,preflight.scope,selected,action==='batch-start');
       if(preflight.refs)requireValue(same(await refs(store,input.preflight_paths),preflight.refs),'stale-preflight',true);
       const snapshot=await worktree(store,preflight.scope,selected.projections), timestamp=now();
       const finalSource=await resolveExecutionSource(store,change,input.role,preflight.extra);
       requireValue(!finalSource.delegated && finalSource.context.digest===selected.context.digest && finalSource.namespace_digest===selected.namespace_digest,'stale-admission',true);
+      if(action==='batch-start')for(const item of input.manifest)selectExecutionTask(finalSource,item.task_id,input.role,preflight.extra);
+      else selectExecutionTask(finalSource,input.task_id,input.role,preflight.extra);
+      await validateExecutionScope(store,preflight.scope,finalSource,action==='batch-start');
       run={schema:RUN_SCHEMA,kind:action==='start'?'single':'batch',change_id:change,run_id:id,task_id:input.task_id??null,
         owner:input.owner,worker:input.worker,role:input.role,scope:preflight.scope,context_paths:preflight.extra,
         version:1,status:'started',lifecycle:'active',execution_state:'running',source:sourceRecord(selected),context:selected.context,
         initial_worktree:snapshot,checkpoint:{worktree:snapshot,progress:{completed_steps:[],next_step:'Execute the assigned task.'}},
         receipts:{},created_at:timestamp,updated_at:timestamp};
       if(run.kind==='batch')Object.assign(run,{manifest:structuredClone(input.manifest),preflight:preflight.refs,items:Object.fromEntries(input.manifest.map(i=>[i.task_id,{}]))});
+      if(input.instruction_composition_digest!==undefined)run.instruction_composition_digest=input.instruction_composition_digest;
+      if(input.instruction_composition_status!==undefined)run.instruction_composition_status=input.instruction_composition_status;
+      // Setup segment 2 (#270): under-lock admission from the entry of this
+      // function up to the validated worktree image, right before publish.
+      // Lock waiting and the durable publication itself stay outside.
+      const admission={started_at:admissionStart,ended_at:now(),elapsed_ms:measuredMs(admissionStartPerf)};
+      run.timings={setup:{started_at:preflightTiming.started_at,ended_at:admission.ended_at,
+        elapsed_ms:preflightTiming.elapsed_ms+admission.elapsed_ms,complete:true,
+        segments:{preflight:preflightTiming,admission}},stamps:[]};
+      stamp(run,action);
       validateRun(run); const writes=[];
       if(!h.source)writes.push([`${folder}/source.json`,{schema:SOURCE_SCHEMA,source:run.source}]);
       if(!h.ledger)writes.push([`${folder}/fix-attempts.json`,{schema:LEDGER_SCHEMA,attempts:[],aliases:[]}]);
@@ -201,9 +248,17 @@ export async function executionCommand(action,input,options={}) {
     if(old) { const snapshot=await current(store,run); if(run.kind==='batch')await freshSeal(store,run,snapshot); else await freshResult(store,run,snapshot); return old; }
     actor(run,input,owner); requireValue(run.lifecycle!=='closed','run-terminal',true);
     const snapshot=await current(store,run);
+    if(input.instruction_composition_digest!==undefined)run.instruction_composition_digest=input.instruction_composition_digest;
+    if(input.instruction_composition_status!==undefined)run.instruction_composition_status=input.instruction_composition_status;
     if(action==='checkpoint') {
       requireValue(run.lifecycle==='active' && run.status==='started','run-terminal',true);
-      run.checkpoint={worktree:snapshot,progress:progressRecord(input.progress)}; advance(run); await saveRun(store,filename,run); return view(run);
+      // Per-checkpoint binding: the composition digest observed at this
+      // checkpoint stays addressable from the stored checkpoint even after
+      // later actions advance the run-level field (review R4).
+      run.checkpoint={worktree:snapshot,progress:progressRecord(input.progress),
+        ...(input.instruction_composition_digest!==undefined?{instruction_composition_digest:input.instruction_composition_digest}:{}),
+        ...(input.instruction_composition_status!==undefined?{instruction_composition_status:input.instruction_composition_status}:{})};
+      stamp(run,'checkpoint'); advance(run); await saveRun(store,filename,run); return view(run);
     }
     if(action.startsWith('attempt-')) {
       requireValue(run.kind==='single' && run.role==='fix' && run.status==='started' && run.lifecycle==='active','fix-run-required');
@@ -239,16 +294,60 @@ export async function executionCommand(action,input,options={}) {
         requireValue(input.result_digest===item.result.digest,'result-mismatch',true); item.accepted=true; extra={...extra,task_id:input.task_id,result_digest:item.result.digest};
       } else if(action==='batch-close') {
         const accepted=Object.keys(run.items).filter(k=>run.items[k].accepted).sort(),unfinished=Object.keys(run.items).filter(k=>!run.items[k].accepted).sort();
-        run.closure={accepted,unfinished,context_digest:run.context.digest,worktree_digest:digest(snapshot),seal_digest:run.seal.digest};
+        run.closure={accepted,unfinished,context_digest:run.context.digest,worktree_digest:digest(snapshot),seal_digest:run.seal.digest,
+          ...(run.instruction_composition_digest!==undefined?{instruction_composition_digest:run.instruction_composition_digest}:{}),
+          ...(run.instruction_composition_status!==undefined?{instruction_composition_status:run.instruction_composition_status}:{})};
         run.lifecycle='closed'; run.execution_state='stopped'; extra={...extra,accepted,unfinished};
       }
     }
-    advance(run); const output=receipt(run,action,input,key,extra); await saveRun(store,filename,run); return {...view(run),...output};
+    // The stamp records the literal command name (no task suffix): receipt
+    // keys may append `:<task_id>` with an 80-character identifier, which
+    // would overflow the stamp.action bound and wedge the transition
+    // (review: batch-result:<80-char-id> reached 93 characters). The measured
+    // envelope needs first/last stamps, not per-task disambiguation.
+    stamp(run,action); advance(run); const output=receipt(run,action,input,key,extra); await saveRun(store,filename,run); return {...view(run),...output};
   }
   if(readOnly)return execute();
   await options.beforeLock?.();
   // Fixed lock order. An orphan is never reclaimed using age or a PID guess.
   return store.lock('.ai-factory/state/execution-write.lock',()=>store.lock(`${folder}/write.lock`,execute));
+}
+
+// Same freshness sequence as resume, with an already validated run (no history rescan).
+export async function lifecycleFreshness(store, run) {
+  await loadRuntime();
+  requireValue(run.schema === RUN_SCHEMA && !run.legacy, 'upgrade-required', true);
+  requireValue(run.lifecycle !== 'interrupted', 'run-interrupted', true);
+  const snapshot = await current(store, run);
+  requireValue(same(snapshot, run.checkpoint.worktree), 'stale-checkpoint', true);
+  if (run.seal) await freshSeal(store, run, snapshot); else await freshResult(store, run, snapshot);
+  return snapshot;
+}
+
+// Delivery borrows freshness from the execution owner; it never creates a result/receipt.
+export async function deliveryAdmission(store, input, { historical = false, resultRequired = true, mutating = true } = {}) {
+  await loadRuntime();
+  if (mutating) {
+    // An unreplayed execution journal owns the run: delivery must not create a
+    // host completion past it (review F1).
+    const pending = await pendingTransactions(store);
+    requireValue(pending.length === 0, 'pending-transaction', true);
+  }
+  const h = await history(store, executionId(input.change_id));
+  const run = h.runs.find(r => r.run_id === identifier(input.run_id));
+  requireValue(run && run.schema === RUN_SCHEMA && !run.legacy, 'missing-or-invalid-run', true);
+  const terminal = ['interrupted', 'closed'].includes(run.lifecycle);
+  requireValue(historical || !terminal, 'delivery-historical-only', true);
+  const task = input.task_id ?? run.task_id;
+  requireValue(run.kind === 'batch' ? Object.hasOwn(run.items, task) : task === run.task_id, 'unknown-or-ambiguous-task', true);
+  const result = run.kind === 'batch' ? run.items[task].result : run.result;
+  if (resultRequired) requireValue(result, 'delivery-result-required', true);
+  if (!terminal) {
+    const snapshot = await current(store, run);
+    if (run.kind === 'batch') await freshSeal(store, run, snapshot);
+    else if (resultRequired) await freshResult(store, run, snapshot);
+  }
+  return { run, result, task_id: task, historical: terminal, reservation_retained: reserves(run) };
 }
 
 async function drift(store,run) {
@@ -289,8 +388,10 @@ async function interrupt(store,folder,filename,h,original,input,options) {
   const pending=ledger.attempts.filter(a=>a.run_id===run.run_id && a.outcome==='pending');
   for(const a of pending) { a.outcome='interrupted'; a.recovery_id=input.recovery_id; }
   run.recovery={recovery_id:input.recovery_id,reason:input.reason,execution_state:input.execution_state,evidence,
-    pending_attempts:pending.map(a=>a.attempt_id),drift:await drift(store,original),interrupted_at:now()};
-  run.lifecycle='interrupted'; run.execution_state=input.execution_state; advance(run);
+    pending_attempts:pending.map(a=>a.attempt_id),drift:await drift(store,original),interrupted_at:now(),
+    ...(input.instruction_composition_digest!==undefined?{instruction_composition_digest:input.instruction_composition_digest}:{}),
+    ...(input.instruction_composition_status!==undefined?{instruction_composition_status:input.instruction_composition_status}:{})};
+  run.lifecycle='interrupted'; run.execution_state=input.execution_state; stamp(run,'interrupt'); advance(run);
   const output=receipt(run,'interrupt',input,'interrupt',{recovery_id:input.recovery_id}); await validateHistoricalRun(store,run,original); validateLedger(ledger);
   const writes=[]; if(!h.source)writes.push([`${folder}/source.json`,{schema:SOURCE_SCHEMA,source:run.source}]);
   writes.push([`${folder}/fix-attempts.json`,ledger],[filename,run]);
@@ -302,7 +403,7 @@ async function stopConfirm(store,filename,run,input) {
   actor(run,input,true);
   requireValue(run.lifecycle==='interrupted' && run.recovery.recovery_id===input.recovery_id && run.execution_state!=='stopped','invalid-stop-confirmation',true);
   const evidence=await refs(store,input.evidence); requireValue(Object.keys(evidence).length>0,'missing-stop-evidence');
-  run.confirmation={confirmation_id:input.confirmation_id,recovery_id:input.recovery_id,evidence}; run.execution_state='stopped'; advance(run);
+  run.confirmation={confirmation_id:input.confirmation_id,recovery_id:input.recovery_id,evidence}; run.execution_state='stopped'; stamp(run,'stop-confirm'); advance(run);
   const output=receipt(run,'stop-confirm',input,'stop-confirm',{recovery_id:input.recovery_id,confirmation_id:input.confirmation_id});
   await saveRun(store,filename,run); return output;
 }
@@ -327,7 +428,9 @@ async function attempt(store,folder,run,snapshot,original,action,input) {
     requireValue(!ledger.attempts.some(a=>fingerprints.has(a.fingerprint) && ['pending','failed','blocked','interrupted'].includes(a.outcome)),'no-progress',true);
     requireValue(!pending,'pending-attempt',true);
     requireValue(ledger.attempts.length<1000,'attempt-ledger-full',true);
-    const entry={attempt_id:randomUUID(),run_id:run.run_id,worker:run.worker,fingerprint,budget,identity,hypothesis:input.hypothesis,worktree_digest:digest(snapshot),outcome:'pending'};
+    const entry={attempt_id:randomUUID(),run_id:run.run_id,worker:run.worker,fingerprint,budget,identity,hypothesis:input.hypothesis,worktree_digest:digest(snapshot),outcome:'pending',
+      ...(input.instruction_composition_digest!==undefined?{instruction_composition_digest:input.instruction_composition_digest}:{}),
+      ...(input.instruction_composition_status!==undefined?{instruction_composition_status:input.instruction_composition_status}:{})};
     ledger.attempts.push(entry); validateLedger(ledger); await store.save(`${folder}/fix-attempts.json`,ledger);
     return {attempt_id:entry.attempt_id,outcome:entry.outcome,fingerprint};
   }

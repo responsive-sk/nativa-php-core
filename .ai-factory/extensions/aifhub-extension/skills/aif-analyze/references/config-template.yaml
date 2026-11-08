@@ -34,6 +34,16 @@ aifhub:
     protectedPatterns: []
     sqz:
       command: sqz
+  # Optional advisory readability diagnostics (issue #228); default is false
+  # and it must never be enabled automatically. The CLI override is
+  # `--enabled true|false` on `ai-factory aifhub-docs-readability`.
+  # readability:
+  #   enabled: false
+  # Optional advisory requirement ambiguity lint (issue #281); default is
+  # false and it must never be enabled automatically. The CLI override is
+  # `--enabled true|false` on `ai-factory aifhub-requirement-lint`.
+  # requirementLint:
+  #   enabled: false
 # OpenSpec-native mode writes its own aifhub settings profile only when
 # aifhub.tools.openspec is true.
 
@@ -105,6 +115,9 @@ utilities:
 # WORKFLOW SETTINGS
 # ============================================================================
 workflow:
+  # Upstream 2.20+ optional workflow.explore_mode / plan_mode / improve_check
+  # resolve through defaults regular / ask / false when omitted. Leading mode
+  # tokens override config; AIFHub gates every resolved ultra before any write.
   # Auto-create missing directories when needed
   auto_create_dirs: true
   

@@ -87,7 +87,7 @@ After enabled tool choices are saved, `/aif-analyze`, mode switches and artifact
 
 HLV initialization first inspects both `project.yaml` and `.hlv/project.yaml`. Existing root HLV projects (with `human/`, `validation/`, `llm/` or custom configured paths) are reused without creating `.hlv/`. Existing adopted projects are also reused. Neither path invokes native reinit, modifies the project map, nor rewrites contracts or milestones. Both markers together, malformed maps, unsafe paths and nonempty partial `.hlv/` layouts require repair instead of automatic overwrites.
 
-With neither marker present, [HLV 1.0.0 native adopt](https://github.com/lee-to/hlv/blob/v1.0.0/src/cmd/init.rs) runs `hlv init --adopt --path <root> --project <safe-project-name> --owner <safe-project-name> --agent agents --profile standard`. It keeps existing source in place, creates `.hlv/` with native project/contract/milestone scaffolding, creates missing shared agent skills and instructions, and appends `.hlv/index/` to `.gitignore`. Closed stdin selects native initial milestone and feature defaults. Existing root instructions and skill files are preserved. A missing/unsupported HLV executable or failed initializer is reported explicitly, with raw process output excluded. No project gates run during initialization, and initialization success is not validation PASS.
+With neither marker present, [HLV 1.1.0 native adopt](https://github.com/lee-to/hlv/blob/v1.1.0/src/cmd/init.rs) runs `hlv init --adopt --path <root> --project <safe-project-name> --owner <safe-project-name> --agent agents --profile standard`. It keeps existing source in place, creates `.hlv/` with native project/contract/milestone scaffolding, creates missing shared agent skills and instructions, and appends `.hlv/index/` to `.gitignore`. Closed stdin selects native initial milestone and feature defaults. Existing root instructions and skill files are preserved. A missing/unsupported HLV executable or failed initializer is reported explicitly, with raw process output excluded. No project gates run during initialization, and initialization success is not validation PASS.
 
 `init --dry-run` describes missing scaffolding without writes or provider commands; it does not claim CLI readiness. `status`, `doctor` and read-only done readiness never initialize anything. Before validation of a newly enabled tool, initialize its missing project once, then obtain the revision and run validation against that initialized state.
 
@@ -97,9 +97,9 @@ With neither marker present, [HLV 1.0.0 native adopt](https://github.com/lee-to/
 
 ## HLV compatibility
 
-The initial command adapter targets exact **HLV 1.0.0**, based on [the tagged CLI](https://github.com/lee-to/hlv/blob/v1.0.0/src/main.rs) and [check output](https://github.com/lee-to/hlv/blob/v1.0.0/src/cmd/check.rs). Other versions return `unsupported`, including 0.3.0 which lacks `doctor`. Detection accepts root `project.yaml` or adopt `.hlv/project.yaml`; both markers together are a configuration error. Symlink/junction and hard-link marker paths are rejected.
+The command adapter targets exact **HLV 1.1.0**, based on [the tagged CLI](https://github.com/lee-to/hlv/blob/v1.1.0/src/main.rs) and [check output](https://github.com/lee-to/hlv/blob/v1.1.0/src/cmd/check.rs). Other versions return `unsupported / tool_version`, including the previous 1.0.0 and 0.3.0 which lacks `doctor`. Detection accepts root `project.yaml` or adopt `.hlv/project.yaml`; both markers together are a configuration error. Symlink/junction and hard-link marker paths are rejected.
 
-| Adapter operation | HLV 1.0.0 command | Interpretation |
+| Adapter operation | HLV 1.1.0 command | Interpretation |
 | --- | --- | --- |
 | detect | `hlv --version` | Exact version, existing marker; no setup |
 | status | `hlv --root <root> status --json` | Bounded project-state summary |
@@ -111,7 +111,11 @@ The initial command adapter targets exact **HLV 1.0.0**, based on [the tagged CL
 
 There is no invented `hlv readiness` or `hlv trace export` command. Workflow next-action text is never executed. Native HLV trace exports are not a neutral OpenSpec-to-semantic graph; only their content identity is retained in public evidence, and their supplemental availability does not replace validation/readiness.
 
-HLV 1.0.0 does not publish a separately versioned CLI envelope. `commandContract: aifhub.hlv-cli@1.0.0` is the **AIFHub adapter's reviewed command contract**, not an invented upstream protocol version. Tool version and adapter contract identity are independent.
+HLV 1.1.0 does not publish a separately versioned CLI envelope. `commandContract: aifhub.hlv-cli@1.1.0` is the **AIFHub adapter's reviewed command contract**, not an invented upstream protocol version. Tool version and adapter contract identity are independent. Updating the contract's version/source invalidates saved HLV evidence from the previous contract: rerun validation before done/archive readiness can accept it, even when project source has not changed. AIFHub does not install or update the HLV executable; users with 1.0.0 must update it separately.
+
+HLV 1.1.0 adds `structural_only`, `structural_status` and `execution_evidence` to `check --json`, and `execution_evidence` to `status --json`. AIFHub ignores these extra fields and retains diagnostics/counts/strictness/exit-code agreement as the validation contract. EVD-001/010/020/030/040 use the existing diagnostic-code format: errors yield `fail`, warnings yield `warn`; `structural_status: passed` cannot override an EVD error. DOC-080 remains `unsupported`.
+
+Optional execution evidence configuration in `project.yaml`, evidence production through `hlv evidence snapshot`, `--structural-only`, and the upstream MCP surface remain HLV-owned. AIFHub does not write that section or invoke those commands/flags. If users configure execution evidence, missing/stale evidence errors block validation and consequently done/archive readiness until the upstream evidence is corrected. Warnings retain the existing non-blocking warning policy. See the [1.1.0 audit](hlv-1.1.0-audit.md) for tag/asset custody, fixture coverage and reproduction limits; the 1.0.0 native results below are historical evidence.
 
 ## Evidence and execution boundary
 
@@ -129,13 +133,30 @@ Statuses distinguish `pass`, `warn`, `fail`, `unavailable`, `unsupported`, `infr
 
 Processes use argument arrays with `shell: false`, hidden Windows windows, closed stdin, combined stdout/stderr byte limits, a bounded timeout and cancellation. Cancellation and timeout terminate the process group on POSIX or process tree on Windows. Output/schema failures never count as validation PASS. Evidence paths are contained in the project and reject links, hard links and traversal.
 
-## Lekalo-ready contract and deferred integration
+## Lekalo 1.1.0: реализованный read-only адаптер
 
-`semantic_model`, [capability negotiation](../schemas/provider-capabilities.schema.json), [neutral trace links and semantic evidence](../schemas/provider-semantic-evidence.schema.json) are reserved independently of HLV. The [fake capability fixture](../test/fixtures/validation-providers/fake-lekalo-capabilities.json) tests `aifhub.provider@1.0.0`; it is not a claim of real Lekalo execution. Missing capabilities or a mismatched contract version return `unsupported`. Neutral links carry requirement → semantic symbol → binding → scenario/test → gate references; absent semantic intermediates may be `null`.
+Адаптер принимает только **CLI 1.1.0** (из `lekalo --version`) и exact manifest **dev.lekalo.workflow-provider@0.8.0**, discriminator `lekalo/workflow-provider/v0.8.0`. Manifest productVersion **0.8.0** обозначает поколение контракта. Discovery вне проекта проверяет полный reviewed manifest digest: неизвестные поля, операции, effects и pins дают unsupported. Additive поля operation reports игнорируются. См. [upstream contract](https://github.com/ichinya/lekalo/blob/v1.1.0/docs/provider-contract.md) и [custody audit](lekalo-1.1.0-audit.md).
 
-The `scripts/lekalo-provider.mjs` adapter mirrors the HLV dispatch shape but is fail-closed: it never spawns the `lekalo` CLI, never writes Lekalo-owned artifacts, and always returns `unsupported / protocol_unpublished`. The reserved `aifhub.lekalo-cli` command contract and the provider-kind dispatch in `scripts/aifhub-providers.mjs` mean a published Lekalo provider protocol can be wired in by changing only the Lekalo adapter and the semantic manifest format, without touching HLV.
+| Операция | Prescribed argv после lekalo | Нормализация |
+| --- | --- | --- |
+| detect | `--version`; `provider describe --json` | Exact pins + маркер lekalo/project.yaml; отсутствие layout → unavailable |
+| status | `status --project DIR` | ready → pass, degraded → warn, blocked → fail |
+| doctor | `doctor --project DIR` | Та же семантика; missing trace evidence деградирует |
+| validate | `validate --no-cache --project DIR` | exit 0: clean → pass, findings → warn; exit 1/3 → fail |
+| readiness | `readiness --phase done --project DIR` | Report verdict; required blocked/unknown не проходит gate |
+| trace | `trace export PATH` | Supplemental digest, format lekalo-trace-manifest-v0.2.16 |
+| impact | `impact --changed --worktree --project DIR` | Bounded sha256 refs через semantic-provider-contract |
+| context | `context --changed IDS --budget 5000 --project DIR` | IDS из impact roots; fits:false/truncation — неполные данные, warn |
 
-The issue's description of Lekalo as a future repository is stale. At [v0.1.10](https://github.com/ichinya/lekalo/tree/v0.1.10), Lekalo has a CLI and semantic validation, but its [provider protocol is explicitly unpublished](https://github.com/ichinya/lekalo/blob/v0.1.10/docs/versioning.md), and [inspect/impact/context are recognized stubs](https://github.com/ichinya/lekalo/blob/v0.1.10/docs/cli.md). AIFHub therefore reports `unsupported / protocol_unpublished` without guessing or invoking a Lekalo command. Aggregated read-only provider status is already available through `aifhub.providers_status` in MCP. Real P2 Lekalo execution — `impact`/`context` in `/aif-implement`, `validate`/`verify`/`trace` in `/aif-verify` and `/aif-done`, target verification and an OpenSpec + Lekalo + HLV runtime fixture — remains dependent on a published compatible protocol. Product, Model, IR and protocol versions must not be conflated.
+Exit 0 у status/doctor/readiness означает получение отчёта. Validation сохраняет error severity classification findings на success-envelope default-профиля как warn. Exit 1 читается из stderr (invalid), exit 3 — stdout (denied), exit 4 — stdout (unsupported/unavailable), exit 5 — stderr (unsupported-version). LEK-коды, исходные diagnostic id/category/severity сохраняются; raw сообщения, пути и capsule не попадают в публичное evidence. Неожиданные exit и невалидный JSON — infrastructure_error. Timeout, cancellation и output_overflow явные; export_overflow не обрезает данные.
+
+Trace convention: `.ai-factory/traces/<change-id>/lekalo-trace-manifest.json`. API принимает явный project-relative tracePath только внутри `.ai-factory/traces/`; traversal, links и выход за custody отклоняются. Нет пути/файла → unavailable/trace_missing без запуска trace collect. Manifest export — входной нейтральный документ пользователя; адаптер не создаёт его автоматически. Partial trace остаётся partial и не заменяет native execution evidence. Входы `.ai-factory/traces/**` и `lekalo.lock` явно входят в revision binding даже при Git ignore; QA и execution-state outputs исключены.
+
+Фаза implement запускает impact/context, verify — validate/status/trace, done — validate/readiness/trace. Policy/phases/timeoutMs/maxOutputBytes/executable настраиваются в `aifhub.providers.lekalo`; default phases implement/verify/done, policy required, timeout 30000 ms, output 1 MiB default (override через config.maxOutputBytes), executable — абсолютный нативный файл либо установленный lekalo из PATH. Trace export — исключение: output cap заменяется contract ceiling 32 MiB (валидный манифест больше default-лимита — evidence, не overflow). Required non-success блокирует gate, optional меняет только gate на warn.
+
+Инициализация через `ai-factory aifhub-mode init --json` отдельно вызывает `lekalo init --adopt --project DIR` после exact detection. Existing valid layout сохраняется без запуска CLI; partial/conflicting layout и lock без модели дают refusal. Dry-run не пишет и не запускает процессы. Install prompt не вызывается: AGENTS.md остаётся injection-слоем AI Factory. Drift/generate/sync/trace collect/native gates не реализованы и fail-closed; LPAC и component receipts принадлежат upstream.
+
+Hermetic [fake-lekalo](../test/fixtures/validation-providers/fake-lekalo.mjs) и [describe golden](../test/fixtures/validation-providers/lekalo-describe-v0.8.0.json) проверяют adapter boundary; [semantic fixture](../test/fixtures/validation-providers/fake-lekalo-capabilities.json) проверяет отдельный AIFHub transport-neutral контракт. Реальный Lekalo binary — NOTRUN.
 
 See also [Context Providers](context-providers.md), [Skill Providers](skill-providers.md), and [OpenSpec Compatibility](openspec-compatibility.md).
 

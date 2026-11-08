@@ -80,6 +80,30 @@
     },
     "updated_at": {
       "type": "string"
+    },
+    "methodology": {
+      "enum": [
+        "aifactory",
+        "openspec"
+      ]
+    },
+    "source_revision": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "session_brief_digest": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "instruction_composition_digest": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-f0-9]{64}$"
     }
   },
   "required": [

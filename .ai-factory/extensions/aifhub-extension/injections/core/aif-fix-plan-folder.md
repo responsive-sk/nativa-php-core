@@ -137,7 +137,7 @@ A passing post-fix check is supporting runtime evidence only. `/aif-fix` must no
 
 #### Persistent fix runs and no-progress guard
 
-For both configured OpenSpec and complete classic plans after marker-first classification, use `ai-factory aifhub-execution <action> --json` with JSON on stdin; consult the installed extension's `docs/workflow-mechanics.md` for payloads. Follow the durable execution/recovery section of [task coordination](../../skills/shared/TASK-COORDINATION.md). Fix attempts remain single-task; the helper requires current finding context for an already checked task and never reopens it. Valid ultra delegates exactly to upstream before local state.
+For both configured OpenSpec and complete classic plans after marker-first classification, use `ai-factory aifhub-execution <action> --json` with JSON on stdin; consult the installed extension's `docs/workflow-mechanics.md` for payloads. Follow the service-mechanics boundary and durable execution/recovery section of [task coordination](../../skills/shared/TASK-COORDINATION.md). Fix attempts remain single-task; the helper requires current finding context for an already checked task and never reopens it. Valid ultra delegates exactly to upstream before local state.
 
 - The parent calls `start` before edits with the assigned canonical task, unique run, owner/worker labels, `role: fix`, and explicit selected-finding file/directory scope. Include additional policy or external input files in `context_paths`. On re-entry, call read-only `resume` before editing; stale input requires parent reassessment and a fresh assignment, not overwriting the old checkpoint.
 - Persist meaningful progress with `checkpoint` and the current version. Existing `writeFixTrace()` remains the owner of readable root-cause and regression evidence.
@@ -153,6 +153,7 @@ For both configured OpenSpec and complete classic plans after marker-first class
 Write fix traces only to runtime state:
 
 - Prefer `writeFixTrace(changeId, trace, options)` from `scripts/openspec-execution-context.mjs` for fix traces.
+When the current SessionBrief pins a non-null `instruction_composition_digest`, the trace must also carry `trace.instructionCompositionDigest` with that exact pinned digest (compile derives the prepared attempt from it), and any consumed-reference declaration in `trace.instructionComposition` is validated against the prepared snapshot; the gate rejects missing bindings and instruction drift with `instruction_composition_*` codes.
 - `.ai-factory/state/<change-id>/`
 - `.ai-factory/state/<change-id>/fixes/`
 

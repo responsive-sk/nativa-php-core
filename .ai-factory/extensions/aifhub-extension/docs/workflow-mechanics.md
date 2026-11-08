@@ -115,7 +115,7 @@ The parent inspects the diff and evidence, then calls `accept`:
 }
 ```
 
-Only the current completed result can transition to `accepted`, closing that single dispatch. Any later file or evidence change blocks acceptance. Exact result/accept retries use the original submitted version, remain subject to freshness, and do not advance the version again. The helper does not update task checkboxes; the parent rechecks current evidence before doing so. Coupled/shared-file tasks run serially through fresh assignments. Canonical updates intentionally invalidate the old context.
+Only the current completed result can transition to `accepted`, closing that single dispatch. Any later file or evidence change blocks acceptance. Exact result/accept retries use the original submitted version, remain subject to freshness, and do not advance the version again. The result/accept helpers do not update task checkboxes; the parent rechecks current evidence before doing so. The separate `lifecycle-progress` action applies the closed run's exact accepted set to the canonical checklist mechanically (journal-first, quiescence-checked) and never a caller-supplied task set. Coupled/shared-file tasks run serially through fresh assignments. Canonical updates intentionally invalidate the old context.
 
 `accepted` means the parent accepted the worker report. It does not write QA, grant approval, or imply `/aif-done`. Existing [Handoff validation](handoff-validation-profile.md), `/aif-verify`, coverage, rules, and done ownership stay authoritative.
 
@@ -279,3 +279,17 @@ These records are local supporting artifacts, excluded from canonical OpenSpec a
 - [Usage](usage.md) — workflow and authoritative verification ownership.
 - [Task coordination](../skills/shared/TASK-COORDINATION.md) — independence checks and parent reconciliation.
 - [Prime Agent evaluation](runtime-research/prime-agent/README.md) — provenance and deferred runtime adoption.
+
+## Coordination cost and dispatch selection
+
+Use the existing helper/direct path for JSON extraction, digest/version propagation, receipts/ACK formatting, status collection and supported waits; do not dispatch an AI worker solely for service mechanics. An ACK does not prove delivery, release or stop. Keep semantic review, QA verdicts, parent acceptance, canonical progress and final verification with their existing owners.
+
+Record direct / serial coupled group / supported same-shape batch / independent isolated tasks and a scope/dependency/risk/capability reason in existing prose assignment/preflight notes before admission. Helper payloads stay closed. For two to five ready independent low-risk same-shape items, select the existing batch unless a concrete capability/scope/inspection constraint requires direct or serial execution. Shared interface, overlapping file, unresolved dependency, different behavior or different risk requires coupled/serial work, a supported split or the exact blocker. Shared-file serial work remains permitted; batch size is not a general worker-count limit. Preserve canonical ID, scope, check/fallback and actual evidence per item; omitted or unaccepted items stay unfinished.
+
+At group boundaries use available observed setup/orientation/integration work and helper/tool counts, naming the group/scenario and source. Missing observations stay UNKNOWN; estimates state their basis. Fewer workers do not prove measured savings, overlapping worker intervals are not run duration, and speedup needs a paired baseline/candidate. Keep feedback outside admitted preflight references and sealed evidence, or after their lifecycle completes.
+
+## Доставка замороженного результата
+
+[Delivery recovery](host-delivery.md) использует отдельный request UUID registry и journal. Read/fetch не меняют execution receipts/version; uncertain не вызывает lifecycle transitions. Четыре поля существующей delivery-проекции сохраняют QA reuse; новый slot после snapshot остаётся материальным. Успешная доставка не подтверждает semantic PASS или право на settlement.
+
+[Optional lifecycle helper](host-lifecycle.md) (#231) группирует status/waits, фиксирует explicit parent settlement отдельно от receipts, выполняет verified host release и journaled exact accepted progress. Classic finalizer публикует caller-reviewed artifacts только после readiness; `/aif-done` сохраняет authority. Checklist application механический, caller task set не принимается. Host-dependent шаги без adapter дают manual_path и capability limitations. Один вызов — один bounded шаг; driver cadence остаётся вне execution lock и model loop. Live pilot — NOTRUN.

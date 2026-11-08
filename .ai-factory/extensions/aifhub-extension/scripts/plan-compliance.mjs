@@ -5,10 +5,11 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 import { ensureRuntimeGitignore } from './runtime-gitignore.mjs';
-import { resolveActiveChange, normalizeChangeId } from './active-change-resolver.mjs';
+import { normalizeChangeId } from './active-change-resolver.mjs';
 import { parseExecutionTasks } from './execution-task-source.mjs';
 import { findExactMarkdownH2Sections } from './markdown-structural-markers.mjs';
 import { inspectSessionBrief } from './session-brief.mjs';
+import { resolvePlanTarget, resolvePlanContext } from './common-plan-resolver.mjs';
 import { readProviderFile, writeProviderFile, safeProviderPath } from './provider-files.mjs';
 
 const SCHEMA = 'aifhub.plan_compliance.v1';
@@ -41,19 +42,18 @@ export async function checkPlanCompliance(options = {}) {
 
 async function buildSnapshot(options) {
   const root = path.resolve(options.rootDir ?? process.cwd());
-  if (options.changeId !== undefined && (typeof options.changeId !== 'string' || !options.changeId || !normalizeChangeId(options.changeId).ok)) throw complianceError('invalid-change-id');
-  const resolution = await resolveActiveChange({ rootDir: root, cwd: options.cwd ?? root, changeId: options.changeId, getCurrentBranch: options.getCurrentBranch });
+  const resolution = await resolvePlanTarget({ ...options, rootDir: root });
   if (!resolution.ok) throw complianceError('active_change_unresolved');
   const changeId = resolution.changeId;
   const status = await inspectSessionBrief({ rootDir: root, cwd: options.cwd ?? root, changeId, includeBrief: true });
-  const tasks = await readTasks(root, resolution.changePath);
+  const context = await resolvePlanContext({ ...options, rootDir: root, changeId, methodology: resolution.methodology });
+  const tasks = await readTasks(root, context.checklist);
   const trace = await findTrace(root, changeId, options.runId);
   const changedFiles = options.changedFiles ?? (trace ? trace.changedFiles : await gitChangedFiles(root));
-  return { root, changeId, status, tasks, trace, changedFiles, brief: status.brief };
+  return { root, changeId, status, tasks, trace, changedFiles, brief: status.brief, requestedRunId: options.runId };
 }
 
-async function readTasks(root, changePath) {
-  const relative = toPosix(path.relative(root, path.join(changePath, 'tasks.md')));
+async function readTasks(root, relative) {
   if (!relative || relative.startsWith('..') || relative.includes(':')) throw complianceError('unsafe_path');
   const bytes = await readProviderFile(root, relative, 2 * 1024 * 1024);
   if (bytes === null) return null;
@@ -66,6 +66,7 @@ async function findTrace(root, changeId, runId) {
   const entries = await listTraceFiles(root, implDir);
   if (entries.length === 0) return null;
   let selected = runId ? entries.find((entry) => entry.name === `${runId}.md`) : null;
+  if (runId && !selected) return null;
   if (!selected) {
     entries.sort((a, b) => b.mtimeMs - a.mtimeMs);
     selected = entries[0];
@@ -77,9 +78,14 @@ async function findTrace(root, changeId, runId) {
   const changedFiles = parseTraceList(content, 'Changed files');
   const binding = parseTraceSection(content, 'SessionBrief binding');
   const sessionBriefDigest = binding?.match(/^Digest: ([a-f0-9]{64})$/m)?.[1] ?? null;
+  const composition = parseTraceSection(content, 'Instruction composition');
+  const instructionCompositionDigest = composition?.match(/^Digest: ([a-f0-9]{64})$/m)?.[1] ?? null;
+  // Whitelist the emitted status enum: the receipt field is schema-enum bound,
+  // so an arbitrary word in a hand-written trace must not flow through.
+  const instructionCompositionStatus = composition?.match(/^Status: (unavailable|incomplete|unverified|stale|verified)$/m)?.[1] ?? null;
   const run = selected.name.replace(/\.md$/, '');
   const acceptanceImpact = traceAcceptanceImpact(content);
-  return { runId: run, changedFiles, sessionBriefDigest, acceptanceImpact };
+  return { runId: run, changedFiles, sessionBriefDigest, instructionCompositionDigest, instructionCompositionStatus, acceptanceImpact };
 }
 
 async function listTraceFiles(root, directory) {
@@ -172,10 +178,31 @@ function buildReceipt(snapshot) {
   if (!brief || !snapshot.status.ok || snapshot.status.status !== 'valid') blockedReasons.push('session_brief_not_current');
   if (!snapshot.tasks) blockedReasons.push('missing_tasks');
   if (!snapshot.changedFiles) blockedReasons.push('missing_changed_scope');
+  if (!snapshot.trace) blockedReasons.push('missing_trace');
+  else if (!snapshot.trace.sessionBriefDigest) blockedReasons.push('trace_session_brief_unbound');
   if (snapshot.trace && snapshot.trace.sessionBriefDigest && snapshot.trace.sessionBriefDigest !== sessionBriefDigest) blockedReasons.push('trace_session_brief_stale');
 
+  // Composition drift is advisory here by policy: fail-closed stays on the
+  // SessionBrief binding channel only (contract decision 11). The receipt
+  // records the independent observation instead of blocking.
+  const compositionDigest = brief?.instruction_composition_digest ?? null;
+  const compositionDrift = [];
+  let compositionStatus = 'unavailable';
+  if (compositionDigest !== null) {
+    if (!snapshot.trace?.instructionCompositionDigest) {
+      compositionStatus = 'unverified';
+      compositionDrift.push('trace_instruction_composition_missing');
+    } else if (snapshot.trace.instructionCompositionDigest !== compositionDigest) {
+      compositionStatus = 'stale';
+      compositionDrift.push('trace_instruction_composition_stale');
+    } else compositionStatus = snapshot.trace.instructionCompositionStatus ?? 'verified';
+  } else if (snapshot.trace?.instructionCompositionDigest) {
+    compositionStatus = 'unverified';
+    compositionDrift.push('brief_instruction_composition_unavailable');
+  }
+
   if (blockedReasons.length > 0) {
-    return emptyReceipt(snapshot.changeId, { planRevision, sessionBriefDigest, traceRunId, completedTasks, skippedTasks, outcome: 'blocked' });
+    return emptyReceipt(snapshot.changeId, { planRevision, sessionBriefDigest, traceRunId, completedTasks, skippedTasks, blockedReasons, outcome: 'blocked', compositionDigest, compositionStatus, compositionDrift });
   }
 
   const allowed = collectSurfacePatterns(brief.change_surface?.allowed ?? []);
@@ -206,7 +233,10 @@ function buildReceipt(snapshot) {
     newConstraints: [],
     acceptanceImpact: snapshot.trace?.acceptanceImpact ?? [],
     outcome,
-    replanRequired: outcome === 'replan_required'
+    replanRequired: outcome === 'replan_required',
+    compositionDigest,
+    compositionStatus,
+    compositionDrift
   });
 }
 
@@ -216,6 +246,9 @@ function emptyReceipt(changeId, values) {
     change_id: changeId,
     plan_revision: values.planRevision ?? null,
     session_brief_digest: values.sessionBriefDigest ?? null,
+    instruction_composition_digest: values.compositionDigest ?? null,
+    instruction_composition_status: values.compositionStatus ?? 'unavailable',
+    composition_drift: values.compositionDrift ?? [],
     trace_run_id: values.traceRunId ?? null,
     completed_tasks: values.completedTasks ?? [],
     skipped_tasks: values.skippedTasks ?? [],
@@ -223,6 +256,7 @@ function emptyReceipt(changeId, values) {
     scope_expansions: values.scopeExpansions ?? [],
     new_constraints: values.newConstraints ?? [],
     acceptance_impact: values.acceptanceImpact ?? [],
+    blocked_reasons: values.blockedReasons ?? [],
     outcome: values.outcome ?? 'blocked',
     replan_required: values.replanRequired ?? (values.outcome === 'replan_required')
   };
@@ -233,7 +267,23 @@ function collectSurfacePatterns(sections) {
   for (const section of sections) {
     for (const line of String(section ?? '').split(/\r\n|\n|\r/)) {
       const item = toPosix(line.trim().replace(/^[-*+]\s+/, '').trim());
-      if (item) patterns.push(item);
+      if (!item) continue;
+      if (!item.startsWith('`')) {
+        patterns.push(item);
+        continue;
+      }
+      // Only leading code spans separated by commas declare paths. Code spans
+      // later in an explanation must not expand the allowed surface.
+      let remaining = item;
+      while (true) {
+        const span = remaining.match(/^`([^`]+)`/);
+        if (!span) break;
+        const pattern = span[1].trim();
+        if (pattern) patterns.push(pattern);
+        remaining = remaining.slice(span[0].length).trimStart();
+        if (!remaining.startsWith(',')) break;
+        remaining = remaining.slice(1).trimStart();
+      }
     }
   }
   return patterns;
@@ -295,9 +345,10 @@ function matchesTopLevel(top, pattern) {
 }
 
 function failure(error) {
-  const receipt = emptyReceipt('unknown', { planRevision: null, sessionBriefDigest: null, traceRunId: null, completedTasks: [], skippedTasks: [], outcome: 'blocked' });
+  const errors = error.planResolverErrors ?? [{ code: error.complianceCode ?? error.planResolverCode ?? 'plan_compliance_io_error' }];
+  const receipt = emptyReceipt('unknown', { planRevision: null, sessionBriefDigest: null, traceRunId: null, completedTasks: [], skippedTasks: [], outcome: 'blocked', blockedReasons: errors.map(({ code }) => code) });
   receipt.change_id = typeof error?.changeId === 'string' ? error.changeId : 'unknown';
-  return { ok: false, outcome: 'blocked', errors: [{ code: error.complianceCode ?? 'plan_compliance_io_error' }], receipt };
+  return { ok: false, outcome: 'blocked', errors, receipt };
 }
 
 function json(value) { return `${JSON.stringify(value, null, 2)}\n`; }

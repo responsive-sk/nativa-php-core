@@ -1202,35 +1202,6 @@ The fallback parser SHOULD NOT be used when CLI JSON is complete.
       },
       showOpenSpecItem: async (itemName, options) => {
         calls.push({ itemName, options });
-        const scenario = {
-          title: 'cli scenario',
-          steps: ['GIVEN CLI JSON', 'WHEN compiled', 'THEN generated rules use it']
-        };
-
-        // A change delta is only readable through `show <change> --deltas-only`,
-        // which returns one entry per capability.
-        if (options.type === 'change') {
-          return {
-            ok: true,
-            json: {
-              deltas: [
-                {
-                  spec: 'auth',
-                  operation: 'ADDED',
-                  requirements: [
-                    {
-                      title: 'CLI auth',
-                      description: 'Requirement from CLI for auth.',
-                      scenarios: [scenario]
-                    }
-                  ]
-                }
-              ]
-            },
-            error: null
-          };
-        }
-
         return {
           ok: true,
           json: {
@@ -1238,7 +1209,12 @@ The fallback parser SHOULD NOT be used when CLI JSON is complete.
               {
                 title: `CLI ${itemName}`,
                 description: `Requirement from CLI for ${itemName}.`,
-                scenarios: [scenario]
+                scenarios: [
+                  {
+                    title: 'cli scenario',
+                    steps: ['GIVEN CLI JSON', 'WHEN compiled', 'THEN generated rules use it']
+                  }
+                ]
               }
             ]
           },
@@ -1248,118 +1224,24 @@ The fallback parser SHOULD NOT be used when CLI JSON is complete.
     }));
 
     assert.equal(result.ok, true);
-    assert.equal(result.mode, 'cli-json');
+    // reason: change sources derive from their delta files (#263) — the CLI
+    // canonical read by capability name would misattribute old requirement
+    // texts to the change delta. Base sources still prefer CLI JSON.
+    assert.equal(result.mode, 'mixed');
     assert.equal(detectionCalls.length, 1);
     assert.equal(detectionCalls[0].command, explicitCommand);
     assert.equal(result.openspecCli.command, explicitCommand);
     assert.equal(result.openspecCli.commandSource, 'explicit');
-    assert.deepEqual(calls.map((call) => [call.itemName, call.options.type, call.options.deltasOnly]), [
-      ['billing', 'spec', undefined],
-      ['cli-rules', 'change', true]
+    assert.deepEqual(calls.map((call) => [call.itemName, call.options.deltasOnly]), [
+      ['billing', false]
     ]);
     assert.equal(calls.every((call) => call.options.command === explicitCommand), true);
 
     const mergedRules = await readGenerated(rootDir, 'openspec-merged-cli-rules.md');
     assert.match(mergedRules, /Requirement: CLI billing/);
-    assert.match(mergedRules, /Requirement: CLI auth/);
+    assert.match(mergedRules, /Requirement: Fallback Delta/);
     assert.doesNotMatch(mergedRules, /Fallback Base/);
-    assert.doesNotMatch(mergedRules, /Fallback Delta/);
-  });
-
-  it('keeps markdown identity when OpenSpec 1.13 JSON drops headings and scenario names', async () => {
-    const { compileOpenSpecRules } = await loadCompiler();
-    const rootDir = await createTempRoot();
-    const baseText = 'The system SHALL keep the heading that the JSON omits.';
-    const deltaText = 'The system SHALL keep the delta heading that the JSON omits.';
-    await writeFixture(rootDir, 'openspec/specs/billing/spec.md', `# Billing
-
-## Requirements
-
-### Requirement: Billing heading
-
-${baseText}
-
-#### Scenario: billing scenario
-
-- GIVEN base state
-- WHEN compiled
-- THEN the markdown heading survives
-`);
-    await createChange(rootDir, 'v13-rules', {
-      'auth/spec.md': `# Auth
-
-## ADDED Requirements
-
-### Requirement: Delta heading
-
-${deltaText}
-
-#### Scenario: delta scenario
-
-- GIVEN delta state
-- WHEN compiled
-- THEN the delta heading survives
-`
-    });
-
-    const result = await compileOpenSpecRules('v13-rules', compilerOptions(rootDir, {
-      detectOpenSpec: async () => ({
-        available: true,
-        canValidate: true,
-        canArchive: true,
-        version: '1.13.0',
-        supportedRange: '>=1.13.0 <2.0.0',
-        versionSupported: true,
-        requiresNode: '>=20.19.0',
-        nodeVersion: '20.19.0',
-        nodeSupported: true,
-        command: 'openspec',
-        commandSource: 'path',
-        reason: null,
-        errors: []
-      }),
-      showOpenSpecItem: async (itemName, options) => options.type === 'change'
-        ? {
-            ok: true,
-            json: {
-              deltas: [
-                {
-                  spec: 'auth',
-                  operation: 'ADDED',
-                  requirements: [
-                    {
-                      text: deltaText,
-                      scenarios: [{ rawText: '- GIVEN delta state\n- WHEN compiled\n- THEN the delta heading survives' }]
-                    }
-                  ]
-                }
-              ]
-            },
-            error: null
-          }
-        : {
-            ok: true,
-            json: {
-              requirements: [
-                {
-                  text: baseText,
-                  scenarios: [{ rawText: '- GIVEN base state\n- WHEN compiled\n- THEN the markdown heading survives' }]
-                }
-              ]
-            },
-            error: null
-          }
-    }));
-
-    assert.equal(result.ok, true);
-    assert.equal(result.mode, 'cli-json');
-    assert.deepEqual(result.warnings.map((warning) => warning.code), []);
-
-    const mergedRules = await readGenerated(rootDir, 'openspec-merged-v13-rules.md');
-    assert.match(mergedRules, /Requirement: Billing heading/);
-    assert.match(mergedRules, /Requirement: Delta heading/);
-    assert.match(mergedRules, /billing scenario/);
-    assert.match(mergedRules, /delta scenario/);
+    assert.doesNotMatch(mergedRules, /CLI auth/);
   });
 });
 
@@ -1443,52 +1325,6 @@ The system MUST remove old behavior.
       'WHEN extracted',
       'THEN it becomes a requirement'
     ]);
-  });
-
-  it('extracts OpenSpec 1.13 text-only requirements with raw scenario bullets', async () => {
-    const { extractRequirementsFromShowJson } = await loadCompiler();
-
-    const extracted = extractRequirementsFromShowJson({
-      id: 'health',
-      title: 'health',
-      requirementCount: 1,
-      requirements: [
-        {
-          text: 'The system SHALL answer 503 when a probe is unhealthy.',
-          scenarios: [{ rawText: '- GIVEN an unhealthy probe\n- WHEN /health runs\n- THEN the answer is 503' }]
-        }
-      ]
-    });
-
-    assert.deepEqual(extracted.requirements.map((requirement) => [requirement.section, requirement.title]), [
-      ['Requirements', 'The system SHALL answer 503 when a probe is unhealthy']
-    ]);
-    assert.deepEqual(extracted.requirements[0].scenarios[0].steps, [
-      'GIVEN an unhealthy probe',
-      'WHEN /health runs',
-      'THEN the answer is 503'
-    ]);
-  });
-
-  it('extracts OpenSpec 1.13 change deltas for the requested capability only', async () => {
-    const { extractRequirementsFromChangeShowJson } = await loadCompiler();
-
-    const json = {
-      deltas: [
-        { spec: 'health', operation: 'ADDED', requirements: [{ text: 'The system SHALL add health.', scenarios: [] }] },
-        { spec: 'queue', operation: 'MODIFIED', requirements: [{ text: 'The system SHALL modify queue.', scenarios: [] }] },
-        { spec: 'health', operation: 'REMOVED', requirements: [{ text: 'The system SHALL remove old health.', scenarios: [] }] }
-      ]
-    };
-
-    const health = extractRequirementsFromChangeShowJson(json, { capability: 'health' });
-    assert.deepEqual(health.requirements.map((requirement) => [requirement.section, requirement.title]), [
-      ['ADDED Requirements', 'The system SHALL add health'],
-      ['REMOVED Requirements', 'The system SHALL remove old health']
-    ]);
-
-    const queue = extractRequirementsFromChangeShowJson(json, { capability: 'queue' });
-    assert.deepEqual(queue.requirements.map((requirement) => requirement.section), ['MODIFIED Requirements']);
   });
 
   it('preserves structured given when then scenario fields from CLI JSON', async () => {

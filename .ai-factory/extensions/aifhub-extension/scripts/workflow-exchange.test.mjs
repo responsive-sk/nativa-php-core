@@ -1,5 +1,6 @@
 import { after, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -105,7 +106,9 @@ describe('Workflow profile export', () => {
   it('fails profile --change when the change cannot be resolved', async () => {
     const result = await exportWorkflowProfile({ rootDir: os.tmpdir(), changeId: 'missing-change' });
     assert.equal(result.outcome, 'failed');
-    assert.equal(result.errors[0].code, 'active_change_unresolved');
+    // reason: config-default-classic resolves explicit identity, then validates
+    // its selected sources instead of searching an OpenSpec directory.
+    assert.equal(result.errors[0].code, 'missing_plan_file');
   });
 
   it('degrades instead of silently dropping a malformed stored decision', async () => {
@@ -253,20 +256,27 @@ describe('Exchange bundle export', () => {
     assert.equal(details.invalid_tracer_decision, 'change_binding_mismatch');
   });
 
-  it('exports a degraded bundle for a native-only AI Factory plan', async () => {
+  it('exports unopted native context without fabricating requirements or a SessionBrief', async () => {
     const root = await mkdtemp(path.join(os.tmpdir(), 'aifhub-exchange-aif-'));
     roots.push(root);
     await put(root, '.ai-factory/config.yaml', 'paths:\n  plan: .ai-factory/PLAN.md\n');
-    await put(root, '.ai-factory/PLAN.md', '# Plan\n\n- [ ] 1.1 Do the native task.\n');
+    // reason: validation-before-parsing; a native pair with incomplete facts
+    // exports as degraded, while missing companions are resolver failures.
+    const native = '.ai-factory/plans/native-task';
+    await put(root, `${native}.md`, '# Plan\n\n- [ ] 1.1 Do the native task.\n');
+    for (const name of ['task.md', 'context.md', 'rules.md', 'verify.md', 'status.yaml']) {
+      await put(root, `${native}/${name}`, name === 'task.md' ? '# Tasks\n\n- [ ] 1.1 Do the native task.\n' : name === 'status.yaml' ? 'plan_id: native-task\n' : '# Context\n');
+    }
     const result = await exportExchangeBundle({ rootDir: root, changeId: 'native-task', methodology: 'aifactory' });
-    assert.equal(result.outcome, 'degraded');
+    assert.equal(result.outcome, 'exported');
     const bundle = result.bundle;
     assert.equal(bundle.plan.methodology, 'aifactory');
-    assert.equal(bundle.plan.public_mode, 'fast');
+    assert.equal(bundle.plan.public_mode, 'full');
     assert.equal(bundle.plan.tasks.length, 1);
-    assert.ok(result.notes.some((note) => note.code === 'aifactory-native-plan-parsing-incomplete'));
-    // SessionBrief is OpenSpec-protocol-bound; aifactory exports stay degraded.
-    assert.ok(result.notes.some((note) => note.code === 'session_brief_blocked'));
+    assert.equal(result.notes.some((note) => note.code === 'aifactory-native-plan-parsing-incomplete'), false);
+    // Missing declared facts remain visible; no synthetic requirements.
+    assert.equal(result.notes.some((note) => note.code === 'session_brief_blocked'), false);
+    assert.equal(bundle.plan.requirements.intent, '');
   });
 });
 
@@ -287,6 +297,8 @@ describe('Evaluation export', () => {
       tokens: { input: 1200, output: 300, total: 1500 },
       cost: { amount: 0.02, currency: 'USD' }, latency_ms: 4200,
       retries: 1, changed_loc: 87, unrelated_changes: 0, human_review_ms: 60000,
+      transport: { create_calls: 2, read_calls: 5, fetch_calls: 1, retry_creates: 1, recovery_attempts: 2,
+        verified_recoveries: 1, uncertain_returns: 1, identity_conflicts: 0, transport_ms: 180, recovery_ms: 120, wait_ms: 0, incomplete_intervals: 1 },
       verified_success: true,
       model: { provider: 'anthropic', id: 'claude-sonnet', version: 'exact' },
       harness: { id: 'ai-factory', version: '2.18.1' }
@@ -308,6 +320,9 @@ describe('Evaluation export', () => {
     assert.equal(record.metrics.tasks_total, 2);
     assert.equal(record.metrics.tasks_completed, 1);
     assert.equal(record.metrics.retries, 1);
+    assert.equal(record.metrics.transport.create_calls, 2);
+    assert.equal(record.metrics.transport.read_calls, 5);
+    assert.equal(record.metrics.transport.incomplete_intervals, 1);
     assert.equal(record.metrics.changed_loc, 87);
     assert.equal(record.metrics.unrelated_changes, 0);
     assert.equal(record.metrics.human_review_ms, 60000);
@@ -367,6 +382,93 @@ describe('Evaluation export', () => {
     const result = await exportEvaluation({ rootDir: root, changeId: change, evidenceClass: 'synthetic_fixture', runnerMetricsPath: 'metrics/bad.json' });
     assert.equal(result.outcome, 'failed');
     assert.equal(result.errors[0].code, 'invalid_runner_metrics');
+  });
+});
+
+describe('Public runtime identifier validation', () => {
+  // The six public runtime fields are projected verbatim into the record while
+  // privacy.contains_paths stays false (issue #273): a path-like value in any
+  // of them must fail the export before any snapshot, salt or projection.
+  const fields = ['run_id', 'model.provider', 'model.id', 'model.version', 'harness.id', 'harness.version'];
+  const pathLike = [
+    '/etc/passwd', 'src/auth/login.ts', 'C:\\Users\\me\\project', 'dir\\file.txt',
+    'C:evil', '\\\\server\\share', '../secrets', '.hidden'
+  ];
+  const metricsWith = (field, value) => {
+    const metrics = {
+      schema: 'aifhub.runner_metrics.v1', run_id: 'run-1',
+      model: { provider: 'anthropic', id: 'claude-sonnet', version: 'exact' },
+      harness: { id: 'ai-factory', version: '2.18.1' }
+    };
+    const [block, key] = field.split('.');
+    if (key === undefined) metrics[field] = value;
+    else metrics[block][key] = value;
+    return metrics;
+  };
+  const probe = async (root, change, field, value) => {
+    await put(root, 'metrics/adversarial.json', JSON.stringify(metricsWith(field, value)));
+    return exportEvaluation({
+      rootDir: root, changeId: change, evidenceClass: 'synthetic_fixture',
+      runnerMetricsPath: 'metrics/adversarial.json', now: '2026-09-13T00:00:00.000Z'
+    });
+  };
+
+  it('rejects path-like values in every public runtime field before any projection', async () => {
+    // One fresh fixture for the whole loop: every probe must reject, so no
+    // fingerprint salt may ever be bootstrapped for this project.
+    const { root, change } = await compiledFixture();
+    for (const field of fields) {
+      for (const value of pathLike) {
+        const result = await probe(root, change, field, value);
+        assert.equal(result.outcome, 'failed', `${field} must reject ${JSON.stringify(value)}`);
+        assert.deepEqual(result.errors, [{ code: 'invalid_runner_metrics' }]);
+        assert.equal('evaluation' in result, false);
+        assert.equal('written' in result, false);
+        // The canary string never reaches the serialized envelope.
+        assert.equal(JSON.stringify(result).includes(JSON.stringify(value)), false,
+          `${field} envelope must not carry ${JSON.stringify(value)}`);
+        // Rejection precedes salt bootstrap: no exchange state was created.
+        assert.equal(existsSync(path.join(root, '.ai-factory/state/exchange/fingerprint-salt.json')), false);
+      }
+    }
+  });
+
+  it('rejects semver build metadata and over-length public identifiers, then accepts the normalized value', async () => {
+    const { root, change } = await compiledFixture();
+    const rejected = [
+      ['harness.version', '2.18.1+build'],
+      ['run_id', 'r'.repeat(81)],
+      ['model.id', 'm'.repeat(81)]
+    ];
+    for (const [field, value] of rejected) {
+      const result = await probe(root, change, field, value);
+      assert.equal(result.outcome, 'failed', `${field} must reject ${JSON.stringify(value)}`);
+      assert.deepEqual(result.errors, [{ code: 'invalid_runner_metrics' }]);
+      assert.equal('evaluation' in result, false);
+      assert.equal('written' in result, false);
+      assert.equal(JSON.stringify(result).includes(JSON.stringify(value)), false,
+        `${field} envelope must not carry ${JSON.stringify(value)}`);
+    }
+    // Sanity control: flipping the single adversarial field back to its
+    // benign form restores a normal export on the same fixture.
+    const good = await probe(root, change, 'run_id', 'run-1');
+    assert.equal(good.outcome, 'exported', JSON.stringify(good.errors));
+    assert.equal(good.evaluation.runtime.run_id, 'run-1');
+  });
+});
+
+describe('Transport runner metrics', () => {
+  it('rejects unknown/negative/coerced data and never implies verified_success', async () => {
+    const { root, change } = await compiledFixture();
+    for (const transport of [{ body: 'private' }, { create_calls: -1 }, { read_calls: '2' }, { fetch_calls: true }]) {
+      await put(root, 'metrics/transport.json', JSON.stringify({ schema: 'aifhub.runner_metrics.v1', transport }));
+      const result = await exportEvaluation({ rootDir: root, changeId: change, evidenceClass: 'synthetic_fixture', runnerMetricsPath: 'metrics/transport.json' });
+      assert.equal(result.errors[0].code, 'invalid_runner_metrics');
+    }
+    await put(root, 'metrics/transport.json', JSON.stringify({ schema: 'aifhub.runner_metrics.v1', transport: { verified_recoveries: 1, transport_ms: null } }));
+    const result = await exportEvaluation({ rootDir: root, changeId: change, evidenceClass: 'synthetic_fixture', runnerMetricsPath: 'metrics/transport.json' });
+    assert.equal(result.evaluation.outcomes.verified_success, null);
+    assert.equal(result.evaluation.metrics.transport.transport_ms, null);
   });
 });
 

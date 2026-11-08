@@ -3,9 +3,10 @@
 # Документация
 
 - [Аудит хранения артефактов](artifact-storage-audit.md) — текущие пути и владельцы, воспроизведённые расхождения, целевая карта хранения и правила Git/архивирования.
-- [AI Factory plans across methodologies](adr/0005-ai-factory-plan-methodologies.md) — целевая архитектура: AI Factory владеет планами, методологии задают содержание, дополнительные инструменты работают через адаптеры; интеграция ещё не реализована.
-- [SDD profiles and SessionBrief (P0)](sdd-profiles.md) — текущий прототип для OpenSpec: глубина planning, независимые quality gates, compiler/status и точный digest implementation context; [ADR 0004](adr/0004-sdd-profiles-and-session-brief.md).
+- [AI Factory plans across methodologies](adr/0005-ai-factory-plan-methodologies.md) — архитектура владения планами и адаптеров: classic/OpenSpec SessionBrief реализован, дальнейшие provider-интеграции имеют отдельные границы приёмки.
+- [SDD profiles and SessionBrief (P0)](sdd-profiles.md) — глубина planning, независимые quality gates, compiler/status и точный digest implementation context для classic/OpenSpec; [native classic contract](classic-session-brief.md), [ADR 0004](adr/0004-sdd-profiles-and-session-brief.md).
 - [Workflow exchange exports (P2)](workflow-exchange.md) — versioned registry/bundle/evaluation exports для кросс-проектных consumers (aifhub#29, orkora#229), lineage vocabulary, evidence classes и privacy boundaries.
+- [Runner metrics collector (#230, этап 1)](runner-metrics.md) — read-only агрегация delivery snapshots, run-записей и opt-in QA-результатов в один `aifhub.runner_metrics.v1`: CLI-контракт, семантика unknown/zero, две дедупликации, record-span оговорки и граница невмешательства.
 
 Эта документация описывает workflow AIFHub Extension v1:
 
@@ -16,6 +17,10 @@ AI Factory UX + OpenSpec artifact protocol
 OpenSpec-native artifacts в `openspec/` являются canonical. AI Factory artifacts в `.ai-factory/` хранят runtime state, QA evidence, generated rules и legacy migration input.
 
 OpenSpec CLI features вызываются через AIFHub wrappers и `scripts/openspec-runner.mjs`; OpenSpec skills или slash commands extension не устанавливает.
+
+## AI Factory 2.20 reviewed baseline
+
+[2.20 release ledger](openspec-compatibility.md#ai-factory-220-reviewed-release): resolved workflow defaults, shared Codex ledger paths, exact v220 alongside v218/v219 smoke slots, schema pin, upstream review-validation-failed boundary и deferred post-#199 карта. [Usage](usage.md#ai-factory-220-workflow-defaults-and-consumer-smoke) содержит opt-in live flags.
 
 ## Порядок Чтения
 
@@ -29,15 +34,17 @@ OpenSpec CLI features вызываются через AIFHub wrappers и `script
 8. [Session Context Dedup](context-dedup.md) - optional `off | aifhub | sqz` context optimization, protected artifacts, ledger paths, external-tool consent, CLI и MCP surface.
 9. [Context Loading Policy](context-loading-policy.md) - Base Context, AI Factory 2.19 upstream warmup boundary, optional project glossary, review policy, optional Graphify/CodeGraph/Context7 guidance, T-Search reject/defer boundary, GitHub-aware roadmap evidence, ownership boundaries, generated rules, quality gates, parent-owned commit grouping, upstream architecture/docs/QA/archive/distillation utilities, commit handoff и legacy path rules.
 10. [Project Review Policy](review-policy.md) - configurable root-default `REVIEW.md`, scaffold ownership, review-only consumers, precedence, path safety и policy/session-state boundary.
-11. [OpenSpec Compatibility](openspec-compatibility.md) - optional CLI adapter support, exact-tagged OpenSpec 1.13.0 reviewed baseline from 1.3.1, tracked Git/npm custody and CLI matrix, pinned AI Factory 2.19.0 release plus selectable 2.18.1/2.19.0 published-executable smoke targets, requirements reconciliation gates, browser-replay write scope, cumulative 2.18 classic/ultra plan and research contracts, upstream coherence ownership, revision-bound receipt, archive guard, ownership/no-op ledger, artifact sync points, rules gate, Node requirements, validation policy flags и degraded mode.
-12. [OpenSpec Artifact Validation](openspec-validation.md) - AIFHub contract validator поверх OpenSpec CLI validation.
-13. [OpenSpec Coverage Matrix](spec-coverage.md) - requirement-to-task-to-code coverage evidence и verify/done policy.
-14. [Legacy Plan Migration](legacy-plan-migration.md) - если существующие `.ai-factory/plans` artifacts нужно перенести в OpenSpec-native changes.
-15. [Active Change Resolver](active-change-resolver.md) - active change selection, runtime paths, current pointer behavior и ambiguity diagnostics.
-16. [Handoff Validation Profile](handoff-validation-profile.md) - read-only orchestration summary contract.
-17. [ADR 0001](adr/0001-openspec-native-artifact-protocol.md) - v1 artifact ownership decision.
-18. [ADR 0002: Optional Project Glossary](adr/0002-optional-project-context-glossary.md) - protocol-neutral glossary ownership, lexical authority and deferred OKF decision.
-19. [ADR 0003: Durable Project Review Policy](adr/0003-durable-project-review-policy.md) - review-policy namespace, ownership, authority and session-state separation.
+11. [Docs Readability Policy](readability-policy.md) - opt-in non-blocking readability diagnostics, pinned RU/EN profile, source-bound report schema, closed-enum outcomes, composite invalidation, state-only writer guards и advisory-изоляция от verification/finalization.
+12. [Requirement Lint Policy](requirement-lint-policy.md) - opt-in advisory линтер неоднозначных требований для plan/improve: четыре closed finding types, точные source refs, уточняющие вопросы без ответов, честные run/coverage исходы, state-only writer guards и отказ кастомных state-корней.
+13. [OpenSpec Compatibility](openspec-compatibility.md) - optional CLI adapter support, exact-tagged OpenSpec 1.15.0 reviewed baseline from 1.3.1, tracked Git/npm custody and CLI matrix, pinned AI Factory 2.19.0 release plus selectable 2.18.1/2.19.0 published-executable smoke targets, requirements reconciliation gates, browser-replay write scope, cumulative 2.18 classic/ultra plan and research contracts, upstream coherence ownership, revision-bound receipt, archive guard, ownership/no-op ledger, artifact sync points, rules gate, Node requirements, validation policy flags и degraded mode.
+14. [OpenSpec Artifact Validation](openspec-validation.md) - AIFHub contract validator поверх OpenSpec CLI validation.
+15. [OpenSpec Coverage Matrix](spec-coverage.md) - requirement-to-task-to-code coverage evidence и verify/done policy.
+16. [Legacy Plan Migration](legacy-plan-migration.md) - если существующие `.ai-factory/plans` artifacts нужно перенести в OpenSpec-native changes.
+17. [Active Change Resolver](active-change-resolver.md) - active change selection, runtime paths, current pointer behavior и ambiguity diagnostics.
+18. [Handoff Validation Profile](handoff-validation-profile.md) - read-only orchestration summary contract.
+19. [ADR 0001](adr/0001-openspec-native-artifact-protocol.md) - v1 artifact ownership decision.
+20. [ADR 0002: Optional Project Glossary](adr/0002-optional-project-context-glossary.md) - protocol-neutral glossary ownership, lexical authority and deferred OKF decision.
+21. [ADR 0003: Durable Project Review Policy](adr/0003-durable-project-review-policy.md) - review-policy namespace, ownership, authority and session-state separation.
 
 Остальные runtime-specific guides являются supporting references:
 
@@ -55,7 +62,7 @@ OpenSpec CLI features вызываются через AIFHub wrappers и `script
 
 | Guide | Назначение |
 |---|---|
-| [Validation Providers](validation-providers.md) | Composable HLV validation, independent tool switches and artifact selection, required/optional policy, revision-bound evidence, read-only doctor and the separate Lekalo-ready semantic contract |
+| [Validation Providers](validation-providers.md) | Composable HLV/Lekalo validation, independent tool switches and artifact selection, required/optional policy, revision-bound evidence, read-only doctor and Lekalo semantic impact/context |
 | [Prime Agent Runtime Evaluation](runtime-research/prime-agent/README.md) | Runtime adoption deferred: mutable harness roles, permission boundary, admission-only delegation, distribution constraints and reproducible source/kernel probes |
 | [Исследование совместимости с Agent Plugins 1.0](agent-plugins-research/README.md) | Исправленный двухskill subset: 27 файлов, явные exclusions, schema/validator checks и положительные/отрицательные MCP project-binding probes |
 | [Persistent Workflow Mechanics](workflow-mechanics.md) | Canonical task sources, sealed batches, interruption recovery, persistent fix budgets and reversible skill-context evolution |
@@ -77,7 +84,9 @@ OpenSpec CLI features вызываются через AIFHub wrappers и `script
 | [Session Context Dedup](context-dedup.md) | Optional `off | aifhub | sqz` context optimization: decision table, protected artifacts, ledger/purge paths, external-tool consent, CLI и MCP surface |
 | [Context Loading Policy](context-loading-policy.md) | Runtime context, AI Factory 2.19 upstream warmup, Optional Project Glossary, review policy, optional Graphify/CodeGraph/Context7 context, T-Search reject/defer boundary, GitHub-aware roadmap evidence, ownership, gates, commit handoff, upstream `/aif-architecture`, `/aif-docs`, `/aif-qa`, `/aif-archive` and `/aif-distillation` boundaries и legacy boundaries |
 | [Project Review Policy](review-policy.md) | Configurable `reviews.policy_file`, root `REVIEW.md` default, scaffold lifecycle, safe read-only review consumption и policy/session-state boundary |
-| [OpenSpec Compatibility](openspec-compatibility.md) | CLI adapter policy, exact-tagged OpenSpec 1.13.0 reviewed baseline from 1.3.1, tracked Git/npm custody and CLI matrix, AI Factory 2.19.0 pinned release and selectable 2.18.1/2.19.0 executable smoke targets, requirements reconciliation and browser-replay boundaries, cumulative 2.18 plan/research/archive adapters, upstream coherence ownership, exact consumer ownership/no-ops, validation policy flags, sync points, rules gate, version support и degraded mode |
+| [Docs Readability Policy](readability-policy.md) | Opt-in non-blocking readability diagnostics: pinned RU/EN profile, source-bound report schema, closed-enum outcomes, composite invalidation, state-only writer guards и advisory-изоляция |
+| [Requirement Lint Policy](requirement-lint-policy.md) | Opt-in advisory линтер неоднозначных требований для plan/improve: четыре closed finding types, точные source refs, вопросы без ответов, честные run/coverage исходы и state-only writer guards |
+| [OpenSpec Compatibility](openspec-compatibility.md) | CLI adapter policy, exact-tagged OpenSpec 1.15.0 reviewed baseline from 1.3.1, tracked Git/npm custody and CLI matrix, AI Factory 2.19.0 pinned release and selectable 2.18.1/2.19.0 executable smoke targets, requirements reconciliation and browser-replay boundaries, cumulative 2.18 plan/research/archive adapters, upstream coherence ownership, exact consumer ownership/no-ops, validation policy flags, sync points, rules gate, version support и degraded mode |
 | [OpenSpec Artifact Validation](openspec-validation.md) | Read-only AIFHub contract validator для canonical artifacts, runtime evidence, QA и generated rules |
 | [OpenSpec Coverage Matrix](spec-coverage.md) | Requirement-to-task-to-code coverage evidence, policy, staleness и integration points |
 | [Legacy Plan Migration](legacy-plan-migration.md) | Explicit migration commands и artifact mapping |
@@ -125,7 +134,7 @@ OpenSpec CLI features вызываются через AIFHub wrappers и `script
 - upstream `/aif-architecture`, `/aif-docs`, and `/aif-qa` project-context utility boundaries; they are not required per-change OpenSpec lifecycle gates
 - AI Factory 2.13+ parent-owned `/aif-commit` `## Commit Plan` grouping
 - upstream `/aif-distillation` utility skill boundaries; it is not an AIFHub lifecycle stage and writes generated skill packages to the current agent skills directory
-- OpenSpec 1.13.0 reviewed baseline from 1.3.1, including `1.6.0-beta.1`, exact Git/npm custody and CLI matrix, inline task verification, Store-root specs instructions, no-spec schema scaffolding, stderr output hygiene, blocked-retirement diagnostics, prior strict/non-strict task-numbering and scenario-loss semantics, advisory-only archived validation, native `skip_specs`, and adapter-only ownership boundaries for Zed, `init --language`, profiles, schemas, OpenSpec skills, `/opsx:*`, agent targets, tool integrations, Stores, workspace beta state, package management, and `openspec update`; the [1.11.0 audit](openspec-1.11.0-audit.md) adds optional diff/batch reads, strict Purpose remediation, archive rename order, schema rollback and Antigravity migration
+- OpenSpec 1.15.0 reviewed baseline from 1.3.1, including `1.6.0-beta.1`, exact Git/npm custody and CLI matrix, inline task verification, Store-root specs instructions, no-spec schema scaffolding, stderr output hygiene, blocked-retirement diagnostics, prior strict/non-strict task-numbering and scenario-loss semantics, advisory-only archived validation, native `skip_specs`, and adapter-only ownership boundaries for Zed, `init --language`, profiles, schemas, OpenSpec skills, `/opsx:*`, agent targets, tool integrations, Stores, workspace beta state, package management, and `openspec update`; the [1.11.0 audit](openspec-1.11.0-audit.md) adds optional diff/batch reads, strict Purpose remediation, archive rename order, schema rollback and Antigravity migration
 - OpenSpec requirement coverage evidence и policy
 - canonical OpenSpec artifact ownership
 - AI Factory runtime state, QA evidence и generated rules
@@ -179,4 +188,4 @@ npm test
 - [CodeGraph Benchmark Results](memory-tools-research/codegraph-benchmark-results.md)
 - [AI Tester Token Matrices](memory-tools-research/ai-tester-token-matrices.md)
 
-The [1.13.0 audit](openspec-1.13.0-audit.md) records apply warnings, repeated delta sections, fenced coverage/archive preservation, and wrapped retirement. The [1.12.0 audit](openspec-1.12.0-audit.md) extends this evidence with findings reports, INFO archive preflight, repository-grounded planning, .gitkeep preservation, and SourceCraft fixtures.
+The [1.15.0 audit](openspec-1.15.0-audit.md) records cumulative 1.13.1–1.15.0 custody, strict-warning boundaries, show completeness resolved upstream in 1.13.1, and standalone docs-only ownership. The [1.13.0 audit](openspec-1.13.0-audit.md) records apply warnings, repeated delta sections, fenced coverage/archive preservation, and wrapped retirement. The [1.12.0 audit](openspec-1.12.0-audit.md) extends this evidence with findings reports, INFO archive preflight, repository-grounded planning, .gitkeep preservation, and SourceCraft fixtures.

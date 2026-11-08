@@ -1,26 +1,38 @@
 {
-  "version": "1.8.0",
-  "released_at": "2026-10-26T06:44:58.052Z",
+  "version": "1.8.1",
+  "released_at": "2026-11-05T18:52:16.423Z",
   "files": [
     {
       "path": "scripts/workflow-state-store.mjs",
-      "sha256": "ca34361a9f35dcafb2a34ec02d17b176eb5094f9054570e2274399589e358d3c"
+      "sha256": "cefc1ac98d924508763a0430b3e97b99ed800e99f1d87467f3901af96156e6cb"
     },
     {
       "path": "scripts/execution-state.mjs",
-      "sha256": "b6470f422e8d50442f8af2474a353d092b850c8a878bdc75c5cb8e322a79a456"
+      "sha256": "c66448b418c9a18a9a0aea13d3a71eaf2bcccb50396dfea1918f9b2e7527dd04"
     },
     {
       "path": "scripts/execution-records.mjs",
-      "sha256": "b2d13e9251a30a6ab24f0d937865e0c842e4356dcf447cd21e40632fe133bf9e"
+      "sha256": "3231bf6661c2a6dd90bbd1071b60514896fbc3b761a13bf7db767e0d802ff721"
     },
     {
       "path": "scripts/execution-task-source.mjs",
-      "sha256": "e438a94e0314621879382b16afcd282743f32dc95c7f8a431ccb01bfde3c313f"
+      "sha256": "8bce49420e92ffba201dd308ce9c50be360f30da3dc4456abbfd8c685aa4525e"
     },
     {
       "path": "scripts/isolated-execution.mjs",
-      "sha256": "5a9cd172e47d9924c645852fc0c0bb7da54b298ec4ab3fc3a973560d01a555fe"
+      "sha256": "964c54a83bf6d9f507ad800a125af36c870b054fb0f13949080bf5a1d3b6c6da"
+    },
+    {
+      "path": "scripts/host-delivery.mjs",
+      "sha256": "a2b6ed85e943ae008d3ef79e6c6bd1b7d105a10f914fd2588bd0b2b80743efe3"
+    },
+    {
+      "path": "scripts/host-delivery-store.mjs",
+      "sha256": "338cb83394f163e7873032f3eeafbe2a32b3bf0a5db3eb6fe309408c457028c2"
+    },
+    {
+      "path": "scripts/no-shell-process.mjs",
+      "sha256": "a36678811a1a98bebcccffea97447ad9a330b182112a901ae5f9ae9814365a89"
     }
   ]
 }

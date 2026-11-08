@@ -92,6 +92,8 @@ When refining an OpenSpec-native change, audit normalized task quality across th
 - `tasks.md` for an executable checklist whose task descriptions state how completion is verified
 - `specs/**/spec.md` for behavior deltas
 
+For OpenSpec 1.14.x/1.15.0 strict validation, keep ADDED requirement body text at most 500 characters (heading excluded); put examples and edge cases in scenarios, explanatory prose in proposal.md or design.md, and use durable requirement/scenario names. MODIFIED delta bodies and `## Purpose` have separate upstream rules. Do not add unsupported `.openspec.yaml` keys such as `skip_design`; preserve user metadata and explain unknown-key findings instead of stripping it. Keep delta prose inside recognized sections; valid lowercase `x-` metadata extensions are exempt since 1.14.2.
+
 For a new capability, refine its delta's `## Purpose` into a meaningful description before first sync/archive. An existing main spec's Purpose is not replaced by a delta's Purpose: if strict validation reports a placeholder, record the affected accepted-spec path and bounded direct remediation instead of manufacturing a requirement delta. Do not rewrite archived changes to clear historical placeholders.
 
 Classify open questions as `blocker`, `warn`, or `info` when useful, without requiring classification in trivial changes or forcing a specific table format.
@@ -99,6 +101,19 @@ Classify open questions as `blocker`, `warn`, or `info` when useful, without req
 Also flag as task-quality findings: missing or incorrect requirement citations, unresolved source conflicts, a missing `## Requirements Reconciliation` section when the reconciliation signals apply, and missing verification of a supported behavior combination or a representative real repository artifact. Respect the plan's testing setting: add a test only when testing is enabled, otherwise add a runnable/manual verification step.
 
 Patch only affected sections and avoid whole-file regeneration unless structurally unusable.
+
+#### Optional requirement ambiguity lint (opt-in, advisory)
+
+- OpenSpec-native only; legacy classic mode never runs this scan. This scan never replaces `## Requirements Reconciliation`, requirement reconciliation gates, or the upstream conflict STOP semantics: a `suspected_requirement_revision_conflict` finding describes suspected ambiguity inside one presented requirement with exactly two source refs and never authorizes editing requirements or deciding for the owner. Cross-source plan-level conflicts stay with the reconciliation gate.
+- Run the scan only when the user enabled it (`aifhub.requirementLint.enabled: true`); never enable it automatically and skip it entirely without an explicit opt-in. Invoke only the installed command:
+
+```bash
+ai-factory aifhub-requirement-lint --change <change-id> --enabled true --file <requirement-source> [--file <requirement-source> ...] --json
+```
+
+- Scan only requirement sources the user or the refinement context explicitly presented. Every finding cites an exact source ref and carries a proposed clarifying question: present that question to the user instead of answering it; never insert a numeric SLA, never rewrite the requirement text, never send questions automatically, and never edit canonical artifacts from the lint output.
+- A `none` result means nothing was found in the presented scope only; it is never a readiness, verification, or approval signal. When the lint is disabled or unavailable, or reports a failed, stale, abstained (`abstained: true` — the assessor declined, which is not a zero-findings result), or a coverage that is not `full` (partial or none — e.g. every presented source was missing) run, state `advisory scan was not performed` with the bounded reason and continue with unchanged refinement behavior; this neither blocks nor unblocks a required gate.
+- Skip findings whose exact source refs were already surfaced by `## Requirements Reconciliation` or an upstream reconciliation gate instead of presenting them twice. When a reconciliation gate already stopped the workflow, a skipped or not-performed scan is not a no-problems signal.
 
 Preservation rules:
 

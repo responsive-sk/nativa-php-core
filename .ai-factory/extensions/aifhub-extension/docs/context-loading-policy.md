@@ -66,6 +66,10 @@ Consumer commands load these project context files when present:
 
 Consumer commands must not use bridge files such as `AGENTS.md`, `CLAUDE.md`, `QWEN.md`, or `AIFACTORY.md` as substitutes for configured context paths.
 
+## AI Factory 2.20 Context Boundaries
+
+Current reviewed baseline: `2.20.0`, with exact v220 consumer smoke alongside v218/v219. Workflow defaults resolve before ultra gating, including config-only ultra and leading explore regular override. Hypothesis cards remain upstream-owned opt-in and coexist with separate Confirmed brief outside Active Summary before Sessions. `workflow.improve_check` / `--no-check`, review auto-+check, upstream review-validator and pinned PR tree remain upstream-owned; Codex may return blocking `review-validation-failed`. This differs from AIFHub fresh-context export-package review. Codex installed paths come from ledger `agents[].skillsDir`, including shared `.agents/skills`; migration preflight owns unknown/modified/linked-file rejection. See [2.20 audit](openspec-compatibility.md#ai-factory-220-reviewed-release).
+
 ## AI Factory 2.19 Session Warmup
 
 The published AI Factory `2.19.0` release adds upstream `/aif-warmup` as a read-only session-start handoff. AIFHub does not copy, replace, or inject that skill.
@@ -451,3 +455,15 @@ If `.ai-factory/config.yaml` is missing or incomplete:
 - [ADR 0002: Optional Project Glossary](adr/0002-optional-project-context-glossary.md)
 - [Project Review Policy](review-policy.md)
 - [ADR 0003: Durable Project Review Policy](adr/0003-durable-project-review-policy.md)
+
+## Instruction composition слои и границы честности
+
+Instruction composition (`scripts/instruction-composition.mjs`, #252) фиксирует состав исполненных инструкций отдельными слоями с ролями: `runtime_skill_entrypoint`/`runtime_agent_entrypoint` (полные опубликованные entrypoints из union `extension.skills` и injection targets — authoritative byte identity), `runtime_injection_prepend`/`runtime_injection_append` (точный блок между marker-pairs опубликованного файла) и `extension_injection_source` (side-source из `injections/core/`, не подменяет published block hash), слои project skill-context в порядке чтения (`individual`/`_legacy_fallback` → `build` → `global`; порядок эмитируется в `skill_context_order`) и references (`selected_references` — декларативное замыкание `PROMPT_REFERENCES`; остальные reference-файлы — `reference_candidate` inventory без declared condition).
+
+Composition-записи не являются context providers, QA evidence или verification gates: compile-time baseline наблюдение живёт в SessionBrief hook-е, per-attempt prepared/consumed записи — под `.ai-factory/state/<change-id>/compositions/` (закрытый namespace для QA snapshot projected), shared SessionBrief они не перезаписывают. Порядок injections — наблюдаемый document-order по byte offset опубликованного файла, не порядок JSON-массива в `extension.json`.
+
+Граница честности: статус `verified` доказывает только детерминированные байты компонентов и валидированные обязательные декларации references (path в prepared-наборе, правильный namespace, hash сырых байтов). Он не доказывает, какие инструкции модель фактически прочитала — офлайн это ненаблюдаемо (прецедент `agent_consumption: not_observed_offline`). Декларации по candidate inventory дают честный `unverified`; расхождение против закреплённого prepared/consumed binding — `stale`.
+
+## Readability-отчёты как допустимое derived-хранилище
+
+Advisory readability-диагностика (`ai-factory aifhub-docs-readability`, #228) пишет source-bound отчёт `aifhub.docs_readability.v1` только по явному `--write` под `.ai-factory/state/<change-id>/readability/report.json` — допустимое derived-хранилище по образцу `graphify`/`compositions`: закрытый namespace QA snapshot projected (запись/перезапись/удаление отчёта между enroll и проверкой binding не меняет `ignored_names`/`changed_paths`), writer остаётся state-only с guard-ами, а кастомный `paths.state` вне `.ai-factory/state` запрещён (`state-root-mismatch`). Команда — read-only потребитель глоссария (`paths.context`, default `CONTEXT.md`): классификация `present/missing/empty/unreadable/unsafe` без раскрытия содержимого; в отчёте допускаются только path/state/sha256 глоссария как advisory invalidation metadata, тело никогда не копируется, владельцем записи глоссария остаётся `/aif-analyze`. Диагностика advisory: не входит в done-readiness, provider policy, runner metrics или финализатор и не создаёт `aif-gate-result`; границы зафиксированы в [Docs Readability Policy](readability-policy.md).

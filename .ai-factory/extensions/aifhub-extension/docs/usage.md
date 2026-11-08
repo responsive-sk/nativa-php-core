@@ -4,6 +4,25 @@
 
 This guide documents the v1 OpenSpec-native workflow for AIFHub Extension.
 
+## QA manifest и dependency-aware reuse
+
+`aifhub-qa-manifest` (#234) явно включает bound mode для work item. Без enrollment существующие writers и `--force` работают как прежде. Для OpenSpec используется `.ai-factory/qa/<id>`, для classic — plan folder (rules gate хранится в `gates/rules.md`, чтобы сохранить canonical `rules.md`). Произвольный layout задаётся `--namespace` и `--qa-dir`.
+
+```text
+ai-factory aifhub-qa-manifest prepare --change <id> --config qa-inputs.json --json
+ai-factory aifhub-qa-manifest record --change <id> --gate verify --check tests --result run-1 --from verify.md --json
+ai-factory aifhub-qa-manifest publish --change <id> --expected-publication none --json
+ai-factory aifhub-qa-manifest inspect --change <id> --json
+```
+
+Classic использует `--plan <id>` вместо `--change`. JSON config содержит `scope`, `checks`, опциональные `policyInputs`, `moduleInputs`, `requiredGates`, `independentRoles` (`check_id`, `role`) и `evidenceRefs`. Каждый check задаёт `id`, `gate`, `profile: "declared.v1"`, `dependencies_complete: true`, `inputs`, `command: {argv, cwd, definition}`, `toolchain: [{name, path, sha256}]`, `env_inputs`, опциональные `ignored_inputs`, `required_evidence` и `requires_observed` (default false). `path` — project-relative файл фактического toolchain; его bytes перечитываются. Closure объявляет adapter/owner: неизвестные runtime dependencies или одна строка версии toolchain не доказывают reuse. Executable/dependency bytes следует включать в inputs; library `providers.toolchain` позволяет заново наблюдать external identities. Явные required gates/roles сохраняются при последующих prepare; новый config не может сократить их.
+
+`record` сохраняет FAIL/nonzero/timeout/cancelled; запись не означает acceptance. Corrective run получает новый `--result` и `--supersedes <id>`. Bound `--force` запрещён. Publication использует CAS id прежней публикации; после seal для новых results нужен новый prepare. Binding `valid/stale/blocked` отдельно от semantic `pass/warn/fail`. Publishers/readers не исполняют checks, не архивируют и не меняют checkboxes; verify/done и независимые роли сохраняют authority.
+
+Metadata registry v1 разрешает только JSON schemas `aifhub.delivery.v1` в `.ai-factory/state/<id>/delivery/*.json` (retry_count/ack/query_state/updated_at) и `aifhub.operational-status.v1` в `.ai-factory/state/<id>/status.json` (status/display/updated_at). Другие поля, declared inputs, policy и scope существенны. Generated rules и tasks checkboxes — inputs. Raw hashes различают CRLF/BOM; absent environment отличается от empty. Declared ignored inputs хэшируются, остальные ignored names отслеживаются. Лимиты: 20000 файлов, 16 MiB/blob, 256 MiB/snapshot, 64 checks, 256 results/refs; превышение блокирует без truncation. Отдельно от metadata registry живёт observation registry (#227): checksummed записи `aifhub.observation.v1` и receipts `aifhub.observed-check.v1` (под `observations/receipts/`) хранятся в `.ai-factory/qa/<id>/artifacts/observations/` (classic — `.ai-factory/plans/<id>/artifacts/observations/`) с ключом `run_id` и first-write-wins записью; путь закрыт qaInternal-исключением, поэтому observation-файлы не попадают ни в снапшот, ни в `ignored_names`.
+
+Host observation принимает consumer-side receipt `aifhub.observed-check.v1` только через injectable trusted `HostObservationRegistry.lookup(run_id)`; JSON statement сам по себе не trusted — доверие несёт host-owned injection registry, а не JSON-файл. Producer-сторона (#227) — library-адаптер `scripts/qa-observed-check.mjs`: `ingestObservedRun(versionedResult, options)` принимает ровно одну согласованную запись `aifhub.observed-run.v1` явно сконфигурированного completion-hook-а, сам запускает verifier через injectable `execFile`, перепроверяет source и настроенные requirements гейтов до и после запуска с требованием равенства digests и пишет registry-backed receipt `aifhub.observed-check.v1`; `options.environment` — полная замена окружения verifier-а, а не merge с `process.env`: declared-absent переменная остаётся absent, объект копируется один раз и разделяется fingerprint/spawn/post-стадиями, а fingerprints включают только объявленные `env_inputs`; `observationRegistry(rootDir, changeId).lookup(run_id)` возвращает `receipt_sha256`, `receipt_path`, `worktree_identity`, `run_id`, `exit_code`, `outcome` и детерминированный `result_id`. Exact replay канонически равного конверта идемпотентен (verifier не перезапускается, freshness не обновляется), конфликтующий payload под тем же `run_id` отклоняется `observation-conflict` без перезаписи. Негативные исходы (`failed`/`timeout`/`cancelled`/`missing-report`; `unsupported` — блокер до запуска без фабрикации receipt) хранятся verbatim и никогда не проходят как PASS, в том числе через warn-статус required-чека: адаптер авторит `pass` только для `completed` с `exit_code=0`. `record`/ingestion не передают ownership verification/finalization. Прод-граница: CLI `publish`/`inspect` пока не передаёт `HostObservationRegistry`, поэтому host-observed запись на этапе binding даёт `execution-unproven`; демонстрация trusted-execution — library-уровень с injectable registry. Library также принимает `SnapshotProvider`, `execFile`, environment и providers для dependency/toolchain/owner requirements; QA SnapshotProvider-фикстуры работают без Git и сети, а project builders (`execution-project.mjs`, `isolated-host-project.mjs`, `delivery-project.mjs`) используют реальный git. Адаптер не включён в `HELPER_MODULES` release-манифеста и им не аттестован. Default filesystem adapter отклоняет submodules с `submodule-identity-unproven` до подключения trusted snapshot adapter. Symlink/junction/hardlink и case collisions запрещены. Cooperative lock и повторные чтения предполагают спокойный checkout и не обеспечивают OS snapshot isolation; незавершённый journal не считается accepted publication. Observation registry использует собственный cooperative lock `observations.lock` в той же модели: lock блокирует только ingestion — если процесс упал внутри custody-окна, lock-файл остаётся, повторный `ingestObservedRun` отвечает `state-locked` и требует ручного снятия. `lookup` lock не читает и не захватывает: pending, повреждённые и отсутствующие записи он скрывает (consumer при переданном registry получает `forged-receipt`), а complete-запись возвращает независимо от оставленного lock-файла. Дедлайн verifier-а задаёт `transport.timeoutMs` (по умолчанию 600000 мс / 10 минут); после успешного `kill` при молчащем callback дополнительно допускается grace-ожидание до `timeoutMs`, поэтому в hang-сценарии lock удерживается ~2×`timeoutMs` ожидания verifier-а (это не общий дедлайн ingestion — pre/post-операции тоже идут под lock). Штатный in-process fail-closed (timeout, `observation-stop-unsupported`, нормализованный exec-failed) снимает lock через `finally` при любом исходе custody-окна: stale `observations.lock` возникает только после смерти процесса, а не после живого отказавшего ingest. Pending intent записывается до refs-budget и может остаться на диске после отказа: он resumable только для того же payload — сократить catalog под прежним `run_id` нельзя, любое изменение payload даёт `observation-conflict` — и скрыт от `lookup`; budget-resume условен: повтор того же envelope успешен лишь если причина переполнения устранена без изменения payload. Record-only resume (crash между registry-complete и записью result): refs-budget на этой ветке проверяет рекордер до любых своих записей, отказ сохраняет complete registry и оставляет run resumable для точного replay.
+
 ```text
 setup and mode:
   /aif-mode status                                  # recommended
@@ -43,7 +62,7 @@ finalization:
   /aif-done <change-id>                             # required after passing verify
   /aif-mode sync                                    # recommended after archive
   /aif-commit                                       # recommended AI Factory commit gate
-  /aif-evolve                                       # optional learning step
+  /aif-evolve                                       # optional, separately authorized learning step
 ```
 
 OpenSpec-native mode uses OpenSpec artifacts as canonical planning/spec artifacts and AI Factory paths for runtime state, QA evidence, and generated rules in user projects.
@@ -355,7 +374,7 @@ Research is supporting context in both artifact modes. Regular `/aif-explore <to
 `extension.json` follows the upstream AI Factory extension manifest schema and should not contain AIFHub-private fields. Its `$schema` value points at:
 
 ```text
-https://raw.githubusercontent.com/lee-to/ai-factory/2.x/schemas/extension.schema.json
+https://raw.githubusercontent.com/lee-to/ai-factory/2.20.0/schemas/extension.schema.json
 ```
 
 The private AIFHub metadata contract lives in `aifhub-extension.json` and is described by `schemas/aifhub-extension.schema.json`. `compat.ai-factory` and `sources.*` belong there, not in `extension.json`.
@@ -484,7 +503,7 @@ If localization questions run first, `/aif-analyze` carries those answers forwar
 
 The OpenSpec boolean selects the artifact profile; HLV and Lekalo are independent additional tools. Legacy `tools.openspec: false` configs do not include `aifhub.openspec` settings or OpenSpec runtime path defaults; OpenSpec-native `tools.openspec: true` configs include those settings and paths explicitly.
 
-After saving tool choices, `/aif-analyze` runs `ai-factory aifhub-mode init --json`; mode switching and sync perform the same initialization. Run that command after direct flag edits, or add `--dry-run` for a preview. Enabled OpenSpec gets missing directories/config; enabled HLV reuses root `project.yaml` or `.hlv/project.yaml` without changing paths, contracts or milestones. If neither exists, installed HLV 1.0.0 initializes the existing repository with `--adopt`, keeping source in place. Existing root HLV projects do not need a `.hlv/` directory. See [provider lifecycle](validation-providers.md#lifecycle) for native scaffold effects and explicit setup failures.
+After saving tool choices, `/aif-analyze` runs `ai-factory aifhub-mode init --json`; mode switching and sync perform the same initialization. Run that command after direct flag edits, or add `--dry-run` for a preview. Enabled OpenSpec gets missing directories/config; enabled HLV reuses root `project.yaml` or `.hlv/project.yaml` without changing paths, contracts or milestones. If neither exists, installed HLV 1.1.0 initializes the existing repository with `--adopt`, keeping source in place. Existing root HLV projects do not need a `.hlv/` directory. Enabled Lekalo reuses lekalo/project.yaml or initializes it with exact CLI 1.1.0 init --adopt; conflicts cause refusal, and dry-run launches no process. The provider negotiates workflow-provider@0.8.0, always validates with --no-cache, and normalizes report verdicts before gates. Implement receives bounded impact/context; native execution remains upstream-owned. See [provider lifecycle](validation-providers.md#lifecycle) for native scaffold effects and explicit setup failures.
 
 Config creation and mode changes structurally patch only explicit AIFHub-owned keys. They preserve upstream/core fields, unknown top-level fields, unknown nested `aifhub` fields, custom paths, and unknown user-authored fields inside a dormant profile. Known AIFHub-owned `aifhub.openspec` settings are omitted from the legacy profile, including known `allowWarnOnDone` children; the dormant block remains only when unknown fields must survive a later switch back. Diagnostics report bounded changed/preserved key paths and counts only; they do not log values, environment data, provider configuration, or credentials. Ultra research derives its root from `paths.research`; `research_bundles_dir` is not a config key.
 
@@ -702,7 +721,23 @@ Before the full research run or any write, `/aif-explore` turns the request into
 
 Pre-confirmation inspection creates no new read permission. In OpenSpec-native mode, it is restricted to the injection's `Allowed read context` and `Enabled optional tool use` boundaries. In Legacy AI Factory-only mode, it is restricted to `.ai-factory/config.yaml`, safe resolved configured project context and rules, the exact referenced legacy plan pair, directly relevant in-repository source/tests/docs/package manifests, and bounded local Git branch/revision metadata. Neither mode may use the interview to read outside the project root, inspect environment or credential stores, consume raw optional-provider stores/output, scan unrelated repositories, or enable an optional provider solely for the interview.
 
-Once the interview is complete, research starts only after the user confirms the normalized brief; this confirmation is required even for an already precise request. In autonomous or subagent mode, assumptions satisfy neither unresolved brief decisions nor confirmation. The agent first returns unresolved decisions, assumptions, blockers, and open questions to the interactive parent. Only after every brief decision is settled does it return the normalized brief with a `research-brief-confirmation-required` blocker. The only autonomous or subagent re-entry condition is that the interactive parent passes back both the exact normalized brief previously returned and an explicit statement that the user confirmed that exact brief without changes. That forwarded confirmation satisfies the confirmation gate for the resumed run and must not trigger another confirmation request; changed brief content or confirmation not explicitly bound to that brief returns to the unresolved-decision or confirmation-blocker flow. Do not create a separate interview, design-tree, decision-log, or research-brief file; the confirmed brief remains conversation context for the existing regular or ultra research output.
+Once the interview is complete, present one normalized research brief. An explicit user-authored request is itself the confirmed brief when it settles every user-owned brief dimension — target question, boundaries and non-goals, constraints, evidence standard, and desired deliverable — through decisions explicitly present in the request or already confirmed in conversation, and explicitly authorizes the same read-only research. This requires every user-owned brief decision to be settled, with no pending prerequisite fact-finding and no blocked or cyclic unresolved decision. An empty frontier alone is insufficient. For this precise-request fast path, present the derived normalized brief once as a non-blocking notice and continue without a second confirmation. Do not add decisions, permissions, or material assumptions while normalizing the request. This fast path grants no new authority: implementation, credentials, environment inspection, outside-project reads, optional-provider enablement, and publication remain out of scope. It does not itself authorize persistence.
+
+If the precise-request conditions are not met and no valid confirmation already covers the exact brief, wait for explicit user confirmation before starting the full research run. Every other request still waits for explicit user confirmation unless valid confirmation already covers the exact brief. In autonomous or subagent mode, assignments and inferred intent are not user confirmation; assumptions never satisfy unresolved brief decisions or confirmation: do not start the full research run. If any user-owned brief decision remains unresolved, return assumptions, blockers, and open questions to the interactive parent under the shared question-tool fallback and do not label the brief confirmation-ready. If confirmation is required and every user-owned brief decision is settled, return the normalized brief, recorded assumptions, and remaining research questions as a `research-brief-confirmation-required` blocker.
+
+The only autonomous or subagent re-entry conditions are two exact parent bindings: (a) the interactive parent passes back both the exact normalized brief previously returned and an explicit statement that the user confirmed that exact brief without changes, or (b) the parent forwards a user-supplied brief that itself settles every user-owned brief dimension and explicitly authorizes the same read-only research, with the precise-request conditions above satisfied. The worker must not classify its assignment as user confirmation. A digest or artifact reference alone is insufficient. That forwarded confirmation satisfies the confirmation gate for the resumed run; do not request confirmation again. If the brief content changed, the confirmation is missing, or the confirmation is not explicitly bound to that brief, recompute the affected frontier and return the appropriate unresolved-decision or `research-brief-confirmation-required` blocker instead of starting research.
+
+Before reopening the interview, reuse valid confirmation for the exact normalized brief. Carry settled decisions forward. A confirmed brief binds only its own scope: a material scope, risk, or tradeoff change invalidates confirmation for the affected content. On such a change, recompute the affected frontier and ask only the newly unresolved decisions; do not repeat unchanged settled questions. Bind any resulting confirmation to the updated exact brief. New findings alone do not reopen settled brief decisions.
+
+That forwarded confirmation satisfies the confirmation gate for the resumed run and must not trigger another confirmation request. Do not create a separate interview, design-tree, decision-log, or research-brief file; the confirmed brief stays conversation context until an already authorized research write records it under `## Confirmed brief`.
+
+Only when research persistence is already authorized, include one minimal scrubbed `## Confirmed brief` section inside the run's existing research output: the resolved `paths.research` file in regular mode, or the selected valid marked bundle's `RESEARCH.md` in ultra mode, never in INDEX.md. Keep it outside the Active Summary. Record it as part of the ordinary research write or update, not a separate confirmation write, file, or worker; preserve the upstream coherence and bundle gate ordering below.
+
+The section carries the exact normalized five-dimension brief, its read-only authority boundary, confirmation origin (explicit user confirmation or precise user request), safe project-relative research source/profile binding, and `Digest: sha256=<lowercase hex>`. The digest input is the UTF-8 normalized brief body including its authority boundary, preserving line order, excluding markdown comments, excluding the section heading, the `Digest:` line, and any timestamp metadata, normalizing line endings to LF, removing trailing spaces from each line, and ending the digest input with exactly one newline. The digest binds the brief, not changing research findings.
+
+The recorded brief must not contain credentials, tokens, raw provider output, private data, or private absolute paths. It must also not contain metadata-shaped lines that downstream research parsing reserves: any line starting with `Status:`, `Updated:`, or `Digest:`, any `aif:` marker comment, or any additional `## Confirmed brief` heading. Rewrite such content as plain prose inside the brief; a brief that cannot be expressed without reserved metadata lines is not persisted. A hash of sensitive content is not scrubbing. If removing sensitive or reserved content materially changes the brief, do not persist a redacted body under the old confirmation: keep it in conversation context or obtain confirmation for the new exact safe brief.
+
+A later `/aif-explore` run treats this record as forwarded confirmation for the same scope only when its digest matches the newly derived normalized brief and the exact body, read-only authority, source/profile binding, and known confirmation provenance also match. A heading or valid digest alone creates no authority. Missing or uncertain provenance, changed content, or a digest mismatch returns to the appropriate unresolved-decision or confirmation-required flow. Any other content inherits no confirmation authority. Parent-forwarded exact binding remains required for autonomous/subagent re-entry.
 
 Regular and ultra research are mutually exclusive writes for one run. A valid ultra `INDEX.md` contains exactly one standalone `<!-- aif:research-mode:ultra -->`, one supported status, and a safe direct `RESEARCH.md` link in `## Artifact Index`. Selection precedence is an explicit safe `RESEARCH.md` path, an exact slug, then exactly one reviewed materially relevant active bundle. Ambiguity stops with `ultra-research-ambiguous`; recency and fuzzy matching never break the tie. Planning/implementation consumers bind to the selected source path, active summary, revision, and digest; sibling C4/ADR/graph rationale cannot expand scope unless reflected in the active summary.
 
@@ -1030,7 +1065,7 @@ Next steps after `/aif-done`:
 
 1. Run `/aif-mode sync` to refresh derived artifacts after OpenSpec archive.
 2. Run `/aif-commit` to commit implementation, OpenSpec archive/spec changes, QA evidence, and final summaries.
-3. Optionally run `/aif-evolve` when the change produced durable workflow or skill learnings.
+3. Present compact evolution proposals backed by existing durable learning evidence without starting optional learning; optional evolution never blocks verified finalization. `/aif-done` never runs evolution as part of finalization and does not dispatch an evolution intake worker or write skill-context/rules/patch cursors for optional proposals. Explicit user-requested evolution or an applicable mandatory project policy uses a separately authorized owner workflow, or an exact `/aif-evolve @.ai-factory/qa/<change-id>` handoff when execution is unavailable.
 
 `/aif-done` finalizes the OpenSpec lifecycle. It does not replace `/aif-commit`.
 
@@ -1091,7 +1126,7 @@ Useful AIFHub inputs include `docs/memory-tools-research/`, `docs/context-provid
 
 ### `/aif-evolve`
 
-`/aif-evolve` is optional after commit/finalization. Use it when the implementation, fix, or finalization evidence contains durable lessons that should improve future skills or skill-context. It should not mutate OpenSpec canonical artifacts.
+`/aif-evolve` is an optional, separately authorized learning step after commit/finalization. `/aif-done` presents compact evolution proposals as output only and never runs evolution as part of finalization. A done invocation, integrated-finalization request, or proposal alone does not authorize evolution. Explicit user-requested evolution or an applicable mandatory project policy retains owner execution semantics: the parent runs the separate workflow when supported or returns an exact owner handoff with the selected evidence scope (`/aif-evolve @.ai-factory/qa/<change-id>` after OpenSpec archive, `/aif-evolve <plan-id>` for classic legacy evidence). Preserve upstream approval semantics, exact `proposal_digest` binding, and existing `aifhub-evolution` transactions for writes; invocation alone does not approve an unreviewed diff. Evolution must not mutate OpenSpec canonical artifacts. Required verification, coverage, rules evidence, readiness, and governance owner updates/handoffs remain unchanged; marked legacy ultra returns only its existing exact receipt-derived handoff.
 
 ## OAuth Example
 
@@ -1113,7 +1148,7 @@ openspec/changes/add-oauth-login/
       spec.md
 ```
 
-Refine, sync, implement, gate, verify, finalize, sync, commit, and optionally evolve:
+Refine, sync, implement, gate, verify, finalize, sync, commit, and optionally evolve as a separately authorized owner step:
 
 ```text
 /aif-improve add-oauth-login
@@ -1194,6 +1229,24 @@ After migration, run:
 ```
 
 See [Legacy Plan Migration](legacy-plan-migration.md).
+
+## AI Factory 2.20 Workflow Defaults and Consumer Smoke
+
+Reviewed baseline — AI Factory `2.20.0`; cumulative [surface audit](openspec-compatibility.md#ai-factory-220-reviewed-release) сохраняет 2.19/2.18 decisions. Leading plan `fast|full|ultra` и explore `regular|ultra` побеждают `workflow.plan_mode` / `workflow.explore_mode`; omitted defaults — `ask` / `regular`, `workflow.improve_check: false`. Invalid defaults дают WARN + fallback; interactive ask предлагает full/fast, Handoff разрешает config до fast fallback. Config-only ultra проходит тот же stable `>=2.18.0` gate до записи. Leading `regular` отменяет configured ultra и восстанавливает save prompt. `--no-check` и improve_check остаются upstream-owned.
+
+При существующей `.agents/` upstream 2.20 мигрирует Codex `.codex/skills` → `.agents/skills`; фактические пути берутся из `.ai-factory.json` → `agents[].skillsDir`. Unknown/modified files и linked entries блокируют preflight fail-closed; сначала разрешите ownership конфликт, не обходите guard. AIFHub не управляет миграцией. Hypothesis cards остаются opt-in upstream; отдельный Confirmed brief не заменяет их.
+
+Upstream `review-validator`, auto-`+check` по confidence markers и pinned PR tree не заменяют `aifhub-fresh-context-review` export-package. На Codex результат `review-validation-failed` означает blocking gate с `suggested_next: null`, а не успешную validation; runtime tool-allowlist boundary upstream разрешает auto-dispatch только Claude.
+
+Offline harness поддерживает v218=2.18.1, v219=2.19.0 и v220=2.20.0; source v217=2.17.0. Ровно один target за запуск. v219/v220 сохраняют идентичные strict SKILL.md sentinels, настоящий ``Language: `en` (English)``, byte-equal upstream tail и marker pair exactly 1. Все installed skill paths, включая dummy extension и transfer, разрешаются через ledger.
+
+Opt-in live-driver (без скачивания, при явном разрешении live-run):
+
+```bash
+npm run smoke:ai-factory-2-18 -- --v217-command <absolute-node> --v217-arg <local-2.17.0-bin> --v217-root <local-2.17.0-root> --v220-command <absolute-node> --v220-arg <local-2.20.0-bin> --v220-root <local-2.20.0-root> --extension-root <local-extension-root>
+```
+
+`--v220-arg` повторяется для каждого argv token, как v218/v219. Ноль или несколько target groups дают NOT_RUN до записи. Live smoke в этом change: NOTRUN (opt-in); deterministic pass не доказывает published install, release, deployment или пользовательскую migration. Команда `upgrade` сознательно вне harness; `update --force` и targeted `extension update aifhub-extension --force` сохраняют свои роли.
 
 ## Mode Switching and Sync
 
@@ -1340,6 +1393,42 @@ npm test
 
 `npm run validate` checks the split manifest contract: upstream `extension.json`, private `aifhub-extension.json`, bundled agent files, and docs links.
 
+### Choosing the execution form and service mechanics
+
+Before admission the coordinator names direct / serial coupled group / supported same-shape batch / independent isolated tasks plus a short reason in the existing assignment/preflight notes. Runtime JSON is not extended. JSON extraction, digest/version propagation, receipt/ACK formatting, status collection, and supported event waits run on the helper/direct path without a separate AI worker. A review sidecar receives a concrete question, a pinned target, and expected coverage; a free slot alone is not a reason. Required independent roles are preserved; self-review and same-session fallback are not independent.
+
+### Read-only gate coverage diagnostics
+
+```text
+ai-factory aifhub-gate-coverage --change <id> [--require review,security] --json
+```
+
+The helper reads the exact `.ai-factory/qa/<id>/{verify,rules,review,security}.md` through the existing gate parser, plus `coverage.json`, `done-readiness.json`, and fresh-context receipts. Verify is always required; rules/coverage are included by unioning the verify/done policy flags. Additional review/security requirements are passed explicitly via `--require`; natural-language policy and multiple independent audit slots of one gate are not inferred automatically. `requirements_complete` refers only to the given query and OpenSpec flags.
+
+Exit 0 means the requested final-result inventory and current supporting coverage are present with every required gate result bound to a matching target; exit 1 means missing/invalid/stale/failing evidence, unproven required independence, or a required gate result with an unrecorded target binding; exit 2 means a bad query. WARN stays a final status; required rules/coverage honor allowWarnOnDone without weakening verify policy. A verify WARN yields a gap, not completion. Today's evidence formats record no gate-to-target binding, so required gates currently report `target-binding-unrecorded` and the diagnostic stays incomplete until such a binding exists. The diagnostics are not semantic acceptance. The bounded JSON separates result_state/result_status, target_binding, role_coverage, and independence; `authorizes: []` always. Role coverage means the gate type, not performer authentication. An unknown target binding is reported explicitly and does not prove review freshness.
+
+Provenance observations show the fresh-context tier (execution_profile ai-fresh-context with a matching saved diff hash), same-session (same_session_fallback), unrecorded, or unknown. An existing prepared receipt does not bind a final gate result to a role and a current target; without a supported binding independence stays unknown even when the outcome says reviewed. Labels, self-review, and same-session never promote to independent. Explicitly required review/security therefore currently report UNKNOWN independence until such a binding exists. Gate coverage does not replace /aif-verify, /aif-done, or required audits. This is a diagnostic with no writes, locks, creates, providers, or stage routing.
+
+### Opt-in readability diagnostics
+
+```text
+ai-factory aifhub-docs-readability --change <id> [--enabled true|false] --file <path> [--file <path> ...] [--language ru|en] [--json] [--write]
+```
+
+The helper computes non-blocking readability diagnostics for explicitly selected documents (pinned offline RU/EN profile: sentence length per section class, closed cliche lists, unbalanced `()`/`[]`/`«»` pairs, unsupported quotation marks, glossary terminology). It is opt-in: `--enabled true|false` overrides the `aifhub.readability.enabled` config key (default `false`); without opt-in the command refuses with exit 2 and touches nothing. Preview is the default; `--write` persists the `aifhub.docs_readability.v1` report under `.ai-factory/state/<id>/readability/report.json` through guarded state-only writes (a custom `paths.state` is refused because the QA projection covers only the default state root).
+
+Findings are source-bound (UTF-8 byte spans plus derived line/column and raw-byte sha256); documents are never edited. State is a closed enum and every degradation (`partial-coverage`, `checker-unavailable`, `wrong-language`, `ambiguous-language`, `malformed-input`, `timeout`) is distinguishable from a zero-findings `complete`. Exit 0 means an advisory result was formed, exit 2 is an invalid invocation, exit 1 is an operational failure; no exit code participates in verify/done/archive chains. The diagnostics are advisory only: no `aif-gate-result`, no QA writes, no entry into done-readiness, provider policy, or runner metrics, and document text is treated as data (no process/network calls on the analysis path). Read-time consumers revalidate the composite binding digest (worktree identity, selection, source/profile/glossary/engine digests) and get `stale-report` on any drift. See [Docs Readability Policy](readability-policy.md).
+
+### Opt-in requirement ambiguity lint
+
+```text
+ai-factory aifhub-requirement-lint --change <id> [--enabled true|false] --file <path> [--file <path> ...] [--language ru|en] [--json] [--write]
+```
+
+The lint reports advisory findings about ambiguous requirements presented to OpenSpec-native `/aif-plan` and `/aif-improve` (pinned offline RU/EN profile, exactly four closed finding types: `undefined_observable_outcome`, `missing_error_case`, `owner_decision_assumed`, `suspected_requirement_revision_conflict`). Every finding carries an exact source ref (deterministic UTF-8 byte span plus raw-document and span sha256) and a proposed clarifying question — never an answer, a numeric SLA, or a rewritten requirement. It is opt-in: `--enabled true|false` overrides the `aifhub.requirementLint.enabled` config key (default `false`); without opt-in the command reports the `not_run` envelope ("advisory scan was not performed") with exit 0, and a malformed lint namespace keeps it off with bounded `requirement-lint:<code>` diagnostics instead of a required-gate failure. Preview is the default; `--write` persists the `aifhub.requirement_lint_observation.v1` observation under `.ai-factory/state/<id>/requirement-lint/observation.json` through guarded state-only writes (a custom `paths.state` is not supported by the lint and is refused with `state-root-mismatch` because the QA projection covers only the default state root — use the default root; custom-root support is a follow-up candidate).
+
+Honesty is structural: the observation separates `run_status`, `freshness`, `coverage`, and `findings_summary`; `none` means nothing was found in the presented scope only and is never a readiness or approval signal; missing sources, deadline cutoffs, and assessor abstention stay coverage/diagnostic outcomes; editing a requirement invalidates the observation through composite-binding revalidation (`stale`). The `requirement-lint` namespace is a closed runtime namespace in the QA snapshot projection, so writing, overwriting, or deleting an observation cannot shift the required QA fingerprint. Conflict findings are intra-requirement only (exactly two revision refs); cross-source plan-level conflicts stay with the requirements reconciliation gates, which this lint never replaces. The live model provider is a separate opt-in step with secret exclusion and egress checks before any model call. See [Requirement Lint Policy](requirement-lint-policy.md).
+
 ## See Also
 
 - [Persistent Workflow Mechanics](workflow-mechanics.md) — classic/OpenSpec execution, `batch-start` → checkpoint/seal → per-item acceptance → close, exact inspection and owner interruption/stop confirmation. Use `ai-factory aifhub-execution <action> --json` with JSON on stdin; authoritative verification remains `/aif-verify`.
@@ -1358,3 +1447,7 @@ npm test
 - [ADR 0002: Optional Project Glossary](adr/0002-optional-project-context-glossary.md)
 - [Project Review Policy](review-policy.md)
 - [ADR 0003: Durable Project Review Policy](adr/0003-durable-project-review-policy.md)
+
+## Delivery recovery по UUID
+
+Слой доставки готового результата: reserve до QA snapshot, prepare из frozen evidence, read/fetch recovery без повторного AI-аудита. Контракт HostClient, uncertain и ограничения описаны в [host-delivery.md](host-delivery.md).

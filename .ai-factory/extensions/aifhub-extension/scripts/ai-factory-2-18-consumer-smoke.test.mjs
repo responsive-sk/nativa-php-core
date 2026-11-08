@@ -1,5 +1,6 @@
 // ai-factory-2-18-consumer-smoke.test.mjs - offline install/update contract coverage
 import assert from 'node:assert/strict';
+import { validateInstalledPromptAssets, recordPromptBaseline, preservePromptAssets, inventoryPromptAssets } from './prompt-assets.mjs';
 import { createHash } from 'node:crypto';
 import {
   cp,
@@ -7,6 +8,7 @@ import {
   mkdtemp,
   readFile,
   rm,
+  rename,
   stat,
   writeFile
 } from 'node:fs/promises';
@@ -18,6 +20,7 @@ import { fileURLToPath } from 'node:url';
 import {
   AI_FACTORY_2181_EXPLORE_SENTINELS,
   AI_FACTORY_2190_RELEASE_SENTINELS,
+  RELEASE_SENTINELS_BY_TARGET,
   CONSUMER_TARGET_KEYS,
   EXPECTED_AI_FACTORY_VERSIONS,
   SMOKE_STATUS,
@@ -103,7 +106,7 @@ function fakeImplementBase(version) {
     '# aif-implement',
     ''
   ];
-  if (version === EXPECTED_AI_FACTORY_VERSIONS.v219) {
+  if ([EXPECTED_AI_FACTORY_VERSIONS.v219, EXPECTED_AI_FACTORY_VERSIONS.v220].includes(version)) {
     base.push(
       `**3.1.1: ${AI_FACTORY_2190_RELEASE_SENTINELS.implementReconciliationGate}**`,
       '',
@@ -124,7 +127,7 @@ function fakeReviewBase(version) {
     '',
     '# aif-review',
     '',
-    'Language: en',
+    'Language: `en` (English)',
     REVIEW_UPSTREAM_SENTINEL,
     ''
   ].join('\n');
@@ -146,7 +149,7 @@ async function createFakeToolchain(root, key, version) {
   await writeFixture(packageRoot, 'skills/aif-explore/SKILL.md', fakeExploreBase(version));
   await writeFixture(packageRoot, 'skills/aif-review/SKILL.md', fakeReviewBase(version));
   await writeFixture(packageRoot, 'skills/aif-implement/SKILL.md', fakeImplementBase(version));
-  if (version === EXPECTED_AI_FACTORY_VERSIONS.v219) {
+  if ([EXPECTED_AI_FACTORY_VERSIONS.v219, EXPECTED_AI_FACTORY_VERSIONS.v220].includes(version)) {
     await writeFixture(
       packageRoot,
       'skills/aif-qa-check/SKILL.md',
@@ -170,7 +173,7 @@ async function hashFile(filePath) {
   return sha256(await readFile(filePath));
 }
 
-async function ensureBaseSkill(projectDir, skillName, version) {
+async function ensureBaseSkill(projectDir, skillName, version, skillsDir = '.codex/skills') {
   const content = skillName === 'aif-explore'
     ? fakeExploreBase(version)
     : skillName === 'aif-review'
@@ -180,13 +183,14 @@ async function ensureBaseSkill(projectDir, skillName, version) {
     : `---\nname: ${skillName}\ndescription: Fake AI Factory ${version} base skill.\n---\n\n# ${skillName}\n`;
   await writeFixture(
     projectDir,
-    `.codex/skills/${skillName}/SKILL.md`,
+    `${skillsDir}/${skillName}/SKILL.md`,
     content
   );
 }
 
 async function applyFakeInjection(projectDir, extensionName, injection, extensionRoot) {
-  const targetPath = path.join(projectDir, '.codex', 'skills', injection.target, 'SKILL.md');
+  const { skillsDir } = (await readJson(path.join(projectDir, '.ai-factory.json'))).agents.find(a => a.id === 'codex');
+  const targetPath = path.join(projectDir, skillsDir, injection.target, 'SKILL.md');
   let target = await readFile(targetPath, 'utf8');
   const source = await readFile(path.resolve(extensionRoot, normalizeManifestPath(injection.file)), 'utf8');
   const start = `<!-- aif-ext:${extensionName}:${injection.target}:${injection.position}:start -->`;
@@ -220,7 +224,7 @@ async function installFakeExtension(projectDir, sourceRoot) {
     ...(manifest.skills ?? []),
     ...(manifest.injections ?? []).map((entry) => entry.file),
     ...(manifest.agentFiles ?? []).map((entry) => entry.source),
-    ...(manifest.name === 'aifhub-extension' ? ['skills/shared/LANGUAGE-POLICY.md'] : [])
+    ...(manifest.name === 'aifhub-extension' ? ['skills/shared', 'injections/references', 'docs/workflow-mechanics.md', 'docs/isolated-execution.md'] : [])
   ]);
   for (const assetPath of assetPaths) {
     await copyReferencedAsset(sourceRoot, installedRoot, assetPath);
@@ -228,7 +232,7 @@ async function installFakeExtension(projectDir, sourceRoot) {
 
   for (const skillPath of manifest.skills ?? []) {
     const skillName = path.basename(normalizeManifestPath(skillPath));
-    const target = path.join(projectDir, '.codex', 'skills', skillName);
+    const target = path.join(projectDir, codex.skillsDir, skillName);
     await rm(target, { recursive: true, force: true });
     await cp(path.resolve(sourceRoot, normalizeManifestPath(skillPath)), target, { recursive: true });
     if (!codex.installedSkills.includes(skillName)) codex.installedSkills.push(skillName);
@@ -277,7 +281,9 @@ async function fakeInit(projectDir, version, cliArgs, manifest) {
   const selectedSkills = requested === 'all'
     ? [...new Set([...injectionTargets, 'aif-loop', ...(aiFactoryVersionIncludesTransfer(version) ? ['aif-transfer'] : [])])].sort()
     : requested.split(',').filter(Boolean).sort();
-  for (const skillName of selectedSkills) await ensureBaseSkill(projectDir, skillName, version);
+  const shared = version === EXPECTED_AI_FACTORY_VERSIONS.v220 && await stat(path.join(projectDir, '.agents')).then(s => s.isDirectory()).catch(() => false);
+  const skillsDir = shared ? '.agents/skills' : '.codex/skills';
+  for (const skillName of selectedSkills) await ensureBaseSkill(projectDir, skillName, version, skillsDir);
   await mkdir(path.join(projectDir, '.codex', 'agents'), { recursive: true });
   await writeFixture(
     projectDir,
@@ -288,7 +294,7 @@ async function fakeInit(projectDir, version, cliArgs, manifest) {
     version,
     agents: [{
       id: 'codex',
-      skillsDir: '.codex/skills',
+      skillsDir,
       installedSkills: selectedSkills,
       managedSkills: {},
       agentsDir: '.codex/agents',
@@ -363,10 +369,17 @@ function createFakeExecutor({
       const ledgerPath = path.join(request.cwd, '.ai-factory.json');
       const ledger = await readJson(ledgerPath);
       ledger.version = version;
+      if (version === EXPECTED_AI_FACTORY_VERSIONS.v220 && await stat(path.join(request.cwd, '.agents')).then(s => s.isDirectory()).catch(() => false)) {
+        const codex = ledger.agents.find(a => a.id === 'codex');
+        if (codex.skillsDir !== '.agents/skills') {
+          await rename(path.join(request.cwd, codex.skillsDir), path.join(request.cwd, '.agents/skills'));
+          codex.skillsDir = '.agents/skills';
+        }
+      }
       await writeJson(ledgerPath, ledger);
       const injectionTargets = [...new Set((manifest.injections ?? []).map((entry) => entry.target))].sort();
       for (const skillName of injectionTargets) {
-        await ensureBaseSkill(request.cwd, skillName, version);
+        await ensureBaseSkill(request.cwd, skillName, version, ledger.agents.find(a => a.id === 'codex').skillsDir);
       }
       trace.push({
         type: 'base-refresh-complete',
@@ -404,7 +417,7 @@ function createFakeExecutor({
   return runner;
 }
 
-async function createHarness({ reportedVersions, failWhen, targetedNoop = false, mutateInstalledInjection, target = 'v218' } = {}) {
+async function createHarness({ reportedVersions, failWhen, targetedNoop = false, mutateInstalledInjection, target = 'v218', sharedCodex = false } = {}) {
   const root = await createTempRoot();
   const manifest = await readJson(path.join(REPO_ROOT, 'extension.json'));
   const toolchains = {
@@ -423,7 +436,9 @@ async function createHarness({ reportedVersions, failWhen, targetedNoop = false,
   const baseFactory = createTemporaryWorkspaceFactory({ temporaryRoot: root });
   const workspaceFactory = async (label) => {
     trace.push({ type: 'workspace', label });
-    return baseFactory(label);
+    const workspace = await baseFactory(label);
+    if (sharedCodex) await mkdir(path.join(workspace.projectDir, '.agents'), { recursive: true });
+    return workspace;
   };
   return { root, manifest, toolchains, trace, runner, workspaceFactory };
 }
@@ -454,6 +469,43 @@ afterEach(async () => {
 });
 
 describe('AI Factory 2.18/2.19 consumer compatibility smoke', () => {
+  it('reapplies the short kernel twice with stable references and exact outside-marker bytes', async () => {
+    const harness = await createHarness();
+    const projectDir = path.join(harness.root, 'repeat-update');
+    const manifest = await readJson(path.join(REPO_ROOT, 'extension.json'));
+    await mkdir(projectDir, { recursive: true });
+    await fakeInit(projectDir, EXPECTED_AI_FACTORY_VERSIONS.v218, ['init'], manifest);
+    await installFakeExtension(projectDir, REPO_ROOT);
+    const injection = manifest.injections.find(i => i.target === 'aif-implement');
+    const file = path.join(projectDir, '.codex/skills/aif-implement/SKILL.md');
+    const end = '<!-- aif-ext:aifhub-extension:aif-implement:prepend:end -->';
+    let initial = await readFile(file, 'utf8');
+    initial = initial.slice(0, initial.indexOf(end) + end.length) + '\n\nuser outside marker\r\n' + initial.slice(initial.indexOf(end) + end.length + 2);
+    await writeFile(file, initial);
+    const outside = value => value.slice(value.indexOf(end) + end.length);
+    await recordPromptBaseline(projectDir);
+    const before = await inventoryPromptAssets(projectDir);
+    for (let i = 0; i < 2; i++) {
+      assert.equal(await preservePromptAssets(projectDir), null);
+      await applyFakeInjection(projectDir, 'aifhub-extension', injection, REPO_ROOT);
+      const current = await readFile(file, 'utf8');
+      assert.equal(current, initial);
+      assert.equal(outside(current), outside(initial));
+      await validateInstalledPromptAssets(projectDir);
+      assert.deepEqual(await inventoryPromptAssets(projectDir), before);
+    }
+  });
+
+  it('rejects an update whose installed mode reference was omitted', async () => {
+    const harness = await createHarness({ mutateInstalledInjection: async ({ projectDir, stage }) => {
+      if (stage === 'global-update') await rm(path.join(projectDir, '.ai-factory/extensions/aifhub-extension/injections/references/aif-implement/classic-sdd.md'));
+    } });
+    const result = await runAiFactory218ConsumerSmoke({ toolchains: harness.toolchains, extensionRoot: REPO_ROOT,
+      runner: harness.runner, workspaceFactory: harness.workspaceFactory, timeoutMs: 5_000, networkEnabled: false, evidence: 'deterministic' });
+    assert.equal(result.status, SMOKE_STATUS.FAIL);
+    assert.equal(result.failure.code, 'installed-prompt-reference-unresolved');
+  });
+
   it('uses injected 2.17.0/2.18.1 executors for clean, global, and exact targeted update contracts', async () => {
     const harness = await createHarness();
     const result = await runAiFactory218ConsumerSmoke({
@@ -615,7 +667,9 @@ describe('AI Factory 2.18/2.19 consumer compatibility smoke', () => {
     assert.equal(EXPECTED_AI_FACTORY_VERSIONS.v218Boundary, '2.18.0');
     assert.equal(EXPECTED_AI_FACTORY_VERSIONS.v218, '2.18.1');
     assert.equal(EXPECTED_AI_FACTORY_VERSIONS.v219, '2.19.0');
-    assert.deepEqual([...CONSUMER_TARGET_KEYS], ['v218', 'v219']);
+    assert.deepEqual([...CONSUMER_TARGET_KEYS], ['v218', 'v219', 'v220']);
+    assert.equal(EXPECTED_AI_FACTORY_VERSIONS.v220, '2.20.0');
+    assert.equal(RELEASE_SENTINELS_BY_TARGET.v220, RELEASE_SENTINELS_BY_TARGET.v219);
     assert.equal(aiFactoryVersionIncludesTransfer('2.17.0'), false);
     assert.equal(aiFactoryVersionIncludesTransfer('2.18.0'), true);
     assert.equal(aiFactoryVersionIncludesTransfer('2.18.1'), true);
@@ -659,6 +713,58 @@ describe('AI Factory 2.18/2.19 consumer compatibility smoke', () => {
     }
   });
 
+  for (const sharedCodex of [false, true]) {
+    it('runs strict v220 contracts with ledger skillsDir, shared=' + sharedCodex, async () => {
+      const harness = await createHarness({ target: 'v220', sharedCodex });
+      const result = await runAiFactory218ConsumerSmoke({ toolchains: harness.toolchains, extensionRoot: REPO_ROOT,
+        runner: harness.runner, workspaceFactory: harness.workspaceFactory, timeoutMs: 5_000, evidence: 'deterministic' });
+      assert.equal(result.status, SMOKE_STATUS.PASS, JSON.stringify(result.failure));
+      assert.equal(result.versions.v220.reported, '2.20.0');
+      for (const flow of ['cleanInstall', 'globalUpdate', 'targetedUpdate']) {
+        assert.equal(result.flows[flow].upstreamImplement.reconciliationGateCount, 1);
+        assert.ok(result.flows[flow].upstreamImplement.conflictTokenCount >= 1);
+        assert.equal(result.flows[flow].upstreamImplement.injectionMarkerCount, 1);
+        assert.ok(result.flows[flow].releaseSurface.browserReplayCount >= 1);
+        assert.equal(result.flows[flow].releaseSurface.warmupSkillPresent, true);
+      }
+    });
+  }
+
+  for (const target of ['v219', 'v220']) {
+    for (const surface of ['review', 'implement']) {
+      it('rejects a fake-only or absent real sentinel: ' + target + '/' + surface, async () => {
+        const needle = surface === 'review' ? 'Language: `en` (English)' : 'Run the requirement consistency gate';
+        const harness = await createHarness({ target, mutateInstalledInjection: async ({ projectDir }) => {
+          const codex = (await readJson(path.join(projectDir, '.ai-factory.json'))).agents.find(a => a.id === 'codex');
+          const installed = path.join(projectDir, codex.skillsDir, 'aif-' + surface, 'SKILL.md');
+          await writeFile(installed, (await readFile(installed, 'utf8')).replace(needle, 'Language: en'));
+        } });
+        const file = path.join(harness.toolchains[target].provenanceRoot, 'skills', 'aif-' + surface, 'SKILL.md');
+        const content = await readFile(file, 'utf8');
+        await writeFile(file, content.replace(needle, 'Language: en'));
+        await writeFixture(harness.toolchains[target].provenanceRoot, 'skills/aif-' + surface + '/references/IMPLEMENT-TASK.md', needle);
+        const result = await runAiFactory218ConsumerSmoke({ toolchains: harness.toolchains, extensionRoot: REPO_ROOT,
+          runner: harness.runner, workspaceFactory: harness.workspaceFactory, timeoutMs: 5_000, evidence: 'deterministic' });
+        assert.equal(result.status, SMOKE_STATUS.FAIL);
+        assert.equal(result.failure.code, surface === 'review'
+          ? 'upstream-review-language-default-mismatch' : 'upstream-implement-reconciliation-gate-mismatch');
+      });
+    }
+  }
+
+  it('rejects an unsafe ledger skillsDir before reading a skill outside the consumer', async () => {
+    const harness = await createHarness({ target: 'v220', mutateInstalledInjection: async ({ projectDir }) => {
+      const file = path.join(projectDir, '.ai-factory.json');
+      const ledger = await readJson(file);
+      ledger.agents.find(a => a.id === 'codex').skillsDir = '../outside';
+      await writeJson(file, ledger);
+    } });
+    const result = await runAiFactory218ConsumerSmoke({ toolchains: harness.toolchains, extensionRoot: REPO_ROOT,
+      runner: harness.runner, workspaceFactory: harness.workspaceFactory, timeoutMs: 5_000, evidence: 'deterministic' });
+    assert.equal(result.status, SMOKE_STATUS.FAIL);
+    assert.equal(result.failure.code, 'unsafe-ledger-skills-dir');
+  });
+
   it('rejects two bound consumer target toolchains before any project mutation', async () => {
     const harness = await createHarness();
     harness.toolchains.v219 = await createFakeToolchain(harness.root, 'v219', EXPECTED_AI_FACTORY_VERSIONS.v219);
@@ -694,7 +800,7 @@ describe('AI Factory 2.18/2.19 consumer compatibility smoke', () => {
     assert.equal(result.status, SMOKE_STATUS.NOT_RUN);
     assert.equal(result.failure.flow, 'preflight');
     assert.equal(result.failure.code, 'missing-target-toolchain');
-    assert.deepEqual(result.failure.details, { candidates: ['v218', 'v219'] });
+    assert.deepEqual(result.failure.details, { candidates: ['v218', 'v219', 'v220'] });
     assert.equal(harness.trace.some((entry) => entry.type === 'workspace'), false);
     assert.equal(harness.runner.calls.length, 0);
   });
@@ -854,8 +960,8 @@ describe('AI Factory 2.18/2.19 consumer compatibility smoke', () => {
     });
     assert.equal(invocation.command, comSpec);
     assert.equal(invocation.adapter, 'windows-comspec');
-    assert.deepEqual(invocation.args.slice(0, 3), ['/d', '/s', '/c']);
-    assert.match(invocation.args[3], /"C:\\Local Toolchains\\ai-factory\.cmd"/);
+    assert.deepEqual(invocation.args.slice(0, 4), ['/d', '/v:off', '/s', '/c']);
+    assert.match(invocation.args[4], /"C:\\Local Toolchains\\ai-factory\.cmd"/);
     assert.equal(invocation.options.shell, false);
     assert.throws(
       () => buildNoShellInvocation({ command, args: ['%PATH%'], platform: 'win32', comSpec }),

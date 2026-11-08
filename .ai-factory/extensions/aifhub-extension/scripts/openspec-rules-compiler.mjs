@@ -1532,93 +1532,6 @@ export function extractRequirementsFromShowJson(json, options = {}) {
   };
 }
 
-// OpenSpec 1.13 `show <change> --deltas-only --json` returns one entry per
-// capability delta, each carrying `operation` plus its `requirements`. Only the
-// delta for the capability being compiled is relevant here.
-export function extractRequirementsFromChangeShowJson(json, options = {}) {
-  const capability = String(options.capability ?? '').trim();
-  const deltas = Array.isArray(json?.deltas) ? json.deltas : [];
-  const requirements = [];
-
-  for (const delta of deltas) {
-    if (delta === null || typeof delta !== 'object') {
-      continue;
-    }
-
-    const deltaCapability = String(delta.spec ?? delta.capability ?? '').trim();
-    if (capability.length > 0 && deltaCapability.length > 0 && deltaCapability !== capability) {
-      continue;
-    }
-
-    const section = deltaSection(delta.operation ?? delta.type);
-    const items = Array.isArray(delta.requirements) && delta.requirements.length > 0
-      ? delta.requirements
-      : delta.requirement ? [delta.requirement] : [];
-
-    for (const item of items) {
-      if (item === null || typeof item !== 'object') {
-        continue;
-      }
-
-      requirements.push(normalizeJsonRequirement(item, section));
-    }
-  }
-
-  return {
-    requirements: sortRequirements(requirements),
-    warnings: []
-  };
-}
-
-function deltaSection(operation) {
-  const normalized = String(operation ?? '').trim().toUpperCase();
-
-  if (normalized === 'ADDED' || normalized === 'MODIFIED' || normalized === 'REMOVED') {
-    return canonicalSection(`${normalized} Requirements`);
-  }
-
-  return 'Requirements';
-}
-
-function resolveDerivedRequirementTitles(requirements, markdown) {
-  if (!requirements.some((requirement) => requirement.titleDerived === true)) {
-    return requirements;
-  }
-
-  const markdownRequirements = parseSpecMarkdownFallback(String(markdown ?? ''), {}).requirements;
-  const byText = new Map();
-
-  for (const requirement of markdownRequirements) {
-    const key = normalizeRequirementText(requirement.body);
-
-    if (key.length > 0 && !byText.has(key)) {
-      byText.set(key, requirement);
-    }
-  }
-
-  return requirements.map((requirement) => {
-    if (requirement.titleDerived !== true) {
-      return requirement;
-    }
-
-    const match = byText.get(normalizeRequirementText(requirement.body));
-
-    if (match === undefined) {
-      return requirement;
-    }
-
-    return {
-      ...requirement,
-      title: match.title,
-      scenarios: match.scenarios
-    };
-  });
-}
-
-function normalizeRequirementText(body) {
-  return normalizeBody(body).join(' ').replace(/\s+/g, ' ').trim();
-}
-
 async function detectOpenSpecCapability(rootDir, options) {
   const detectOpenSpec = options.detectOpenSpec ?? defaultDetectOpenSpec;
   const showOpenSpecItem = options.showOpenSpecItem ?? defaultShowOpenSpecItem;
@@ -1689,11 +1602,11 @@ async function readRuleSource(filePath, context) {
   let parseResult = null;
   let extractionMode = 'filesystem-fallback';
 
-  if (context.cli.available) {
-    const cliResult = await tryReadRequirementsFromCli(capability, {
-      ...context,
-      content
-    });
+  // For change sources the delta file is the derivation source: the CLI reads
+  // the canonical spec by capability name and would attribute canonical
+  // requirements (old texts) to the change delta file (#263).
+  if (context.cli.available && context.kind !== 'change') {
+    const cliResult = await tryReadRequirementsFromCli(capability, context);
     warnings.push(...cliResult.warnings);
 
     if (cliResult.requirements.length > 0) {
@@ -1737,22 +1650,12 @@ async function readRuleSource(filePath, context) {
 
 async function tryReadRequirementsFromCli(capability, context) {
   try {
-    // OpenSpec 1.13 renders only base specs through `show <spec>`; a change's
-    // delta must be read from `show <change> --deltas-only`, which exposes one
-    // entry per capability under `deltas`. Asking for the capability as a spec
-    // fails (`--deltas-only` is change-only) and forces the filesystem fallback.
-    const result = context.kind === 'change'
-      ? await context.cli.showOpenSpecItem(context.changeId, {
-          ...context.cli.runOptions,
-          cwd: context.rootDir,
-          type: 'change',
-          deltasOnly: true
-        })
-      : await context.cli.showOpenSpecItem(capability, {
-          ...context.cli.runOptions,
-          cwd: context.rootDir,
-          type: 'spec'
-        });
+    const result = await context.cli.showOpenSpecItem(capability, {
+      ...context.cli.runOptions,
+      cwd: context.rootDir,
+      type: 'spec',
+      deltasOnly: context.kind === 'change'
+    });
 
     if (!result.ok) {
       return {
@@ -1767,9 +1670,7 @@ async function tryReadRequirementsFromCli(capability, context) {
       };
     }
 
-    const extracted = context.kind === 'change'
-      ? extractRequirementsFromChangeShowJson(result.json, { capability })
-      : extractRequirementsFromShowJson(result.json);
+    const extracted = extractRequirementsFromShowJson(result.json);
 
     if (extracted.requirements.length === 0) {
       return {
@@ -1784,16 +1685,7 @@ async function tryReadRequirementsFromCli(capability, context) {
       };
     }
 
-    // OpenSpec 1.13 JSON keeps a requirement's text and raw scenario bullets
-    // only, so headings and scenario names come back from the canonical
-    // markdown the CLI just rendered. Without this the generated rules would
-    // flip identity every time the extraction mode changed.
-    const requirements = resolveDerivedRequirementTitles(extracted.requirements, context.content);
-    for (const requirement of requirements) {
-      delete requirement.titleDerived;
-    }
-
-    return { requirements, warnings: extracted.warnings };
+    return extracted;
   } catch (err) {
     return {
       requirements: [],
@@ -2187,14 +2079,7 @@ function visitJsonRequirementsCollection(value, state) {
 }
 
 function looksLikeRequirement(node) {
-  const title = node.title ?? node.name ?? node.requirement;
-  const text = node.description ?? node.text ?? node.body;
-  const hasTitle = typeof title === 'string' && title.trim().length > 0;
-  const hasText = typeof text === 'string' && text.trim().length > 0;
-
-  // OpenSpec 1.13 drops a requirement's heading, so a text-only node is still a
-  // requirement; the heading is recovered from the canonical markdown.
-  return (hasTitle || hasText)
+  return typeof (node.title ?? node.name ?? node.requirement) === 'string'
     && (
       node.description !== undefined
       || node.text !== undefined
@@ -2205,12 +2090,12 @@ function looksLikeRequirement(node) {
 }
 
 function normalizeJsonRequirement(node, section) {
-  const rawTitle = node.title ?? node.name ?? node.requirement;
-  const hasTitle = typeof rawTitle === 'string' && rawTitle.trim().length > 0;
+  const title = String(node.title ?? node.name ?? node.requirement).trim();
   const body = normalizeBody(node.description ?? node.text ?? node.body);
   const scenarios = normalizeJsonScenarios(node.scenarios ?? node.scenario);
-  const requirement = {
-    title: hasTitle ? rawTitle.trim() : titleFromRequirementText(body),
+
+  return {
+    title,
     section,
     body,
     scenarios,
@@ -2220,24 +2105,6 @@ function normalizeJsonRequirement(node, section) {
     relativePath: '',
     fingerprint: ''
   };
-
-  if (!hasTitle) {
-    requirement.titleDerived = true;
-  }
-
-  return requirement;
-}
-
-function titleFromRequirementText(body) {
-  const text = normalizeRequirementText(body).replace(/[.]+$/, '');
-
-  if (text.length === 0) {
-    return 'Requirement';
-  }
-
-  const sentence = text.split(/(?<=[.!?])\s+/)[0] ?? text;
-
-  return sentence.length > 80 ? `${sentence.slice(0, 77).trimEnd()}...` : sentence;
 }
 
 function normalizeJsonScenarios(input) {
@@ -2271,9 +2138,7 @@ function normalizeJsonScenarioSteps(scenario) {
     scenario.when,
     scenario.then,
     scenario.description,
-    scenario.body,
-    // OpenSpec 1.13 emits a scenario as one raw markdown bullet block.
-    scenario.rawText
+    scenario.body
   ];
 
   return fields.flatMap((field) => normalizeBody(field));
