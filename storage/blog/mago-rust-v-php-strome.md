@@ -9,18 +9,18 @@ category: "Nástroje"
 published: true
 ---
 
-Podmienka znela skoro ako vkus >
-nástroj na kontrolu PHP kvality má byť napísaný v **Ruste** >
-dodávaný ako **samostatný binárny súbor** >
-nemá vyžadovať PHP runtime závislosti a má byť rádovo rýchlejší než >
+Podmienka znela skoro ako vkus
+nástroj na kontrolu PHP kvality má byť napísaný v **Ruste**
+dodávaný ako **samostatný binárny súbor**
+nemá vyžadovať PHP runtime závislosti a má byť rádovo rýchlejší než
 nástroje, ktoré bežia na PHP.
 
 [Mago](https:
 //github.com/carthage-software/mago) túto podmienku spĺňa.
-Je to Rust, je to jeden binárny súbor a Composer je pri ňom jedna z ciest >
+Je to Rust, je to jeden binárny súbor a Composer je pri ňom jedna z ciest
 nie podmienka.
 Lenže „spĺňa podmienku“ a „má nahradiť PHPStan“ sú dve rôzne otázky.
-Tento článok je záznam z merania, ktoré ich oddelilo >
+Tento článok je záznam z merania, ktoré ich oddelilo
 a odpovedá na obe.
 
 ---
@@ -44,7 +44,7 @@ Keď analýza trvá tri sekundy, človek si ju nechá na koniec práce.
 Keď trvá pätinu sekundy, dá sa pustiť medzi dvoma úpravami.
 
 Mago ale nie je „PHPStan v Ruste“.
-Sú to štyri nástroje nad jedným parserom >
+Sú to štyri nástroje nad jedným parserom
 a každý z nich má inú mieru pravdy.
 
 ---
@@ -52,12 +52,12 @@ a každý z nich má inú mieru pravdy.
 ## Časť II > Štyri nástroje, jeden parser
 
 Meranie prebehlo 22. októbra 2026 s `mago 1.58.2` na PHP 8.5.11.
-Scope bol presne ten istý ako pri `phpstan.neon` >
-123 `.php` súborov plus `bin/cms`, deväť ciest >
+Scope bol presne ten istý ako pri `phpstan.neon`
+123 `.php` súborov plus `bin/cms`, deväť ciest
 ktoré strom naozaj analyzuje.
-Dokumentácia >
+Dokumentácia
 je na [mago.carthage.software](https:
-//mago.carthage.software) >
+//mago.carthage.software)
 zdrojový kód na [GitHube](https:
 //github.com/carthage-software/mago).
 
@@ -69,7 +69,7 @@ zdrojový kód na [GitHube](https:
 | `mago guard` | architektonické hranice | **brána** : pridaná hodnota, ktorú strom dovtedy nemal |
 
 To je celý článok v jednej tabuľke.
-Zvyšok vysvetľuje >
+Zvyšok vysvetľuje
 prečo prvé dva verdikty nie sú „áno“ a prečo posledný nie je marketing.
 
 ---
@@ -83,11 +83,11 @@ composer require --dev carthage-software/mago
 ```
 
 Je to **tenký wrapper**, nie PHP knižnica.
-Pri prvom volaní stiahne zodpovedajúci binárny súbor >
-na zdieľanom CI runneri potrebuje `GITHUB_TOKEN` >
+Pri prvom volaní stiahne zodpovedajúci binárny súbor
+na zdieľanom CI runneri potrebuje `GITHUB_TOKEN`
 inak narazí na anonymný rate limit.
-Do `composer.lock` pribudne záznam >
-ktorý runtime tohto kernelu nepotrebuje >
+Do `composer.lock` pribudne záznam
+ktorý runtime tohto kernelu nepotrebuje
 a to je presne dôvod, prečo tu Composer nie je povinný.
 
 Druhá cesta je archivovaný release s pevne daným `sha256`:
@@ -97,8 +97,8 @@ MAGO_VERSION="1.58.2"
 MAGO_ARCHIVE_SHA256="80b6e6ed3cd2fe2da348f9cd83d23e638f2ccd44988d48bebd766c20ccd30dc2"
 ```
 
-`bin/build/mago-spike.sh` stiahne >
-`mago-1.58.2-x86_64-unknown-linux-gnu.tar.gz` >
+`bin/build/mago-spike.sh` stiahne
+`mago-1.58.2-x86_64-unknown-linux-gnu.tar.gz`
 overí checksum a binary uloží do `storage/cache/mago-spike/`.
 Druhý beh je offline, CI nepotrebuje token a žiadny PHP balík sa nemení.
 Rovnaký vzor ako pri Lekalo.
@@ -106,7 +106,7 @@ Rovnaký vzor ako pri Lekalo.
 **Composer je teda optional.**
 Ak ho chceš, dostaneš pohodlie a zápis v lock file.
 Ak nie, dostaneš deterministický binary bez závislosti.
-Mago v oboch prípadoch nepotrebuje PHP runtime >
+Mago v oboch prípadoch nepotrebuje PHP runtime
 potrebuje len PHP súbory, ktoré má parsovať.
 
 ---
@@ -125,14 +125,14 @@ Namerané wall time na tom istom checkoute:
 
 Pomer je približne **16×**.
 To je „o rád“, nie zázrak a nie dôvod na prepis všetkého.
-Tento strom má 123 súborov; pri tisícoch súborov by sa rozdiel zväčšil >
+Tento strom má 123 súborov; pri tisícoch súborov by sa rozdiel zväčšil
 ale ani dnes nie je PHPStan bottlenecks.
 Rýchlosť je dôvod vyskúšať Mago, nie dôvod mu veriť.
 
-A ešte jedna poznámka k porovnaniu s Pintom >
+A ešte jedna poznámka k porovnaniu s Pintom
 Pint je formátovač z Laravel sveta.
-Tento strom používa `php-cs-fixer` >
-takže porovnávať Mago s Pintom by znamenalo porovnávať ho s nástrojom >
+Tento strom používa `php-cs-fixer`
+takže porovnávať Mago s Pintom by znamenalo porovnávať ho s nástrojom
 ktorý tu vôbec nebeží.
 Rozhodujúce je porovnanie s tým, čo je v CI.
 
@@ -140,9 +140,9 @@ Rozhodujúce je porovnanie s tým, čo je v CI.
 
 ## Časť V > Analyzátor: 189 errorov, dva skutočné
 
-Prvý pohľad vyzerá ako katastrofa >
+Prvý pohľad vyzerá ako katastrofa
 PHPStan level 9 je zelený na nule a Mago hlási 189 errorov.
-Druhý pohľad ukáže, že väčšina z nich nie je nález v kóde >
+Druhý pohľad ukáže, že väčšina z nich nie je nález v kóde
 ale medzera v konfigurácii alebo v inferencii.
 
 | príčina | počet | príklad |
@@ -164,14 +164,14 @@ foreach ($this->emittedClasses() as $class => $where) {
 ```
 
 `$emitted` nikde predtým nevznikne.
-PHP ho pri prvom zápise automaticky vytvorí ako pole >
+PHP ho pri prvom zápise automaticky vytvorí ako pole
 takže test prejde a PHPStan level 9 mlčí.
 Mago to pomenuje.
-To je presne ten signál, ktorý sa hľadal >
+To je presne ten signál, ktorý sa hľadal
 ale sú to **dva errory z 189**.
 
 Preto analyzer nie je brána.
-Aby bol, potreboval by baseline alebo široký ignore list; baseline >
+Aby bol, potreboval by baseline alebo široký ignore list; baseline
 ktorý rastie, schová ďalší nález.
 Menšia verzia pravdy je lepšia než väčšia verzia šumu.
 
@@ -188,7 +188,7 @@ Na tomto strome hlási **570** nálezov:
 - 36 × `cyclomatic-complexity` pri threshold 15.
 
 Taký preset sa nedá použiť ako brána.
-`mago.toml` preto vypína 18 pravidiel, každé s nameraným počtom a dôvodom >
+`mago.toml` preto vypína 18 pravidiel, každé s nameraným počtom a dôvodom
 a necháva zapnuté correctness, security a readability.
 Výsledok po opravách:
 **0 nálezov**.
@@ -211,7 +211,7 @@ Zvyšných šesť boli false positives dvoch security pravidiel.
 Obe pravidlá zostali zapnuté:
 
 - `no-insecure-comparison` (4): heuristika čítala `$token` ako credential,
-  ale v `KernelCoupling.php` to bol prvok z `token_get_all()` >
+  ale v `KernelCoupling.php` to bol prvok z `token_get_all()`
     pole alebo
   jednoznakový string. Premenovanie na `$element` problém vyriešilo bez
   pragmy;
@@ -221,8 +221,8 @@ Obe pravidlá zostali zapnuté:
 
 `make mago-lint` beží s `--max-issues=0`.
 Prázdna množina je tvrdenie; jeden nález job zhodí.
-A pragma, ktorá prežije svoj kód >
-sa počíta ako nález cez `unfulfilled-expect` >
+A pragma, ktorá prežije svoj kód
+sa počíta ako nález cez `unfulfilled-expect`
 takže ani výnimky nemôžu zhrdzavieť.
 
 ---
@@ -242,11 +242,11 @@ To nie je „rýchlejší `php-cs-fixer`“, to je iný štýl.
 | `declare_equal_normalize` | **áno**, cez `space-around-assignment-in-declare` |
 | `concat_space`, `single_quote`, `trailing_comma_in_multiline` | **áno** |
 
-Z 124 súborov sa 28 líši len v `declare(strict_types = 1)` >
-proti `declare(strict_types=1)`; zvyšných 96 má väčší diff >
+Z 124 súborov sa 28 líši len v `declare(strict_types = 1)`
+proti `declare(strict_types=1)`; zvyšných 96 má väčší diff
 najmä zbalené prázdne konštruktory a prelomené argumenty.
-Prejsť >
-na Mago formát znamená preformátovať celý strom **a** vzdať sa pravidiel >
+Prejsť
+na Mago formát znamená preformátovať celý strom **a** vzdať sa pravidiel
 ktoré tento strom drží zámerne.
 To je samostatný plán s vlastným diffom, nie prepínač.
 
@@ -254,24 +254,24 @@ To je samostatný plán s vlastným diffom, nie prepínač.
 
 ## Časť VIII > Guard: jediná vec, ktorá naozaj pridala hodnotu
 
-`mago guard` tvrdí vetu, ktorú už drží `KernelCouplingTest` >
+`mago guard` tvrdí vetu, ktorú už drží `KernelCouplingTest`
 **súbor v kernelu nesmie menovať modul.**
 Rozdiel je v tom, ako to vidí.
 
 Test číta `use` riadky.
-Guard číta aj inline FQCN >
-a na neupravenom strome našiel **osem** takých hrán >
-v `AuthMiddleware.php` a `RateLimitMiddleware.php` >
-kde kernel siahal na `Modules\Outbox\…` cez `class_exists()` >
+Guard číta aj inline FQCN
+a na neupravenom strome našiel **osem** takých hrán
+v `AuthMiddleware.php` a `RateLimitMiddleware.php`
+kde kernel siahal na `Modules\Outbox\…` cez `class_exists()`
 a plné meno triedy.
 Test mal prázdny ledger práve preto, že to neboli `use` statementy.
 Toto je celý argument za guard.
 
 Osem nálezov sa nevyriešilo baseline.
-Vyriešilo sa to portom `Modules\Core\Domain\Contracts\SecurityEventSink` >
+Vyriešilo sa to portom `Modules\Core\Domain\Contracts\SecurityEventSink`
 ktorý má jednu metódu na fakt, ktorý kernel vyvoláva.
-Outbox ho implementuje v `OutboxSecurityEventSink`; `src/http.php` >
-composition root, ktorý smie moduly menovať >
+Outbox ho implementuje v `OutboxSecurityEventSink`; `src/http.php`
+composition root, ktorý smie moduly menovať
 ho zostaví za `class_exists()` a predá obom middleware.
 Bez modulu je sink `null` a záznam sa zahodí, nikdy nie odmietnutie.
 
@@ -282,11 +282,11 @@ Merané po refaktore:
   Modules\…`, pridal kontrakt, na ktorom modul závisí;
 - `make mago-guard` dnes: **0 issues, 53 ms**;
 - v CI beží job `kernel-dependency` bez PHP setupu a bez `composer install`
- >
+
     checkout, ktorý dokazuje bránu, je zároveň checkout bez `vendor/`.
 
 Guard nie je náhrada testu.
-Test klasifikuje hrany (M/C/G) a ratchetuje nerozhodnuté >
+Test klasifikuje hrany (M/C/G) a ratchetuje nerozhodnuté
 guard nemá ledger.
 Guard hovorí pravidlo, test zapisuje rozhodnutia.
 To je dôvod, prečo sú v strome obe veci a prečo to nie je duplicita.
@@ -302,17 +302,17 @@ To je dôvod, prečo sú v strome obe veci a prečo to nie je duplicita.
 | typová analýza | **nie, doplnok** | 189 errorov, 2 skutočné; PHPStan level 9 zostáva |
 | formátovanie | **nie** | 124/124 prepis a strata nosných pravidiel |
 
-Ak je podmienka „chcem PHP kvalitatívnu kontrolu pod Rust toolchainom“, Mago je správna voľba >
+Ak je podmienka „chcem PHP kvalitatívnu kontrolu pod Rust toolchainom“, Mago je správna voľba
 ale len na tie vrstvy, ktoré vie pomenovať.
-Ak je podmienka „chcem drop-in náhradu PHPStanu a `php-cs-fixer`“, Mago ňou >
+Ak je podmienka „chcem drop-in náhradu PHPStanu a `php-cs-fixer`“, Mago ňou
 nie je a tvrdiť opak by bolo meranie proti marketingu.
 
 Praktické pravidlo:
-**Mago pridáva tam, kde dokáže sformulovať vetu >
+**Mago pridáva tam, kde dokáže sformulovať vetu
 ktorá sa dá vyvrátiť.**
 „Kernel nesmie menovať modul“ je taká veta.
-„Tento kód je typovo správny“ je taká veta len vtedy, keď nástroj vidí bootstrap >
-a voliteľné moduly >
+„Tento kód je typovo správny“ je taká veta len vtedy, keď nástroj vidí bootstrap
+a voliteľné moduly
 a to Mago v tomto strome ešte nevidí.
 
 ---
@@ -327,18 +327,18 @@ make mago-lint                      # brána: lint, --max-issues=0
 bin/build/mago-spike.sh --only=analyze
 ```
 
-Reporty padajú do `storage/cache/mago-spike/` (gitignored) >
+Reporty padajú do `storage/cache/mago-spike/` (gitignored)
 `<tool>.txt` a `summary.tsv`.
-Rationale >
-a všetky čísla sú v [`docs/mago-evaluation.md`](/docs/mago-evaluation) >
+Rationale
+a všetky čísla sú v [`docs/mago-evaluation.md`](/docs/mago-evaluation)
 tento článok je jeho naratívna verzia, nie druhý zdroj pravdy.
 
 ---
 
-*Merané 22. októbra 2026 s `mago 1.58.2` na PHP 8.5.11 >
+*Merané 22. októbra 2026 s `mago 1.58.2` na PHP 8.5.11
 scope 123 `.php` súborov + `bin/cms`.
 Pri písaní článku 23. októbra:
-`composer test` 714 testov / 5889 asertí >
+`composer test` 714 testov / 5889 asertí
 `make mago-guard` 0 issues (53 ms), `make mago-lint` 0 issues (30 ms).
-Ak niektoré číslo už neplatí, je to dôvod na nové meranie >
+Ak niektoré číslo už neplatí, je to dôvod na nové meranie
 nie na vymazanie odseku.*

@@ -8,14 +8,18 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * ProseRhythmContractTest, the written form of the `>` separator.
+ * ProseRhythmContractTest, the written form of the prose in this tree.
  *
- * `prose-separator` names the rule; this is the part of it a machine can see.
- * The list below is the set of files already wrapped in the new form, and it
- * only grows: a file joins it when its prose is converted, so the ratchet never
- * needs a reason to shrink. What this cannot judge is where a sentence may be
- * cut (verb and object stay together, a noun keeps its attribute); that stays a
- * decision an author makes, with the examples in the spec as the model.
+ * `prose-separator` names the rules; this is the part of them a machine can
+ * see. The list below is the set of wrapped files, and it only grows: a file
+ * joins it once its prose is converted, so the ratchet never needs a reason to
+ * shrink. What this cannot judge is where a sentence may be cut (verb and
+ * object stay together, a noun keeps its attribute); that stays a decision an
+ * author makes, with the examples in the spec as the model.
+ *
+ * The `>` that once ended a mid-sentence line was retired. A line is still one
+ * thought, and a break that continues the sentence is now an ordinary wrap, so
+ * these checks read the source lines rather than a glyph.
  *
  * @internal
  *
@@ -146,9 +150,9 @@ final class ProseRhythmContractTest extends TestCase
     /**
      * The sentences of one paragraph, each with its length in words.
      *
-     * The lines are joined before the sentences are cut, because a separator is
-     * a break inside a sentence and not a sentence end. Inline code counts as
-     * one word, the way a reader takes it, and emphasis markers count as none.
+     * The lines are joined before the sentences are cut, because a wrap is a
+     * break inside a sentence and not a sentence end. Inline code counts as one
+     * word, the way a reader takes it, and emphasis markers count as none.
      *
      * @param list<string> $lines
      *
@@ -156,10 +160,7 @@ final class ProseRhythmContractTest extends TestCase
      */
     private static function sentences(array $lines): array
     {
-        $joined = implode(' ', array_map(
-            static fn (string $line): string => (string) preg_replace('/\s>$/', '', $line),
-            $lines,
-        ));
+        $joined = implode(' ', $lines);
 
         $sentences = [];
 
@@ -302,66 +303,9 @@ final class ProseRhythmContractTest extends TestCase
             self::assertStringNotContainsString(
                 '—',
                 $content,
-                sprintf('%s still carries an em dash; the separator is `>`.', $file),
+                sprintf('%s still carries an em dash; the tree separates with a line break.', $file),
             );
         }
-    }
-
-    #[Test]
-    public function aLineEndsWithTheSeparatorOnlyInsideItsSentence(): void
-    {
-        $problems = [];
-
-        foreach (self::wrapped() as $file) {
-            foreach (self::paragraphs($file) as $paragraph) {
-                $lines = $paragraph['lines'];
-
-                foreach ($lines as $index => $line) {
-                    $last = $index === count($lines) - 1;
-                    $hasSeparator = str_ends_with($line, ' >');
-                    $bare = (string) preg_replace('/\s>$/', '', $line);
-                    $bare = rtrim($bare, '*_`„“\"\')]»');
-                    $endsSentence = 1 === preg_match('/[.!?]$/u', $bare);
-                    $endsColon = 1 === preg_match('/:$/u', $bare);
-
-                    if ($last && $hasSeparator) {
-                        $problems[] = sprintf('%s: last line of a paragraph ends with the separator: %s', $file, $line);
-                    }
-
-                    if (!$last && $endsSentence && $hasSeparator) {
-                        $problems[] = sprintf(
-                            '%s: a line that ends its sentence carries the separator: %s',
-                            $file,
-                            $line,
-                        );
-                    }
-
-                    if (!$last && $endsColon && $hasSeparator) {
-                        $problems[] = sprintf(
-                            '%s: a colon ends its line, so the separator doubles it: %s',
-                            $file,
-                            $line,
-                        );
-                    }
-
-                    if ($last || $hasSeparator) {
-                        continue;
-                    }
-
-                    // A colon is a break of its own: the sentence continues
-                    // and the next line says what the colon introduced.
-                    if (!$endsSentence && !$endsColon) {
-                        $problems[] = sprintf(
-                            '%s: a line breaks mid-sentence without the separator: %s',
-                            $file,
-                            $line,
-                        );
-                    }
-                }
-            }
-        }
-
-        self::assertSame([], $problems, "The separator belongs inside a sentence, at the end of the line it closes:\n" . implode("\n", $problems));
     }
 
     #[Test]
@@ -373,7 +317,6 @@ final class ProseRhythmContractTest extends TestCase
             foreach (self::paragraphs($file) as $paragraph) {
                 foreach ($paragraph['lines'] as $line) {
                     $masked = (string) preg_replace('/`[^`]*`/u', '@', $line);
-                    $masked = (string) preg_replace('/\s>$/', '', $masked);
 
                     if (1 === preg_match('/[.!?][)\]"»“*`]*\s+\p{Lu}/u', $masked)) {
                         $problems[] = sprintf('%s: a new sentence shares the line: %s', $file, $line);
@@ -392,12 +335,24 @@ final class ProseRhythmContractTest extends TestCase
 
         foreach (self::wrapped() as $file) {
             foreach (self::paragraphs($file) as $paragraph) {
-                foreach ($paragraph['lines'] as $line) {
-                    if (!str_ends_with($line, ' >')) {
+                $lines = $paragraph['lines'];
+
+                foreach ($lines as $index => $line) {
+                    if ($index === count($lines) - 1) {
                         continue;
                     }
 
-                    $words = preg_split('/\s+/u', trim(substr($line, 0, -2))) ?: [];
+                    // A line that ends its sentence, or ends on the colon that
+                    // introduces the next one, is a break of its own and may
+                    // end on any word. The rest continue the sentence, and a
+                    // function word there is a phrase cut in the wrong place.
+                    $bare = rtrim($line, '*_`„“"\')]»');
+
+                    if (1 === preg_match('/[.!?…:]$/u', $bare)) {
+                        continue;
+                    }
+
+                    $words = preg_split('/\s+/u', trim($line)) ?: [];
                     $last = strtolower((string) end($words));
                     $last = trim($last, '.,;:!?„"()[]');
 
@@ -581,10 +536,8 @@ final class ProseRhythmContractTest extends TestCase
      * Colons that keep the text they introduce on the same line.
      *
      * Inline code is masked first, so a `key: value` inside backticks is data
-     * and not prose, and a trailing separator is removed, because a colon that
-     * already ended its line is the shape this looks for. A colon between two
-     * digits is a clock time (`23:31`), not an introduction, so it is dropped
-     * before the line is read.
+     * and not prose. A colon between two digits is a clock time (`23:31`), not
+     * an introduction, so it is dropped before the line is read.
      */
     private static function colonsOnTheSameLine(string $file): int
     {
@@ -593,7 +546,6 @@ final class ProseRhythmContractTest extends TestCase
         foreach (self::paragraphs($file) as $paragraph) {
             foreach ($paragraph['lines'] as $line) {
                 $masked = (string) preg_replace('/`[^`]*`/u', '@', $line);
-                $masked = (string) preg_replace('/\s>$/', '', $masked);
                 $masked = str_replace(['**', '*', '_'], '', $masked);
                 $masked = (string) preg_replace('/(?<=\d):(?=\d)/u', '', $masked);
 

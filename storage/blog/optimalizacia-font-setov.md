@@ -12,16 +12,16 @@ published: true
 ## Časť I > Symptóm, ktorý vyzerá ako chyba prehliadača
 
 Veta „Čo z toho zostáva" je nadpis.
-Veľké `Č` v nej bolo vykreslené iným písmom než zvyšok slova >
+Veľké `Č` v nej bolo vykreslené iným písmom než zvyšok slova
 fallbackom, ktorý má diakritiku, kým náš webfont ju nemá.
 Prehliadač sa nezbláznil; urobil presne to, čo má:
-pre znak >
+pre znak
 ktorý v fonte chýba, siahol po ďalšej rodine v `font-family` reťazi.
 
-Otázka teda nebola „prečo to blbne" >
+Otázka teda nebola „prečo to blbne"
 ale „prečo ten font nemá `Č`, keď sme pred chvíľou tvrdili, že je opravený".
-Odpoveď má dve časti a obe sú merateľné >
-**v súbore chýbalo 24 znakov** >
+Odpoveď má dve časti a obe sú merateľné
+**v súbore chýbalo 24 znakov**
 a **prehliadač mal v cache starú verziu toho istého súboru**.
 
 ---
@@ -37,13 +37,13 @@ public/fonts/roboto-condensed-400.woff2    upm 2048   cmap 229   chýba 24
 chýba: Č Ď Ĺ Ľ Ň Ŕ Š Ť Ž   č ď ĺ ľ ň ŕ š ť ž   Ě Ř Ů   ě ř ů
 ```
 
-Prvých osemnásť je slovenská sada (mäkké spoluhlásky a dlhé slabikotvorné >
+Prvých osemnásť je slovenská sada (mäkké spoluhlásky a dlhé slabikotvorné
 `ĺ ŕ`), zvyšných šesť je česká nadstavba.
-`á ä é í ó ô ú ý` tam boli >
+`á ä é í ó ô ú ý` tam boli
 tie sú v latin-1 a do `latin` subsetu patria.
-Chýbali teda presne tie znaky, ktoré odlišujú slovenčinu od angličtiny >
+Chýbali teda presne tie znaky, ktoré odlišujú slovenčinu od angličtiny
 a to je najhorší možný výber:
-text je čitý >
+text je čitý
 len občas „prepne písmo" a pri skenovaní to vyzerá ako rozbitý layout.
 
 ---
@@ -63,8 +63,8 @@ Prešiel som ich CLI, aby som vedel, či problém vedia vyriešiť:
 
 Všetky štyri „generátory" robia jednu operáciu:
 **odoberajú glyfy**.
-`pyftsubset` je jednosmerný >
-zo vstupu vyberie znaky, ktoré tam sú; ak tam >
+`pyftsubset` je jednosmerný
+zo vstupu vyberie znaky, ktoré tam sú; ak tam
 nie sú nemá ich odkiaľ vziať.
 A ich vlastné fonty sú iné verzie než tie, ktoré Boson používa:
 
@@ -75,8 +75,8 @@ public/fonts/inter-400.woff2                          Version 4.001;git-66647c0b
 public/fonts/roboto-condensed-400.woff2               Version 3.008; 2023
 ```
 
-Pustiť `combine.py` na `RobotoCondensed-Regular.ttf` >
-by teda vyrobilo *menší* súbor z *inej* verzie rodiny >
+Pustiť `combine.py` na `RobotoCondensed-Regular.ttf`
+by teda vyrobilo *menší* súbor z *inej* verzie rodiny
 a slovenské znaky by v ňom chýbali ďalej, len v menšom balení.
 Nástroj nebol zlý; len na tento problém nesedel.
 
@@ -87,7 +87,7 @@ Nástroj nebol zlý; len na tento problém nesedel.
 Subset je deštruktívna operácia:
 vstup `F`, sada `S` → `F|S`.
 Nikdy `F ∪ D`.
-Preto sa „oprava font setu" nedá spraviť tým istým prístrojom >
+Preto sa „oprava font setu" nedá spraviť tým istým prístrojom
 ktorý ho pokazil.
 Dá sa to len jednou z troch ciest:
 
@@ -97,17 +97,17 @@ Dá sa to len jednou z troch ciest:
 
 Cesta 1 je najčistejšia, ak plný zdroj existuje v tej istej verzii.
 Tu neexistoval:
-na disku bolo Inter 3.019 a Roboto Condensed 1.1 >
+na disku bolo Inter 3.019 a Roboto Condensed 1.1
 kým súbory v projekte sú 4.001 a 3.008.
 Cesta 3 by znamenala, že v každom slove s diakritikou máme iné písmo.
 
-Zostala cesta 2 >
+Zostala cesta 2
 s podmienkou, ktorá celý zásah drží pokope:
 
 > donor musí byť subset **toho istého buildu**: rovnaká rodina, verzia, `upm`
 > a rovnaké obrysy pre glyfy, ktoré majú oba súbory spoločné.
 
-Keď to platí, kopírovanie glyfu nie je „približná náhrada" >
+Keď to platí, kopírovanie glyfu nie je „približná náhrada"
 je to presne ten tvar, ktorý by tam bol, keby subset nikdy neodrezal.
 
 ---
@@ -117,13 +117,13 @@ je to presne ten tvar, ktorý by tam bol, keby subset nikdy neodrezal.
 Dve merania stačili.
 
 **Inter.**
-`public/fonts/inter-400.woff2` má md5 `da03732a27e1…` >
+`public/fonts/inter-400.woff2` má md5 `da03732a27e1…`
 a latin subset z Google Fonts má **ten istý md5**.
-To nie je „podobný font", to je identický súbor >
+To nie je „podobný font", to je identický súbor
 takže `latin-ext` subset tej istej rodiny je donor z toho istého buildu.
 
 **Roboto Condensed.**
-md5 nesedel (náš súbor je custom subset s 363 znakmi) >
+md5 nesedel (náš súbor je custom subset s 363 znakmi)
 takže sa porovnávali obrysy a metriky:
 
 ```
@@ -136,15 +136,15 @@ hhea ascent/descent    1900 / -500            1900 / -500
 'o' advance            1028                   1028
 ```
 
-Rovnaká verzia, rovnaké `upm` >
-rovnaké vertikálne metriky a **rovnaké obrysy aj advance** >
+Rovnaká verzia, rovnaké `upm`
+rovnaké vertikálne metriky a **rovnaké obrysy aj advance**
 pre spoločné glyfy → donor je ten istý build.
 
 ---
 
 ## Časť VI > Transplantácia bez zmeny metrík
 
-Merge robil `fontTools` (engine, na ktorom stoja aj interné skripty >
+Merge robil `fontTools` (engine, na ktorom stoja aj interné skripty
 ich CLI na to nemá príkaz).
 Postup na jeden súbor:
 
@@ -159,9 +159,9 @@ missing = [c for c in "ÁÄČĎ…žĚŘŮěřů" if ord(c) not in dst_cmap]
 ```
 
 A to, čo sa **nesmie** stať:
-prepočítať `hhea` >
+prepočítať `hhea`
 `OS/2` (`xAvgCharWidth`) alebo `hmtx` existujúcich glyfov.
-Tie čísla totiž nie sú dekorácia >
+Tie čísla totiž nie sú dekorácia
 Boson má na nich postavený CLS fix:
 
 ```
@@ -171,10 +171,10 @@ descent-override  = (|webfont descent|/upm) / size-adjust
 line-gap-override = (webfont lineGap/upm) / size-adjust
 ```
 
-`size-adjust: 107.6 %` pre Inter >
+`size-adjust: 107.6 %` pre Inter
 a `88.61 %` pre Roboto Condensed sú **vlastnosť fontu**, nie vkus.
-Keby merge prepočítal `xAvgCharWidth` >
-fallback by prestal sedieť na riadkový box a `font-display: swap` >
+Keby merge prepočítal `xAvgCharWidth`
+fallback by prestal sedieť na riadkový box a `font-display: swap`
 by vrátil presne ten reflow, ktorý má odstrániť.
 Preto invarianty:
 
@@ -193,15 +193,15 @@ Výsledok po merge:
 | `inter-400` | 23 664 B | 24 148 B (+484) | 230 → 254 | 518 → 540 |
 | `roboto-condensed-400` | 51 412 B | 52 196 B (+784) | 363 → 411 | 363 → 411 |
 
-Dva fonty, **+1 268 bajtov** spolu, a žiadny nový request >
-face 600 v Boson CSS smeruje na tú istú 400 URL >
+Dva fonty, **+1 268 bajtov** spolu, a žiadny nový request
+face 600 v Boson CSS smeruje na tú istú 400 URL
 takže obe váhy sú opravené jedným súborom.
 
 ---
 
 ## Časť VII > Prečo to aj tak nefungovalo
 
-Po merge bolo pokrytie čisté (`missing: none`) >
+Po merge bolo pokrytie čisté (`missing: none`)
 a headless test v čerstvom Chromiu ukazoval správne šírky.
 A predsa:
 na obrazovke fallback.
@@ -214,9 +214,9 @@ Header set Cache-Control "public, max-age=31536000, immutable"
 ```
 
 Prepis bajtov na tej istej URL je presne to, čo tento header zakazuje.
-Prehliadač mal starý súbor v cache a pokojne ho používal ďalej >
+Prehliadač mal starý súbor v cache a pokojne ho používal ďalej
 a keby aj chcel overiť, `immutable` mu povie, že nemá.
-Test v studenej cache tento problém **nemôže** odhaliť; to je jediná chyba >
+Test v studenej cache tento problém **nemôže** odhaliť; to je jediná chyba
 ktorú mi tento postup spočiatku nezachytil.
 
 Oprava preto nie je „prepíš súbor", ale **nová URL s obsahom v názve**:
@@ -226,29 +226,29 @@ Oprava preto nie je „prepíš súbor", ale **nová URL s obsahom v názve**:
 /fonts/roboto-condensed-400-99aca383.woff2
 ```
 
-Staré súbory zostali na svojich URL s pôvodnými bajtmi >
-mazanie by znamenalo 404 pre každé HTML >
+Staré súbory zostali na svojich URL s pôvodnými bajtmi
+mazanie by znamenalo 404 pre každé HTML
 ktoré má ešte starú URL v cache.
 Neostali však len ako mŕtva váha.
-`Frontend/packages/griffe/src/styles/fonts.css` ukazoval na opravu z októbra >
-`roboto-condensed-400-c05481f9.woff2` >
-a tá už slovenské znaky mala, len bez glyfu `space` >
-takže `Č` v nadpise `Časť` prišlo z webfontu >
+`Frontend/packages/griffe/src/styles/fonts.css` ukazoval na opravu z októbra
+`roboto-condensed-400-c05481f9.woff2`
+a tá už slovenské znaky mala, len bez glyfu `space`
+takže `Č` v nadpise `Časť` prišlo z webfontu
 a medzeru medzi slovami kreslila až ďalšia rodina v reťazi.
-V novembri ten súbor ukázal na ten istý build s medzerou >
-`roboto-condensed-400-99aca383.woff2` >
+V novembri ten súbor ukázal na ten istý build s medzerou
+`roboto-condensed-400-99aca383.woff2`
 a preto dnes Boson aj griffe používajú rovnaké čísla fallbacku.
-Admin ich nikdy nesťahoval >
+Admin ich nikdy nesťahoval
 jeho písmo je Gilroy z `public/fonts/mark`.
 
 ---
 
 ## Časť VIII > Druhá pasca: nie CSS, ale bundle
 
-Zdrojové `modules/Themes/Boson/assets/critical/boson.css` som mal opravené >
-testy zelené >
+Zdrojové `modules/Themes/Boson/assets/critical/boson.css` som mal opravené
+testy zelené
 a stránka aj tak inlinovala staré URL.
-Boson totiž pri existujúcom manifeste inlinuje **minifikovaný bundle** >
+Boson totiž pri existujúcom manifeste inlinuje **minifikovaný bundle**
 z `public/dist/boson/`, nie zdrojový súbor:
 
 ```
@@ -256,9 +256,9 @@ BosonTheme::criticalCss()  →  Modules/Boson/assets/critical/boson.css
 FrontendLayout            →  public/dist/boson/assets/boson-*.css   (ak manifest existuje)
 ```
 
-Bundle sa skladá >
-z toho istého zdroja (`Frontend/packages/boson/src/boson.ts` importuje >
-`modules/Themes/Boson/assets/critical/boson.css`) >
+Bundle sa skladá
+z toho istého zdroja (`Frontend/packages/boson/src/boson.ts` importuje
+`modules/Themes/Boson/assets/critical/boson.css`)
 takže stačilo prebuildiť:
 
 ```bash
@@ -268,8 +268,8 @@ cd Frontend/packages && pnpm --filter @nativa/theme-boson run build
 
 `public/dist/` je gitignored build artefakt.
 To znamená dve veci:
-v gite je zmena len v CSS a fontoch (správne) >
-a na stroji bez buildu sa inlinuje zdrojové CSS >
+v gite je zmena len v CSS a fontoch (správne)
+a na stroji bez buildu sa inlinuje zdrojové CSS
 ktoré je tiež už správne.
 Obe cesty teda vedú k opraveným URL, len jedna z nich je minifikovaná.
 
@@ -302,9 +302,9 @@ font    600 25.6px "Roboto Condensed"
 fallback            15.36 px
 ```
 
-Tých 0.52 px je syntetický bold >
+Tých 0.52 px je syntetický bold
 face 600 je v skutočnosti 400 súbor, takže prehliadač priťahuje obrysy.
-To je vlastnosť, ktorá tam bola aj predtým >
+To je vlastnosť, ktorá tam bola aj predtým
 nie je to regresia a nie je to predmetom tejto opravy.
 Podstatné je, že 15.03 nie je 15.36 a že sedí na advance z fontu.
 
@@ -312,7 +312,7 @@ Podstatné je, že 15.03 nie je 15.36 a že sedí na advance z fontu.
 
 ## Časť X > Čo by mal nástroj vedieť, aby toto robil sám
 
-Interné skripty sú subsettery a to je v poriadku >
+Interné skripty sú subsettery a to je v poriadku
 len ich CLI končí pri `F|S`.
 Chýbajúci režim je malý a presne ohraničený:
 
@@ -335,26 +335,26 @@ font_subsetter.py \
 5. vypísať cmap pred/po a zoznam pridaných znakov
 ```
 
-Bez bodu 1 je to hazard >
-bez bodu 3 tichá CLS regresia a bez bodu 4 to neuvidí nikto >
-kto má starý súbor v cache >
+Bez bodu 1 je to hazard
+bez bodu 3 tichá CLS regresia a bez bodu 4 to neuvidí nikto
+kto má starý súbor v cache
 teda presne ten človek, ktorý to hlásil.
 
 ---
 
 ## Časť XI > Zhrnutie v piatich vetách
 
-Subset je jednosmerný >
-takže oprava vyžaduje buď plný zdroj tej istej verzie >
+Subset je jednosmerný
+takže oprava vyžaduje buď plný zdroj tej istej verzie
 alebo donor z toho istého buildu.
-Transplantácia glyfov je presná len vtedy, keď sa overí verzia >
-`upm` a obrysy >
+Transplantácia glyfov je presná len vtedy, keď sa overí verzia
+`upm` a obrysy
 inak je to nový font s cudzími znakmi.
-Metriky sa nesmú prepočítať >
-inak sa rozpadne metricky zladený fallback a vráti sa CLS >
+Metriky sa nesmú prepočítať
+inak sa rozpadne metricky zladený fallback a vráti sa CLS
 ktorý má `size-adjust` odstrániť.
-Fonty sa v tomto projekte servírujú immutable na rok >
+Fonty sa v tomto projekte servírujú immutable na rok
 takže opravený font **musí** prísť na novej URL.
 A testovať treba aj to, čo sa nesťahuje z disku:
-bundle, cache a to >
+bundle, cache a to
 ktorý súbor prehliadač naozaj použil.

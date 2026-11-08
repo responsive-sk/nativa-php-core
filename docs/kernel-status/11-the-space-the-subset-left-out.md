@@ -107,8 +107,8 @@ is now a sentence about when it stopped.
   inlined CSS declares and asserts each of them is preloaded once, before the
   stylesheet, and exists on disk. That is what holds the new URL: a rename
   that leaves the old file behind fails there.
-- `SlovakProseContractTest` and the prose-rhythm contract hold the article to
-  the glossary and to the line-break rule; the first draft of the corrected
+- `SlovakProseContractTest` holds the article to the glossary, and
+  `docs/prose-rhythm.md` holds its rhythm; the first draft of the corrected
   paragraph ended a line on `nie` and was rejected.
 
 **What no test holds** is the font stack. Nothing in `modules/Themes/*/tests`

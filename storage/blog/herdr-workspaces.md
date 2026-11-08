@@ -11,21 +11,21 @@ published: true
 
 ## Časť I > Otázka, ktorá vyzerala ako áno/nie
 
-Prišla veta >
+Prišla veta
 ktorá sa dá zodpovedať jedným slovom a pritom nijako nepomôcť:
 
 > „mozeme pracovat v herdr na viacerych repo?"
 
 Odpoveď „áno" je pravdivá a nepoužiteľná.
-Herdr nemá jednu úroveň >
+Herdr nemá jednu úroveň
 na ktorej by „viac repozitárov" znamenalo jednu vec.
-Má tri >
-a každá z nich rieši iný problém, s inými dôsledkami pre to >
-čo sa deje s git indexom, s pracovným stromom a s kontextom agenta >
+Má tri
+a každá z nich rieši iný problém, s inými dôsledkami pre to
+čo sa deje s git indexom, s pracovným stromom a s kontextom agenta
 ktorý v tom termináli beží.
 
 Pretože išlo o otázku o stave, nie o názor, odpoveď sa dala odmerať.
-Toto je zápis merania a pravidiel, ktoré z neho vyplynuli >
+Toto je zápis merania a pravidiel, ktoré z neho vyplynuli
 nie návod na klávesové skratky.
 
 ---
@@ -47,13 +47,13 @@ workspace   w6            najvyššia úroveň, má cwd a metadáta worktree
 | tab | vizuálna skupina panov | áno | `tab create` |
 | pane | skutočný terminál a proces | áno | `pane split` |
 
-ID sú **nepriehľadné a stabilné** >
-zatvorené ID sa už nikdy nepoužije >
-a pane presunutý do iného workspace dostane nové >
+ID sú **nepriehľadné a stabilné**
+zatvorené ID sa už nikdy nepoužije
+a pane presunutý do iného workspace dostane nové
 workspace-kvalifikované ID.
-Preto sa identifikátory nehádajú >
-čítajú sa z odpovede príkazu >
-ktorý daný objekt vytvoril (`workspace create` vráti `.result.workspace` >
+Preto sa identifikátory nehádajú
+čítajú sa z odpovede príkazu
+ktorý daný objekt vytvoril (`workspace create` vráti `.result.workspace`
 `.result.tab` a `.result.root_pane`; `pane split` vráti `.result.pane`).
 
 Každý spravovaný pane dostane do prostredia kontext volajúceho:
@@ -65,19 +65,19 @@ printf '%s\n' "$HERDR_WORKSPACE_ID" "$HERDR_TAB_ID" "$HERDR_PANE_ID"
 # w6:p8
 ```
 
-To je dôvod >
-prečo sa `pane split` bez cieľa správa inak než väčšina ostatných príkazov >
-keď je `HERDR_PANE_ID` dostupné, delí **volajúci** pane, >
+To je dôvod
+prečo sa `pane split` bez cieľa správa inak než väčšina ostatných príkazov
+keď je `HERDR_PANE_ID` dostupné, delí **volajúci** pane,
 nie ten ktorý má fokus v UI.
-Pri ostatných príkazoch môže `--current` zamieriť na volajúci pane >
-explicitne >
+Pri ostatných príkazoch môže `--current` zamieriť na volajúci pane
+explicitne
 a je to bezpečnejšie než spoliehať sa na to, kde má užívateľ práve kurzor.
 
 ---
 
 ## Časť III > Čo bolo v session namerané
 
-Pred akýmkoľvek presúvaním súborov alebo repozitárov sa vyplatí pozrieť >
+Pred akýmkoľvek presúvaním súborov alebo repozitárov sa vyplatí pozrieť
 čo v session naozaj je:
 
 ```bash
@@ -116,8 +116,8 @@ open → w6
 worktree/green-harbor-7663   (zatvorený)
 ```
 
-Worktree teda nie je exotika >
-Herdr si ich drží v `~/.herdr/worktrees/<repo>/` a vie ich otvoriť >
+Worktree teda nie je exotika
+Herdr si ich drží v `~/.herdr/worktrees/<repo>/` a vie ich otvoriť
 aj zavrieť bez toho, aby sa čokoľvek stratilo.
 
 ---
@@ -134,9 +134,9 @@ herdr workspace create --cwd /home/evan/dev/06/nativa-minimal --label nativa-min
 herdr workspace create --cwd /home/evan/dev/06/boson           --label boson          --no-focus
 ```
 
-`--focus` prepne užívateľa do nového workspace; `--no-focus` ho nechá tam >
+`--focus` prepne užívateľa do nového workspace; `--no-focus` ho nechá tam
 kde je.
-Pri zakladaní na pozadí je `--no-focus` správna voľba vždy >
+Pri zakladaní na pozadí je `--no-focus` správna voľba vždy
 fokus patrí užívateľovi, nie automatizácii.
 
 ### 2. Tab s vlastným cwd
@@ -148,7 +148,7 @@ herdr tab create --workspace w6 --cwd /home/evan/dev/06/ui --label ui
 ```
 
 Tab je vizuálna skupina.
-Nedáva oddelený git kontext ani oddeleného agenta >
+Nedáva oddelený git kontext ani oddeleného agenta
 dáva poriadok v panoch.
 
 ### 3. Pane s vlastným cwd
@@ -160,23 +160,23 @@ Jeden panel vedľa druhého, každý v inom repozitári:
 herdr pane split --current --direction right --cwd /home/evan/dev/06/boson --no-focus
 ```
 
-Geometrické pravidlo, ktoré sa vyplatí dodržať >
+Geometrické pravidlo, ktoré sa vyplatí dodržať
 **široký pane deliť doprava, úzky alebo vysoký dole.**
-Opakované delenie tým istým smerom vyrába stĺpce >
+Opakované delenie tým istým smerom vyrába stĺpce
 v ktorých sa nedá čítať diff ani log.
 
 ---
 
 ## Časť V > Hub: jeden workspace, viac repozitárov
 
-Ďalšia otázka prišla hneď po tom, ako hub vznikol >
-môže taký workspace obsahovať viac rôznych repozitárov >
+Ďalšia otázka prišla hneď po tom, ako hub vznikol
+môže taký workspace obsahovať viac rôznych repozitárov
 alebo je to len adresár, v ktorom sa nič gitové nedeje?
 
-Môže >
+Môže
 a je to presne ten prípad, na ktorý hub existuje.
-Workspace nemá jednu rolu repozitára >
-je to najvyššia jednotka s vlastným cwd >
+Workspace nemá jednu rolu repozitára
+je to najvyššia jednotka s vlastným cwd
 a **každý pane v ňom má cwd vlastný**.
 Meranie z tej istej session:
 
@@ -192,7 +192,7 @@ dev/10/
   marko            bez .git
 ```
 
-Pane v hube sa do repozitára dostane obyčajným `cd` >
+Pane v hube sa do repozitára dostane obyčajným `cd`
 alebo sa rovno založí s cwd v ňom:
 
 ```bash
@@ -202,7 +202,7 @@ herdr pane split --current --direction right \
 herdr tab create --workspace w7 --cwd /home/evan/dev/10/resp-blog --label resp-blog
 ```
 
-Každý taký pane má vlastný shell >
+Každý taký pane má vlastný shell
 vlastný git kontext a môže v ňom bežať vlastný agent.
 Hub je teda legitímny spôsob, ako mať päť repozitárov v jednom okne.
 
@@ -214,10 +214,10 @@ herdr workspace get w7
 # ... "workspace": {"label": "dev10", ...}      ← žiadny "worktree" kľúč
 ```
 
-Pre porovnanie >
-workspace založený priamo v repozitári (časť III) má `worktree` objekt >
+Pre porovnanie
+workspace založený priamo v repozitári (časť III) má `worktree` objekt
 s `repo_root`, `repo_key` a `is_linked_worktree`.
-Hub >
+Hub
 nie nemá z čoho.
 A git pomocníci sa podľa toho správajú:
 
@@ -241,11 +241,11 @@ Z toho vyplývajú tri pravidlá pre hub:
 | hub nemá predvolený repozitár | `herdr worktree create --workspace w7` nemá z čoho vychádzať |
 | pany v tom istom repozitári zdieľajú index | izoláciu dáva worktree, nie druhý pane |
 
-A jedna vec, ktorá platí bez ohľadu na to >
-či je workspace hub alebo repozitár >
-keď sa pany rozídu do rôznych repozitárov >
+A jedna vec, ktorá platí bez ohľadu na to
+či je workspace hub alebo repozitár
+keď sa pany rozídu do rôznych repozitárov
 workspace-level metadáta prestanú byť pravdou o obsahu.
-Hub je čitateľný vtedy, keď tie repozitáre k sebe patria >
+Hub je čitateľný vtedy, keď tie repozitáre k sebe patria
 keď spolu nesúvisia, workspace na repozitár je zrozumiteľnejší.
 
 ---
@@ -253,7 +253,7 @@ keď spolu nesúvisia, workspace na repozitár je zrozumiteľnejší.
 ## Časť VI > Worktree: druhý checkout toho istého repozitára
 
 Workspace rieší „iný repozitár".
-Worktree rieši >
+Worktree rieši
 „iná vetva toho istého repozitára bez rozbitia hlavného checkoutu":
 
 ```bash
@@ -263,17 +263,17 @@ herdr worktree create --cwd /home/evan/dev/06/nativa-minimal \
 herdr worktree open --path /home/evan/.herdr/worktrees/nativa-minimal/worktree-green-harbor-7663
 ```
 
-Rozdiel >
-oproti dvom panom v tom istom checkoute je zásadný a je to jediný rozdiel >
-na ktorom naozaj záleží >
-**dva pany v jednom checkoute zdieľajú jeden git index >
+Rozdiel
+oproti dvom panom v tom istom checkoute je zásadný a je to jediný rozdiel
+na ktorom naozaj záleží
+**dva pany v jednom checkoute zdieľajú jeden git index
 a jeden pracovný strom.**
 Dva worktree nie.
 Preto:
 
 - dva agenti v tom istom checkoute na tej istej vetve = súťaž o index;
 - dva agenti v dvoch worktree = dve nezávislé vetvy, žiadna kolízia;
-- dva pany v tom istom checkoute sú v poriadku len na **read-only** prácu >
+- dva pany v tom istom checkoute sú v poriadku len na **read-only** prácu
   testy, hľadanie, čítanie logov.
 
 ---
@@ -281,7 +281,7 @@ Preto:
 ## Časť VII > Agenti: jeden pane, jeden agent
 
 `agent start` nezakladá layout.
-Vyžaduje existujúci pane, ktorý je na interaktívnom shell prompte >
+Vyžaduje existujúci pane, ktorý je na interaktívnom shell prompte
 a v ňom rozpozná zadaný typ agenta:
 
 ```bash
@@ -291,25 +291,25 @@ herdr agent start reviewer --kind codex --pane w6:pD
 herdr agent prompt reviewer "Zhrň zmeny v tomto worktree." --wait --timeout 120000
 ```
 
-Podporovaných kindov je dvadsaťštyri (`pi`, `claude`, `codex`, `gemini` >
-`cursor`, `devin`, `agy`, `cline`, `omp`, `mastracode`, `opencode` >
-`copilot`, `kimi`, `kiro`, `droid`, `amp`, `grok`, `hermes`, `kilo` >
-`qodercli`, `qwen`, `letta`, `maki` >
-`muse`) a meno agenta musí sedieť na `[a-z][a-z0-9_-]{0,31}` >
+Podporovaných kindov je dvadsaťštyri (`pi`, `claude`, `codex`, `gemini`
+`cursor`, `devin`, `agy`, `cline`, `omp`, `mastracode`, `opencode`
+`copilot`, `kimi`, `kiro`, `droid`, `amp`, `grok`, `hermes`, `kilo`
+`qodercli`, `qwen`, `letta`, `maki`
+`muse`) a meno agenta musí sedieť na `[a-z][a-z0-9_-]{0,31}`
 a byť unikátne medzi živými agentmi.
 
 Stavy, s ktorými sa dá počítať:
-`idle`, `working`, `blocked`, `done` >
+`idle`, `working`, `blocked`, `done`
 `unknown`.
 Dve upozornenia, ktoré vyzerajú ako formalita a nie sú:
 
 - `blocked` znamená rozpoznaný approval alebo otázku. Na taký dialog sa
-  neodpovedá naslepo >
+  neodpovedá naslepo
     najprv `agent get` a `agent read`, potom rozhodnutie.
 - `unknown` neznamená hotovo. Znamená, že Herdr nevie stav klasifikovať.
 
-Preto sa `agent prompt` s `--wait` používa ako štandard (čaká >
-na prvý ustálený stav), kým `--until blocked` je vyhradené pre workflow >
+Preto sa `agent prompt` s `--wait` používa ako štandard (čaká
+na prvý ustálený stav), kým `--until blocked` je vyhradené pre workflow
 kde sa na otázku naozaj čaká.
 
 ---
@@ -326,7 +326,7 @@ kde sa na otázku naozaj čaká.
 | spustiť príkaz a počkať na jeho výstup | pane run + pane wait-output |
 | agent, ktorý má stav a dá sa naň čakať | agent start + agent prompt --wait |
 
-Tretí riadok je jediný, kde si treba uvedomiť cenu >
+Tretí riadok je jediný, kde si treba uvedomiť cenu
 dva pany nad jedným checkoutom sú bezplatné na čítanie a drahé na zápis.
 
 ---
@@ -335,29 +335,29 @@ dva pany nad jedným checkoutom sú bezplatné na čítanie a drahé na zápis.
 
 **Holé `herdr` neotváraj na prieskum.**
 Spustí alebo pripojí TUI.
-Objavovanie začína na `herdr --help` >
-a pokračuje skupinou bez podpríkazu (`herdr workspace`, `herdr pane` >
+Objavovanie začína na `herdr --help`
+a pokračuje skupinou bez podpríkazu (`herdr workspace`, `herdr pane`
 `herdr agent`).
 
 **Mutujúci príkaz sa netestuje vynechaním argumentov.**
-`herdr workspace create` je validný aj bez prepínačov >
+`herdr workspace create` je validný aj bez prepínačov
 a naozaj založí workspace.
 „Skúsim, čo to povie" tu znamená „urobil som to".
 
 **Metadáta workspace nie sú cwd panov.**
-Nameraný príklad z časti III to ukazuje priamo >
+Nameraný príklad z časti III to ukazuje priamo
 workspace tvrdí `nativa-minimal`, všetky tri pany sú v `nativa-php-core`.
-Pri miešaní repozitárov v jednom workspace sú tie metadáta len stopa >
-o pôvode >
-a hub (časť V) ich nemá vôbec, takže git pomocníci sa riadia pane cwd >
+Pri miešaní repozitárov v jednom workspace sú tie metadáta len stopa
+o pôvode
+a hub (časť V) ich nemá vôbec, takže git pomocníci sa riadia pane cwd
 nie workspace.
 
 **Agent edituje to, čo vidí zo svojho cwd.**
 Agent spustený v pane dedí cwd panu.
-To isté platí pre nástroje, ktoré má k dispozícii >
-nástroj ukotvený na koreň projektu nepreskočí do susedného repozitára >
+To isté platí pre nástroje, ktoré má k dispozícii
+nástroj ukotvený na koreň projektu nepreskočí do susedného repozitára
 len preto, že ho vidno v inom pane.
-Paralelná práca v dvoch repozitároch preto znamená dvoch agentov >
+Paralelná práca v dvoch repozitároch preto znamená dvoch agentov
 v dvoch workspace, nie jedného agenta s dvoma cestami.
 
 **Fokus je užívateľov.**
@@ -366,7 +366,7 @@ Výnimkou je len prípad, keď o prepnutie užívateľ explicitne požiadal.
 
 **Socket a stroje sú scope.**
 ID a mená agentov platia v rámci jedného servera.
-Dva uložené SSH stroje môžu mať oba `w1:p1` aj agenta s menom `reviewer` >
+Dva uložené SSH stroje môžu mať oba `w1:p1` aj agenta s menom `reviewer`
 `--machine` sa potom musí použiť na objavovanie aj na každý ďalší príkaz.
 Výber stroja v TUI príkazy z panu neprepína.
 
@@ -389,7 +389,7 @@ herdr worktree create --cwd /home/evan/dev/06/nativa-php-core \
   --branch worktree/pokus --base master --no-focus
 ```
 
-**Čítanie výstupu z iného workspace bez toho >
+**Čítanie výstupu z iného workspace bez toho
 aby som doň čokoľvek poslal.**
 
 ```bash
@@ -397,9 +397,9 @@ herdr pane list --workspace w6
 herdr pane read w6:pC --source recent-unwrapped --lines 120
 ```
 
-`recent-unwrapped` je správny zdroj na logy a transkripty (spája soft >
-wrap); `visible` je len to, čo je práve na obrazovke >
-a `detection` je interný snapshot >
+`recent-unwrapped` je správny zdroj na logy a transkripty (spája soft
+wrap); `visible` je len to, čo je práve na obrazovke
+a `detection` je interný snapshot
 z ktorého Herdr robí rozpoznanie agenta.
 
 **Príkaz na pozadí s čakaním na konkrétny riadok.**
@@ -409,7 +409,7 @@ herdr pane run w6:pD "make test"
 herdr pane wait-output w6:pD --match "OK (" --timeout 120000
 ```
 
-`pane run` potvrdzuje prijatie riadku, nie vykonanie príkazu >
+`pane run` potvrdzuje prijatie riadku, nie vykonanie príkazu
 preto sa na výsledok nečaká odhadom, ale `wait-output`.
 
 ---
@@ -417,18 +417,18 @@ preto sa na výsledok nečaká odhadom, ale `wait-output`.
 ## Časť XI > Čo z toho zostáva
 
 Workspace nie je „väčší pane".
-Je to hranica >
-na ktorej sa dá bezpečne povedať >
+Je to hranica
+na ktorej sa dá bezpečne povedať
 „toto je iný repozitár, s iným git kontextom a iným agentom".
-Worktree je hranica druhá >
-v rámci jedného repozitára >
+Worktree je hranica druhá
+v rámci jedného repozitára
 a je to jediná hranica, ktorá oddelí dva git indexy.
 
 Zvyšok je disciplína:
-čítať ID z odpovedí namiesto ich hádania >
-nedeliť pany tým istým smerom do nekonečna >
-neodpovedať na `blocked` naslepo a nepliesť si metadáta workspace >
+čítať ID z odpovedí namiesto ich hádania
+nedeliť pany tým istým smerom do nekonečna
+neodpovedať na `blocked` naslepo a nepliesť si metadáta workspace
 s pracovným adresárom panu.
-Ani jedno z toho nie je obmedzenie Herdru >
-je to popis toho, kde presne ležia hranice >
+Ani jedno z toho nie je obmedzenie Herdru
+je to popis toho, kde presne ležia hranice
 ktoré sa dajú prekročiť len za cenu, ktorá sa nemusí vyplatiť.

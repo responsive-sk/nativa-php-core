@@ -1,68 +1,69 @@
 # prose-separator Specification
 
-Canonical spec for the separator this tree writes prose with: the responsive
-`>` that ends a line and continues the same sentence. The em dash is banned
-(`AGENTS.md`, rule 13), so the character that replaced it has to render, has to
-survive a heading, and has to be pinned by a test.
+Canonical spec for how prose is written and rendered in this tree: a line ends
+where the reader should see a line end, the written form is measured, and the
+`>` survives only as the shape of a prefixed heading.
+
+The glyph was a training control for the rhythm, and it was retired on
+2026-11-08. The reasoning and the measurement live in `docs/prose-rhythm.md`,
+and `AGENTS.md` (rule 13) carries the writing rule. What this spec names is the
+behaviour: the renderer breaks where a sentence ends, wraps everywhere else, and
+the heading split still reads the character the author wrote.
 
 ## Purpose
 
-A line of prose ends with the separator and the sentence continues on the next
-line. The renderer's job is to make that glyph the visible character at the end
-of the line instead of the empty bar a blockquote would draw, and to keep the
-heading split working on the separator the author wrote rather than on a dash it
-prints itself.
+A writer hard-wraps prose at about 76 characters, and the browser sees one
+paragraph where the source has many lines. The renderer's job is to keep the
+part of that shape a reader benefits from: a finished sentence starts on its own
+line on the page. The part the reader does not benefit from, a wrap in the
+middle of a sentence, joins with a space.
+
+A heading is one line, so the prefix split stays inline: `## Časť I > Title`
+becomes a prefix span, the glyph and a title span.
 
 ## Requirements
 
-### Requirement: The separator renders as a visible glyph and a break
+### Requirement: A line ends where the reader should see a line end
 
-A Markdown line that ends with ` >` SHALL render the glyph itself and start the
-next line below it (`&gt;<br>`), and a blank line after that line SHALL still
-end the paragraph as usual. A line that OPENS with `>` and carries text SHALL
-stay a blockquote: the separator closes a line it belongs to and never opens
-one.
-
-#### Scenario: A line ending with the separator breaks the line
-
-- GIVEN `prvý bod >` followed by `druhý bod` on the next line
-- WHEN `MarkdownRenderer::render()` runs
-- THEN the output is `<p>prvý bod &gt;<br>druhý bod</p>`
-
-- PINS: tests/Content/MarkdownSeparatorTest.php::theSeparatorStaysAtTheEndOfItsLine
+A source line that ends its sentence SHALL render a break (`<br>`) and start the
+next line below it, and a blank line after it SHALL still end the paragraph as
+usual. A line that ends on a colon SHALL render the same break, because the
+colon introduces what the next line says. Any other break inside a sentence
+SHALL join with a space. A line that OPENS with `>` and carries text SHALL stay
+a blockquote.
 
 #### Scenario: A sentence that ended starts its line on the page
 
 - GIVEN two sentences on their own source lines, the first ending with a period
-- WHEN the renderer runs
-- THEN the output breaks between them (`<br>`) with no separator glyph
-- AND a soft wrap without either shape still joins with a space
+- WHEN `MarkdownRenderer::render()` runs
+- THEN the output breaks between them (`<br>`)
 
-- PINS: tests/Content/MarkdownSeparatorTest.php::aNewSentenceStartsOnItsOwnLine
+- PINS: tests/Content/MarkdownBlockParagraphTest.php::aParagraphOfProseIsUnaffected
+
+#### Scenario: A soft wrap joins with a space
+
+- GIVEN a sentence broken across two source lines with no sentence end between
+- WHEN the renderer runs
+- THEN the two lines join with a single space and no break
+- AND no glyph is printed, because there is none in the source
+
+- PINS: tests/Content/MarkdownBlockParagraphTest.php::aSoftWrapJoinsWithASpace
 
 #### Scenario: A blank line still ends the paragraph
 
-- GIVEN `prvý bod >` followed by a blank line and `druhý bod`
+- GIVEN a sentence, a blank line and another sentence
 - WHEN the renderer runs
 - THEN the two sentences are two paragraphs, each keeping its own shape
 
-- PINS: tests/Content/MarkdownSeparatorTest.php::aBlankLineEndsTheParagraphAfterTheSeparator
+- PINS: tests/Content/MarkdownBlockParagraphTest.php::aParagraphOfProseIsUnaffected
 
 #### Scenario: A line that opens with the glyph is still a quote
 
 - GIVEN the Markdown `> quoted line`
 - WHEN the renderer runs
-- THEN the output is a `<blockquote>`, not a separator
+- THEN the output is a `<blockquote>`, not a break
 
-- PINS: tests/Content/MarkdownSeparatorTest.php::aLineStartingWithTheSeparatorIsStillAQuote
-
-#### Scenario: The separator is never read as a quote
-
-- GIVEN a paragraph whose lines end with the separator
-- WHEN the renderer runs
-- THEN no `<blockquote>` is produced and every glyph survives as text
-
-- PINS: tests/Content/MarkdownSeparatorTest.php::theSeparatorIsNeverReadAsAQuote
+- PINS: tests/Content/MarkdownBlockParagraphTest.php::aLineOpeningWithAGlyphIsStillAQuote
 
 ### Requirement: A heading carries the split inline and keeps its markup
 
@@ -99,12 +100,11 @@ is the one the author wrote.
 
 ### Requirement: The written form, as far as a machine can check it
 
-Prose in a wrapped file SHALL carry no em dash and SHALL put the separator only
-inside a sentence: a line that ends its sentence ends on a plain newline, and a
-line that continues the sentence ends with the separator. No line SHALL end on
-a function word (a preposition, a conjunction, an auxiliary), because that is
-the mechanical shadow of a phrase cut in the wrong place, and no line SHALL
-run past 100 characters.
+Prose in a wrapped file SHALL carry no em dash, and SHALL start each sentence on
+its own line. No line that continues a sentence SHALL end on a function word (a
+preposition, a conjunction, an auxiliary), because that is the mechanical shadow
+of a phrase cut in the wrong place, and no line SHALL run past 100 characters.
+A prefix split inside a heading is the one place the glyph is still written.
 
 The list of wrapped files in `ProseRhythmContractTest` only grows: a file joins
 it once its prose is converted, never leaves it. What the check cannot judge is
@@ -113,8 +113,8 @@ model: verb and object stay together, a noun keeps its attribute, and a longer
 line is preferred to a broken phrase.
 
 ```text
-the kernel therefore owns the **port** >
-an interface in `src/Modules/Core/` >
+the kernel therefore owns the **port**
+an interface in `src/Modules/Core/`
 and a module owns the implementation.
 ```
 
@@ -123,8 +123,6 @@ and a module owns the implementation.
 - GIVEN a paragraph of two sentences
 - WHEN the written form is applied
 - THEN the first sentence ends its line, and the second starts the next one
-- AND neither line carries a separator, because a period already ended the
-  sentence
 
 - PINS: tests/Content/ProseRhythmContractTest.php::everySentenceStartsItsOwnLine
 
@@ -136,19 +134,10 @@ and a module owns the implementation.
 
 - PINS: tests/Content/ProseRhythmContractTest.php::noWrappedFileCarriesAnEmDash
 
-#### Scenario: The separator marks a sentence that continues
+#### Scenario: A continuation line does not end mid-phrase
 
-- GIVEN a paragraph whose lines end with the separator
-- WHEN the rhythm check reads it
-- THEN a line ending its sentence carries no separator
-- AND a line that breaks mid-sentence without one is reported
-
-- PINS: tests/Content/ProseRhythmContractTest.php::aLineEndsWithTheSeparatorOnlyInsideItsSentence
-
-#### Scenario: No line leaves a function word dangling
-
-- GIVEN a line that ends with the separator
-- WHEN the rhythm check reads the word before it
+- GIVEN a line that continues its sentence
+- WHEN the rhythm check reads the word before the break
 - THEN a preposition, a conjunction or an auxiliary is reported
 
 - PINS: tests/Content/ProseRhythmContractTest.php::noLineEndsOnAFunctionWord
@@ -163,12 +152,10 @@ and a module owns the implementation.
 
 ### Requirement: A colon ends its line
 
-A colon in prose SHALL close the line it appears on, and the text it
-introduces SHALL start on the next line. A line that ends with a colon SHALL
-NOT also carry the separator, because the colon already says that the sentence
-continues, and the number of colons that keep their text on the line SHALL
-only fall: the corpus carries them, and the conversion pass lowers them one
-file at a time.
+A colon in prose SHALL close the line it appears on, and the text it introduces
+SHALL start on the next line. The number of colons that keep their text on the
+line SHALL only fall: the corpus carries them, and the conversion pass lowers
+them one file at a time.
 
 ```text
 popis musí byť v tabuľke:
@@ -182,14 +169,6 @@ popis musí byť v tabuľke:
 - THEN the line is reported, and the next line is where the text belongs
 
 - PINS: tests/Content/ProseRhythmContractTest.php::aColonEndsItsLine
-
-#### Scenario: A colon does not wear the separator too
-
-- GIVEN a line that ends with a colon
-- WHEN the rhythm check reads the separator after it
-- THEN the doubled mark is reported
-
-- PINS: tests/Content/ProseRhythmContractTest.php::aLineEndsWithTheSeparatorOnlyInsideItsSentence
 
 ### Requirement: Tempo is measured, and its counts only fall
 

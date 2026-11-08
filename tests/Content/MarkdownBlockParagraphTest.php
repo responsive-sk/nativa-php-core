@@ -53,4 +53,24 @@ final class MarkdownBlockParagraphTest extends TestCase
 
         $this->assertSame('<p>Prvý riadok.<br>Druhý riadok.</p>' . "\n", $html);
     }
+
+    #[Test]
+    public function aSoftWrapJoinsWithASpace(): void
+    {
+        $html = (new MarkdownRenderer())->render('A long clause that' . "\n" . 'continues here.' . "\n");
+
+        $this->assertSame(
+            '<p>A long clause that continues here.</p>' . "\n",
+            $html,
+            'A break inside a sentence is a wrap, not something the reader sees.',
+        );
+    }
+
+    #[Test]
+    public function aLineOpeningWithAGlyphIsStillAQuote(): void
+    {
+        $html = (new MarkdownRenderer())->render('> quoted line' . "\n");
+
+        $this->assertStringContainsString('<blockquote><p>quoted line</p></blockquote>', $html);
+    }
 }

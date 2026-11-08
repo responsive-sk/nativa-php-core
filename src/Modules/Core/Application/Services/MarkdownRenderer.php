@@ -115,15 +115,6 @@ final class MarkdownRenderer
             return ['html' => "<hr>\n", 'next' => $i + 1];
         }
 
-        // The responsive.sk separator ends the sentence, never starts a line:
-        // `prvý bod >` closes the line and the next one begins on a new line.
-        // A bare `>` on its own line is the older shape; it renders as the
-        // character in a paragraph of its own instead of becoming an empty
-        // blockquote (a bar, with the text after it swallowed into the quote).
-        if ('>' === trim($line)) {
-            return ['html' => "<p>&gt;</p>\n", 'next' => $i + 1];
-        }
-
         // Blockquote — consecutive > lines merge into one paragraph.
         if (1 === preg_match('/^\s*>/', $line)) {
             return $this->renderBlockquote($lines, $count, $i);
@@ -387,13 +378,13 @@ final class MarkdownRenderer
             return ['html' => trim($paragraph[0]) . "\n", 'next' => $i];
         }
 
-        // A source line ends where the reader should see a line end, in three
-        // shapes: the separator, which marks a sentence that continues
-        // (`sentence >` then `next part` renders as `sentence &gt;<br>next
-        // part`), a sentence that is finished, because the rule is one sentence
+        // A source line ends where the reader should see a line end, in two
+        // shapes: a sentence that is finished, because the rule is one sentence
         // per line and joining them would undo the rhythm, and a colon, which
         // introduces what the next line says. Any other break is a soft wrap
         // and joins with a space, and a blank line still ends the paragraph.
+        // The `>` that used to mark a mid-sentence break was retired: the break
+        // is a wrap, and a reader does not need to see it.
         $html = '';
         $breaks = false;
 
@@ -401,8 +392,7 @@ final class MarkdownRenderer
             $line = rtrim($line);
             $html .= 0 === $index ? $this->inline($line) : ($breaks ? '<br>' : ' ') . $this->inline($line);
             $bare = rtrim($line, '*_`„“"\')]»');
-            $breaks = 1 === preg_match('/\s>$/', $line)
-                || 1 === preg_match('/[.!?…:]$/u', $bare);
+            $breaks = 1 === preg_match('/[.!?…:]$/u', $bare);
         }
 
         return [

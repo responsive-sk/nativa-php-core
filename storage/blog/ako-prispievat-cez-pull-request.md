@@ -9,9 +9,9 @@ category: "Proces"
 published: true
 ---
 
-Tento strom má **päť CI brán** a každá z nich existuje preto >
+Tento strom má **päť CI brán** a každá z nich existuje preto
 lebo raz niečo pustila.
-Návod nižšie nie je želanie >
+Návod nižšie nie je želanie
 je to prepis toho, čo tie brány reálne kontrolujú.
 Keď lokálne prejde päť príkazov, PR prejde tiež.
 
@@ -24,13 +24,13 @@ cp bin/git-hooks/commit-msg .git/hooks/commit-msg
 composer install
 ```
 
-Hook nie je ozdoba >
-história tohto repozitára nenesie **žiadny agent-footer** (konvencia >
-z nativa-minimal) a hook ho vymaže z každej commit message skôr >
+Hook nie je ozdoba
+história tohto repozitára nenesie **žiadny agent-footer** (konvencia
+z nativa-minimal) a hook ho vymaže z každej commit message skôr
 než sa zapíše.
-`.git/hooks` sa neversionuje >
+`.git/hooks` sa neversionuje
 takže každý čerstvý klon potrebuje tú jednu kópiu.
-`composer install` je pritom len na dev-nástroje >
+`composer install` je pritom len na dev-nástroje
 runtime žiadny `vendor/` nepotrebuje a jedna z CI úloh to aj dokazuje.
 
 ## Bežná práca
@@ -45,10 +45,10 @@ git commit
 git push -u origin feat/nazov-veci
 ```
 
-PR sa otvára z vetvy do `master` s popisom **čo** a **prečo** >
+PR sa otvára z vetvy do `master` s popisom **čo** a **prečo**
 nie ako.
-„Pridaný guard do `CardboardServices`, lebo odstránenie Users pod Cardboardom >
-končilo holým fatalom" >
+„Pridaný guard do `CardboardServices`, lebo odstránenie Users pod Cardboardom
+končilo holým fatalom"
 je dobrý popis.
 Výpis diffu popis nenahrádza.
 
@@ -63,11 +63,11 @@ Výpis diffu popis nenahrádza.
    niesť `mark`, `mark-switch` a `moonshine`, v CSS nesmie prežiť `@layer`.
 5. **Boot bez vendor/** : jadro nabootuje aj bez `composer install`.
 
-Tretí bod má jednu zradu, na ktorú sa tu už raz narazilo >
-modulový test v strome **bez svojho modulu** musí **skippovať >
+Tretí bod má jednu zradu, na ktorú sa tu už raz narazilo
+modulový test v strome **bez svojho modulu** musí **skippovať
 nie padať**.
-A pozor >
-PHPUnit púšťa `tearDown()` aj po skippnutom `setUp()` >
+A pozor
+PHPUnit púšťa `tearDown()` aj po skippnutom `setUp()`
 takže guard patrí na obe miesta.
 Vzor je `TaxonomyRegistryTest` pri Blogu.
 
@@ -79,19 +79,19 @@ Vzor je `TaxonomyRegistryTest` pri Blogu.
 - **Hranica jadra.** Kernel-súbor nesmie `use Modules\<X>\…`; závislosti
   modulu číta katalóg z `use`-riadkov (`module:show X` → `closure:` musí
   zostať acyklická). Kto potrebuje výnimku, prizná ju FQ-inline a zdôvodní
-  v docblocku >
+  v docblocku
     nie potichu.
 - **Interné nástroje** (`.agents/`, `.ai-factory.json`) patria do
   `.gitignore`, nikdy do PR.
 - **Väčší zásah** si zaslúži záznam v `docs/kernel-status.md`: boot-záznam
   s nameranými stavmi, nie plánom. Meranie staršie ako reštart servera sa
-  nepočíta >
+  nepočíta
     opcache tu klame rovnako ochotne ako cache testov.
 
 ## Prečo to funguje
 
 Pravidlá vyššie nie sú byrokracia, ale skratky k zelenému PR.
 Každé z nich vzniklo z konkrétneho pádu:
-cyklus v grafe modulov >
+cyklus v grafe modulov
 test červený len v CI, stylesheet, ktorý chýbal potichu.
 Dodrž ich a review sa bude venovať myšlienke zmeny, nie jej baleniu.

@@ -9,25 +9,25 @@ category: "Nástroje"
 published: true
 ---
 
-Kým Mago meralo len jadro >
+Kým Mago meralo len jadro
 bolo to meranie deviatich ciest z `phpstan.neon`.
-Katalóg `modules/` >
-kód >
-ktorý `bin/cms module:add` skopíruje do inštalácie a ktorý tam naozaj beží >
+Katalóg `modules/`
+kód
+ktorý `bin/cms module:add` skopíruje do inštalácie a ktorý tam naozaj beží
 neanalyzoval nikto.
 Nebola to otázka vkusu, bol to scope:
-`phpstan` >
-`php-cs-fixer` >
-aj `rector` mali `modules/` vylúčené >
+`phpstan`
+`php-cs-fixer`
+aj `rector` mali `modules/` vylúčené
 a vo svojich konfiguráciách mali napísané prečo.
 Tá poznámka je správna a nezmenila sa.
-Zmenilo sa len to, že **Mago tú dieru teraz zaplnilo** >
+Zmenilo sa len to, že **Mago tú dieru teraz zaplnilo**
 a článok je záznam o tom, čo v nej bolo.
 
 Zmena je v commite `f129ca0`:
-127 súborov, +2119 / −471 >
-z toho 13 nových súborov v katalógu >
-a dva nové nástroje (`make mago-modules` >
+127 súborov, +2119 / −471
+z toho 13 nových súborov v katalógu
+a dva nové nástroje (`make mago-modules`
 `bin/build/mago-modules-report.sh`).
 
 ---
@@ -44,25 +44,25 @@ Tri konfigurácie hovoria to isté tromi rôznymi slovami:
 
 Každá z nich je obhájiteľná.
 Súčet je však toto:
-**360 PHP súborov, ktoré inštalácia spustí >
+**360 PHP súborov, ktoré inštalácia spustí
 a žiadny nástroj na nich nič nemeria.**
-(Dnes je v katalógu 373 `.php` súborov >
+(Dnes je v katalógu 373 `.php` súborov
 trinásť pribudlo v tomto commite, zvyšok je ten istý kód.)
-Pri module, ktorý niečo pokazí, sa to prejaví v odpovedi servera >
+Pri module, ktorý niečo pokazí, sa to prejaví v odpovedi servera
 nie v bráne.
 
-Mago je na doplnenie tejto medzery vhodné z jedného dôvodu >
+Mago je na doplnenie tejto medzery vhodné z jedného dôvodu
 `mago.toml` je konfiguračný súbor tohto stromu, nie súbor showroomu.
-Jeho `[source] paths` môže menovať katalóg bez toho >
-aby sa niečo prepisovalo >
-a čo je dôležitejšie, `mago.toml` vie povedať **pre každý nástroj zvlášť** >
+Jeho `[source] paths` môže menovať katalóg bez toho
+aby sa niečo prepisovalo
+a čo je dôležitejšie, `mago.toml` vie povedať **pre každý nástroj zvlášť**
 či sa ho katalóg týka.
 
 ---
 
 ## Časť II > Čo presne sa zmenilo
 
-Do `[source] paths` pribudol riadok `"modules"` >
+Do `[source] paths` pribudol riadok `"modules"`
 a z `[source] excludes` zmizol.
 Zvyšok je o tom, čo **nie**:
 
@@ -73,17 +73,17 @@ Zvyšok je o tom, čo **nie**:
 | `[guard] excludes` | `"modules"` | perimeter hovorí o **jadre**; moduly sú druhá strana pravidla a model je whitelist, takže namespace bez pravidla by hlásil každú hranu |
 | `[linter] excludes` | `"modules/Themes"` | témy sú SHA overovaný mirror `nativa-themes`; nález tam opraví len upstream |
 
-Scope drží `tests/Architecture/MagoScopeContractTest` >
-cesty Mago musia obsahovať všetky cesty `phpstan.neon` a **jediné >
+Scope drží `tests/Architecture/MagoScopeContractTest`
+cesty Mago musia obsahovať všetky cesty `phpstan.neon` a **jediné
 čo smie pribudnúť navyše, je `modules`**.
-Kontrakt z nesúladu neurobí ticho >
+Kontrakt z nesúladu neurobí ticho
 spadne.
 
 ---
 
 ## Časť III > Prvé meranie
 
-Mago 1.58.2, PHP 8.5, ten istý binárny súbor >
+Mago 1.58.2, PHP 8.5, ten istý binárny súbor
 len o 360 súborov širší scope:
 
 | nástroj | jadro (22. 10.) | + `modules/` (27. 10.) |
@@ -94,25 +94,25 @@ len o 360 súborov širší scope:
 | `mago guard` | 0 nálezov | nezmenené |
 
 `1691 / 917` je takmer päťkrát viac errorov, než malo jadro.
-To je presne ten druh čísla, ktorý vyzerá ako dôvod scope nerozširovať >
-a je presne ten dôvod ho rozšíriť >
-v jadre tie isté triedy nálezov existujú tiež (`prepare()` vracajúci >
-`PDOStatement|false`, nedefinovaný `APP_BASE_PATH` v testoch) >
+To je presne ten druh čísla, ktorý vyzerá ako dôvod scope nerozširovať
+a je presne ten dôvod ho rozšíriť
+v jadre tie isté triedy nálezov existujú tiež (`prepare()` vracajúci
+`PDOStatement|false`, nedefinovaný `APP_BASE_PATH` v testoch)
 takže nešlo o nový druh problému, len o nový výskyt známeho.
 
 Dôležité je, že **`analyze` zostal meraním, nie bránou.**
-Brána nad katalógom je len jedna trieda nálezov >
-`lint`, s limitom 0 >
+Brána nad katalógom je len jedna trieda nálezov
+`lint`, s limitom 0
 a to je zásadné:
-brána, ktorá padá na číslo, ktoré nikto netriedil >
+brána, ktorá padá na číslo, ktoré nikto netriedil
 padá prvý deň a ignoruje sa na tretí.
 
 ---
 
 ## Časť IV > `invalid-method-access`: 313 → 0
 
-Najväčšia jediná trieda >
-v katalógu bola 313 nálezov `invalid-method-access` >
+Najväčšia jediná trieda
+v katalógu bola 313 nálezov `invalid-method-access`
 a všetky boli ten istý defekt povedaný 313-krát:
 
 ```php
@@ -120,41 +120,41 @@ $stmt = $this->pdo->prepare($sql);
 $stmt->execute($params);          // <- typovo: volanie metódy na `false`
 ```
 
-`PDO::prepare()` a `PDO::query()` sú deklarované ako `PDOStatement|false` >
+`PDO::prepare()` a `PDO::query()` sú deklarované ako `PDOStatement|false`
 pretože PDO vie byť nakonfigurované tak, že zlyhá potichu.
-Tieto pripojenia také >
-nie sú `DatabaseConnectionManager` nastavuje `ERRMODE_EXCEPTION` >
+Tieto pripojenia také
+nie sú `DatabaseConnectionManager` nastavuje `ERRMODE_EXCEPTION`
 takže vetva `false` je za behu nedosiahnuteľná.
-Lenže **nedosiahnuteľné nie je odtypované** a kód >
+Lenže **nedosiahnuteľné nie je odtypované** a kód
 ktorý bol o runtime správne, bol o typ nesprávne.
 
-Riešenie je nová trieda v každom module, ktorý pripravuje SQL >
-`Modules\<Name>\Infrastructure\Persistence\Statement` >
-s dvomi statickými metódami >
+Riešenie je nová trieda v každom module, ktorý pripravuje SQL
+`Modules\<Name>\Infrastructure\Persistence\Statement`
+s dvomi statickými metódami
 ktoré vyhodia `RuntimeException` namiesto toho, aby vrátili `false`.
 
 Prečo trinásť kópií a nie jedna zdieľaná trieda?
 Pretože platia dve pravidlá súčasne:
-moduly sú samostatné slicy >
-ktoré **nesmú** importovať jeden druhý >
-a jedna trieda v `Modules\Database` by do jadra pridala súbor >
+moduly sú samostatné slicy
+ktoré **nesmú** importovať jeden druhý
+a jedna trieda v `Modules\Database` by do jadra pridala súbor
 ktorý `extract-kernel --check` porovnáva s upstreamom.
-Trinásť malých súborov je cena za tie dve pravidlá >
-a aby to nebola cena za trinásť rôznych správaní >
-drží ich `tests/Architecture/StatementHelperContractTest` >
-rovnaké bajty po normalizácii namespace, namespace odvodený z adresára >
+Trinásť malých súborov je cena za tie dve pravidlá
+a aby to nebola cena za trinásť rôznych správaní
+drží ich `tests/Architecture/StatementHelperContractTest`
+rovnaké bajty po normalizácii namespace, namespace odvodený z adresára
 obe poistky a zoznam modulov ako ratchet.
 
 Popri tom zmizlo 20 už mŕtvych guardov typu `false === $stmt ?
 [] :
 $stmt->fetchAll()`.
 Neboli neškodné:
-keby zostali >
-vyrobili by 20 nových nálezov `redundant-comparison` >
+keby zostali
+vyrobili by 20 nových nálezov `redundant-comparison`
 a `impossible-condition` a časť výhry by sa sama zjedla.
 
 Výsledok:
-**313 → 0** >
+**313 → 0**
 a vedľajším efektom `possibly-false-argument` 15 → 1.
 
 ---
@@ -163,23 +163,23 @@ a vedľajším efektom `possibly-false-argument` 15 → 1.
 
 Druhá najväčšia trieda vyzerá ako jedna, ale jedna nie je.
 291 nálezov „priradenie `mixed` do premennej“ má rôzne zdroje:
-98 čítaní >
-`Request::body()`/`query()`, 79 prístup do indexu netypovaného poľa, 20 >
+98 čítaní
+`Request::body()`/`query()`, 79 prístup do indexu netypovaného poľa, 20
 `json_decode()`, zvyšok `foreach` cez `array<string, mixed>` alebo `get_object_vars()`.
 
 Jedna časť mala jednu príčinu.
-`body()` a `query()` vracajú `mixed` >
+`body()` a `query()` vracajú `mixed`
 a tak každá akcia v katalógu písala ten istý idiom:
 
 ```php
 $name = is_string($request->body('name')) ? $request->body('name') : '';
 ```
 
-To čítanie je **dvojité** a to druhé je stále `mixed` >
+To čítanie je **dvojité** a to druhé je stále `mixed`
 zúženie jedného volania nevypovedá o druhom.
-`Request` má preto vedľa `header(): ?string` >
-ktoré taký typovaný prístup malo odjakživa >
-nové `queryString()` a `bodyString()` >
+`Request` má preto vedľa `header(): ?string`
+ktoré taký typovaný prístup malo odjakživa
+nové `queryString()` a `bodyString()`
 jedno čítanie, priznaný default.
 Používa ich 71 miest v 21 triedach.
 
@@ -189,13 +189,13 @@ Používa ich 71 miest v 21 triedach.
 | `mixed-argument` (vedľajší efekt) | 197 | **73** |
 
 Zvyšných 245 je tá ťažšia polovica a nechávam ju na stole vedome.
-Index do `array<string, mixed>` je `mixed` preto >
-že to pole **nebolo nikdy typované** >
-správna oprava je tvar na producentovi >
+Index do `array<string, mixed>` je `mixed` preto
+že to pole **nebolo nikdy typované**
+správna oprava je tvar na producentovi
 (`@return array{meta?: array{image?: string}}`), nie cast na konzumentovi.
-Nesprávny tvar je horší než tá výstraha >
+Nesprávny tvar je horší než tá výstraha
 a `json_decode()` potrebuje to isté rozhodnutie raz za miesto.
-To je návrhová práca cez hranice modulov, nie mechanická >
+To je návrhová práca cez hranice modulov, nie mechanická
 urobiť polovicu by znamenalo vyrobiť 245 miest, kde sa typ len tvári.
 
 ---
@@ -203,7 +203,7 @@ urobiť polovicu by znamenalo vyrobiť 245 miest, kde sa typ len tvári.
 ## Časť VI > Ktoré brány vidia moduly a ktoré jadro
 
 Rozšírenie scope dalo katalógu **jednu** bránu a nič viac.
-Zvyšok brán stromu bol napísaný pre jadro a nikde to nebolo napísané spolu >
+Zvyšok brán stromu bol napísaný pre jadro a nikde to nebolo napísané spolu
 takže teraz je to v `docs/mago-evaluation.md` tabuľkou:
 
 | brána | jadro | `modules/` | čo kontroluje |
@@ -217,19 +217,19 @@ takže teraz je to v `docs/mago-evaluation.md` tabuľkou:
 | `make mago-modules` | : | áno, ako meranie | 0 nálezov lint, 884 nálezov analyze; nikdy nepadne |
 | `composer test` | `tests/` | `modules/*/tests/` | správanie |
 
-`make lint` pritom predtým katalóg tiež nemal >
-`find src public tests bin` na `modules/` nedosiahol >
-takže syntaktická chyba v module sa odhalila až tým >
+`make lint` pritom predtým katalóg tiež nemal
+`find src public tests bin` na `modules/` nedosiahol
+takže syntaktická chyba v module sa odhalila až tým
 že súbor niečo načíta.
 Dnes je v `find` aj `modules`.
 
-Aby číslo neostalo len v dokumente, je tu tretí diel >
-`make mago-modules` púšťa `lint` + `analyze` len nad katalógom >
+Aby číslo neostalo len v dokumente, je tu tretí diel
+`make mago-modules` púšťa `lint` + `analyze` len nad katalógom
 a `bin/build/mago-modules-report.sh` z neho robí markdown.
-V CI to je job `module-quality`, ktorý tabuľku zapíše do zhrnutia behu >
-a **nemôže** zlyhať >
-`--max-issues` s týmto scope odmietne (a limit je brána) >
-`--strict` len upozorní, že sa ignoruje >
+V CI to je job `module-quality`, ktorý tabuľku zapíše do zhrnutia behu
+a **nemôže** zlyhať
+`--max-issues` s týmto scope odmietne (a limit je brána)
+`--strict` len upozorní, že sa ignoruje
 a celý job má `continue-on-error`.
 Číslo, ktoré sa dá prečítať, ale nedá sa ním zablokovať merge.
 
@@ -247,19 +247,19 @@ a celý job má `continue-on-error`.
 | `mago lint` (katalóg) | : | **0** |
 
 Overené:
-`make mago-lint` 0, `make mago-guard` 0, `make lint` čistý >
-`make extract-check` OK (206 identických, 82 zaznamenaných divergencií) >
-phpstan a php-cs-fixer čisté, architektonické testy 94/94 >
-celá sada **804 testov / 6242 asertov** >
+`make mago-lint` 0, `make mago-guard` 0, `make lint` čistý
+`make extract-check` OK (206 identických, 82 zaznamenaných divergencií)
+phpstan a php-cs-fixer čisté, architektonické testy 94/94
+celá sada **804 testov / 6242 asertov**
 a modulová sada 539 testov proti naozaj nainštalovanému katalógu.
-(Tento článok k tomu číslu pridáva jednu asertu >
-jazyková brána `SlovakProseContractTest` číta každý obsahový súbor zvlášť >
+(Tento článok k tomu číslu pridáva jednu asertu
+jazyková brána `SlovakProseContractTest` číta každý obsahový súbor zvlášť
 takže bez neho je sada o jednu kratšia.)
 
 Dva dôsledky stoja za pomenovanie:
 
 - **Katalóg nie je držaný na úrovni jadra.** `phpstan` level 9 ho nečíta a
-  `mago analyze` nad ním nemá limit >
+  `mago analyze` nad ním nemá limit
     348 errorov je údaj, nie verdikt.
   Jediná statická brána nad modulovým kódom je `mago-lint`.
 - **Katalóg sa re-importuje.** Každý lokálny zásah do `modules/` je pri
@@ -267,10 +267,10 @@ Dva dôsledky stoja za pomenovanie:
   formatter vylúčený. Oprava sa preto robí v katalógu a vedome; ak by mala
   žiť, patrí do showroomu, z ktorého sa moduly berú.
 
-Nový je aj jeden záznam v `bin/build/kernel-divergence.txt` >
-`Request.php` má teraz typované čítania (`queryString()`, `bodyString()`) >
-takže sa líši od upstreamu >
-a brána `extract-check` to vie prečítať namiesto toho >
+Nový je aj jeden záznam v `bin/build/kernel-divergence.txt`
+`Request.php` má teraz typované čítania (`queryString()`, `bodyString()`)
+takže sa líši od upstreamu
+a brána `extract-check` to vie prečítať namiesto toho
 aby na to ticho padla.
 
 ---
@@ -300,12 +300,12 @@ make extract-check     # jadro proti upstream slice
 ## Záver
 
 Brána, ktorá vidí viac, nie je víťazstvo.
-Je to zoznam, ktorý treba prejsť >
-a v tomto prípade sa z neho dve triedy prejsť dali >
-jedna bola jeden defekt v 313 kópiách a druhá mala v sebe jednu časť >
+Je to zoznam, ktorý treba prejsť
+a v tomto prípade sa z neho dve triedy prejsť dali
+jedna bola jeden defekt v 313 kópiách a druhá mala v sebe jednu časť
 s jednou príčinou.
 Zvyšok zostal pomenovaný, zmeraný a publikovaný, nie vymazaný z reportu.
 
-To je celý rozdiel medzi meraním a bránou >
-**`mago analyze` nad katalógom smie ukazovať 348 errorov >
+To je celý rozdiel medzi meraním a bránou
+**`mago analyze` nad katalógom smie ukazovať 348 errorov
 `mago lint` nesmie ukázať ani jeden nález.**

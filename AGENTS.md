@@ -181,25 +181,26 @@ deciding which number fails; do not wire it into CI and leave that implied.
     `docs/kernel-status/` plus its row in the index: the state each number was
     read in, not a plan.
 13. **No em dash in prose.** The banned character is `—`; do not use it to
-    separate parts of a sentence. The separator in this tree is `>` (the
-    responsive.sk one): prose is hard-wrapped at about 76 characters, every line
-    but the last in a paragraph ends with ` >`, and the next line continues the
-    same sentence.
+    separate parts of a sentence. Prose is hard-wrapped at about 76 characters,
+    one sentence per line. The separator that once closed a mid-sentence line
+    (the responsive.sk `>`) was retired, because the break it marked is a wrap
+    and a reader does not need to see it; `docs/prose-rhythm.md` records the
+    decision and the measurement.
 
     ```text
-    A surface the kernel must render without any module installed still needs >
-    an answer: the site name, the active theme, the default locale >
-    the navigation menu.
+    A surface the kernel must render without any module installed still needs
+    an answer: the site name, the active theme, the default locale
+    and the navigation menu.
     ```
 
     The break falls on a clause boundary, never inside one: verb and object stay
     together, a noun keeps its attribute (`je náprotivok pre bežiacu session`),
     and a longer line is preferred to a broken phrase. A sentence that ends
-    starts a new line with no separator, because the period already ended it:
+    starts a new line, because the period already ended it:
 
     ```text
     Na tomto stroji bol doteraz ako okenný manažér XFCE.
-    Dnes je to Hyprland 0.56.2, ale XFCE sa neodstránilo >
+    Dnes je to Hyprland 0.56.2, ale XFCE sa neodstránilo,
     jedna session vedľa druhej.
     ```
 
@@ -209,30 +210,21 @@ deciding which number fails; do not wire it into CI and leave that implied.
     sentence lengths, is written in `docs/prose-rhythm.md`; it is an aid for the
     author, never a gate, and the ported numbers come from `nativa-minimal`.
 
-    The separator replaces the punctuation at the break instead of joining it:
-    write `the active theme > the default locale`, never
-    `the active theme, > the default locale`. A comma and a `>` in the same
-    place say the same thing twice.
-
     A conjunction that joins two clauses (`a`, `aj`, `ale`, `no`, `ani`, `či`,
     `lebo`, `pretože`, `takže`, `však`, `hoci`) starts a line and never ends
     one:
 
     ```text
-    náprotivok pre bežiacu session >
+    náprotivok pre bežiacu session,
     a v tejto session vracia prázdny výstup.
     ```
 
-    Never after a full stop, because the period already ends that sentence.
-    Never inline between two words, never alone on a line. A heading is the one
-    place the split stays inline, because a heading holds one line:
-    `## Časť IV > Title`; the renderer splits it into the prefix and the title
-    spans and echoes the `>` it was given.
-
-    `MarkdownRenderer` keeps the glyph and starts the continuation below it
-    (`&gt;<br>`), so it is visible on the page; a `>` line carrying text is
-    still an ordinary blockquote, and `tests/Content/MarkdownSeparatorTest.php`
-    pins both.
+    A heading is the one place the glyph is still written, because a heading
+    holds one line: `## Časť IV > Title`; the renderer splits it into the prefix
+    and the title spans and echoes the `>` it was given. A `>` line carrying
+    text is still an ordinary blockquote, and
+    `tests/Content/MarkdownBlockParagraphTest.php` pins the sentence break, the
+    soft wrap and the quote.
 
     It applies to everything written here: docs, articles, UI copy, commit
     messages and agent replies, in either language.
