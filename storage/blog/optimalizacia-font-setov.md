@@ -223,7 +223,7 @@ Oprava preto nie je „prepíš súbor", ale **nová URL s obsahom v názve**:
 
 ```
 /fonts/inter-400-0c9c05bd.woff2
-/fonts/roboto-condensed-400-c05481f9.woff2
+/fonts/roboto-condensed-400-99aca383.woff2
 ```
 
 Staré súbory zostali na svojich URL s pôvodnými bajtmi >
@@ -235,9 +235,11 @@ takže na griffe stránke prišlo každé `Č` v nadpise `Časť` z fallbacku >
 až do novembra.
 V novembri ten súbor ukázal na tie isté dve hashované URL >
 ktoré Boson používa od októbra.
-Súbor `roboto-condensed-400-c05481f9.woff2` potom dostal ešte jednu adresu >
-`roboto-condensed-400-99aca383.woff2` >
-lebo v ňom chýbal glyf `space` a medzery v nadpisoch kreslil fallback.
+Prvá oprava Roboto Condensed mala adresu `roboto-condensed-400-c05481f9.woff2` >
+a slovenské znaky v nej boli, no glyf `space` chýbal >
+takže medzery v nadpisoch kreslila až ďalšia rodina v reťazi.
+Druhá adresa je ten istý build s medzerou >
+a preto dnes Boson aj griffe používajú rovnaké čísla fallbacku.
 Admin ich nikdy nesťahoval >
 jeho písmo je Gilroy z `public/fonts/mark`.
 
