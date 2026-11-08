@@ -32,6 +32,10 @@ the measured state of the boot. Read this file before changing anything.
   of the `nativa-themes` repository, not a source: change a theme there, run
   `make themes-sync`, then re-install the module. `make themes-check` fails on a
   hand edit here and names the file.
+- **The public tree is generated.** `responsive-sk/nativa-core` is exported
+  from a commit of this one by `bin/build/export-core.sh`; the profile is
+  `bin/export/core/` and `make core-export-check` runs its own suite. A change
+  to the public tree is made here, never there.
 
 ## Bootstrap (once per clone)
 
@@ -238,6 +242,7 @@ deciding which number fails; do not wire it into CI and leave that implied.
 | the tools, the gates, the pins, the CI jobs | `toolchain.json` · `make gates` |
 | how a module is catalogued, installed, removed | `docs/modules.md` |
 | the measured boot state, round by round | `docs/kernel-status.md` · `docs/kernel-status/` |
+| what the public nativa-core tree carries, and what it drops | `bin/export/core/` · `make core-export-check` |
 | why a rule in `.gitignore` exists | `.gitignore` — every rule carries its reason |
 | what is being built, and what a test holds | `openspec/specs/` (shared) · `openspec/changes/` (local plans) |
 | why mago's scope and ceilings are what they are | `docs/mago-evaluation.md` |

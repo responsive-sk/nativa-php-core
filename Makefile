@@ -125,6 +125,29 @@ kernel-size: ## Measure the kernel shape (bytes, files, layers, interface/concre
 extract-check: ## Verify this tree against the upstream kernel slice
 	bin/build/extract-kernel.sh --check --minimal-root $(MINIMAL_ROOT)
 
+##@ Publishing the kernel
+# `nativa-core` is generated from a commit of this tree: the kernel, the module
+# catalogue and the Frontend sources, without the measurement log, the article
+# corpus, the Lekalo model or the plans. The source of truth stays here, so a
+# hand edit in the published repository is a defect rather than a fork.
+#
+# `core-export` writes a tree (default ../nativa-core); `core-export-check`
+# exports into a temporary directory and runs the exported suite, which is what
+# CI runs; `publish-core` replaces the public repository, and `--dry-run` shows
+# what it would push without a network call.
+CORE_TO ?=
+CORE_EXPORT_ARGS ?=
+PUBLISH_ARGS ?=
+
+core-export: ## Write the nativa-core tree from a commit (CORE_TO=<dir>, CORE_EXPORT_ARGS=--ref <commit>)
+	@bin/build/export-core.sh $(if $(CORE_TO),--to $(CORE_TO),) $(CORE_EXPORT_ARGS)
+
+core-export-check: ## Gate: the exported tree assembles, lints and passes its own suite
+	@bin/build/export-core.sh --check $(CORE_EXPORT_ARGS)
+
+publish-core: ## Replace the public nativa-core repository with a fresh export (PUBLISH_ARGS=--dry-run)
+	@bin/build/publish-core.sh $(PUBLISH_ARGS)
+
 ##@ Themes (the source is nativa-themes, not this tree)
 # The five theme modules are authored in `evan70/nativa-themes`; the catalogue
 # here is their copy, because `bin/cms module:add` installs from this tree.

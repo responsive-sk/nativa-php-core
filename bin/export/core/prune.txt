@@ -1,0 +1,57 @@
+# The nativa-core export: paths that stay in nativa-php-core.
+#
+# Format: <repo-relative path> [# reason]
+#
+# A path names a file or a directory, and a directory prunes its whole subtree.
+# The exporter FAILS when an entry matches nothing, so a path that moved is a
+# red run instead of a rule that quietly stopped pruning.
+#
+# Every line here is a decision. A file added to this tree and never classified
+# still ships, which is why the exported suite runs as part of the check.
+
+# The boot log, the approval ledgers, the article archive and the writing rules.
+# They record how THIS tree was built, and the numbers in them belong to it.
+docs
+
+# Content corpora. The export ships the storage skeleton and no articles.
+storage/blog
+storage/blog-images
+storage/pages
+
+# The architectural IR model and its lockfile. The model covers this tree's
+# modules; the exported Makefile has no target that reads it.
+lekalo
+lekalo.lock
+
+# The canonical specs and the local plan tree.
+openspec
+
+# Agent tooling and factory state. The export ships its own short AGENTS.md.
+.ai-factory
+.codex
+AGENTS.md
+CONTRIBUTING.md
+
+# Replaced by bin/export/core/<same name>: each of these names something the
+# export does not have, or asserts a floor that only this tree meets.
+Makefile
+toolchain.json
+phpunit.xml
+.github/workflows/ci.yml
+.gitignore
+README.md
+
+# Scripts that keep this tree in step with a sibling repository, measure this
+# tree's shape, or render the nativa-themes gallery. The exported Makefile
+# names none of them.
+bin/build/extract-kernel.sh
+bin/build/kernel-divergence.txt
+bin/build/sync-themes.sh
+bin/build/kernel-size.sh
+bin/build/render-theme-pages.php
+bin/build/lekalo-modules.sh
+bin/build/mago-modules-report.sh
+bin/ops/lekalo-reports.php
+
+# The profile itself, after it has been moved into place.
+bin/export

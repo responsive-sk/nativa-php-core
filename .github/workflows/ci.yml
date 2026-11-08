@@ -511,6 +511,12 @@ jobs:
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 
+      # The export is a public repository generated from this commit, so its
+      # own suite is a gate here: a profile that hides a broken export would
+      # otherwise stay green until someone cloned the public tree.
+      - name: Check the nativa-core export
+        run: make core-export-check
+
       # No pnpm, no build: nothing the kernel-only suite renders reads a bundle
       # (the kernel theme ships no CSS — see docs/kernel-status.md). The suite
       # asserts that `/mark` answers 404 here, which is the admin-is-a-module

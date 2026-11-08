@@ -116,3 +116,22 @@ value is still the operator's to change in `/mark` → Settings. A kernel-only
 checkout has the profile file but no `Settings` module to apply it with, so that
 build keeps the kernel defaults and says so — the failure that would matter
 (the module is installed, the profile is wrong) still fails the build.
+
+## The published tree
+
+`responsive-sk/nativa-core` is **generated** from a commit of this tree: the
+kernel, the module catalogue and the Frontend sources, without the boot log,
+the article corpus, the Lekalo model or the plans. It is a starting point for a
+site, not a second source. A change is made here and exported:
+
+```sh
+make core-export-check                     # the gate: assemble, lint, validate, run its suite
+make core-export CORE_TO=../nativa-core    # write the tree from HEAD
+make publish-core PUBLISH_ARGS=--dry-run   # what a publish would push
+```
+
+The profile is `bin/export/core/`: the prune list with a reason per path, the
+Makefile and CI the export ships, the PHPUnit exclusions, and the README and
+`AGENTS.md` the public tree carries.
+`docs/kernel-status/12-the-tree-we-publish-from.md` records the measured export
+and the three things this round did not close.

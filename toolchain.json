@@ -128,6 +128,30 @@
       "answers": "the kernel shape: bytes, files, layers, interface/concrete split"
     },
     {
+      "target": "core-export",
+      "tier": "repo",
+      "can_fail": false,
+      "answers": "writes the public nativa-core tree from a commit of this one (CORE_TO, --ref)"
+    },
+    {
+      "target": "core-export-check",
+      "tier": "repo",
+      "can_fail": true,
+      "answers": "does the exported tree assemble, keep its own registry, lint and pass its own PHPUnit suite",
+      "ci": [
+        {
+          "job": "tests",
+          "note": "a step beside composer test, after composer install"
+        }
+      ]
+    },
+    {
+      "target": "publish-core",
+      "tier": "repo",
+      "can_fail": false,
+      "answers": "replaces the public nativa-core repository with a fresh export (--dry-run prints it)"
+    },
+    {
       "target": "mago-modules",
       "tier": "catalogue",
       "can_fail": false,

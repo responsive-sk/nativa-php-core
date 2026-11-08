@@ -1,0 +1,24 @@
+# Tests excluded from the nativa-core export, one path and one reason per line.
+#
+# These are not failing tests. Their SUBJECT is the development of
+# nativa-php-core: an approval record under docs/, the Lekalo model, the
+# OpenSpec tree, or the article corpus. That material is not shipped, so the
+# test would fail on a missing fixture rather than on a defect.
+#
+# The exporter asserts every path here exists in the export and ends in
+# Test.php. A test that no longer exists is a stale exclusion and fails.
+#
+# Format: <repo-relative test path> [# reason]
+tests/Architecture/KernelShapeTest.php # its approval record is docs/kernel-shape.md
+tests/Architecture/MagoScopeContractTest.php # its analysis is docs/mago-evaluation.md
+tests/Architecture/NameOwnershipContractTest.php # its ledger is docs/name-ownership.md
+tests/Architecture/PersistedBooleanContractTest.php # its vocabulary is docs/boolean-vocabulary.md
+tests/Architecture/ToolchainRegistryContractTest.php # it asserts this tree's 25-target gate floor
+tests/Architecture/DocsCatalogContractTest.php # it asserts the guide map and the article archive
+tests/Architecture/SlovakProseContractTest.php # its corpus is storage/blog, docs/clanky and storage/pages
+tests/Architecture/ModelCatalogueContractTest.php # it reads lekalo/modules/
+tests/Architecture/ModelPayloadContractTest.php # it reads lekalo/modules/
+tests/Architecture/ModelReferenceContractTest.php # it reads lekalo/modules/
+tests/Architecture/ScenarioTestBindingContractTest.php # it reads openspec/ and would skip on every run here
+tests/Content/EmDashContractTest.php # it ratchets the em dash count of docs/
+tests/Content/ProseRhythmContractTest.php # its wrapped list is docs/ files
