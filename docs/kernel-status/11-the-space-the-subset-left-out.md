@@ -29,7 +29,7 @@ survive the font table.
 | space width at 100 px, Chromium | webfont 22.953 px; the table says 470/2048 = 22.949 |
 | the same space through `Roboto Condensed Fallback` | 24.625 px, 7 % wider, and still on the same line |
 | line box from 280 to 560 px wide, webfont blocked | 192 / 154 / 154 / 154 / 115 / 115 / 115 / 115 px, identical to the loaded run |
-| `public/dist/griffe/assets/griffe-KiqZ3wI6.css` | 25 426 B against a 27 000 budget; 305 B of it is the fallback pair |
+| `public/dist/griffe/assets/griffe-KiqZ3wI6.css` | 25 426 B against a 27 000 budget; the two fallback rules are 204 B and 215 B of it |
 | themes shipping a metric fallback | griffe, boson, erik; mono ships none because it ships no `@font-face` |
 
 The fallback numbers, per theme and per face:
@@ -73,8 +73,11 @@ describes.
 
 **The budget moved with a reason.** Griffe's frozen stylesheet had a 23 000
 byte ceiling from before it shipped the question and form blocks. It measures
-18 243 B, 20 954 B and 25 426 B in the three states the freeze test records,
-the last 305 B of which are the fallback pair, and the ceiling is 27 000. The
+18 243 B, 20 954 B and 25 426 B in the three states the freeze test records.
+The fallback pair inside the last one is 204 B and 215 B, 419 B together, while
+the rebuild that added them moved the file by 305 B, so the two numbers count
+different things and the docblock in `nativa-themes` that said "the last 305 B"
+was reading the delta as if it were the block. The ceiling is 27 000. The
 number lives in `nativa-themes`, not here: the copy under `modules/Themes/`
 is that repository's, and `make themes-check` fails on a hand edit. It is now
 `identical=19 diverged=0` against `nativa-themes@8d4a813`.
@@ -89,16 +92,22 @@ is now a sentence about when it stopped.
 
 - `GriffeBuildFreezeTest` holds the bundle to the ceiling and asserts that
   every `gr-*` class in the critical fallback exists in the build.
-- `BosonThemeTest` and `GriffeThemeTest` render the pages that carry the
-  headings, so a stack that loses a family fails a test rather than a page.
+- `tests/Theme/FontPreloadTest.php` reads the `@font-face` urls the theme's
+  inlined CSS declares and asserts each of them is preloaded once, before the
+  stylesheet, and exists on disk. That is what holds the new URL: a rename
+  that leaves the old file behind fails there.
 - `SlovakProseContractTest` and the prose-rhythm contract hold the article to
   the glossary and to the line-break rule; the first draft of the corrected
   paragraph ended a line on `nie` and was rejected.
 
-**What no test holds** is the space glyph itself. It was found with
-`fontTools`, by hand, and a rebuild that drops `U+0020` again returns silently:
-the stylesheet still parses, the bundle still fits, and the page still looks
-almost right. That is the cheapest open item in this round.
+**What no test holds** is the font stack. Nothing in `modules/Themes/*/tests`
+or `tests/Theme` reads a theme's `font-family` or its `size-adjust`, so a
+stack that loses `Roboto Condensed Fallback`, or a fallback pair whose
+percentages drift from the file, passes the whole suite. Nor does anything
+read the space glyph itself: a rebuild that drops `U+0020` returns silently,
+because the stylesheet still parses, the bundle still fits and the page still
+looks almost right. Both are cheap tests and the cheapest open items in this
+round.
 
 ## What the round did not close
 
