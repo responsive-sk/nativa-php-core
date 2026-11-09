@@ -9,7 +9,7 @@ use Modules\Blog\Domain\Entities\ArticleAuthor;
 use Modules\Core\Application\Services\MarkdownRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Paths\AppPaths;
-use Modules\Core\Infrastructure\Storage\LocalStorageProvider;
+use Modules\Uploads\Infrastructure\Storage\LocalStorageProvider;
 use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 

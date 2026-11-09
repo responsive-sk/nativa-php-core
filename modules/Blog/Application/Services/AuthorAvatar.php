@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Blog\Application\Services;
 
 use Modules\Core\Application\Services\MarkdownRenderer;
-use Modules\Core\Infrastructure\Storage\LocalStorageProvider;
+use Modules\Uploads\Infrastructure\Storage\LocalStorageProvider;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 
 /**

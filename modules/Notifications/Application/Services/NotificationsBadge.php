@@ -4,8 +4,8 @@ declare(strict_types = 1);
 
 namespace Modules\Notifications\Application\Services;
 
-use Modules\Core\Domain\Contracts\NavBadgeContract;
-use Modules\Core\Infrastructure\Attributes\AsNavBadge;
+use Modules\Navigation\Domain\Contracts\NavBadgeContract;
+use Modules\Navigation\Infrastructure\Attributes\AsNavBadge;
 use Modules\Notifications\Domain\SignedInUser;
 use Modules\Notifications\Interfaces\HTTP\NotificationsServices;
 

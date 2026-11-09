@@ -15,7 +15,7 @@ use Modules\Media\Infrastructure\Persistence\MediaRepository;
 use Modules\Media\Infrastructure\Storage\Providers\CloudinaryApi;
 use Modules\Media\Infrastructure\Storage\Providers\LocalStorageProviderAdapter;
 use Modules\Media\Interfaces\HTTP\MediaServices;
-use Modules\Core\Infrastructure\Storage\LocalStorageProvider;
+use Modules\Uploads\Infrastructure\Storage\LocalStorageProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 

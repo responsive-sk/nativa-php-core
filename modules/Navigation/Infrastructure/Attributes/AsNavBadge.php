@@ -2,9 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Core\Infrastructure\Attributes;
+namespace Modules\Navigation\Infrastructure\Attributes;
 
-use Modules\Core\Infrastructure\Registry\NavBadgeRegistry;
+use Modules\Navigation\Infrastructure\Registry\NavBadgeRegistry;
 
 /**
  * Marks a class as an admin-nav badge provider for auto-discovery.
@@ -15,7 +15,7 @@ use Modules\Core\Infrastructure\Registry\NavBadgeRegistry;
  * this keeps the tie-break explicit instead of accidental.
  *
  * The class MUST implement NavBadgeContract and have no required
- * constructor parameters (same constraint as #[AsMiddleware]).
+ * constructor parameters, like every other discovery port.
  *
  * @see NavBadgeContract
  * @see NavBadgeRegistry

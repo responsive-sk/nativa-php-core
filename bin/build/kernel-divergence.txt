@@ -16,7 +16,6 @@
 #
 # --- Rewritten surfaces: the edge cuts (Boots 3-9) ---------------------------
 DIVERGED src/Modules/Core/Application/Services/View/InlineCss.php # Boot 5: comment-strip fix, Mono renders through it
-DIVERGED src/Modules/Core/Infrastructure/Registry/NavBadgeRegistry.php # Boot 9: prose without the deleted MetricRegistry
 DIVERGED src/Modules/Core/Interfaces/HTTP/Actions/HomepageAction.php # Boot 4: kernel home from ShellContext + PageContext
 DIVERGED src/Modules/Core/Interfaces/HTTP/Actions/SitemapAction.php # Boot 6: home + locale roots only
 DIVERGED src/Modules/Core/Interfaces/HTTP/ContentServices.php # Boot 3: default locale through the shell port
@@ -189,9 +188,17 @@ DROPPED src/Modules/Core/Interfaces/HTTP/Actions/DocsIndexAction.php # moved to 
 DIVERGED src/Modules/Core/Infrastructure/Http/Request.php # 2026-10-27: queryString()/bodyString() — typed request reads beside header(); module actions use them instead of reading the field twice
 OWNED src/Modules/Core/Interfaces/HTTP/assets/scripts/docs-reader.js # 32d60a3: docs reader; upstream's docs surface is not in the slice
 OWNED src/Modules/Core/Domain/Contracts/SecurityEventSink.php # 4147809: the kernel's own security-event port
-OWNED src/Modules/Core/Domain/Contracts/Mailer.php # 5fcd2f8: mail contract for module-owned notifications
 OWNED src/Modules/Core/Domain/SubmitResult.php # 8c57c3c: submit answers as a type instead of an array
 OWNED src/Modules/Core/Domain/ThemeSetting.php # fea7c1e: a theme declares its admin-editable settings
 OWNED src/Modules/Core/Domain/ThemeSettingValues.php # fea7c1e: the values such settings hold
 OWNED src/Modules/Core/Interfaces/HTTP/Middleware/AdminUnavailableMiddleware.php # the admin prefix answers 404 when no module supplies the auth port
 OWNED Frontend/packages/nativa # the Nativa theme source; upstream packages do not carry it
+
+# --- Shared surfaces moved out (2026-11-09, round 4) --------------------------
+# Every consumer is a module; the kernel boots, dispatches and renders without
+# these classes. The owning module is named so the next import review knows
+# where the behaviour went.
+DROPPED src/Modules/Core/Domain/Contracts/NavBadgeContract.php # moved to modules/Navigation
+DROPPED src/Modules/Core/Infrastructure/Attributes/AsNavBadge.php # moved to modules/Navigation
+DROPPED src/Modules/Core/Infrastructure/Registry/NavBadgeRegistry.php # moved to modules/Navigation
+DROPPED src/Modules/Core/Infrastructure/Storage/LocalStorageProvider.php # moved to modules/Uploads

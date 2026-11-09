@@ -6,7 +6,7 @@ namespace Modules\Blog\Tests;
 
 use Modules\Blog\Application\Services\AuthorAvatar;
 use Modules\Core\Infrastructure\Paths\AppPaths;
-use Modules\Core\Infrastructure\Storage\LocalStorageProvider;
+use Modules\Uploads\Infrastructure\Storage\LocalStorageProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 

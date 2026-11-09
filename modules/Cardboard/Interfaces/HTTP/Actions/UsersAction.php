@@ -10,7 +10,7 @@ use Modules\Core\Application\Services\CacheInvalidator;
 use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
-use Modules\Core\Infrastructure\Storage\LocalStorageProvider;
+use Modules\Uploads\Infrastructure\Storage\LocalStorageProvider;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Security\Application\Services\PasswordHasher;

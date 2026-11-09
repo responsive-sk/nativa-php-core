@@ -9,7 +9,7 @@ use Modules\Core\Application\Services\AssetManager;
 use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Paths\AppPaths;
-use Modules\Core\Infrastructure\Registry\NavBadgeRegistry;
+use Modules\Navigation\Infrastructure\Registry\NavBadgeRegistry;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
 use Modules\Core\Interfaces\HTTP\ThemeResolver;
 use Modules\Core\Kernel\Contracts\RouterInterface;

@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Media\Infrastructure\Storage\Providers;
 
 use Modules\Core\Infrastructure\Env;
-use Modules\Core\Infrastructure\Storage\LocalStorageProvider;
+use Modules\Uploads\Infrastructure\Storage\LocalStorageProvider;
 
 /**
  * StorageProviderFactory — resolves the active MediaProviderInterface.

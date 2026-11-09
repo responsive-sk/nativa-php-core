@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Core\Infrastructure\Storage;
+namespace Modules\Uploads\Infrastructure\Storage;
 
 use Modules\Core\Infrastructure\Paths\AppPaths;
 

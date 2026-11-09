@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Media\Application\Services;
 
-use Modules\Core\Infrastructure\Storage\LocalStorageProvider;
+use Modules\Uploads\Infrastructure\Storage\LocalStorageProvider;
 use Modules\Media\Domain\Model\MediaAsset;
 use Modules\Media\Infrastructure\Cache\CloudinaryPreviewCache;
 use Modules\Media\Infrastructure\Persistence\MediaFolderRepository;

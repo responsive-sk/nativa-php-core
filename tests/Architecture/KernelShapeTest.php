@@ -91,7 +91,6 @@ final class KernelShapeTest extends TestCase
         'src/Modules/Core/Infrastructure/Attributes/AsMarkdownBlock.php',
         'src/Modules/Core/Infrastructure/Attributes/AsMiddleware.php',
         'src/Modules/Core/Infrastructure/Attributes/AsMigrator.php',
-        'src/Modules/Core/Infrastructure/Attributes/AsNavBadge.php',
         'src/Modules/Core/Infrastructure/Attributes/AsShellContextProvider.php',
         'src/Modules/Core/Infrastructure/Bootstrap/Bootstrapper.php',
         'src/Modules/Core/Infrastructure/Env.php',
@@ -99,9 +98,7 @@ final class KernelShapeTest extends TestCase
         'src/Modules/Core/Infrastructure/Http/Request.php',
         'src/Modules/Core/Infrastructure/Http/Response.php',
         'src/Modules/Core/Infrastructure/Paths/AppPaths.php',
-        'src/Modules/Core/Infrastructure/Registry/NavBadgeRegistry.php',
         'src/Modules/Core/Infrastructure/Session/FileSessionHandler.php',
-        'src/Modules/Core/Infrastructure/Storage/LocalStorageProvider.php',
         'src/Modules/Core/Interfaces/CLI/Support/DatabaseMigrator.php',
         'src/Modules/Core/Interfaces/HTTP/Actions/HomepageAction.php',
         'src/Modules/Core/Interfaces/HTTP/Actions/LlmsTxtAction.php',
@@ -146,6 +143,11 @@ final class KernelShapeTest extends TestCase
      * the "`ok` ⇒ no errors" invariant now in its constructors. It is a
      * `contract` row in docs/kernel-shape.md and stores nothing.
      *
+     * 63 → 60 is the shared-surface round: `Uploads` took
+     * `LocalStorageProvider`, and `Navigation` took `NavBadgeRegistry` and
+     * `AsNavBadge`; every consumer is a module, so the kernel no longer owns
+     * the discovery seam or the upload store.
+     *
      * 66 → 67 is the admin-prefix round: `AdminUnavailableMiddleware` answers
      * 404 for the admin prefix when no auth provider is wired. The kernel owns
      * the prefix, so the kernel is the only layer that can refuse a panel a
@@ -153,7 +155,7 @@ final class KernelShapeTest extends TestCase
      * `/mark` to a guest because the gate was never wired. One `runtime` row,
      * three importers (http.php and two tests).
      */
-    private const int MAX_APPROVED = 63;
+    private const int MAX_APPROVED = 60;
 
     /**
      * Rule 1: every `.php` file under `src/Modules/Core` is an interface, enum

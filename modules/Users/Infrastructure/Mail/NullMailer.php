@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Users\Infrastructure\Mail;
 
-use Modules\Core\Domain\Contracts\Mailer;
+use Modules\Users\Domain\Contracts\Mailer;
 
 /**
  * NullMailer — no transport is configured, so nothing is delivered and nothing

@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Users\Application\Services;
 
-use Modules\Core\Domain\Contracts\Mailer;
+use Modules\Users\Domain\Contracts\Mailer;
 use Modules\Core\Infrastructure\Env;
 use Modules\Users\Infrastructure\Mail\MailerFactory;
 use Modules\Settings\Interfaces\HTTP\SettingsServices;

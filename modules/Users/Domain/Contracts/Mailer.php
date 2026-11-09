@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Core\Domain\Contracts;
+namespace Modules\Users\Domain\Contracts;
 
 /**
  * Mailer — the kernel's port for one plain-text message to one address.

@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Users\Tests;
 
-use Modules\Core\Domain\Contracts\Mailer;
+use Modules\Users\Domain\Contracts\Mailer;
 use Modules\Users\Application\Services\AdminNotificationHandler;
 use Modules\Users\Application\Services\AdminNotifier;
 use PHPUnit\Framework\Attributes\Test;

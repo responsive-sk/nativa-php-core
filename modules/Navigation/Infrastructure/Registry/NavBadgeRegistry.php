@@ -2,10 +2,10 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Core\Infrastructure\Registry;
+namespace Modules\Navigation\Infrastructure\Registry;
 
-use Modules\Core\Domain\Contracts\NavBadgeContract;
-use Modules\Core\Infrastructure\Attributes\AsNavBadge;
+use Modules\Navigation\Domain\Contracts\NavBadgeContract;
+use Modules\Navigation\Infrastructure\Attributes\AsNavBadge;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 
 /**
@@ -134,18 +134,44 @@ final class NavBadgeRegistry
     }
 
     /**
-     * Extract the FQCN from a file body (namespace + class declaration).
+     * Extract the FQCN from a file body: its namespace declaration and its type
+     * declaration, and nothing else.
+     *
+     * A declaration starts a LINE (after optional whitespace and the modifiers
+     * PHP allows on a type) or a STATEMENT (after a `;`), so a compact
+     * `namespace Demo; class Thing {}` file still resolves — the failure mode
+     * here is silence, not an error, and a heuristic that is too strict trades
+     * one silent skip for another.
+     *
+     * What cannot be a declaration is PROSE. This used to take the FIRST mention
+     * of the keyword anywhere in the file, so a docblock sentence like "This
+     * class says the one thing..." resolved a type named `says`: the class did
+     * not exist, the file was skipped with no log line, and the badge silently
+     * disappeared. The registry was moved out of the kernel after that defect
+     * had already been fixed in its siblings; this is the same declaration-start
+     * resolver they use.
+     *
+     * tests/Discovery/TextFirstFqcnTest.php pins both halves for every registry
+     * that shares this shape.
      */
     private static function resolveFqcn(string $content): ?string
     {
-        if (!preg_match('/namespace\s+([\w\\\\]+)/', $content, $nsMatch)) {
-            return null;
+        $namespace = '';
+        $className = '';
+
+        if (preg_match('/(?:^|;)\s*namespace\s+([\w\\\\]+)\s*;/m', $content, $namespaceMatch)) {
+            $namespace = $namespaceMatch[1];
         }
-        if (!preg_match('/class\s+(\w+)/', $content, $cnMatch)) {
+
+        if (preg_match('/(?:^|;)\s*(?:(?:final|abstract|readonly)\s+)*class\s+(\w+)/m', $content, $classNameMatch)) {
+            $className = $classNameMatch[1];
+        }
+
+        if ('' === $namespace || '' === $className) {
             return null;
         }
 
-        return $nsMatch[1] . '\\' . $cnMatch[1];
+        return $namespace . '\\' . $className;
     }
 
     /**

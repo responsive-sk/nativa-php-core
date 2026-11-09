@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Users\Infrastructure\Mail;
 
-use Modules\Core\Domain\Contracts\Mailer;
+use Modules\Users\Domain\Contracts\Mailer;
 
 /**
  * HttpMailer — one HTTPS POST per message, in the JSON shape this tree already

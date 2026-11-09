@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Users\Infrastructure\Mail;
 
-use Modules\Core\Domain\Contracts\Mailer;
+use Modules\Users\Domain\Contracts\Mailer;
 use Modules\Core\Infrastructure\Env;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 

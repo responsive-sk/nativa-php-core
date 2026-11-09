@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "uploads",
+      "kind": "module",
+      "version": 1,
+      "description": "Uploads — the local upload store: extension and MIME validation, date-based storage paths and the public /storage/uploads URL."
+    }
+  ]
+}

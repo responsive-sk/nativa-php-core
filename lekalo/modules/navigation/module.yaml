@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "navigation",
+      "kind": "module",
+      "version": 1,
+      "description": "Navigation — the admin nav badge port and its attribute-driven discovery, kept out of the kernel because only admin and feature modules consume it."
+    }
+  ]
+}

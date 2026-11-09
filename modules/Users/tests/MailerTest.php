@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Users\Tests;
 
-use Modules\Core\Domain\Contracts\Mailer;
+use Modules\Users\Domain\Contracts\Mailer;
 use Modules\Users\Infrastructure\Mail\DevLogMailer;
 use Modules\Users\Infrastructure\Mail\HttpMailer;
 use Modules\Users\Infrastructure\Mail\MailerFactory;

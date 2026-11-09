@@ -2,20 +2,22 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Core\Domain\Contracts;
+namespace Modules\Navigation\Domain\Contracts;
 
-use Modules\Core\Infrastructure\Attributes\AsNavBadge;
-use Modules\Core\Infrastructure\Registry\NavBadgeRegistry;
+use Modules\Navigation\Infrastructure\Attributes\AsNavBadge;
+use Modules\Navigation\Infrastructure\Registry\NavBadgeRegistry;
 
 /**
  * NavBadgeContract — a module's count for one admin navigation item.
  *
- * The admin sidebar is kernel-owned chrome, so it cannot read
+ * The admin sidebar is shared chrome, so it cannot read
  * `QuestionsServices` (nor `CommentsServices`, nor anything else) without
  * becoming a second place that has to be edited when a module arrives. This
  * contract is the seam instead: a module declares WHICH nav item it speaks for
  * and HOW MANY, and the sidebar asks the registry — the same shape
- * `MetricContract` gives the dashboard, and the same auto-discovery.
+ * `MetricContract` gives the dashboard, and the same auto-discovery. The
+ * contract lives with its registry in `Navigation`; the admin layout is the
+ * consumer, not the owner.
  *
  * Two rules the sidebar relies on:
  *
@@ -31,8 +33,8 @@ use Modules\Core\Infrastructure\Registry\NavBadgeRegistry;
  *     normal state most of the time.
  *
  * A provider MUST have no required constructor parameters (same constraint as
- * `MetricContract` and `#[AsMiddleware]`); dependencies come from the owning
- * module's lazy factory.
+ * the other discovery ports); dependencies come from the owning module's lazy
+ * factory.
  *
  * What a badge is NOT: an unread marker. It is the depth of a work queue, so
  * it clears when the work is done (a question is moderated), not when somebody

@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Users\Tests;
 
-use Modules\Core\Domain\Contracts\Mailer;
+use Modules\Users\Domain\Contracts\Mailer;
 use Modules\Core\Domain\Permissions;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;

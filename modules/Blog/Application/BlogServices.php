@@ -14,7 +14,7 @@ use Modules\Blog\Application\Services\BlogFeedService;
 use Modules\Blog\Application\Services\BlogSearchService;
 use Modules\Blog\Application\Services\TaxonomyService;
 use Modules\Core\Infrastructure\Paths\AppPaths;
-use Modules\Core\Infrastructure\Storage\LocalStorageProvider;
+use Modules\Uploads\Infrastructure\Storage\LocalStorageProvider;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 
 /**

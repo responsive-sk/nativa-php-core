@@ -36,6 +36,7 @@ modules/Forms
 modules/Health
 modules/Locales
 modules/Media
+modules/Navigation
 modules/Notifications
 modules/Outbox
 modules/Pages
@@ -45,6 +46,7 @@ modules/Queue
 modules/Scheduler
 modules/Scratch
 modules/Security
+modules/Uploads
 modules/Users
 modules/Validation
 modules/Themes/Boson

@@ -8,7 +8,7 @@ use Modules\Core\Application\Services\DisposalRegistry;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Infrastructure\Paths\AppPaths;
-use Modules\Core\Infrastructure\Storage\LocalStorageProvider;
+use Modules\Uploads\Infrastructure\Storage\LocalStorageProvider;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\ErrorPageRenderer;
 use Modules\Media\Interfaces\HTTP\MediaServices;

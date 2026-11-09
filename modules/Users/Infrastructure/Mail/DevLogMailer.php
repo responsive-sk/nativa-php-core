@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Users\Infrastructure\Mail;
 
-use Modules\Core\Domain\Contracts\Mailer;
+use Modules\Users\Domain\Contracts\Mailer;
 
 /**
  * DevLogMailer — the development transport: the message is APPENDED to the log
