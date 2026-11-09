@@ -41,6 +41,8 @@ so the installed tree and `modules/` agree.
 - `src/Modules/Core`: **294 208 B / 61 files** (9 interface / 50 concrete).
 - `KernelShapeTest::MAX_APPROVED`: **49** (one runtime file replaced another).
 - Source suite: **1099 tests / 7272 assertions / 1 skipped**.
+- Fresh kernel-only checkout: **1059 tests / 3721 assertions / 867 skipped**,
+  zero errors; `/` answers 200 with the Organization block, `/mark` answers 404.
 - `make extract-check`: **199 identical / 89 recorded divergences**; the old
   Core path is `DROPPED` and `WebsiteStructuredData` is `OWNED`.
 - `make lekalo-check`: **35 modules**.
