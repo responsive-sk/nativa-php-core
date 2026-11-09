@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Pages\Interfaces\HTTP\Actions;
 
 use Modules\Markdown\Application\Services\MarkdownRenderer;
-use Modules\Core\Application\Services\StructuredDataService;
+use Modules\Core\Application\Services\WebsiteStructuredData;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
@@ -137,7 +137,7 @@ final class PageViewAction
             localeLinks: $links,
             hreflangLinks: $this->hreflangLinks($request, $links),
             ogType: 'website',
-            structuredData: StructuredDataService::website($seoTitle, $canonicalUrl),
+            structuredData: WebsiteStructuredData::website($seoTitle, $canonicalUrl),
             theme: $theme,
         ));
     }

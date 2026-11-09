@@ -70,7 +70,7 @@ final class KernelShapeTest extends TestCase
         'src/Modules/Core/Application/Services/DisposalRegistry.php',
         'src/Modules/Core/Application/Services/PreferenceVote.php',
         'src/Modules/Core/Application/Services/ShellContextProviderRegistry.php',
-        'src/Modules/Core/Application/Services/StructuredDataService.php',
+        'src/Modules/Core/Application/Services/WebsiteStructuredData.php',
         'src/Modules/Core/Application/Services/View/InlineCss.php',
         'src/Modules/Core/Application/Services/View/InlineJs.php',
         'src/Modules/Core/Application/Services/View/Paths.php',

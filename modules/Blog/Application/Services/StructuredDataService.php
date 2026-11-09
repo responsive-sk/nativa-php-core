@@ -2,12 +2,14 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Core\Application\Services;
+namespace Modules\Blog\Application\Services;
 
 /**
- * StructuredDataService — JSON-LD structured data builders (schema.org).
+ * StructuredDataService — the JSON-LD the blog's own surfaces announce.
  *
- * Each method returns a ready-to-inline JSON string for the
+ * Article, listing, category and author pages all build schema.org blocks here;
+ * the kernel home keeps only its own Organization + WebSite block. Each method
+ * returns a ready-to-inline JSON string for the
  * <script type="application/ld+json"> tag in FrontendLayout. JSON is encoded
  * with JSON_HEX_TAG so a `</script>` sequence inside any user-provided
  * value can never break out of the script element (XSS-safe by
@@ -19,40 +21,11 @@ namespace Modules\Core\Application\Services;
 final class StructuredDataService
 {
     /**
-     * Organization + WebSite for the homepage, including a SearchAction so
-     * Google can offer site search rich results (target /blog?q=…).
-     */
-    public static function website(string $name, string $url): string
-    {
-        $searchUrl = $url . 'blog?q={search_term_string}';
-
-        return self::encode([
-            [
-                '@context' => 'https://schema.org',
-                '@type'    => 'Organization',
-                'name'     => $name,
-                'url'      => $url,
-            ],
-            [
-                '@context'      => 'https://schema.org',
-                '@type'         => 'WebSite',
-                'name'          => $name,
-                'url'           => $url,
-                'potentialAction' => [
-                    '@type'       => 'SearchAction',
-                    'target'      => ['@type' => 'EntryPoint', 'urlTemplate' => $searchUrl],
-                    'query-input' => 'required name=search_term_string',
-                ],
-            ],
-        ]);
-    }
-
-    /**
      * Article + BreadcrumbList for a blog article page. $published is the
      * front-matter date (YYYY-MM-DD), $image an absolute cover URL or null.
      *
      * $blogName is the section's own word for itself, passed in for the same
-     * reason as everywhere else here: the kernel renders the trail, the module
+     * reason as everywhere else here: the surface renders the trail, the module
      * that owns the section names it.
      */
     public static function article(
@@ -99,8 +72,7 @@ final class StructuredDataService
      *
      * $homeUrl is passed rather than derived from $url because a listing is
      * locale-prefixed (`/en/blog`) and the root it hangs under is not. The name
-     * is the caller's: a kernel service does not know what the module that owns
-     * the listing calls itself.
+     * is the caller's: the builder does not know what the listing calls itself.
      */
     public static function collection(
         string $name,

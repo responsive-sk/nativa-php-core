@@ -7,7 +7,7 @@ namespace Modules\Blog\Interfaces\HTTP\Actions;
 use Modules\Blog\Application\BlogServices;
 use Modules\Blog\Application\Services\BlogArticleHelper;
 use Modules\Blog\Application\Services\BlogArticlesService;
-use Modules\Core\Application\Services\StructuredDataService;
+use Modules\Blog\Application\Services\StructuredDataService;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
