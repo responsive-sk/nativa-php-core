@@ -22,14 +22,15 @@ an answer:
 the site name, the active theme, the default locale
 the navigation menu.
 The kernel therefore owns the **port**
-an interface in `src/Modules/Core/`
+an interface in a kernel-owned namespace
+(here `src/Shell/`)
 and a module owns the implementation.
 
 The shape is always the same three parts:
 
 | part | owned by | example |
 |---|---|---|
-| the port (interface) | kernel | `Domain/Contracts/ShellContextProvider` |
+| the port (interface) | kernel | `Shell/ShellContextProvider` |
 | the discovery attribute | kernel | `#[AsShellContextProvider]` |
 | the registry that finds implementations | kernel | `ShellContextProviderRegistry` |
 | the implementation | module | `Settings` supplies the site's own answers |
