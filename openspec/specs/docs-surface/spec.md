@@ -29,7 +29,7 @@ token SHALL fall back to the index rather than to a result list.
 - THEN the page links that guide
 - AND every link it renders belongs to `DocsCatalog::keys()`
 
-- PINS: tests/Http/DocsSearchTest.php::aQueryAnswersFromThePublishedGuides
+- PINS: modules/Docs/tests/DocsSearchTest.php::aQueryAnswersFromThePublishedGuides
 
 #### Scenario: Syntax in the query is only punctuation
 
@@ -37,7 +37,7 @@ token SHALL fall back to the index rather than to a result list.
 - WHEN both are asked
 - THEN both answer with the same number of guides
 
-- PINS: tests/Http/DocsSearchTest.php::syntaxInTheQueryIsOnlyPunctuation
+- PINS: modules/Docs/tests/DocsSearchTest.php::syntaxInTheQueryIsOnlyPunctuation
 
 #### Scenario: The query comes back escaped
 
@@ -46,7 +46,7 @@ token SHALL fall back to the index rather than to a result list.
 - THEN the query is carried back in the sentence
 - AND the markup is escaped rather than emitted
 
-- PINS: tests/Http/DocsSearchTest.php::theQueryComesBackEscaped
+- PINS: modules/Docs/tests/DocsSearchTest.php::theQueryComesBackEscaped
 
 ### Requirement: A miss says so in its own words
 
@@ -61,7 +61,7 @@ deployment without `docs/` and false of a word that does not appear in them.
 - THEN the page says no guide matches
 - AND it does not say that no guides are published
 
-- PINS: tests/Http/DocsSearchTest.php::aQueryWithNoHitsSaysSo
+- PINS: modules/Docs/tests/DocsSearchTest.php::aQueryWithNoHitsSaysSo
 
 ### Requirement: The search surface is one heading and one section
 
@@ -81,7 +81,7 @@ air between a count and the first row.
 - AND the hits render after the count
 - AND the theme's index head and cards do not appear
 
-- PINS: tests/Http/DocsSearchTest.php::theHitsFollowTheCountUnderOneHeading
+- PINS: modules/Docs/tests/DocsSearchTest.php::theHitsFollowTheCountUnderOneHeading
 
 ### Requirement: One field, routed by section
 
@@ -101,7 +101,7 @@ leaves `/docs` searchable only by typing the URL.
 - THEN the docs page submits its field to `/docs`
 - AND the blog page keeps submitting to `/blog`
 
-- PINS: tests/Http/DocsSearchTest.php::theHeaderFieldFollowsTheSection
+- PINS: modules/Docs/tests/DocsSearchTest.php::theHeaderFieldFollowsTheSection
 
 #### Scenario: The index adds no field beside the shell's
 
@@ -110,7 +110,7 @@ leaves `/docs` searchable only by typing the URL.
 - THEN the page carries exactly the shell's fields
 - AND the kernel's section carries no form
 
-- PINS: tests/Http/DocsSearchTest.php::theIndexAddsNoSecondField
+- PINS: modules/Docs/tests/DocsSearchTest.php::theIndexAddsNoSecondField
 
 #### Scenario: A theme without a shell field gets one on the index
 
@@ -118,7 +118,7 @@ leaves `/docs` searchable only by typing the URL.
 - WHEN the index renders
 - THEN the kernel's section carries a field posting to `/docs`
 
-- PINS: tests/Http/DocsSearchTest.php::aThemeWithoutAShellFieldGetsOneOnTheIndex
+- PINS: modules/Docs/tests/DocsSearchTest.php::aThemeWithoutAShellFieldGetsOneOnTheIndex
 
 #### Scenario: A miss stays refinable without a shell field
 
@@ -126,7 +126,7 @@ leaves `/docs` searchable only by typing the URL.
 - WHEN a query carrying markup returns no hits
 - THEN the field carries the query back escaped
 
-- PINS: tests/Http/DocsSearchTest.php::aMissIsStillRefinableWithoutAShellField
+- PINS: modules/Docs/tests/DocsSearchTest.php::aMissIsStillRefinableWithoutAShellField
 
 #### Scenario: The index is searchable whatever the theme
 
@@ -134,4 +134,4 @@ leaves `/docs` searchable only by typing the URL.
 - WHEN a request for `/docs` without a query renders
 - THEN the page carries a search field posting to `/docs`
 
-- PINS: tests/Http/DocsSearchTest.php::theIndexIsAlwaysSearchableFromItsPage
+- PINS: modules/Docs/tests/DocsSearchTest.php::theIndexIsAlwaysSearchableFromItsPage

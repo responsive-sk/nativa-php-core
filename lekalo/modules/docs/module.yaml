@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "docs",
+      "kind": "module",
+      "version": 1,
+      "description": "Docs — the /docs publication surface: a catalogue of Markdown guides, search over the published entries and the reader that renders one guide inside the active theme."
+    }
+  ]
+}

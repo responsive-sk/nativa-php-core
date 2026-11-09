@@ -14,8 +14,9 @@
 docs
 
 # The catalogue: the export ships the Nativa theme and Settings, the only
-# implementation of the theme vote (`ShellContextProvider::theme()`). Every
-# other module is a dependency the register in
+# implementation of the theme vote (`ShellContextProvider::theme()`). Docs is a
+# module with no guides in this export, so it is pruned with the other
+# optional modules. Every other module is a dependency the register in
 # `openspec/changes/nativa-core-export/design.md` would have to name, and none
 # of them is a dependency of the theme itself. `modules/Settings` and
 # `modules/Themes/Nativa` stay.
@@ -30,6 +31,7 @@ modules/Blog
 modules/Cardboard
 modules/Clickhouse
 modules/Comments
+modules/Docs
 modules/Forms
 modules/Health
 modules/Locales

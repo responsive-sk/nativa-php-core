@@ -2,10 +2,10 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Core\Interfaces\HTTP\Actions;
+namespace Modules\Docs\Interfaces\HTTP\Actions;
 
-use Modules\Core\Application\Services\DocsCatalog;
-use Modules\Core\Application\Services\DocsSearchService;
+use Modules\Docs\Application\Services\DocsCatalog;
+use Modules\Docs\Application\Services\DocsSearchService;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
@@ -73,6 +73,9 @@ final readonly class DocsIndexAction
                 lang: DocsCatalog::LANGUAGE,
                 noindex: true,
                 theme: $theme,
+                searchAction: '/docs',
+                searchPlaceholder: 'Search guides',
+                searchLabel: 'Search guides',
             ));
         }
 
@@ -104,6 +107,9 @@ final readonly class DocsIndexAction
             lang: DocsCatalog::LANGUAGE,
             noindex: true,
             theme: $theme,
+            searchAction: '/docs',
+            searchPlaceholder: 'Search guides',
+            searchLabel: 'Search guides',
         ));
     }
 

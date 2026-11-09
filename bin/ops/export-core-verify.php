@@ -97,6 +97,7 @@ foreach ($required as $path) {
 
 $pruned = [
     'docs',
+    'modules/Docs',
     'lekalo',
     'lekalo.lock',
     'openspec',

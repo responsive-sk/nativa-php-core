@@ -70,8 +70,6 @@ final class KernelShapeTest extends TestCase
         'src/Modules/Core/Application/Services/ContentLocaleMapper.php',
         'src/Modules/Core/Application/Services/DiscoveryCache.php',
         'src/Modules/Core/Application/Services/DisposalRegistry.php',
-        'src/Modules/Core/Application/Services/DocsCatalog.php',
-        'src/Modules/Core/Application/Services/DocsSearchService.php',
         'src/Modules/Core/Application/Services/MarkdownRenderer.php',
         'src/Modules/Core/Application/Services/PageCacheService.php',
         'src/Modules/Core/Application/Services/PreferenceVote.php',
@@ -105,8 +103,6 @@ final class KernelShapeTest extends TestCase
         'src/Modules/Core/Infrastructure/Session/FileSessionHandler.php',
         'src/Modules/Core/Infrastructure/Storage/LocalStorageProvider.php',
         'src/Modules/Core/Interfaces/CLI/Support/DatabaseMigrator.php',
-        'src/Modules/Core/Interfaces/HTTP/Actions/DocsIndexAction.php',
-        'src/Modules/Core/Interfaces/HTTP/Actions/DocsPageAction.php',
         'src/Modules/Core/Interfaces/HTTP/Actions/HomepageAction.php',
         'src/Modules/Core/Interfaces/HTTP/Actions/LlmsTxtAction.php',
         'src/Modules/Core/Interfaces/HTTP/Actions/RobotsAction.php',
@@ -157,7 +153,7 @@ final class KernelShapeTest extends TestCase
      * `/mark` to a guest because the gate was never wired. One `runtime` row,
      * three importers (http.php and two tests).
      */
-    private const int MAX_APPROVED = 67;
+    private const int MAX_APPROVED = 63;
 
     /**
      * Rule 1: every `.php` file under `src/Modules/Core` is an interface, enum

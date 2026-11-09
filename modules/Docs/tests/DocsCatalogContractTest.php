@@ -2,9 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace Tests\Architecture;
+namespace Modules\Docs\Tests;
 
-use Modules\Core\Application\Services\DocsCatalog;
+use Modules\Docs\Application\Services\DocsCatalog;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -36,6 +36,13 @@ use PHPUnit\Framework\TestCase;
  */
 final class DocsCatalogContractTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        if (!class_exists(DocsCatalog::class)) {
+            $this->markTestSkipped('Docs is not installed — the catalogue under test is a Docs module.');
+        }
+    }
+
     /**
      * Drafts in `docs/clanky/` that have no blog pendant YET. Named rather than
      * derived: a draft that was never published is not an error, a draft nobody
@@ -173,7 +180,7 @@ final class DocsCatalogContractTest extends TestCase
 
         self::assertNotNull($guide, sprintf('"%s" has no readable body.', $key));
 
-        $file = (string) file_get_contents(sprintf('%s/docs/%s.md', dirname(__DIR__, 2), $key));
+        $file = (string) file_get_contents(sprintf('%s/docs/%s.md', dirname(__DIR__, 3), $key));
 
         self::assertMatchesRegularExpression(
             '/^#\s+\S/m',
@@ -235,7 +242,7 @@ final class DocsCatalogContractTest extends TestCase
     #[Test]
     public function theArticleArchiveNeverLeaksIntoTheGuideSurface(): void
     {
-        $root = dirname(__DIR__, 2);
+        $root = dirname(__DIR__, 3);
         $archive = glob($root . '/docs/clanky/*.md') ?: [];
 
         self::assertNotSame([], $archive, 'docs/clanky/ is gone — this check is reading nothing.');

@@ -2,13 +2,13 @@
 
 declare(strict_types = 1);
 
-namespace Tests\Http;
+namespace Modules\Docs\Tests;
 
-use Modules\Core\Application\Services\DocsCatalog;
-use Modules\Core\Application\Services\DocsSearchService;
+use Modules\Docs\Application\Services\DocsCatalog;
+use Modules\Docs\Application\Services\DocsSearchService;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
-use Modules\Core\Interfaces\HTTP\Actions\DocsIndexAction;
+use Modules\Docs\Interfaces\HTTP\Actions\DocsIndexAction;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\ThemeKernel;
 use Modules\Core\Interfaces\HTTP\ThemeRegistry;
@@ -46,6 +46,10 @@ final class DocsSearchTest extends TestCase
      */
     protected function setUp(): void
     {
+        if (!class_exists(DocsCatalog::class)) {
+            $this->markTestSkipped('Docs is not installed — the surface under test is a Docs module.');
+        }
+
         if (ThemeKernel::for(self::THEME)->name() !== self::THEME) {
             $this->markTestSkipped(self::THEME . ' is not installed, so its header and index markup do not exist here.');
         }
@@ -152,7 +156,15 @@ final class DocsSearchTest extends TestCase
     #[Test]
     public function theHeaderFieldFollowsTheSection(): void
     {
-        $docsPath = FrontendLayout::render('t', 'c', currentPath: '/docs', theme: self::THEME);
+        $docsPath = FrontendLayout::render(
+            't',
+            'c',
+            currentPath: '/docs',
+            theme: self::THEME,
+            searchAction: '/docs',
+            searchPlaceholder: 'Search guides',
+            searchLabel: 'Search guides',
+        );
         $blogPath = FrontendLayout::render('t', 'c', currentPath: '/blog', theme: self::THEME);
 
         self::assertStringContainsString('action="/docs" role="search"', $docsPath);

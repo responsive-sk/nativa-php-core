@@ -16,7 +16,6 @@ tests/Architecture/MagoScopeContractTest.php # its analysis is docs/mago-evaluat
 tests/Architecture/NameOwnershipContractTest.php # its ledger is docs/name-ownership.md
 tests/Architecture/PersistedBooleanContractTest.php # its vocabulary is docs/boolean-vocabulary.md
 tests/Architecture/ToolchainRegistryContractTest.php # it asserts this tree's 25-target gate floor
-tests/Architecture/DocsCatalogContractTest.php # it asserts the guide map and the article archive
 tests/Architecture/SlovakProseContractTest.php # its corpus is storage/blog, docs/clanky and storage/pages
 tests/Architecture/ModelCatalogueContractTest.php # it reads lekalo/modules/
 tests/Architecture/ModelPayloadContractTest.php # it reads lekalo/modules/
@@ -42,5 +41,4 @@ tests/Theme/ThemeClassOwnershipTest.php # its shared-contract ledger needs two t
 tests/Architecture/AdminClassContractTest.php # its stylesheet rules belong to Cardboard, which is not catalogued
 tests/Discovery/AuthProviderRegistryTest.php # it needs a module that ships an auth provider; none is shipped
 tests/Http/AuthMiddlewareDenialTest.php # its payload is the Outbox vocabulary, which is not shipped
-tests/Http/DocsSearchTest.php # it queries the guides a Boson install publishes; no guide is shipped
 tests/Theme/FontPreloadTest.php # it needs a theme that declares a webfont; Nativa declares none by design

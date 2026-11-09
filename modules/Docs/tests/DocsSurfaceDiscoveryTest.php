@@ -2,14 +2,15 @@
 
 declare(strict_types = 1);
 
-namespace Tests\Http;
+namespace Modules\Docs\Tests;
 
-use Modules\Core\Application\Services\DocsCatalog;
+use Modules\Docs\Application\Services\DocsCatalog;
 use Modules\Core\Domain\AdminRoutePolicy;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Actions\LlmsTxtAction;
 use Modules\Core\Interfaces\HTTP\Actions\SitemapAction;
+use Modules\Core\Interfaces\HTTP\Router;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
@@ -31,6 +32,13 @@ use ReflectionMethod;
  */
 final class DocsSurfaceDiscoveryTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        if (!class_exists(DocsCatalog::class)) {
+            $this->markTestSkipped('Docs is not installed — the surface under test is a Docs module.');
+        }
+    }
+
     /**
      * `/docs` is deliberately NOT in the sitemap: the guide surface carries
      * `noindex` and no canonical, and the sitemap's own contract is "every
@@ -65,7 +73,7 @@ final class DocsSurfaceDiscoveryTest extends TestCase
     #[Test]
     public function llmsTxtAdvertisesTheDocumentationSurface(): void
     {
-        $body = self::render(new LlmsTxtAction());
+        $body = self::render(self::llms());
 
         // The links are absolutized against the request host, so the check is on
         // the path suffix rather than on the markdown placeholder form.
@@ -87,7 +95,7 @@ final class DocsSurfaceDiscoveryTest extends TestCase
     #[Test]
     public function neitherSurfaceAdvertisesAModuleRoute(): void
     {
-        foreach (['sitemap' => new SitemapAction(), 'llms.txt' => new LlmsTxtAction()] as $name => $action) {
+        foreach (['sitemap' => new SitemapAction(), 'llms.txt' => self::llms()] as $name => $action) {
             $body = self::render($action);
 
             // The admin prefix is spelled by its owner, not retyped here: this
@@ -121,6 +129,15 @@ final class DocsSurfaceDiscoveryTest extends TestCase
 
         self::assertNotSame([], $keys, 'PUBLISHED is empty — llms.txt would advertise a surface with nothing behind it.');
         self::assertContains('intro', $keys, 'The guide the index opens with is no longer published.');
+    }
+
+    /**
+     * The llms.txt surface with this tree's routes, so the docs link is present
+     * only because the Docs module is installed here.
+     */
+    private static function llms(): LlmsTxtAction
+    {
+        return new LlmsTxtAction(new Router([APP_BASE_PATH . '/src/Modules']));
     }
 
     private static function render(object $action): string

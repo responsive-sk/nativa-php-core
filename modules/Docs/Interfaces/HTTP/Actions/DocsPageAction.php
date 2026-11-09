@@ -2,9 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Core\Interfaces\HTTP\Actions;
+namespace Modules\Docs\Interfaces\HTTP\Actions;
 
-use Modules\Core\Application\Services\DocsCatalog;
+use Modules\Docs\Application\Services\DocsCatalog;
 use Modules\Core\Application\Services\MarkdownRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
