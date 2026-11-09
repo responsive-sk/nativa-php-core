@@ -167,3 +167,57 @@ repository with `--dry-run` printing what it would push.
 - The exported theme modules are a copy. A theme change lands in
   `nativa-themes`, then here, then in the export, and the exported README says
   so.
+
+## The dead-weight round (2026-11-09)
+
+The third round asked what the export still carried that no shipped file reads.
+The answer was measured, not guessed: `git ls-files` plus a reader search for
+each candidate, then a check that the reader itself survives the cut. Two
+candidates failed that check and stayed: `public/demo` had a reader in the dist
+smoke test, and `public/fonts` looked used by the font-preload code but no
+shipped stylesheet writes a `url()` into it.
+
+| candidate | files | bytes | reader before | decision |
+|---|---:|---:|---|---|
+| `public/fonts` | 12 | 402 864 | none: no `@font-face` and no `url(/fonts/...)` in the export | pruned |
+| `public/demo` | 5 | 522 976 | `build-dist.sh` checked `/demo/hero-*.jpg` for Mono's slider, and Mono is not shipped | pruned; probe moved to `favicon.svg` |
+| excluded tests | 27 | 402 316 | copied into the export, then silenced by `<exclude>`; never ran | not copied at all |
+| `bin/build/admin-smoke.sh` | 1 | 50 454 | the profile's `make admin-smoke`, which exits 1 on a fresh export (`::error::Audit is not installed`) | pruned, target removed |
+| `bin/generate/` | 3 | 23 537 | Forms and Questions stylesheet generators; both modules are pruned | pruned |
+| `bin/build/clickhouse-smoke.sh` | 1 | 22 389 | ClickHouse is pruned and no profile target ran it | pruned |
+| `fixtures/` | 2 | 12 482 | only `render-theme-pages.php`, which is pruned | pruned |
+| `bin/build/build-prod.sh` | 1 | 1 689 | calls the pruned `extract-kernel.sh`; no target | pruned |
+
+| measured | before | after |
+|---|---|---|
+| files in the tree | 260 | **208** |
+| tracked bytes | 2 753 619 | **1 313 391** |
+| pruned paths | 68 | **75** |
+| exported Make targets | 18 | **17** |
+| excluded tests in the tree | 27 | **0** |
+| exported `phpunit.xml` | 27 `<exclude>` entries | **none** |
+| CI | 9/9 | **9/9** (run 42603465179) |
+
+Source commits: `971badf` (fonts, fixtures, generators, two dead tools),
+`6018aba` (demo art and the dist probe), `24ef8cd` (excluded tests are not
+copied), `8ac9b22` (the admin gate the export cannot run), `31d6e19` (the
+trait PHPStan only saw through an excluded test). Published marker: source
+`31d6e19`, public commit `0172cf1`.
+
+Two findings are worth keeping:
+
+- `make admin-smoke` was a red gate on every fresh export while the design
+  claimed every profile target runs on a fresh clone. The script installs nine
+  modules the catalogue does not carry; the target and the script left the
+  export, and `SECURITY.md` now says the gate belongs to this repository.
+- Removing the excluded tests deleted the only analysed user of
+  `ResolvesRouteUrls`. PHPStan's `trait.unused` rule does not know that the
+  trait's real users are module slices outside its deliberately kernel-only
+  scope, so the trait carries a scoped `@phpstan-ignore` with that reason. The
+  contract stayed; the false positive did not.
+
+Measured in a clean clone of the published tree, after `make modules-install`
+and `php bin/cms migrate`: **202 tests, 742 assertions, 0 skipped**; with
+`config/deploy.php` applied, `/` answers 200 with 16 `na-card`, `/docs` 200,
+`/sitemap.xml` 200, `/mark` 404, and `/demo/hero-1.jpg` 404 because the
+photography is no longer shipped.
