@@ -137,7 +137,17 @@ build_row() {
         cp -a "$d" "$row/modules/"
     done
 
-    ln -s "$ROOT/vendor" "$row/vendor"
+    # NOT a symlink: Composer resolves `$baseDir` from the autoloader's own
+    # `__DIR__`, so a symlinked vendor points every `Modules\...` class back at
+    # the source tree — the row would run the source's installed slices and
+    # measure the wrong tree (the export gate documents the same trap).
+    # Hardlinks keep the bytes cheap while each row keeps its own path; a
+    # different filesystem (the default /tmp) cannot hardlink, so fall back to
+    # a real copy rather than a symlink for the reason above.
+    if ! cp -al "$ROOT/vendor" "$row/vendor" 2>/dev/null; then
+        rm -rf "$row/vendor"
+        cp -a "$ROOT/vendor" "$row/vendor"
+    fi
     cp "$ROOT/bin/lab/core.env" "$row/.env"
 
     ( cd "$row" && php bin/cms module:add Nativa >/dev/null )
