@@ -9,7 +9,7 @@ read port for the rate-limit fallback and no cache policy of its own.
 
 - `src/Modules/Core`: **324 809 B / 63 files** (8 interface / 53 concrete).
 - `KernelShapeTest::MAX_APPROVED`: **52**.
-- Source suite: **1099 tests / 7271 assertions / 1 skipped**.
+- Source suite: **1099 tests / 7272 assertions / 1 skipped**.
 
 ## What moved
 
@@ -49,12 +49,19 @@ module is absent, so a fresh kernel-only checkout starts clean.
 
 - `src/Modules/Core`: **298 995 B / 61 files** (9 interface / 50 concrete).
 - `KernelShapeTest::MAX_APPROVED`: **52 -> 49**.
-- Source suite: **1099 tests / 7271 assertions / 1 skipped**.
+- Source suite: **1099 tests / 7272 assertions / 1 skipped**.
+- Fresh kernel-only checkout: **1059 tests / 3721 assertions / 867 skipped**,
+  zero errors; `/mark` answers **404**.
 - `make extract-check`: **199 identical / 89 recorded divergences**; the three
-  moved paths are `DROPPED` with `modules/PageCache` named.
+  moved paths are `DROPPED` with `modules/PageCache` named, and the new
+  `PageCacheReader` port is `OWNED`.
 - `make lekalo-check`: **35 modules**.
-- `make lint`, `composer phpstan`, `make analyze`, `make mago-lint`,
-  `make mago-guard` and `make core-export-check` are green.
+- `make lint`, `composer phpstan`, `make analyze`, `make mago-lint` and
+  `make mago-guard` are green.
+- Export from `f44969f`: **183 files / 169 tests / 439 assertions / 52 skipped**;
+  `make core-export-check` is green.
+- With `PAGE_CACHE=1`, a guest request to `/` is served from the module cache
+  with `X-Cache: HIT`; `/mark` still redirects (302).
 
 ## Still open
 
