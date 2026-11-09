@@ -61,6 +61,11 @@ stack: it adds two files and no database.
   `make mago-guard` are green.
 - Export: **183 files / 169 tests / 436 assertions / 52 skipped**;
   `make core-export-check` is green.
+- Source CI: **16/16 jobs**, run `42642382385` on `1be6e4c`.
+- Published export: `responsive-sk/nativa-core@2297e0e`, generated from source
+  `1be6e4c`; public CI is **9/9 jobs**, run `42642654048`.
+- Published kernel-only clone: `/` and `/sitemap.xml` = 200, `/mark` = 404; the
+  shipped catalogue is `ContentLocale`, `Settings` and `Themes/Nativa`.
 
 ## Still open
 
