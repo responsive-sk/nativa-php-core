@@ -149,7 +149,7 @@ publish-core: ## Replace the public nativa-core repository with a fresh export (
 	@bin/build/publish-core.sh $(PUBLISH_ARGS)
 
 ##@ Themes (the source is nativa-themes, not this tree)
-# The five theme modules are authored in `evan70/nativa-themes`; the catalogue
+# The six theme modules are authored in `evan70/nativa-themes`; the catalogue
 # here is their copy, because `bin/cms module:add` installs from this tree.
 # `themes-check` is the gate — a hand edit under modules/Themes/ is drift, not
 # a fix, and `themes-sync` is how a reviewed change lands.

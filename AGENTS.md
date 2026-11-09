@@ -177,10 +177,10 @@ deciding which number fails; do not wire it into CI and leave that implied.
     `CONTRIBUTING.md`; `docs/`, the specs, commit messages and this file are
     English. A Czech character in an article fails `SlovakProseContractTest`.
 11. **Runtime state is never committed:** `src/Modules/<Name>`,
-    `storage/data|logs|cache|sessions|uploads`, `public/dist`. The two frozen
-    bundles `griffe` and `mono` are committed on purpose and edited only by
-    rebuilding them — `GriffeBuildFreezeTest` and `MonoBuildFreezeTest` fail on
-    a hand edit.
+    `storage/data|logs|cache|sessions|uploads`, `public/dist`. The three frozen
+    bundles `griffe`, `mono` and `nativa` are committed on purpose and edited
+    only by rebuilding them — `GriffeBuildFreezeTest`, `MonoBuildFreezeTest` and
+    `NativaBuildFreezeTest` fail on a hand edit.
 12. **Measured, not remembered.** A larger change earns a part under
     `docs/kernel-status/` plus its row in the index: the state each number was
     read in, not a plan.

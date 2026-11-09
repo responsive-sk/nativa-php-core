@@ -33,7 +33,7 @@ without it.
 | syntax highlighting ships in the package or the module, or the theme is listed in `WITHOUT_HIGHLIGHT` with a reason | `ThemeAssetCompletenessTest` |
 | no import of a feature module enters the install closure | `KernelCouplingTest`, `ThemeClassOwnershipTest` |
 
-Measured file sets (all five satisfy the contract today):
+Measured file sets (all six satisfy the contract today):
 
 ```
 Boson     4 files  180 KB   Theme/BosonTheme.php, assets/critical/boson.css (2 906 r.),
@@ -42,6 +42,7 @@ Erik      3 files   52 KB   Theme/ErikTheme.php, assets/critical/erik.css (355 r
 Griffe    4 files   76 KB   Theme/GriffeTheme.php, assets/critical/griffe.css (281 r.), 2 tests
 Jednotka  3 files   88 KB   Theme/JednotkaTheme.php, assets/scripts/theme-init.js, tests
 Mono      5 files  115 KB   Theme/MonoTheme.php, assets/critical/{mono,mo-variants}.css, 2 tests
+Nativa    4 files   68 KB   Theme/NativaTheme.php, assets/critical/nativa.css (862 r.), 2 tests
 ```
 
 Two asymmetries the contract does **not** cover, and they are the reason a separate theme
@@ -116,11 +117,11 @@ package — a green `make assets` is not evidence that every theme was built.
 ## `evan70/nativa-themes`: the theme repository, measured 2026-10-21
 
 Updated after the repository became the themes' home (`af593f7`, `134c79a`). It holds **224
-tracked files** — 19 of them the theme modules — and two things, and the split is the point:
+tracked files** — 23 of them the theme modules — and two things, and the split is the point:
 
 | path | what it is | edited there? |
 |---|---|---|
-| `modules/Themes/<Name>/` | the five kernel themes — the **source** | yes |
+| `modules/Themes/<Name>/` | the six kernel themes — the **source** | yes |
 | `boson/`, `jednotka/`, `mono/`, `starter/`, `erik/`, `magazine/`, `moonshine/`, `font-set/` | the static gallery (60 pages) | generated, or hand-written against the theme's class names |
 | `src/`, `build/` | the gallery's copies of `nativa-minimal`'s frontend sources | no — `pnpm run sync` deletes and recopies them |
 
@@ -154,7 +155,7 @@ The gallery stays at the repository root and is a **consumer**: `modules/` is no
 package and Vite reads only its explicit inputs, so nothing collides; moving the gallery into
 `gallery/` would rewrite every input path, `publicDir`, the sync map and the Pages artifact
 path for no benefit. Its own gate, `pnpm run sync:check`, protects the gallery's `src/`
-against `nativa-minimal` — **it does not protect the five theme modules**, and `RULES.md`
+against `nativa-minimal` — **it does not protect the six theme modules**, and `RULES.md`
 says so in those words. `pages.yml` uploads `dist/` from the root and deliberately does not run
 `sync:check` (the upstream checkout is private, so a runner could only report "skipped").
 

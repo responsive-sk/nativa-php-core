@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "nativa",
+      "kind": "module",
+      "version": 1,
+      "description": "Nativa — the house public theme: a serif display stack, an asymmetric hero and a numbered card grid over the na- vocabulary."
+    }
+  ]
+}

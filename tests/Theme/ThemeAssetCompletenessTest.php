@@ -46,6 +46,7 @@ final class ThemeAssetCompletenessTest extends TestCase
      */
     private const array WITHOUT_HIGHLIGHT = [
         'kernel' => 'no JS by design: one hand-written CSS file, no build (KernelThemeTest pins it)',
+        'nativa' => 'the house theme bundles one behaviour (the TOC scrollspy) and imports no highlighter, so code blocks render in one colour',
     ];
 
     #[Test]

@@ -73,6 +73,7 @@ src/Modules/*
 # Freeze exception (follow-up: mono): same contract as griffe above, guarded
 # by MonoBuildFreezeTest.
 !/public/dist/mono/
+!/public/dist/nativa/
 
 # pnpm workspace dependencies (Frontend/packages). The theme SOURCES are
 # tracked — they are what `make assets` builds; node_modules and pnpm's

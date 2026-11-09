@@ -3,7 +3,7 @@
 # =============================================================================
 # sync-themes.sh — the theme catalogue, copied from its repository or verified.
 # =============================================================================
-# The five kernel themes (Boson, Erik, Griffe, Jednotka, Mono) are edited in
+# The six kernel themes (Boson, Erik, Griffe, Jednotka, Mono, Nativa) are edited in
 # `evan70/nativa-themes` under `modules/Themes/<Name>/`. This tree keeps a
 # catalogue at the same path because `bin/cms module:add <Name>` installs from
 # here — but the catalogue is a **copy**, never a second source. Without a gate
@@ -61,6 +61,7 @@ THEMES=(
     "Griffe"
     "Jednotka"
     "Mono"
+    "Nativa"
 )
 
 usage() {
