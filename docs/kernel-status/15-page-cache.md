@@ -57,11 +57,14 @@ module is absent, so a fresh kernel-only checkout starts clean.
   `PageCacheReader` port is `OWNED`.
 - `make lekalo-check`: **35 modules**.
 - `make lint`, `composer phpstan`, `make analyze`, `make mago-lint` and
-  `make mago-guard` are green.
-- Export from `f44969f`: **183 files / 169 tests / 439 assertions / 52 skipped**;
+  `make mago-guard` are green.- Export from `f44969f`: **183 files / 169 tests / 439 assertions / 52 skipped**;
   `make core-export-check` is green.
+- Source CI: **16/16 jobs**, run `42634516921` on `32ece96`.
+- Published export: `responsive-sk/nativa-core@e825eb3`, generated from source
+  `32ece96`; public CI is **9/9 jobs**, run `42634790434`.
 - With `PAGE_CACHE=1`, a guest request to `/` is served from the module cache
   with `X-Cache: HIT`; `/mark` still redirects (302).
+- Published kernel-only clone: `/` = 200, `/mark` = 404.
 
 ## Still open
 
