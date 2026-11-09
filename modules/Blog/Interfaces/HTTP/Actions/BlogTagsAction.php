@@ -13,7 +13,7 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Themes\FrontendLayout;
-use Modules\Core\Interfaces\HTTP\PageContext;
+use Shell\PageContext;
 use Themes\ThemeKernel;
 use Themes\ThemeResolver;
 use Modules\Locales\Interfaces\HTTP\LocalesServices;

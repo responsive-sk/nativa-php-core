@@ -19,7 +19,7 @@ use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Themes\FrontendLayout;
 use Modules\Markdown\Interfaces\HTTP\Markdown\MarkdownBlockContext;
-use Modules\Core\Interfaces\HTTP\PageContext;
+use Shell\PageContext;
 use Themes\ThemeKernel;
 use Themes\ThemeResolver;
 use Modules\Locales\Domain\Model\Locale;

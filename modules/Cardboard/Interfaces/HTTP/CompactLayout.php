@@ -7,7 +7,7 @@ namespace Modules\Cardboard\Interfaces\HTTP;
 use View\ViewRenderer;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
-use Modules\Core\Application\Services\ShellContextProviderRegistry;
+use Shell\ShellContextProviderRegistry;
 use Modules\Core\Kernel\Contracts\RouterInterface;
 
 /**

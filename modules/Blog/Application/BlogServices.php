@@ -105,7 +105,7 @@ final class BlogServices
 
     public static function brandSuffix(): string
     {
-        return \Modules\Core\Application\Services\ShellContextProviderRegistry::siteName()
+        return \Shell\ShellContextProviderRegistry::siteName()
             ?? \Themes\FrontendLayout::DEFAULT_SITE_NAME;
     }
 

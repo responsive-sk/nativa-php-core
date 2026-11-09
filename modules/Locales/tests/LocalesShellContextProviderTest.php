@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Locales\Tests;
 
-use Modules\Core\Application\Services\ShellContextProviderRegistry;
+use Shell\ShellContextProviderRegistry;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Locales\Application\Services\LocaleService;

@@ -67,15 +67,12 @@ final class KernelShapeTest extends TestCase
         'src/Modules/Core/Application/Services/DiscoveryCache.php',
         'src/Modules/Core/Application/Services/DisposalRegistry.php',
         'src/Modules/Core/Application/Services/PreferenceVote.php',
-        'src/Modules/Core/Application/Services/ShellContextProviderRegistry.php',
         'src/Modules/Core/Application/Services/WebsiteStructuredData.php',
         'src/Modules/Core/Domain/AdminRoutePolicy.php',
         'src/Modules/Core/Domain/Permissions.php',
-        'src/Modules/Core/Domain/ShellNavItem.php',
         'src/Modules/Core/Domain/SubmitResult.php',
         'src/Modules/Core/Infrastructure/Attributes/AsMiddleware.php',
         'src/Modules/Core/Infrastructure/Attributes/AsMigrator.php',
-        'src/Modules/Core/Infrastructure/Attributes/AsShellContextProvider.php',
         'src/Modules/Core/Infrastructure/Bootstrap/Bootstrapper.php',
         'src/Modules/Core/Infrastructure/Env.php',
         'src/Modules/Core/Infrastructure/Http/JsonResponse.php',
@@ -96,9 +93,7 @@ final class KernelShapeTest extends TestCase
         'src/Modules/Core/Interfaces/HTTP/Middleware/MiddlewareRegistry.php',
         'src/Modules/Core/Interfaces/HTTP/Middleware/RateLimitMiddleware.php',
         'src/Modules/Core/Interfaces/HTTP/Middleware/SecurityHeadersMiddleware.php',
-        'src/Modules/Core/Interfaces/HTTP/PageContext.php',
         'src/Modules/Core/Interfaces/HTTP/Router.php',
-        'src/Modules/Core/Interfaces/HTTP/ShellContext.php',
     ];
 
     /**
@@ -154,6 +149,10 @@ final class KernelShapeTest extends TestCase
      * `src/Themes` with the critical CSS and scripts it inlines. It composes
      * the theme chrome; every action that renders HTML imports it as a theme
      * surface, which is what makes it a theme class rather than HTTP kernel.
+     * 36 → 31 is the shell-port phase: the registry, the discovery attribute,
+     * the two context value objects and `ShellNavItem` moved to `src/Shell`.
+     * The port answers at render time and is not an HTTP dispatch member; its
+     * interface was already free, and the five concrete rows leave the list.
      *
      * 66 → 67 is the admin-prefix round: `AdminUnavailableMiddleware` answers
      * 404 for the admin prefix when no auth provider is wired. The kernel owns
@@ -162,7 +161,7 @@ final class KernelShapeTest extends TestCase
      * `/mark` to a guest because the gate was never wired. One `runtime` row,
      * three importers (http.php and two tests).
      */
-    private const int MAX_APPROVED = 36;
+    private const int MAX_APPROVED = 31;
 
     /**
      * Rule 1: every `.php` file under `src/Modules/Core` is an interface, enum
@@ -179,9 +178,9 @@ final class KernelShapeTest extends TestCase
         // true, and this guard asserting nothing while the suite stayed green —
         // the failure mode KernelCouplingTest's scanner check exists for, and
         // the same reason it reads a signal that cannot go quiet. Core carries
-        // 45 files after the public-shell phase.
+        // 39 files after the shell-port phase.
         self::assertGreaterThan(
-            40,
+            35,
             \count($files),
             'the shape scan found ' . \count($files) . ' files under src/Modules/Core — the walk or the '
             . 'tokenizer stopped working, and every rule below would then approve zero files while the '

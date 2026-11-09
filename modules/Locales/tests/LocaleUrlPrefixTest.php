@@ -8,7 +8,7 @@ use Modules\Auth\Application\Services\AuthProviderRegistry;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
-use Modules\Core\Application\Services\ShellContextProviderRegistry;
+use Shell\ShellContextProviderRegistry;
 use Themes\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\Kernel;
 use Themes\ThemeResolver;

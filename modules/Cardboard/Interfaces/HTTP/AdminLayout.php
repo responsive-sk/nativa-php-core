@@ -13,7 +13,7 @@ use Modules\Navigation\Infrastructure\Registry\NavBadgeRegistry;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
 use Themes\ThemeResolver;
 use Modules\Core\Kernel\Contracts\RouterInterface;
-use Modules\Core\Application\Services\ShellContextProviderRegistry;
+use Shell\ShellContextProviderRegistry;
 
 /**
  * AdminLayout — shared admin page shell (task 9.5).

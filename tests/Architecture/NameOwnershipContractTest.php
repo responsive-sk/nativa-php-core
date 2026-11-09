@@ -93,6 +93,7 @@ final class NameOwnershipContractTest extends TestCase
         'src/Modules/Database',
         'src/Modules/KernelTheme',
         'src/Modules/Tooling',
+        'src/Shell',
         'src/Themes',
         'src/View',
         'modules',

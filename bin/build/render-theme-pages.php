@@ -34,7 +34,7 @@ require_once __DIR__ . '/../../src/init.php';
 
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Interfaces\HTTP\ContentServices;
-use Modules\Core\Interfaces\HTTP\PageContext;
+use Shell\PageContext;
 use Themes\FrontendLayout;
 use Themes\ThemeRegistry;
 

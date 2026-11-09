@@ -20,8 +20,8 @@ DIVERGED src/Modules/Core/Interfaces/HTTP/Actions/HomepageAction.php # Boot 4: k
 DIVERGED src/Modules/Core/Interfaces/HTTP/Actions/SitemapAction.php # Boot 6: home + locale roots only
 DROPPED src/Modules/Core/Interfaces/HTTP/FrontendLayout.php # moved to src/Themes: the public shell is theme runtime, not an HTTP kernel member
 DIVERGED src/Modules/Core/Interfaces/HTTP/Middleware/RateLimitMiddleware.php # Boot 5: ports + guards, no module imports
-DIVERGED src/Modules/Core/Interfaces/HTTP/PageContext.php # Boot 9: Blog types trimmed (C)
-DIVERGED src/Modules/Core/Interfaces/HTTP/ShellContext.php # Boot 3: kernel-owned nav items
+DROPPED src/Modules/Core/Interfaces/HTTP/PageContext.php # moved to src/Shell: the page payload is shell vocabulary, not an HTTP kernel member
+DROPPED src/Modules/Core/Interfaces/HTTP/ShellContext.php # moved to src/Shell: the shell context is render data, not an HTTP kernel member
 DROPPED src/Modules/Core/Interfaces/HTTP/ThemeKernel.php # moved to src/Themes: was Boot 3's kernel-theme-only connector
 DROPPED src/Modules/Core/Interfaces/HTTP/ThemeResolver.php # moved to src/Themes: was Boot 3's theme + whitelist resolver
 DIVERGED src/Themes/ThemeModule.php # Boot 12: errorContent() surface (upstream contract has none)
@@ -80,8 +80,6 @@ DIVERGED README.md # kernel README
 # --- Owned: written here, no upstream counterpart ------------------------------
 OWNED src/Themes/kernel # the kernel's built-in default theme, KernelFallbackTheme (kernel default theme); the visual kernel theme is Modules\KernelTheme; ThemeModule.php itself is upstream-identical and compared
 OWNED src/Themes/ThemeRegistry.php # kept after upstream removal; ThemeResolver + ThemeKernel still use it
-OWNED src/Modules/Core/Domain/Contracts/ShellContextProvider.php # shell port (Boot 3)
-OWNED src/Modules/Core/Domain/ShellNavItem.php # shell port (Boot 3)
 OWNED src/Modules/Core/Kernel # kernel contracts: RouterInterface, ErrorRendererInterface (kernel contracts)
 OWNED src/Modules/Core/Application/Services/PreferenceVote.php # preference voting, added in this tree (no upstream counterpart)
 OWNED src/Modules/Core/Application/Services/DiscoveryCache.php # route + middleware discovery cache, added in this tree
@@ -94,8 +92,6 @@ OWNED src/Modules/Core/Interfaces/HTTP/ResolvesRouteUrls.php # admin redirects a
 OWNED src/Modules/Core/Domain/Permissions.php # the admin permission table lives in the kernel, because the gate that reads it is the kernel's
 OWNED src/Modules/Core/Domain/AdminRoutePolicy.php # the admin path is an optional prefix (ADMIN_PATH, default /mark) and an alias, owned once and applied to both spellings; a malformed value falls back to /mark rather than hiding the panel
 OWNED config/deploy.php # the committed deployment profile: the settings a build starts a site from, so an artifact cannot silently rebrand itself into the kernel's own (theme, site name). Applied by `bin/cms settings:profile` right after migrate; --no-profile skips it
-OWNED src/Modules/Core/Infrastructure/Attributes/AsShellContextProvider.php # shell port (Boot 3)
-OWNED src/Modules/Core/Application/Services/ShellContextProviderRegistry.php # shell port (Boot 3)
 OWNED src/Modules/Tooling # module catalogue + lifecycle, moved out of Core/Application/Services (bin/cms ships it; born here, never upstream)
 OWNED src/Modules/Core/Domain/Contracts/RateLimiter.php # limiter shape the middleware guards (Boot 11)
 OWNED tests # kernel-native harness (Boot 10); extraction adopts it, not the reverse
