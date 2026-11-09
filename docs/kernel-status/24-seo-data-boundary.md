@@ -77,6 +77,8 @@ and `PageViewAction` no longer hardcodes `Nativa Minimal`.
   with **8 interface / 27 concrete** types.
 - Source CI: **16/16 jobs**, run `42715698265` on `4273690`. The kernel-only
   boot job and the module-installed PHPUnit job both passed.
+- Published export: `responsive-sk/nativa-core@f2e7d8b`, generated from source
+  `39f42c0`; public CI is **9/9 jobs**, run `42716636690`.
 
 ## After
 
@@ -98,10 +100,15 @@ A fresh export with no `vendor/` and only `KernelTheme` answered `/` 200,
 Its sitemap held only the kernel home row. Neither server logged a `[seo]`
 line on a healthy request.
 
+The published clone repeated the same result: `/`, `/sitemap.xml` and
+`/robots.txt` answered 200, `/llms.txt` and `/mark` answered 404, and the
+sitemap held only `/`. Its marker named source commit `39f42c0`.
+
 ## Still open
 
 - The optional SEO admin surface is not built. This round deliberately puts
   crawl endpoints and shared primitives in the kernel, not in a module that a
   kernel-only tree would have to serve without.
 - `llms.txt` stays in `Docs`; it advertises the docs route, not the sitemap.
-- Publish is a separate step. It was not run in this round.
+- No item is open for this boundary. An optional SEO admin surface remains
+  future work; the crawl endpoints and shared primitives stay in the kernel.
