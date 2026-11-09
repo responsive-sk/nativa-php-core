@@ -126,8 +126,11 @@ final class KernelOnlyBootTest extends TestCase
      */
     private static function authGate(object $provider): ?MiddlewareInterface
     {
+        // Mirror src/http.php: widen the literal before reflection so the
+        // kernel-only export can type-check a class that is not on disk.
+        $keepString = static fn (string $class): string => $class;
         /** @var class-string $middleware */
-        $middleware = 'Modules\\Auth\\Interfaces\\HTTP\\Middleware\\AuthMiddleware';
+        $middleware = $keepString('Modules\\Auth\\Interfaces\\HTTP\\Middleware\\AuthMiddleware');
 
         try {
             $gate = (new \ReflectionClass($middleware))->newInstance($provider);

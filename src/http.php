@@ -231,10 +231,12 @@ function http_kernel(): Kernel
     // not exist, and that must hold even when a module still routes `/mark` —
     // measured 2026-11-09: `Cardboard` without `Users` answered 200 to a guest
     // because the gate was simply never wired.
-    /** @var string $authRegistryClass */
-    $authRegistryClass = 'Modules\\Auth\\Application\\Services\\AuthProviderRegistry';
+    // Keep the names plain strings: a literal assigned directly keeps its
+    // literal type, which this export cannot pass as a reflection class name.
+    $keepString = static fn (string $class): string => $class;
+    $authRegistryClass = $keepString('Modules\\Auth\\Application\\Services\\AuthProviderRegistry');
     /** @var class-string $authMiddlewareClass */
-    $authMiddlewareClass = 'Modules\\Auth\\Interfaces\\HTTP\\Middleware\\AuthMiddleware';
+    $authMiddlewareClass = $keepString('Modules\\Auth\\Interfaces\\HTTP\\Middleware\\AuthMiddleware');
     $authProvider = null;
 
     if (class_exists($authRegistryClass) && is_callable([$authRegistryClass, 'first'])) {
