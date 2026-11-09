@@ -78,9 +78,6 @@ final class KernelShapeTest extends TestCase
         'src/Modules/Core/Domain/Permissions.php',
         'src/Modules/Core/Domain/ShellNavItem.php',
         'src/Modules/Core/Domain/SubmitResult.php',
-        'src/Modules/Core/Domain/ThemePreference.php',
-        'src/Modules/Core/Domain/ThemeSetting.php',
-        'src/Modules/Core/Domain/ThemeSettingValues.php',
         'src/Modules/Core/Infrastructure/Attributes/AsMiddleware.php',
         'src/Modules/Core/Infrastructure/Attributes/AsMigrator.php',
         'src/Modules/Core/Infrastructure/Attributes/AsShellContextProvider.php',
@@ -108,9 +105,6 @@ final class KernelShapeTest extends TestCase
         'src/Modules/Core/Interfaces/HTTP/PageContext.php',
         'src/Modules/Core/Interfaces/HTTP/Router.php',
         'src/Modules/Core/Interfaces/HTTP/ShellContext.php',
-        'src/Modules/Core/Interfaces/HTTP/ThemeKernel.php',
-        'src/Modules/Core/Interfaces/HTTP/ThemeRegistry.php',
-        'src/Modules/Core/Interfaces/HTTP/ThemeResolver.php',
     ];
 
     /**
@@ -151,6 +145,13 @@ final class KernelShapeTest extends TestCase
      * `ContentServices` moved to `modules/ContentLocale`, so every content
      * module and theme asks the module, not the kernel, for the mapping rule.
      *
+     * 48 → 42 is the Themes-namespace phase: `ThemeResolver`, `ThemeRegistry`,
+     * `ThemeKernel`, `ThemePreference`, `ThemeSetting` and `ThemeSettingValues`
+     * moved from `Modules\Core` to the kernel-owned `Themes` namespace. They
+     * were never Core's: the theme contract already lives in `src/Themes`, and
+     * a module that ships a theme programs against that namespace, not this
+     * one.
+     *
      * 66 → 67 is the admin-prefix round: `AdminUnavailableMiddleware` answers
      * 404 for the admin prefix when no auth provider is wired. The kernel owns
      * the prefix, so the kernel is the only layer that can refuse a panel a
@@ -158,7 +159,7 @@ final class KernelShapeTest extends TestCase
      * `/mark` to a guest because the gate was never wired. One `runtime` row,
      * three importers (http.php and two tests).
      */
-    private const int MAX_APPROVED = 48;
+    private const int MAX_APPROVED = 42;
 
     /**
      * Rule 1: every `.php` file under `src/Modules/Core` is an interface, enum
@@ -175,7 +176,7 @@ final class KernelShapeTest extends TestCase
         // true, and this guard asserting nothing while the suite stayed green —
         // the failure mode KernelCouplingTest's scanner check exists for, and
         // the same reason it reads a signal that cannot go quiet. Core carries
-        // 59 files after the ContentLocale phase.
+        // 53 files after the Themes-namespace phase.
         self::assertGreaterThan(
             50,
             \count($files),

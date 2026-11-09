@@ -6,12 +6,12 @@ namespace Modules\Cardboard\Tests;
 
 use Modules\Cardboard\Interfaces\HTTP\Actions\SettingsAction;
 use Modules\Cardboard\Interfaces\HTTP\CardboardServices;
-use Modules\Core\Domain\ThemeSettingValues;
+use Themes\ThemeSettingValues;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Interfaces\CLI\CliOutput;
-use Modules\Core\Interfaces\HTTP\ThemeKernel;
-use Modules\Core\Interfaces\HTTP\ThemeRegistry;
-use Modules\Core\Interfaces\HTTP\ThemeResolver;
+use Themes\ThemeKernel;
+use Themes\ThemeRegistry;
+use Themes\ThemeResolver;
 use Modules\Core\Kernel\Contracts\RouterInterface;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Settings\Infrastructure\Persistence\Migrations\SettingsDatabaseMigrator;

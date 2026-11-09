@@ -11,7 +11,7 @@ use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Application\Services\ShellContextProviderRegistry;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\Kernel;
-use Modules\Core\Interfaces\HTTP\ThemeResolver;
+use Themes\ThemeResolver;
 use Modules\Auth\Interfaces\HTTP\Middleware\AuthMiddleware;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
 use Modules\Core\Interfaces\HTTP\Middleware\MiddlewareRegistry;

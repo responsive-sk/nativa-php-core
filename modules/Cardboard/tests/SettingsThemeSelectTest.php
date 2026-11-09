@@ -5,8 +5,8 @@ declare(strict_types = 1);
 namespace Modules\Cardboard\Tests;
 
 use Modules\Cardboard\Interfaces\HTTP\Actions\SettingsAction;
-use Modules\Core\Interfaces\HTTP\ThemeRegistry;
-use Modules\Core\Interfaces\HTTP\ThemeResolver;
+use Themes\ThemeRegistry;
+use Themes\ThemeResolver;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 

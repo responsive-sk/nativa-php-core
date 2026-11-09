@@ -6,10 +6,10 @@ namespace Tests\Theme;
 
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
-use Modules\Core\Interfaces\HTTP\ThemeRegistry;
-use Modules\Core\Interfaces\HTTP\ThemeResolver;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Themes\ThemeRegistry;
+use Themes\ThemeResolver;
 
 /**
  * FontPreloadTest — a webfont the first viewport needs is preloaded, exactly

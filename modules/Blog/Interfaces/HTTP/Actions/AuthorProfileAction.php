@@ -14,8 +14,8 @@ use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\PageContext;
-use Modules\Core\Interfaces\HTTP\ThemeKernel;
-use Modules\Core\Interfaces\HTTP\ThemeResolver;
+use Themes\ThemeKernel;
+use Themes\ThemeResolver;
 use Modules\Locales\Interfaces\HTTP\LocalesServices;
 
 /**

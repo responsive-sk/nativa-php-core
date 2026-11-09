@@ -640,7 +640,7 @@ jobs:
           php <<'PHP'
           <?php
           require 'src/init.php';
-          $theme = \Modules\Core\Interfaces\HTTP\ThemeKernel::for(\Modules\Core\Interfaces\HTTP\ThemeResolver::resolvePath('/'));
+          $theme = \Themes\ThemeKernel::for(\Themes\ThemeResolver::resolvePath('/'));
           $assets = new \Modules\Core\Application\Services\AssetManager($theme->name());
           printf("active theme: %s (bundle available: %s)\n", $theme->name(), $assets->isAvailable() ? 'yes' : 'no');
 

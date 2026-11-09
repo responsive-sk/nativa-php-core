@@ -22,8 +22,8 @@ DIVERGED src/Modules/Core/Interfaces/HTTP/FrontendLayout.php # Boot 3: brand, na
 DIVERGED src/Modules/Core/Interfaces/HTTP/Middleware/RateLimitMiddleware.php # Boot 5: ports + guards, no module imports
 DIVERGED src/Modules/Core/Interfaces/HTTP/PageContext.php # Boot 9: Blog types trimmed (C)
 DIVERGED src/Modules/Core/Interfaces/HTTP/ShellContext.php # Boot 3: kernel-owned nav items
-DIVERGED src/Modules/Core/Interfaces/HTTP/ThemeKernel.php # Boot 3: kernel theme only, unknown falls back; kernel theme moved to Modules\KernelTheme, Themes\kernel\KernelFallbackTheme is the built-in default
-DIVERGED src/Modules/Core/Interfaces/HTTP/ThemeResolver.php # Boot 3: theme + whitelist through the port; Boot 12: resolvePath() for the error renderer
+DROPPED src/Modules/Core/Interfaces/HTTP/ThemeKernel.php # moved to src/Themes: was Boot 3's kernel-theme-only connector
+DROPPED src/Modules/Core/Interfaces/HTTP/ThemeResolver.php # moved to src/Themes: was Boot 3's theme + whitelist resolver
 DIVERGED src/Themes/ThemeModule.php # Boot 12: errorContent() surface (upstream contract has none)
 DIVERGED src/Modules/Core/Interfaces/HTTP/ErrorPageRenderer.php # Boot 12: theme-owned error block, no showcase strings; kernel contracts: implements ErrorRendererInterface
 DIVERGED src/Modules/Core/Interfaces/HTTP/Kernel.php # Boot 12: error path threads the request path for theme resolution; kernel contracts: depends on RouterInterface + ErrorRendererInterface
@@ -79,14 +79,14 @@ DIVERGED README.md # kernel README
 #
 # --- Owned: written here, no upstream counterpart ------------------------------
 OWNED src/Themes/kernel # the kernel's built-in default theme, KernelFallbackTheme (kernel default theme); the visual kernel theme is Modules\KernelTheme; ThemeModule.php itself is upstream-identical and compared
-OWNED src/Modules/Core/Interfaces/HTTP/ThemeRegistry.php # kept after upstream removal; ThemeResolver + ThemeKernel still use it
+OWNED src/Themes/ThemeRegistry.php # kept after upstream removal; ThemeResolver + ThemeKernel still use it
 OWNED src/Modules/Core/Domain/Contracts/ShellContextProvider.php # shell port (Boot 3)
 OWNED src/Modules/Core/Domain/ShellNavItem.php # shell port (Boot 3)
 OWNED src/Modules/Core/Kernel # kernel contracts: RouterInterface, ErrorRendererInterface (kernel contracts)
 OWNED src/Modules/Core/Application/Services/PreferenceVote.php # preference voting, added in this tree (no upstream counterpart)
 OWNED src/Modules/Core/Application/Services/DiscoveryCache.php # route + middleware discovery cache, added in this tree
 DROPPED src/Modules/Core/Application/Services/DocsSearchService.php # moved to modules/Docs: search over the guide corpus is a module surface
-OWNED src/Modules/Core/Domain/ThemePreference.php # theme preference resolution, added in this tree
+OWNED src/Themes/ThemePreference.php # theme preference resolution, added in this tree
 OWNED Frontend/packages/griffe # Griffe theme package (module-carried), added in this tree
 OWNED Frontend/packages/mono # Mono theme package (module-carried), added in this tree
 OWNED Frontend/packages/boson # Boson theme package (module-carried), added in this tree — the build the theme declared, alongside griffe and mono
@@ -175,8 +175,8 @@ DIVERGED src/Modules/Core/Infrastructure/Http/Request.php # 2026-10-27: queryStr
 OWNED src/Modules/Core/Interfaces/HTTP/assets/scripts/docs-reader.js # 32d60a3: docs reader; upstream's docs surface is not in the slice
 OWNED src/Modules/Core/Domain/Contracts/SecurityEventSink.php # 4147809: the kernel's own security-event port
 OWNED src/Modules/Core/Domain/SubmitResult.php # 8c57c3c: submit answers as a type instead of an array
-OWNED src/Modules/Core/Domain/ThemeSetting.php # fea7c1e: a theme declares its admin-editable settings
-OWNED src/Modules/Core/Domain/ThemeSettingValues.php # fea7c1e: the values such settings hold
+OWNED src/Themes/ThemeSetting.php # fea7c1e: a theme declares its admin-editable settings
+OWNED src/Themes/ThemeSettingValues.php # fea7c1e: the values such settings hold
 OWNED src/Modules/Core/Interfaces/HTTP/Middleware/AdminUnavailableMiddleware.php # the admin prefix answers 404 when no module supplies the auth port
 OWNED Frontend/packages/nativa # the Nativa theme source; upstream packages do not carry it
 

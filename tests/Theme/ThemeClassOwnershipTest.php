@@ -4,9 +4,9 @@ declare(strict_types = 1);
 
 namespace Tests\Theme;
 
-use Modules\Core\Interfaces\HTTP\ThemeRegistry;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Themes\ThemeRegistry;
 
 /**
  * ThemeClassOwnershipTest — no CSS class belongs to two themes.

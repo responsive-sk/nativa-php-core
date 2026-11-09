@@ -36,7 +36,7 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\PageContext;
-use Modules\Core\Interfaces\HTTP\ThemeRegistry;
+use Themes\ThemeRegistry;
 
 /**
  * Demo locale => the directory it renders into under `<theme>/`, and its fixture.

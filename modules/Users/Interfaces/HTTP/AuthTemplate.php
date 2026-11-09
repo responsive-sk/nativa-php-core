@@ -9,8 +9,8 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
-use Modules\Core\Interfaces\HTTP\ThemeKernel;
-use Modules\Core\Interfaces\HTTP\ThemeResolver;
+use Themes\ThemeKernel;
+use Themes\ThemeResolver;
 use Modules\Locales\Interfaces\HTTP\LocalesServices;
 use Themes\AuthPageTheme;
 

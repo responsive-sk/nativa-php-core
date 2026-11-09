@@ -11,7 +11,7 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Navigation\Infrastructure\Registry\NavBadgeRegistry;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
-use Modules\Core\Interfaces\HTTP\ThemeResolver;
+use Themes\ThemeResolver;
 use Modules\Core\Kernel\Contracts\RouterInterface;
 use Modules\Core\Application\Services\ShellContextProviderRegistry;
 

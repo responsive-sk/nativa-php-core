@@ -13,8 +13,8 @@ use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Interfaces\HTTP\ErrorPageRenderer;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Markdown\Interfaces\HTTP\Markdown\MarkdownBlockContext;
-use Modules\Core\Interfaces\HTTP\ThemeKernel;
-use Modules\Core\Interfaces\HTTP\ThemeResolver;
+use Themes\ThemeKernel;
+use Themes\ThemeResolver;
 use Themes\DocsPageTheme;
 
 /**

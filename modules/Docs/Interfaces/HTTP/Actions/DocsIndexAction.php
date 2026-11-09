@@ -10,8 +10,8 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
-use Modules\Core\Interfaces\HTTP\ThemeKernel;
-use Modules\Core\Interfaces\HTTP\ThemeResolver;
+use Themes\ThemeKernel;
+use Themes\ThemeResolver;
 use Themes\DocsPageTheme;
 
 /**
