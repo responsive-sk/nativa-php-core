@@ -168,17 +168,18 @@ The scan reads files as TEXT and never loads a class it describes, so a module
 whose dependencies are absent is still describable. A scanner that fatals on a
 missing class cannot report the very closure that is missing.
 
-The admin gate is picked up the same way, one level down: a module ships an
-`AuthProvider` marked `#[AsAuthProvider]`, and `AuthProviderRegistry` (Core)
-finds it by file name — `*AuthProvider.php` in the module's `Interfaces/HTTP`.
-The composition root asks that registry and wraps `AuthMiddleware` around what
-it gets, so the HTTP composition root (`src/http.php`) names no module class
-for auth at all. Install
-the module and the gate exists; a tree with the admin router but no provider
-module answers 200 (there is nothing to gate with — a route is not a guard),
-and a kernel-only tree answers 404. (`Users` used to ship an `AuthWiring::wire()`
-entry point for this; it was deleted when discovery landed — see
-`docs/kernel-status/04-kernel-contracts.md` §6 and
+The admin gate is picked up the same way, one level down: the `Auth` module
+owns the `AuthProvider` port, the identity value object, the registry and the
+middleware. A provider module ships an `AuthProvider` marked
+`#[AsAuthProvider]`, and the registry finds it by file name —
+`*AuthProvider.php` in that module's `Interfaces/HTTP`. The composition root
+asks the registry and constructs the Auth middleware behind `class_exists`,
+so `src/http.php` names no Auth class in a type position. With Auth and a
+provider installed the gate exists; with no provider, or no Auth module, the
+kernel answers 404 through `AdminUnavailableMiddleware`. A route is not a
+guard, and an ungated admin route must not answer 200. (`Users` used to ship an
+`AuthWiring::wire()` entry point for this; it was deleted when discovery
+landed — see `docs/kernel-status/04-kernel-contracts.md` §6 and
 `docs/kernel-status/06-auth-discovery-and-mail-transport.md` §10 for the
 measured states, with `docs/kernel-status.md` as the index over the parts.)
 
@@ -191,7 +192,7 @@ The security-event sink is wired the same way and for the same reason: the
 kernel owns the port (`Modules\Core\Domain\Contracts\SecurityEventSink`), the
 `Outbox` module implements it (`OutboxSecurityEventSink`, where the event type
 and payload keys live), and `src/http.php` constructs it behind `class_exists`
-and hands it to `AuthMiddleware` and `RateLimitMiddleware`. Both middlewares
+and hands it to the Auth middleware and `RateLimitMiddleware`. Both middlewares
 name no module, so a kernel-only tree drops the record and still answers the
 request — and `mago guard` sees a kernel with no module dependency at all.
 
@@ -339,7 +340,7 @@ when there are some.
    policy, query, scalar, scenario, target-binding, value-object; `kind: error` in a
    slice is refused with `LEK-IR-003`), so no such symbol could have been created.
    **Fixed 2026-10-16:** all 15 now name `users.authorization_denied`, the event the
-   one denial path in `Modules\Core\Interfaces\HTTP\Middleware\AuthMiddleware`
+   one denial path in `Modules\Auth\Interfaces\HTTP\Middleware\AuthMiddleware`
    raises, and `ModelReferenceContractTest` — new the same day — resolves every ref
    against the model's definition ids and refuses one that names a non-`event`.
    The model gained one definition doing so (`lekalo load --json`: 250 → 251), so

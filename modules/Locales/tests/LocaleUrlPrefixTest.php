@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Locales\Tests;
 
-use Modules\Core\Application\Services\AuthProviderRegistry;
+use Modules\Auth\Application\Services\AuthProviderRegistry;
 use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
@@ -12,7 +12,7 @@ use Modules\Core\Application\Services\ShellContextProviderRegistry;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\Kernel;
 use Modules\Core\Interfaces\HTTP\ThemeResolver;
-use Modules\Core\Interfaces\HTTP\Middleware\AuthMiddleware;
+use Modules\Auth\Interfaces\HTTP\Middleware\AuthMiddleware;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
 use Modules\Core\Interfaces\HTTP\Middleware\MiddlewareRegistry;
 use Modules\Core\Interfaces\HTTP\Middleware\SecurityHeadersMiddleware;

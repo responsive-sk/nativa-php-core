@@ -2,17 +2,18 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Core\Interfaces\HTTP\Middleware;
+namespace Modules\Auth\Interfaces\HTTP\Middleware;
 
 use Modules\Core\Domain\AdminRoutePolicy;
-use Modules\Core\Domain\AuthIdentity;
-use Modules\Core\Domain\Contracts\AuthProvider;
+use Modules\Auth\Domain\AuthIdentity;
+use Modules\Auth\Domain\Contracts\AuthProvider;
 use Modules\Core\Domain\Contracts\SecurityEventSink;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\Middleware\MiddlewareInterface;
 
 /**
- * AuthMiddleware — protects the admin area through the kernel-owned auth port.
+ * AuthMiddleware — protects the admin area through the Auth module's port.
  *
  * Before the port, this file imported the auth service, the signed-in user
  * entity and the admin path table from `Users`, and the security-event

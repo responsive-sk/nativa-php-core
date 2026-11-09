@@ -4,9 +4,9 @@ declare(strict_types = 1);
 
 namespace Modules\Users\Interfaces\HTTP;
 
-use Modules\Core\Domain\AuthIdentity;
-use Modules\Core\Domain\Contracts\AuthProvider;
-use Modules\Core\Infrastructure\Attributes\AsAuthProvider;
+use Modules\Auth\Domain\AuthIdentity;
+use Modules\Auth\Domain\Contracts\AuthProvider;
+use Modules\Auth\Infrastructure\Attributes\AsAuthProvider;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Domain\AdminRoutePolicy;
 use Modules\Core\Domain\Permissions;
@@ -16,7 +16,7 @@ use Modules\Core\Domain\Permissions;
  * waiting for, in the module that owns sessions, roles and the `/mark` policy
  * table.
  *
- * `AuthMiddleware` (Core) decides; this class answers. It exists because the
+ * `AuthMiddleware` (Auth) decides; this class answers. It exists because the
  * port was shipped without an implementation: measured 2026-10-15, `/mark`
  * served the whole admin dashboard — user table, e-mails, delete forms — to a
  * request with no cookies, because nothing in the tree constructed the

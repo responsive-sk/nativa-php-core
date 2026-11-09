@@ -65,7 +65,6 @@ final class KernelShapeTest extends TestCase
      */
     private const array ALLOW_LIST = [
         'src/Modules/Core/Application/Services/AssetManager.php',
-        'src/Modules/Core/Application/Services/AuthProviderRegistry.php',
         'src/Modules/Core/Application/Services/CacheInvalidator.php',
         'src/Modules/Core/Application/Services/ContentLocaleMapper.php',
         'src/Modules/Core/Application/Services/DiscoveryCache.php',
@@ -79,14 +78,12 @@ final class KernelShapeTest extends TestCase
         'src/Modules/Core/Application/Services/View/Paths.php',
         'src/Modules/Core/Application/Services/View/ViewRenderer.php',
         'src/Modules/Core/Domain/AdminRoutePolicy.php',
-        'src/Modules/Core/Domain/AuthIdentity.php',
         'src/Modules/Core/Domain/Permissions.php',
         'src/Modules/Core/Domain/ShellNavItem.php',
         'src/Modules/Core/Domain/SubmitResult.php',
         'src/Modules/Core/Domain/ThemePreference.php',
         'src/Modules/Core/Domain/ThemeSetting.php',
         'src/Modules/Core/Domain/ThemeSettingValues.php',
-        'src/Modules/Core/Infrastructure/Attributes/AsAuthProvider.php',
         'src/Modules/Core/Infrastructure/Attributes/AsMiddleware.php',
         'src/Modules/Core/Infrastructure/Attributes/AsMigrator.php',
         'src/Modules/Core/Infrastructure/Attributes/AsShellContextProvider.php',
@@ -108,7 +105,6 @@ final class KernelShapeTest extends TestCase
         'src/Modules/Core/Interfaces/HTTP/FrontendLayout.php',
         'src/Modules/Core/Interfaces/HTTP/Kernel.php',
         'src/Modules/Core/Interfaces/HTTP/Middleware/AdminUnavailableMiddleware.php',
-        'src/Modules/Core/Interfaces/HTTP/Middleware/AuthMiddleware.php',
         'src/Modules/Core/Interfaces/HTTP/Middleware/CsrfMiddleware.php',
         'src/Modules/Core/Interfaces/HTTP/Middleware/MiddlewareRegistry.php',
         'src/Modules/Core/Interfaces/HTTP/Middleware/PageCacheMiddleware.php',
@@ -148,6 +144,10 @@ final class KernelShapeTest extends TestCase
      * `MarkdownBlockContext`, `MarkdownBlockRegistry` and `AsMarkdownBlock`
      * moved to `modules/Markdown`; the interface they publish is free shape.
      *
+     * 56 → 52 is the Auth phase: `AuthProviderRegistry`, `AuthIdentity`,
+     * `AsAuthProvider` and `AuthMiddleware` moved to `modules/Auth`; the
+     * `AuthProvider` interface went with them and is free shape.
+     *
      * 66 → 67 is the admin-prefix round: `AdminUnavailableMiddleware` answers
      * 404 for the admin prefix when no auth provider is wired. The kernel owns
      * the prefix, so the kernel is the only layer that can refuse a panel a
@@ -155,7 +155,7 @@ final class KernelShapeTest extends TestCase
      * `/mark` to a guest because the gate was never wired. One `runtime` row,
      * three importers (http.php and two tests).
      */
-    private const int MAX_APPROVED = 56;
+    private const int MAX_APPROVED = 52;
 
     /**
      * Rule 1: every `.php` file under `src/Modules/Core` is an interface, enum
@@ -172,8 +172,7 @@ final class KernelShapeTest extends TestCase
         // true, and this guard asserting nothing while the suite stayed green —
         // the failure mode KernelCouplingTest's scanner check exists for, and
         // the same reason it reads a signal that cannot go quiet. Core carries
-        // 70 files (67 → 60 concrete + 10 interfaces: Phases 3-4, then the
-        // resurrected AuthProviderRegistry).
+        // 63 files (53 concrete + 8 interfaces after the Auth phase).
         self::assertGreaterThan(
             50,
             \count($files),

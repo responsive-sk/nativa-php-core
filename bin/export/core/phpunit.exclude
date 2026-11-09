@@ -39,6 +39,4 @@ tests/Architecture/ModuleCatalogueShapeTest.php # it asserts a catalogue of them
 tests/Architecture/SecurityEventPayloadContractTest.php # its vocabulary is modules/Outbox/Domain/SecurityEvents.php
 tests/Theme/ThemeClassOwnershipTest.php # its shared-contract ledger needs two themes; one theme cannot collide with itself
 tests/Architecture/AdminClassContractTest.php # its stylesheet rules belong to Cardboard, which is not catalogued
-tests/Discovery/AuthProviderRegistryTest.php # it needs a module that ships an auth provider; none is shipped
-tests/Http/AuthMiddlewareDenialTest.php # its payload is the Outbox vocabulary, which is not shipped
 tests/Theme/FontPreloadTest.php # it needs a theme that declares a webfont; Nativa declares none by design

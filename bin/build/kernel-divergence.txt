@@ -20,7 +20,6 @@ DIVERGED src/Modules/Core/Interfaces/HTTP/Actions/HomepageAction.php # Boot 4: k
 DIVERGED src/Modules/Core/Interfaces/HTTP/Actions/SitemapAction.php # Boot 6: home + locale roots only
 DIVERGED src/Modules/Core/Interfaces/HTTP/ContentServices.php # Boot 3: default locale through the shell port
 DIVERGED src/Modules/Core/Interfaces/HTTP/FrontendLayout.php # Boot 3: brand, nav, languages through the shell port
-DIVERGED src/Modules/Core/Interfaces/HTTP/Middleware/AuthMiddleware.php # Boot 5: auth port, no Users import
 DIVERGED src/Modules/Core/Interfaces/HTTP/Middleware/PageCacheMiddleware.php # Boot 5: locale key without Locales
 DIVERGED src/Modules/Core/Interfaces/HTTP/Middleware/RateLimitMiddleware.php # Boot 5: ports + guards, no module imports
 DIVERGED src/Modules/Core/Interfaces/HTTP/PageContext.php # Boot 9: Blog types trimmed (C)
@@ -101,12 +100,8 @@ OWNED src/Modules/Core/Interfaces/HTTP/ResolvesRouteUrls.php # admin redirects a
 OWNED src/Modules/Core/Domain/Permissions.php # the admin permission table lives in the kernel, because the gate that reads it is the kernel's
 OWNED src/Modules/Core/Domain/AdminRoutePolicy.php # the admin path is an optional prefix (ADMIN_PATH, default /mark) and an alias, owned once and applied to both spellings; a malformed value falls back to /mark rather than hiding the panel
 OWNED config/deploy.php # the committed deployment profile: the settings a build starts a site from, so an artifact cannot silently rebrand itself into the kernel's own (theme, site name). Applied by `bin/cms settings:profile` right after migrate; --no-profile skips it
-OWNED src/Modules/Core/Domain/Contracts/AuthProvider.php # auth port (Boot 5)
-OWNED src/Modules/Core/Domain/AuthIdentity.php # auth port (Boot 5)
 OWNED src/Modules/Core/Infrastructure/Attributes/AsShellContextProvider.php # shell port (Boot 3)
-OWNED src/Modules/Core/Infrastructure/Attributes/AsAuthProvider.php # auth port (Boot 5)
 OWNED src/Modules/Core/Application/Services/ShellContextProviderRegistry.php # shell port (Boot 3)
-OWNED src/Modules/Core/Application/Services/AuthProviderRegistry.php # auth-provider discovery (2026-10-16): registry resurrected at its former path, rebuilt on the MiddlewareRegistry shape (declaration-start resolveFqcn + PreferenceVote) — upstream has no reader for #[AsAuthProvider]
 OWNED src/Modules/Tooling # module catalogue + lifecycle, moved out of Core/Application/Services (bin/cms ships it; born here, never upstream)
 OWNED src/Modules/Core/Domain/Contracts/RateLimiter.php # limiter shape the middleware guards (Boot 11)
 OWNED tests # kernel-native harness (Boot 10); extraction adopts it, not the reverse
@@ -205,3 +200,8 @@ DROPPED src/Modules/Core/Interfaces/HTTP/Markdown/MarkdownBlockContext.php # mov
 DROPPED src/Modules/Core/Interfaces/HTTP/Markdown/MarkdownBlockInterface.php # moved to modules/Markdown
 DROPPED src/Modules/Core/Interfaces/HTTP/Markdown/MarkdownBlockRegistry.php # moved to modules/Markdown
 DROPPED src/Modules/Core/Infrastructure/Attributes/AsMarkdownBlock.php # moved to modules/Markdown
+DROPPED src/Modules/Core/Application/Services/AuthProviderRegistry.php # moved to modules/Auth
+DROPPED src/Modules/Core/Domain/AuthIdentity.php # moved to modules/Auth
+DROPPED src/Modules/Core/Domain/Contracts/AuthProvider.php # moved to modules/Auth
+DROPPED src/Modules/Core/Infrastructure/Attributes/AsAuthProvider.php # moved to modules/Auth
+DROPPED src/Modules/Core/Interfaces/HTTP/Middleware/AuthMiddleware.php # moved to modules/Auth

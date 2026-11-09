@@ -2,23 +2,21 @@
 
 declare(strict_types = 1);
 
-namespace Tests\Discovery;
+namespace Modules\Auth\Tests;
 
-use Modules\Core\Application\Services\AuthProviderRegistry;
-use Modules\Core\Domain\Contracts\AuthProvider;
+use Modules\Auth\Application\Services\AuthProviderRegistry;
+use Modules\Auth\Domain\Contracts\AuthProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
  * AuthProviderRegistryTest — the discovery contracts that survive ANY tree.
  *
- * This lives in `tests/` and not in a module because the registry is Core: it
- * drives Core, it skips nothing, and it is analysed by phpstan in a
- * kernel-only checkout — which is exactly why it may not name a module's class
- * even in a string it would load. The provider the workstation installs
- * (Users) is therefore asserted through the PORT, never by name; the CI
- * kernel-only run asserts the other half of the same contract (`first()` is
- * null, `all()` is empty, nothing is wired).
+ * This lives with the Auth module because the registry does: a kernel-only
+ * checkout skips it in `setUp()`, and the provider the workstation installs
+ * (Users) is asserted through the PORT, never by name. The kernel-only run
+ * asserts the other half of the same contract: no Auth class, no admin gate,
+ * and `/mark` answers 404 through `AdminUnavailableMiddleware`.
  *
  * Two halves, and the second one needs files:
  *
@@ -54,6 +52,10 @@ final class AuthProviderRegistryTest extends TestCase
     {
         parent::setUp();
 
+        if (!class_exists(AuthProviderRegistry::class)) {
+            $this->markTestSkipped('Auth is not installed — the registry ships with this module.');
+        }
+
         AuthProviderRegistry::reset();
     }
 
@@ -74,7 +76,9 @@ final class AuthProviderRegistryTest extends TestCase
             $this->logBefore = false;
         }
 
-        AuthProviderRegistry::reset();
+        if (class_exists(AuthProviderRegistry::class)) {
+            AuthProviderRegistry::reset();
+        }
 
         parent::tearDown();
     }
@@ -225,8 +229,8 @@ final class AuthProviderRegistryTest extends TestCase
 
             namespace Modules\RegFixtureTie\Interfaces\HTTP;
 
-            use Modules\Core\Domain\AuthIdentity;
-            use Modules\Core\Domain\Contracts\AuthProvider;
+            use Modules\Auth\Domain\AuthIdentity;
+            use Modules\Auth\Domain\Contracts\AuthProvider;
             use Modules\Core\Infrastructure\Http\Request;
 
             final readonly class UnmarkedAuthProvider implements AuthProvider
@@ -311,9 +315,9 @@ final class AuthProviderRegistryTest extends TestCase
 
             namespace Modules\%s\Interfaces\HTTP;
 
-            use Modules\Core\Domain\AuthIdentity;
-            use Modules\Core\Domain\Contracts\AuthProvider;
-            use Modules\Core\Infrastructure\Attributes\AsAuthProvider;
+            use Modules\Auth\Domain\AuthIdentity;
+            use Modules\Auth\Domain\Contracts\AuthProvider;
+            use Modules\Auth\Infrastructure\Attributes\AsAuthProvider;
             use Modules\Core\Infrastructure\Http\Request;
 
             #[AsAuthProvider(priority: %d)]

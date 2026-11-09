@@ -27,6 +27,7 @@ docs
 # Pages) costs +373 and content is not a dependency; the panel (Users,
 # Cardboard) costs +209.
 modules/Audit
+modules/Auth
 modules/Blog
 modules/Cardboard
 modules/Clickhouse

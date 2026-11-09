@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Core\Infrastructure\Attributes;
+namespace Modules\Auth\Infrastructure\Attributes;
 
 use Attribute;
 
@@ -14,7 +14,7 @@ use Attribute;
  * A module that owns authentication implements `AuthProvider` and marks the
  * class with this. Nothing else registers it: a provider that has to be
  * listed somewhere is a provider a removed module leaves behind in that list.
- * The kernel holds the label and the port only — reading the attribute is the
+ * The Auth module holds the label and the port; reading the attribute is the
  * assembling side's job, so no scanner here has to track which modules are
  * installed. `AuthMiddleware` takes its `AuthProvider` from the constructor,
  * which is where the answer to "who is signed in" has to come from anyway.

@@ -2,14 +2,14 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Core\Domain\Contracts;
+namespace Modules\Auth\Domain\Contracts;
 
-use Modules\Core\Domain\AuthIdentity;
+use Modules\Auth\Domain\AuthIdentity;
 use Modules\Core\Infrastructure\Http\Request;
 
 /**
- * AuthProvider — the kernel-owned port the auth middleware asks instead of
- * reaching into a module.
+ * AuthProvider — the Auth module's port, the one seam the middleware asks
+ * instead of reaching into a feature module.
  *
  * Before this port, `AuthMiddleware` imported the auth service, the signed-in
  * user entity and the admin path table from `Users`, and the security-event
@@ -17,8 +17,8 @@ use Modules\Core\Infrastructure\Http\Request;
  * unloadable without two feature modules it does not own. Now the middleware
  * asks this port and nothing else:
  *
- * - WHO the request is (`identity()`, mapped to a kernel-owned value object
- *   by whoever owns the session — session rows, remember-me cookies and their
+ * - WHO the request is (`identity()`, mapped to this module's value object by
+ *   whoever owns the session; session rows, remember-me cookies and their
  *   renewal stay the module's business entirely);
  * - WHICH paths are protected and what they require (`isProtectedPath()`,
  *   `requiredPermission()` — the permission vocabulary belongs with the roles

@@ -166,7 +166,7 @@ arrive in the database row:
 | `modules/Outbox/tests/OutboxMetricTest.php:110` | `'article.published'` |
 | `modules/Outbox/tests/ProcessOutboxCommandTest.php:114,186` | `'article.published'` |
 | `modules/Outbox/tests/ProcessOutboxCommandTest.php:115` | `'article.unpublished'` |
-| `tests/Http/AuthMiddlewareDenialTest.php:169,175` | `'security.authz.denied'` |
+| `modules/Auth/tests/AuthMiddlewareDenialTest.php:169,175` | `'security.authz.denied'` |
 
 Writing `assertSame(SecurityEvents::ARTICLE_PUBLISHED, $row['event_type'])`
 instead would make the test **tautological**: it would pass even if the constant

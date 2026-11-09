@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "auth",
+      "kind": "module",
+      "version": 1,
+      "description": "Auth — the admin gate: the AuthProvider port, the identity value object, provider discovery and the middleware that turns a provider's answer into a redirect, a 403 or a pass. No routes and no storage."
+    }
+  ]
+}

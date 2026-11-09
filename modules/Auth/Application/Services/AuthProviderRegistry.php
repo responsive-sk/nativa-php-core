@@ -2,10 +2,11 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Core\Application\Services;
+namespace Modules\Auth\Application\Services;
 
-use Modules\Core\Domain\Contracts\AuthProvider;
-use Modules\Core\Infrastructure\Attributes\AsAuthProvider;
+use Modules\Auth\Domain\Contracts\AuthProvider;
+use Modules\Auth\Infrastructure\Attributes\AsAuthProvider;
+use Modules\Core\Application\Services\PreferenceVote;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 
 /**

@@ -2,18 +2,18 @@
 
 declare(strict_types = 1);
 
-namespace Tests\Http;
+namespace Modules\Auth\Tests;
 
 use Modules\Core\Domain\AdminRoutePolicy;
-use Modules\Core\Domain\AuthIdentity;
-use Modules\Core\Domain\Contracts\AuthProvider;
+use Modules\Auth\Domain\AuthIdentity;
+use Modules\Auth\Domain\Contracts\AuthProvider;
 use Modules\Core\Domain\Contracts\SecurityEventSink;
 use Modules\Core\Domain\Permissions;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Core\Interfaces\CLI\CliOutput;
-use Modules\Core\Interfaces\HTTP\Middleware\AuthMiddleware;
+use Modules\Auth\Interfaces\HTTP\Middleware\AuthMiddleware;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use PDO;
 use PHPUnit\Framework\Attributes\Test;
@@ -76,7 +76,7 @@ final class AuthMiddlewareDenialTest extends TestCase
     {
         parent::setUp();
 
-        foreach (['Outbox', 'Audit', 'Users'] as $module) {
+        foreach (['Auth', 'Outbox', 'Audit', 'Users'] as $module) {
             if (!is_dir(APP_BASE_PATH . '/src/Modules/' . $module)) {
                 $this->markTestSkipped(sprintf('%s is not installed.', $module));
             }

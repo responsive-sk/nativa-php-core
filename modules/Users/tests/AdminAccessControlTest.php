@@ -254,11 +254,11 @@ final class AdminAccessControlTest extends TestCase
         // provider registry, wire the middleware around what it finds. Inline
         // FQCNs so the mirror needs no imports and cannot silently keep
         // compiling against a moved class.
-        $provider = \Modules\Core\Application\Services\AuthProviderRegistry::first();
+        $provider = \Modules\Auth\Application\Services\AuthProviderRegistry::first();
 
         if (null !== $provider) {
             $kernel->addMiddleware(
-                new \Modules\Core\Interfaces\HTTP\Middleware\AuthMiddleware($provider),
+                new \Modules\Auth\Interfaces\HTTP\Middleware\AuthMiddleware($provider),
             );
         }
 
