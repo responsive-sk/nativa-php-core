@@ -94,6 +94,7 @@ final class NameOwnershipContractTest extends TestCase
         'src/Modules/KernelTheme',
         'src/Modules/Tooling',
         'src/Discovery',
+        'src/Seo',
         'src/Shell',
         'src/Themes',
         'src/View',
@@ -349,7 +350,10 @@ final class NameOwnershipContractTest extends TestCase
      * three is a second name for a value that had one, which is why the
      * distinct-name ceiling did not move with them.
      */
-    private const int MAX_DECLARATIONS = 287;
+    // 292 = 287 + the five constants the `src/Seo` sitemap primitives need:
+    // two public policy defaults, one private list, the registry-test fixture
+    // name, and `FrontendLayout::DEFAULT_DESCRIPTION`.
+    private const int MAX_DECLARATIONS = 292;
 
     /**
      * 203 → 204 with MAX_DECLARATIONS: `ModuleTreeState::IGNORED` is a name as
@@ -401,7 +405,10 @@ final class NameOwnershipContractTest extends TestCase
      * constants: `'text'` and `'email'` are ordinary words, and owning them as
      * constants charged 182 unrelated places in the tree (Boot 47).
      */
-    private const int MAX_NAMES = 225;
+    // 229 = 225 + the four distinct names the new `src/Seo` and layout files
+    // introduce (`DEFAULT_CHANGEFREQ`, `DEFAULT_PRIORITY`, `CHANGEFREQS`,
+    // `DEFAULT_DESCRIPTION`); `MODULE` in the registry test reuses a name.
+    private const int MAX_NAMES = 229;
 
     /**
      * `name => modules/<Name>` or `modules/<Group>/<Name>`, resolved once. A

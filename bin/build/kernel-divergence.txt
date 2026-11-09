@@ -211,7 +211,7 @@ DROPPED src/Modules/Core/Application/Services/CacheInvalidator.php # moved to mo
 DROPPED src/Modules/Core/Interfaces/HTTP/Middleware/PageCacheMiddleware.php # moved to modules/PageCache
 OWNED src/Modules/Core/Domain/Contracts/PageCacheReader.php # the kernel-owned read port for the rate-limit fallback
 DROPPED src/Modules/Core/Application/Services/StructuredDataService.php # the article, listing, category and author builders moved to modules/Blog
-OWNED src/Modules/Core/Application/Services/WebsiteStructuredData.php # the kernel home's own Organization + WebSite block
+DROPPED src/Modules/Core/Application/Services/WebsiteStructuredData.php # moved to src/Seo: the shared Organization + WebSite builder is kernel SEO runtime
 
 # --- Content locale moved out (2026-11-09, round 8) --------------------------
 DROPPED src/Modules/Core/Application/Services/ContentLocaleMapper.php # moved to modules/ContentLocale
@@ -225,4 +225,5 @@ DROPPED src/Modules/Core/Application/Services/View/Paths.php # moved to src/View
 DROPPED src/Modules/Core/Application/Services/View/ViewRenderer.php # moved to src/View: template include renderer
 OWNED src/View # the kernel's view helpers, moved from Core in Boot 56
 OWNED src/Discovery # the kernel's discovery runtime, moved from Core in Boot 60
+OWNED src/Seo # the kernel's SEO primitives and sitemap port, moved from Core in Boot 61
 OWNED src/Themes/AssetManager.php # theme bundle manifest reader, moved from Core in Boot 56

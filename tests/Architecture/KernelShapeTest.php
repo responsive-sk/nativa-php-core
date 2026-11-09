@@ -65,7 +65,6 @@ final class KernelShapeTest extends TestCase
      */
     private const array ALLOW_LIST = [
         'src/Modules/Core/Application/Services/DisposalRegistry.php',
-        'src/Modules/Core/Application/Services/WebsiteStructuredData.php',
         'src/Modules/Core/Domain/AdminRoutePolicy.php',
         'src/Modules/Core/Domain/Permissions.php',
         'src/Modules/Core/Domain/SubmitResult.php',
@@ -159,6 +158,11 @@ final class KernelShapeTest extends TestCase
      * contention rule are how the kernel discovers and arbitrates providers,
      * not HTTP dispatch members, and no module is imported by either.
      *
+     * 28 → 27 is the SEO phase: `WebsiteStructuredData` moved to the
+     * kernel-owned `Seo` namespace with the sitemap port and the content
+     * contributors. The home and Pages share the builder, and the namespace is
+     * not an HTTP dispatch member.
+     *
      * 66 → 67 is the admin-prefix round: `AdminUnavailableMiddleware` answers
      * 404 for the admin prefix when no auth provider is wired. The kernel owns
      * the prefix, so the kernel is the only layer that can refuse a panel a
@@ -166,7 +170,7 @@ final class KernelShapeTest extends TestCase
      * `/mark` to a guest because the gate was never wired. One `runtime` row,
      * three importers (http.php and two tests).
      */
-    private const int MAX_APPROVED = 28;
+    private const int MAX_APPROVED = 27;
 
     /**
      * Rule 1: every `.php` file under `src/Modules/Core` is an interface, enum
@@ -183,9 +187,9 @@ final class KernelShapeTest extends TestCase
         // true, and this guard asserting nothing while the suite stayed green —
         // the failure mode KernelCouplingTest's scanner check exists for, and
         // the same reason it reads a signal that cannot go quiet. Core carries
-        // 36 files after the Discovery phase.
+        // 35 files after the SEO phase.
         self::assertGreaterThan(
-            35,
+            34,
             \count($files),
             'the shape scan found ' . \count($files) . ' files under src/Modules/Core — the walk or the '
             . 'tokenizer stopped working, and every rule below would then approve zero files while the '

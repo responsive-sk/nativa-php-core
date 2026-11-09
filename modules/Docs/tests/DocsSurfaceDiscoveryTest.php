@@ -87,34 +87,38 @@ final class DocsSurfaceDiscoveryTest extends TestCase
     }
 
     /**
-     * Both surfaces are the kernel's own: they name no module route, because a
-     * kernel-only tree serves none. The rule is stated in both files' docblocks
-     * ("advertising a module\'s route here would teach a crawler to find a 404");
-     * this is the check that keeps the prose honest.
+     * `llms.txt` is still a kernel text surface with no module contribution: it
+     * names no module route, because a kernel-only tree serves none.
      */
     #[Test]
-    public function neitherSurfaceAdvertisesAModuleRoute(): void
+    public function llmsTxtAdvertisesNoModuleRoute(): void
     {
-        foreach (['sitemap' => new SitemapAction(), 'llms.txt' => self::llms()] as $name => $action) {
-            $body = self::render($action);
+        $body = self::render(self::llms());
 
-            // The admin prefix is spelled by its owner, not retyped here: this
-            // test reads the surfaces, and a second `'/mark'` in the tree is
-            // exactly the duplication `NameOwnershipContractTest` ratchets.
-            foreach (['/blog', AdminRoutePolicy::prefix(), '/authors'] as $moduleRoute) {
-                self::assertStringNotContainsString(
-                    $moduleRoute,
-                    $body,
-                    sprintf(
-                        '%s advertises "%s", which is a module route. The kernel lists what it'
-                        . ' serves; a module that arrives extends these surfaces through its own'
-                        . ' contribution, not by a line the kernel keeps in sync.',
-                        $name,
-                        $moduleRoute,
-                    ),
-                );
-            }
+        // The admin prefix is spelled by its owner, not retyped here: this
+        // test reads the surface, and a second `'/mark'` in the tree is
+        // exactly the duplication `NameOwnershipContractTest` ratchets.
+        foreach (['/blog', AdminRoutePolicy::prefix(), '/authors'] as $moduleRoute) {
+            self::assertStringNotContainsString(
+                $moduleRoute,
+                $body,
+                sprintf('llms.txt advertises "%s", which is a module route.', $moduleRoute),
+            );
         }
+    }
+
+    /**
+     * The sitemap MAY name a module route now, but only because the installed
+     * module contributes it. The two claims that remain true in both trees are
+     * that the admin prefix is absent and that the noindex docs surface is absent.
+     */
+    #[Test]
+    public function theSitemapNamesNoAdminOrDocumentationRoute(): void
+    {
+        $body = self::render(new SitemapAction());
+
+        self::assertStringNotContainsString(AdminRoutePolicy::prefix(), $body);
+        self::assertStringNotContainsString('/docs', $body);
     }
 
     /**
