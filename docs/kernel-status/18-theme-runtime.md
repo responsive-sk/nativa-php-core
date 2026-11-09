@@ -51,9 +51,23 @@ moved 48 -> 42.
 - `src/Modules/Core`: **266 093 B / 53 files** (9 interface / 42 concrete).
 - `KernelShapeTest::MAX_APPROVED`: **42**.
 - Source suite: **1099 tests / 7269 assertions / 1 skipped**.
-- `make themes-check`: **23 identical / 0 diverged**.
+- Fresh kernel-only checkout: **1059 tests / 3718 assertions / 867 skipped**,
+  zero errors; `/` and `/sitemap.xml` answer 200, `/mark` answers 404.
+- `make extract-check`: **198 identical / 90 recorded divergences**; the two
+  old Core paths are `DROPPED` to `src/Themes`, and the registry plus the three
+  value objects are `OWNED` under their new paths.
+- `make themes-check`: **23 identical / 0 diverged** against
+  `evan70/nativa-themes@b3ff468`.
+- `make lekalo-check`: **36 modules**.
 - `make lint`, `composer phpstan`, `make analyze`, `make mago-lint` and
   `make mago-guard` are green.
+- Export: **183 files / 169 tests / 426 assertions / 52 skipped**;
+  `make core-export-check` is green.
+- Source CI: **16/16 jobs**, run `42645195537` on `c0d381b`.
+- Published export: `responsive-sk/nativa-core@ba1945c`, generated from source
+  `c0d381b`; public CI is **9/9 jobs**, run `42645476950`.
+- Published kernel-only clone: `/` and `/sitemap.xml` = 200, `/mark` = 404; the
+  shipped catalogue is `ContentLocale`, `Settings` and `Themes/Nativa`.
 
 ## Still open
 
