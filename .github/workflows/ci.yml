@@ -641,7 +641,7 @@ jobs:
           <?php
           require 'src/init.php';
           $theme = \Themes\ThemeKernel::for(\Themes\ThemeResolver::resolvePath('/'));
-          $assets = new \Modules\Core\Application\Services\AssetManager($theme->name());
+          $assets = new \Themes\AssetManager($theme->name());
           printf("active theme: %s (bundle available: %s)\n", $theme->name(), $assets->isAvailable() ? 'yes' : 'no');
 
           if (!$assets->isAvailable()) {

@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Locales\Tests;
 
-use Modules\Core\Application\Services\View\ViewRenderer;
+use View\ViewRenderer;
 use Modules\Locales\Application\Services\TranslationService;
 use Modules\Locales\Domain\Model\Locale;
 use Modules\Locales\Domain\Model\Translation;

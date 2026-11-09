@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Media\Tests;
 
-use Modules\Core\Application\Services\View\ViewRenderer;
+use View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;

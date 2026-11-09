@@ -3,7 +3,7 @@
 declare(strict_types = 1);
 
 /**
- * Rendered via Modules\Core\Application\Services\View\ViewRenderer.
+ * Rendered via View\ViewRenderer.
  * Variables are provided by the caller; $this is not available.
  */
 
@@ -68,5 +68,5 @@ if (!isset($viewRendererGuard)) {
     <div class="m-card">
         <label for="body" class="m-label--field">Content (Markdown)</label>
         <textarea id="body" name="body" rows="20" class="m-textarea--code"><?php echo $bodyValue; ?></textarea>
-    </div>    <?php $articleCreateScript = Modules\Core\Application\Services\View\InlineJs::file('Modules/Blog/Interfaces/HTTP/assets/scripts/article-create.js'); ?>
+    </div>    <?php $articleCreateScript = View\InlineJs::file('Modules/Blog/Interfaces/HTTP/assets/scripts/article-create.js'); ?>
     <script nonce="__CSP_NONCE_PLACEHOLDER__"><?php echo $articleCreateScript; ?></script>

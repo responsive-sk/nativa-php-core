@@ -5,8 +5,8 @@ declare(strict_types = 1);
 namespace Modules\Cardboard\Interfaces\HTTP;
 
 use Modules\Cardboard\Application\Services\IconRegistry;
-use Modules\Core\Application\Services\AssetManager;
-use Modules\Core\Application\Services\View\ViewRenderer;
+use Themes\AssetManager;
+use View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Navigation\Infrastructure\Registry\NavBadgeRegistry;

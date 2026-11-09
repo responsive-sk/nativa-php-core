@@ -210,3 +210,12 @@ OWNED src/Modules/Core/Application/Services/WebsiteStructuredData.php # the kern
 # --- Content locale moved out (2026-11-09, round 8) --------------------------
 DROPPED src/Modules/Core/Application/Services/ContentLocaleMapper.php # moved to modules/ContentLocale
 DROPPED src/Modules/Core/Interfaces/HTTP/ContentServices.php # moved to modules/ContentLocale
+
+# --- View and theme assets moved out (2026-11-09, round 10) ------------------
+DROPPED src/Modules/Core/Application/Services/AssetManager.php # moved to src/Themes: theme manifest reader
+DROPPED src/Modules/Core/Application/Services/View/InlineCss.php # moved to src/View: CSS loader beside the shell
+DROPPED src/Modules/Core/Application/Services/View/InlineJs.php # moved to src/View: JS loader beside the shell
+DROPPED src/Modules/Core/Application/Services/View/Paths.php # moved to src/View: template and asset path resolver
+DROPPED src/Modules/Core/Application/Services/View/ViewRenderer.php # moved to src/View: template include renderer
+OWNED src/View # the kernel's view helpers, moved from Core in Boot 56
+OWNED src/Themes/AssetManager.php # theme bundle manifest reader, moved from Core in Boot 56

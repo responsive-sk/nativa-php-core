@@ -94,6 +94,7 @@ final class NameOwnershipContractTest extends TestCase
         'src/Modules/KernelTheme',
         'src/Modules/Tooling',
         'src/Themes',
+        'src/View',
         'modules',
         'tests',
         'bin',

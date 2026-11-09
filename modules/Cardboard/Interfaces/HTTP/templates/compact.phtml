@@ -3,7 +3,7 @@
 declare(strict_types = 1);
 
 /**
- * Rendered via Modules\Core\Application\Services\View\ViewRenderer.
+ * Rendered via View\ViewRenderer.
  * Variables are provided by the caller; $this is not available.
  */
 
@@ -128,7 +128,7 @@ if (!isset($viewRendererGuard)) {
     </style>
     <?php echo $htmxScript . "\n"; ?>
     <?php echo $htmxConfig . "\n"; ?>
-    <?php $compactThemeInitScript = Modules\Core\Application\Services\View\InlineJs::file('Modules/Cardboard/Interfaces/HTTP/assets/scripts/admin-theme-init.js'); ?>
+    <?php $compactThemeInitScript = View\InlineJs::file('Modules/Cardboard/Interfaces/HTTP/assets/scripts/admin-theme-init.js'); ?>
     <script nonce="__CSP_NONCE_PLACEHOLDER__"><?php echo $compactThemeInitScript; ?></script>
 </head>
 <body>
@@ -173,8 +173,8 @@ if (!isset($viewRendererGuard)) {
             <?php echo $content . "\n"; ?>
         </div>
     </main>
-<?php $compactShellScript = Modules\Core\Application\Services\View\InlineJs::file('Modules/Cardboard/Interfaces/HTTP/assets/scripts/compact-shell.js'); ?>
-    <?php $compactShellCommands = Modules\Core\Application\Services\View\InlineJs::file('Modules/Cardboard/Interfaces/HTTP/assets/scripts/compact-shell-commands.js'); ?>
+<?php $compactShellScript = View\InlineJs::file('Modules/Cardboard/Interfaces/HTTP/assets/scripts/compact-shell.js'); ?>
+    <?php $compactShellCommands = View\InlineJs::file('Modules/Cardboard/Interfaces/HTTP/assets/scripts/compact-shell-commands.js'); ?>
     <script nonce="__CSP_NONCE_PLACEHOLDER__"><?php echo $compactShellScript; ?>
         var recent = <?php echo $recentJson; ?>;
         <?php echo $compactShellCommands; ?></script>

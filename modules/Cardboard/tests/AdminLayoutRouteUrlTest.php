@@ -7,7 +7,7 @@ namespace Modules\Cardboard\Tests;
 use Modules\Cardboard\Application\Services\BulkActions;
 use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Domain\AdminRoutePolicy;
-use Modules\Core\Application\Services\View\ViewRenderer;
+use View\ViewRenderer;
 use Modules\Core\Interfaces\HTTP\Router;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;

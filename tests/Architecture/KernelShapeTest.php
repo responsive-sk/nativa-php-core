@@ -64,16 +64,11 @@ final class KernelShapeTest extends TestCase
      * @var list<string>
      */
     private const array ALLOW_LIST = [
-        'src/Modules/Core/Application/Services/AssetManager.php',
         'src/Modules/Core/Application/Services/DiscoveryCache.php',
         'src/Modules/Core/Application/Services/DisposalRegistry.php',
         'src/Modules/Core/Application/Services/PreferenceVote.php',
         'src/Modules/Core/Application/Services/ShellContextProviderRegistry.php',
         'src/Modules/Core/Application/Services/WebsiteStructuredData.php',
-        'src/Modules/Core/Application/Services/View/InlineCss.php',
-        'src/Modules/Core/Application/Services/View/InlineJs.php',
-        'src/Modules/Core/Application/Services/View/Paths.php',
-        'src/Modules/Core/Application/Services/View/ViewRenderer.php',
         'src/Modules/Core/Domain/AdminRoutePolicy.php',
         'src/Modules/Core/Domain/Permissions.php',
         'src/Modules/Core/Domain/ShellNavItem.php',
@@ -152,6 +147,11 @@ final class KernelShapeTest extends TestCase
      * a module that ships a theme programs against that namespace, not this
      * one.
      *
+     * 42 → 37 is the View phase: `ViewRenderer`, `Paths`, `InlineCss` and
+     * `InlineJs` moved to `src/View`, and `AssetManager` followed the theme
+     * contract to `src/Themes`. Templates, layouts and theme modules render
+     * through those helpers, but none of them is an HTTP kernel member.
+     *
      * 66 → 67 is the admin-prefix round: `AdminUnavailableMiddleware` answers
      * 404 for the admin prefix when no auth provider is wired. The kernel owns
      * the prefix, so the kernel is the only layer that can refuse a panel a
@@ -159,7 +159,7 @@ final class KernelShapeTest extends TestCase
      * `/mark` to a guest because the gate was never wired. One `runtime` row,
      * three importers (http.php and two tests).
      */
-    private const int MAX_APPROVED = 42;
+    private const int MAX_APPROVED = 37;
 
     /**
      * Rule 1: every `.php` file under `src/Modules/Core` is an interface, enum
@@ -176,9 +176,9 @@ final class KernelShapeTest extends TestCase
         // true, and this guard asserting nothing while the suite stayed green —
         // the failure mode KernelCouplingTest's scanner check exists for, and
         // the same reason it reads a signal that cannot go quiet. Core carries
-        // 53 files after the Themes-namespace phase.
+        // 46 files after the View phase.
         self::assertGreaterThan(
-            50,
+            40,
             \count($files),
             'the shape scan found ' . \count($files) . ' files under src/Modules/Core — the walk or the '
             . 'tokenizer stopped working, and every rule below would then approve zero files while the '

@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Users\Interfaces\HTTP;
 
-use Modules\Core\Application\Services\View\InlineJs;
+use View\InlineJs;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;

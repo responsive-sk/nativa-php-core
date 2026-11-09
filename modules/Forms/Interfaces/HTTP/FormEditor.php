@@ -5,8 +5,8 @@ declare(strict_types = 1);
 namespace Modules\Forms\Interfaces\HTTP;
 
 use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
-use Modules\Core\Application\Services\View\InlineJs;
-use Modules\Core\Application\Services\View\ViewRenderer;
+use View\InlineJs;
+use View\ViewRenderer;
 use Modules\Forms\Domain\Entities\Form;
 use Modules\Forms\Domain\Entities\FormField;
 use Modules\Forms\Domain\Model\FormFieldType;

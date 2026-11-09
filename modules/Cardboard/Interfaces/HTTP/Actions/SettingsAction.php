@@ -8,7 +8,7 @@ use Modules\Cardboard\Application\Services\IconRegistry;
 use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Cardboard\Interfaces\HTTP\CardboardServices;
 use Modules\PageCache\Application\Services\CacheInvalidator;
-use Modules\Core\Application\Services\View\ViewRenderer;
+use View\ViewRenderer;
 use Themes\ThemePreference;
 use Themes\ThemeSetting;
 use Themes\ThemeSettingValues;

@@ -3,7 +3,7 @@
 declare(strict_types = 1);
 
 /**
- * Rendered via Modules\Core\Application\Services\View\ViewRenderer.
+ * Rendered via View\ViewRenderer.
  * Variables are provided by the caller; $this is not available.
  */
 
@@ -40,5 +40,5 @@ if (!isset($viewRendererGuard)) {
             <div><button class="m-btn m-btn-primary" type="submit" id="upload-btn">Upload</button></div>
         </form>
     </div>
-    <?php $uploadFormScript = Modules\Core\Application\Services\View\InlineJs::file('Modules/Media/Interfaces/HTTP/assets/scripts/upload-form.js'); ?>
+    <?php $uploadFormScript = View\InlineJs::file('Modules/Media/Interfaces/HTTP/assets/scripts/upload-form.js'); ?>
     <script nonce="__CSP_NONCE_PLACEHOLDER__">window.UPLOAD_LIMITS=<?php echo json_encode($uploadLimits, JSON_HEX_TAG | JSON_HEX_AMP); ?>;<?php echo $uploadFormScript; ?></script>
