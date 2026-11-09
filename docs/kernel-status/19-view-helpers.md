@@ -34,31 +34,54 @@ falls back to the kernel bundle and still discovers module-carried bundles.
 
 ## Wiring
 
-`composer.json` gained `View\\` -> `src/View/`. PHPStan, PHP CS Fixer and
-`mago.toml` gained the same root, `NameOwnershipContractTest` counts it, and
-the Mago perimeter gained a `View` rule that permits the kernel and global
-functions but no module. Core gained `View\\**` in its permit list.
+`composer.json` gained the `View` PSR-4 root pointing at `src/View/`. PHPStan,
+PHP CS Fixer and `mago.toml` gained the same root,
+`NameOwnershipContractTest` counts it, and the Mago perimeter gained a `View`
+rule that permits the kernel and global functions but no module. Core gained
+the `View` namespace in its permit list.
 
 The imports changed in Core, the catalogue, all installed slices, tests,
 `public/`, `bin/` and `.github/workflows/ci.yml`. The theme repository was
 edited in `evan70/nativa-themes` (`e271fef`), synced here, and verified with
 `make themes-check`: **23 identical, 0 diverged**.
 
-There is no compatibility alias: the old
-`Modules\Core\Application\Services\View\…` names now fail loudly instead of
-loading a second copy.
+There is no compatibility alias: the old Core view names now fail loudly
+instead of loading a second copy.
 
 ## After
 
 - `src/Modules/Core`: **249 691 B / 48 files** (9 interface / 37 concrete).
 - `KernelShapeTest::MAX_APPROVED`: **37**.
 - Source suite: **1099 tests / 7265 assertions / 1 skipped**.
+- Fresh kernel-only checkout, no `vendor/`: **1059 tests / 3714 assertions /
+  867 skipped**, zero errors; `/` and `/sitemap.xml` answer 200, `/mark`
+  answers 404.
 - `make extract-check`: **197 identical / 91 recorded divergences**; the five
   old Core paths are `DROPPED` to `src/View` or `src/Themes`.
 - `make themes-check`: **23 identical / 0 diverged** against
   `evan70/nativa-themes@e271fef`.
 - `make lint`, `composer phpstan`, `make analyze`, `make mago-lint` and
   `make mago-guard` are green.
+- Export: **183 files / 169 tests / 421 assertions / 52 skipped**;
+  `make core-export-check` is green.
+
+## What the first CI run found
+
+The first source run on `daed694` was red on exactly the shape this move
+changed: the kernel-only boot and the dist artifact answered 500 without
+`vendor/`, because `src/init.php`'s zero-dependency PSR-4 fallback knew
+`Modules`, `Templates` and `Themes` but not the new `View` prefix. The PHPUnit
+job passed because Composer's autoloader supplied the class; only the no-vendor
+jobs could see the gap. `baac1ee` adds the `View` prefix to that map, and the
+next run is **16/16 green** (run `42647635406`).
+
+## Published
+
+- Source CI: **16/16 jobs**, run `42647635406` on `baac1ee`.
+- Published export: `responsive-sk/nativa-core@10dba50`, generated from source
+  `baac1ee`; public CI is **9/9 jobs**, run `42648007691`.
+- Published kernel-only clone: `/` and `/sitemap.xml` = 200, `/mark` = 404; the
+  shipped catalogue is `ContentLocale`, `Settings` and `Themes/Nativa`.
 
 ## Still open
 
