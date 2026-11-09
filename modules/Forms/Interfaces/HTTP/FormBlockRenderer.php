@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Forms\Interfaces\HTTP;
 
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
 use Modules\Forms\Application\Services\FormResultsService;
@@ -99,7 +99,7 @@ final readonly class FormBlockRenderer
      */
     private static function form(Form $form, string $prefix, string $locale, array $old, array $invalid, string $returnPath): string
     {
-        $action = ContentServices::mapper()->urlPrefix($locale) . '/forms/' . rawurlencode($form->slug);
+        $action = ContentLocaleServices::mapper()->urlPrefix($locale) . '/forms/' . rawurlencode($form->slug);
         $return = self::returnPath($returnPath, $prefix);
 
         $html = '<form class="' . $prefix . '-form__form" method="post" action="' . FrontendLayout::e($action) . '">'

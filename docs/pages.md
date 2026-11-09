@@ -68,7 +68,7 @@ lifetime.
 
 ## Two things this module does not decide
 
-**Its locale family.** `ContentServices::mapper()` owns which locale is the
+**Its locale family.** `ContentLocaleServices::mapper()` owns which locale is the
 default and how each one maps to a directory and a URL prefix. Pages asks; it
 never hardcodes a code — a defaulted locale argument is how a hardcoded Slovak
 literal once leaked in and made every unknown code resolve to Slovak.

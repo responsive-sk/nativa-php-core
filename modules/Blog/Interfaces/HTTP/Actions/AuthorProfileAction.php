@@ -11,7 +11,7 @@ use Modules\Blog\Application\Services\StructuredDataService;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\PageContext;
 use Modules\Core\Interfaces\HTTP\ThemeKernel;
@@ -148,7 +148,7 @@ final class AuthorProfileAction
      */
     private function profilePath(string $locale, string $slug): string
     {
-        return ContentServices::mapper()->urlPrefix($locale) . '/authors/' . $slug;
+        return ContentLocaleServices::mapper()->urlPrefix($locale) . '/authors/' . $slug;
     }
 
     private function memberSince(string $createdAt): string

@@ -6,7 +6,7 @@ namespace Modules\Blog\Application\Services;
 
 use Modules\Blog\Application\BlogServices;
 use Modules\Blog\Domain\Entities\Article;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 
 /**
@@ -142,7 +142,7 @@ final readonly class BlogFeedService
      */
     private function articleUrl(string $baseUrl, Article $article): string
     {
-        $prefix = ContentServices::mapper()->urlPrefix($article->locale);
+        $prefix = ContentLocaleServices::mapper()->urlPrefix($article->locale);
 
         return $baseUrl . $prefix . '/blog/' . $article->slug;
     }

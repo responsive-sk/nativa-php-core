@@ -8,7 +8,7 @@ use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Forms\Application\FormsServices;
 use Modules\Forms\Domain\Entities\Form;
@@ -21,7 +21,7 @@ use Modules\Forms\Domain\Entities\Form;
  * module existed.
  *
  * The locale toggle mirrors Pages: `?locale=sk|en`, canonicalised through
- * `ContentServices::mapper()->code()`. A definition belongs to one locale, so
+ * `ContentLocaleServices::mapper()->code()`. A definition belongs to one locale, so
  * the list never mixes two languages.
  */
 #[Route(path: '/mark/forms', method: 'GET', name: 'mark.forms')]
@@ -32,7 +32,7 @@ final readonly class FormsIndexAction
     public function handle(Request $request): Response
     {
         $locale = $this->locale($request);
-        $language = ContentServices::mapper()->languageCode($locale);
+        $language = ContentLocaleServices::mapper()->languageCode($locale);
         $forms = FormsServices::forms()->listForLocale($locale);
         $csrf = AdminLayout::csrfField();
 
@@ -91,8 +91,8 @@ final readonly class FormsIndexAction
     {
         $html = '';
 
-        foreach (ContentServices::mapper()->locales() as $code) {
-            $lang = ContentServices::mapper()->languageCode($code);
+        foreach (ContentLocaleServices::mapper()->locales() as $code) {
+            $lang = ContentLocaleServices::mapper()->languageCode($code);
             $html .= '<a class="m-btn m-btn-ghost" href="' . AdminLayout::e($this->url('mark.forms') . '?locale=' . $lang) . '">'
                 . ($code === $locale ? '[' . AdminLayout::e($lang) . ']' : AdminLayout::e($lang)) . '</a> ';
         }
@@ -102,6 +102,6 @@ final readonly class FormsIndexAction
 
     private function locale(Request $request): string
     {
-        return ContentServices::mapper()->code($request->queryString('locale', 'sk'));
+        return ContentLocaleServices::mapper()->code($request->queryString('locale', 'sk'));
     }
 }

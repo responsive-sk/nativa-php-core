@@ -9,7 +9,7 @@ use Modules\Core\Application\Services\WebsiteStructuredData;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Interfaces\HTTP\ErrorPageRenderer;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Markdown\Interfaces\HTTP\Markdown\MarkdownBlockContext;
@@ -165,7 +165,7 @@ final class PageViewAction
 
     private function pageHref(string $locale, string $slug): string
     {
-        return ContentServices::mapper()->urlPrefix($locale) . '/' . $slug;
+        return ContentLocaleServices::mapper()->urlPrefix($locale) . '/' . $slug;
     }
 
     /**
@@ -174,7 +174,7 @@ final class PageViewAction
      */
     private function otherLocale(string $locale): string
     {
-        foreach (ContentServices::mapper()->locales() as $code) {
+        foreach (ContentLocaleServices::mapper()->locales() as $code) {
             if ($code !== $locale) {
                 return $code;
             }
@@ -203,7 +203,7 @@ final class PageViewAction
 
         // x-default points at the configured default locale's version; fall
         // back to the first available link when this page is not paired.
-        $defaultCode = ContentServices::mapper()->defaultLocale();
+        $defaultCode = ContentLocaleServices::mapper()->defaultLocale();
         $fallback = $links[$defaultCode] ?? (string) reset($links);
 
         if ('' !== $fallback) {
@@ -302,7 +302,7 @@ final class PageViewAction
         // it). It already holds the configured default for a bare request.
         $locale = $request->getAttribute('locale');
 
-        return ContentServices::mapper()->code(is_string($locale) ? $locale : '');
+        return ContentLocaleServices::mapper()->code(is_string($locale) ? $locale : '');
     }
 
     /**

@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Pages\Application\Services;
 
 use Modules\PageCache\Application\Services\CacheInvalidator;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Pages\Infrastructure\Persistence\PageFileStorage;
 
 /**
@@ -210,7 +210,7 @@ final readonly class PageCrudService
      */
     private function otherLocale(string $locale): string
     {
-        foreach (ContentServices::mapper()->locales() as $candidate) {
+        foreach (ContentLocaleServices::mapper()->locales() as $candidate) {
             if ($candidate !== $locale) {
                 return $candidate;
             }

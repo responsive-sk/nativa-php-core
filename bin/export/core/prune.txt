@@ -13,19 +13,17 @@
 # They record how THIS tree was built, and the numbers in them belong to it.
 docs
 
-# The catalogue: the export ships the Nativa theme and Settings, the only
-# implementation of the theme vote (`ShellContextProvider::theme()`). Docs is a
-# module with no guides in this export, so it is pruned with the other
-# optional modules. Every other module is a dependency the register in
-# `openspec/changes/nativa-core-export/design.md` would have to name, and none
-# of them is a dependency of the theme itself. `modules/Settings` and
+# The catalogue: the export ships the Nativa theme, Settings (the theme vote)
+# and ContentLocale (the locale-to-URL-prefix rule every theme asks for). Docs
+# is a module with no guides in this export, so it is pruned with the other
+# optional modules. `modules/Settings`, `modules/ContentLocale` and
 # `modules/Themes/Nativa` stay.
 #
 # Measured before this list was written (`bin/lab/core-surfaces.sh`): the theme
-# renders with Settings alone; the copy surface (Locales) costs +143 files and
-# drags in a Cardboard whose `/mark` answers 500 without Users; content (Blog,
-# Pages) costs +373 and content is not a dependency; the panel (Users,
-# Cardboard) costs +209.
+# renders with Settings + ContentLocale; the copy surface (Locales) costs +143
+# files and drags in a Cardboard whose `/mark` answers 500 without Users;
+# content (Blog, Pages) costs +373 and content is not a dependency; the panel
+# (Users, Cardboard) costs +209.
 modules/Audit
 modules/Auth
 modules/Blog

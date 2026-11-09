@@ -11,7 +11,7 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Media\Interfaces\HTTP\MediaEditorHelper;
 use Modules\Pages\Application\Services\PageCrudService;
 use Modules\Validation\Validation\Validator;
@@ -82,7 +82,7 @@ final class PagesEditAction
             $request->getClientIp(),
         );
 
-        $localeParam = ContentServices::mapper()->languageCode($locale);
+        $localeParam = ContentLocaleServices::mapper()->languageCode($locale);
         $redirect = $this->url('pages.index') . '?locale=' . $localeParam . '&toast=Page+saved+successfully';
 
         // HTMX: return redirect header for partial update.
@@ -104,7 +104,7 @@ final class PagesEditAction
     private function form(array $page, string $slug, string $locale, array $override = [], array $errors = []): string
     {
         $data = $override ?: $this->normalizePage($page, $slug);
-        $localeParam = ContentServices::mapper()->languageCode($locale);
+        $localeParam = ContentLocaleServices::mapper()->languageCode($locale);
         $slugEscaped = AdminLayout::e($slug);
         $backHref = $this->url('pages.index') . '?locale=' . $localeParam;
         $bodyValue = AdminLayout::e($data['body']);
@@ -293,6 +293,6 @@ final class PagesEditAction
     {
         $localeParam = $request->queryString('locale', 'sk');
 
-        return ContentServices::mapper()->code($localeParam);
+        return ContentLocaleServices::mapper()->code($localeParam);
     }
 }

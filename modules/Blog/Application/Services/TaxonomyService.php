@@ -6,7 +6,7 @@ namespace Modules\Blog\Application\Services;
 
 use Modules\Blog\Application\BlogServices;
 use Modules\Core\Infrastructure\Paths\AppPaths;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 
 /**
  * TaxonomyService — persistent registry for blog tags and categories.
@@ -279,7 +279,7 @@ final class TaxonomyService
     {
         $derived = [];
 
-        foreach (ContentServices::mapper()->locales() as $locale) {
+        foreach (ContentLocaleServices::mapper()->locales() as $locale) {
             foreach (BlogServices::crud()->list($locale) as $article) {
                 foreach ($article['tags'] as $tag) {
                     $normalized = strtolower(trim($tag));
@@ -302,7 +302,7 @@ final class TaxonomyService
     {
         $derived = [];
 
-        foreach (ContentServices::mapper()->locales() as $locale) {
+        foreach (ContentLocaleServices::mapper()->locales() as $locale) {
             foreach (BlogServices::crud()->list($locale) as $article) {
                 $category = trim($article['category']);
                 if ('' !== $category) {

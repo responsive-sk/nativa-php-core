@@ -15,7 +15,7 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Users\Interfaces\HTTP\AuthServices;
 use Modules\Validation\Validation\Validator;
 
@@ -108,7 +108,7 @@ final class ArticlesCreateAction
         $csrf = AdminLayout::csrfField();
         $e = static fn (string $key, string $default = ''): string => AdminLayout::e($data[$key] ?? $default);
 
-        $localeParam = ContentServices::mapper()->languageCode($locale);
+        $localeParam = ContentLocaleServices::mapper()->languageCode($locale);
         $backHref = $this->url('articles.index') . '?locale=' . $localeParam;
 
         $htmx = null !== $request && AdminLayout::isHtmx($request);

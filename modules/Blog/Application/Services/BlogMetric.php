@@ -13,7 +13,7 @@ use Modules\Cardboard\Domain\Model\Trend;
 use Modules\Cardboard\Domain\Contracts\MetricContract;
 use Modules\Cardboard\Infrastructure\Attributes\AsMetricProvider;
 use Modules\Cardboard\Infrastructure\Registry\CardboardRegistry;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 
 /**
@@ -69,7 +69,7 @@ final readonly class BlogMetric implements MetricContract
     private function registerArticlesCard(Period $period): void
     {
         $crud = new BlogCrudService();
-        $locales = ContentServices::mapper()->locales();
+        $locales = ContentLocaleServices::mapper()->locales();
         $articleSk = count($crud->list($locales[0]));
         $articleEn = count($crud->list($locales[1]));
         $total = $articleSk + $articleEn;
@@ -113,7 +113,7 @@ final readonly class BlogMetric implements MetricContract
         $previousStart = false !== $previousStartTs ? date('Y-m-d', $previousStartTs) : date('Y-m-d');
 
         $published = [];
-        foreach (ContentServices::mapper()->locales() as $locale) {
+        foreach (ContentLocaleServices::mapper()->locales() as $locale) {
             foreach ($crud->list($locale) as $article) {
                 $date = $article['date'];
                 if ('' === $date) {

@@ -8,7 +8,7 @@ use Modules\Blog\Interfaces\HTTP\Actions\BlogArticleAction;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Queue\Interfaces\HTTP\QueueServices;
 use Modules\Users\Application\Services\AdminNotificationHandler;
 use Modules\Users\Application\Services\NotificationPayload;
@@ -206,7 +206,7 @@ final class QuestionSubmitAction
             : '/' . rawurlencode($subjectSlug);
 
         return Response::redirect(
-            ContentServices::mapper()->urlPrefix($locale) . $path . '?question-sent=1#questions',
+            ContentLocaleServices::mapper()->urlPrefix($locale) . $path . '?question-sent=1#questions',
         );
     }
 
@@ -276,7 +276,7 @@ final class QuestionSubmitAction
     {
         $locale = $request->getAttribute('locale');
 
-        return ContentServices::mapper()->code(is_string($locale) ? $locale : '');
+        return ContentLocaleServices::mapper()->code(is_string($locale) ? $locale : '');
     }
 
     private static function validSlug(string $slug): bool

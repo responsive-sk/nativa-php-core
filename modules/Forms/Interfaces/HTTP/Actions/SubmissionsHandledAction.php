@@ -8,7 +8,7 @@ use Modules\Audit\Interfaces\HTTP\AuditServices;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Forms\Application\FormsServices;
 
@@ -34,8 +34,8 @@ final readonly class SubmissionsHandledAction
 
     public function handle(Request $request): Response
     {
-        $locale = ContentServices::mapper()->code($request->queryString('locale', 'sk'));
-        $language = ContentServices::mapper()->languageCode($locale);
+        $locale = ContentLocaleServices::mapper()->code($request->queryString('locale', 'sk'));
+        $language = ContentLocaleServices::mapper()->languageCode($locale);
         $slug = (string) ($request->routeParam('slug') ?? '');
         $id = (string) ($request->routeParam('id') ?? '');
         $form = FormsServices::forms()->findBySlug($slug, $locale);

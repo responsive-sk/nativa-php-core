@@ -78,7 +78,7 @@ answers a single string, and the result bars average one value per submission.
 
 ## Two things this module does not decide
 
-**Its locale family.** `ContentServices::mapper()` owns which locale is default
+**Its locale family.** `ContentLocaleServices::mapper()` owns which locale is default
 and how a code maps to a directory and a URL prefix. A form stores the canonical
 code it was given; the block and the endpoint ask the mapper what "default"
 means rather than hardcoding a literal.

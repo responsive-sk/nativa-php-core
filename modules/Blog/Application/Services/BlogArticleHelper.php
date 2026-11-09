@@ -7,7 +7,7 @@ namespace Modules\Blog\Application\Services;
 use Modules\Blog\Domain\Entities\Article;
 use Modules\Blog\Domain\Entities\ArticleAuthor;
 use Modules\Core\Infrastructure\Http\Request;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 
 /**
@@ -260,7 +260,7 @@ final readonly class BlogArticleHelper
      */
     public static function blogPath(string $locale): string
     {
-        return ContentServices::mapper()->urlPrefix($locale) . '/blog';
+        return ContentLocaleServices::mapper()->urlPrefix($locale) . '/blog';
     }
 
     /**

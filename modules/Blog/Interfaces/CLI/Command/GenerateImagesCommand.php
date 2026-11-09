@@ -10,7 +10,7 @@ use Modules\Blog\Application\Services\CoverPathResolver;
 use Modules\Markdown\Application\Services\MarkdownRenderer;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Core\Interfaces\CLI\CliOutput;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use RuntimeException;
 
 /**
@@ -339,7 +339,7 @@ final class GenerateImagesCommand
     {
         $files = [];
 
-        foreach (ContentServices::mapper()->locales() as $locale) {
+        foreach (ContentLocaleServices::mapper()->locales() as $locale) {
             $dir = AppPaths::instance()->storage(BlogArticlesService::directoryFor($locale));
             foreach (glob($dir . DIRECTORY_SEPARATOR . '*.md') ?: [] as $file) {
                 $files[] = (string) $file;

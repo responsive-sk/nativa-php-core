@@ -8,7 +8,7 @@ use Modules\Core\Domain\AdminRoutePolicy;
 use Modules\Core\Domain\Contracts\PageCacheReader;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
 use Modules\Core\Interfaces\HTTP\Middleware\SecurityHeadersMiddleware;
 
@@ -483,7 +483,7 @@ final readonly class PageCacheService implements PageCacheReader
 
         return $this->cacheKey(
             $request,
-            is_string($locale) && '' !== $locale ? $locale : ContentServices::mapper()->defaultLocale(),
+            is_string($locale) && '' !== $locale ? $locale : ContentLocaleServices::mapper()->defaultLocale(),
         );
     }
 

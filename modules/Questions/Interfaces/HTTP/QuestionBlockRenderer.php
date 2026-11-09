@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Questions\Interfaces\HTTP;
 
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
 use Modules\Questions\Application\QuestionsServices;
@@ -167,7 +167,7 @@ final class QuestionBlockRenderer
     private static function form(string $subjectType, string $subjectSlug, string $locale, array $old, string $prefix): string
     {
         $csrf = CsrfMiddleware::field();
-        $localePrefix = ContentServices::mapper()->urlPrefix($locale);
+        $localePrefix = ContentLocaleServices::mapper()->urlPrefix($locale);
         $action = $localePrefix . '/questions/' . $subjectType . '/' . rawurlencode($subjectSlug);
 
         $displayName = FrontendLayout::e($old['display_name'] ?? '');

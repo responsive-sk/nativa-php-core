@@ -18,7 +18,6 @@
 DIVERGED src/Modules/Core/Application/Services/View/InlineCss.php # Boot 5: comment-strip fix, Mono renders through it
 DIVERGED src/Modules/Core/Interfaces/HTTP/Actions/HomepageAction.php # Boot 4: kernel home from ShellContext + PageContext
 DIVERGED src/Modules/Core/Interfaces/HTTP/Actions/SitemapAction.php # Boot 6: home + locale roots only
-DIVERGED src/Modules/Core/Interfaces/HTTP/ContentServices.php # Boot 3: default locale through the shell port
 DIVERGED src/Modules/Core/Interfaces/HTTP/FrontendLayout.php # Boot 3: brand, nav, languages through the shell port
 DIVERGED src/Modules/Core/Interfaces/HTTP/Middleware/RateLimitMiddleware.php # Boot 5: ports + guards, no module imports
 DIVERGED src/Modules/Core/Interfaces/HTTP/PageContext.php # Boot 9: Blog types trimmed (C)
@@ -207,3 +206,7 @@ DROPPED src/Modules/Core/Interfaces/HTTP/Middleware/PageCacheMiddleware.php # mo
 OWNED src/Modules/Core/Domain/Contracts/PageCacheReader.php # the kernel-owned read port for the rate-limit fallback
 DROPPED src/Modules/Core/Application/Services/StructuredDataService.php # the article, listing, category and author builders moved to modules/Blog
 OWNED src/Modules/Core/Application/Services/WebsiteStructuredData.php # the kernel home's own Organization + WebSite block
+
+# --- Content locale moved out (2026-11-09, round 8) --------------------------
+DROPPED src/Modules/Core/Application/Services/ContentLocaleMapper.php # moved to modules/ContentLocale
+DROPPED src/Modules/Core/Interfaces/HTTP/ContentServices.php # moved to modules/ContentLocale

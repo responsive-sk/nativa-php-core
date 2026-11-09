@@ -11,7 +11,7 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Pages\Application\Services\PageCrudService;
 use Modules\Pages\Interfaces\HTTP\PagesTableRenderer;
 
@@ -36,7 +36,7 @@ final class PagesIndexAction
         // row/filter/create URLs, so anything outside sk/en would reflect
         // verbatim (AdminLocale::raw() is the identity on legit values).
         $localeRaw = AdminLocale::raw($request->queryString('locale', 'sk'));
-        $locale = ContentServices::mapper()->code($localeRaw);
+        $locale = ContentLocaleServices::mapper()->code($localeRaw);
         $search = $request->queryString('q');
         $pageParam = $request->query('page');
         $page = max(1, (int) (is_string($pageParam) ? $pageParam : '1'));

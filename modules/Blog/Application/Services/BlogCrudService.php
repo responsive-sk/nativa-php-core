@@ -6,7 +6,7 @@ namespace Modules\Blog\Application\Services;
 
 use Modules\Markdown\Application\Services\MarkdownRenderer;
 use Modules\Core\Infrastructure\Paths\AppPaths;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 
 /**
  * BlogCrudService — read/write blog articles stored as markdown files
@@ -242,7 +242,7 @@ final readonly class BlogCrudService
     {
         $urls = [];
 
-        foreach (ContentServices::mapper()->locales() as $locale) {
+        foreach (ContentLocaleServices::mapper()->locales() as $locale) {
             $dir = AppPaths::instance()->storage(BlogArticlesService::directoryFor($locale));
 
             foreach (glob($dir . DIRECTORY_SEPARATOR . '*.md') ?: [] as $file) {

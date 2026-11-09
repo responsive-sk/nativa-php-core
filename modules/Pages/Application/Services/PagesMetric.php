@@ -11,7 +11,7 @@ use Modules\Cardboard\Domain\Model\Period;
 use Modules\Cardboard\Domain\Contracts\MetricContract;
 use Modules\Cardboard\Infrastructure\Attributes\AsMetricProvider;
 use Modules\Cardboard\Infrastructure\Registry\CardboardRegistry;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 
 /**
  * PagesMetric — aggregated pages metric card for the dashboard.
@@ -27,7 +27,7 @@ final readonly class PagesMetric implements MetricContract
     public function registerCards(Period $period): void
     {
         $crud = new PageCrudService();
-        $locales = ContentServices::mapper()->locales();
+        $locales = ContentLocaleServices::mapper()->locales();
         $pageSk = count($crud->list($locales[0]));
         $pageEn = count($crud->list($locales[1]));
         $total = $pageSk + $pageEn;

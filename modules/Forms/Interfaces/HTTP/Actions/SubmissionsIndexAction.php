@@ -8,7 +8,7 @@ use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Forms\Application\FormsServices;
 use Modules\Forms\Domain\Entities\FormSubmission;
@@ -29,7 +29,7 @@ final readonly class SubmissionsIndexAction
     public function handle(Request $request): Response
     {
         $locale = $this->locale($request);
-        $language = ContentServices::mapper()->languageCode($locale);
+        $language = ContentLocaleServices::mapper()->languageCode($locale);
         $slug = (string) ($request->routeParam('slug') ?? '');
         $form = FormsServices::forms()->findBySlug($slug, $locale);
 
@@ -121,6 +121,6 @@ final readonly class SubmissionsIndexAction
 
     private function locale(Request $request): string
     {
-        return ContentServices::mapper()->code($request->queryString('locale', 'sk'));
+        return ContentLocaleServices::mapper()->code($request->queryString('locale', 'sk'));
     }
 }

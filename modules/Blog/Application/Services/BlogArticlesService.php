@@ -10,7 +10,7 @@ use Modules\Markdown\Application\Services\MarkdownRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Uploads\Infrastructure\Storage\LocalStorageProvider;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 
 /**
@@ -460,7 +460,7 @@ final class BlogArticlesService
             return $locale;
         }
 
-        return ContentServices::mapper()->defaultLocale();
+        return ContentLocaleServices::mapper()->defaultLocale();
     }
 
     /**
@@ -472,7 +472,7 @@ final class BlogArticlesService
      */
     public static function directoryFor(string $locale): string
     {
-        return str_replace('/', DIRECTORY_SEPARATOR, ContentServices::mapper()->directory('blog', $locale));
+        return str_replace('/', DIRECTORY_SEPARATOR, ContentLocaleServices::mapper()->directory('blog', $locale));
     }
 
     private function avatar(): AuthorAvatar

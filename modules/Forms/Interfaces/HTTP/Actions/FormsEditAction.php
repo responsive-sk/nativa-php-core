@@ -10,7 +10,7 @@ use Modules\PageCache\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Forms\Application\FormsServices;
 use Modules\Forms\Domain\Entities\Form;
@@ -36,7 +36,7 @@ final readonly class FormsEditAction
     public function handle(Request $request): Response
     {
         $locale = $this->locale($request);
-        $language = ContentServices::mapper()->languageCode($locale);
+        $language = ContentLocaleServices::mapper()->languageCode($locale);
         $slug = (string) ($request->routeParam('slug') ?? '');
         $form = FormsServices::forms()->findBySlug($slug, $locale);
 
@@ -133,6 +133,6 @@ final readonly class FormsEditAction
     {
         $submitted = $request->bodyString('locale');
 
-        return ContentServices::mapper()->code('' !== $submitted ? $submitted : $request->queryString('locale', 'sk'));
+        return ContentLocaleServices::mapper()->code('' !== $submitted ? $submitted : $request->queryString('locale', 'sk'));
     }
 }

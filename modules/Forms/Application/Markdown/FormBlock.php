@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Forms\Application\Markdown;
 
 use Modules\Markdown\Infrastructure\Attributes\AsMarkdownBlock;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Markdown\Interfaces\HTTP\Markdown\MarkdownBlockContext;
 use Modules\Markdown\Interfaces\HTTP\Markdown\MarkdownBlockInterface;
 use Modules\Forms\Application\FormsServices;
@@ -96,7 +96,7 @@ final readonly class FormBlock implements MarkdownBlockInterface
             return $form;
         }
 
-        $default = ContentServices::mapper()->defaultLocale();
+        $default = ContentLocaleServices::mapper()->defaultLocale();
 
         if ($default === $locale) {
             return null;

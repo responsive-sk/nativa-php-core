@@ -8,7 +8,7 @@ use Modules\Blog\Interfaces\HTTP\Actions\BlogArticleAction;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Forms\Application\FormsServices;
 use Modules\Forms\Application\Services\ReturnTargetResolver;
 use Modules\Forms\Domain\Entities\Form;
@@ -136,7 +136,7 @@ final readonly class FormSubmitAction
             return $form;
         }
 
-        $default = ContentServices::mapper()->defaultLocale();
+        $default = ContentLocaleServices::mapper()->defaultLocale();
 
         if ($default === $locale) {
             return null;
@@ -184,7 +184,7 @@ final readonly class FormSubmitAction
         $path = $target ?? '/';
 
         return Response::redirect(
-            ContentServices::mapper()->urlPrefix($locale) . $path . '?form-sent=1#form-' . rawurlencode($slug),
+            ContentLocaleServices::mapper()->urlPrefix($locale) . $path . '?form-sent=1#form-' . rawurlencode($slug),
         );
     }
 
@@ -204,6 +204,6 @@ final readonly class FormSubmitAction
     {
         $locale = $request->getAttribute('locale');
 
-        return ContentServices::mapper()->code(is_string($locale) ? $locale : '');
+        return ContentLocaleServices::mapper()->code(is_string($locale) ? $locale : '');
     }
 }

@@ -6,7 +6,7 @@ namespace Modules\Pages\Infrastructure\Persistence;
 
 use Modules\Markdown\Application\Services\MarkdownRenderer;
 use Modules\Core\Infrastructure\Paths\AppPaths;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 
 /**
  * PageFileStorage — reads/writes page markdown files with YAML frontmatter.
@@ -308,6 +308,6 @@ final readonly class PageFileStorage
      */
     private function directory(string $locale): string
     {
-        return str_replace('/', DIRECTORY_SEPARATOR, ContentServices::mapper()->directory('pages', $locale));
+        return str_replace('/', DIRECTORY_SEPARATOR, ContentLocaleServices::mapper()->directory('pages', $locale));
     }
 }

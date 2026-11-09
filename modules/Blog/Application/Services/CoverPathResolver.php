@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Blog\Application\Services;
 
 use Modules\Core\Infrastructure\Paths\AppPaths;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 
 /**
  * CoverPathResolver — which locale an article belongs to, and where its
@@ -42,7 +42,7 @@ final class CoverPathResolver
      */
     public function localeFor(string $file): string
     {
-        $mapper = ContentServices::mapper();
+        $mapper = ContentLocaleServices::mapper();
         $directory = dirname($file);
 
         foreach ($mapper->locales() as $locale) {
@@ -76,7 +76,7 @@ final class CoverPathResolver
      */
     public function collides(string $fileSlug, string $locale): bool
     {
-        $mapper = ContentServices::mapper();
+        $mapper = ContentLocaleServices::mapper();
 
         foreach ($mapper->locales() as $candidate) {
             if ($mapper->languageCode($candidate) === $locale) {
@@ -99,7 +99,7 @@ final class CoverPathResolver
     private function directory(string $locale): string
     {
         return AppPaths::instance()->storage(
-            str_replace('/', DIRECTORY_SEPARATOR, ContentServices::mapper()->directory('blog', $locale)),
+            str_replace('/', DIRECTORY_SEPARATOR, ContentLocaleServices::mapper()->directory('blog', $locale)),
         );
     }
 
@@ -155,7 +155,7 @@ final class CoverPathResolver
      */
     private function codeFor(string $locale): string
     {
-        $mapper = ContentServices::mapper();
+        $mapper = ContentLocaleServices::mapper();
 
         foreach ($mapper->locales() as $candidate) {
             if ($candidate === $locale || $mapper->languageCode($candidate) === $locale) {

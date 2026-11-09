@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Locales\Tests;
 
 use Modules\Auth\Application\Services\AuthProviderRegistry;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Application\Services\ShellContextProviderRegistry;
@@ -241,7 +241,7 @@ final class LocaleUrlPrefixTest extends TestCase
     #[Test]
     public function theLocaleLinkAThemeBuildsReachesARoute(): void
     {
-        $mapper = ContentServices::mapper();
+        $mapper = ContentLocaleServices::mapper();
         $paths = array_map(
             static fn (string $code): string => $mapper->urlPrefix($code) . '/docs',
             $mapper->locales(),

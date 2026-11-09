@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "content_locale",
+      "kind": "module",
+      "version": 1,
+      "description": "ContentLocale — the shared content-locale rule: default locale, storage directory and URL prefix. No routes, storage schema or admin screen."
+    }
+  ]
+}

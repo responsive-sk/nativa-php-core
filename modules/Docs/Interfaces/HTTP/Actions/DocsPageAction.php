@@ -9,7 +9,7 @@ use Modules\Markdown\Application\Services\MarkdownRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Interfaces\HTTP\ErrorPageRenderer;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Markdown\Interfaces\HTTP\Markdown\MarkdownBlockContext;
@@ -76,7 +76,7 @@ final readonly class DocsPageAction
         // reaches the action without one (a direct call) resolves to the
         // configured default rather than throwing on a null.
         $active = $request->getAttribute('locale');
-        $locale = ContentServices::mapper()->code(is_string($active) ? $active : '');
+        $locale = ContentLocaleServices::mapper()->code(is_string($active) ? $active : '');
 
         // Same pipeline as pages and articles — the renderer is the one the
         // projects already read their content through, and the theme owns the

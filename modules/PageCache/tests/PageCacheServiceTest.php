@@ -7,7 +7,7 @@ namespace Modules\PageCache\Tests;
 use Modules\Core\Domain\AdminRoutePolicy;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
 use Modules\Core\Interfaces\HTTP\Middleware\SecurityHeadersMiddleware;
 use Modules\PageCache\Application\Services\PageCacheService;
@@ -187,7 +187,7 @@ final class PageCacheServiceTest extends TestCase
     #[Test]
     public function theSamePathInAnotherLocaleIsNotAnsweredFromTheCache(): void
     {
-        [$defaultLocale, $otherLocale] = ContentServices::mapper()->locales();
+        [$defaultLocale, $otherLocale] = ContentLocaleServices::mapper()->locales();
 
         $default = Request::create('GET', '/blog');
         $default->setAttribute('locale', $defaultLocale);

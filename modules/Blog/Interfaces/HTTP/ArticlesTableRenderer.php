@@ -6,7 +6,7 @@ namespace Modules\Blog\Interfaces\HTTP;
 
 use Modules\Cardboard\Application\Services\BulkActions;
 use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Kernel\Contracts\RouterInterface;
 use Modules\Locales\Interfaces\HTTP\LocalesServices;
 
@@ -94,7 +94,7 @@ final class ArticlesTableRenderer
         $iconView = AdminLayout::iconView();
         $iconEdit = AdminLayout::iconEdit();
         $iconDelete = AdminLayout::iconDelete();
-        $mapper = ContentServices::mapper();
+        $mapper = ContentLocaleServices::mapper();
         $viewHref = $mapper->urlPrefix($mapper->code($locale)) . '/blog/' . $slug;
 
         $statusBadges = self::statusBadges($article);

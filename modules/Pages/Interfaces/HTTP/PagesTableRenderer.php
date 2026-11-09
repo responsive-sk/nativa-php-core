@@ -7,7 +7,7 @@ namespace Modules\Pages\Interfaces\HTTP;
 use Modules\Cardboard\Application\Services\BulkActions;
 use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Core\Kernel\Contracts\RouterInterface;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Locales\Interfaces\HTTP\LocalesServices;
 
 /**
@@ -94,7 +94,7 @@ final class PagesTableRenderer
         // The public URL is PER LOCALE — /o-nas in sk, /en/about in en. The
         // raw admin param is canonicalized through the mapper first, so 'sk'
         // and 'sk_SK' cannot disagree about where the page lives.
-        $mapper = ContentServices::mapper();
+        $mapper = ContentLocaleServices::mapper();
         $slugUrl = $mapper->urlPrefix($mapper->code($locale)) . '/' . $page['slug'];
         $pair = is_string($page['translation'] ?? null) && '' !== $page['translation']
             ? ' &rarr; <code>' . AdminLayout::e($page['translation']) . '</code>'

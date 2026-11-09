@@ -15,7 +15,7 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Users\Interfaces\HTTP\AuthServices;
 use Modules\Validation\Validation\Validator;
 
@@ -121,7 +121,7 @@ final class ArticlesEditAction
      */
     private function saved(Request $request, string $locale): Response
     {
-        $localeParam = ContentServices::mapper()->languageCode($locale);
+        $localeParam = ContentLocaleServices::mapper()->languageCode($locale);
         $target = $this->url('articles.index') . '?locale=' . $localeParam . '&toast=Article+saved+successfully';
 
         if (AdminLayout::isHtmx($request)) {
@@ -142,7 +142,7 @@ final class ArticlesEditAction
     private function form(array $article, string $slug, string $locale, array $override = [], array $errors = [], ?Request $request = null): string
     {
         $data = $override ?: $this->normalizeArticle($article, $slug);
-        $localeParam = ContentServices::mapper()->languageCode($locale);
+        $localeParam = ContentLocaleServices::mapper()->languageCode($locale);
         $slugEscaped = AdminLayout::e($slug);
         $backHref = $this->url('articles.index') . '?locale=' . $localeParam;
         $fields = $this->passthroughFields($data) . $this->formFields($data, $slug, $locale);

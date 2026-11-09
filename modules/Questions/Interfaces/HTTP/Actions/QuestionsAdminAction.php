@@ -11,7 +11,7 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Questions\Application\QuestionsServices;
 use Modules\Questions\Domain\Entities\Question;
 
@@ -183,7 +183,7 @@ final class QuestionsAdminAction
             return '';
         }
 
-        $language = ContentServices::mapper()->languageCode($locale);
+        $language = ContentLocaleServices::mapper()->languageCode($locale);
         $href = $this->url('articles.edit', ['slug' => rawurlencode($slug)]) . '?locale=' . rawurlencode($language);
 
         return '<p><a class="m-btn m-btn-ghost" href="' . AdminLayout::e($href) . '">Review article</a></p>';

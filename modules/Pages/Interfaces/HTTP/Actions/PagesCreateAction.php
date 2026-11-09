@@ -12,7 +12,7 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Media\Interfaces\HTTP\MediaEditorHelper;
 use Modules\Pages\Application\Services\PageCrudService;
 use Modules\Validation\Validation\Validator;
@@ -93,7 +93,7 @@ final class PagesCreateAction
         $errorHtml = AdminLayout::messages($errors, 'err');
         $csrf = AdminLayout::csrfField();
 
-        $localeParam = ContentServices::mapper()->languageCode($locale);
+        $localeParam = ContentLocaleServices::mapper()->languageCode($locale);
         $backHref = $this->url('pages.index') . '?locale=' . $localeParam;
 
         $content = '<form method="POST" action="' . AdminLayout::e($this->url('pages.create')) . '?locale=' . $localeParam . '"'
@@ -215,6 +215,6 @@ final class PagesCreateAction
     {
         $localeParam = $request->queryString('locale', 'sk');
 
-        return ContentServices::mapper()->code($localeParam);
+        return ContentLocaleServices::mapper()->code($localeParam);
     }
 }

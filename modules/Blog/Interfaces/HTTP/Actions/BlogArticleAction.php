@@ -16,7 +16,7 @@ use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Markdown\Interfaces\HTTP\Markdown\MarkdownBlockContext;
 use Modules\Core\Interfaces\HTTP\PageContext;
@@ -214,7 +214,7 @@ final class BlogArticleAction
     private function resolveArticle(string $slug, string $locale): ?array
     {
         $parsed = $this->loadArticle($slug, $locale);
-        $default = ContentServices::mapper()->defaultLocale();
+        $default = ContentLocaleServices::mapper()->defaultLocale();
 
         if (null === $parsed && $locale !== $default) {
             $fallback = $this->loadArticle($slug, $default);
@@ -283,7 +283,7 @@ final class BlogArticleAction
             description: $excerpt,
             currentPath: $request->getPathInfo(),
             localeLinks: $links,
-            lang: ContentServices::mapper()->languageCode($locale),
+            lang: ContentLocaleServices::mapper()->languageCode($locale),
             hreflangLinks: $this->hreflangLinks($request, $links),
             canonicalUrl: $canonical,
             ogType: 'article',
@@ -551,7 +551,7 @@ final class BlogArticleAction
      */
     private function otherLocale(string $locale): string
     {
-        foreach (ContentServices::mapper()->locales() as $code) {
+        foreach (ContentLocaleServices::mapper()->locales() as $code) {
             if ($code !== $locale) {
                 return $code;
             }
@@ -562,7 +562,7 @@ final class BlogArticleAction
 
     private function blogHref(string $locale, string $slug): string
     {
-        return ContentServices::mapper()->urlPrefix($locale) . '/blog/' . $slug;
+        return ContentLocaleServices::mapper()->urlPrefix($locale) . '/blog/' . $slug;
     }
 
     /**
@@ -597,7 +597,7 @@ final class BlogArticleAction
         // x-default points at the configured default locale's version; if this
         // page has no translation for it (or it IS the default), fall back to
         // the first available link.
-        $defaultCode = ContentServices::mapper()->defaultLocale();
+        $defaultCode = ContentLocaleServices::mapper()->defaultLocale();
         $fallback = $links[$defaultCode] ?? (string) reset($links);
 
         if ('' !== $fallback) {

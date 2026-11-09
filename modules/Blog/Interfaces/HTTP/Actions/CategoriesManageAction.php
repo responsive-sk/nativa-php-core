@@ -12,7 +12,7 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 
 /**
  * Category management — GET /mark/categories, POST /mark/categories/create,
@@ -231,7 +231,7 @@ final class CategoriesManageAction
     {
         $counts = [];
 
-        foreach (ContentServices::mapper()->locales() as $locale) {
+        foreach (ContentLocaleServices::mapper()->locales() as $locale) {
             $service = BlogServices::crud();
             $articles = $service->list($locale);
 
@@ -256,7 +256,7 @@ final class CategoriesManageAction
     {
         $count = 0;
 
-        foreach (ContentServices::mapper()->locales() as $locale) {
+        foreach (ContentLocaleServices::mapper()->locales() as $locale) {
             $service = BlogServices::crud();
             $articles = $service->list($locale);
 
@@ -289,7 +289,7 @@ final class CategoriesManageAction
     {
         $count = 0;
 
-        foreach (ContentServices::mapper()->locales() as $locale) {
+        foreach (ContentLocaleServices::mapper()->locales() as $locale) {
             $service = BlogServices::crud();
             $articles = $service->list($locale);
 
