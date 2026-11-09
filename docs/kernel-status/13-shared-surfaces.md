@@ -59,8 +59,9 @@ next copy cannot drift unnoticed.
 - `make extract-check`: **199 identical, 89 recorded divergences**; the moved
   upstream paths are recorded as `DROPPED`, with the owning module named.
 - `make lekalo-check`: **33 modules** validated.
-- `make themes-check THEMES_ROOT=../nativa-themes`: **23 identical, 0 diverged**
-  against the local theme commit `7842772`.
+- `make themes-check`: **23 identical, 0 diverged** against the pushed
+  `nativa-themes@7842772`; the local `THEMES_ROOT=../nativa-themes` variant
+  reports the same.
 - `make lint`, `composer phpstan`, `make analyze`, `make mago-lint` and
   `make mago-guard` are green.
 
@@ -73,11 +74,6 @@ minus the files each side no longer shares.
 
 ### Still open
 
-- The `nativa-themes` commit `7842772` is local and has not been pushed. The
-  default `make themes-check` therefore still compares the core copy against
-  the old remote HEAD (`e6d71db`) and reports Jednotka as diverged. The local
-  `THEMES_ROOT=../nativa-themes` check is green; the public CI needs the theme
-  commit pushed first.
 - `StructuredDataService`, `ContentServices`, the page cache and the theme
   resolver stay in the kernel: each is on the boot/render path, and moving one
   would require an inversion, not another module directory.
