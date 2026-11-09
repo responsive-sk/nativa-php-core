@@ -50,6 +50,8 @@ stack: it adds two files and no database.
 - `src/Modules/Core`: **288 590 B / 59 files** (9 interface / 48 concrete).
 - `KernelShapeTest::MAX_APPROVED`: **49 -> 48**.
 - Source suite: **1099 tests / 7279 assertions / 1 skipped**.
+- Fresh kernel-only checkout: **1059 tests / 3728 assertions / 867 skipped**,
+  zero errors; `/` and `/sitemap.xml` answer 200, `/mark` answers 404.
 - `make extract-check`: **198 identical / 90 recorded divergences**; both old
   Core paths are `DROPPED` with `modules/ContentLocale` named.
 - `make lekalo-check`: **36 modules**.
@@ -57,7 +59,7 @@ stack: it adds two files and no database.
   repository.
 - `make lint`, `composer phpstan`, `make analyze`, `make mago-lint` and
   `make mago-guard` are green.
-- Export: **185 files / 169 tests / 439 assertions / 52 skipped**;
+- Export: **183 files / 169 tests / 436 assertions / 52 skipped**;
   `make core-export-check` is green.
 
 ## Still open
