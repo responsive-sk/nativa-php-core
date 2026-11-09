@@ -96,6 +96,13 @@ final class DocsCatalogContractTest extends TestCase
     /** @return array<string, array{string}> */
     public static function publishedKeys(): array
     {
+        // A data provider runs before setUp(), so a kernel-only checkout must
+        // not reach for the Docs class here. The dummy case is skipped by
+        // setUp(); returning an empty provider would be an error, not a skip.
+        if (!class_exists(DocsCatalog::class)) {
+            return ['Docs is not installed' => ['']];
+        }
+
         $cases = [];
 
         foreach ((new DocsCatalog())->keys() as $key) {

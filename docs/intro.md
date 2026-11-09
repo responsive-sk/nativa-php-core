@@ -11,9 +11,9 @@ The kernel is the smallest tree that still answers HTTP: routing, the
 request/response pair, the middleware pipeline, per-module SQLite, markdown
 rendering, error pages, and the SEO text surfaces. It ships with zero Composer
 runtime dependencies — `php -S 127.0.0.1:8000 -t public` boots it with no
-`vendor/` — and a kernel-only checkout answers `/`, `/sitemap.xml`,
-`/robots.txt` and `/docs` with **200**. Anything it cannot answer with nothing
-installed (like `/mark`, the admin) answers 404 there, by design.
+`vendor/` — and a kernel-only checkout answers `/`, `/sitemap.xml` and
+`/robots.txt` with **200**. Anything it cannot answer with nothing installed
+(like `/docs` and `/mark`, both modules) answers 404 there, by design.
 
 ## A module
 

@@ -19,6 +19,13 @@ use PHPUnit\Framework\TestCase;
  */
 final class MarkdownHeadingTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        if (!class_exists(MarkdownRenderer::class)) {
+            $this->markTestSkipped('Markdown is not installed — the renderer ships with this module.');
+        }
+    }
+
     #[Test]
     public function aPrefixedHeadingIsSplitIntoAPrefixAndATitle(): void
     {

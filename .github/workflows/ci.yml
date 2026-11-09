@@ -49,7 +49,7 @@
 #                         /mark's stylesheet comes from are built HERE and the
 #                         manifest the PHP reader probes is asserted, not
 #                         assumed.
-#   7. Boot             — the six kernel surfaces over real HTTP, a module
+#   7. Boot             — the kernel surfaces over real HTTP, a module
 #                         installed → served → removed → 404, and `bin/cms
 #                         migrate`. No `composer install` in this job,
 #                         deliberately: the kernel runtime has zero Composer
@@ -1012,7 +1012,7 @@ jobs:
 
       # `check <path> <status>`; a page cache or an error page would change the
       # code, so the status IS the assertion.
-      - name: The six kernel surfaces answer over HTTP
+      - name: The kernel surfaces answer over HTTP
         run: |
           set -euo pipefail
           check() {
@@ -1027,7 +1027,8 @@ jobs:
           check /            200
           check /sitemap.xml 200
           check /robots.txt  200
-          check /docs        200
+          # Docs is a module; a kernel-only checkout has no /docs route.
+          check /docs        404
           check /nope        404
           # The interesting one: not 403 and not 500. The admin is a module, and
           # a path the kernel has no route for is NOT FOUND — never Forbidden.

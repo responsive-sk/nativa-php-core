@@ -22,6 +22,13 @@ use PHPUnit\Framework\TestCase;
  */
 final class MarkdownBlockParagraphTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        if (!class_exists(MarkdownRenderer::class)) {
+            $this->markTestSkipped('Markdown is not installed — the renderer ships with this module.');
+        }
+    }
+
     #[Test]
     public function aPlaceholderAloneInAParagraphIsNotWrapped(): void
     {

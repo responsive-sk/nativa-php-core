@@ -39,9 +39,9 @@ installed.
 
 `docs/kernel-status.md` records the measured state, with the status codes read
 back off this tree rather than paraphrased from a plan. Measured on a freshly
-started server: `/`, `/robots.txt`, `/sitemap.xml` and `/docs` answer **200**,
-`/nope` answers **404**, and a module installed over HTTP answers `200` →
-`404` across `module:add` / `module:remove`.
+started server: `/`, `/robots.txt` and `/sitemap.xml` answer **200**, `/docs`
+and `/nope` answer **404** because Docs is a module, and a module installed
+over HTTP answers `200` → `404` across `module:add` / `module:remove`.
 
 `/` was a 500 for most of this kernel's life — `HomepageAction` reached for a
 module that is not part of it. Boot 19 closed that, and the same boot found the
