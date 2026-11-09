@@ -8,7 +8,7 @@ use Modules\Cardboard\Application\Services\AdminLocale;
 use Modules\Cardboard\Application\Services\BulkEntityGate;
 use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Cardboard\Interfaces\HTTP\CardboardServices;
-use Modules\Core\Application\Services\CacheInvalidator;
+use Modules\PageCache\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;

@@ -101,6 +101,7 @@ $pruned = [
     'modules/Docs',
     'modules/Markdown',
     'modules/Navigation',
+    'modules/PageCache',
     'modules/Uploads',
     'lekalo',
     'lekalo.lock',

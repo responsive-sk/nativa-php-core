@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Cardboard\Interfaces\HTTP;
 
 use Modules\Cardboard\Application\Services\AdminNavService;
-use Modules\Core\Application\Services\PageCacheService;
+use Modules\PageCache\Application\Services\PageCacheService;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Security\Application\Services\PasswordHasher;
 use Modules\Security\Application\Services\RateLimiter;

@@ -79,7 +79,7 @@ source `691b364`; its CI is **9/9 jobs**, run `42631413239`.
 ## Still open
 
 - `ThemeResolver`, `ThemeKernel` and `ThemeRegistry` remain on the render path.
-- The page cache remains in the dispatch path and is used by Tooling.
+- The page cache moved out in Boot 52; see `15-page-cache.md`.
 - `StructuredDataService` still has the kernel homepage as a caller.
 - `AdminRoutePolicy` stays in the kernel even though the auth module reads it:
   the admin prefix is a kernel routing rule, and the fallback must exist

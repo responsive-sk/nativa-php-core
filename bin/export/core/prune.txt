@@ -41,6 +41,7 @@ modules/Media
 modules/Navigation
 modules/Notifications
 modules/Outbox
+modules/PageCache
 modules/Pages
 modules/Pagination
 modules/Questions

@@ -2,16 +2,16 @@
 
 declare(strict_types = 1);
 
-namespace Tests\Cache;
+namespace Modules\PageCache\Tests;
 
-use Modules\Core\Application\Services\PageCacheService;
 use Modules\Core\Domain\AdminRoutePolicy;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
-use Modules\Core\Interfaces\HTTP\Middleware\PageCacheMiddleware;
 use Modules\Core\Interfaces\HTTP\Middleware\SecurityHeadersMiddleware;
+use Modules\PageCache\Application\Services\PageCacheService;
+use Modules\PageCache\Interfaces\HTTP\Middleware\PageCacheMiddleware;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -49,6 +49,10 @@ final class PageCacheServiceTest extends TestCase
 
     protected function setUp(): void
     {
+        if (!class_exists(PageCacheService::class)) {
+            $this->markTestSkipped('PageCache is not installed in this checkout.');
+        }
+
         $this->cacheDir = sys_get_temp_dir() . '/nativa-page-cache-' . bin2hex(random_bytes(6));
 
         $_SESSION = [];

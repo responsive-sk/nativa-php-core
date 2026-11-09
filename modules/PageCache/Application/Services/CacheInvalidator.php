@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Core\Application\Services;
+namespace Modules\PageCache\Application\Services;
 
 /**
  * CacheInvalidator — drops the page-cache entries a write made stale.
@@ -25,9 +25,9 @@ namespace Modules\Core\Application\Services;
  * guess. A caller that cannot name the affected paths must flush, never
  * invalidate a subset it guessed.
  *
- * Lives in Core (shared kernel) so every module can call it without
- * cross-module imports; static + stateless so #[Route] action classes
- * (instantiated by the router with no arguments) need no wiring changes.
+ * Lives in the PageCache module so its callers share the owner of the cache;
+ * static + stateless so #[Route] action classes (instantiated by the router
+ * with no arguments) need no wiring changes.
  */
 final class CacheInvalidator
 {

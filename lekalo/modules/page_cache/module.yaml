@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "page_cache",
+      "kind": "module",
+      "version": 1,
+      "description": "PageCache — the anonymous HTML page cache: the file store, the read/store middleware and the invalidation calls content writes make. No routes and no storage schema."
+    }
+  ]
+}

@@ -2,11 +2,12 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Core\Interfaces\HTTP\Middleware;
+namespace Modules\PageCache\Interfaces\HTTP\Middleware;
 
-use Modules\Core\Application\Services\PageCacheService;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
+use Modules\Core\Interfaces\HTTP\Middleware\MiddlewareInterface;
+use Modules\PageCache\Application\Services\PageCacheService;
 
 /**
  * PageCacheMiddleware — serves an anonymous public page from the file cache

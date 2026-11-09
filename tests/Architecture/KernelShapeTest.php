@@ -65,11 +65,9 @@ final class KernelShapeTest extends TestCase
      */
     private const array ALLOW_LIST = [
         'src/Modules/Core/Application/Services/AssetManager.php',
-        'src/Modules/Core/Application/Services/CacheInvalidator.php',
         'src/Modules/Core/Application/Services/ContentLocaleMapper.php',
         'src/Modules/Core/Application/Services/DiscoveryCache.php',
         'src/Modules/Core/Application/Services/DisposalRegistry.php',
-        'src/Modules/Core/Application/Services/PageCacheService.php',
         'src/Modules/Core/Application/Services/PreferenceVote.php',
         'src/Modules/Core/Application/Services/ShellContextProviderRegistry.php',
         'src/Modules/Core/Application/Services/StructuredDataService.php',
@@ -107,7 +105,6 @@ final class KernelShapeTest extends TestCase
         'src/Modules/Core/Interfaces/HTTP/Middleware/AdminUnavailableMiddleware.php',
         'src/Modules/Core/Interfaces/HTTP/Middleware/CsrfMiddleware.php',
         'src/Modules/Core/Interfaces/HTTP/Middleware/MiddlewareRegistry.php',
-        'src/Modules/Core/Interfaces/HTTP/Middleware/PageCacheMiddleware.php',
         'src/Modules/Core/Interfaces/HTTP/Middleware/RateLimitMiddleware.php',
         'src/Modules/Core/Interfaces/HTTP/Middleware/SecurityHeadersMiddleware.php',
         'src/Modules/Core/Interfaces/HTTP/PageContext.php',
@@ -148,6 +145,10 @@ final class KernelShapeTest extends TestCase
      * `AsAuthProvider` and `AuthMiddleware` moved to `modules/Auth`; the
      * `AuthProvider` interface went with them and is free shape.
      *
+     * 52 → 49 is the PageCache phase: `PageCacheService`, `CacheInvalidator`
+     * and `PageCacheMiddleware` moved to `modules/PageCache`. The kernel keeps
+     * only `PageCacheReader`, the port RateLimitMiddleware reads.
+     *
      * 66 → 67 is the admin-prefix round: `AdminUnavailableMiddleware` answers
      * 404 for the admin prefix when no auth provider is wired. The kernel owns
      * the prefix, so the kernel is the only layer that can refuse a panel a
@@ -155,7 +156,7 @@ final class KernelShapeTest extends TestCase
      * `/mark` to a guest because the gate was never wired. One `runtime` row,
      * three importers (http.php and two tests).
      */
-    private const int MAX_APPROVED = 52;
+    private const int MAX_APPROVED = 49;
 
     /**
      * Rule 1: every `.php` file under `src/Modules/Core` is an interface, enum
@@ -172,7 +173,7 @@ final class KernelShapeTest extends TestCase
         // true, and this guard asserting nothing while the suite stayed green —
         // the failure mode KernelCouplingTest's scanner check exists for, and
         // the same reason it reads a signal that cannot go quiet. Core carries
-        // 63 files (53 concrete + 8 interfaces after the Auth phase).
+        // 60 files (50 concrete + 9 interfaces after the PageCache phase).
         self::assertGreaterThan(
             50,
             \count($files),

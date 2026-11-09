@@ -30,7 +30,6 @@ tests/Content/ProseRhythmContractTest.php # its wrapped list is docs/ files
 # Measured in the export-shaped tree (Nativa + Settings): 6 errors, 9 failures
 # and 19 skips before this list existed.
 tests/Architecture/StatementHelperContractTest.php # its helper set is every module that ships a Statement helper; the catalogue has two
-tests/Cache/PageCacheInvalidationTest.php # it reads modules/Blog and modules/Outbox, which are not shipped
 tests/Discovery/DiscoveryCacheTest.php # it installs Scratch from the catalogue
 tests/Modules/ModuleLifecycleTest.php # it installs and removes Scratch from the catalogue
 tests/Architecture/AdminRouteUrlNamesTest.php # it walks every module's admin routes; no module ships one here

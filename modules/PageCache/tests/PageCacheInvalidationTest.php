@@ -2,12 +2,12 @@
 
 declare(strict_types = 1);
 
-namespace Tests\Cache;
+namespace Modules\PageCache\Tests;
 
-use Modules\Core\Application\Services\PageCacheService;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
-use Modules\Core\Interfaces\HTTP\Middleware\PageCacheMiddleware;
+use Modules\PageCache\Application\Services\PageCacheService;
+use Modules\PageCache\Interfaces\HTTP\Middleware\PageCacheMiddleware;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -43,6 +43,10 @@ final class PageCacheInvalidationTest extends TestCase
 
     protected function setUp(): void
     {
+        if (!class_exists(PageCacheService::class)) {
+            $this->markTestSkipped('PageCache is not installed in this checkout.');
+        }
+
         $this->cacheDir = sys_get_temp_dir() . '/nativa-invalidation-' . bin2hex(random_bytes(6));
         $_SESSION = [];
     }
@@ -207,7 +211,7 @@ final class PageCacheInvalidationTest extends TestCase
     #[Test]
     public function everyBlogWritePathInvalidatesItsOwnPagesInsteadOfFlushingTheCache(): void
     {
-        $root = dirname(__DIR__, 2);
+        $root = APP_BASE_PATH;
         $callSites = [
             'modules/Blog/Interfaces/HTTP/Actions/ArticlesCreateAction.php',
             'modules/Blog/Interfaces/HTTP/Actions/ArticlesEditAction.php',
@@ -243,7 +247,7 @@ final class PageCacheInvalidationTest extends TestCase
     #[Test]
     public function theOutboxPublishHandlerInvalidatesTheSameArticlePagesAsTheBlogModule(): void
     {
-        $root = dirname(__DIR__, 2);
+        $root = APP_BASE_PATH;
         $source = (string) file_get_contents($root . '/modules/Outbox/Application/Services/ArticlePublishHandler.php');
 
         $this->assertStringContainsString(

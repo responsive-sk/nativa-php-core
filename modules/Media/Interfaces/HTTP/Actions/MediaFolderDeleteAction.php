@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Media\Interfaces\HTTP\Actions;
 
 use Modules\Audit\Interfaces\HTTP\AuditServices;
-use Modules\Core\Application\Services\CacheInvalidator;
+use Modules\PageCache\Application\Services\CacheInvalidator;
 use Modules\Core\Domain\SubmitResult;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;

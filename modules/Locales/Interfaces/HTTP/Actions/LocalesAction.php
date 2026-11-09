@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Locales\Interfaces\HTTP\Actions;
 
 use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
-use Modules\Core\Application\Services\CacheInvalidator;
+use Modules\PageCache\Application\Services\CacheInvalidator;
 use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;

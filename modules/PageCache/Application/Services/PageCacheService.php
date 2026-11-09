@@ -2,9 +2,10 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Core\Application\Services;
+namespace Modules\PageCache\Application\Services;
 
 use Modules\Core\Domain\AdminRoutePolicy;
+use Modules\Core\Domain\Contracts\PageCacheReader;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\ContentServices;
@@ -38,7 +39,7 @@ use Modules\Core\Interfaces\HTTP\Middleware\SecurityHeadersMiddleware;
  * SecurityHeadersMiddleware replaces it with a fresh nonce on every request,
  * including cached responses.
  */
-final readonly class PageCacheService
+final readonly class PageCacheService implements PageCacheReader
 {
     private const int DEFAULT_TTL = 300;
 

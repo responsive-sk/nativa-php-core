@@ -20,7 +20,6 @@ DIVERGED src/Modules/Core/Interfaces/HTTP/Actions/HomepageAction.php # Boot 4: k
 DIVERGED src/Modules/Core/Interfaces/HTTP/Actions/SitemapAction.php # Boot 6: home + locale roots only
 DIVERGED src/Modules/Core/Interfaces/HTTP/ContentServices.php # Boot 3: default locale through the shell port
 DIVERGED src/Modules/Core/Interfaces/HTTP/FrontendLayout.php # Boot 3: brand, nav, languages through the shell port
-DIVERGED src/Modules/Core/Interfaces/HTTP/Middleware/PageCacheMiddleware.php # Boot 5: locale key without Locales
 DIVERGED src/Modules/Core/Interfaces/HTTP/Middleware/RateLimitMiddleware.php # Boot 5: ports + guards, no module imports
 DIVERGED src/Modules/Core/Interfaces/HTTP/PageContext.php # Boot 9: Blog types trimmed (C)
 DIVERGED src/Modules/Core/Interfaces/HTTP/ShellContext.php # Boot 3: kernel-owned nav items
@@ -37,7 +36,6 @@ DIVERGED src/Modules/Core/Infrastructure/Bootstrap/Bootstrapper.php # Boot 16: i
 DIVERGED src/Modules/Core/Application/Services/StructuredDataService.php # listing builders: collection() for a
 #   listing page and category() with a caller-supplied parent, and article() now takes the section's
 #   own word instead of spelling it. The home announces Organization + WebSite through website().
-DIVERGED src/Modules/Core/Application/Services/PageCacheService.php # Boot 24: a response rendered for a signed-in visitor is not cacheable (the cache is served to whoever trips the rate limit, so an editor's page carrying the admin link leaked to guests)
 DIVERGED src/Modules/Core/Interfaces/HTTP/Middleware/MiddlewareRegistry.php # Boot 24: FQCN resolver anchors to a declaration line — first-mention matching let prose shadow the class (upstream still resolves the docblock)
 #
 # --- Rewritten surfaces: upstream moved after our import ----------------------
@@ -176,7 +174,6 @@ DIVERGED src/init.php # 4147809: mago lint — explicit octal (`0755` → `0o755
 DIVERGED src/Modules/Core/Infrastructure/Session/FileSessionHandler.php # 4147809: mago lint — explicit octal on `@mkdir`
 DIVERGED src/Modules/Database/Infrastructure/Persistence/DatabaseConnectionManager.php # 4147809: a refused WAL pragma is logged, not silently swallowed
 DROPPED src/Modules/Core/Application/Services/DocsCatalog.php # moved to modules/Docs: the guide inventory is a module surface
-DIVERGED src/Modules/Core/Application/Services/CacheInvalidator.php # 23eec72: invalidates the pages a write changed, not the whole cache
 DROPPED src/Modules/Core/Interfaces/HTTP/Actions/DocsIndexAction.php # moved to modules/Docs: the route is a module surface
 DIVERGED src/Modules/Core/Infrastructure/Http/Request.php # 2026-10-27: queryString()/bodyString() — typed request reads beside header(); module actions use them instead of reading the field twice
 OWNED src/Modules/Core/Interfaces/HTTP/assets/scripts/docs-reader.js # 32d60a3: docs reader; upstream's docs surface is not in the slice
@@ -205,3 +202,9 @@ DROPPED src/Modules/Core/Domain/AuthIdentity.php # moved to modules/Auth
 DROPPED src/Modules/Core/Domain/Contracts/AuthProvider.php # moved to modules/Auth
 DROPPED src/Modules/Core/Infrastructure/Attributes/AsAuthProvider.php # moved to modules/Auth
 DROPPED src/Modules/Core/Interfaces/HTTP/Middleware/AuthMiddleware.php # moved to modules/Auth
+
+# --- Shared surfaces moved out (2026-11-09, round 6) --------------------------
+DROPPED src/Modules/Core/Application/Services/PageCacheService.php # moved to modules/PageCache
+DROPPED src/Modules/Core/Application/Services/CacheInvalidator.php # moved to modules/PageCache
+DROPPED src/Modules/Core/Interfaces/HTTP/Middleware/PageCacheMiddleware.php # moved to modules/PageCache
+OWNED src/Modules/Core/Domain/Contracts/PageCacheReader.php # the kernel-owned read port for the rate-limit fallback

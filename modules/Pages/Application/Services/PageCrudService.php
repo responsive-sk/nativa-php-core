@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Pages\Application\Services;
 
-use Modules\Core\Application\Services\CacheInvalidator;
+use Modules\PageCache\Application\Services\CacheInvalidator;
 use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Pages\Infrastructure\Persistence\PageFileStorage;
 

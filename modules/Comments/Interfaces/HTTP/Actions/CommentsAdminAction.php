@@ -8,7 +8,7 @@ use Modules\Audit\Interfaces\HTTP\AuditServices;
 use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
 use Modules\Comments\Domain\Entities\Comment;
 use Modules\Comments\Interfaces\HTTP\CommentsServices;
-use Modules\Core\Application\Services\CacheInvalidator;
+use Modules\PageCache\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;

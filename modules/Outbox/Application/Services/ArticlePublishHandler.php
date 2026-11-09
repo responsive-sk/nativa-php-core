@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Outbox\Application\Services;
 
-use Modules\Core\Application\Services\CacheInvalidator;
+use Modules\PageCache\Application\Services\CacheInvalidator;
 use Modules\Outbox\Interfaces\HTTP\OutboxServices;
 
 /**

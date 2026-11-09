@@ -2,10 +2,10 @@
 
 declare(strict_types = 1);
 
-namespace Tests\Cache;
+namespace Modules\PageCache\Tests;
 
-use Modules\Core\Application\Services\PageCacheService;
 use Modules\Core\Infrastructure\Paths\AppPaths;
+use Modules\PageCache\Application\Services\PageCacheService;
 use Modules\Tooling\ModuleCatalog;
 use Modules\Tooling\ModuleInstaller;
 use PHPUnit\Framework\Attributes\Test;
@@ -32,13 +32,20 @@ use PHPUnit\Framework\TestCase;
  * disappeared from the cache an operator would look in, and that no nested
  * `storage/` was left behind for the next reader to wonder about.
  *
- * Kernel-level test, like the rest of `tests/`: nothing here names a module
- * outside the kernel-owned ones, so a tree with no modules installed runs it.
+ * The test lives with the module now; a kernel-only checkout skips it with the
+ * rest of the PageCache tests instead of running a subject that is not there.
  */
 final class PageCacheDirectoryTest extends TestCase
 {
     /** Sentinel written into the real page cache, removed even on failure. */
     private string $sentinel = '';
+
+    protected function setUp(): void
+    {
+        if (!class_exists(PageCacheService::class)) {
+            $this->markTestSkipped('PageCache is not installed in this checkout.');
+        }
+    }
 
     protected function tearDown(): void
     {

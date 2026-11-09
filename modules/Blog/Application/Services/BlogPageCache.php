@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Blog\Application\Services;
 
-use Modules\Core\Application\Services\CacheInvalidator;
+use Modules\PageCache\Application\Services\CacheInvalidator;
 
 /**
  * BlogPageCache — the public pages an article write makes stale.
