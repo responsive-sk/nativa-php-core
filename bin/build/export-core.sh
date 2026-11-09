@@ -25,8 +25,8 @@
 #   - every profile target exists in the source Makefile;
 #   - every `bin/...` path an exported recipe names exists in the export;
 #   - every `make` call in the exported workflow is an exported target;
-#   - every phpunit exclusion names a real test file, and every excluded file
-#     is removed from the run;
+#   - every phpunit exclusion names a real test file, and that file is not
+#     shipped at all;
 #   - no exported surface names a pruned path.
 #
 # Usage:
@@ -217,14 +217,13 @@ php -r '
     );
 ' "$TARGET" "$STAGE"
 
-step "Generating the exported PHPUnit configuration"
+step "Removing the tests whose subject the export does not carry"
 php -r '
     $target = $argv[1];
     $stage = $argv[2];
 
-    $xml = (string) file_get_contents($stage . "/phpunit.source.xml");
     $lines = file($stage . "/phpunit.exclude", FILE_IGNORE_NEW_LINES) ?: [];
-    $excludes = [];
+    $dropped = 0;
 
     foreach ($lines as $line) {
         $path = trim(explode("#", $line, 2)[0]);
@@ -243,31 +242,22 @@ php -r '
             exit(1);
         }
 
-        $excludes[] = $path;
+        if (!unlink($target . "/" . $path)) {
+            fwrite(STDERR, "export-core: could not remove the excluded test: " . $path . "\n");
+            exit(1);
+        }
+
+        $dropped++;
     }
 
-    if (count($excludes) < 10) {
+    if ($dropped < 10) {
         fwrite(STDERR, "export-core: fewer than ten exclusions, the file probably moved\n");
         exit(1);
     }
-
-    $insert = "";
-
-    foreach ($excludes as $path) {
-        $insert .= "            <exclude>" . $path . "</exclude>\n";
-    }
-
-    $position = strpos($xml, "</testsuite>");
-
-    if (false === $position) {
-        fwrite(STDERR, "export-core: phpunit.xml has no closing testsuite\n");
-        exit(1);
-    }
-
-    $xml = substr($xml, 0, $position) . $insert . substr($xml, $position);
-
-    file_put_contents($target . "/phpunit.xml", $xml);
 ' "$TARGET" "$STAGE"
+
+step "Installing the exported PHPUnit configuration"
+cp "$STAGE/phpunit.source.xml" "$TARGET/phpunit.xml"
 
 step "Generating the exported toolchain registry"
 php "$ROOT/bin/ops/export-core-registry.php" \
@@ -334,7 +324,7 @@ if ! ( cd "$TARGET" && php vendor/bin/phpunit --no-progress ); then
     fail "the exported suite is red; fix the export rather than the exclusion list" 1
 fi
 
-step "Checking that every excluded test is really removed from the run"
+step "Checking that every excluded test is absent from the run"
 listed_tests="$(cd "$TARGET" && php vendor/bin/phpunit --list-tests 2>/dev/null)"
 
 while IFS= read -r line || [ -n "$line" ]; do

@@ -1,12 +1,14 @@
-# Tests excluded from the nativa-core export, one path and one reason per line.
+# Tests the nativa-core export does NOT CARRY, one path and one reason per line.
 #
 # These are not failing tests. Their SUBJECT is the development of
 # nativa-php-core: an approval record under docs/, the Lekalo model, the
 # OpenSpec tree, or the article corpus. That material is not shipped, so the
 # test would fail on a missing fixture rather than on a defect.
 #
-# The exporter asserts every path here exists in the export and ends in
-# Test.php. A test that no longer exists is a stale exclusion and fails.
+# The exporter asserts every path here exists in the archive, ends in Test.php
+# and is removed before the tree is published. A test that no longer exists is a
+# stale entry and fails; a file left in the archive would run in CI against a
+# subject that is not there.
 #
 # Format: <repo-relative test path> [# reason]
 tests/Architecture/KernelShapeTest.php # its approval record is docs/kernel-shape.md
