@@ -147,11 +147,10 @@ repository with `--dry-run` printing what it would push.
   `make publish-core PUBLISH_ARGS=--yes` (source `b7533a2`, 258 files) and the
   published CI answered 9/9; the marker names the source commit, so the history
   of the public tree stays a list of exports.
-- `/docs` in the export answers 200 with an empty index. The guides are
-  written for this tree and name `openspec/`, `lekalo/` and the boot log, so
-  rewriting them for the export is a documentation round of its own. The
-  exported `README.md` is the operator guide until then.
-- The 13 excluded tests are a smaller gate surface in the public tree. They
+- `/docs` is a module in the source tree and is pruned from the export: this
+  tree carries no guides, and `/docs` answers 404. `llms.txt` advertises the
+  route only when the router serves it.
+- The 25 excluded tests are a smaller gate surface in the public tree. They
   are all measurement-of-this-repository checks, and the source tree runs them
   on every commit; the export is regenerated from that commit. Recorded rather
   than implied.
@@ -217,7 +216,7 @@ Two findings are worth keeping:
   contract stayed; the false positive did not.
 
 Measured in a clean clone of the published tree, after `make modules-install`
-and `php bin/cms migrate`: **202 tests, 742 assertions, 0 skipped**; with
-`config/deploy.php` applied, `/` answers 200 with 16 `na-card`, `/docs` 200,
+and `php bin/cms migrate`: **200 tests, 711 assertions, 0 skipped**; with
+`config/deploy.php` applied, `/` answers 200 with 16 `na-card`, `/docs` 404,
 `/sitemap.xml` 200, `/mark` 404, and `/demo/hero-1.jpg` 404 because the
-photography is no longer shipped.
+photography is no longer shipped. The export is 204 files / 1 271 313 B.
