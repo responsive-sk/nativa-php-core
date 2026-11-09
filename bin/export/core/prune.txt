@@ -71,6 +71,27 @@ storage/blog
 storage/blog-images
 storage/pages
 
+# Public fonts: no shipped theme declares an @font-face and no stylesheet in
+# the export writes a url() into public/. They are leftovers from the themes,
+# and the docs/mark sheets, that are pruned above; Nativa's own header says it
+# ships "no @font-face" on purpose.
+public/fonts
+
+# Theme-gallery inputs. The one reader, `bin/build/render-theme-pages.php`, is
+# pruned below, and `build-dist.sh` already excludes the directory from the
+# artifact.
+fixtures
+
+# The Forms and Questions stylesheet generators. Both modules are pruned, and
+# `theme-css.mjs` is imported only by these two scripts.
+bin/generate
+
+# Tools whose subject the export does not carry: the production wrapper calls
+# the pruned `extract-kernel.sh`, and ClickHouse has no module and no Makefile
+# target here.
+bin/build/build-prod.sh
+bin/build/clickhouse-smoke.sh
+
 # The architectural IR model and its lockfile. The model covers this tree's
 # modules; the exported Makefile has no target that reads it.
 lekalo
