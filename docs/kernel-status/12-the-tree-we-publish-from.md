@@ -86,6 +86,48 @@ catalogue, `src/Modules/<Name>` is gitignored, and a module test skips when its
 module is absent. The exported CI's `modules` job installs the catalogue and
 runs the same suite with those tests live.
 
+## The minimal round (2026-11-09)
+
+The first export carried the whole catalogue, so it answered "does the exporter
+work", not "what does the kernel need". The second round removed the catalogue
+on purpose and added back only what a surface proved.
+
+| measured | first export | minimal export |
+|---|---|---|
+| files in the tree | 1 047 | **258** |
+| pruned paths | 30 | **68** |
+| catalogue | 26 modules, 5 themes | **2 modules, 1 theme** (`Settings`, `Themes/Nativa`) |
+| excluded tests | 13 | **27** |
+| exported suite | 976 tests, 787 skips | **199 tests, 52 skips** without modules |
+| same suite with `module:add` | not measured | **199 tests, 0 skips** |
+| `curl /` | kernel theme | **200, 19 381 B, 16 `na-card`** |
+| CI | 9/9 | **9/9** (run 42597299304) |
+
+The register behind the two catalogue entries was measured, not argued:
+`bin/lab/core-surfaces.sh` builds the export-shaped tree once per dependency
+surface and prints what each public path answers (`bin/lab/core.env` carries the
+runtime flags; a `.env` cannot install a module).
+
+| surface | modules | cost | verdict |
+|---|---|---|---|
+| Nativa on `/` | `Settings` | +14 files | kept: the theme vote is a kernel port and the kernel ships no provider |
+| Slovak copy | `Settings`, `Locales` | +143 files | not shipped: English kernel copy, and `Locales` drags in a `Cardboard` whose `/mark` answers 500 without `Users` |
+| `/blog`, `/cookies` | `Blog`, `Pages` | +373 files | not shipped: content is not a dependency of the theme, and the corpora are pruned |
+| `/mark` | `Users`, `Cardboard` | +209 files | not shipped: the panel is not part of the starting point |
+
+The second round also moved three things the first round assumed:
+
+- `check-theme-bundles.sh` reads `modules/Themes/` instead of a hardcoded list
+  of six names, so the same script is correct in both trees (measured:
+  `themes=6` here, `themes=1` in the export).
+- The export carries its own `config/deploy.php` (`theme => nativa`); the source
+  profile names `boson`, which the export does not have. `dist-check` reports
+  "kernel defaults (no Settings module to apply config/deploy.php)", which is
+  the honest state of an artifact built without a catalogue.
+- The exporter's test floor moved from 800 to 150. It guards against an
+  exclusion list that swallows the tree, and the minimal tree's honest count is
+  199; the old floor would have been a target to pad.
+
 ## The gate
 
 `make core-export-check` runs the whole thing: assemble, lint, `composer
@@ -101,10 +143,10 @@ repository with `--dry-run` printing what it would push.
 
 ## What this round did not close
 
-- The first public push is a separate, explicit step: `make publish-core
-  PUBLISH_ARGS=--yes`. A dry run is what this round measured; creating the
-  repository and publishing it is a decision the operator makes once, not a
-  side effect of the check.
+- The first public push was a separate, explicit step. It ran once with
+  `make publish-core PUBLISH_ARGS=--yes` (source `b7533a2`, 258 files) and the
+  published CI answered 9/9; the marker names the source commit, so the history
+  of the public tree stays a list of exports.
 - `/docs` in the export answers 200 with an empty index. The guides are
   written for this tree and name `openspec/`, `lekalo/` and the boot log, so
   rewriting them for the export is a documentation round of its own. The
