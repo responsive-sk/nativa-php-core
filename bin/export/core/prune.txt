@@ -93,10 +93,13 @@ public/demo
 bin/generate
 
 # Tools whose subject the export does not carry: the production wrapper calls
-# the pruned `extract-kernel.sh`, and ClickHouse has no module and no Makefile
-# target here.
+# the pruned `extract-kernel.sh`, ClickHouse has no module and no Makefile
+# target here, and `admin-smoke.sh` installs nine modules (Audit, Cardboard,
+# Comments, Forms, Outbox, Queue, Scheduler, Security, Users) the catalogue
+# does not have. On a fresh export it exits on its first line.
 bin/build/build-prod.sh
 bin/build/clickhouse-smoke.sh
+bin/build/admin-smoke.sh
 
 # The architectural IR model and its lockfile. The model covers this tree's
 # modules; the exported Makefile has no target that reads it.
