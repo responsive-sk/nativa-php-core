@@ -408,7 +408,7 @@ final class ThemeClassOwnershipTest extends TestCase
                 // theme's. `jednotka` resolves none of its own and reaches
                 // BASE_CRITICAL_CSS, so its nine files are 104 `st-` classes
                 // that belong to nobody-but-the-kernel and are correct here.
-                $borrowed = str_contains($file, '/Core/Interfaces/HTTP/assets/critical/');
+                $borrowed = str_contains($file, '/Themes/assets/critical/');
 
                 foreach (array_keys($this->classesIn($file)) as $class) {
                     $family = explode('-', $class)[0];

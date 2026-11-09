@@ -90,7 +90,6 @@ final class KernelShapeTest extends TestCase
         'src/Modules/Core/Interfaces/HTTP/Actions/SitemapAction.php',
         'src/Modules/Core/Interfaces/HTTP/Attributes/Route.php',
         'src/Modules/Core/Interfaces/HTTP/ErrorPageRenderer.php',
-        'src/Modules/Core/Interfaces/HTTP/FrontendLayout.php',
         'src/Modules/Core/Interfaces/HTTP/Kernel.php',
         'src/Modules/Core/Interfaces/HTTP/Middleware/AdminUnavailableMiddleware.php',
         'src/Modules/Core/Interfaces/HTTP/Middleware/CsrfMiddleware.php',
@@ -151,6 +150,10 @@ final class KernelShapeTest extends TestCase
      * `InlineJs` moved to `src/View`, and `AssetManager` followed the theme
      * contract to `src/Themes`. Templates, layouts and theme modules render
      * through those helpers, but none of them is an HTTP kernel member.
+     * 37 → 36 is the public-shell phase: `FrontendLayout` moved to
+     * `src/Themes` with the critical CSS and scripts it inlines. It composes
+     * the theme chrome; every action that renders HTML imports it as a theme
+     * surface, which is what makes it a theme class rather than HTTP kernel.
      *
      * 66 → 67 is the admin-prefix round: `AdminUnavailableMiddleware` answers
      * 404 for the admin prefix when no auth provider is wired. The kernel owns
@@ -159,7 +162,7 @@ final class KernelShapeTest extends TestCase
      * `/mark` to a guest because the gate was never wired. One `runtime` row,
      * three importers (http.php and two tests).
      */
-    private const int MAX_APPROVED = 37;
+    private const int MAX_APPROVED = 36;
 
     /**
      * Rule 1: every `.php` file under `src/Modules/Core` is an interface, enum
@@ -176,7 +179,7 @@ final class KernelShapeTest extends TestCase
         // true, and this guard asserting nothing while the suite stayed green —
         // the failure mode KernelCouplingTest's scanner check exists for, and
         // the same reason it reads a signal that cannot go quiet. Core carries
-        // 46 files after the View phase.
+        // 45 files after the public-shell phase.
         self::assertGreaterThan(
             40,
             \count($files),

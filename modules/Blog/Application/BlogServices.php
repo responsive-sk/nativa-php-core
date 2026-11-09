@@ -106,7 +106,7 @@ final class BlogServices
     public static function brandSuffix(): string
     {
         return \Modules\Core\Application\Services\ShellContextProviderRegistry::siteName()
-            ?? \Modules\Core\Interfaces\HTTP\FrontendLayout::DEFAULT_SITE_NAME;
+            ?? \Themes\FrontendLayout::DEFAULT_SITE_NAME;
     }
 
     public static function crud(): BlogCrudService

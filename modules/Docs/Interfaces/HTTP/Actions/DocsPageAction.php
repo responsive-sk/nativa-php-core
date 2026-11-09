@@ -11,7 +11,7 @@ use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Interfaces\HTTP\ErrorPageRenderer;
-use Modules\Core\Interfaces\HTTP\FrontendLayout;
+use Themes\FrontendLayout;
 use Modules\Markdown\Interfaces\HTTP\Markdown\MarkdownBlockContext;
 use Themes\ThemeKernel;
 use Themes\ThemeResolver;

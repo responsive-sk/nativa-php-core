@@ -9,7 +9,7 @@ use Modules\Docs\Application\Services\DocsSearchService;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Docs\Interfaces\HTTP\Actions\DocsIndexAction;
-use Modules\Core\Interfaces\HTTP\FrontendLayout;
+use Themes\FrontendLayout;
 use Themes\ThemeKernel;
 use Themes\ThemeRegistry;
 use Themes\ThemeResolver;

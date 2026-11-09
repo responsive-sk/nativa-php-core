@@ -18,7 +18,7 @@
 DIVERGED src/Modules/Core/Application/Services/View/InlineCss.php # Boot 5: comment-strip fix, Mono renders through it
 DIVERGED src/Modules/Core/Interfaces/HTTP/Actions/HomepageAction.php # Boot 4: kernel home from ShellContext + PageContext
 DIVERGED src/Modules/Core/Interfaces/HTTP/Actions/SitemapAction.php # Boot 6: home + locale roots only
-DIVERGED src/Modules/Core/Interfaces/HTTP/FrontendLayout.php # Boot 3: brand, nav, languages through the shell port
+DROPPED src/Modules/Core/Interfaces/HTTP/FrontendLayout.php # moved to src/Themes: the public shell is theme runtime, not an HTTP kernel member
 DIVERGED src/Modules/Core/Interfaces/HTTP/Middleware/RateLimitMiddleware.php # Boot 5: ports + guards, no module imports
 DIVERGED src/Modules/Core/Interfaces/HTTP/PageContext.php # Boot 9: Blog types trimmed (C)
 DIVERGED src/Modules/Core/Interfaces/HTTP/ShellContext.php # Boot 3: kernel-owned nav items
@@ -172,7 +172,16 @@ DIVERGED src/Modules/Database/Infrastructure/Persistence/DatabaseConnectionManag
 DROPPED src/Modules/Core/Application/Services/DocsCatalog.php # moved to modules/Docs: the guide inventory is a module surface
 DROPPED src/Modules/Core/Interfaces/HTTP/Actions/DocsIndexAction.php # moved to modules/Docs: the route is a module surface
 DIVERGED src/Modules/Core/Infrastructure/Http/Request.php # 2026-10-27: queryString()/bodyString() — typed request reads beside header(); module actions use them instead of reading the field twice
-OWNED src/Modules/Core/Interfaces/HTTP/assets/scripts/docs-reader.js # 32d60a3: docs reader; upstream's docs surface is not in the slice
+DROPPED src/Modules/Core/Interfaces/HTTP/assets/critical/base.css # moved to src/Themes/assets: the shell's critical CSS follows the layout
+DROPPED src/Modules/Core/Interfaces/HTTP/assets/critical/blog-comments.css # moved to src/Themes/assets: the shell's critical CSS follows the layout
+DROPPED src/Modules/Core/Interfaces/HTTP/assets/critical/blog-members.css # moved to src/Themes/assets: the shell's critical CSS follows the layout
+DROPPED src/Modules/Core/Interfaces/HTTP/assets/critical/blog-search.css # moved to src/Themes/assets: the shell's critical CSS follows the layout
+DROPPED src/Modules/Core/Interfaces/HTTP/assets/critical/blog-toc.css # moved to src/Themes/assets: the shell's critical CSS follows the layout
+DROPPED src/Modules/Core/Interfaces/HTTP/assets/critical/blog.css # moved to src/Themes/assets: the shell's critical CSS follows the layout
+DROPPED src/Modules/Core/Interfaces/HTTP/assets/critical/home.css # moved to src/Themes/assets: the shell's critical CSS follows the layout
+DROPPED src/Modules/Core/Interfaces/HTTP/assets/critical/nav.css # moved to src/Themes/assets: the shell's critical CSS follows the layout
+DROPPED src/Modules/Core/Interfaces/HTTP/assets/critical/shell.css # moved to src/Themes/assets: the shell's critical CSS follows the layout
+DROPPED src/Modules/Core/Interfaces/HTTP/assets/scripts/theme-toggle.js # moved to src/Themes/assets: the shell's scripts follow the layout
 OWNED src/Modules/Core/Domain/Contracts/SecurityEventSink.php # 4147809: the kernel's own security-event port
 OWNED src/Modules/Core/Domain/SubmitResult.php # 8c57c3c: submit answers as a type instead of an array
 OWNED src/Themes/ThemeSetting.php # fea7c1e: a theme declares its admin-editable settings
