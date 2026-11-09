@@ -82,6 +82,12 @@ public/fonts
 # artifact.
 fixtures
 
+# Article cover photography. The corpus is pruned above and the only reader was
+# `build-dist.sh`'s static-asset probe for Mono's home slider, a theme the export
+# does not carry. The probe now names `favicon.svg`, which every shipped layout
+# links.
+public/demo
+
 # The Forms and Questions stylesheet generators. Both modules are pruned, and
 # `theme-css.mjs` is imported only by these two scripts.
 bin/generate
