@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Pages\Interfaces\HTTP\Actions;
 
 use Modules\Markdown\Application\Services\MarkdownRenderer;
-use Modules\Core\Application\Services\WebsiteStructuredData;
+use Seo\WebsiteStructuredData;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
@@ -126,12 +126,10 @@ final class PageViewAction
             . $this->questionBlock($request, $slug, $locale, $prefix)
             . '</section>';
 
-        $desc = '' !== $seoDescription ? $seoDescription : 'Nativa Minimal';
-
         return Response::html(FrontendLayout::render(
             $seoTitle . ' — Nativa',
             $content,
-            description: $desc,
+            description: '' !== $seoDescription ? $seoDescription : null,
             currentPath: $request->getPathInfo(),
             canonicalUrl: $canonicalUrl,
             localeLinks: $links,

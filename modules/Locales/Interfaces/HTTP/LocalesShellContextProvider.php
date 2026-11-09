@@ -45,6 +45,11 @@ final class LocalesShellContextProvider implements ShellContextProvider
         return null;
     }
 
+    public function siteDescription(): ?string
+    {
+        return null;
+    }
+
     public function theme(): ?string
     {
         return null;
