@@ -15,9 +15,9 @@ it should not be.
 
 ## What is counted, and what is not
 
-Scope: `src/Modules/{Core,Database,KernelTheme,Tooling}`, `src/Themes`,
-`modules`, `tests`, `bin`, `public` (minus `public/dist`). 575 non-gate files
-plus the 18 gate files — 593 scanned: rule 1 reads all of them, while the
+Scope: `src/Modules/{Core,Database,KernelTheme,Tooling}`, `src/Seo`, `src/Themes`,
+`modules`, `tests`, `bin`, `public` (minus `public/dist`). 580 non-gate files
+plus the 18 gate files — 598 scanned: rule 1 reads all of them, while the
 two counts exclude the gates for the reason below.
 
 `src/Modules/<Name>` for any other module is **gitignored operator state**. A

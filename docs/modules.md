@@ -60,6 +60,23 @@ another module imports is a refusal that names the holders, and `--force` stays
 a CLI decision made by someone who knows what depends on what. Neither step
 touches module data, and uninstall reports what it left on disk.
 
+## SEO contributions
+
+A content module owns the public URLs it serves, so it also owns its rows in the
+kernel sitemap. The port is `Seo\SitemapContributor::entries(): array`; the
+attribute is `#[AsSitemapContributor(priority: 0)]`.
+
+`SitemapContributorRegistry` scans the installed `Application` and `Interfaces`
+trees for `*SitemapContributor.php`, reads the attribute before reflection and
+sorts by priority then class name. A contributor that fails to load or throws
+is logged as `[seo] sitemap contributor skipped` and skipped. The kernel keeps
+`/sitemap.xml` itself: it owns the absolute URL, the XML shape, escaping,
+deduplication and the kernel rows. A module only returns `SitemapEntry` values
+whose paths it can actually serve.
+
+Blog and Pages are the two contributors today. `llms.txt` is different: it
+advertises the docs route and stays with the `Docs` module that serves it.
+
 ## Catalogue vs slice: drift, measured (task 4.1, 2026-10-17)
 
 `modules/<Name>/` is the **source**: it is tracked in git, an author edits it,

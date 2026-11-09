@@ -51,6 +51,11 @@ exist, or the key is "no pair" — the same rule the blog holds. `aliases` is
 written strictly as a flow list and read tolerantly (a comma scalar from a
 hand-edited file is accepted).
 
+A published page also contributes its current URL to `/sitemap.xml` through
+`PagesSitemapContributor`, in every locale the content-locale mapper knows. The
+contribution lists the current slug only: an alias is a redirect source and an
+unpublished page is not a public surface, so neither reaches the sitemap.
+
 The module also owns the page cache contract behind `CacheInvalidator`: a
 rename flushes it, because without the flush the next request serves the
 previous slug's cached HTML and the 301 appears not to work for a cache
