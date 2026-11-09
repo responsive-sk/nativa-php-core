@@ -6,6 +6,7 @@ namespace Modules\Cardboard\Tests;
 
 use Modules\Cardboard\Application\Services\BulkActions;
 use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
+use Modules\Core\Domain\AdminRoutePolicy;
 use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Interfaces\HTTP\Router;
 use PHPUnit\Framework\Attributes\Test;
@@ -59,6 +60,33 @@ final class AdminLayoutRouteUrlTest extends TestCase
         self::assertStringContainsString('href="/mark/pages/create"', $html);
         self::assertStringContainsString('href="/mark/media/upload"', $html);
         self::assertStringContainsString('href="/mark/settings"', $html);
+    }
+
+    /**
+     * Quick actions belong to other modules, so the dashboard may not assume
+     * they are installed. Measured 2026-11-09: a tree with Cardboard and no
+     * Blog answered `/mark` with 500 because the template resolved
+     * `articles.create`. The template now asks `$has` first and renders only
+     * the links whose route this tree carries.
+     */
+    #[Test]
+    public function quickActionsSkipRoutesThisTreeDoesNotCarry(): void
+    {
+        $router = Router::fromEntries([], [
+            ['path' => '/mark/settings', 'method' => 'GET', 'name' => 'mark.settings', 'handlerMethod' => null, 'action' => self::class],
+        ]);
+
+        $html = ViewRenderer::render(
+            'Modules/Cardboard/Interfaces/HTTP/templates/dashboard-audit.phtml',
+            [
+                'url' => AdminLayout::urlBuilder($router),
+                'has' => static fn (string $name): bool => $router->hasRouteName($name),
+            ],
+        );
+
+        self::assertStringContainsString('href="/mark/settings"', $html);
+        self::assertStringNotContainsString('New article', $html);
+        self::assertStringNotContainsString('articles.create', $html);
     }
 
     /**
@@ -164,7 +192,7 @@ final class AdminLayoutRouteUrlTest extends TestCase
 
         self::assertStringContainsString('action="/routes/bulk-publish"', $html);
         self::assertStringContainsString('action="/routes/bulk-delete"', $html);
-        self::assertStringNotContainsString('/mark', $html);
+        self::assertStringNotContainsString(AdminRoutePolicy::prefix(), $html);
     }
 
     #[Test]
@@ -180,7 +208,7 @@ final class AdminLayoutRouteUrlTest extends TestCase
 
         self::assertStringContainsString('action="/routes/articles/publish?locale=sk"', $html);
         self::assertStringContainsString('hx-post="/routes/articles/publish?locale=sk"', $html);
-        self::assertStringNotContainsString('/mark', $html);
+        self::assertStringNotContainsString(AdminRoutePolicy::prefix(), $html);
     }
 
     #[Test]

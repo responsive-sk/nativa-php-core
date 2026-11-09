@@ -48,7 +48,14 @@ final class DashboardAction
         }
         $statCards .= '</div>';
 
-        $quickActions = ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/dashboard-audit.phtml', ['url' => $this->urlBuilder()]);
+        $quickActions = ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/dashboard-audit.phtml', [
+            'url' => $this->urlBuilder(),
+            // The quick actions belong to other modules; the dashboard is not
+            // allowed to assume they are installed. Without this, a catalogue
+            // tree with Cardboard and no Blog answered /mark with 500 (the
+            // template resolved `articles.create`).
+            'has' => fn (string $name): bool => $this->hasRoute($name),
+        ]);
 
         $systemRows = '';
         $system = [
