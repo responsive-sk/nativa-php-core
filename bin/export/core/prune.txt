@@ -13,6 +13,59 @@
 # They record how THIS tree was built, and the numbers in them belong to it.
 docs
 
+# The catalogue: the export ships the Nativa theme and Settings, the only
+# implementation of the theme vote (`ShellContextProvider::theme()`). Every
+# other module is a dependency the register in
+# `openspec/changes/nativa-core-export/design.md` would have to name, and none
+# of them is a dependency of the theme itself. `modules/Settings` and
+# `modules/Themes/Nativa` stay.
+#
+# Measured before this list was written (`bin/lab/core-surfaces.sh`): the theme
+# renders with Settings alone; the copy surface (Locales) costs +143 files and
+# drags in a Cardboard whose `/mark` answers 500 without Users; content (Blog,
+# Pages) costs +373 and content is not a dependency; the panel (Users,
+# Cardboard) costs +209.
+modules/Audit
+modules/Blog
+modules/Cardboard
+modules/Clickhouse
+modules/Comments
+modules/Forms
+modules/Health
+modules/Locales
+modules/Media
+modules/Notifications
+modules/Outbox
+modules/Pages
+modules/Pagination
+modules/Questions
+modules/Queue
+modules/Scheduler
+modules/Scratch
+modules/Security
+modules/Users
+modules/Validation
+modules/Themes/Boson
+modules/Themes/Erik
+modules/Themes/Griffe
+modules/Themes/Jednotka
+modules/Themes/Mono
+
+# Theme sources and frozen bundles for every theme the export does not ship.
+# The pnpm workspace keeps `packages/nativa` and `packages/build`.
+public/dist/griffe
+public/dist/mono
+Frontend/packages/basic
+Frontend/packages/boson
+Frontend/packages/erik
+Frontend/packages/griffe
+Frontend/packages/jednotka
+Frontend/packages/magazine
+Frontend/packages/minimal
+Frontend/packages/mono
+Frontend/packages/moonshine
+Frontend/packages/starter
+
 # Content corpora. The export ships the storage skeleton and no articles.
 storage/blog
 storage/blog-images
@@ -59,6 +112,11 @@ bin/build/export-core.sh
 bin/build/publish-core.sh
 bin/ops/export-core-registry.php
 bin/ops/export-core-verify.php
+
+# The dependency lab. It builds the clean core next to every surface by
+# installing modules from THIS catalogue, so it is a source-repo instrument: the
+# artifact ships no catalogue to install from.
+bin/lab
 
 # The profile itself, after it has been moved into place.
 bin/export

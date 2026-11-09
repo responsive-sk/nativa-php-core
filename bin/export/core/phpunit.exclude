@@ -22,3 +22,23 @@ tests/Architecture/ModelReferenceContractTest.php # it reads lekalo/modules/
 tests/Architecture/ScenarioTestBindingContractTest.php # it reads openspec/ and would skip on every run here
 tests/Content/EmDashContractTest.php # it ratchets the em dash count of docs/
 tests/Content/ProseRhythmContractTest.php # its wrapped list is docs/ files
+
+# The minimal catalogue. These tests measure the 26-module development tree,
+# not a defect: their subject is a module the export deliberately does not ship,
+# or a collision/second provider that cannot exist with one theme and one module.
+# Measured in the export-shaped tree (Nativa + Settings): 6 errors, 9 failures
+# and 19 skips before this list existed.
+tests/Architecture/StatementHelperContractTest.php # its helper set is every module that ships a Statement helper; the catalogue has two
+tests/Cache/PageCacheInvalidationTest.php # it reads modules/Blog and modules/Outbox, which are not shipped
+tests/Discovery/DiscoveryCacheTest.php # it installs Scratch from the catalogue
+tests/Modules/ModuleLifecycleTest.php # it installs and removes Scratch from the catalogue
+tests/Architecture/AdminRouteUrlNamesTest.php # it walks every module's admin routes; no module ships one here
+tests/Architecture/MetricRegistryResolutionTest.php # it asserts every #[AsMetricProvider] is registered; none is shipped
+tests/Architecture/ModuleCatalogueShapeTest.php # it asserts a catalogue of theme groups this tree does not carry
+tests/Architecture/SecurityEventPayloadContractTest.php # its vocabulary is modules/Outbox/Domain/SecurityEvents.php
+tests/Theme/ThemeClassOwnershipTest.php # its shared-contract ledger needs two themes; one theme cannot collide with itself
+tests/Architecture/AdminClassContractTest.php # its stylesheet rules belong to Cardboard, which is not catalogued
+tests/Discovery/AuthProviderRegistryTest.php # it needs a module that ships an auth provider; none is shipped
+tests/Http/AuthMiddlewareDenialTest.php # its payload is the Outbox vocabulary, which is not shipped
+tests/Http/DocsSearchTest.php # it queries the guides a Boson install publishes; no guide is shipped
+tests/Theme/FontPreloadTest.php # it needs a theme that declares a webfont; Nativa declares none by design

@@ -146,8 +146,8 @@ fi
 echo "    $pruned path(s) pruned"
 
 step "Installing the export profile"
-mkdir -p "$TARGET/.github/workflows"
-for file in Makefile .gitignore README.md AGENTS.md; do
+mkdir -p "$TARGET/.github/workflows" "$TARGET/config"
+for file in Makefile .gitignore README.md AGENTS.md config/deploy.php; do
     cp "$STAGE/$file" "$TARGET/$file"
 done
 cp "$STAGE/.github/workflows/ci.yml" "$TARGET/.github/workflows/ci.yml"
@@ -323,7 +323,10 @@ cp -a "$ROOT/vendor/." "$TARGET/vendor/"
 step "Running the exported PHPUnit suite"
 tests_before="$(cd "$TARGET" && php vendor/bin/phpunit --list-tests 2>/dev/null | grep -c '^ - ' || true)"
 
-if [ "${tests_before:-0}" -lt 800 ]; then
+# A floor, not a target. It catches an exclusion list that swallowed the tree;
+# the minimal export is a kernel plus one theme and one module, so its honest
+# count is far below the catalogue tree's ~1 500 and the floor moved with it.
+if [ "${tests_before:-0}" -lt 150 ]; then
     fail "the exported suite discovered only $tests_before tests; the exclusion list probably hides the tree" 1
 fi
 
