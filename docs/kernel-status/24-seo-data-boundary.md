@@ -77,8 +77,8 @@ and `PageViewAction` no longer hardcodes `Nativa Minimal`.
   with **8 interface / 27 concrete** types.
 - Source CI: **16/16 jobs**, run `42715698265` on `4273690`. The kernel-only
   boot job and the module-installed PHPUnit job both passed.
-- Published export: `responsive-sk/nativa-core@f2e7d8b`, generated from source
-  `39f42c0`; public CI is **9/9 jobs**, run `42716636690`.
+- Published export: `responsive-sk/nativa-core@69c98df`, generated from source
+  `f68e59b`; public CI is **9/9 jobs**, run `42723660681`.
 
 ## After
 
@@ -102,7 +102,7 @@ line on a healthy request.
 
 The published clone repeated the same result: `/`, `/sitemap.xml` and
 `/robots.txt` answered 200, `/llms.txt` and `/mark` answered 404, and the
-sitemap held only `/`. Its marker named source commit `39f42c0`.
+sitemap held only `/`. Its marker named source commit `f68e59b`.
 
 ## Still open
 
