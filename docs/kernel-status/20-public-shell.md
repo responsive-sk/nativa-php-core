@@ -70,6 +70,7 @@ Core class and the ten upstream asset files as `DROPPED`; the moved files under
 - `make dist-check`: clean clone -> **199 files**, no `vendor/`, smoke clean.
 - Export: **183 files / 169 tests / 416 assertions / 52 skipped**;
   `make core-export-check` is green.
+- Source CI: **16/16 jobs**, run `42669847379` on `903f1d6`.
 - Published export: `responsive-sk/nativa-core@302c111`, generated from source
   `903f1d6`; public CI is **9/9 jobs**, run `42670542573`. The public clone
   answers `/` and `/sitemap.xml` with 200 and `/mark` with 404.
