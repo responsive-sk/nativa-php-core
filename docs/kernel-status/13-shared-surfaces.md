@@ -65,12 +65,18 @@ next copy cannot drift unnoticed.
 - `make lint`, `composer phpstan`, `make analyze`, `make mago-lint` and
   `make mago-guard` are green.
 
-Export measured from `ece318a`: **192 files / 1 216 190 B**. The export check
+Export measured from `ae990db`: **192 files / 1 216 190 B**. The export check
 runs **191 tests / 525 assertions / 52 skipped** without modules; a clean clone
 after `make modules-install` and `php bin/cms migrate` answers **191 tests /
 674 assertions / 0 skipped**. The four module directories and the moved test
 files are pruned, so the kernel suite is the same shape it was before the round
 minus the files each side no longer shares.
+
+The first public push (`d716c46`) failed exported PHPStan: `TextFirstFqcnTest`
+named the pruned Markdown and Navigation registries with `::class`, which
+resolves before the runtime `class_exists` filter can skip them. `ae990db`
+keeps those two optional names as strings; the republished tree is
+`responsive-sk/nativa-core@7f8ef00`, and its CI is **9/9 green**.
 
 ### Still open
 
