@@ -73,6 +73,9 @@ test count is unchanged. A kernel-only checkout still answers `/mark` with
 404; the admin smoke gate (all modules installed) still reaches the login
 redirect.
 
+The published export is `responsive-sk/nativa-core@fc6c38f`, generated from
+source `691b364`; its CI is **9/9 jobs**, run `42631413239`.
+
 ## Still open
 
 - `ThemeResolver`, `ThemeKernel` and `ThemeRegistry` remain on the render path.
