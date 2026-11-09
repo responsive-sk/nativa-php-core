@@ -56,6 +56,10 @@ next copy cannot drift unnoticed.
 - `src/Modules/Core`: **346 540 B / 68 files** (9 interface / 57 concrete).
 - `KernelShapeTest::MAX_APPROVED`: **60 → 56** (63 before the round).
 - Source suite: **1099 tests / 7272 assertions / 1 skipped**.
+- Source CI at `3b93ec9`: **16/16 green**. The kernel-only checkout runs
+  **1059 tests / 3832 assertions / 834 skipped** — catalogue tests skip when
+  their module is absent — and Boot asserts `/docs` **404**, because Docs is a
+  module, not a kernel surface.
 - `make extract-check`: **199 identical, 89 recorded divergences**; the moved
   upstream paths are recorded as `DROPPED`, with the owning module named.
 - `make lekalo-check`: **33 modules** validated.
