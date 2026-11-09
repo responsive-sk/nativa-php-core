@@ -55,9 +55,12 @@ unnoticed.
 - `make lint`, `composer phpstan`, `make analyze`, `make mago-lint` and
   `make mago-guard` are green.
 
-The export still has to be re-measured from the commit that carries this
-round; the export profile prunes the three module directories, and the moved
-test files leave with them.
+Export measured from `835db7d`: **199 files / 1 252 987 B**. The export check
+runs **200 tests / 555 assertions / 52 skipped** without modules; a clean clone
+after `make modules-install` and `php bin/cms migrate` answers **200 tests /
+704 assertions / 0 skipped**. The three module directories and the moved test
+files are pruned, so the kernel suite is the same shape it was before the
+round minus the five files each side no longer shares.
 
 ### Still open
 
