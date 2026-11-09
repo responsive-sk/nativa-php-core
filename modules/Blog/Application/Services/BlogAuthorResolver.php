@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Blog\Application\Services;
 
 use Modules\Blog\Infrastructure\Persistence\Statement;
-use Modules\Core\Application\Services\MarkdownRenderer;
+use Modules\Markdown\Application\Services\MarkdownRenderer;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 
 /**

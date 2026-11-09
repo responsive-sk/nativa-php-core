@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Core\Interfaces\HTTP\Markdown;
+namespace Modules\Markdown\Interfaces\HTTP\Markdown;
 
 /**
  * MarkdownBlockContext — what a block needs to expand a placeholder.

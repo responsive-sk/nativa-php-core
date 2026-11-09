@@ -4,10 +4,10 @@ declare(strict_types = 1);
 
 namespace Modules\Forms\Application\Markdown;
 
-use Modules\Core\Infrastructure\Attributes\AsMarkdownBlock;
+use Modules\Markdown\Infrastructure\Attributes\AsMarkdownBlock;
 use Modules\Core\Interfaces\HTTP\ContentServices;
-use Modules\Core\Interfaces\HTTP\Markdown\MarkdownBlockContext;
-use Modules\Core\Interfaces\HTTP\Markdown\MarkdownBlockInterface;
+use Modules\Markdown\Interfaces\HTTP\Markdown\MarkdownBlockContext;
+use Modules\Markdown\Interfaces\HTTP\Markdown\MarkdownBlockInterface;
 use Modules\Forms\Application\FormsServices;
 use Modules\Forms\Domain\Entities\Form;
 use Modules\Forms\Interfaces\HTTP\FormBlockRenderer;

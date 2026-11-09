@@ -35,6 +35,7 @@ modules/Docs
 modules/Forms
 modules/Health
 modules/Locales
+modules/Markdown
 modules/Media
 modules/Navigation
 modules/Notifications

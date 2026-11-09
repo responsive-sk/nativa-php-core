@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Forms\Tests;
 
 use Modules\Core\Interfaces\CLI\CliOutput;
-use Modules\Core\Interfaces\HTTP\Markdown\MarkdownBlockContext;
+use Modules\Markdown\Interfaces\HTTP\Markdown\MarkdownBlockContext;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Forms\Application\FormsServices;
 use Modules\Forms\Application\Markdown\FormBlock;

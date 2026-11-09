@@ -38,7 +38,7 @@ a blockquote.
 - WHEN `MarkdownRenderer::render()` runs
 - THEN the output breaks between them (`<br>`)
 
-- PINS: tests/Content/MarkdownBlockParagraphTest.php::aParagraphOfProseIsUnaffected
+- PINS: modules/Markdown/tests/MarkdownBlockParagraphTest.php::aParagraphOfProseIsUnaffected
 
 #### Scenario: A soft wrap joins with a space
 
@@ -47,7 +47,7 @@ a blockquote.
 - THEN the two lines join with a single space and no break
 - AND no glyph is printed, because there is none in the source
 
-- PINS: tests/Content/MarkdownBlockParagraphTest.php::aSoftWrapJoinsWithASpace
+- PINS: modules/Markdown/tests/MarkdownBlockParagraphTest.php::aSoftWrapJoinsWithASpace
 
 #### Scenario: A blank line still ends the paragraph
 
@@ -55,7 +55,7 @@ a blockquote.
 - WHEN the renderer runs
 - THEN the two sentences are two paragraphs, each keeping its own shape
 
-- PINS: tests/Content/MarkdownBlockParagraphTest.php::aParagraphOfProseIsUnaffected
+- PINS: modules/Markdown/tests/MarkdownBlockParagraphTest.php::aParagraphOfProseIsUnaffected
 
 #### Scenario: A line that opens with the glyph is still a quote
 
@@ -63,7 +63,7 @@ a blockquote.
 - WHEN the renderer runs
 - THEN the output is a `<blockquote>`, not a break
 
-- PINS: tests/Content/MarkdownBlockParagraphTest.php::aLineOpeningWithAGlyphIsStillAQuote
+- PINS: modules/Markdown/tests/MarkdownBlockParagraphTest.php::aLineOpeningWithAGlyphIsStillAQuote
 
 ### Requirement: A heading carries the split inline and keeps its markup
 
@@ -79,7 +79,7 @@ is the one the author wrote.
 - THEN the heading carries the prefix, the glyph and the title as separate spans
 - AND the table of contents still reads the whole heading
 
-- PINS: tests/Content/MarkdownHeadingTest.php::aPrefixedHeadingIsSplitIntoAPrefixAndATitle
+- PINS: modules/Markdown/tests/MarkdownHeadingTest.php::aPrefixedHeadingIsSplitIntoAPrefixAndATitle
 
 #### Scenario: The renderer never injects an em dash
 
@@ -87,7 +87,7 @@ is the one the author wrote.
 - WHEN the renderer runs
 - THEN the HTML carries no `—`
 
-- PINS: tests/Content/MarkdownHeadingTest.php::theRendererNeverInjectsAnEmDash
+- PINS: modules/Markdown/tests/MarkdownHeadingTest.php::theRendererNeverInjectsAnEmDash
 
 #### Scenario: A title carrying inline code keeps it
 
@@ -96,7 +96,7 @@ is the one the author wrote.
 - THEN the title span contains the `<code>` element and the rest of the title
 - AND the prefix span holds only `Časť IV`
 
-- PINS: tests/Content/MarkdownHeadingTest.php::aTitleWithInlineMarkupIsInlinedOnItsOwn
+- PINS: modules/Markdown/tests/MarkdownHeadingTest.php::aTitleWithInlineMarkupIsInlinedOnItsOwn
 
 ### Requirement: The written form, as far as a machine can check it
 

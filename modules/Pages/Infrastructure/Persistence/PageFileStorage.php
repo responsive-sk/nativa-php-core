@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Pages\Infrastructure\Persistence;
 
-use Modules\Core\Application\Services\MarkdownRenderer;
+use Modules\Markdown\Application\Services\MarkdownRenderer;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Core\Interfaces\HTTP\ContentServices;
 

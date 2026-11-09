@@ -8,7 +8,7 @@ use Modules\Blog\Application\BlogServices;
 use Modules\Blog\Application\Services\BlogArticleHelper;
 use Modules\Blog\Interfaces\HTTP\Actions\BlogCategoriesAction;
 use Modules\Blog\Interfaces\HTTP\Actions\BlogIndexAction;
-use Modules\Core\Application\Services\MarkdownRenderer;
+use Modules\Markdown\Application\Services\MarkdownRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;

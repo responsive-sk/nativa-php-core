@@ -2,9 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Core\Interfaces\HTTP\Markdown;
+namespace Modules\Markdown\Interfaces\HTTP\Markdown;
 
-use Modules\Core\Infrastructure\Attributes\AsMarkdownBlock;
+use Modules\Markdown\Infrastructure\Attributes\AsMarkdownBlock;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 
 /**

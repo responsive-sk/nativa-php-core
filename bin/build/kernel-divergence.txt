@@ -40,7 +40,6 @@ DIVERGED src/Modules/Core/Application/Services/StructuredDataService.php # listi
 #   own word instead of spelling it. The home announces Organization + WebSite through website().
 DIVERGED src/Modules/Core/Application/Services/PageCacheService.php # Boot 24: a response rendered for a signed-in visitor is not cacheable (the cache is served to whoever trips the rate limit, so an editor's page carrying the admin link leaked to guests)
 DIVERGED src/Modules/Core/Interfaces/HTTP/Middleware/MiddlewareRegistry.php # Boot 24: FQCN resolver anchors to a declaration line — first-mention matching let prose shadow the class (upstream still resolves the docblock)
-DIVERGED src/Modules/Core/Interfaces/HTTP/Markdown/MarkdownBlockRegistry.php # Boot 24: same FQCN resolver fix as MiddlewareRegistry — four copies existed, one left broken is one silent skip
 #
 # --- Rewritten surfaces: upstream moved after our import ----------------------
 DIVERGED src/Modules/Core/Interfaces/HTTP/Router.php # Boot 19: upstream's mayDeclareRoute guard adopted (only the two comments differ); the Boot 1 defect is no longer inherited; kernel contracts: implements RouterInterface
@@ -183,7 +182,6 @@ DIVERGED src/Modules/Core/Infrastructure/Session/FileSessionHandler.php # 414780
 DIVERGED src/Modules/Database/Infrastructure/Persistence/DatabaseConnectionManager.php # 4147809: a refused WAL pragma is logged, not silently swallowed
 DROPPED src/Modules/Core/Application/Services/DocsCatalog.php # moved to modules/Docs: the guide inventory is a module surface
 DIVERGED src/Modules/Core/Application/Services/CacheInvalidator.php # 23eec72: invalidates the pages a write changed, not the whole cache
-DIVERGED src/Modules/Core/Application/Services/MarkdownRenderer.php # 3d8e636: a `Časť I — Title` heading is split so a theme sets its own numbering
 DROPPED src/Modules/Core/Interfaces/HTTP/Actions/DocsIndexAction.php # moved to modules/Docs: the route is a module surface
 DIVERGED src/Modules/Core/Infrastructure/Http/Request.php # 2026-10-27: queryString()/bodyString() — typed request reads beside header(); module actions use them instead of reading the field twice
 OWNED src/Modules/Core/Interfaces/HTTP/assets/scripts/docs-reader.js # 32d60a3: docs reader; upstream's docs surface is not in the slice
@@ -202,3 +200,8 @@ DROPPED src/Modules/Core/Domain/Contracts/NavBadgeContract.php # moved to module
 DROPPED src/Modules/Core/Infrastructure/Attributes/AsNavBadge.php # moved to modules/Navigation
 DROPPED src/Modules/Core/Infrastructure/Registry/NavBadgeRegistry.php # moved to modules/Navigation
 DROPPED src/Modules/Core/Infrastructure/Storage/LocalStorageProvider.php # moved to modules/Uploads
+DROPPED src/Modules/Core/Application/Services/MarkdownRenderer.php # moved to modules/Markdown
+DROPPED src/Modules/Core/Interfaces/HTTP/Markdown/MarkdownBlockContext.php # moved to modules/Markdown
+DROPPED src/Modules/Core/Interfaces/HTTP/Markdown/MarkdownBlockInterface.php # moved to modules/Markdown
+DROPPED src/Modules/Core/Interfaces/HTTP/Markdown/MarkdownBlockRegistry.php # moved to modules/Markdown
+DROPPED src/Modules/Core/Infrastructure/Attributes/AsMarkdownBlock.php # moved to modules/Markdown

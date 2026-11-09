@@ -70,7 +70,6 @@ final class KernelShapeTest extends TestCase
         'src/Modules/Core/Application/Services/ContentLocaleMapper.php',
         'src/Modules/Core/Application/Services/DiscoveryCache.php',
         'src/Modules/Core/Application/Services/DisposalRegistry.php',
-        'src/Modules/Core/Application/Services/MarkdownRenderer.php',
         'src/Modules/Core/Application/Services/PageCacheService.php',
         'src/Modules/Core/Application/Services/PreferenceVote.php',
         'src/Modules/Core/Application/Services/ShellContextProviderRegistry.php',
@@ -88,7 +87,6 @@ final class KernelShapeTest extends TestCase
         'src/Modules/Core/Domain/ThemeSetting.php',
         'src/Modules/Core/Domain/ThemeSettingValues.php',
         'src/Modules/Core/Infrastructure/Attributes/AsAuthProvider.php',
-        'src/Modules/Core/Infrastructure/Attributes/AsMarkdownBlock.php',
         'src/Modules/Core/Infrastructure/Attributes/AsMiddleware.php',
         'src/Modules/Core/Infrastructure/Attributes/AsMigrator.php',
         'src/Modules/Core/Infrastructure/Attributes/AsShellContextProvider.php',
@@ -109,8 +107,6 @@ final class KernelShapeTest extends TestCase
         'src/Modules/Core/Interfaces/HTTP/ErrorPageRenderer.php',
         'src/Modules/Core/Interfaces/HTTP/FrontendLayout.php',
         'src/Modules/Core/Interfaces/HTTP/Kernel.php',
-        'src/Modules/Core/Interfaces/HTTP/Markdown/MarkdownBlockContext.php',
-        'src/Modules/Core/Interfaces/HTTP/Markdown/MarkdownBlockRegistry.php',
         'src/Modules/Core/Interfaces/HTTP/Middleware/AdminUnavailableMiddleware.php',
         'src/Modules/Core/Interfaces/HTTP/Middleware/AuthMiddleware.php',
         'src/Modules/Core/Interfaces/HTTP/Middleware/CsrfMiddleware.php',
@@ -148,6 +144,10 @@ final class KernelShapeTest extends TestCase
      * `AsNavBadge`; every consumer is a module, so the kernel no longer owns
      * the discovery seam or the upload store.
      *
+     * 60 → 56 is the Markdown phase: `MarkdownRenderer`,
+     * `MarkdownBlockContext`, `MarkdownBlockRegistry` and `AsMarkdownBlock`
+     * moved to `modules/Markdown`; the interface they publish is free shape.
+     *
      * 66 → 67 is the admin-prefix round: `AdminUnavailableMiddleware` answers
      * 404 for the admin prefix when no auth provider is wired. The kernel owns
      * the prefix, so the kernel is the only layer that can refuse a panel a
@@ -155,7 +155,7 @@ final class KernelShapeTest extends TestCase
      * `/mark` to a guest because the gate was never wired. One `runtime` row,
      * three importers (http.php and two tests).
      */
-    private const int MAX_APPROVED = 60;
+    private const int MAX_APPROVED = 56;
 
     /**
      * Rule 1: every `.php` file under `src/Modules/Core` is an interface, enum

@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Pages\Interfaces\HTTP\Actions;
 
-use Modules\Core\Application\Services\MarkdownRenderer;
+use Modules\Markdown\Application\Services\MarkdownRenderer;
 use Modules\Core\Application\Services\StructuredDataService;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
@@ -12,7 +12,7 @@ use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\ContentServices;
 use Modules\Core\Interfaces\HTTP\ErrorPageRenderer;
 use Modules\Core\Interfaces\HTTP\FrontendLayout;
-use Modules\Core\Interfaces\HTTP\Markdown\MarkdownBlockContext;
+use Modules\Markdown\Interfaces\HTTP\Markdown\MarkdownBlockContext;
 use Modules\Core\Interfaces\HTTP\ThemeKernel;
 use Modules\Core\Interfaces\HTTP\ThemeResolver;
 use Modules\Locales\Domain\Model\Locale;

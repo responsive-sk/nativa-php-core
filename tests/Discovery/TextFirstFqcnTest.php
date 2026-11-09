@@ -6,9 +6,9 @@ namespace Tests\Discovery;
 
 use Modules\Core\Application\Services\AuthProviderRegistry;
 use Modules\Core\Application\Services\ShellContextProviderRegistry;
-use Modules\Core\Interfaces\HTTP\Markdown\MarkdownBlockRegistry;
 use Modules\Core\Interfaces\HTTP\Middleware\MiddlewareRegistry;
 use Modules\Core\Interfaces\HTTP\ThemeRegistry;
+use Modules\Markdown\Interfaces\HTTP\Markdown\MarkdownBlockRegistry;
 use Modules\Navigation\Infrastructure\Registry\NavBadgeRegistry;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;

@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Core\Infrastructure\Attributes;
+namespace Modules\Markdown\Infrastructure\Attributes;
 
 /**
  * Marks a class as a markdown block expander for auto-discovery.

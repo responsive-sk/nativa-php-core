@@ -2,9 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace Tests\Content;
+namespace Modules\Markdown\Tests;
 
-use Modules\Core\Application\Services\MarkdownRenderer;
+use Modules\Markdown\Application\Services\MarkdownRenderer;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 

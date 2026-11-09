@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "markdown",
+      "kind": "module",
+      "version": 1,
+      "description": "Markdown — the zero-dependency renderer, the block context and registry, and the MarkdownBlock attribute that Forms, Docs and the themes expand."
+    }
+  ]
+}

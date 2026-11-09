@@ -84,6 +84,6 @@ final readonly class FormEditorInput
             return $data['slug'];
         }
 
-        return \Modules\Core\Application\Services\MarkdownRenderer::slugify($data['title']);
+        return \Modules\Markdown\Application\Services\MarkdownRenderer::slugify($data['title']);
     }
 }

@@ -1,6 +1,6 @@
 # Kernel status 13 > shared surfaces leave the kernel
 
-## Boot 49 — the registry, the upload store and the mail port get owners
+## Boot 49: the registry, the upload store and the mail port get owners
 
 The Docs round took a route out of the kernel. This round asks the next
 question: which classes are still in `Modules\Core` although no kernel boot,
@@ -35,7 +35,7 @@ would turn it into a `Mail` module, not into a kernel port.
 `NavBadgeRegistry` still used the pre-Boot-23 resolver: the first mention of
 `class` anywhere in a file. Adding it to `TextFirstFqcnTest`'s registry list
 made the test resolve `Modules\Wrong\Place\says` out of a docblock sentence and
-skip the provider silently — the same defect the other registries had already
+skip the provider silently: the same defect the other registries had already
 been fixed for, hidden in a registry the test had never listed.
 
 The moved copy now uses the declaration-start resolver: namespace and type
@@ -48,7 +48,7 @@ unnoticed.
 - `src/Modules/Core`: **378 460 B / 73 files** (10 interface / 61 concrete).
 - `KernelShapeTest::MAX_APPROVED`: **60**.
 - Source suite: **1099 tests / 7266 assertions / 1 skipped**.
-- `make extract-check`: **202 identical, 86 recorded divergences** — the four
+- `make extract-check`: **202 identical, 86 recorded divergences**; the four
   upstream paths are recorded as `DROPPED`, with the owning module named.
 - `make lekalo-check`: **32 modules** validated.
 - `make themes-check`: **23 identical, 0 diverged**.

@@ -6,7 +6,7 @@ namespace Modules\Blog\Application\Services;
 
 use Modules\Blog\Domain\Entities\Article;
 use Modules\Blog\Domain\Entities\ArticleAuthor;
-use Modules\Core\Application\Services\MarkdownRenderer;
+use Modules\Markdown\Application\Services\MarkdownRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Uploads\Infrastructure\Storage\LocalStorageProvider;

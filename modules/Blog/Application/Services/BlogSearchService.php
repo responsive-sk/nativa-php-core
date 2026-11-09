@@ -6,7 +6,7 @@ namespace Modules\Blog\Application\Services;
 
 use Modules\Blog\Domain\Entities\SearchResult;
 use Modules\Blog\Infrastructure\Persistence\Statement;
-use Modules\Core\Application\Services\MarkdownRenderer;
+use Modules\Markdown\Application\Services\MarkdownRenderer;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 
 /**

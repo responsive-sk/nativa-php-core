@@ -98,6 +98,7 @@ foreach ($required as $path) {
 $pruned = [
     'docs',
     'modules/Docs',
+    'modules/Markdown',
     'modules/Navigation',
     'modules/Uploads',
     'lekalo',

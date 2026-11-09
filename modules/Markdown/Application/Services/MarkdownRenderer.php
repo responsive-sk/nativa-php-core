@@ -2,10 +2,10 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Core\Application\Services;
+namespace Modules\Markdown\Application\Services;
 
-use Modules\Core\Interfaces\HTTP\Markdown\MarkdownBlockContext;
-use Modules\Core\Interfaces\HTTP\Markdown\MarkdownBlockRegistry;
+use Modules\Markdown\Interfaces\HTTP\Markdown\MarkdownBlockContext;
+use Modules\Markdown\Interfaces\HTTP\Markdown\MarkdownBlockRegistry;
 
 /**
  * MarkdownRenderer — zero-dependency Markdown renderer for blog articles.

@@ -7,7 +7,7 @@ namespace Modules\Blog\Interfaces\CLI\Command;
 use Modules\Blog\Application\Services\BlogArticlesService;
 use Modules\Blog\Application\Services\CoverGenerator;
 use Modules\Blog\Application\Services\CoverPathResolver;
-use Modules\Core\Application\Services\MarkdownRenderer;
+use Modules\Markdown\Application\Services\MarkdownRenderer;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Core\Interfaces\HTTP\ContentServices;
