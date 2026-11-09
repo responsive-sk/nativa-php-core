@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Modules\Core\Interfaces\HTTP\Actions;
+namespace Modules\Docs\Interfaces\HTTP\Actions;
 
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;

@@ -8,7 +8,7 @@ use Modules\Docs\Application\Services\DocsCatalog;
 use Modules\Core\Domain\AdminRoutePolicy;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
-use Modules\Core\Interfaces\HTTP\Actions\LlmsTxtAction;
+use Modules\Docs\Interfaces\HTTP\Actions\LlmsTxtAction;
 use Modules\Core\Interfaces\HTTP\Actions\SitemapAction;
 use Modules\Core\Interfaces\HTTP\Router;
 use PHPUnit\Framework\Attributes\Test;

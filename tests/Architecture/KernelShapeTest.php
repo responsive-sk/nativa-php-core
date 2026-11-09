@@ -82,7 +82,6 @@ final class KernelShapeTest extends TestCase
         'src/Modules/Core/Infrastructure/Session/FileSessionHandler.php',
         'src/Modules/Core/Interfaces/CLI/Support/DatabaseMigrator.php',
         'src/Modules/Core/Interfaces/HTTP/Actions/HomepageAction.php',
-        'src/Modules/Core/Interfaces/HTTP/Actions/LlmsTxtAction.php',
         'src/Modules/Core/Interfaces/HTTP/Actions/RobotsAction.php',
         'src/Modules/Core/Interfaces/HTTP/Actions/SitemapAction.php',
         'src/Modules/Core/Interfaces/HTTP/Attributes/Route.php',
@@ -153,6 +152,9 @@ final class KernelShapeTest extends TestCase
      * the two context value objects and `ShellNavItem` moved to `src/Shell`.
      * The port answers at render time and is not an HTTP dispatch member; its
      * interface was already free, and the five concrete rows leave the list.
+     * 31 → 30 is the Docs-module phase: `LlmsTxtAction` moved to `Docs`, where
+     * the route it publishes belongs. `robots.txt` now asks the router whether
+     * the route exists instead of advertising a 404.
      *
      * 66 → 67 is the admin-prefix round: `AdminUnavailableMiddleware` answers
      * 404 for the admin prefix when no auth provider is wired. The kernel owns
@@ -161,7 +163,7 @@ final class KernelShapeTest extends TestCase
      * `/mark` to a guest because the gate was never wired. One `runtime` row,
      * three importers (http.php and two tests).
      */
-    private const int MAX_APPROVED = 31;
+    private const int MAX_APPROVED = 30;
 
     /**
      * Rule 1: every `.php` file under `src/Modules/Core` is an interface, enum
@@ -178,7 +180,7 @@ final class KernelShapeTest extends TestCase
         // true, and this guard asserting nothing while the suite stayed green —
         // the failure mode KernelCouplingTest's scanner check exists for, and
         // the same reason it reads a signal that cannot go quiet. Core carries
-        // 39 files after the shell-port phase.
+        // 38 files after the Docs-module phase.
         self::assertGreaterThan(
             35,
             \count($files),
