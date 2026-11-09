@@ -25,6 +25,13 @@ use PHPUnit\Framework\TestCase;
  */
 final class LlmsTxtActionTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        if (!class_exists(LlmsTxtAction::class)) {
+            $this->markTestSkipped('Docs is not installed — llms.txt is a Docs surface.');
+        }
+    }
+
     #[Test]
     public function aTreeWithoutTheDocsRouteDoesNotAdvertiseIt(): void
     {
