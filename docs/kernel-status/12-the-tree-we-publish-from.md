@@ -155,13 +155,15 @@ repository with `--dry-run` printing what it would push.
   are all measurement-of-this-repository checks, and the source tree runs them
   on every commit; the export is regenerated from that commit. Recorded rather
   than implied.
-- Two catalogue defects were found and are not fixed here. `Cardboard` alone
-  answers `/mark` with 500 because `dashboard-audit.phtml` resolves
-  `articles.create` and `Blog` is absent. And because the composition root wires
-  `AuthMiddleware` only when a provider exists, a dashboard that did render in a
-  `Cardboard`-without-`Users` tree would be public. The fix is one change, not
-  two: refuse admin paths at the kernel when no provider is wired, then let the
-  dashboard skip quick actions whose route is absent.
+- Two catalogue defects were found here and fixed in the same round.
+  `Cardboard` alone answered `/mark` with 500 because `dashboard-audit.phtml`
+  resolved `articles.create` and `Blog` is absent. And because the composition
+  root wires `AuthMiddleware` only when a provider exists, a dashboard that did
+  render in a `Cardboard`-without-`Users` tree would have been public. The
+  kernel now answers 404 for the admin prefix when no provider is wired
+  (`AdminUnavailableMiddleware`), and the dashboard skips quick actions whose
+  route is absent. Measured after the fix: `Cardboard` plus its closure → `/mark`
+  404; with `Users` present → 302 to the login.
 - The exported theme modules are a copy. A theme change lands in
   `nativa-themes`, then here, then in the export, and the exported README says
   so.
