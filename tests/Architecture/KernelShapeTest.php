@@ -64,9 +64,7 @@ final class KernelShapeTest extends TestCase
      * @var list<string>
      */
     private const array ALLOW_LIST = [
-        'src/Modules/Core/Application/Services/DiscoveryCache.php',
         'src/Modules/Core/Application/Services/DisposalRegistry.php',
-        'src/Modules/Core/Application/Services/PreferenceVote.php',
         'src/Modules/Core/Application/Services/WebsiteStructuredData.php',
         'src/Modules/Core/Domain/AdminRoutePolicy.php',
         'src/Modules/Core/Domain/Permissions.php',
@@ -156,6 +154,11 @@ final class KernelShapeTest extends TestCase
      * the route it publishes belongs. `robots.txt` now asks the router whether
      * the route exists instead of advertising a 404.
      *
+     * 30 → 28 is the Discovery phase: `DiscoveryCache` and `PreferenceVote`
+     * moved to the kernel-owned `Discovery` namespace. The scan cache and the
+     * contention rule are how the kernel discovers and arbitrates providers,
+     * not HTTP dispatch members, and no module is imported by either.
+     *
      * 66 → 67 is the admin-prefix round: `AdminUnavailableMiddleware` answers
      * 404 for the admin prefix when no auth provider is wired. The kernel owns
      * the prefix, so the kernel is the only layer that can refuse a panel a
@@ -163,7 +166,7 @@ final class KernelShapeTest extends TestCase
      * `/mark` to a guest because the gate was never wired. One `runtime` row,
      * three importers (http.php and two tests).
      */
-    private const int MAX_APPROVED = 30;
+    private const int MAX_APPROVED = 28;
 
     /**
      * Rule 1: every `.php` file under `src/Modules/Core` is an interface, enum
@@ -180,7 +183,7 @@ final class KernelShapeTest extends TestCase
         // true, and this guard asserting nothing while the suite stayed green —
         // the failure mode KernelCouplingTest's scanner check exists for, and
         // the same reason it reads a signal that cannot go quiet. Core carries
-        // 38 files after the Docs-module phase.
+        // 36 files after the Discovery phase.
         self::assertGreaterThan(
             35,
             \count($files),

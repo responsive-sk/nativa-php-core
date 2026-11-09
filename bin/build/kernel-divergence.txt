@@ -82,8 +82,8 @@ DIVERGED README.md # kernel README
 OWNED src/Themes/kernel # the kernel's built-in default theme, KernelFallbackTheme (kernel default theme); the visual kernel theme is Modules\KernelTheme; ThemeModule.php itself is upstream-identical and compared
 OWNED src/Themes/ThemeRegistry.php # kept after upstream removal; ThemeResolver + ThemeKernel still use it
 OWNED src/Modules/Core/Kernel # kernel contracts: RouterInterface, ErrorRendererInterface (kernel contracts)
-OWNED src/Modules/Core/Application/Services/PreferenceVote.php # preference voting, added in this tree (no upstream counterpart)
-OWNED src/Modules/Core/Application/Services/DiscoveryCache.php # route + middleware discovery cache, added in this tree
+DROPPED src/Modules/Core/Application/Services/PreferenceVote.php # moved to src/Discovery: provider contention is discovery runtime, added in this tree
+DROPPED src/Modules/Core/Application/Services/DiscoveryCache.php # moved to src/Discovery: the route + middleware scan cache is discovery runtime, added in this tree
 DROPPED src/Modules/Core/Application/Services/DocsSearchService.php # moved to modules/Docs: search over the guide corpus is a module surface
 OWNED src/Themes/ThemePreference.php # theme preference resolution, added in this tree
 OWNED Frontend/packages/griffe # Griffe theme package (module-carried), added in this tree
@@ -224,4 +224,5 @@ DROPPED src/Modules/Core/Application/Services/View/InlineJs.php # moved to src/V
 DROPPED src/Modules/Core/Application/Services/View/Paths.php # moved to src/View: template and asset path resolver
 DROPPED src/Modules/Core/Application/Services/View/ViewRenderer.php # moved to src/View: template include renderer
 OWNED src/View # the kernel's view helpers, moved from Core in Boot 56
+OWNED src/Discovery # the kernel's discovery runtime, moved from Core in Boot 60
 OWNED src/Themes/AssetManager.php # theme bundle manifest reader, moved from Core in Boot 56
