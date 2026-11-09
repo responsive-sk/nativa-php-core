@@ -162,6 +162,7 @@ exactly the movement the table exists to record.
 | `src/Modules/Core/Interfaces/HTTP/Markdown/MarkdownBlockContext.php` | 1309 | Interfaces | concrete | 2 | runtime |
 | `src/Modules/Core/Interfaces/HTTP/Markdown/MarkdownBlockInterface.php` | 1247 | Interfaces | interface | 0 | contract |
 | `src/Modules/Core/Interfaces/HTTP/Markdown/MarkdownBlockRegistry.php` | 5779 | Interfaces | concrete | 1 | runtime |
+| `src/Modules/Core/Interfaces/HTTP/Middleware/AdminUnavailableMiddleware.php` | 1949 | Interfaces | concrete | 3 | runtime |
 | `src/Modules/Core/Interfaces/HTTP/Middleware/AuthMiddleware.php` | 4980 | Interfaces | concrete | 0 | runtime |
 | `src/Modules/Core/Interfaces/HTTP/Middleware/CsrfMiddleware.php` | 3024 | Interfaces | concrete | 8 | runtime |
 | `src/Modules/Core/Interfaces/HTTP/Middleware/MiddlewareInterface.php` | 373 | Interfaces | interface | 1 | contract |
