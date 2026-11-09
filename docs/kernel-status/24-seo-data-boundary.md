@@ -75,6 +75,8 @@ and `PageViewAction` no longer hardcodes `Nativa Minimal`.
 - `make dist-check`: clean clone, **207 files**, no `vendor/`, smoke clean.
 - `make kernel-size`: **154 346 B / 37 total files**; Core is **35 files**,
   with **8 interface / 27 concrete** types.
+- Source CI: **16/16 jobs**, run `42715698265` on `4273690`. The kernel-only
+  boot job and the module-installed PHPUnit job both passed.
 
 ## After
 
@@ -102,4 +104,4 @@ line on a healthy request.
   crawl endpoints and shared primitives in the kernel, not in a module that a
   kernel-only tree would have to serve without.
 - `llms.txt` stays in `Docs`; it advertises the docs route, not the sitemap.
-- Source CI and publish are separate steps. They were not run in this round.
+- Publish is a separate step. It was not run in this round.
