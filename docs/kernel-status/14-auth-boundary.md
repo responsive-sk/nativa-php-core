@@ -62,8 +62,11 @@ installed; the catalogue installer orders the closure so Auth comes first.
 - `make lekalo-check`: **34 modules** validated.
 - `make lint`, `composer phpstan`, `make analyze`, `make mago-lint` and
   `make mago-guard` are green.
+- Source CI: **16/16 jobs**, run `42630529705` on `7c61069`.
+- Fresh kernel-only checkout: **1059 tests / 3810 assertions / 838 skipped**,
+  zero errors; `/mark` answers **404**.
 
-Export measured from `cee2b6f`: **187 files / 191 tests / 502 assertions /
+Export measured from `7c61069`: **187 files / 191 tests / 502 assertions /
 52 skipped**. The five runtime files leave with the Auth module; the two moved
 test files were already excluded from the export by `phpunit.exclude`, so the
 test count is unchanged. A kernel-only checkout still answers `/mark` with
