@@ -50,6 +50,11 @@ so the installed tree and `modules/` agree.
   `make mago-guard` are green.
 - Export: **183 files / 169 tests / 439 assertions / 52 skipped**;
   `make core-export-check` is green.
+- Source CI: **16/16 jobs**, run `42638787661` on `b40f30d`.
+- Published export: `responsive-sk/nativa-core@567bb5c`, generated from source
+  `b40f30d`; public CI is **9/9 jobs**, run `42639024978`.
+- Published kernel-only clone: `/` = 200 with Organization + WebSite, `/mark` =
+  404; `modules/Blog` is absent.
 
 ## Still open
 
