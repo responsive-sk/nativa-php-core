@@ -151,7 +151,8 @@ final class DocsSearchTest extends TestCase
     /**
      * Inside `/docs` the header's field submits to `/docs`; everywhere else it
      * keeps the destination the theme shipped with. The theme is a copy of
-     * `nativa-themes` (`make themes-check`), so this routing lives in the kernel.
+     * `nativa-themes` (`make themes-check`), so the caller supplies the action
+     * and `FrontendLayout` applies it.
      */
     #[Test]
     public function theHeaderFieldFollowsTheSection(): void

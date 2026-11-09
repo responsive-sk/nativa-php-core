@@ -31,8 +31,8 @@ use Themes\DocsPageTheme;
  * answers from the SAME catalogue the index renders, so a hit and a card are
  * two views of one publication boundary. The header's search field is routed
  * here on `/docs*` by `FrontendLayout` — the theme owns that markup and this
- * tree only holds a copy of it (`make themes-check`), so routing is the kernel's
- * half of the job.
+ * tree only holds a copy of it (`make themes-check`), so this action supplies
+ * the destination and the layout applies it.
  */
 #[Route(path: '/docs', method: 'GET', name: 'docs-index')]
 final readonly class DocsIndexAction
