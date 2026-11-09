@@ -111,7 +111,7 @@ runtime flags; a `.env` cannot install a module).
 | surface | modules | cost | verdict |
 |---|---|---|---|
 | Nativa on `/` | `Settings` | +14 files | kept: the theme vote is a kernel port and the kernel ships no provider |
-| Slovak copy | `Settings`, `Locales` | +143 files | not shipped: English kernel copy, and `Locales` drags in a `Cardboard` whose `/mark` answers 500 without `Users` |
+| Slovak copy | `Settings`, `Locales` | +143 files | not shipped: English kernel copy, and `Locales` drags in a `Cardboard` whose `/mark` answers 500 in a tree without `Blog` (its quick actions resolve `articles.create`) |
 | `/blog`, `/cookies` | `Blog`, `Pages` | +373 files | not shipped: content is not a dependency of the theme, and the corpora are pruned |
 | `/mark` | `Users`, `Cardboard` | +209 files | not shipped: the panel is not part of the starting point |
 
@@ -155,6 +155,13 @@ repository with `--dry-run` printing what it would push.
   are all measurement-of-this-repository checks, and the source tree runs them
   on every commit; the export is regenerated from that commit. Recorded rather
   than implied.
+- Two catalogue defects were found and are not fixed here. `Cardboard` alone
+  answers `/mark` with 500 because `dashboard-audit.phtml` resolves
+  `articles.create` and `Blog` is absent. And because the composition root wires
+  `AuthMiddleware` only when a provider exists, a dashboard that did render in a
+  `Cardboard`-without-`Users` tree would be public. The fix is one change, not
+  two: refuse admin paths at the kernel when no provider is wired, then let the
+  dashboard skip quick actions whose route is absent.
 - The exported theme modules are a copy. A theme change lands in
   `nativa-themes`, then here, then in the export, and the exported README says
   so.
