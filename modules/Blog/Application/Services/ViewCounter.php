@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Blog\Application\Services;
 
 use Modules\Blog\Infrastructure\Persistence\Statement;
+use Modules\Database\Contracts\ConnectionInterface;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 
 /**
@@ -20,11 +21,11 @@ final class ViewCounter
 {
     private static ?self $instance = null;
 
-    private readonly \PDO $pdo;
+    private readonly ConnectionInterface $connection;
 
     private function __construct()
     {
-        $this->pdo = DatabaseConnectionManager::instance()->connection('blog');
+        $this->connection = DatabaseConnectionManager::instance()->connect('blog');
         $this->ensureTable();
     }
 
@@ -46,7 +47,7 @@ final class ViewCounter
      */
     public function record(string $slug): void
     {
-        $stmt = Statement::prepare($this->pdo, 'INSERT INTO article_views (article_slug) VALUES (:slug)');
+        $stmt = Statement::prepare($this->connection, 'INSERT INTO article_views (article_slug) VALUES (:slug)');
         $stmt->execute([':slug' => $slug]);
     }
 
@@ -55,7 +56,7 @@ final class ViewCounter
      */
     public function count(string $slug): int
     {
-        $stmt = Statement::prepare($this->pdo, 'SELECT COUNT(*) FROM article_views WHERE article_slug = :slug');
+        $stmt = Statement::prepare($this->connection, 'SELECT COUNT(*) FROM article_views WHERE article_slug = :slug');
         $stmt->execute([':slug' => $slug]);
 
         return (int) $stmt->fetchColumn();
@@ -75,13 +76,13 @@ final class ViewCounter
         }
 
         $placeholders = implode(',', array_fill(0, count($slugs), '?'));
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->connection,
             "SELECT article_slug, COUNT(*) as cnt FROM article_views WHERE article_slug IN ({$placeholders}) GROUP BY article_slug",
         );
         $stmt->execute($slugs);
 
         $counts = [];
-        foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $row) {
+        foreach ($stmt->fetchAll() as $row) {
             $counts[(string) $row['article_slug']] = (int) $row['cnt'];
         }
 
@@ -112,13 +113,13 @@ final class ViewCounter
      */
     private function ensureTable(): void
     {
-        $this->pdo->exec(<<<'SQL'
+        $this->connection->execute(<<<'SQL'
                 CREATE TABLE IF NOT EXISTS article_views (
                     id          INTEGER PRIMARY KEY AUTOINCREMENT,
                     article_slug VARCHAR(200) NOT NULL,
                     viewed_at   DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             SQL);
-        $this->pdo->exec('CREATE INDEX IF NOT EXISTS idx_article_views_slug ON article_views(article_slug)');
+        $this->connection->execute('CREATE INDEX IF NOT EXISTS idx_article_views_slug ON article_views(article_slug)');
     }
 }

@@ -8,6 +8,8 @@ use Modules\Blog\Domain\Entities\SearchResult;
 use Modules\Blog\Infrastructure\Persistence\Statement;
 use Modules\Markdown\Application\Services\MarkdownRenderer;
 use Modules\Core\Infrastructure\Paths\AppPaths;
+use Modules\Database\Contracts\ConnectionInterface;
+use Modules\Database\Infrastructure\Persistence\PdoConnection;
 
 /**
  * BlogSearchService — full-text search over storage/blog via an in-memory
@@ -73,10 +75,10 @@ final readonly class BlogSearchService
         // @mago-expect lint:sensitive-parameter
         $match = implode(' ', array_map(static fn (string $token): string => '"' . $token . '"*', $tokens));
 
-        $pdo = $this->index($locale);
+        $connection = $this->index($locale);
 
         // Count total matching rows
-        $countStmt = Statement::prepare($pdo,
+        $countStmt = Statement::prepare($connection,
             'SELECT COUNT(*) as cnt FROM blog_fts WHERE blog_fts MATCH :match',
         );
         $countStmt->execute([':match' => $match]);
@@ -88,7 +90,7 @@ final readonly class BlogSearchService
         $page = max(1, min($page, $totalPages));
         $offset = ($page - 1) * $perPage;
 
-        $stmt = Statement::prepare($pdo,
+        $stmt = Statement::prepare($connection,
             'SELECT slug FROM blog_fts WHERE blog_fts MATCH :match ORDER BY bm25(blog_fts, 10.0, 5.0, 3.0, 1.0) LIMIT :limit OFFSET :offset',
         );
         $stmt->bindValue(':match', $match, \PDO::PARAM_STR);
@@ -97,7 +99,7 @@ final readonly class BlogSearchService
         $stmt->execute();
 
         $slugs = [];
-        foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $row) {
+        foreach ($stmt->fetchAll() as $row) {
             $slugs[] = (string) $row['slug'];
         }
 
@@ -153,7 +155,7 @@ final readonly class BlogSearchService
      * Build the in-memory FTS5 index from the article cards + raw bodies of
      * the given locale.
      */
-    private function index(string $locale): \PDO
+    private function index(string $locale): ConnectionInterface
     {
         $pdo = new \PDO('sqlite::memory:');
         $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
@@ -162,7 +164,12 @@ final readonly class BlogSearchService
         // tags/body get the 10.0/5.0/3.0/1.0 weights in the ORDER BY below.
         $pdo->exec('CREATE VIRTUAL TABLE blog_fts USING fts5(title, excerpt, tags, body, slug UNINDEXED)');
 
-        $insert = Statement::prepare($pdo, 'INSERT INTO blog_fts (slug, title, excerpt, tags, body) VALUES (?, ?, ?, ?, ?)');
+        // The scratch index is not a module database: no manager owns it and
+        // no one routes it, so the handle is built here and wrapped once for
+        // the statement helper.
+        $connection = new PdoConnection($pdo, 'blog-fts');
+
+        $insert = Statement::prepare($connection, 'INSERT INTO blog_fts (slug, title, excerpt, tags, body) VALUES (?, ?, ?, ?, ?)');
         $renderer = new MarkdownRenderer();
 
         foreach ($this->articles->all($locale) as $article) {
@@ -175,7 +182,7 @@ final readonly class BlogSearchService
             ]);
         }
 
-        return $pdo;
+        return $connection;
     }
 
     /**

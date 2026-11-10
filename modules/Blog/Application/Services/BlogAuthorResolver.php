@@ -117,7 +117,7 @@ final readonly class BlogAuthorResolver
     private function lookup(string $sql, array $params): ?array
     {
         try {
-            $stmt = Statement::prepare($this->manager->connection('users'), $sql);
+            $stmt = Statement::prepare($this->manager->connect('users'), $sql);
             $stmt->execute($params);
             $row = $stmt->fetch();
         } catch (\PDOException) {
@@ -148,7 +148,7 @@ final readonly class BlogAuthorResolver
     {
         try {
             $stmt = Statement::query(
-                $this->manager->connection('users'),
+                $this->manager->connect('users'),
                 'SELECT id, name, avatar, created_at FROM users WHERE is_active = 1',
             );
             $rows = $stmt->fetchAll();

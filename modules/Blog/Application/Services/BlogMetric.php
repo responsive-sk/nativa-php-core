@@ -14,6 +14,7 @@ use Modules\Cardboard\Domain\Contracts\MetricContract;
 use Modules\Cardboard\Infrastructure\Attributes\AsMetricProvider;
 use Modules\Cardboard\Infrastructure\Registry\CardboardRegistry;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
+use Modules\Database\Contracts\ConnectionInterface;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 
 /**
@@ -47,11 +48,11 @@ final readonly class BlogMetric implements MetricContract
 
     private function registerViewsCard(Period $period): void
     {
-        $pdo = DatabaseConnectionManager::instance()->connection('blog');
+        $connection = DatabaseConnectionManager::instance()->connect('blog');
 
-        $viewsInPeriod = $this->countViewsInPeriod($pdo, $period->sqlInterval());
+        $viewsInPeriod = $this->countViewsInPeriod($connection, $period->sqlInterval());
         $viewsPreviously = $this->countViewsBetweenPeriods(
-            $pdo,
+            $connection,
             $period->previousSqlInterval(),
             $period->sqlInterval(),
         );
@@ -140,9 +141,9 @@ final readonly class BlogMetric implements MetricContract
     /**
      * Count article views in the given period.
      */
-    private function countViewsInPeriod(\PDO $pdo, string $interval): int
+    private function countViewsInPeriod(ConnectionInterface $connection, string $interval): int
     {
-        $stmt = Statement::prepare($pdo,
+        $stmt = Statement::prepare($connection,
             'SELECT COUNT(*) FROM article_views WHERE viewed_at >= datetime(\'now\', :interval)',
         );
         $stmt->execute([':interval' => $interval]);
@@ -153,9 +154,9 @@ final readonly class BlogMetric implements MetricContract
     /**
      * Count article views between two period boundaries.
      */
-    private function countViewsBetweenPeriods(\PDO $pdo, string $fromInterval, string $toInterval): int
+    private function countViewsBetweenPeriods(ConnectionInterface $connection, string $fromInterval, string $toInterval): int
     {
-        $stmt = Statement::prepare($pdo,
+        $stmt = Statement::prepare($connection,
             'SELECT COUNT(*) FROM article_views WHERE viewed_at >= datetime(\'now\', :from) AND viewed_at < datetime(\'now\', :to)',
         );
         $stmt->execute([':from' => $fromInterval, ':to' => $toInterval]);
