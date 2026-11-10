@@ -20,6 +20,10 @@ use Modules\Security\Application\Services\RateLimiter;
  * limiter lives on users.db (that is where the rate_limits table is). SQLite
  * cannot join across databases, so the two connections are kept separate and
  * each service is pointed at the connection that holds its table.
+ *
+ * Both go through `connect()`: the limiter because it writes, the repository
+ * because a pending count is the badge on every `/mark` page and questions
+ * reads are cheaper off a replica than off the primary.
  */
 final class QuestionsServices
 {
@@ -35,7 +39,7 @@ final class QuestionsServices
     public static function repository(): QuestionRepository
     {
         return self::$repository ??= new QuestionRepository(
-            DatabaseConnectionManager::instance()->connection('questions'),
+            DatabaseConnectionManager::instance()->connect('questions'),
         );
     }
 
