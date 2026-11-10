@@ -309,6 +309,51 @@ the replica, not about the database the check claims to probe. Clickhouse does
 not open a module database at all; the manager has no name for it, and giving
 it one would make a foreign, read-only file look like module state.
 
+### What the two would cost, counted
+
+Health is one production class. `Checks/DatabaseHealthCheck.php` names `\PDO`
+three times, all in the connector seam: the `@param` docblock, the `@var` above
+the default lambda, and the lambda's return type. Converting it is
+`(\Closure(string): ConnectionInterface)|null`, a default of
+`new PdoConnection($manager->connection($name), $name)` so the probe still
+reads the file it claims to read rather than a routed connection, and the
+deletion of the `if (false === $statement)` branch, because the contract raises
+instead of returning `false`. `tests/HealthChecksTest.php` changes two closure
+return types. One class, one test file, about eight lines, and nothing else in
+the module touches the driver. The round would buy no routing: the check exists
+to observe a file failing, and `connection()` is the observation the doc keeps.
+
+Clickhouse is three production files and one helper, and the count is the small
+half of it. `SqliteJournal` opens `sqlite:<path>` to run
+`PRAGMA wal_checkpoint(TRUNCATE)`, a write that has to be read-write (the class
+records the measured `disk I/O error` a read-only handle gets).
+`SqliteSchemaReader` opens the same kind of path with
+`SQLITE_ATTR_OPEN_FLAGS => SQLITE_OPEN_READONLY` and follows it with
+`PRAGMA query_only = ON`, which is the guard that keeps a reader from writing
+to a file ClickHouse owns. `Infrastructure/Persistence/Statement.php` wraps
+`\PDO` for that reader and has two call sites, both in it. Three test files
+open a raw handle around these classes.
+
+The obstacle is not a type annotation. `ConnectionInterface` names a module
+database and never a path, and it has no way to ask for a read-only open: the
+manager caches one writable handle per name. Two honest ways to close it, and
+what each costs:
+
+- Add a path-level open to the kernel (`open(string $path, bool $readOnly)` on
+the manager, or an options argument on `connect()`), then convert the three
+files and either delete the module helper or make it the fifteenth member of
+the ratchet. New kernel surface, a new test for the flag, and a second entry
+point next to the cached one, bought for a module that answers no repository
+call and has no reads to route.
+- Leave it, and the module keeps `\PDO` in three files and its own helper, with
+the reason recorded here rather than rediscovered in a later sweep.
+
+A third option is the one the doc rejects: give the foreign file a module name
+so `connect('clickhouse')` works. It would convert the types and lose the
+read-only flag, so the reader could write a database ClickHouse is reading.
+That is a defect bought with a type signature, which is why the second option
+is the one taken.
+
 Queue was worth doing for the opposite reason from Blog and Media: a worker
 that reserves a job writes immediately, the write marks the connection, and
 every read after it is on the primary anyway, so the round bought no latency.
@@ -317,7 +362,10 @@ everything else, which is the property the doc is about.
 
 - No module remains a real target. Health and Clickhouse are recommendations
   with reasons, not a backlog, and the two-stage helper test is what keeps the
-  movement visible instead of letting both shapes grow.
+  movement visible instead of letting both shapes grow. The section above
+  counts what each would take, so the next reader does not have to re-measure
+  the tree to find out that Clickhouse is a kernel seam and Health is an
+  afternoon's typing.
 - Module migrators keep `\PDO` on purpose. DDL runs before any repository
   exists and does not read or write rows, so routing it would buy nothing and
   cost the one consumer that is happy with the driver.
