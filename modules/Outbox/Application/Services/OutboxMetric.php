@@ -11,10 +11,10 @@ use Modules\Cardboard\Domain\Model\Period;
 use Modules\Cardboard\Domain\Model\Trend;
 use Modules\Cardboard\Infrastructure\Attributes\AsMetricProvider;
 use Modules\Cardboard\Infrastructure\Registry\CardboardRegistry;
+use Modules\Database\Contracts\ConnectionInterface;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Outbox\Infrastructure\Persistence\Repositories\SqliteOutboxRepository;
 use Modules\Outbox\Infrastructure\Persistence\Statement;
-use PDO;
 
 /**
  * OutboxMetric — outbox message stat card for the admin dashboard.
@@ -34,26 +34,26 @@ use PDO;
 final readonly class OutboxMetric implements MetricContract
 {
     public function __construct(
-        private ?PDO $pdo = null,
+        private ?ConnectionInterface $connection = null,
     ) {
     }
 
     public function registerCards(Period $period): void
     {
         try {
-            $pdo = $this->pdo ?? DatabaseConnectionManager::instance()->connection('outbox');
-            $repository = new SqliteOutboxRepository($pdo);
+            $connection = $this->connection ?? DatabaseConnectionManager::instance()->connect('outbox');
+            $repository = new SqliteOutboxRepository($connection);
 
             $counts = $repository->countByStatus();
             $attention = $counts['pending'] + $counts['processing'];
 
-            $processed = $this->countProcessedSince($pdo, $period->sqlInterval());
+            $processed = $this->countProcessedSince($connection, $period->sqlInterval());
             $processedBefore = $this->countProcessedBetween(
-                $pdo,
+                $connection,
                 $period->previousSqlInterval(),
                 $period->sqlInterval(),
             );
-            $failed = $this->countFailedSince($pdo, $period->sqlInterval());
+            $failed = $this->countFailedSince($connection, $period->sqlInterval());
 
             CardboardRegistry::register(
                 Card::make('outbox', 'Outbox', $attention)
@@ -68,9 +68,9 @@ final readonly class OutboxMetric implements MetricContract
         }
     }
 
-    private function countProcessedSince(PDO $pdo, string $interval): int
+    private function countProcessedSince(ConnectionInterface $connection, string $interval): int
     {
-        $stmt = Statement::prepare($pdo,
+        $stmt = Statement::prepare($connection,
             'SELECT COUNT(*) FROM outbox_messages WHERE status = \'processed\' AND processed_at >= datetime(\'now\', :interval)',
         );
         $stmt->execute([':interval' => $interval]);
@@ -78,9 +78,9 @@ final readonly class OutboxMetric implements MetricContract
         return (int) $stmt->fetchColumn();
     }
 
-    private function countProcessedBetween(PDO $pdo, string $fromInterval, string $toInterval): int
+    private function countProcessedBetween(ConnectionInterface $connection, string $fromInterval, string $toInterval): int
     {
-        $stmt = Statement::prepare($pdo,
+        $stmt = Statement::prepare($connection,
             'SELECT COUNT(*) FROM outbox_messages WHERE status = \'processed\' AND processed_at >= datetime(\'now\', :from) AND processed_at < datetime(\'now\', :to)',
         );
         $stmt->execute([':from' => $fromInterval, ':to' => $toInterval]);
@@ -88,9 +88,9 @@ final readonly class OutboxMetric implements MetricContract
         return (int) $stmt->fetchColumn();
     }
 
-    private function countFailedSince(PDO $pdo, string $interval): int
+    private function countFailedSince(ConnectionInterface $connection, string $interval): int
     {
-        $stmt = Statement::prepare($pdo,
+        $stmt = Statement::prepare($connection,
             'SELECT COUNT(*) FROM outbox_messages WHERE status = \'failed\' AND last_attempt_at >= datetime(\'now\', :interval)',
         );
         $stmt->execute([':interval' => $interval]);

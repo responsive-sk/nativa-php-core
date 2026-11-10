@@ -122,7 +122,7 @@ final class OutboxServices
     private static function newRepository(): SqliteOutboxRepository
     {
         return new SqliteOutboxRepository(
-            DatabaseConnectionManager::instance()->connection('outbox'),
+            DatabaseConnectionManager::instance()->connect('outbox'),
         );
     }
 }

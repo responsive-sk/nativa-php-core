@@ -5,6 +5,8 @@ declare(strict_types = 1);
 namespace Modules\Outbox\Tests;
 
 use Modules\Core\Interfaces\CLI\CliOutput;
+use Modules\Database\Contracts\ConnectionInterface;
+use Modules\Database\Infrastructure\Persistence\PdoConnection;
 use Modules\Outbox\Infrastructure\Persistence\Migrations\OutboxDatabaseMigrator;
 use Modules\Outbox\Infrastructure\Persistence\Repositories\SqliteOutboxRepository;
 use Modules\Outbox\Infrastructure\Persistence\Statement;
@@ -23,6 +25,8 @@ final class OutboxAdminListTest extends TestCase
     private string $dbFile;
 
     private PDO $pdo;
+
+    private ConnectionInterface $connection;
 
     private SqliteOutboxRepository $repository;
 
@@ -45,12 +49,13 @@ final class OutboxAdminListTest extends TestCase
         };
         (new OutboxDatabaseMigrator($this->pdo))->run($null);
 
-        $this->repository = new SqliteOutboxRepository($this->pdo);
+        $this->connection = new PdoConnection($this->pdo, 'outbox');
+        $this->repository = new SqliteOutboxRepository($this->connection);
     }
 
     protected function tearDown(): void
     {
-        unset($this->repository, $this->pdo);
+        unset($this->repository, $this->connection, $this->pdo);
 
         if (isset($this->dbFile) && is_file($this->dbFile)) {
             unlink($this->dbFile);
@@ -85,7 +90,7 @@ final class OutboxAdminListTest extends TestCase
 
     private function seed(string $status, string $createdAt): void
     {
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->connection,
             'INSERT INTO outbox_messages (id, event_type, event_payload, status, attempts, max_attempts, created_at)'
             . ' VALUES (:id, :type, :payload, :status, 0, 5, :created)',
         );

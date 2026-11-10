@@ -178,9 +178,21 @@ consumer: it catches `\Throwable` so a missing database leaves the dashboard
 without a card, and a routed connection adds a failure mode there (`connect()`
 can fail on replica selection), which the same catch already covers.
 
+`Outbox` was the round that found a hole in the ratchet rather than in the
+module. The helper is a byte-for-byte copy across the stage, and the first
+version of this round edited its docblock to mention the metric as well as the
+repository; `theHelpersAreIdenticalApartFromTheirNamespace` failed on line 14
+with both texts in the diff, which is exactly the drift it exists to catch. The
+copy took the other modules' wording instead. The module itself is one
+repository plus a metric with a constructor handle, so a call site could bypass
+the factory entirely; `OutboxMetric`'s optional argument is now typed
+`?ConnectionInterface` and defaults to `connect('outbox')`, and the two tests
+that built a raw handle wrap it in `PdoConnection` so they exercise the same
+methods a routed connection has.
+
 `StatementHelperContractTest` pins two stages (`CONTRACT_MODULES = ['Audit',
-'Cardboard', 'Comments', 'Forms', 'Locales', 'Notifications', 'Questions',
-'Security', 'Users']`):
+'Cardboard', 'Comments', 'Forms', 'Locales', 'Notifications', 'Outbox',
+'Questions', 'Security', 'Users']`):
 each stage is byte-identical inside itself, and each shape is asserted
 directly, so a module cannot drift from `\PDO` to the contract without being
 named.
@@ -216,14 +228,13 @@ which is the case a replica exists for.
 
 ### What is left, module by module
 
-Seven modules still name `\PDO` somewhere a caller can see it. Counted from
+Six modules still name `\PDO` somewhere a caller can see it. Counted from
 the tree, not from memory: type sites outside `Migrations/` and `tests/`,
 construction sites outside the module's own installed copy, and test files
 that build a raw `\PDO` for these classes.
 
 | Module | Database | Type | Build sites | Raw-PDO tests | Round |
 |---|---|---:|---:|---:|---|
-| Outbox | `outbox` | 7 | 2 | 2 | Repository plus a metric with its own handle. |
 | Blog | `blog` | 6 | 2 | 0 | Three services, three binds, FTS `MATCH`. |
 | Media | `media` | 6 | 3 | 3 | Three classes, a metric, five binds. |
 | Settings | `config` | 4 | 5 | 1 | Two repositories, shared with Cardboard. |
@@ -256,7 +267,7 @@ the connection, and every read after it is on the primary anyway. Moving it
 would be a mechanical round with a real regression risk (`reserve()` is the
 one place a double-dispatch would hurt) and no latency to win.
 
-- Five modules remain real targets, at roughly one to three files each plus a
+- Four modules remain real targets, at roughly one to three files each plus a
   catalogue reinstall. Each moves in its own round; the two-stage helper test
   is what keeps the movement visible instead of letting both shapes grow.
 - Module migrators keep `\PDO` on purpose. DDL runs before any repository

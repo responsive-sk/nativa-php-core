@@ -107,6 +107,7 @@ final class StatementHelperContractTest extends TestCase
         'Forms',
         'Locales',
         'Notifications',
+        'Outbox',
         'Questions',
         'Security',
         'Users',

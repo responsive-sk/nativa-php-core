@@ -7,6 +7,8 @@ namespace Modules\Outbox\Tests;
 use Modules\Cardboard\Domain\Model\Period;
 use Modules\Cardboard\Infrastructure\Registry\CardboardRegistry;
 use Modules\Core\Interfaces\CLI\CliOutput;
+use Modules\Database\Contracts\ConnectionInterface;
+use Modules\Database\Infrastructure\Persistence\PdoConnection;
 use Modules\Outbox\Application\Services\OutboxMetric;
 use Modules\Outbox\Infrastructure\Persistence\Migrations\OutboxDatabaseMigrator;
 use Modules\Outbox\Infrastructure\Persistence\Statement;
@@ -27,6 +29,8 @@ final class OutboxMetricTest extends TestCase
 
     private PDO $pdo;
 
+    private ConnectionInterface $connection;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -38,6 +42,7 @@ final class OutboxMetricTest extends TestCase
         $this->dbFile = sys_get_temp_dir() . '/outbox-metric-' . bin2hex(random_bytes(8)) . '.sqlite';
         $this->pdo = new PDO('sqlite:' . $this->dbFile);
         $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $this->connection = new PdoConnection($this->pdo, 'outbox');
 
         $null = new class implements CliOutput {
             public function writeln(string $message): void
@@ -55,7 +60,7 @@ final class OutboxMetricTest extends TestCase
             CardboardRegistry::reset();
         }
 
-        unset($this->pdo);
+        unset($this->connection, $this->pdo);
 
         if (isset($this->dbFile) && is_file($this->dbFile)) {
             unlink($this->dbFile);
@@ -76,7 +81,7 @@ final class OutboxMetricTest extends TestCase
         $this->seed('processed', date('Y-m-d H:i:s', strtotime('-60 days')), null);
         $this->seed('failed', null, date('Y-m-d H:i:s'));
 
-        (new OutboxMetric($this->pdo))->registerCards(Period::SEVEN_DAYS);
+        (new OutboxMetric($this->connection))->registerCards(Period::SEVEN_DAYS);
 
         $cards = CardboardRegistry::all();
         $this->assertCount(1, $cards);
@@ -92,7 +97,7 @@ final class OutboxMetricTest extends TestCase
     #[Test]
     public function emptyDatabaseRegistersZeroCard(): void
     {
-        (new OutboxMetric($this->pdo))->registerCards(Period::SEVEN_DAYS);
+        (new OutboxMetric($this->connection))->registerCards(Period::SEVEN_DAYS);
 
         $cards = CardboardRegistry::all();
         $this->assertCount(1, $cards);
@@ -102,7 +107,7 @@ final class OutboxMetricTest extends TestCase
 
     private function seed(string $status, ?string $processedAt, ?string $lastAttemptAt): void
     {
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->connection,
             'INSERT INTO outbox_messages (id, event_type, event_payload, status, attempts, max_attempts, processed_at, last_attempt_at, created_at)'
             . ' VALUES (:id, :type, :payload, :status, 0, 3, :processed, :attempted, :created)',
         );

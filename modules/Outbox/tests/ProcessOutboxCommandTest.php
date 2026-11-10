@@ -178,7 +178,7 @@ final class ProcessOutboxCommandTest extends TestCase
     private function seedProcessed(string $processedAt): void
     {
         $statement = Statement::prepare(
-            DatabaseConnectionManager::instance()->connection('outbox'),
+            DatabaseConnectionManager::instance()->connect('outbox'),
             'INSERT INTO outbox_messages (id, event_type, event_payload, status, attempts, max_attempts, processed_at, created_at)'
             . ' VALUES (:id, :type, :payload, \'processed\', 1, 5, :processed, :processed)',
         );
