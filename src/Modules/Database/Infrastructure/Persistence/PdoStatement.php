@@ -25,7 +25,11 @@ final readonly class PdoStatement implements StatementInterface
 
     public function execute(array $bindings = []): bool
     {
-        return $this->statement->execute($bindings);
+        // Passing `[]` is not the same as passing nothing: PDO reads an
+        // argument as "bind exactly these", so an empty array would drop the
+        // values a caller set with bindValue(). The contract's default means
+        // "use what is already bound", which is PDO's null.
+        return $this->statement->execute([] === $bindings ? null : $bindings);
     }
 
     public function fetch(int $mode = \PDO::FETCH_ASSOC): array|false
