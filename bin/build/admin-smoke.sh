@@ -187,9 +187,9 @@ use Modules\Security\Application\Services\PasswordHasher;
 use Modules\Users\Infrastructure\Persistence\Repositories\RoleRepository;
 use Modules\Users\Infrastructure\Persistence\Repositories\UserRepository;
 
-$pdo = DatabaseConnectionManager::instance()->connection('users');
-$roles = new RoleRepository($pdo);
-$users = new UserRepository($pdo);
+$db = DatabaseConnectionManager::instance()->connect('users');
+$roles = new RoleRepository($db);
+$users = new UserRepository($db);
 $hasher = new PasswordHasher();
 
 $roles->createRole('smoke00000000000000000000000001', 'admin', 'Smoke admin');
@@ -200,16 +200,22 @@ $roles->createRole('smoke00000000000000000000000002', 'author', 'Smoke author');
 foreach (Permissions::all() as $i => $name) {
     $id = sprintf('smokeperm%022d', $i);
 
-    $pdo->prepare('INSERT OR IGNORE INTO permissions (id, name, description, group_name) VALUES (?, ?, ?, ?)')
-        ->execute([$id, $name, 'Smoke: ' . $name, 'general']);
+    $db->execute(
+        'INSERT OR IGNORE INTO permissions (id, name, description, group_name) VALUES (?, ?, ?, ?)',
+        [$id, $name, 'Smoke: ' . $name, 'general'],
+    );
 
     // admin: every permission. author: exactly what a content editor holds.
-    $pdo->prepare('INSERT OR IGNORE INTO role_permissions (role_id, permission_id) VALUES (?, ?)')
-        ->execute(['smoke00000000000000000000000001', $id]);
+    $db->execute(
+        'INSERT OR IGNORE INTO role_permissions (role_id, permission_id) VALUES (?, ?)',
+        ['smoke00000000000000000000000001', $id],
+    );
 
     if (in_array($name, [Permissions::MARK_ACCESS, Permissions::CONTENT], true)) {
-        $pdo->prepare('INSERT OR IGNORE INTO role_permissions (role_id, permission_id) VALUES (?, ?)')
-            ->execute(['smoke00000000000000000000000002', $id]);
+        $db->execute(
+            'INSERT OR IGNORE INTO role_permissions (role_id, permission_id) VALUES (?, ?)',
+            ['smoke00000000000000000000000002', $id],
+        );
     }
 }
 
