@@ -168,9 +168,19 @@ it through `PdoConnection`, and Blog's escape test stopped opening a throwaway
 `locales.db` handle and reads through the manager, so it tests the wiring the
 admin writes through.
 
+`Forms` was the first module with four readers rather than one, and its round
+was mechanical because of it: two repositories, the metric's two count helpers
+and two factories, with no test changes at all. `FormsPersistenceTest` already
+drove both repositories through `FormsServices`, so the wiring the round
+changed was covered before it changed; the module's only raw `\PDO` was the
+fixture hand to the migrator, which keeps it. The metric was the interesting
+consumer: it catches `\Throwable` so a missing database leaves the dashboard
+without a card, and a routed connection adds a failure mode there (`connect()`
+can fail on replica selection), which the same catch already covers.
+
 `StatementHelperContractTest` pins two stages (`CONTRACT_MODULES = ['Audit',
-'Cardboard', 'Comments', 'Locales', 'Notifications', 'Questions', 'Security',
-'Users']`):
+'Cardboard', 'Comments', 'Forms', 'Locales', 'Notifications', 'Questions',
+'Security', 'Users']`):
 each stage is byte-identical inside itself, and each shape is asserted
 directly, so a module cannot drift from `\PDO` to the contract without being
 named.
@@ -206,14 +216,13 @@ which is the case a replica exists for.
 
 ### What is left, module by module
 
-Eight modules still name `\PDO` somewhere a caller can see it. Counted from
+Seven modules still name `\PDO` somewhere a caller can see it. Counted from
 the tree, not from memory: type sites outside `Migrations/` and `tests/`,
 construction sites outside the module's own installed copy, and test files
 that build a raw `\PDO` for these classes.
 
 | Module | Database | Type | Build sites | Raw-PDO tests | Round |
 |---|---|---:|---:|---:|---|
-| Forms | `forms` | 6 | 2 | 0 | Two repositories, a metric, two binds. |
 | Outbox | `outbox` | 7 | 2 | 2 | Repository plus a metric with its own handle. |
 | Blog | `blog` | 6 | 2 | 0 | Three services, three binds, FTS `MATCH`. |
 | Media | `media` | 6 | 3 | 3 | Three classes, a metric, five binds. |
@@ -247,7 +256,7 @@ the connection, and every read after it is on the primary anyway. Moving it
 would be a mechanical round with a real regression risk (`reserve()` is the
 one place a double-dispatch would hurt) and no latency to win.
 
-- Six modules remain real targets, at roughly one to three files each plus a
+- Five modules remain real targets, at roughly one to three files each plus a
   catalogue reinstall. Each moves in its own round; the two-stage helper test
   is what keeps the movement visible instead of letting both shapes grow.
 - Module migrators keep `\PDO` on purpose. DDL runs before any repository

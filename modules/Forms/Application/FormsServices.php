@@ -35,14 +35,14 @@ final class FormsServices
     public static function forms(): FormRepository
     {
         return self::$forms ??= new FormRepository(
-            DatabaseConnectionManager::instance()->connection('forms'),
+            DatabaseConnectionManager::instance()->connect('forms'),
         );
     }
 
     public static function submissions(): SubmissionRepository
     {
         return self::$submissions ??= new SubmissionRepository(
-            DatabaseConnectionManager::instance()->connection('forms'),
+            DatabaseConnectionManager::instance()->connect('forms'),
         );
     }
 

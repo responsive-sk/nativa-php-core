@@ -104,6 +104,7 @@ final class StatementHelperContractTest extends TestCase
         'Audit',
         'Cardboard',
         'Comments',
+        'Forms',
         'Locales',
         'Notifications',
         'Questions',

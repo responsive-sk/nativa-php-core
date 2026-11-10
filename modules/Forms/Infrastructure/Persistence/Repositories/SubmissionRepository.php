@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Forms\Infrastructure\Persistence\Repositories;
 
+use Modules\Database\Contracts\ConnectionInterface;
 use Modules\Forms\Domain\Entities\FormSubmission;
 use Modules\Forms\Infrastructure\Persistence\Statement;
 
@@ -21,13 +22,13 @@ use Modules\Forms\Infrastructure\Persistence\Statement;
  */
 final readonly class SubmissionRepository
 {
-    public function __construct(private \PDO $pdo)
+    public function __construct(private ConnectionInterface $connection)
     {
     }
 
     public function insert(FormSubmission $submission): void
     {
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->connection,
             'INSERT INTO form_submissions (id, form_id, form_slug, locale, payload, status, ip_address)'
             . ' VALUES (:id, :form_id, :form_slug, :locale, :payload, :status, :ip)',
         );
@@ -47,7 +48,7 @@ final readonly class SubmissionRepository
      */
     public function listForForm(string $formId): array
     {
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->connection,
             'SELECT * FROM form_submissions WHERE form_id = :id ORDER BY created_at DESC, rowid DESC',
         );
         $stmt->execute(['id' => $formId]);
@@ -65,7 +66,7 @@ final readonly class SubmissionRepository
 
     public function findById(string $id): ?FormSubmission
     {
-        $stmt = Statement::prepare($this->pdo, 'SELECT * FROM form_submissions WHERE id = :id');
+        $stmt = Statement::prepare($this->connection, 'SELECT * FROM form_submissions WHERE id = :id');
         $stmt->execute(['id' => $id]);
 
         $row = $stmt->fetch();
@@ -79,7 +80,7 @@ final readonly class SubmissionRepository
      */
     public function countNew(): int
     {
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->connection,
             'SELECT COUNT(*) FROM form_submissions WHERE status = :status',
         );
         $stmt->execute(['status' => FormSubmission::STATUS_NEW]);
@@ -89,7 +90,7 @@ final readonly class SubmissionRepository
 
     public function countNewForForm(string $formId): int
     {
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->connection,
             'SELECT COUNT(*) FROM form_submissions WHERE form_id = :id AND status = :status',
         );
         $stmt->execute(['id' => $formId, 'status' => FormSubmission::STATUS_NEW]);
@@ -103,7 +104,7 @@ final readonly class SubmissionRepository
      */
     public function markHandled(string $id): void
     {
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->connection,
             'UPDATE form_submissions SET status = :handled, handled_at = CURRENT_TIMESTAMP'
             . ' WHERE id = :id AND status = :new',
         );
@@ -116,7 +117,7 @@ final readonly class SubmissionRepository
 
     public function delete(string $id): void
     {
-        Statement::prepare($this->pdo, 'DELETE FROM form_submissions WHERE id = :id')
+        Statement::prepare($this->connection, 'DELETE FROM form_submissions WHERE id = :id')
             ->execute(['id' => $id]);
     }
 
@@ -127,7 +128,7 @@ final readonly class SubmissionRepository
      */
     public function recentPayloads(string $formId, int $limit): array
     {
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->connection,
             'SELECT payload FROM form_submissions WHERE form_id = :id'
             . ' ORDER BY created_at DESC, rowid DESC LIMIT :limit',
         );

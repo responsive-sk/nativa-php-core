@@ -11,6 +11,7 @@ use Modules\Cardboard\Domain\Model\Period;
 use Modules\Cardboard\Domain\Model\Trend;
 use Modules\Cardboard\Infrastructure\Attributes\AsMetricProvider;
 use Modules\Cardboard\Infrastructure\Registry\CardboardRegistry;
+use Modules\Database\Contracts\ConnectionInterface;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Forms\Infrastructure\Persistence\Statement;
 
@@ -27,11 +28,11 @@ final readonly class FormsMetric implements MetricContract
     public function registerCards(Period $period): void
     {
         try {
-            $pdo = DatabaseConnectionManager::instance()->connection('forms');
+            $connection = DatabaseConnectionManager::instance()->connect('forms');
 
-            $total = $this->countInPeriod($pdo, $period->sqlInterval());
+            $total = $this->countInPeriod($connection, $period->sqlInterval());
             $previous = $this->countBetweenPeriods(
-                $pdo,
+                $connection,
                 $period->previousSqlInterval(),
                 $period->sqlInterval(),
             );
@@ -49,9 +50,9 @@ final readonly class FormsMetric implements MetricContract
         }
     }
 
-    private function countInPeriod(\PDO $pdo, string $interval): int
+    private function countInPeriod(ConnectionInterface $connection, string $interval): int
     {
-        $stmt = Statement::prepare($pdo,
+        $stmt = Statement::prepare($connection,
             'SELECT COUNT(*) FROM form_submissions WHERE created_at >= datetime(\'now\', :interval)',
         );
         $stmt->execute([':interval' => $interval]);
@@ -59,9 +60,9 @@ final readonly class FormsMetric implements MetricContract
         return (int) $stmt->fetchColumn();
     }
 
-    private function countBetweenPeriods(\PDO $pdo, string $fromInterval, string $toInterval): int
+    private function countBetweenPeriods(ConnectionInterface $connection, string $fromInterval, string $toInterval): int
     {
-        $stmt = Statement::prepare($pdo,
+        $stmt = Statement::prepare($connection,
             'SELECT COUNT(*) FROM form_submissions'
             . ' WHERE created_at >= datetime(\'now\', :from) AND created_at < datetime(\'now\', :to)',
         );
