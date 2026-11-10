@@ -11,6 +11,7 @@ use Modules\Queue\Application\Services\DatabaseQueue;
 use Modules\Queue\Application\Services\HandlerRegistry;
 use Modules\Queue\Application\Services\QueueMetric;
 use Modules\Queue\Infrastructure\Persistence\Migrations\QueueDatabaseMigrator;
+use Modules\Database\Infrastructure\Persistence\PdoConnection;
 use PDO;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -30,6 +31,8 @@ final class QueueMetricTest extends TestCase
 
     private PDO $pdo;
 
+    private PdoConnection $connection;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -48,6 +51,9 @@ final class QueueMetricTest extends TestCase
             }
         };
         (new QueueDatabaseMigrator($this->pdo))->run($null);
+
+        // The migrator keeps the raw handle; services take the contract.
+        $this->connection = new PdoConnection($this->pdo, 'queue');
 
         CardboardRegistry::reset();
     }
@@ -76,7 +82,7 @@ final class QueueMetricTest extends TestCase
             throw new RuntimeException('nope');
         });
 
-        $queue = new DatabaseQueue($this->pdo, $handlers);
+        $queue = new DatabaseQueue($this->connection, $handlers);
         $queue->push('ok.handler'); // pending
         $queue->push('ok.handler'); // pending
         $queue->push('ok.handler', [], delaySeconds: 3600); // future, not reservable
@@ -88,7 +94,7 @@ final class QueueMetricTest extends TestCase
         $queue->push('bad.handler', [], maxAttempts: 1);
         $queue->work(limit: 10); // parks bad.handler in failed_jobs, processes pendings
 
-        (new QueueMetric($this->pdo))->registerCards(Period::SEVEN_DAYS);
+        (new QueueMetric($this->connection))->registerCards(Period::SEVEN_DAYS);
 
         $cards = CardboardRegistry::all();
         $this->assertCount(1, $cards);
@@ -106,7 +112,7 @@ final class QueueMetricTest extends TestCase
     #[Test]
     public function emptyDatabaseRegistersZeroCard(): void
     {
-        (new QueueMetric($this->pdo))->registerCards(Period::SEVEN_DAYS);
+        (new QueueMetric($this->connection))->registerCards(Period::SEVEN_DAYS);
 
         $cards = CardboardRegistry::all();
         $this->assertCount(1, $cards);

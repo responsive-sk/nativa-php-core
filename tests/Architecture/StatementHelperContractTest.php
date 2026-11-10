@@ -111,6 +111,7 @@ final class StatementHelperContractTest extends TestCase
         'Notifications',
         'Outbox',
         'Questions',
+        'Queue',
         'Security',
         'Settings',
         'Users',

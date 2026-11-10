@@ -8,6 +8,7 @@ use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Queue\Application\Services\DatabaseQueue;
 use Modules\Queue\Application\Services\HandlerRegistry;
 use Modules\Queue\Infrastructure\Persistence\Migrations\QueueDatabaseMigrator;
+use Modules\Database\Infrastructure\Persistence\PdoConnection;
 use PDO;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -24,6 +25,8 @@ final class QueueAdminApiTest extends TestCase
     private string $dbFile;
 
     private PDO $pdo;
+
+    private PdoConnection $connection;
 
     private DatabaseQueue $queue;
 
@@ -46,13 +49,16 @@ final class QueueAdminApiTest extends TestCase
         };
         (new QueueDatabaseMigrator($this->pdo))->run($null);
 
+        // The migrator keeps the raw handle; services take the contract.
+        $this->connection = new PdoConnection($this->pdo, 'queue');
+
         $handlers = new HandlerRegistry();
         $handlers->register('ok.handler', static fn (): null => null);
         $handlers->register('bad.handler', static function (): void {
             throw new RuntimeException('nope');
         });
 
-        $this->queue = new DatabaseQueue($this->pdo, $handlers);
+        $this->queue = new DatabaseQueue($this->connection, $handlers);
     }
 
     protected function tearDown(): void

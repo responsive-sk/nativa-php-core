@@ -231,9 +231,20 @@ and the fixture schema and moved only the reads and writes to
 helper returning `PdoConnection` from its own round, so one call site changed
 and no new wrapper was added.
 
+`Queue` is the round the doc argued against, taken anyway because the argument
+was about value rather than risk, and the risk turned out to be one line. The
+worker reservation was the worry: `reserve()` runs `BEGIN IMMEDIATE`, not a
+transaction, because a deferred `BEGIN` lets the SELECT run before the write
+lock and the guarded update then matters for nothing. `beginTransaction()` on
+the contract would have quietly downgraded it to deferred, so the statement
+stays spelled out and goes through `execute()`, which on a routed connection
+still lands on the primary. `inTransaction()` is on the contract already, so
+the rollback path did not change at all. The metric is a copy of the Blog one:
+an optional connection defaulting to `connect('queue')`.
+
 `StatementHelperContractTest` pins two stages (`CONTRACT_MODULES = ['Audit',
 'Blog', 'Cardboard', 'Comments', 'Forms', 'Locales', 'Media', 'Notifications',
-'Outbox', 'Questions', 'Security', 'Settings', 'Users']`):
+'Outbox', 'Questions', 'Queue', 'Security', 'Settings', 'Users']`):
 each stage is byte-identical inside itself, and each shape is asserted
 directly, so a module cannot drift from `\PDO` to the contract without being
 named.
@@ -269,20 +280,20 @@ which is the case a replica exists for.
 
 ### What is left, module by module
 
-Three modules still name `\PDO` somewhere a caller can see it. Counted from
+Two modules still name `\PDO` somewhere a caller can see it. Counted from
 the tree, not from memory: type sites outside `Migrations/` and `tests/`,
 construction sites outside the module's own installed copy, and test files
 that build a raw `\PDO` for these classes.
 
 | Module | Database | Type | Build sites | Raw-PDO tests | Round |
 |---|---|---:|---:|---:|---|
-| Queue | `queue` | 9 | 2 | 5 | Worker plus a metric, four binds. |
 | Health | every | 3 | 0 | 0 | Probes `SELECT 1` through `connection()`. |
 | Clickhouse | foreign | 3 | 0 | 3 | Reads a file it does not own, read-only. |
 
 The two columns that decide a round are the last two counts: what a module
-builds and where a repository is built from outside it. Queue is the smallest
-remaining surface of either kind.
+builds and where a repository is built from outside it. Neither column has an
+entry left: no class outside a migrator names `\PDO`, and no test builds a raw
+handle for a repository it hands to one.
 
 Blog and Media carry the routing value: a public article page reads `blog`
 several times and a gallery reads `media`, while the rounds that only touch an
@@ -298,16 +309,15 @@ the replica, not about the database the check claims to probe. Clickhouse does
 not open a module database at all; the manager has no name for it, and giving
 it one would make a foreign, read-only file look like module state.
 
-Queue is worth naming for the opposite reason: it is possible, it is just not
-worth much. A worker that reserves a job writes immediately, the write marks
-the connection, and every read after it is on the primary anyway. Moving it
-would be a mechanical round with a real regression risk (`reserve()` is the
-one place a double-dispatch would hurt) and no latency to win.
+Queue was worth doing for the opposite reason from Blog and Media: a worker
+that reserves a job writes immediately, the write marks the connection, and
+every read after it is on the primary anyway, so the round bought no latency.
+What it bought is that the reservation guard now runs on the same contract as
+everything else, which is the property the doc is about.
 
-- One module remains a real target, Queue, and it is the round argued against
-  two paragraphs up. What is left after it is not a backlog: Health and
-  Clickhouse are recommendations with reasons, and the two-stage helper test
-  is what keeps the movement visible instead of letting both shapes grow.
+- No module remains a real target. Health and Clickhouse are recommendations
+  with reasons, not a backlog, and the two-stage helper test is what keeps the
+  movement visible instead of letting both shapes grow.
 - Module migrators keep `\PDO` on purpose. DDL runs before any repository
   exists and does not read or write rows, so routing it would buy nothing and
   cost the one consumer that is happy with the driver.

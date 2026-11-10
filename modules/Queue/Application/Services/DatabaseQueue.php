@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Queue\Application\Services;
 
 use Closure;
+use Modules\Database\Contracts\ConnectionInterface;
 use Modules\Queue\Exceptions\PoisonJobException;
 use Modules\Queue\Infrastructure\Persistence\Statement;
 use PDO;
@@ -58,7 +59,7 @@ final class DatabaseQueue
     private readonly Closure $now;
 
     public function __construct(
-        private readonly PDO $pdo,
+        private readonly ConnectionInterface $connection,
         private readonly HandlerRegistry $handlers,
         ?callable $now = null,
     ) {
@@ -79,7 +80,7 @@ final class DatabaseQueue
     ): string {
         $id = bin2hex(random_bytes(16));
 
-        $statement = Statement::prepare($this->pdo,
+        $statement = Statement::prepare($this->connection,
             'INSERT INTO jobs (id, queue, handler, payload, attempts, max_attempts, reserved_at, available_at)'
             . ' VALUES (:id, :queue, :handler, :payload, 0, :max_attempts, NULL, :available_at)',
         );
@@ -104,13 +105,16 @@ final class DatabaseQueue
      */
     public function reserve(?string $queue = null): ?QueuedJob
     {
-        $this->pdo->exec('BEGIN IMMEDIATE');
+        // `BEGIN IMMEDIATE` stays spelled out: PDO's beginTransaction() issues a
+        // deferred BEGIN, and the whole reservation guard depends on the write
+        // lock being taken before the SELECT.
+        $this->connection->execute('BEGIN IMMEDIATE');
 
         try {
             $row = $this->findAvailable($queue);
 
             if (null === $row) {
-                $this->pdo->exec('ROLLBACK');
+                $this->connection->execute('ROLLBACK');
 
                 return null;
             }
@@ -123,7 +127,7 @@ final class DatabaseQueue
                 // Corrupt payload: park the row before anyone can spin on
                 // it, then tell the caller to move to the next job.
                 $this->parkPoison($row, $e->getMessage());
-                $this->pdo->exec('COMMIT');
+                $this->connection->execute('COMMIT');
 
                 throw new PoisonJobException(
                     sprintf('Job %s has a corrupt payload and was moved to failed_jobs.', $row['id']),
@@ -131,7 +135,7 @@ final class DatabaseQueue
                 );
             }
 
-            $claimed = Statement::prepare($this->pdo,
+            $claimed = Statement::prepare($this->connection,
                 'UPDATE jobs SET reserved_at = :now, attempts = attempts + 1'
                 . ' WHERE id = :id AND reserved_at IS NULL',
             );
@@ -139,17 +143,17 @@ final class DatabaseQueue
 
             if (0 === $claimed->rowCount()) {
                 // Lost the race: another process reserved it first.
-                $this->pdo->exec('ROLLBACK');
+                $this->connection->execute('ROLLBACK');
 
                 return null;
             }
 
-            $this->pdo->exec('COMMIT');
+            $this->connection->execute('COMMIT');
 
             return $job;
         } catch (Throwable $e) {
-            if ($this->pdo->inTransaction()) {
-                $this->pdo->exec('ROLLBACK');
+            if ($this->connection->inTransaction()) {
+                $this->connection->execute('ROLLBACK');
             }
 
             throw $e;
@@ -161,7 +165,7 @@ final class DatabaseQueue
      */
     public function delete(string $id): void
     {
-        $statement = Statement::prepare($this->pdo, 'DELETE FROM jobs WHERE id = :id');
+        $statement = Statement::prepare($this->connection, 'DELETE FROM jobs WHERE id = :id');
         $statement->execute([':id' => $id]);
     }
 
@@ -180,13 +184,13 @@ final class DatabaseQueue
         $now = $this->stamp();
 
         if (null === $queue) {
-            $statement = Statement::prepare($this->pdo,
+            $statement = Statement::prepare($this->connection,
                 'SELECT id, queue, handler, attempts, max_attempts, reserved_at, available_at, created_at'
                 . ' FROM jobs ORDER BY created_at DESC, rowid DESC LIMIT :limit',
             );
             $statement->bindValue(':limit', max(1, $limit), PDO::PARAM_INT);
         } else {
-            $statement = Statement::prepare($this->pdo,
+            $statement = Statement::prepare($this->connection,
                 'SELECT id, queue, handler, attempts, max_attempts, reserved_at, available_at, created_at'
                 . ' FROM jobs WHERE queue = :queue ORDER BY created_at DESC, rowid DESC LIMIT :limit',
             );
@@ -211,7 +215,7 @@ final class DatabaseQueue
      */
     public function findJob(string $id): ?array
     {
-        $statement = Statement::prepare($this->pdo,
+        $statement = Statement::prepare($this->connection,
             'SELECT id, queue, handler, attempts, max_attempts, reserved_at, available_at, created_at, payload'
             . ' FROM jobs WHERE id = :id',
         );
@@ -234,7 +238,7 @@ final class DatabaseQueue
      */
     public function countFailedOlderThan(string $interval = '30 days'): int
     {
-        $statement = Statement::prepare($this->pdo,
+        $statement = Statement::prepare($this->connection,
             "SELECT COUNT(*) FROM failed_jobs WHERE failed_at < datetime('now', '-' || ?)",
         );
         $statement->execute([$interval]);
@@ -266,7 +270,7 @@ final class DatabaseQueue
      */
     public function pruneFailed(string $interval = '30 days'): int
     {
-        $statement = Statement::prepare($this->pdo,
+        $statement = Statement::prepare($this->connection,
             "DELETE FROM failed_jobs WHERE failed_at < datetime('now', '-' || ?)",
         );
         $statement->execute([$interval]);
@@ -281,7 +285,7 @@ final class DatabaseQueue
      */
     public function listFailed(int $limit = 100): array
     {
-        $statement = Statement::prepare($this->pdo,
+        $statement = Statement::prepare($this->connection,
             'SELECT id, queue, handler, attempts, error, failed_at, payload'
             . ' FROM failed_jobs ORDER BY failed_at DESC, rowid DESC LIMIT :limit',
         );
@@ -309,7 +313,7 @@ final class DatabaseQueue
      */
     public function findFailed(string $id): ?array
     {
-        $statement = Statement::prepare($this->pdo,
+        $statement = Statement::prepare($this->connection,
             'SELECT id, queue, handler, attempts, error, failed_at, payload'
             . ' FROM failed_jobs WHERE id = :id',
         );
@@ -348,7 +352,7 @@ final class DatabaseQueue
             return false;
         }
 
-        $statement = Statement::prepare($this->pdo,
+        $statement = Statement::prepare($this->connection,
             'INSERT INTO jobs (id, queue, handler, payload, attempts, max_attempts, reserved_at, available_at)'
             . ' VALUES (:id, :queue, :handler, :payload, 0, :max_attempts, NULL, :available_at)',
         );
@@ -371,7 +375,7 @@ final class DatabaseQueue
      */
     public function deleteFailed(string $id): bool
     {
-        $statement = Statement::prepare($this->pdo, 'DELETE FROM failed_jobs WHERE id = :id');
+        $statement = Statement::prepare($this->connection, 'DELETE FROM failed_jobs WHERE id = :id');
         $statement->execute([':id' => $id]);
 
         return $statement->rowCount() > 0;
@@ -414,7 +418,7 @@ final class DatabaseQueue
      */
     public function release(string $id, int $delaySeconds = 0): void
     {
-        $statement = Statement::prepare($this->pdo,
+        $statement = Statement::prepare($this->connection,
             'UPDATE jobs SET reserved_at = NULL, available_at = :at WHERE id = :id',
         );
         $statement->execute([':at' => $this->stamp($delaySeconds), ':id' => $id]);
@@ -439,7 +443,7 @@ final class DatabaseQueue
      */
     public function fail(QueuedJob $job, string $error): void
     {
-        $statement = Statement::prepare($this->pdo,
+        $statement = Statement::prepare($this->connection,
             'INSERT INTO failed_jobs (id, queue, handler, payload, attempts, error)'
             . ' VALUES (:id, :queue, :handler, :payload, :attempts, :error)',
         );
@@ -511,7 +515,7 @@ final class DatabaseQueue
      */
     private function parkPoison(array $row, string $error): void
     {
-        $statement = Statement::prepare($this->pdo,
+        $statement = Statement::prepare($this->connection,
             'INSERT INTO failed_jobs (id, queue, handler, payload, attempts, error)'
             . ' VALUES (:id, :queue, :handler, :payload, :attempts, :error)',
         );
@@ -533,13 +537,13 @@ final class DatabaseQueue
     private function findAvailable(?string $queue): ?array
     {
         if (null === $queue) {
-            $statement = Statement::prepare($this->pdo,
+            $statement = Statement::prepare($this->connection,
                 'SELECT * FROM jobs WHERE reserved_at IS NULL AND available_at <= :now'
                 . ' ORDER BY available_at ASC LIMIT 1',
             );
             $statement->execute([':now' => $this->stamp()]);
         } else {
-            $statement = Statement::prepare($this->pdo,
+            $statement = Statement::prepare($this->connection,
                 'SELECT * FROM jobs WHERE queue = :queue AND reserved_at IS NULL AND available_at <= :now'
                 . ' ORDER BY available_at ASC LIMIT 1',
             );

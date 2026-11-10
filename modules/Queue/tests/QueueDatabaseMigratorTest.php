@@ -7,6 +7,7 @@ namespace Modules\Queue\Tests;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Queue\Infrastructure\Persistence\Migrations\QueueDatabaseMigrator;
 use Modules\Queue\Infrastructure\Persistence\Statement;
+use Modules\Database\Infrastructure\Persistence\PdoConnection;
 use PDO;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -23,6 +24,8 @@ final class QueueDatabaseMigratorTest extends TestCase
     private string $dbFile;
 
     private PDO $pdo;
+
+    private PdoConnection $connection;
 
     protected function setUp(): void
     {
@@ -62,12 +65,13 @@ final class QueueDatabaseMigratorTest extends TestCase
         };
 
         $migrator = new QueueDatabaseMigrator($this->pdo);
+        $this->connection = new PdoConnection($this->pdo, 'queue');
         $migrator->run($output);
         // Re-running is safe (the `bin/cms migrate` contract).
         $migrator->run($output);
 
         $tables = Statement::query(
-            $this->pdo,
+            $this->connection,
             "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('jobs', 'failed_jobs')",
         )->fetchAll(PDO::FETCH_COLUMN);
 
@@ -75,7 +79,7 @@ final class QueueDatabaseMigratorTest extends TestCase
 
         $this->assertSame(['failed_jobs', 'jobs'], $tables);
 
-        $columns = Statement::query($this->pdo, 'PRAGMA table_info(jobs)')
+        $columns = Statement::query($this->connection, 'PRAGMA table_info(jobs)')
             ->fetchAll(PDO::FETCH_COLUMN, 1);
 
         foreach (['id', 'queue', 'handler', 'payload', 'attempts', 'max_attempts', 'reserved_at', 'available_at', 'created_at'] as $column) {

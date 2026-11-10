@@ -11,9 +11,9 @@ use Modules\Cardboard\Domain\Model\Period;
 use Modules\Cardboard\Domain\Model\Trend;
 use Modules\Cardboard\Infrastructure\Attributes\AsMetricProvider;
 use Modules\Cardboard\Infrastructure\Registry\CardboardRegistry;
+use Modules\Database\Contracts\ConnectionInterface;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Queue\Infrastructure\Persistence\Statement;
-use PDO;
 
 /**
  * QueueMetric — queued-job stat card for the admin dashboard.
@@ -32,22 +32,22 @@ use PDO;
 final readonly class QueueMetric implements MetricContract
 {
     public function __construct(
-        private ?PDO $pdo = null,
+        private ?ConnectionInterface $connection = null,
     ) {
     }
 
     public function registerCards(Period $period): void
     {
         try {
-            $pdo = $this->pdo ?? DatabaseConnectionManager::instance()->connection('queue');
+            $connection = $this->connection ?? DatabaseConnectionManager::instance()->connect('queue');
 
-            $pending = $this->countReservable($pdo);
-            $reserved = $this->countReserved($pdo);
-            $failed = $this->countFailed($pdo);
+            $pending = $this->countReservable($connection);
+            $reserved = $this->countReserved($connection);
+            $failed = $this->countFailed($connection);
 
-            $pushed = $this->countPushedSince($pdo, $period->sqlInterval());
+            $pushed = $this->countPushedSince($connection, $period->sqlInterval());
             $previous = $this->countPushedBetween(
-                $pdo,
+                $connection,
                 $period->previousSqlInterval(),
                 $period->sqlInterval(),
             );
@@ -68,9 +68,9 @@ final readonly class QueueMetric implements MetricContract
     /**
      * Jobs `reserve()` would hand out now (mirrors findAvailable()).
      */
-    private function countReservable(PDO $pdo): int
+    private function countReservable(ConnectionInterface $connection): int
     {
-        $stmt = Statement::prepare($pdo,
+        $stmt = Statement::prepare($connection,
             'SELECT COUNT(*) FROM jobs WHERE reserved_at IS NULL AND available_at <= :now',
         );
         $stmt->execute([':now' => date('Y-m-d H:i:s')]);
@@ -78,19 +78,19 @@ final readonly class QueueMetric implements MetricContract
         return (int) $stmt->fetchColumn();
     }
 
-    private function countReserved(PDO $pdo): int
+    private function countReserved(ConnectionInterface $connection): int
     {
-        return (int) Statement::query($pdo, 'SELECT COUNT(*) FROM jobs WHERE reserved_at IS NOT NULL')->fetchColumn();
+        return (int) Statement::query($connection, 'SELECT COUNT(*) FROM jobs WHERE reserved_at IS NOT NULL')->fetchColumn();
     }
 
-    private function countFailed(PDO $pdo): int
+    private function countFailed(ConnectionInterface $connection): int
     {
-        return (int) Statement::query($pdo, 'SELECT COUNT(*) FROM failed_jobs')->fetchColumn();
+        return (int) Statement::query($connection, 'SELECT COUNT(*) FROM failed_jobs')->fetchColumn();
     }
 
-    private function countPushedSince(PDO $pdo, string $interval): int
+    private function countPushedSince(ConnectionInterface $connection, string $interval): int
     {
-        $stmt = Statement::prepare($pdo,
+        $stmt = Statement::prepare($connection,
             'SELECT COUNT(*) FROM jobs WHERE created_at >= datetime(\'now\', :interval)',
         );
         $stmt->execute([':interval' => $interval]);
@@ -98,9 +98,9 @@ final readonly class QueueMetric implements MetricContract
         return (int) $stmt->fetchColumn();
     }
 
-    private function countPushedBetween(PDO $pdo, string $fromInterval, string $toInterval): int
+    private function countPushedBetween(ConnectionInterface $connection, string $fromInterval, string $toInterval): int
     {
-        $stmt = Statement::prepare($pdo,
+        $stmt = Statement::prepare($connection,
             'SELECT COUNT(*) FROM jobs WHERE created_at >= datetime(\'now\', :from) AND created_at < datetime(\'now\', :to)',
         );
         $stmt->execute([':from' => $fromInterval, ':to' => $toInterval]);

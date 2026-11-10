@@ -157,7 +157,7 @@ final class QueueAdminWorkTest extends TestCase
         (new QueueAdminAction(self::router()))->process(Request::create('POST', '/mark/queue/work'));
 
         $row = Statement::query(
-            DatabaseConnectionManager::instance()->connection('audit'),
+            DatabaseConnectionManager::instance()->connect('audit'),
             "SELECT action, detail FROM audit_log WHERE action = 'queue.work'",
         )->fetch(PDO::FETCH_ASSOC);
 

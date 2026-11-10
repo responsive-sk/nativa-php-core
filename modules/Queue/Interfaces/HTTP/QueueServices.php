@@ -30,7 +30,7 @@ final class QueueServices
     public static function queue(): DatabaseQueue
     {
         return self::$queue ??= new DatabaseQueue(
-            DatabaseConnectionManager::instance()->connection('queue'),
+            DatabaseConnectionManager::instance()->connect('queue'),
             self::handlers(),
         );
     }
