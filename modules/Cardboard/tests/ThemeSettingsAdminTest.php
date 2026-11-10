@@ -325,7 +325,7 @@ final class ThemeSettingsAdminTest extends TestCase
             throw new \LogicException('bootDatabases() must run first.');
         }
 
-        return new SettingsRepository($this->pdo);
+        return new SettingsRepository(DatabaseConnectionManager::instance()->connect('config'));
     }
 
     private static function quietOutput(): CliOutput

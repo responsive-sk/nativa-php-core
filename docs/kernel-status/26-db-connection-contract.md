@@ -216,9 +216,24 @@ the statement helper gets it wrapped once in `PdoConnection`, the same shape the
 Locales migrator uses. Its `MATCH` query and three binds did not change; only
 the handle type did.
 
+`Settings` was the round with more callers than classes, which is where the
+shape of the change shows. Two repositories moved; five places build them,
+because Cardboard and Locales each build a `SettingsRepository` for their own
+screens, and the change is one argument at each. The migrator is the part that
+could not simply keep its handle: it already used the statement helper for its
+seed and its `PRAGMA` probe, so it now keeps `\PDO` for DDL and wraps itself
+once in `PdoConnection` for everything that binds, the same split the Locales
+migrator uses. `seedMenuItem()` took `\PDOStatement` twice and now takes
+`StatementInterface`, which is the only signature in the module that was not
+already a value-free rename. The tests kept their raw `\PDO` for the migrator
+and the fixture schema and moved only the reads and writes to
+`connect('config')`. `ApplyDeploymentProfileCommandTest` already had a `db()`
+helper returning `PdoConnection` from its own round, so one call site changed
+and no new wrapper was added.
+
 `StatementHelperContractTest` pins two stages (`CONTRACT_MODULES = ['Audit',
 'Blog', 'Cardboard', 'Comments', 'Forms', 'Locales', 'Media', 'Notifications',
-'Outbox', 'Questions', 'Security', 'Users']`):
+'Outbox', 'Questions', 'Security', 'Settings', 'Users']`):
 each stage is byte-identical inside itself, and each shape is asserted
 directly, so a module cannot drift from `\PDO` to the contract without being
 named.
@@ -254,22 +269,20 @@ which is the case a replica exists for.
 
 ### What is left, module by module
 
-Four modules still name `\PDO` somewhere a caller can see it. Counted from
+Three modules still name `\PDO` somewhere a caller can see it. Counted from
 the tree, not from memory: type sites outside `Migrations/` and `tests/`,
 construction sites outside the module's own installed copy, and test files
 that build a raw `\PDO` for these classes.
 
 | Module | Database | Type | Build sites | Raw-PDO tests | Round |
 |---|---|---:|---:|---:|---|
-| Settings | `config` | 4 | 5 | 1 | Two repositories, shared with Cardboard. |
 | Queue | `queue` | 9 | 2 | 5 | Worker plus a metric, four binds. |
 | Health | every | 3 | 0 | 0 | Probes `SELECT 1` through `connection()`. |
 | Clickhouse | foreign | 3 | 0 | 3 | Reads a file it does not own, read-only. |
 
 The two columns that decide a round are the last two counts: what a module
-builds and where a repository is built from outside it. Settings is four
-classes and five, because Cardboard and Locales each build its repositories
-for their own screens.
+builds and where a repository is built from outside it. Queue is the smallest
+remaining surface of either kind.
 
 Blog and Media carry the routing value: a public article page reads `blog`
 several times and a gallery reads `media`, while the rounds that only touch an
@@ -291,8 +304,9 @@ the connection, and every read after it is on the primary anyway. Moving it
 would be a mechanical round with a real regression risk (`reserve()` is the
 one place a double-dispatch would hurt) and no latency to win.
 
-- Two modules remain real targets, at roughly one to three files each plus a
-  catalogue reinstall. Each moves in its own round; the two-stage helper test
+- One module remains a real target, Queue, and it is the round argued against
+  two paragraphs up. What is left after it is not a backlog: Health and
+  Clickhouse are recommendations with reasons, and the two-stage helper test
   is what keeps the movement visible instead of letting both shapes grow.
 - Module migrators keep `\PDO` on purpose. DDL runs before any repository
   exists and does not read or write rows, so routing it would buy nothing and

@@ -259,7 +259,7 @@ final class ApplyDeploymentProfileCommandTest extends TestCase
      */
     private function setting(string $key): ?array
     {
-        $statement = Statement::prepare($this->pdo, 'SELECT * FROM settings WHERE setting_key = :key');
+        $statement = Statement::prepare($this->db(), 'SELECT * FROM settings WHERE setting_key = :key');
         $statement->execute([':key' => $key]);
         /** @var array<string, mixed>|false $row */
         $row = $statement->fetch();

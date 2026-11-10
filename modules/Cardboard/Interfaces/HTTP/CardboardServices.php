@@ -77,14 +77,14 @@ final class CardboardServices
     public static function settings(): SettingsRepository
     {
         return self::$settings ??= new SettingsRepository(
-            DatabaseConnectionManager::instance()->connection('config'),
+            DatabaseConnectionManager::instance()->connect('config'),
         );
     }
 
     public static function menu(): MenuRepository
     {
         return self::$menu ??= new MenuRepository(
-            DatabaseConnectionManager::instance()->connection('config'),
+            DatabaseConnectionManager::instance()->connect('config'),
         );
     }
 

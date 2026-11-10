@@ -112,6 +112,7 @@ final class StatementHelperContractTest extends TestCase
         'Outbox',
         'Questions',
         'Security',
+        'Settings',
         'Users',
     ];
 

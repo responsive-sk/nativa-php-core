@@ -81,7 +81,7 @@ final class LocalesServices
     private static function defaultLocaleFromSettings(): ?string
     {
         $settings = new SettingsRepository(
-            DatabaseConnectionManager::instance()->connection('config'),
+            DatabaseConnectionManager::instance()->connect('config'),
         );
 
         $value = $settings->get('locale', null);
