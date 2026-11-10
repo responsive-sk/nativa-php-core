@@ -154,14 +154,18 @@ final class MediaCloudinaryDeleteTest extends TestCase
 
     private function repository(): MediaRepository
     {
-        return new MediaRepository(DatabaseConnectionManager::instance()->connection('media'));
+        return new MediaRepository(DatabaseConnectionManager::instance()->connect('media'));
     }
 
     private function service(MediaProviderInterface $provider): MediaService
     {
-        $pdo = DatabaseConnectionManager::instance()->connection('media');
+        $connection = DatabaseConnectionManager::instance()->connect('media');
 
-        return new MediaService(new MediaRepository($pdo), $provider, new MediaFolderRepository($pdo));
+        return new MediaService(
+            new MediaRepository($connection),
+            $provider,
+            new MediaFolderRepository($connection),
+        );
     }
 
     private function asset(string $path): MediaAsset

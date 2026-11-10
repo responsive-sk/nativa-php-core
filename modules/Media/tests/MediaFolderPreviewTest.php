@@ -74,13 +74,13 @@ final class MediaFolderPreviewTest extends TestCase
     #[Test]
     public function theNewestImageInAFolderStandsForIt(): void
     {
-        $pdo = DatabaseConnectionManager::instance()->connection('media');
-        $repository = new MediaRepository($pdo);
+        $connection = DatabaseConnectionManager::instance()->connect('media');
+        $repository = new MediaRepository($connection);
         $repository->insert($this->asset('photos/old.png', 'photos', 'image/png'));
         $repository->insert($this->asset('photos/new.png', 'photos', 'image/png'));
 
-        $pdo->exec("UPDATE assets SET created_at = '2020-01-01 00:00:00' WHERE path = 'photos/old.png'");
-        $pdo->exec("UPDATE assets SET created_at = '2024-01-01 00:00:00' WHERE path = 'photos/new.png'");
+        $connection->execute("UPDATE assets SET created_at = '2020-01-01 00:00:00' WHERE path = 'photos/old.png'");
+        $connection->execute("UPDATE assets SET created_at = '2024-01-01 00:00:00' WHERE path = 'photos/new.png'");
 
         $previews = $this->service()->folderPreviews(['photos']);
 
@@ -95,7 +95,7 @@ final class MediaFolderPreviewTest extends TestCase
     #[Test]
     public function aFolderWithoutAnImageHasNoPreview(): void
     {
-        $repository = new MediaRepository(DatabaseConnectionManager::instance()->connection('media'));
+        $repository = new MediaRepository(DatabaseConnectionManager::instance()->connect('media'));
         $repository->insert($this->asset('docs/manual.pdf', 'docs', 'application/pdf'));
 
         self::assertSame([], $this->service()->folderPreviews(['docs', 'missing']));
@@ -233,12 +233,12 @@ final class MediaFolderPreviewTest extends TestCase
 
     private function service(): MediaService
     {
-        $pdo = DatabaseConnectionManager::instance()->connection('media');
+        $connection = DatabaseConnectionManager::instance()->connect('media');
 
         return new MediaService(
-            new MediaRepository($pdo),
+            new MediaRepository($connection),
             new LocalStorageProviderAdapter(new LocalStorageProvider()),
-            new MediaFolderRepository($pdo),
+            new MediaFolderRepository($connection),
         );
     }
 

@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Modules\Media\Infrastructure\Persistence;
 
+use Modules\Database\Contracts\ConnectionInterface;
+use Modules\Database\Contracts\StatementInterface;
 use Modules\Media\Domain\Model\MediaAsset;
 
 /**
@@ -14,13 +16,13 @@ use Modules\Media\Domain\Model\MediaAsset;
  */
 final readonly class MediaRepository
 {
-    public function __construct(private \PDO $pdo)
+    public function __construct(private ConnectionInterface $connection)
     {
     }
 
     public function insert(MediaAsset $asset): void
     {
-        $stmt = Statement::prepare($this->pdo, <<<'SQL'
+        $stmt = Statement::prepare($this->connection, <<<'SQL'
                 INSERT INTO assets (id, filename, original_name, path, size, mime_type, uploaded_by, created_at, provider, folder, category)
                 VALUES (:id, :filename, :original_name, :path, :size, :mime_type, :uploaded_by, :created_at, :provider, :folder, :category)
             SQL);
@@ -43,7 +45,7 @@ final readonly class MediaRepository
 
     public function findById(string $id): ?MediaAsset
     {
-        $stmt = Statement::prepare($this->pdo, 'SELECT * FROM assets WHERE id = :id LIMIT 1');
+        $stmt = Statement::prepare($this->connection, 'SELECT * FROM assets WHERE id = :id LIMIT 1');
         $stmt->execute([':id' => $id]);
         /** @var array<string, mixed>|false $row */
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
@@ -60,7 +62,7 @@ final readonly class MediaRepository
      */
     public function findByPath(string $path): ?MediaAsset
     {
-        $stmt = Statement::prepare($this->pdo, 'SELECT * FROM assets WHERE path = :path LIMIT 1');
+        $stmt = Statement::prepare($this->connection, 'SELECT * FROM assets WHERE path = :path LIMIT 1');
         $stmt->execute([':path' => $path]);
         /** @var array<string, mixed>|false $row */
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
@@ -84,7 +86,7 @@ final readonly class MediaRepository
         $tracked = [];
         foreach (array_chunk(array_values(array_unique($paths)), 500) as $chunk) {
             $placeholders = implode(',', array_fill(0, count($chunk), '?'));
-            $stmt = Statement::prepare($this->pdo, "SELECT path FROM assets WHERE path IN ({$placeholders})");
+            $stmt = Statement::prepare($this->connection, "SELECT path FROM assets WHERE path IN ({$placeholders})");
             $stmt->execute($chunk);
             foreach ($stmt->fetchAll(\PDO::FETCH_COLUMN) as $path) {
                 if (is_string($path)) {
@@ -109,7 +111,7 @@ final readonly class MediaRepository
         ['from' => $from, 'where' => $where, 'params' => $params] = $this->filterClause($mimePrefix, $category, $tag, $providers, '');
         $sql = 'SELECT a.folder, COUNT(*) AS total FROM ' . $from . ' WHERE ' . $where
             . " AND a.folder != '' GROUP BY a.folder ORDER BY a.folder";
-        $stmt = Statement::prepare($this->pdo, $sql);
+        $stmt = Statement::prepare($this->connection, $sql);
         $this->bindFilterParams($stmt, $params);
         $stmt->execute();
 
@@ -157,7 +159,7 @@ final readonly class MediaRepository
             . 'FROM assets a WHERE a.folder IN (' . implode(', ', $names) . ") AND a.mime_type LIKE 'image/%'"
             . ') WHERE rn = 1';
 
-        $stmt = Statement::prepare($this->pdo, $sql);
+        $stmt = Statement::prepare($this->connection, $sql);
         $this->bindFilterParams($stmt, $params);
         $stmt->execute();
 
@@ -195,7 +197,7 @@ final readonly class MediaRepository
             $where = ' AND provider IN (' . implode(', ', $names) . ')';
         }
 
-        $stmt = Statement::prepare($this->pdo, "SELECT DISTINCT folder FROM assets WHERE folder != ''{$where} ORDER BY folder");
+        $stmt = Statement::prepare($this->connection, "SELECT DISTINCT folder FROM assets WHERE folder != ''{$where} ORDER BY folder");
         $this->bindFilterParams($stmt, $params);
         $stmt->execute();
 
@@ -207,7 +209,7 @@ final readonly class MediaRepository
 
     public function updateFolder(string $id, string $folder): bool
     {
-        $stmt = Statement::prepare($this->pdo, 'UPDATE assets SET folder = :folder WHERE id = :id');
+        $stmt = Statement::prepare($this->connection, 'UPDATE assets SET folder = :folder WHERE id = :id');
         $stmt->execute([':folder' => $folder, ':id' => $id]);
 
         return $stmt->rowCount() > 0;
@@ -220,7 +222,7 @@ final readonly class MediaRepository
      */
     public function all(int $limit = 50, int $offset = 0): array
     {
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->connection,
             'SELECT * FROM assets ORDER BY created_at DESC LIMIT :limit OFFSET :offset',
         );
         $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
@@ -242,7 +244,7 @@ final readonly class MediaRepository
 
     public function delete(string $id): bool
     {
-        $stmt = Statement::prepare($this->pdo, 'DELETE FROM assets WHERE id = :id');
+        $stmt = Statement::prepare($this->connection, 'DELETE FROM assets WHERE id = :id');
         $stmt->execute([':id' => $id]);
 
         return $stmt->rowCount() > 0;
@@ -260,7 +262,7 @@ final readonly class MediaRepository
         }
 
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
-        $stmt = Statement::prepare($this->pdo, "DELETE FROM assets WHERE id IN ({$placeholders})");
+        $stmt = Statement::prepare($this->connection, "DELETE FROM assets WHERE id IN ({$placeholders})");
         $stmt->execute($ids);
 
         return $stmt->rowCount();
@@ -280,7 +282,7 @@ final readonly class MediaRepository
         }
 
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
-        $stmt = Statement::prepare($this->pdo, "SELECT * FROM assets WHERE id IN ({$placeholders})");
+        $stmt = Statement::prepare($this->connection, "SELECT * FROM assets WHERE id IN ({$placeholders})");
         $stmt->execute($ids);
 
         $assets = [];
@@ -298,7 +300,7 @@ final readonly class MediaRepository
 
     public function updateMetadata(string $id, string $altText, string $caption): bool
     {
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->connection,
             'UPDATE assets SET alt_text = :alt_text, caption = :caption WHERE id = :id',
         );
         $stmt->execute([
@@ -312,7 +314,7 @@ final readonly class MediaRepository
 
     public function updateCategory(string $id, string $category): bool
     {
-        $stmt = Statement::prepare($this->pdo, 'UPDATE assets SET category = :category WHERE id = :id');
+        $stmt = Statement::prepare($this->connection, 'UPDATE assets SET category = :category WHERE id = :id');
         $stmt->execute([':category' => $category, ':id' => $id]);
 
         return $stmt->rowCount() > 0;
@@ -320,7 +322,7 @@ final readonly class MediaRepository
 
     public function count(): int
     {
-        $stmt = Statement::query($this->pdo, 'SELECT COUNT(*) FROM assets');
+        $stmt = Statement::query($this->connection, 'SELECT COUNT(*) FROM assets');
         $result = $stmt->fetchColumn();
 
         return is_numeric($result) ? (int) $result : 0;
@@ -352,7 +354,7 @@ final readonly class MediaRepository
     ): array {
         ['from' => $from, 'where' => $where, 'params' => $params] = $this->filterClause($mimePrefix, $category, $tag, $providers, $folder);
 
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->connection,
             'SELECT a.* FROM ' . $from . ' WHERE ' . $where
             . ' ORDER BY ' . $this->orderBy($sort)
             . ' LIMIT :limit OFFSET :offset',
@@ -380,7 +382,7 @@ final readonly class MediaRepository
     ): int {
         ['from' => $from, 'where' => $where, 'params' => $params] = $this->filterClause($mimePrefix, $category, $tag, $providers, $folder);
 
-        $stmt = Statement::prepare($this->pdo, 'SELECT COUNT(*) FROM ' . $from . ' WHERE ' . $where);
+        $stmt = Statement::prepare($this->connection, 'SELECT COUNT(*) FROM ' . $from . ' WHERE ' . $where);
         $this->bindFilterParams($stmt, $params);
         $stmt->execute();
         $result = $stmt->fetchColumn();
@@ -442,7 +444,7 @@ final readonly class MediaRepository
     /**
      * @param array<string, string> $params
      */
-    private function bindFilterParams(\PDOStatement $stmt, array $params): void
+    private function bindFilterParams(StatementInterface $stmt, array $params): void
     {
         foreach ($params as $name => $value) {
             $stmt->bindValue($name, $value, \PDO::PARAM_STR);
@@ -471,7 +473,7 @@ final readonly class MediaRepository
      */
     public function incrementViewByPath(string $path): void
     {
-        $stmt = Statement::prepare($this->pdo, 'UPDATE assets SET view_count = view_count + 1 WHERE path = :path');
+        $stmt = Statement::prepare($this->connection, 'UPDATE assets SET view_count = view_count + 1 WHERE path = :path');
         $stmt->execute([':path' => $path]);
     }
 
@@ -486,7 +488,7 @@ final readonly class MediaRepository
             return;
         }
 
-        $stmt = Statement::prepare($this->pdo, 'INSERT INTO media_tags (asset_id, tag) VALUES (:asset_id, :tag)');
+        $stmt = Statement::prepare($this->connection, 'INSERT INTO media_tags (asset_id, tag) VALUES (:asset_id, :tag)');
         foreach ($tags as $tag) {
             $tag = trim(strtolower($tag));
             if ('' === $tag) {
@@ -498,7 +500,7 @@ final readonly class MediaRepository
 
     public function deleteTagsForAsset(string $id): void
     {
-        $stmt = Statement::prepare($this->pdo, 'DELETE FROM media_tags WHERE asset_id = :id');
+        $stmt = Statement::prepare($this->connection, 'DELETE FROM media_tags WHERE asset_id = :id');
         $stmt->execute([':id' => $id]);
     }
 
@@ -512,7 +514,7 @@ final readonly class MediaRepository
         }
 
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
-        Statement::prepare($this->pdo, "DELETE FROM media_tags WHERE asset_id IN ({$placeholders})")->execute($ids);
+        Statement::prepare($this->connection, "DELETE FROM media_tags WHERE asset_id IN ({$placeholders})")->execute($ids);
     }
 
     /**
@@ -520,7 +522,7 @@ final readonly class MediaRepository
      */
     public function getAllCategories(): array
     {
-        $stmt = Statement::query($this->pdo, "SELECT DISTINCT category FROM assets WHERE category != '' ORDER BY category");
+        $stmt = Statement::query($this->connection, "SELECT DISTINCT category FROM assets WHERE category != '' ORDER BY category");
 
         /** @var list<string> $categories */
         $categories = $stmt->fetchAll(\PDO::FETCH_COLUMN) ?: [];
@@ -533,7 +535,7 @@ final readonly class MediaRepository
      */
     public function getAllTags(): array
     {
-        $stmt = Statement::query($this->pdo, 'SELECT DISTINCT tag FROM media_tags ORDER BY tag');
+        $stmt = Statement::query($this->connection, 'SELECT DISTINCT tag FROM media_tags ORDER BY tag');
 
         /** @var list<string> $tags */
         $tags = $stmt->fetchAll(\PDO::FETCH_COLUMN) ?: [];
@@ -542,11 +544,9 @@ final readonly class MediaRepository
     }
 
     /**
-     * @param \PDOStatement $stmt
-     *
      * @return list<MediaAsset>
      */
-    private function fetchAll(\PDOStatement $stmt): array
+    private function fetchAll(StatementInterface $stmt): array
     {
         $assets = [];
         while (true) {

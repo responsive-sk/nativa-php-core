@@ -54,7 +54,7 @@ final class MediaServices
     public static function folderRepository(): MediaFolderRepository
     {
         return self::$folderRepository ??= new MediaFolderRepository(
-            DatabaseConnectionManager::instance()->connection('media'),
+            DatabaseConnectionManager::instance()->connect('media'),
         );
     }
 
@@ -75,7 +75,7 @@ final class MediaServices
     public static function repository(): MediaRepository
     {
         return self::$repository ??= new MediaRepository(
-            DatabaseConnectionManager::instance()->connection('media'),
+            DatabaseConnectionManager::instance()->connect('media'),
         );
     }
 

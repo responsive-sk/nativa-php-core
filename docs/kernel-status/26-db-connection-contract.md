@@ -190,9 +190,24 @@ the factory entirely; `OutboxMetric`'s optional argument is now typed
 that built a raw handle wrap it in `PdoConnection` so they exercise the same
 methods a routed connection has.
 
+`Media` was the biggest surface so far: two repositories, a metric and five
+private helpers that took a `\PDOStatement`, all inside one module. Only two of
+the helpers needed a signature change (`bindFilterParams()` and the private
+`fetchAll()` now take `StatementInterface`); the rest were `fetch`/`fetchAll`
+call sites where `\PDO::FETCH_ASSOC` is the default and the constant only said
+so out loud. The migrator keeps its raw handle, and it is the one place in the
+module that reads a `PRAGMA` (`table_info(assets)`), which the contract has no
+answer for by design. The three raw-handle tests were of two kinds: the
+`new \PDO(...)` in each `setUp()` is the fixture hand for the migrator and
+stays, while the ones the repositories received now come from `connect('media')`,
+and the two `$pdo->exec()` column updates became `execute()` calls on the same
+connection. `MediaFolderPreviewTest` caught one leftover
+`connection('media')` immediately: the TypeError named the class and the line,
+which is the whole reason the parameter is typed rather than documented.
+
 `StatementHelperContractTest` pins two stages (`CONTRACT_MODULES = ['Audit',
-'Cardboard', 'Comments', 'Forms', 'Locales', 'Notifications', 'Outbox',
-'Questions', 'Security', 'Users']`):
+'Cardboard', 'Comments', 'Forms', 'Locales', 'Media', 'Notifications',
+'Outbox', 'Questions', 'Security', 'Users']`):
 each stage is byte-identical inside itself, and each shape is asserted
 directly, so a module cannot drift from `\PDO` to the contract without being
 named.
@@ -228,7 +243,7 @@ which is the case a replica exists for.
 
 ### What is left, module by module
 
-Six modules still name `\PDO` somewhere a caller can see it. Counted from
+Five modules still name `\PDO` somewhere a caller can see it. Counted from
 the tree, not from memory: type sites outside `Migrations/` and `tests/`,
 construction sites outside the module's own installed copy, and test files
 that build a raw `\PDO` for these classes.
@@ -236,7 +251,6 @@ that build a raw `\PDO` for these classes.
 | Module | Database | Type | Build sites | Raw-PDO tests | Round |
 |---|---|---:|---:|---:|---|
 | Blog | `blog` | 6 | 2 | 0 | Three services, three binds, FTS `MATCH`. |
-| Media | `media` | 6 | 3 | 3 | Three classes, a metric, five binds. |
 | Settings | `config` | 4 | 5 | 1 | Two repositories, shared with Cardboard. |
 | Queue | `queue` | 9 | 2 | 5 | Worker plus a metric, four binds. |
 | Health | every | 3 | 0 | 0 | Probes `SELECT 1` through `connection()`. |
@@ -267,7 +281,7 @@ the connection, and every read after it is on the primary anyway. Moving it
 would be a mechanical round with a real regression risk (`reserve()` is the
 one place a double-dispatch would hurt) and no latency to win.
 
-- Four modules remain real targets, at roughly one to three files each plus a
+- Three modules remain real targets, at roughly one to three files each plus a
   catalogue reinstall. Each moves in its own round; the two-stage helper test
   is what keeps the movement visible instead of letting both shapes grow.
 - Module migrators keep `\PDO` on purpose. DDL runs before any repository

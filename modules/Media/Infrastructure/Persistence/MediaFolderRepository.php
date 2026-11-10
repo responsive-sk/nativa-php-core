@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Media\Infrastructure\Persistence;
 
+use Modules\Database\Contracts\ConnectionInterface;
 
 /**
  * MediaFolderRepository — the folder registry (`media_folders`) and the
@@ -36,7 +37,7 @@ namespace Modules\Media\Infrastructure\Persistence;
  */
 final readonly class MediaFolderRepository
 {
-    public function __construct(private \PDO $pdo)
+    public function __construct(private ConnectionInterface $connection)
     {
     }
 
@@ -47,7 +48,7 @@ final readonly class MediaFolderRepository
      */
     public function all(): array
     {
-        $stmt = Statement::query($this->pdo, 'SELECT path FROM media_folders ORDER BY path');
+        $stmt = Statement::query($this->connection, 'SELECT path FROM media_folders ORDER BY path');
 
 
         /** @var list<string> $paths */
@@ -58,7 +59,7 @@ final readonly class MediaFolderRepository
 
     public function exists(string $path): bool
     {
-        $stmt = Statement::prepare($this->pdo, 'SELECT 1 FROM media_folders WHERE path = :path LIMIT 1');
+        $stmt = Statement::prepare($this->connection, 'SELECT 1 FROM media_folders WHERE path = :path LIMIT 1');
         $stmt->execute([':path' => $path]);
 
         return false !== $stmt->fetchColumn();
@@ -69,7 +70,7 @@ final readonly class MediaFolderRepository
      */
     public function insert(string $path): bool
     {
-        $stmt = Statement::prepare($this->pdo, 'INSERT OR IGNORE INTO media_folders (path) VALUES (:path)');
+        $stmt = Statement::prepare($this->connection, 'INSERT OR IGNORE INTO media_folders (path) VALUES (:path)');
         $stmt->execute([':path' => $path]);
 
         return $stmt->rowCount() > 0;
@@ -96,7 +97,7 @@ final readonly class MediaFolderRepository
      */
     public function deleteSubtree(string $path): int
     {
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->connection,
             'DELETE FROM media_folders WHERE path = :path'
             . " OR substr(path, 1, length(:path)) = :path AND substr(path, length(:path) + 1, 1) = '/'",
         );
@@ -113,7 +114,7 @@ final readonly class MediaFolderRepository
      */
     public function subtreePaths(string $path): array
     {
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->connection,
             'SELECT path FROM media_folders WHERE path = :path'
             . " OR substr(path, 1, length(:path)) = :path AND substr(path, length(:path) + 1, 1) = '/'"
             . ' ORDER BY path',
@@ -133,7 +134,7 @@ final readonly class MediaFolderRepository
      */
     public function subtreeAssetIds(string $path): array
     {
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->connection,
             'SELECT id FROM assets WHERE (folder = :path'
             . " OR substr(folder, 1, length(:path)) = :path AND substr(folder, length(:path) + 1, 1) = '/')"
             . " AND provider != 'cloudinary' ORDER BY id",
@@ -232,7 +233,7 @@ final readonly class MediaFolderRepository
      */
     private function rewrite(string $sql, string $from, string $to, string $extraCondition): int
     {
-        $stmt = Statement::prepare($this->pdo, $sql . $extraCondition);
+        $stmt = Statement::prepare($this->connection, $sql . $extraCondition);
         $stmt->execute([':from' => $from, ':to' => $to]);
 
         return $stmt->rowCount();
@@ -240,7 +241,7 @@ final readonly class MediaFolderRepository
 
     private function count(string $sql, string $path): int
     {
-        $stmt = Statement::prepare($this->pdo, $sql);
+        $stmt = Statement::prepare($this->connection, $sql);
         $stmt->execute([':path' => $path]);
         $result = $stmt->fetchColumn();
 
