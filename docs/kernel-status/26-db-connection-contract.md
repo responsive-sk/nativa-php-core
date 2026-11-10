@@ -149,10 +149,19 @@ badge does instead of a parallel path to the same file. The unmigrated-inbox
 test still fails for the right reason: `no such table` now arrives from the
 wrapper, which is what makes it a test of the wrapper's error path.
 
+`Cardboard` was the fourth. It is one service rather than a repository, and it
+runs on every `/mark` render in both the full and the compact layout, which
+makes it the busiest reader in the panel. Its two queries failed differently:
+`allItems()` has to turn an empty `menu_items` into the hardcoded fallback, and
+`hasChildren()` is a `SELECT 1` whose answer decides whether a group starts
+expanded. `AdminNavContractTest` pins both through the wrapper on a temp
+`config.db`, which the module had no test for before.
+
 `StatementHelperContractTest` pins two stages (`CONTRACT_MODULES = ['Audit',
-'Comments', 'Notifications', 'Questions', 'Security', 'Users']`): each stage is
-byte-identical inside itself, and each shape is asserted directly, so a module
-cannot drift from `\PDO` to the contract without being named.
+'Cardboard', 'Comments', 'Notifications', 'Questions', 'Security', 'Users']`):
+each stage is byte-identical inside itself, and each shape is asserted
+directly, so a module cannot drift from `\PDO` to the contract without being
+named.
 
 ## Measured: reads are a small slice of a request
 
@@ -185,14 +194,13 @@ which is the case a replica exists for.
 
 ### What is left, module by module
 
-Ten modules still name `\PDO` somewhere a caller can see it. Counted from
+Nine modules still name `\PDO` somewhere a caller can see it. Counted from
 the tree, not from memory: type sites outside `Migrations/` and `tests/`,
 construction sites outside the module's own installed copy, and test files
 that build a raw `\PDO` for these classes.
 
 | Module | Database | Type | Build sites | Raw-PDO tests | Round |
 |---|---|---:|---:|---:|---|
-| Cardboard | `config` | 3 | 1 | 2 | `AdminNavService` only, read on every `/mark`. |
 | Locales | `locales` | 3 | 3 | 2 | One repository; Blog's escape test builds it. |
 | Forms | `forms` | 6 | 2 | 0 | Two repositories, a metric, two binds. |
 | Outbox | `outbox` | 7 | 2 | 2 | Repository plus a metric with its own handle. |
@@ -229,7 +237,7 @@ the connection, and every read after it is on the primary anyway. Moving it
 would be a mechanical round with a real regression risk (`reserve()` is the
 one place a double-dispatch would hurt) and no latency to win.
 
-- Eight modules remain real targets, at roughly one to three files each plus a
+- Seven modules remain real targets, at roughly one to three files each plus a
   catalogue reinstall. Each moves in its own round; the two-stage helper test
   is what keeps the movement visible instead of letting both shapes grow.
 - Module migrators keep `\PDO` on purpose. DDL runs before any repository
@@ -241,7 +249,7 @@ one place a double-dispatch would hurt) and no latency to win.
 
 ## Verified
 
-- `composer test`: 1184 tests, 7529 assertions, 1 skipped. Besides the route
+- `composer test`: 1186 tests, 7536 assertions, 1 skipped. Besides the route
   through a real `Kernel` (`tests/Http/ReadReplicaRoutingTest.php`),
   `tests/Database/UnitOfWorkTest.php` pins the per-database nesting stack:
   two instances over one database open a savepoint instead of a second
@@ -255,6 +263,8 @@ one place a double-dispatch would hurt) and no latency to win.
 - `modules/Questions/tests/QuestionRepositoryContractTest.php` runs the whole
   `QuestionRepository` through `PdoConnection` on a temp database, which is
   the module's first test of its SQL rather than of its entity.
+  `modules/Cardboard/tests/AdminNavContractTest.php` does the same for the
+  admin nav's fallback and its group expansion.
 - `make lint`, PHPStan level 9, Rector dry, PHP CS Fixer dry, `make
   mago-guard`, `make mago-lint`: clean.
 - `make extract-check`: OK, 185 identical, 103 recorded divergences

@@ -6,6 +6,7 @@ namespace Modules\Cardboard\Application\Services;
 
 use Modules\Cardboard\Infrastructure\Persistence\Statement;
 use Modules\Core\Domain\Permissions;
+use Modules\Database\Contracts\ConnectionInterface;
 
 /**
  * AdminNavService — resolves admin panel navigation items from DB.
@@ -46,7 +47,7 @@ final readonly class AdminNavService
         ['id' => '_audit',     'label' => 'Audit',     'href' => '/mark/audit', 'sort_order' => 110, 'is_active' => true, 'icon' => 'clipboard', 'parent_id' => null],
     ];
 
-    public function __construct(private \PDO $pdo)
+    public function __construct(private ConnectionInterface $connection)
     {
     }
 
@@ -302,7 +303,7 @@ final readonly class AdminNavService
      */
     public function allItems(): array
     {
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->connection,
             'SELECT id, label, href, sort_order, is_active, icon, parent_item_id FROM menu_items
              WHERE location = :loc ORDER BY sort_order ASC, created_at ASC',
         );
@@ -364,7 +365,7 @@ final readonly class AdminNavService
      */
     private function hasChildren(string $itemId): bool
     {
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->connection,
             'SELECT 1 FROM menu_items WHERE parent_item_id = :id AND location = :loc AND is_active = 1 LIMIT 1',
         );
         $stmt->execute([':id' => $itemId, ':loc' => 'admin']);

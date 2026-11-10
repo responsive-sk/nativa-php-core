@@ -105,7 +105,7 @@ final class CardboardServices
     public static function adminNav(): AdminNavService
     {
         return self::$adminNav ??= new AdminNavService(
-            DatabaseConnectionManager::instance()->connection('config'),
+            DatabaseConnectionManager::instance()->connect('config'),
         );
     }
 
