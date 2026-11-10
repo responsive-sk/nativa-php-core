@@ -634,8 +634,8 @@ jobs:
           php <<'PHP'
           <?php
           require 'src/init.php';
-          $pdo = \Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager::instance()->connection('config');
-          (new \Modules\Settings\Infrastructure\Persistence\Repositories\SettingsRepository($pdo))->set('theme', 'mono', 'design');
+          $connection = \Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager::instance()->connect('config');
+          (new \Modules\Settings\Infrastructure\Persistence\Repositories\SettingsRepository($connection))->set('theme', 'mono', 'design');
           PHP
           php <<'PHP'
           <?php
