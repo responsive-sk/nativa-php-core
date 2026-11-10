@@ -112,7 +112,35 @@ async function observeQaSnapshotInner(store, payload, options = {}) {
   // follow the same rule; the writer refuses custom state roots, so the
   // default-root namespace below is the only surface to exclude.
   const requirementLintNamespace = p => within(p, `.ai-factory/state/${payload.target.id}/requirement-lint`);
-  const names = Object.keys(observed.files).filter(p => !compositionsNamespace(p) && !readabilityNamespace(p) && !requirementLintNamespace(p));
+  // Closed runtime namespace (#282): advisory claim-evidence observations use
+  // the same projection rule; the writer refuses custom state roots and is
+  // git-guarded pre-write, so the default-root namespace below is the only
+  // surface to exclude.
+  const claimEvidenceNamespace = p => within(p, `.ai-factory/state/${payload.target.id}/claim-evidence`);
+  // Closed runtime namespace (#283): advisory trace-link suggestion
+  // observations follow the same rule; the writer refuses custom state roots
+  // and is git-guarded pre-write, so the default-root namespace below is the
+  // only surface to exclude.
+  const traceLinkSuggestionsNamespace = p => within(p, `.ai-factory/state/${payload.target.id}/trace-link-suggestions`);
+  // Closed runtime namespace (#284): advisory context-selection overlay
+  // observations follow the same rule; the writer refuses custom state roots
+  // and is git-guarded pre-write, so the default-root namespace below is the
+  // only surface to exclude.
+  const contextSelectionOverlayNamespace = p => within(p, `.ai-factory/state/${payload.target.id}/context-selection-overlay`);
+  // Closed runtime namespace (#285): project-scoped decision-correction
+  // fixture cases and run records live under a CONSTANT store namespace (the
+  // store is shared by the whole command, not owned by one QA target), so the
+  // predicate is literal and not parameterized by payload.target.id; the
+  // writer refuses custom state roots and is git-guarded pre-write.
+  const decisionCorrectionsNamespace = p => within(p, '.ai-factory/state/decision-corrections');
+  const closedNamespace = p => compositionsNamespace(p) || readabilityNamespace(p) || requirementLintNamespace(p) || claimEvidenceNamespace(p) || traceLinkSuggestionsNamespace(p) || contextSelectionOverlayNamespace(p) || decisionCorrectionsNamespace(p);
+  // Declared roots inside a closed runtime namespace fail closed on the
+  // provider path too: without this check an injected provider whose scope
+  // covers a closed namespace would silently hide that scope's own content
+  // from the projection while still reporting a complete snapshot (the
+  // filesystem path enforces the same rule at `self-referential-input`).
+  requireValue(!allDeclaredRoots(payload).some(p => closedNamespace(p)), 'self-referential-input', true);
+  const names = Object.keys(observed.files).filter(p => !closedNamespace(p));
   requireValue(names.length <= QA_LIMITS.files, 'qa-files-limit', true);
   const collision = new Map();
   const directoryCase = new Map();
@@ -125,7 +153,7 @@ async function observeQaSnapshotInner(store, payload, options = {}) {
       directoryCase.set(prefix.toLowerCase(), prefix);
     }
   }
-  const directories = new Set((observed.directory_names ?? []).filter(p => !compositionsNamespace(p) && !readabilityNamespace(p) && !requirementLintNamespace(p)));
+  const directories = new Set((observed.directory_names ?? []).filter(p => !closedNamespace(p)));
   requireValue(directories.size <= QA_LIMITS.files && [...directories].every(p => Object.hasOwn(observed.files, p)
     && observed.files[p] === null), 'directory-catalog-invalid', true);
   let bytes = 0;
@@ -145,7 +173,7 @@ async function observeQaSnapshotInner(store, payload, options = {}) {
     files[relative] = data === null ? { kind: directories.has(relative) ? 'directory' : 'missing' } : { kind: 'file', sha256: digest(data),
       projection: material ? null : metadataProjection(relative, data) };
   }
-  const ignored = sorted((observed.ignored_names ?? []).filter(p => !compositionsNamespace(p) && !readabilityNamespace(p) && !requirementLintNamespace(p)));
+  const ignored = sorted((observed.ignored_names ?? []).filter(p => !closedNamespace(p)));
   requireValue(ignored.length <= QA_LIMITS.files, 'qa-files-limit', true);
   for (const p of ignored) {
     sourcePath(p);
@@ -156,7 +184,7 @@ async function observeQaSnapshotInner(store, payload, options = {}) {
   requireValue(new Set([...names, ...ignored]).size <= QA_LIMITS.files, 'qa-files-limit', true);
   requireValue(observed.modules && Object.keys(observed.modules).length > 0
     && Object.values(observed.modules).every(hash => SHA.test(hash)), 'module-identity-unproven', true);
-  const changedPaths = sorted((observed.changed_paths ?? []).filter(p => !compositionsNamespace(p) && !readabilityNamespace(p) && !requirementLintNamespace(p)));
+  const changedPaths = sorted((observed.changed_paths ?? []).filter(p => !closedNamespace(p)));
   requireValue(changedPaths.length <= QA_LIMITS.files, 'qa-files-limit', true);
   for (const p of changedPaths) {
     sourcePath(p);
@@ -222,7 +250,13 @@ async function filesystemSnapshot(store, payload, options) {
   const excluded = p => within(p, '.git') || qaInternal(p)
     || within(p, `.ai-factory/state/${payload.target.id}/compositions`)
     || within(p, `.ai-factory/state/${payload.target.id}/readability`)
-    || within(p, `.ai-factory/state/${payload.target.id}/requirement-lint`);
+    || within(p, `.ai-factory/state/${payload.target.id}/requirement-lint`)
+    || within(p, `.ai-factory/state/${payload.target.id}/claim-evidence`)
+    || within(p, `.ai-factory/state/${payload.target.id}/trace-link-suggestions`)
+    || within(p, `.ai-factory/state/${payload.target.id}/context-selection-overlay`)
+    // Closed runtime namespace (#285): constant store namespace shared by the
+    // whole aifhub-decision-corrections command, not owned by one QA target.
+    || within(p, '.ai-factory/state/decision-corrections');
   const visible = (await git(['ls-files', '--cached', '--others', '--exclude-standard', '-z'])).split('\0').filter(Boolean);
   // Closed namespaces are excluded before the catalog limits: a flood of
   // gitignored paths under compositions/ must not fail the snapshot when the

@@ -174,6 +174,27 @@ const WRAPPER_COMMANDS = [
     module: './commands/aifhub-requirement-lint.mjs',
     script: 'requirement-lint.mjs',
     args: ['--change', 'add-oauth', '--enabled', 'true', '--file', 'openspec/changes/add-oauth/proposal.md', '--json']
+  },
+  {
+    name: 'aifhub-claim-evidence-check',
+    description: 'Run opt-in advisory claim evidence diagnostics for presented claim-source pairs without changing evidence or authorizing progression.',
+    module: './commands/aifhub-claim-evidence-check.mjs',
+    script: 'claim-evidence-check.mjs',
+    args: ['--change', 'add-oauth', '--enabled', 'true', '--pairs', 'docs/research-claims.json', '--json']
+  },
+  {
+    name: 'aifhub-trace-link-suggestions',
+    description: 'Run opt-in advisory trace link suggestions over the closed typed graph of requirements, symbols, scenarios, and tests without changing evidence or authorizing progression.',
+    module: './commands/aifhub-trace-link-suggestions.mjs',
+    script: 'trace-link-suggestions.mjs',
+    args: ['--change', 'add-oauth', '--enabled', 'true', '--test', 'test/auth.spec.mjs', '--json']
+  },
+  {
+    name: 'aifhub-context-selection-overlay',
+    description: 'Run opt-in advisory context selection over the exact baseline SessionBrief for presented supporting candidates without changing evidence, replacing the protected minimum, or authorizing progression.',
+    module: './commands/aifhub-context-selection-overlay.mjs',
+    script: 'context-selection-overlay.mjs',
+    args: ['--change', 'add-oauth', '--enabled', 'true', '--candidate', 'notes/research.md', '--json']
   }
 ];
 
@@ -639,7 +660,8 @@ describe('AIFHub wrapper guidance contract', () => {
         'ai-factory aifhub-migrate-legacy-plans <change-id> --dry-run',
         'ai-factory aifhub-migrate-legacy-plans --all --dry-run',
         'ai-factory aifhub-done-finalizer --change <change-id> --json',
-        'ai-factory aifhub-requirement-lint --change <id> [--enabled true|false]'
+        'ai-factory aifhub-requirement-lint --change <id> [--enabled true|false]',
+        'ai-factory aifhub-claim-evidence-check --change <id> [--enabled true|false]'
       ]],
       ['docs/openspec-validation.md', [
         'ai-factory aifhub-write-gate-evidence --change add-oauth-login --gate rules',
@@ -695,7 +717,9 @@ describe('AIFHub wrapper guidance contract', () => {
       ]],
       ['injections/core/aif-improve-plan-folder.md', [
         'ai-factory aifhub-migrate-legacy-plans <change-id> --dry-run',
-        'ai-factory aifhub-requirement-lint --change <change-id> --enabled true'
+        'ai-factory aifhub-requirement-lint --change <change-id> --enabled true',
+        'ai-factory aifhub-trace-link-suggestions --change <change-id> --enabled true --test <test-path> [--test <test-path> ...] --json',
+        'without `--write`'
       ]],
       ['injections/core/aif-implement-plan-folder.md', [
         'ai-factory aifhub-migrate-legacy-plans <change-id> --dry-run'
@@ -706,6 +730,15 @@ describe('AIFHub wrapper guidance contract', () => {
       ['injections/core/aif-plan-plan-folder.md', [
         'ai-factory aifhub-mode status --json',
         'ai-factory aifhub-requirement-lint --change <change-id> --enabled true'
+      ]],
+      ['injections/core/aif-explore-plan-folder.md', [
+        'ai-factory aifhub-claim-evidence-check --change <change-id> --enabled true --stdin --json',
+        'without `--write`'
+      ]],
+      ['injections/core/aif-review-context-providers.md', [
+        'ai-factory aifhub-claim-evidence-check --change <change-id> --enabled true --stdin --json',
+        'without `--write`',
+        'ai-factory aifhub-trace-link-suggestions --change <change-id> --enabled true --test <test-path> [--test <test-path> ...] --json'
       ]],
       ['agent-files/codex/aifhub-plan-polisher.toml', [
         'ai-factory aifhub-mode status --json'
