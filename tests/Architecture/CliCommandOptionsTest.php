@@ -138,7 +138,7 @@ final class CliCommandOptionsTest extends TestCase
         self::assertSame('3', $parsed['options']['--limit='] ?? null);
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('unknown option "--lmit=3" for queue:work');
+        $this->expectExceptionMessage('unknown option "--lmit" for queue:work');
 
         \parseArguments('queue:work', ['cms', 'queue:work', '--lmit=3']);
     }

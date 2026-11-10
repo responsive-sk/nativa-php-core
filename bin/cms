@@ -63,6 +63,7 @@ declare(strict_types = 1);
  */
 
 use Modules\Core\Interfaces\CLI\CliOutput;
+use Modules\Core\Interfaces\CLI\CommandOptions;
 use Modules\Core\Interfaces\CLI\Support\DatabaseMigrator;
 use Modules\Tooling\ModuleCatalog;
 use Modules\Tooling\ModuleInstaller;
@@ -831,42 +832,41 @@ function parseArguments(string $command, array $argv): array
         return ['delegated' => true, 'args' => array_slice($argv, 2), 'options' => []];
     }
 
-    // A map, not a chain of `===` comparisons: mago's no-insecure-comparison
-    // rule treats any strict string comparison as a timing-attack candidate, and
-    // a lookup expresses the same match without an operator to flag. A token
-    // ending in `=` matches on its name and takes the rest as the value.
-    $known = [];
+    // The table's keys are the tokens as typed (`--force`, `--limit=`); the
+    // parser wants bare names, so split them once here and put the trailing
+    // `=` back on the way out, where the callers look their value up.
+    $values = [];
+    $flags = [];
 
     foreach (array_keys($spec) as $token) {
-        $known[$token] = true;
+        if (str_ends_with($token, '=')) {
+            $values[] = substr($token, 2, -1);
+        } else {
+            $flags[] = substr($token, 2);
+        }
     }
 
-    $args = [];
+    try {
+        $parsed = CommandOptions::parse(array_slice($argv, 2), $values, $flags);
+    } catch (RuntimeException $e) {
+        // The parser names the option; this entry point names the command and
+        // the alternatives, which is what an operator needs at a prompt.
+        throw new InvalidArgumentException(sprintf(
+            '%s for %s; known: %s',
+            rtrim($e->getMessage(), '.'),
+            $command,
+            [] === $spec ? 'none' : implode(', ', array_keys($spec)),
+        ));
+    }
+
     $options = [];
 
-    foreach (array_slice($argv, 2) as $argument) {
-        if (!str_starts_with($argument, '--')) {
-            $args[] = $argument;
-
-            continue;
-        }
-
-        $equals = strpos($argument, '=');
-        $name = false === $equals ? $argument : substr($argument, 0, $equals + 1);
-
-        if (!array_key_exists($name, $known)) {
-            throw new InvalidArgumentException(sprintf(
-                'unknown option "%s" for %s; known: %s',
-                $argument,
-                $command,
-                [] === $spec ? 'none' : implode(', ', array_keys($spec)),
-            ));
-        }
-
-        $options[$name] = str_ends_with($name, '=') ? (string) substr($argument, strlen($name)) : null;
+    foreach ($parsed['options'] as $name => $value) {
+        $token = in_array($name, $values, true) ? '--' . $name . '=' : '--' . $name;
+        $options[$token] = is_string($value) ? $value : null;
     }
 
-    return ['delegated' => false, 'args' => $args, 'options' => $options];
+    return ['delegated' => false, 'args' => $parsed['positional'], 'options' => $options];
 }
 
 /** @param list<string> $argv */

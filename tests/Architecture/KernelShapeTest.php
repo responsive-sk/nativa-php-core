@@ -77,6 +77,7 @@ final class KernelShapeTest extends TestCase
         'src/Modules/Core/Infrastructure/Http/Response.php',
         'src/Modules/Core/Infrastructure/Paths/AppPaths.php',
         'src/Modules/Core/Infrastructure/Session/FileSessionHandler.php',
+        'src/Modules/Core/Interfaces/CLI/CommandOptions.php',
         'src/Modules/Core/Interfaces/CLI/Support/DatabaseMigrator.php',
         'src/Modules/Core/Interfaces/HTTP/Actions/HomepageAction.php',
         'src/Modules/Core/Interfaces/HTTP/Actions/RobotsAction.php',
@@ -169,8 +170,14 @@ final class KernelShapeTest extends TestCase
      * module still routes; measured 2026-11-09, Cardboard without Users served
      * `/mark` to a guest because the gate was never wired. One `runtime` row,
      * three importers (http.php and two tests).
+     *
+     * 27 → 28 is the argv round: `CommandOptions` is the one parser `bin/cms`
+     * and the Blog, Outbox and Clickhouse commands share. It replaces three
+     * copies with three different typo rules, and it sits beside `CliOutput`
+     * because a module command may import the kernel's CLI contract. It
+     * parses argv and holds no state, so its bucket is `runtime`.
      */
-    private const int MAX_APPROVED = 27;
+    private const int MAX_APPROVED = 28;
 
     /**
      * Rule 1: every `.php` file under `src/Modules/Core` is an interface, enum

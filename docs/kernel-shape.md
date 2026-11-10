@@ -160,6 +160,7 @@ exactly the movement the table exists to record.
 | `src/Modules/Core/Interfaces/CLI/CliOutput.php` | 577 | Interfaces | interface | 17 | contract |
 | `src/Modules/Core/Interfaces/CLI/Command/MigrateCommand.php` | 921 | Interfaces | concrete | 0 | runtime |
 | `src/Modules/Core/Interfaces/CLI/Command/ServeCommand.php` | 2190 | Interfaces | concrete | 0 | runtime |
+| `src/Modules/Core/Interfaces/CLI/CommandOptions.php` | 4713 | Interfaces | concrete | 6 | runtime |
 | `src/Modules/Core/Interfaces/CLI/MigratorInterface.php` | 779 | Interfaces | interface | 10 | contract |
 | `src/Modules/Core/Interfaces/CLI/Support/DatabaseMigrator.php` | 4870 | Interfaces | concrete | 1 | runtime |
 | `src/Modules/Core/Interfaces/HTTP/Actions/DocsIndexAction.php` | 5041 | Interfaces | concrete | 0 | runtime |

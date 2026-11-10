@@ -10,6 +10,7 @@ use Modules\Blog\Application\Services\CoverPathResolver;
 use Modules\Markdown\Application\Services\MarkdownRenderer;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Core\Interfaces\CLI\CliOutput;
+use Modules\Core\Interfaces\CLI\CommandOptions;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use RuntimeException;
 
@@ -96,7 +97,19 @@ final class GenerateImagesCommand
     public function run(array $argv, CliOutput $output): int
     {
         try {
-            $options = $this->parse(array_slice($argv, 1));
+            $parsed = CommandOptions::parse(
+                array_slice($argv, 1),
+                [],
+                [],
+                self::SHORT_OPTIONS,
+                self::VALUE_OPTIONS,
+            );
+
+            if ([] !== $parsed['positional']) {
+                throw new RuntimeException(sprintf('unexpected argument "%s".', $parsed['positional'][0]));
+            }
+
+            $options = $parsed['options'];
         } catch (RuntimeException $e) {
             $output->writeln('generate-images: ' . $e->getMessage());
 
@@ -479,63 +492,5 @@ final class GenerateImagesCommand
         $value = $this->text($options, $name);
 
         return '' === $value ? $default : (int) $value;
-    }
-
-    /**
-     * `--name=value` or `--name value`, plus the single-dash short forms.
-     *
-     * An unknown option is an error rather than a shrug: `generate-imagez`
-     * would otherwise render every article with the defaults and print a
-     * healthy-looking summary, which is the worst possible outcome for a
-     * command an operator runs in bulk.
-     *
-     * @param list<string> $arguments
-     *
-     * @return array<string, string|bool>
-     *
-     * @throws RuntimeException on an unknown option or a missing value
-     */
-    private function parse(array $arguments): array
-    {
-        $options = [];
-        $count = count($arguments);
-
-        for ($i = 0; $i < $count; ++$i) {
-            $argument = $arguments[$i];
-
-            if (str_starts_with($argument, '--')) {
-                $name = substr($argument, 2);
-            } elseif (str_starts_with($argument, '-')) {
-                $short = substr($argument, 1);
-
-                if (!isset(self::SHORT_OPTIONS[$short])) {
-                    throw new RuntimeException(sprintf('unknown option "-%s".', $short));
-                }
-
-                $name = self::SHORT_OPTIONS[$short];
-            } else {
-                throw new RuntimeException(sprintf('unexpected argument "%s".', $argument));
-            }
-
-            if (str_contains($name, '=')) {
-                [$name, $value] = explode('=', $name, 2);
-            } elseif (isset($arguments[$i + 1]) && !str_starts_with($arguments[$i + 1], '-')) {
-                $value = $arguments[++$i];
-            } else {
-                $value = true;
-            }
-
-            if (!in_array($name, self::VALUE_OPTIONS, true)) {
-                throw new RuntimeException(sprintf('unknown option "--%s".', $name));
-            }
-
-            // A value option given with no value falls back to the default
-            // rather than erroring — symfony treated `--format` with nothing
-            // after it as the flag-less form, and the previous behaviour was
-            // "use the default", so the port keeps that.
-            $options[$name] = true === $value ? '' : $value;
-        }
-
-        return $options;
     }
 }

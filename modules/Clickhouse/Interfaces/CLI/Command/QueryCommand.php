@@ -6,7 +6,7 @@ namespace Modules\Clickhouse\Interfaces\CLI\Command;
 
 use Modules\Clickhouse\Application\ClickHouseClient;
 use Modules\Clickhouse\Domain\ClickHouseError;
-use Modules\Clickhouse\Interfaces\CLI\CommandOptions;
+use Modules\Core\Interfaces\CLI\CommandOptions;
 use Modules\Clickhouse\Interfaces\HTTP\ClickhouseServices;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use RuntimeException;

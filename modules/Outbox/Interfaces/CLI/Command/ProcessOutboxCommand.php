@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Outbox\Interfaces\CLI\Command;
 
 use Modules\Core\Interfaces\CLI\CliOutput;
+use Modules\Core\Interfaces\CLI\CommandOptions;
 use Modules\Outbox\Application\Services\ArticlePublishHandler;
 use Modules\Outbox\Application\Services\OutboxDrain;
 use Modules\Outbox\Interfaces\HTTP\OutboxServices;
@@ -64,7 +65,17 @@ final class ProcessOutboxCommand
     public static function run(array $argv, CliOutput $output): int
     {
         try {
-            $options = self::parse(array_slice($argv, 1));
+            $parsed = CommandOptions::parse(
+                array_slice($argv, 1),
+                ['limit', 'prune-interval'],
+                self::FLAGS,
+            );
+
+            if ([] !== $parsed['positional']) {
+                throw new RuntimeException(sprintf('unexpected argument "%s".', $parsed['positional'][0]));
+            }
+
+            $options = $parsed['options'];
         } catch (RuntimeException $e) {
             $output->writeln('outbox:process: ' . $e->getMessage());
 
@@ -136,62 +147,4 @@ final class ProcessOutboxCommand
         $output->writeln('Handlers: ' . ([] === $types ? '(none registered)' : implode(', ', $types)));
     }
 
-    /**
-     * `--name=value` or `--name value` for a value option, `--name` for a flag.
-     *
-     * An unknown option is an error, not a shrug — the same thing symfony did,
-     * and the thing that matters here: a typo'd `--lmit=50` that silently used
-     * the default limit would drain a different amount than the operator
-     * asked for and print a clean-looking summary either way.
-     *
-     * @param list<string> $arguments
-     *
-     * @return array<string, string|bool>
-     *
-     * @throws RuntimeException on an unknown option or a value option with no value
-     */
-    private static function parse(array $arguments): array
-    {
-        $options = [];
-        $count = count($arguments);
-
-        for ($i = 0; $i < $count; ++$i) {
-            $argument = $arguments[$i];
-
-            if (!str_starts_with($argument, '--')) {
-                throw new RuntimeException(sprintf('unexpected argument "%s".', $argument));
-            }
-
-            $name = substr($argument, 2);
-
-            if (str_contains($name, '=')) {
-                [$name, $value] = explode('=', $name, 2);
-            } else {
-                $value = true;
-            }
-
-            if (!in_array($name, self::FLAGS, true) && !in_array($name, ['limit', 'prune-interval'], true)) {
-                throw new RuntimeException(sprintf('unknown option "--%s".', $name));
-            }
-
-            if (true === $value) {
-                if (in_array($name, self::FLAGS, true)) {
-                    $options[$name] = true;
-
-                    continue;
-                }
-
-                // `--limit 50`: the value is the next token.
-                if (!isset($arguments[$i + 1])) {
-                    throw new RuntimeException(sprintf('option "--%s" needs a value.', $name));
-                }
-
-                $value = $arguments[++$i];
-            }
-
-            $options[$name] = $value;
-        }
-
-        return $options;
-    }
 }

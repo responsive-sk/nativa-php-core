@@ -9,7 +9,7 @@ use Modules\Clickhouse\Application\Services\SqliteEngineBridge;
 use Modules\Clickhouse\Application\Services\SqliteJournal;
 use Modules\Clickhouse\Application\Services\TypedTablePlanner;
 use Modules\Clickhouse\Domain\ClickHouseError;
-use Modules\Clickhouse\Interfaces\CLI\CommandOptions;
+use Modules\Core\Interfaces\CLI\CommandOptions;
 use Modules\Clickhouse\Interfaces\HTTP\ClickhouseServices;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use RuntimeException;
