@@ -6,11 +6,13 @@ namespace Modules\Users\Interfaces\CLI\Command;
 
 use Modules\Core\Domain\Permissions;
 use Modules\Core\Interfaces\CLI\CliOutput;
+use Modules\Core\Interfaces\CLI\CommandOptions;
 use Modules\Database\Infrastructure\Persistence\UnitOfWork;
 use Modules\Security\Application\Services\PasswordHasher;
 use Modules\Security\Domain\PasswordPolicy;
 use Modules\Users\Infrastructure\Persistence\Repositories\RoleRepository;
 use Modules\Users\Infrastructure\Persistence\Repositories\UserRepository;
+use RuntimeException;
 
 /**
  * bin/cms user:admin — the supported path to a first administrator.
@@ -67,13 +69,13 @@ final readonly class EnsureAdminCommand
 
         if (null === $parsed) {
             $output->writeln('user:admin: unknown or incomplete option.');
-            $output->writeln('Usage: php bin/cms user:admin [email] [password] [--name=NAME]');
+            $output->writeln('Usage: php bin/cms user:admin [email] [password] [--name=NAME | --name NAME]');
 
             return 1;
         }
 
         if (true === $parsed) {
-            $output->writeln('Usage: php bin/cms user:admin [email] [password] [--name=NAME]');
+            $output->writeln('Usage: php bin/cms user:admin [email] [password] [--name=NAME | --name NAME]');
             $output->writeln('');
             $output->writeln('  Creates (or repairs) an administrator account.');
             $output->writeln('  Defaults: admin@example.test / admin1234');
@@ -226,6 +228,24 @@ final readonly class EnsureAdminCommand
      */
     private function parse(array $arguments): array|bool|null
     {
+        // `--help` is not an option the command reads, so it is answered before
+        // the parser (which would refuse it as undeclared).
+        if (in_array('--help', $arguments, true) || in_array('-h', $arguments, true)) {
+            return true;
+        }
+
+        try {
+            $parsed = CommandOptions::parse($arguments, ['email', 'password', 'name']);
+        } catch (RuntimeException) {
+            return null;
+        }
+
+        $positional = $parsed['positional'];
+
+        if (\count($positional) > 2) {
+            return null;
+        }
+
         $values = [
             'email'    => 'admin@example.test',
             // The documented development default (see the class docblock), not a
@@ -234,41 +254,13 @@ final readonly class EnsureAdminCommand
             'password' => 'admin1234', // audit-ok: documented development default, see the class docblock
             'name'     => 'Admin',
         ];
-        $positional = [];
-        $count = \count($arguments);
 
-        for ($i = 0; $i < $count; $i++) {
-            $argument = $arguments[$i];
+        foreach (['email', 'password', 'name'] as $name) {
+            $value = CommandOptions::value($parsed['options'], $name);
 
-            if ('--help' === $argument || '-h' === $argument) {
-                return true;
+            if (null !== $value) {
+                $values[$name] = $value;
             }
-
-            if (!str_starts_with($argument, '--')) {
-                $positional[] = $argument;
-
-                continue;
-            }
-
-            $name = substr($argument, 2);
-
-            if (str_contains($name, '=')) {
-                [$name, $value] = explode('=', $name, 2);
-            } elseif (isset($arguments[$i + 1]) && !str_starts_with($arguments[$i + 1], '-')) {
-                $value = $arguments[++$i];
-            } else {
-                return null;
-            }
-
-            if (!\in_array($name, ['email', 'password', 'name'], true)) {
-                return null;
-            }
-
-            $values[$name] = $value;
-        }
-
-        if (\count($positional) > 2) {
-            return null;
         }
 
         if (isset($positional[0])) {

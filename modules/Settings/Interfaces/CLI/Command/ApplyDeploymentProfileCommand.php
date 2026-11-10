@@ -6,7 +6,9 @@ namespace Modules\Settings\Interfaces\CLI\Command;
 
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Core\Interfaces\CLI\CliOutput;
+use Modules\Core\Interfaces\CLI\CommandOptions;
 use Modules\Database\Infrastructure\Persistence\UnitOfWork;
+use RuntimeException;
 use Modules\Settings\Infrastructure\Persistence\Statement;
 
 /**
@@ -128,21 +130,20 @@ final readonly class ApplyDeploymentProfileCommand
      */
     private function profilePath(array $arguments, CliOutput $output): ?string
     {
-        $path = AppPaths::instance()->config('deploy.php');
+        try {
+            $parsed = CommandOptions::parse($arguments, ['file']);
+        } catch (RuntimeException $e) {
+            $output->writeln('settings:profile: ' . $e->getMessage() . ' Known: --file=PATH');
 
-        foreach ($arguments as $argument) {
-            if (str_starts_with($argument, '--file=')) {
-                $path = substr($argument, strlen('--file='));
+            return null;
+        }
 
-                continue;
-            }
+        $path = CommandOptions::value($parsed['options'], 'file')
+            ?? AppPaths::instance()->config('deploy.php');
 
-            if (str_starts_with($argument, '-')) {
-                $output->writeln('settings:profile: unknown option "' . $argument . '" (known: --file=PATH)');
-
-                return null;
-            }
-
+        // A positional path wins over the option, the same order the loop this
+        // replaced used: `settings:profile other.php` must read other.php.
+        foreach ($parsed['positional'] as $argument) {
             if ('' !== $argument) {
                 $path = $argument;
             }

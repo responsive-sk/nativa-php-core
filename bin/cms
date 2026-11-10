@@ -396,12 +396,14 @@ function usageLines(): array
         '  clickhouse:status         the server\'s view of the attached databases, and drift',
         '  clickhouse:query "<sql>" [--db=<name>] [--write] [--format=JSONEachRow|TSV]',
         '                            run one statement (read-only unless --write)',
-        '  user:admin [email] [password] [--name=NAME]',
+        '  user:admin [email] [password] [--name=NAME | --name NAME]',
         '                            create or repair an administrator (defaults admin@example.test / admin1234)',
-        '  settings:profile [--file=PATH]',
+        '  settings:profile [--file=PATH | --file PATH]',
         '                            apply a committed deployment profile (default: config/deploy.php)',
         '  discovery:clear          delete the discovery cache (rebuilt on the next request)',
         '  discovery:status         whether the discovery cache exists and is fresh',
+        '',
+        '  An option that takes a value accepts --name=value and --name value.',
     ];
 }
 

@@ -25,6 +25,8 @@ declare their options to it.
 - `bin/cms parseArguments()`: the table-driven parser from commit `87f927e`.
   `--name=value` only, undeclared options refused, the command name and the
   known ones added to the message.
+- `settings:profile` and `user:admin`: one hand-written loop each, for one
+  option (`--file=`) and three (`--email=`, `--password=`, `--name=`).
 
 The four disagreed in ways a test could not see: the same `--format` token was
 a default in one command and an error in another, and `--dry-runn` was refused
@@ -55,6 +57,8 @@ The migrations:
 | `generate-images` | private `parse()`, 55 lines | `CommandOptions::parse()` with `VALUE_OPTIONS` and `SHORT_OPTIONS` |
 | `outbox:process` | private `parse()`, 55 lines | `CommandOptions::parse()` with `FLAGS` |
 | `bin/cms` | its own loop | `CommandOptions::parse()`, adding the command and known list to the error |
+| `settings:profile` | inline `--file=` loop | `CommandOptions::parse()` with `--file` |
+| `user:admin` | inline `--email=/--password=/--name=` loop | `CommandOptions::parse()` with the three, `--help` answered before it |
 
 Across the three modules and `bin/cms` the diff is **57 insertions, 243
 deletions**; the kernel gained one file of 4 713 B. Blog, Outbox and Clickhouse
@@ -71,7 +75,10 @@ catalogue edits.
   `generate-images: unknown option "--formt".` and exits 1.
 - `php bin/cms clickhouse:attach --dry-runn` prints
   `clickhouse:attach: unknown option "--dry-runn".` and exits 1.
-- `php bin/cms queue:work --limit 2` and `--limit=2` both work the same batch.
+- `php bin/cms queue:work --limit 2` and `--limit=2` both work the same batch,
+  and the help now spells both forms: `[--limit=N]` in the kernel's table lines,
+  `[--name=NAME | --name NAME]` and `[--file=PATH | --file PATH]` in the two
+  delegated lines, plus one line saying an option takes either spelling.
 
 `tests/Architecture/CliCommandOptionsTest.php` pins the `bin/cms` side: every
 dispatched command has a table entry and the reverse, the help advertises
@@ -98,10 +105,10 @@ undeclared one is refused with the command named.
 
 ## Still open
 
-- `settings:profile` and `user:admin` keep their own single-option loops
-  (`--file=`, `--name=`, `--email=`, `--password=`). Each reads one option and
-  has its own test, so it is the last copy of the rule rather than a defect;
-  the next round can move them the same way.
-- `bin/cms` help still spells `--limit=N` while the parser also accepts
-  `--limit N`. The table is the owner, so advertising the second form is a
-  help-text edit, not a parser change.
+- `user:admin` answers `--help` and `-h` before the parser, because they are
+  not options it reads. A parser-owned `--help` would need a global flag in
+  `CommandOptions`, which is a contract decision rather than a migration.
+- The kernel's table lines in `bin/cms` still spell only `--limit=N`; the
+  generic line below the list says `--name value` works too. Rendering both
+  forms per line would make the table's token extraction ambiguous, so the
+  contract test would need a normalisation rule first.
