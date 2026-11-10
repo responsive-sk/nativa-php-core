@@ -395,6 +395,12 @@ everything else, which is the property the doc is about.
   mago-guard`, `make mago-lint`: clean.
 - `make extract-check`: OK, 185 identical, 103 recorded divergences
   (`UnitOfWork` is `DIVERGED`: the upstream row is the raw-handle version).
-- `make kernel-size`: **184 903 B / 47 files**, delta -153 289 B vs baseline.
+- `make kernel-size`: **185 219 B / 47 files**, delta -152 973 B vs baseline.
   Core types unchanged (8 interface / 28 concrete); Database reads 3
-  interface / 8 concrete in the same report.
+  interface / 8 concrete in the same report. The 184 903 B measured when
+  `Users` and `UnitOfWork` landed was not the last word: `PdoStatement`
+  grew 316 B when `execute()` without arguments stopped forwarding an empty
+  binding list, which had dropped everything a caller set with
+  `bindValue()`. The wrapper passed the whole suite and 500ed
+  `/mark/audit`; the 316 B are the fix and the test that pins both call
+  shapes, and they are the shape the series closes on.
