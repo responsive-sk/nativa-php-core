@@ -7,6 +7,7 @@ namespace Modules\Users\Tests;
 use Modules\Security\Application\Services\PasswordHasher;
 use Modules\Security\Application\Services\RateLimiter;
 use Modules\Security\Domain\PasswordPolicy;
+use Modules\Database\Infrastructure\Persistence\PdoConnection;
 use Modules\Users\Application\Services\PasswordResetService;
 use Modules\Users\Infrastructure\Mail\NullPasswordResetMailer;
 use Modules\Users\Infrastructure\Persistence\Repositories\UserRepository;
@@ -76,7 +77,7 @@ final class PasswordResetServiceTest extends TestCase
         $this->pdo->exec('CREATE TABLE role_permissions (role_id VARCHAR(32) NOT NULL, permission_id VARCHAR(32) NOT NULL, PRIMARY KEY (role_id, permission_id))');
 
         $this->hasher = new PasswordHasher();
-        $users = new UserRepository($this->pdo);
+        $users = new UserRepository($this->db());
         $users->insert([
             'id'       => bin2hex(random_bytes(16)),
             'name'     => 'Eva',
@@ -89,7 +90,7 @@ final class PasswordResetServiceTest extends TestCase
         // PasswordResetMailerTest (audit finding #1). The limiter is real — the
         // service's other job (finding #6) is bounded by it.
         $this->resets = new PasswordResetService(
-            $this->pdo,
+            $this->db(),
             $users,
             $this->hasher,
             new NullPasswordResetMailer(),
@@ -137,7 +138,7 @@ final class PasswordResetServiceTest extends TestCase
     public function validTokenResetsPasswordAndBurnsToken(): void
     {
         $token = bin2hex(random_bytes(32));
-        Statement::prepare($this->pdo,
+        Statement::prepare($this->db(),
             "INSERT INTO password_reset_tokens (id, email, token, expires_at, created_at)\n             VALUES (:id, :email, :token, datetime('now', '+1 hour'), CURRENT_TIMESTAMP)",
         )->execute([
             ':id'    => bin2hex(random_bytes(16)),
@@ -147,7 +148,7 @@ final class PasswordResetServiceTest extends TestCase
 
         $this->assertSame([], $this->resets->reset($token, 'brand-new-pass', 'brand-new-pass'));
 
-        $user = (new UserRepository($this->pdo))->findByEmail('eva@example.test');
+        $user = (new UserRepository($this->db()))->findByEmail('eva@example.test');
         $this->assertNotNull($user);
         $this->assertTrue($this->hasher->verify('brand-new-pass', $user->password()));
 
@@ -197,5 +198,14 @@ final class PasswordResetServiceTest extends TestCase
 
             $this->assertTrue($result->ok, 'request ' . $i . ' from the local address must be allowed');
         }
+    }
+
+    /**
+     * The service and the repository take the connection contract now; this
+     * wraps the test's in-memory handle without routing anywhere.
+     */
+    private function db(): PdoConnection
+    {
+        return new PdoConnection($this->pdo, 'users');
     }
 }

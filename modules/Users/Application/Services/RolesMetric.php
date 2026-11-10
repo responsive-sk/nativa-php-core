@@ -29,7 +29,7 @@ final readonly class RolesMetric implements MetricContract
     {
         try {
             $repo = new RoleRepository(
-                DatabaseConnectionManager::instance()->connection('users'),
+                DatabaseConnectionManager::instance()->connect('users'),
             );
 
             $this->registerRolesCard($repo);

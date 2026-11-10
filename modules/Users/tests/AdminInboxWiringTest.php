@@ -7,7 +7,9 @@ namespace Modules\Users\Tests;
 use Modules\Users\Domain\Contracts\Mailer;
 use Modules\Core\Domain\Permissions;
 use Modules\Core\Interfaces\CLI\CliOutput;
+use Modules\Database\Contracts\ConnectionInterface;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
+use Modules\Database\Infrastructure\Persistence\PdoConnection;
 use Modules\Notifications\Application\Services\NotificationInbox;
 use Modules\Notifications\Infrastructure\Persistence\Migrations\NotificationsDatabaseMigrator;
 use Modules\Notifications\Infrastructure\Persistence\Repositories\SqliteNotificationRepository;
@@ -75,8 +77,8 @@ final class AdminInboxWiringTest extends TestCase
         (new NotificationsDatabaseMigrator(new \PDO('sqlite:' . $this->tmpDir . '/notifications.db')))
             ->run($this->quietOutput());
 
-        $this->users = new UserRepository($usersPdo);
-        $this->seedAccounts($usersPdo);
+        $this->users = new UserRepository(new PdoConnection($usersPdo, 'users'));
+        $this->seedAccounts(new PdoConnection($usersPdo, 'users'));
     }
 
     protected function tearDown(): void
@@ -216,15 +218,15 @@ final class AdminInboxWiringTest extends TestCase
      * methods, so the pivot rows carry the ids the schema expects rather than
      * ones this test guessed.
      */
-    private function seedAccounts(\PDO $pdo): void
+    private function seedAccounts(ConnectionInterface $db): void
     {
-        $roles = new RoleRepository($pdo);
+        $roles = new RoleRepository($db);
 
         $adminRole = $roles->ensureRole('role-admin', 'admin', 'Super-user');
         $writerRole = $roles->ensureRole('role-writer', 'writer', 'Moderator');
         $markAccess = $roles->ensurePermission('perm-mark', Permissions::MARK_ACCESS, 'Open the panel', 'panel');
 
-        Statement::prepare($pdo, 'INSERT OR IGNORE INTO role_permissions (role_id, permission_id) VALUES (?, ?)')
+        Statement::prepare($db, 'INSERT OR IGNORE INTO role_permissions (role_id, permission_id) VALUES (?, ?)')
             ->execute([$writerRole, $markAccess]);
 
         foreach ([
@@ -245,7 +247,7 @@ final class AdminInboxWiringTest extends TestCase
         $this->users->assignRole('user-writer', $writerRole);
         $this->users->assignRole('user-disabled', $adminRole);
 
-        Statement::prepare($pdo, 'UPDATE users SET is_active = 0 WHERE id = ?')->execute(['user-disabled']);
+        Statement::prepare($db, 'UPDATE users SET is_active = 0 WHERE id = ?')->execute(['user-disabled']);
     }
 
     private function recorder(bool $accepts = true): object

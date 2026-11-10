@@ -23,9 +23,10 @@ use Modules\Database\Exceptions\ReadException;
  *     the statement runs. A prepared read does not fail over: the throw happens
  *     at `execute()`, when the replica is already chosen.
  *  3. **Transactions on the primary.** Beginning a transaction marks the
- *     connection as written. UnitOfWork hands its callback the raw `\PDO`, so
- *     writes inside a transaction are invisible here; assuming the worst is the
- *     only honest option, and the safe one.
+ *     connection as written. `UnitOfWork` now hands its callback this same
+ *     object, so writes inside it would mark it anyway; doing it at `begin`
+ *     keeps the read side on the primary from the first statement, which is
+ *     what a transaction means.
  *
  * `onPrimary()` is the escape for a read that must not be stale, and it nests
  * like a stack: an inner scope cannot lift an outer scope's primary routing.
@@ -100,8 +101,8 @@ final class ReadWriteConnection implements ConnectionInterface, PrimaryReadInter
 
     public function beginTransaction(): void
     {
-        // The callback below receives the raw \PDO, so a write it performs is
-        // never seen by this class. Marking at begin is the conservative side.
+        // A transaction is a write intent: its first read must see the rows its
+        // writes will touch, not a replica that may not have them yet.
         $this->markWritten();
         $this->write->beginTransaction();
     }

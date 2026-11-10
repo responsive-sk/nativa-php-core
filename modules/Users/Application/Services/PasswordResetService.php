@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Users\Application\Services;
 
 use Modules\Core\Domain\SubmitResult;
+use Modules\Database\Contracts\ConnectionInterface;
 use Modules\Security\Application\Services\PasswordHasher;
 use Modules\Security\Application\Services\RateLimiter;
 use Modules\Security\Domain\LocalClient;
@@ -45,7 +46,7 @@ final readonly class PasswordResetService
     private const int FORGOT_EMAIL_WINDOW = 3600;
 
     public function __construct(
-        private \PDO $pdo,
+        private ConnectionInterface $db,
         private UserRepository $users,
         private PasswordHasher $hasher,
         private PasswordResetMailer $mailer,
@@ -88,10 +89,10 @@ final readonly class PasswordResetService
         $token = bin2hex(random_bytes(32));
 
         // Invalidate previous unused tokens for this email.
-        Statement::prepare($this->pdo, 'DELETE FROM password_reset_tokens WHERE email = :email AND used_at IS NULL')
+        Statement::prepare($this->db, 'DELETE FROM password_reset_tokens WHERE email = :email AND used_at IS NULL')
             ->execute([':email' => $email]);
 
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->db,
             'INSERT INTO password_reset_tokens (id, email, token, expires_at, created_at)
              VALUES (:id, :email, :token, datetime(\'now\', :ttl), CURRENT_TIMESTAMP)',
         );
@@ -172,7 +173,7 @@ final readonly class PasswordResetService
         }
 
         $hash = hash('sha256', $token);
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->db,
             'SELECT id, email FROM password_reset_tokens
              WHERE token = :hash AND used_at IS NULL AND expires_at > CURRENT_TIMESTAMP LIMIT 1',
         );
@@ -192,7 +193,7 @@ final readonly class PasswordResetService
 
         $this->users->updatePassword($user->id(), $this->hasher->hash($password));
 
-        Statement::prepare($this->pdo, 'UPDATE password_reset_tokens SET used_at = CURRENT_TIMESTAMP WHERE id = :id')
+        Statement::prepare($this->db, 'UPDATE password_reset_tokens SET used_at = CURRENT_TIMESTAMP WHERE id = :id')
             ->execute([':id' => $row['id']]);
 
         return [];

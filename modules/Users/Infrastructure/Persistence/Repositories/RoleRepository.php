@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Users\Infrastructure\Persistence\Repositories;
 
+use Modules\Database\Contracts\ConnectionInterface;
 use Modules\Database\Infrastructure\Persistence\UnitOfWork;
 use Modules\Users\Infrastructure\Persistence\Statement;
 
@@ -12,7 +13,7 @@ use Modules\Users\Infrastructure\Persistence\Statement;
  */
 final readonly class RoleRepository
 {
-    public function __construct(private \PDO $pdo)
+    public function __construct(private ConnectionInterface $db)
     {
     }
 
@@ -21,7 +22,7 @@ final readonly class RoleRepository
      */
     public function findByName(string $name): ?array
     {
-        $stmt = Statement::prepare($this->pdo, 'SELECT * FROM roles WHERE name = :name LIMIT 1');
+        $stmt = Statement::prepare($this->db, 'SELECT * FROM roles WHERE name = :name LIMIT 1');
         $stmt->execute([':name' => $name]);
         /** @var array<string, mixed>|false $row */
         $row = $stmt->fetch();
@@ -43,7 +44,7 @@ final readonly class RoleRepository
             return $existingId;
         }
 
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->db,
             'INSERT INTO roles (id, name, description, created_at) VALUES (:id, :name, :description, CURRENT_TIMESTAMP)',
         );
         $stmt->execute([':id' => $id, ':name' => $name, ':description' => $description]);
@@ -57,7 +58,7 @@ final readonly class RoleRepository
      */
     public function ensurePermission(string $id, string $name, string $description, string $group): string
     {
-        $stmt = Statement::prepare($this->pdo, 'SELECT id FROM permissions WHERE name = :name LIMIT 1');
+        $stmt = Statement::prepare($this->db, 'SELECT id FROM permissions WHERE name = :name LIMIT 1');
         $stmt->execute([':name' => $name]);
         /** @var array<string, mixed>|false $existing */
         $existing = $stmt->fetch();
@@ -69,7 +70,7 @@ final readonly class RoleRepository
             return $existingId;
         }
 
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->db,
             'INSERT INTO permissions (id, name, description, group_name, created_at)
              VALUES (:id, :name, :description, :group, CURRENT_TIMESTAMP)',
         );
@@ -83,7 +84,7 @@ final readonly class RoleRepository
      */
     public function roleExists(string $roleId): bool
     {
-        $stmt = Statement::prepare($this->pdo, 'SELECT 1 FROM roles WHERE id = :id LIMIT 1');
+        $stmt = Statement::prepare($this->db, 'SELECT 1 FROM roles WHERE id = :id LIMIT 1');
         $stmt->execute([':id' => $roleId]);
 
         return false !== $stmt->fetch();
@@ -96,7 +97,7 @@ final readonly class RoleRepository
      */
     public function allRoles(): array
     {
-        $stmt = Statement::query($this->pdo, 'SELECT * FROM roles ORDER BY name ASC');
+        $stmt = Statement::query($this->db, 'SELECT * FROM roles ORDER BY name ASC');
         $rows = $stmt->fetchAll();
         $normalized = [];
 
@@ -120,7 +121,7 @@ final readonly class RoleRepository
      */
     public function allPermissions(): array
     {
-        $stmt = Statement::query($this->pdo,
+        $stmt = Statement::query($this->db,
             'SELECT * FROM permissions ORDER BY group_name ASC, name ASC',
         );
         $rows = $stmt->fetchAll();
@@ -147,7 +148,7 @@ final readonly class RoleRepository
      */
     public function permissionIdsForRole(string $roleId): array
     {
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->db,
             'SELECT permission_id FROM role_permissions WHERE role_id = :rid',
         );
         $stmt->execute([':rid' => $roleId]);
@@ -176,7 +177,7 @@ final readonly class RoleRepository
      */
     public function roleIdsForUser(string $userId): array
     {
-        $stmt = Statement::prepare($this->pdo, 'SELECT role_id FROM user_roles WHERE user_id = :uid');
+        $stmt = Statement::prepare($this->db, 'SELECT role_id FROM user_roles WHERE user_id = :uid');
         $stmt->execute([':uid' => $userId]);
 
         /** @var list<array<string, mixed>>|false $rows */
@@ -201,7 +202,7 @@ final readonly class RoleRepository
      */
     public function createRole(string $id, string $name, string $description): void
     {
-        Statement::prepare($this->pdo,
+        Statement::prepare($this->db,
             'INSERT INTO roles (id, name, description, created_at) VALUES (:id, :name, :description, CURRENT_TIMESTAMP)',
         )->execute([':id' => $id, ':name' => $name, ':description' => $description]);
     }
@@ -211,17 +212,17 @@ final readonly class RoleRepository
      */
     public function deleteRole(string $roleId): void
     {
-        $uow = new UnitOfWork($this->pdo);
-        $uow->transaction(function (\PDO $pdo) use ($roleId): void {
-            Statement::prepare($pdo, 'DELETE FROM role_permissions WHERE role_id = :rid')->execute([':rid' => $roleId]);
-            Statement::prepare($pdo, 'DELETE FROM user_roles WHERE role_id = :rid')->execute([':rid' => $roleId]);
-            Statement::prepare($pdo, 'DELETE FROM roles WHERE id = :rid')->execute([':rid' => $roleId]);
+        $uow = new UnitOfWork($this->db);
+        $uow->transaction(function (ConnectionInterface $db) use ($roleId): void {
+            Statement::prepare($db, 'DELETE FROM role_permissions WHERE role_id = :rid')->execute([':rid' => $roleId]);
+            Statement::prepare($db, 'DELETE FROM user_roles WHERE role_id = :rid')->execute([':rid' => $roleId]);
+            Statement::prepare($db, 'DELETE FROM roles WHERE id = :rid')->execute([':rid' => $roleId]);
         });
     }
 
     public function assignPermission(string $roleId, string $permissionId): void
     {
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->db,
             'INSERT OR IGNORE INTO role_permissions (role_id, permission_id, created_at)
              VALUES (:rid, :pid, CURRENT_TIMESTAMP)',
         );
@@ -244,14 +245,14 @@ final readonly class RoleRepository
             return;
         }
 
-        $uow = new UnitOfWork($this->pdo);
-        $uow->transaction(function (\PDO $pdo) use ($roleId, $toRemove, $toAdd): void {
+        $uow = new UnitOfWork($this->db);
+        $uow->transaction(function (ConnectionInterface $db) use ($roleId, $toRemove, $toAdd): void {
             foreach ($toRemove as $pid) {
-                Statement::prepare($pdo, 'DELETE FROM role_permissions WHERE role_id = :rid AND permission_id = :pid')
+                Statement::prepare($db, 'DELETE FROM role_permissions WHERE role_id = :rid AND permission_id = :pid')
                     ->execute([':rid' => $roleId, ':pid' => $pid]);
             }
             foreach ($toAdd as $pid) {
-                Statement::prepare($pdo, 'INSERT OR IGNORE INTO role_permissions (role_id, permission_id, created_at) VALUES (:rid, :pid, CURRENT_TIMESTAMP)')
+                Statement::prepare($db, 'INSERT OR IGNORE INTO role_permissions (role_id, permission_id, created_at) VALUES (:rid, :pid, CURRENT_TIMESTAMP)')
                     ->execute([':rid' => $roleId, ':pid' => $pid]);
             }
         });

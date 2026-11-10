@@ -83,7 +83,7 @@ final class ArticlesFormHelper
         $byEmail = [];
 
         // Active registered users are the linked authors (users.db).
-        $users = new UserRepository(DatabaseConnectionManager::instance()->connection('users'));
+        $users = new UserRepository(DatabaseConnectionManager::instance()->connect('users'));
 
         foreach ($users->all() as $user) {
             if ($user->isActive()) {

@@ -45,8 +45,8 @@ final class MediaFolderDeleteAction
         $cascadeRaw = $request->body('cascade');
         $cascade = is_string($cascadeRaw) && '1' === $cascadeRaw;
 
-        $pdo = DatabaseConnectionManager::instance()->connection('media');
-        $outcome = (new UnitOfWork($pdo))->transaction(
+        $db = DatabaseConnectionManager::instance()->connect('media');
+        $outcome = (new UnitOfWork($db))->transaction(
             fn (): SubmitResult => $this->deleteWithCascade($path, $cascade),
         );
 

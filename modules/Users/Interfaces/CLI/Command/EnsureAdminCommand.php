@@ -7,6 +7,7 @@ namespace Modules\Users\Interfaces\CLI\Command;
 use Modules\Core\Domain\Permissions;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Core\Interfaces\CLI\CommandOptions;
+use Modules\Database\Contracts\ConnectionInterface;
 use Modules\Database\Infrastructure\Persistence\UnitOfWork;
 use Modules\Security\Application\Services\PasswordHasher;
 use Modules\Security\Domain\PasswordPolicy;
@@ -53,7 +54,7 @@ use RuntimeException;
  */
 final readonly class EnsureAdminCommand
 {
-    public function __construct(private \PDO $pdo)
+    public function __construct(private ConnectionInterface $db)
     {
     }
 
@@ -105,8 +106,8 @@ final readonly class EnsureAdminCommand
             return 1;
         }
 
-        $result = (new UnitOfWork($this->pdo))->transaction(
-            fn (\PDO $pdo): array => $this->ensure($pdo, $email, $password, $name),
+        $result = (new UnitOfWork($this->db))->transaction(
+            fn (ConnectionInterface $db): array => $this->ensure($db, $email, $password, $name),
         );
 
         $output->writeln(sprintf('user:admin: %s — %s', $email, $result['state']));
@@ -137,11 +138,11 @@ final readonly class EnsureAdminCommand
     /**
      * @return array{state: string, changes: list<string>, role: string}
      */
-    private function ensure(\PDO $pdo, string $email, #[\SensitiveParameter] string $password, string $name): array
+    private function ensure(ConnectionInterface $db, string $email, #[\SensitiveParameter] string $password, string $name): array
     {
         $role = 'admin';
-        $roles = new RoleRepository($pdo);
-        $users = new UserRepository($pdo);
+        $roles = new RoleRepository($db);
+        $users = new UserRepository($db);
         $hasher = new PasswordHasher();
         $changes = [];
 
@@ -211,7 +212,7 @@ final readonly class EnsureAdminCommand
     private function schemaExists(): bool
     {
         try {
-            $this->pdo->query('SELECT 1 FROM users LIMIT 1');
+            $this->db->query('SELECT 1 FROM users LIMIT 1');
 
             return true;
         } catch (\PDOException) {

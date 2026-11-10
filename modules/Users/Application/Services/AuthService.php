@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Users\Application\Services;
 
 use Modules\Core\Infrastructure\Env;
+use Modules\Database\Contracts\ConnectionInterface;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
 use Modules\Security\Application\Services\PasswordHasher;
 use Modules\Security\Application\Services\RateLimiter;
@@ -56,7 +57,7 @@ final readonly class AuthService
     private const string DUMMY_PASSWORD_HASH = '$2y$12$6hO.qcb0O30iOs2k/EReUumcibRsIzq2GbYObFalM7RPajh04fCrG';
 
     public function __construct(
-        private \PDO $pdo,
+        private ConnectionInterface $db,
         private UserRepository $users,
         private PasswordHasher $hasher,
         private RateLimiter $limiter,
@@ -272,7 +273,7 @@ final readonly class AuthService
         // Clear remember-me cookie + DB token
         $token = $_COOKIE[self::REMEMBER_COOKIE] ?? null;
         if (is_string($token) && '' !== $token) {
-            $stmt = Statement::prepare($this->pdo, 'DELETE FROM remember_tokens WHERE token_hash = :hash');
+            $stmt = Statement::prepare($this->db, 'DELETE FROM remember_tokens WHERE token_hash = :hash');
             $stmt->execute([':hash' => hash('sha256', $token)]);
         }
         // Same Secure flag as when the cookie was issued — audit finding F-5.
@@ -291,7 +292,7 @@ final readonly class AuthService
         }
 
         $hash = hash('sha256', $token);
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->db,
             'SELECT user_id FROM remember_tokens WHERE token_hash = :hash AND expires_at > CURRENT_TIMESTAMP LIMIT 1',
         );
         $stmt->execute([':hash' => $hash]);
@@ -391,7 +392,7 @@ final readonly class AuthService
     {
         $token = bin2hex(random_bytes(32));
 
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->db,
             'INSERT INTO remember_tokens (id, user_id, token_hash, expires_at, created_at)
              VALUES (:id, :uid, :hash, datetime(\'now\', \'+30 days\'), CURRENT_TIMESTAMP)',
         );
@@ -426,7 +427,7 @@ final readonly class AuthService
     private function persistSessionRow(string $userId, ?string $ip, ?string $userAgent): void
     {
         try {
-            $stmt = Statement::prepare($this->pdo,
+            $stmt = Statement::prepare($this->db,
                 'INSERT INTO sessions (id, user_id, ip_address, user_agent, last_activity)
                  VALUES (:id, :uid, :ip, :ua, datetime(\'now\'))
                  ON CONFLICT(id) DO UPDATE SET
@@ -451,7 +452,7 @@ final readonly class AuthService
     private function deleteSessionRow(): void
     {
         try {
-            $stmt = Statement::prepare($this->pdo, 'DELETE FROM sessions WHERE id = :id');
+            $stmt = Statement::prepare($this->db, 'DELETE FROM sessions WHERE id = :id');
             $stmt->execute([':id' => self::dbSessionKey()]);
         } catch (\Throwable) {
             // Best-effort.

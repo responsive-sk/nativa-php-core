@@ -165,7 +165,7 @@ final readonly class AdminNotificationHandler
     {
         try {
             $users = new UserRepository(
-                DatabaseConnectionManager::instance()->connection('users'),
+                DatabaseConnectionManager::instance()->connect('users'),
             );
 
             $ids = [];

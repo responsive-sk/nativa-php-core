@@ -28,13 +28,18 @@ final class AuthServices
     public static function auth(): AuthService
     {
         if (null === self::$auth) {
-            $pdo = DatabaseConnectionManager::instance()->connection('users');
+            // One routed connection for the service and its repository, so a
+            // write in the service is visible to the repository's next read.
+            // The rate limiter is Security's and still takes the raw handle.
+            $db = DatabaseConnectionManager::instance()->connect('users');
 
             self::$auth = new AuthService(
-                $pdo,
-                new UserRepository($pdo),
+                $db,
+                new UserRepository($db),
                 new PasswordHasher(),
-                new RateLimiter($pdo),
+                new RateLimiter(
+                    DatabaseConnectionManager::instance()->connection('users'),
+                ),
             );
         }
 
@@ -44,17 +49,19 @@ final class AuthServices
     public static function resets(): PasswordResetService
     {
         if (null === self::$resets) {
-            $pdo = DatabaseConnectionManager::instance()->connection('users');
+            $db = DatabaseConnectionManager::instance()->connect('users');
 
             // The mailer is resolved here, once: which transport carries a
             // reset link is an environment fact, and this is where the service
             // graph is composed (see PasswordResetMailerFactory).
             self::$resets = new PasswordResetService(
-                $pdo,
-                new UserRepository($pdo),
+                $db,
+                new UserRepository($db),
                 new PasswordHasher(),
                 PasswordResetMailerFactory::create(),
-                new RateLimiter($pdo),
+                new RateLimiter(
+                    DatabaseConnectionManager::instance()->connection('users'),
+                ),
             );
         }
 

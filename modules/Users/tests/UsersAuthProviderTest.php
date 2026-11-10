@@ -255,7 +255,7 @@ final class UsersAuthProviderTest extends TestCase
         $id = bin2hex(random_bytes(16));
 
         $stmt = Statement::prepare(
-            $this->pdo(),
+            DatabaseConnectionManager::instance()->connect('users'),
             'INSERT INTO users (id, name, email, password, is_active) VALUES (:id, :name, :email, :password, 1)',
         );
         $stmt->execute([

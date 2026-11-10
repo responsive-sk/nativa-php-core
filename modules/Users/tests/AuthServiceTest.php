@@ -7,6 +7,7 @@ namespace Modules\Users\Tests;
 use Modules\Security\Application\Services\PasswordHasher;
 use Modules\Security\Application\Services\RateLimiter;
 use Modules\Security\Domain\PasswordPolicy;
+use Modules\Database\Infrastructure\Persistence\PdoConnection;
 use Modules\Users\Application\Services\AuthService;
 use Modules\Users\Infrastructure\Persistence\Repositories\UserRepository;
 use Modules\Users\Infrastructure\Persistence\Statement;
@@ -83,7 +84,7 @@ final class AuthServiceTest extends TestCase
         $pdo->exec('CREATE TABLE role_permissions (role_id VARCHAR(32) NOT NULL, permission_id VARCHAR(32) NOT NULL, PRIMARY KEY (role_id, permission_id))');
 
         $this->pdo = $pdo;
-        $this->auth = new AuthService($pdo, new UserRepository($pdo), new PasswordHasher(), new RateLimiter($pdo));
+        $this->auth = new AuthService($this->db(), new UserRepository($this->db()), new PasswordHasher(), new RateLimiter($pdo));
     }
 
     #[Test]
@@ -168,7 +169,7 @@ final class AuthServiceTest extends TestCase
         $this->assertGreaterThan(0, $refused['retryAfter'], 'a refusal must carry the remaining window');
         $this->assertSame(
             5,
-            (int) Statement::query($this->pdo, 'SELECT COUNT(*) FROM users')->fetchColumn(),
+            (int) Statement::query($this->db(), 'SELECT COUNT(*) FROM users')->fetchColumn(),
             'the refused registration must not have created an account',
         );
     }
@@ -186,6 +187,15 @@ final class AuthServiceTest extends TestCase
             $this->assertSame([], $result['errors'], 'registration ' . $i . ' from the local address must be accepted');
         }
 
-        $this->assertSame(6, (int) Statement::query($this->pdo, 'SELECT COUNT(*) FROM users')->fetchColumn());
+        $this->assertSame(6, (int) Statement::query($this->db(), 'SELECT COUNT(*) FROM users')->fetchColumn());
+    }
+
+    /**
+     * The service and its repository now take the connection contract; this
+     * wraps the test's in-memory handle without routing anywhere.
+     */
+    private function db(): PdoConnection
+    {
+        return new PdoConnection($this->pdo, 'users');
     }
 }

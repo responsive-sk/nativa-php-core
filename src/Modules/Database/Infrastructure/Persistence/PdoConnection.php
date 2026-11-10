@@ -29,18 +29,6 @@ final readonly class PdoConnection implements ConnectionInterface
     ) {
     }
 
-    /**
-     * The handle itself, for the two legacy consumers that still need PDO:
-     * module migrators (DDL) and UnitOfWork's transaction callbacks.
-     *
-     * Not a routing escape: a ReadWriteConnection does not expose this, so a
-     * caller that wants the primary has to ask for it by name.
-     */
-    public function pdo(): \PDO
-    {
-        return $this->pdo;
-    }
-
     public function name(): string
     {
         return $this->name;

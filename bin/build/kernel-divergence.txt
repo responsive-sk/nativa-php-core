@@ -243,3 +243,4 @@ OWNED src/Modules/Database/Infrastructure/Persistence/PdoStatement.php # the PDO
 OWNED src/Modules/Database/Infrastructure/Persistence/ReadWriteConnection.php # sticky-write routing: reads go to a replica until the request writes, then to the primary; failover down the replica list
 OWNED src/Modules/Database/Infrastructure/Persistence/ReplicaSelector.php # which replica serves the next read: random or weighted per connection name
 OWNED src/Modules/Database/Infrastructure/Persistence/StatementIntent.php # fail-closed read/write intent for `prepare()`, the one place a prepared statement's side is guessed
+DIVERGED src/Modules/Database/Infrastructure/Persistence/UnitOfWork.php # transactions nest per database name and run savepoints through the contract, so a routed connection can carry one

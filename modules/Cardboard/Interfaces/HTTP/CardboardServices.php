@@ -61,7 +61,7 @@ final class CardboardServices
         self::need('Modules\\Users\\Infrastructure\\Persistence\\Repositories\\UserRepository', 'Users');
 
         return self::$users ??= new \Modules\Users\Infrastructure\Persistence\Repositories\UserRepository(
-            DatabaseConnectionManager::instance()->connection('users'),
+            DatabaseConnectionManager::instance()->connect('users'),
         );
     }
 
@@ -70,7 +70,7 @@ final class CardboardServices
         self::need('Modules\\Users\\Infrastructure\\Persistence\\Repositories\\RoleRepository', 'Users');
 
         return self::$roles ??= new \Modules\Users\Infrastructure\Persistence\Repositories\RoleRepository(
-            DatabaseConnectionManager::instance()->connection('users'),
+            DatabaseConnectionManager::instance()->connect('users'),
         );
     }
 
@@ -93,7 +93,7 @@ final class CardboardServices
         self::need('Modules\\Users\\Application\\Services\\AuthService', 'Users');
 
         return self::$auth ??= new \Modules\Users\Application\Services\AuthService(
-            DatabaseConnectionManager::instance()->connection('users'),
+            DatabaseConnectionManager::instance()->connect('users'),
             self::users(),
             new PasswordHasher(),
             new RateLimiter(

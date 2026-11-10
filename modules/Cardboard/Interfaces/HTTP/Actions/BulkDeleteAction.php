@@ -221,11 +221,14 @@ final class BulkDeleteAction
      */
     private function deleteDbEntities(string $entity, array $ids): int
     {
-        $pdo = DatabaseConnectionManager::instance()->connection('users');
-        $uow = new UnitOfWork($pdo);
+        $db = DatabaseConnectionManager::instance()->connect('users');
+        $uow = new UnitOfWork($db);
         $deleted = 0;
 
-        $uow->transaction(function (\PDO $_pdo) use ($entity, $ids, &$deleted): void {
+        // The deletes go through the repositories, which hold their own
+        // connection to the same database; the transaction is here to make the
+        // batch atomic, so the callback needs no handle of its own.
+        $uow->transaction(function () use ($entity, $ids, &$deleted): void {
             foreach ($ids as $id) {
                 if ($this->deleteItem($entity, (string) $id, '')) {
                     $deleted++;

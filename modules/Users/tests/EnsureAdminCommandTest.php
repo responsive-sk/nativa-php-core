@@ -6,6 +6,7 @@ namespace Modules\Users\Tests;
 
 use Modules\Core\Domain\Permissions;
 use Modules\Core\Interfaces\CLI\CliOutput;
+use Modules\Database\Infrastructure\Persistence\PdoConnection;
 use Modules\Security\Application\Services\PasswordHasher;
 use Modules\Users\Infrastructure\Persistence\Migrations\UsersDatabaseMigrator;
 use Modules\Users\Infrastructure\Persistence\Repositories\RoleRepository;
@@ -93,7 +94,7 @@ final class EnsureAdminCommandTest extends TestCase
         $this->migrate();
         $recorder = $this->recorder();
 
-        $exit = (new EnsureAdminCommand($this->pdo))->run(['user:admin'], $recorder);
+        $exit = (new EnsureAdminCommand($this->db()))->run(['user:admin'], $recorder);
 
         self::assertSame(0, $exit);
         self::assertStringContainsString($this->email, $recorder->text());
@@ -123,7 +124,7 @@ final class EnsureAdminCommandTest extends TestCase
     public function aSecondRunAddsNoDuplicateRows(): void
     {
         $this->migrate();
-        $command = new EnsureAdminCommand($this->pdo);
+        $command = new EnsureAdminCommand($this->db());
 
         self::assertSame(0, $command->run(['user:admin'], $this->recorder()));
 
@@ -135,10 +136,10 @@ final class EnsureAdminCommandTest extends TestCase
         self::assertSame(0, $command->run(['user:admin'], $recorder));
         self::assertStringContainsString('unchanged', $recorder->text());
 
-        $roles = new RoleRepository($this->pdo);
+        $roles = new RoleRepository($this->db());
         $roleId = $this->adminRoleId();
 
-        self::assertSame(1, \count((new UserRepository($this->pdo))->all()));
+        self::assertSame(1, \count((new UserRepository($this->db()))->all()));
         self::assertSame(1, \count($roles->allRoles()));
         self::assertSame(\count(Permissions::all()), \count($roles->allPermissions()));
         self::assertSame(1, \count($roles->roleIdsForUser($first->id())));
@@ -151,8 +152,8 @@ final class EnsureAdminCommandTest extends TestCase
     {
         $this->migrate();
 
-        $users = new UserRepository($this->pdo);
-        $roles = new RoleRepository($this->pdo);
+        $users = new UserRepository($this->db());
+        $roles = new RoleRepository($this->db());
 
         $roles->createRole('role-author', 'author', 'Author');
         $users->insert([
@@ -164,7 +165,7 @@ final class EnsureAdminCommandTest extends TestCase
         $users->update('registered-user', 'Registered', $this->email, false);
         $users->assignRole('registered-user', 'role-author');
 
-        $exit = (new EnsureAdminCommand($this->pdo))->run(['user:admin'], $this->recorder());
+        $exit = (new EnsureAdminCommand($this->db()))->run(['user:admin'], $this->recorder());
 
         self::assertSame(0, $exit);
 
@@ -184,7 +185,7 @@ final class EnsureAdminCommandTest extends TestCase
     {
         $this->migrate();
 
-        $exit = (new EnsureAdminCommand($this->pdo))->run(
+        $exit = (new EnsureAdminCommand($this->db()))->run(
             ['user:admin', 'owner@example.test', 'correct-horse-battery', '--name=Owner'],
             $this->recorder(),
         );
@@ -205,7 +206,7 @@ final class EnsureAdminCommandTest extends TestCase
         $this->migrate();
         $recorder = $this->recorder();
 
-        (new EnsureAdminCommand($this->pdo))->run(['user:admin'], $recorder);
+        (new EnsureAdminCommand($this->db()))->run(['user:admin'], $recorder);
 
         $text = $recorder->text();
 
@@ -218,7 +219,7 @@ final class EnsureAdminCommandTest extends TestCase
     {
         $recorder = $this->recorder();
 
-        $exit = (new EnsureAdminCommand($this->pdo))->run(['user:admin'], $recorder);
+        $exit = (new EnsureAdminCommand($this->db()))->run(['user:admin'], $recorder);
 
         self::assertSame(1, $exit);
         self::assertStringContainsString('migrate', $recorder->text());
@@ -230,7 +231,7 @@ final class EnsureAdminCommandTest extends TestCase
         $this->migrate();
         $recorder = $this->recorder();
 
-        $exit = (new EnsureAdminCommand($this->pdo))->run(['user:admin', 'not-an-email'], $recorder);
+        $exit = (new EnsureAdminCommand($this->db()))->run(['user:admin', 'not-an-email'], $recorder);
 
         self::assertSame(1, $exit);
         self::assertStringContainsString('not a valid e-mail', $recorder->text());
@@ -243,12 +244,12 @@ final class EnsureAdminCommandTest extends TestCase
 
     private function user(string $email): ?\Modules\Users\Domain\Entities\User
     {
-        return (new UserRepository($this->pdo))->findByEmail($email);
+        return (new UserRepository($this->db()))->findByEmail($email);
     }
 
     private function adminRoleId(): string
     {
-        $role = (new RoleRepository($this->pdo))->findByName('admin');
+        $role = (new RoleRepository($this->db()))->findByName('admin');
 
         self::assertNotNull($role, 'the command must have created the admin role');
 
@@ -260,7 +261,7 @@ final class EnsureAdminCommandTest extends TestCase
      */
     private function roleNamesFor(string $userId): array
     {
-        $roles = new RoleRepository($this->pdo);
+        $roles = new RoleRepository($this->db());
         $names = [];
 
         foreach ($roles->allRoles() as $role) {
@@ -279,7 +280,7 @@ final class EnsureAdminCommandTest extends TestCase
      */
     private function permissionNamesFor(string $roleName): array
     {
-        $roles = new RoleRepository($this->pdo);
+        $roles = new RoleRepository($this->db());
         $role = $roles->findByName($roleName);
         self::assertNotNull($role);
 
@@ -314,6 +315,15 @@ final class EnsureAdminCommandTest extends TestCase
      * `GenerateImagesCommandTest` uses, because a command's wording is part
      * of what it promises (the refusal names the remedy).
      */
+    /**
+     * The command and its repositories take the connection contract now; this
+     * wraps the test's temp-file handle without routing anywhere.
+     */
+    private function db(): PdoConnection
+    {
+        return new PdoConnection($this->pdo, 'users');
+    }
+
     private function recorder(): CliOutput
     {
         return new class () implements CliOutput {

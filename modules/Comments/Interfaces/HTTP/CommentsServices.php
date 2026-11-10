@@ -43,9 +43,9 @@ final class CommentsServices
     public static function auth(): AuthService
     {
         return self::$auth ??= new AuthService(
-            DatabaseConnectionManager::instance()->connection('users'),
+            DatabaseConnectionManager::instance()->connect('users'),
             new UserRepository(
-                DatabaseConnectionManager::instance()->connection('users'),
+                DatabaseConnectionManager::instance()->connect('users'),
             ),
             new PasswordHasher(),
             new RateLimiter(

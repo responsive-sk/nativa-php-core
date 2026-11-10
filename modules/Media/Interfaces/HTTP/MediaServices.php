@@ -59,16 +59,16 @@ final class MediaServices
     }
 
     /**
-     * The folder operations service. Shares the ONE media PDO with the
-     * repository, because `UnitOfWork` nests per connection handle — two
-     * connections would be two transactions that neither knows about the
-     * other.
+     * The folder operations service. Takes the routed media connection — the
+     * same one the repository writes through — because `UnitOfWork` nests per
+     * database: a transaction opened on another connection to the same file
+     * would be invisible to the one below it.
      */
     public static function folders(): MediaFolderService
     {
         return self::$folderService ??= new MediaFolderService(
             self::folderRepository(),
-            DatabaseConnectionManager::instance()->connection('media'),
+            DatabaseConnectionManager::instance()->connect('media'),
         );
     }
 

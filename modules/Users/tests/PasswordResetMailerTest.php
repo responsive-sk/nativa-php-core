@@ -292,14 +292,16 @@ final class PasswordResetMailerTest extends TestCase
             }
         };
 
-        $pdo = DatabaseConnectionManager::instance()->connection('users');
+        $db = DatabaseConnectionManager::instance()->connect('users');
 
         $service = new PasswordResetService(
-            $pdo,
-            new UserRepository($pdo),
+            $db,
+            new UserRepository($db),
             new PasswordHasher(),
             $recorder,
-            new RateLimiter($pdo),
+            new RateLimiter(
+                DatabaseConnectionManager::instance()->connection('users'),
+            ),
         );
 
         $service->requestReset('  Mailer-Probe@Example.Test  ', '127.0.0.1');
@@ -309,7 +311,7 @@ final class PasswordResetMailerTest extends TestCase
         self::assertSame(1, $recorder->calls[0]['ttl']);
         self::assertMatchesRegularExpression('/^[0-9a-f]{64}$/', $recorder->calls[0]['token']);
 
-        $stored = Statement::query($pdo, 'SELECT token FROM password_reset_tokens')->fetchColumn();
+        $stored = Statement::query($db, 'SELECT token FROM password_reset_tokens')->fetchColumn();
 
         self::assertSame(
             hash('sha256', $recorder->calls[0]['token']),
@@ -469,7 +471,7 @@ final class PasswordResetMailerTest extends TestCase
     private function resetTokenCount(): int
     {
         return (int) Statement::query(
-            DatabaseConnectionManager::instance()->connection('users'),
+            DatabaseConnectionManager::instance()->connect('users'),
             'SELECT COUNT(*) FROM password_reset_tokens',
         )->fetchColumn();
     }

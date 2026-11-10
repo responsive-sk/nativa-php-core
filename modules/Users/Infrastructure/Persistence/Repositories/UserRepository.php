@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Users\Infrastructure\Persistence\Repositories;
 
+use Modules\Database\Contracts\ConnectionInterface;
 use Modules\Database\Infrastructure\Persistence\UnitOfWork;
 use Modules\Users\Domain\Entities\User;
 use Modules\Users\Infrastructure\Persistence\Statement;
@@ -13,13 +14,13 @@ use Modules\Users\Infrastructure\Persistence\Statement;
  */
 final readonly class UserRepository
 {
-    public function __construct(private \PDO $pdo)
+    public function __construct(private ConnectionInterface $db)
     {
     }
 
     public function findByEmail(string $email): ?User
     {
-        $stmt = Statement::prepare($this->pdo, 'SELECT * FROM users WHERE email = :email COLLATE NOCASE LIMIT 1');
+        $stmt = Statement::prepare($this->db, 'SELECT * FROM users WHERE email = :email COLLATE NOCASE LIMIT 1');
         $stmt->execute([':email' => $email]);
         /** @var array<string, mixed>|false $row */
         $row = $stmt->fetch();
@@ -33,7 +34,7 @@ final readonly class UserRepository
 
     public function findById(string $id): ?User
     {
-        $stmt = Statement::prepare($this->pdo, 'SELECT * FROM users WHERE id = :id LIMIT 1');
+        $stmt = Statement::prepare($this->db, 'SELECT * FROM users WHERE id = :id LIMIT 1');
         $stmt->execute([':id' => $id]);
         /** @var array<string, mixed>|false $row */
         $row = $stmt->fetch();
@@ -52,7 +53,7 @@ final readonly class UserRepository
      */
     public function all(): array
     {
-        $stmt = Statement::query($this->pdo, 'SELECT * FROM users ORDER BY created_at DESC');
+        $stmt = Statement::query($this->db, 'SELECT * FROM users ORDER BY created_at DESC');
         $rows = $stmt->fetchAll();
         $users = [];
 
@@ -69,7 +70,7 @@ final readonly class UserRepository
      */
     public function update(string $id, string $name, string $email, bool $isActive): void
     {
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->db,
             'UPDATE users SET name = :name, email = :email, is_active = :active, updated_at = CURRENT_TIMESTAMP WHERE id = :id',
         );
         $stmt->execute([
@@ -85,18 +86,21 @@ final readonly class UserRepository
      */
     public function delete(string $id): void
     {
-        $user = $this->findById($id);
-        $email = null === $user ? '' : $user->email();
+        $uow = new UnitOfWork($this->db);
+        $uow->transaction(function (ConnectionInterface $db) use ($id): void {
+            // Read inside the transaction: beginning it marked the connection
+            // as written, so this lookup runs on the primary rather than on a
+            // replica that may not have the row yet.
+            $user = $this->findById($id);
+            $email = null === $user ? '' : $user->email();
 
-        $uow = new UnitOfWork($this->pdo);
-        $uow->transaction(function (\PDO $pdo) use ($id, $email): void {
-            Statement::prepare($pdo, 'DELETE FROM user_roles WHERE user_id = :id')->execute([':id' => $id]);
+            Statement::prepare($db, 'DELETE FROM user_roles WHERE user_id = :id')->execute([':id' => $id]);
             if ('' !== $email) {
-                Statement::prepare($pdo, 'DELETE FROM password_reset_tokens WHERE email = :email')->execute([':email' => $email]);
+                Statement::prepare($db, 'DELETE FROM password_reset_tokens WHERE email = :email')->execute([':email' => $email]);
             }
-            Statement::prepare($pdo, 'DELETE FROM remember_tokens WHERE user_id = :id')->execute([':id' => $id]);
-            Statement::prepare($pdo, 'DELETE FROM sessions WHERE user_id = :id')->execute([':id' => $id]);
-            Statement::prepare($pdo, 'DELETE FROM users WHERE id = :id')->execute([':id' => $id]);
+            Statement::prepare($db, 'DELETE FROM remember_tokens WHERE user_id = :id')->execute([':id' => $id]);
+            Statement::prepare($db, 'DELETE FROM sessions WHERE user_id = :id')->execute([':id' => $id]);
+            Statement::prepare($db, 'DELETE FROM users WHERE id = :id')->execute([':id' => $id]);
         });
     }
 
@@ -105,14 +109,14 @@ final readonly class UserRepository
      */
     public function removeRole(string $userId, string $roleId): void
     {
-        Statement::prepare($this->pdo,
+        Statement::prepare($this->db,
             'DELETE FROM user_roles WHERE user_id = :uid AND role_id = :rid',
         )->execute([':uid' => $userId, ':rid' => $roleId]);
     }
 
     public function emailExists(string $email): bool
     {
-        $stmt = Statement::prepare($this->pdo, 'SELECT 1 FROM users WHERE email = :email COLLATE NOCASE LIMIT 1');
+        $stmt = Statement::prepare($this->db, 'SELECT 1 FROM users WHERE email = :email COLLATE NOCASE LIMIT 1');
         $stmt->execute([':email' => $email]);
 
         return false !== $stmt->fetch();
@@ -132,7 +136,7 @@ final readonly class UserRepository
         $password = is_string($data['password'] ?? null) ? $data['password'] : '';
         $avatar = is_string($data['avatar'] ?? null) ? $data['avatar'] : null;
 
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->db,
             'INSERT INTO users (id, name, email, password, avatar, is_active, created_at, updated_at)
              VALUES (:id, :name, :email, :password, :avatar, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
         );
@@ -155,7 +159,7 @@ final readonly class UserRepository
      */
     public function assignRole(string $userId, string $roleId): void
     {
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->db,
             'INSERT OR IGNORE INTO user_roles (user_id, role_id, created_at) VALUES (:uid, :rid, CURRENT_TIMESTAMP)',
         );
         $stmt->execute([':uid' => $userId, ':rid' => $roleId]);
@@ -166,14 +170,14 @@ final readonly class UserRepository
      */
     public function updateAvatar(string $userId, ?string $avatar): void
     {
-        Statement::prepare($this->pdo,
+        Statement::prepare($this->db,
             'UPDATE users SET avatar = :avatar, updated_at = CURRENT_TIMESTAMP WHERE id = :id',
         )->execute([':avatar' => $avatar, ':id' => $userId]);
     }
 
     public function updateLastLogin(string $userId, string $ip): void
     {
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->db,
             'UPDATE users SET last_login_at = CURRENT_TIMESTAMP, last_login_ip = :ip WHERE id = :id',
         );
         $stmt->execute([':ip' => $ip, ':id' => $userId]);
@@ -181,7 +185,7 @@ final readonly class UserRepository
 
     public function updatePassword(string $userId, #[\SensitiveParameter] string $hashedPassword): void
     {
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->db,
             'UPDATE users SET password = :password, updated_at = CURRENT_TIMESTAMP WHERE id = :id',
         );
         $stmt->execute([':password' => $hashedPassword, ':id' => $userId]);
@@ -197,7 +201,7 @@ final readonly class UserRepository
         $user = User::fromRow($row);
 
         // Roles
-        $roleStmt = Statement::prepare($this->pdo,
+        $roleStmt = Statement::prepare($this->db,
             'SELECT r.name FROM roles r
              INNER JOIN user_roles ur ON ur.role_id = r.id
              WHERE ur.user_id = :id ORDER BY r.name',
@@ -206,7 +210,7 @@ final readonly class UserRepository
         $roles = array_map(static fn ($r): string => (string) $r['name'], $roleStmt->fetchAll());
 
         // Permissions (via roles)
-        $permStmt = Statement::prepare($this->pdo,
+        $permStmt = Statement::prepare($this->db,
             'SELECT DISTINCT p.name FROM permissions p
              INNER JOIN role_permissions rp ON rp.permission_id = p.id
              INNER JOIN user_roles ur ON ur.role_id = rp.role_id

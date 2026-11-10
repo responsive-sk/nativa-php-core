@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Media\Application\Services;
 
 use Modules\Core\Domain\SubmitResult;
+use Modules\Database\Contracts\ConnectionInterface;
 use Modules\Database\Infrastructure\Persistence\UnitOfWork;
 use Modules\Media\Infrastructure\Persistence\MediaFolderRepository;
 
@@ -43,7 +44,7 @@ final readonly class MediaFolderService
 
     public function __construct(
         private MediaFolderRepository $folders,
-        private \PDO $pdo,
+        private ConnectionInterface $db,
     ) {
     }
 
@@ -153,7 +154,7 @@ final readonly class MediaFolderService
 
         // How many imported rows keep their folder — reported, never rewritten.
         $skipped = $this->folders->subtreeCounts($from)['cloudinary'];
-        $moved = (new UnitOfWork($this->pdo))->transaction(
+        $moved = (new UnitOfWork($this->db))->transaction(
             fn (): array => $this->folders->renameSubtree($from, $clean),
         );
 
