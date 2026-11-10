@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace Tests\Database;
 
-use Modules\Audit\Infrastructure\Persistence\Repositories\AuditLogRepository;
 use Modules\Database\Contracts\ConnectionInterface;
 use Modules\Database\Contracts\StatementInterface;
 use Modules\Database\Infrastructure\Persistence\PdoConnection;
@@ -28,8 +27,9 @@ use PHPUnit\Framework\TestCase;
  * shapes are replayed rather than the methods called: a class that takes
  * `\PDO` cannot be handed a `PdoConnection` until its round moves it.
  *
- * The last test is the one real call site that is already on the contract, end
- * to end, because a shape is only an argument about what the method does.
+ * The shapes stop here on purpose: this file ships in the kernel export, where
+ * no module exists, so the end-to-end version of the Audit call site lives in
+ * that module's own tests.
  */
 final class PdoStatementParityTest extends TestCase
 {
@@ -105,28 +105,6 @@ final class PdoStatementParityTest extends TestCase
 
             return [$statement->fetchColumn()];
         });
-    }
-
-    #[Test]
-    public function theAuditRecentCallSiteAnswersThroughTheContract(): void
-    {
-        // The regression itself: a bound LIMIT reaching a repository that was
-        // handed connect('audit') rather than a \PDO.
-        $pdo = $this->pdo();
-        $pdo->exec(
-            'CREATE TABLE audit_log (id TEXT PRIMARY KEY, actor_user_id TEXT, actor_name TEXT,'
-            . ' action TEXT, target TEXT, detail TEXT, ip_address TEXT, created_at TEXT)',
-        );
-        $pdo->exec(
-            'INSERT INTO audit_log (id, actor_user_id, actor_name, action, target, detail, ip_address, created_at) VALUES'
-            . " ('a1', 'u1', 'Admin', 'first', '/x', 'one', '127.0.0.1', '2026-01-01T00:00:00'),"
-            . " ('a2', 'u1', 'Admin', 'second', '/x', 'two', '127.0.0.1', '2026-01-02T00:00:00')",
-        );
-
-        $entries = (new AuditLogRepository(new PdoConnection($pdo, 'audit')))->recent(1);
-
-        self::assertCount(1, $entries, 'the limit is a bound integer and has to survive the wrapper');
-        self::assertSame('second', $entries[0]->action(), 'recent() is newest first');
     }
 
     /**
