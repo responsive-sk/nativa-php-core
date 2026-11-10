@@ -32,7 +32,7 @@ final class CommentsServices
                 DatabaseConnectionManager::instance()->connection('comments'),
             ),
             new RateLimiter(
-                DatabaseConnectionManager::instance()->connection('users'),
+                DatabaseConnectionManager::instance()->connect('users'),
             ),
         );
     }
@@ -42,16 +42,21 @@ final class CommentsServices
      */
     public static function auth(): AuthService
     {
-        return self::$auth ??= new AuthService(
-            DatabaseConnectionManager::instance()->connect('users'),
-            new UserRepository(
-                DatabaseConnectionManager::instance()->connect('users'),
-            ),
-            new PasswordHasher(),
-            new RateLimiter(
-                DatabaseConnectionManager::instance()->connection('users'),
-            ),
-        );
+        if (null === self::$auth) {
+            // One routed connection for the whole graph: the service, its
+            // repository and the limiter all read and write users.db, so a
+            // write any of them makes is visible to the others.
+            $db = DatabaseConnectionManager::instance()->connect('users');
+
+            self::$auth = new AuthService(
+                $db,
+                new UserRepository($db),
+                new PasswordHasher(),
+                new RateLimiter($db),
+            );
+        }
+
+        return self::$auth;
     }
 
     /**

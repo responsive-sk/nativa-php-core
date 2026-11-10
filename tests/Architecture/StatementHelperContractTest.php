@@ -102,6 +102,7 @@ final class StatementHelperContractTest extends TestCase
      */
     private const array CONTRACT_MODULES = [
         'Audit',
+        'Security',
         'Users',
     ];
 

@@ -94,7 +94,7 @@ final class PasswordResetServiceTest extends TestCase
             $users,
             $this->hasher,
             new NullPasswordResetMailer(),
-            new RateLimiter($this->pdo),
+            new RateLimiter($this->db()),
         );
     }
 

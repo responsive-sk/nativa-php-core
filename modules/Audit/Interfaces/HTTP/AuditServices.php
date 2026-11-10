@@ -39,16 +39,20 @@ final class AuditServices
      */
     public static function auth(): AuthService
     {
-        return self::$auth ??= new AuthService(
-            DatabaseConnectionManager::instance()->connect('users'),
-            new UserRepository(
-                DatabaseConnectionManager::instance()->connect('users'),
-            ),
-            new PasswordHasher(),
-            new RateLimiter(
-                DatabaseConnectionManager::instance()->connection('users'),
-            ),
-        );
+        if (null === self::$auth) {
+            // One routed connection for the whole graph, so a write any of
+            // these three makes is visible to the others' next read.
+            $db = DatabaseConnectionManager::instance()->connect('users');
+
+            self::$auth = new AuthService(
+                $db,
+                new UserRepository($db),
+                new PasswordHasher(),
+                new RateLimiter($db),
+            );
+        }
+
+        return self::$auth;
     }
 
     /**

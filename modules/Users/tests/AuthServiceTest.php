@@ -84,7 +84,7 @@ final class AuthServiceTest extends TestCase
         $pdo->exec('CREATE TABLE role_permissions (role_id VARCHAR(32) NOT NULL, permission_id VARCHAR(32) NOT NULL, PRIMARY KEY (role_id, permission_id))');
 
         $this->pdo = $pdo;
-        $this->auth = new AuthService($this->db(), new UserRepository($this->db()), new PasswordHasher(), new RateLimiter($pdo));
+        $this->auth = new AuthService($this->db(), new UserRepository($this->db()), new PasswordHasher(), new RateLimiter($this->db()));
     }
 
     #[Test]

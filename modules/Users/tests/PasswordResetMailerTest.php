@@ -299,9 +299,7 @@ final class PasswordResetMailerTest extends TestCase
             new UserRepository($db),
             new PasswordHasher(),
             $recorder,
-            new RateLimiter(
-                DatabaseConnectionManager::instance()->connection('users'),
-            ),
+            new RateLimiter($db),
         );
 
         $service->requestReset('  Mailer-Probe@Example.Test  ', '127.0.0.1');

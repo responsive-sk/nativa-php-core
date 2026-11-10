@@ -57,7 +57,7 @@ final class FormsServices
     public static function limiter(): RateLimiter
     {
         return self::$limiter ??= new RateLimiter(
-            DatabaseConnectionManager::instance()->connection('users'),
+            DatabaseConnectionManager::instance()->connect('users'),
         );
     }
 

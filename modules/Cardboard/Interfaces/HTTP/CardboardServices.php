@@ -97,7 +97,7 @@ final class CardboardServices
             self::users(),
             new PasswordHasher(),
             new RateLimiter(
-                DatabaseConnectionManager::instance()->connection('users'),
+                DatabaseConnectionManager::instance()->connect('users'),
             ),
         );
     }

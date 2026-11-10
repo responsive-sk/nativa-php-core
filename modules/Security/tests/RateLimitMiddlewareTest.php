@@ -8,6 +8,7 @@ use Modules\Core\Domain\Contracts\SecurityEventSink;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Middleware\RateLimitMiddleware;
+use Modules\Database\Infrastructure\Persistence\PdoConnection;
 use Modules\Security\Application\Services\RateLimiter;
 use PDO;
 use PHPUnit\Framework\Attributes\Test;
@@ -152,7 +153,7 @@ final class RateLimitMiddlewareTest extends TestCase
      */
     private function middleware(): RateLimitMiddleware
     {
-        $limiter = new RateLimiter(new PDO('sqlite::memory:'));
+        $limiter = new RateLimiter(new PdoConnection(new PDO('sqlite::memory:'), 'users'));
 
         $sink = new class implements SecurityEventSink {
             public function authorizationDenied(

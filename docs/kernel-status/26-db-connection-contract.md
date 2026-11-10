@@ -100,13 +100,13 @@ now runs on the primary, where the row it is about to delete certainly is.
 The wiring sites keep the two entry points apart. `RateLimiter` is the
 Security module's and still takes `\PDO`, so `AuthServices::auth()` passes it
 `connection('users')` while the service and the repository share
-`connect('users')` — the same primary handle, one with routing in front.
+`connect('users')`: the same primary handle, one with routing in front.
 
 `UnitOfWork` moved with them. Its callback now receives `ConnectionInterface`,
 which is what makes a transaction routable: without it the callback's
 statements would bypass the decorator entirely. Nesting is keyed by
 `ConnectionInterface::name()` rather than by the handle, because `connect()`
-returns a decorator whose handle is not the object the caller holds — a
+returns a decorator whose handle is not the object the caller holds. A
 handle-keyed stack would see the outer and inner scope as two databases and
 open a second transaction on the same file. The set of names is bounded by the
 databases a process opens, so the `WeakMap` that existed to avoid unbounded
@@ -116,14 +116,50 @@ growth became a plain array.
 consumers, and with them moved it had no caller left; a migrator gets its
 `\PDO` from `connection()` directly.
 
+`Security` followed, which is the module that made the wiring one shape:
+`RateLimiter` takes the contract, so every `AuthService` graph now passes a
+single `connect('users')` to the service, its repository and the limiter
+instead of building the limiter from `connection('users')` beside them. The
+limiter is also the first consumer whose writes are unavoidable: counting is an
+upsert, so on a routed connection the first `isAllowed()` marks the request
+written. That is not a defect, it is what a counter must do, and it is why the
+read-heavy surfaces, not the throttled ones, are where a replica pays.
+
 `StatementHelperContractTest` pins two stages
-(`CONTRACT_MODULES = ['Audit', 'Users']`): each stage is byte-identical inside
-itself, and each shape is asserted directly, so a module cannot drift from
-`\PDO` to the contract without being named.
+(`CONTRACT_MODULES = ['Audit', 'Security', 'Users']`): each stage is
+byte-identical inside itself, and each shape is asserted directly, so a module
+cannot drift from `\PDO` to the contract without being named.
+
+## Measured: reads are a small slice of a request
+
+A throwaway harness (a `PDO` subclass timing every `query()`, `exec()` and
+`execute()`, placed in the manager's connection map, real `Kernel::handle`
+dispatches against copies of the module databases) puts the read share at:
+
+| Request | Median total | Time in reads | Share | Reads |
+|---|---:|---:|---:|---:|
+| `GET /` | 10.47 ms | 0.13 ms | 1.3% | 4 |
+| `GET /sitemap.xml` | 20.86 ms | 0.21 ms | 1.0% | 17 |
+| `GET /`, rate limiter active | 11.18 ms | 0.20 ms | 1.8% | 7 |
+| `GET /mark`, admin session | 65.61 ms | 1.38 ms | 2.1% | 45 |
+
+25 runs per public case, 20 with the limiter, 15 for the dashboard; medians,
+warm page cache, SQLite files on the same disk. Routing itself cost nothing
+measurable: `GET /` answered in 10.46 ms with `DB_USERS_READ` pointing at a
+copy, against 10.47 ms without it.
+
+Two readings matter. A replica cannot buy more than the read share, and here
+that is 1 to 2% of a public request: the 65 ms dashboard is rendering, not
+querying, so `DB_<NAME>_READ` is an availability lever in this tree, not a
+latency one. And the limiter writes before dispatch (two writes on a
+non-loopback request), while a write marks the connection, so on the real
+pipeline the reads left for a replica are the ones after it. Over a network
+the arithmetic changes: one round trip per query would dwarf everything above,
+which is the case a replica exists for.
 
 ## What is not done
 
-- 13 modules still take `\PDO`. Each moves in its own round, with its own
+- 12 modules still take `\PDO`. Each moves in its own round, with its own
   catalogue reinstall; the two-stage helper test is what keeps the movement
   visible instead of letting both shapes grow.
 - Module migrators keep `\PDO` on purpose. DDL runs before any repository
@@ -135,10 +171,12 @@ cost the one consumer that is happy with the driver.
 
 ## Verified
 
-- `composer test`: 1170 tests, 7497 assertions, 1 skipped. The two new cases
-  are `tests/Http/ReadReplicaRoutingTest.php`, which dispatches a real route
-  through a real `Kernel` with `DB_USERS_READ` pointing at a second file and
-  asserts the response says `replica` before the write and `primary` after it.
+- `composer test`: 1174 tests, 7509 assertions, 1 skipped. Besides the route
+  through a real `Kernel` (`tests/Http/ReadReplicaRoutingTest.php`),
+  `tests/Database/UnitOfWorkTest.php` pins the per-database nesting stack:
+  two instances over one database open a savepoint instead of a second
+  transaction, a nested failure rolls back to its savepoint, and two databases
+  keep two stacks.
 - `make lint`, PHPStan level 9, Rector dry, PHP CS Fixer dry, `make
   mago-guard`, `make mago-lint`: clean.
 - `make extract-check`: OK, 185 identical, 103 recorded divergences

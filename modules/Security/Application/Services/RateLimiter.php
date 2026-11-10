@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Security\Application\Services;
 
+use Modules\Database\Contracts\ConnectionInterface;
 use Modules\Security\Infrastructure\Persistence\Statement;
 
 /**
@@ -15,6 +16,15 @@ use Modules\Security\Infrastructure\Persistence\Statement;
  * Schema ownership: the canonical DDL lives in the Users module migrator
  * (task 7.1). This service self-heals with a cheap existence check (not a
  * CREATE per request) so it works on a fresh clone before any migrator runs.
+ *
+ * ## What a limiter does to routing
+ *
+ * Counting is a write, so on a routed connection the first `isAllowed()` marks
+ * the request written and every read after it goes to the primary. That is the
+ * honest outcome — a counter that read a replica would answer from a stale
+ * value — but it means a deployment that limits every request gets no replica
+ * reads past the first one. Read-heavy work belongs behind routing, not behind
+ * a limiter.
  */
 final readonly class RateLimiter
 {
@@ -22,7 +32,7 @@ final readonly class RateLimiter
 
     private const int DEFAULT_LOGIN_WINDOW = 60;
 
-    public function __construct(private \PDO $pdo)
+    public function __construct(private ConnectionInterface $db)
     {
         $this->ensureSchema();
     }
@@ -46,7 +56,7 @@ final readonly class RateLimiter
         $now = time();
         $expires = $now + $windowSeconds;
 
-        $stmt = Statement::prepare($this->pdo, <<<'SQL'
+        $stmt = Statement::prepare($this->db, <<<'SQL'
                 INSERT INTO rate_limits ("key", count, expires)
                 VALUES (:key, 1, :expires)
                 ON CONFLICT("key") DO UPDATE SET
@@ -59,7 +69,7 @@ final readonly class RateLimiter
         // servers) — read the upserted count back instead. The upsert is a
         // single atomic statement, so this SELECT cannot observe a stale
         // count from a concurrent request.
-        $countStmt = Statement::prepare($this->pdo, 'SELECT count FROM rate_limits WHERE "key" = :key');
+        $countStmt = Statement::prepare($this->db, 'SELECT count FROM rate_limits WHERE "key" = :key');
         $countStmt->execute(['key' => $key]);
         $count = (int) $countStmt->fetchColumn();
 
@@ -79,7 +89,7 @@ final readonly class RateLimiter
      */
     public function getRetryAfter(string $key): int
     {
-        $stmt = Statement::prepare($this->pdo, 'SELECT expires FROM rate_limits WHERE "key" = :key');
+        $stmt = Statement::prepare($this->db, 'SELECT expires FROM rate_limits WHERE "key" = :key');
         $stmt->execute(['key' => $key]);
         /** @var array{expires: string}|false $row */
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
@@ -96,7 +106,7 @@ final readonly class RateLimiter
      */
     public function reset(string $key): void
     {
-        Statement::prepare($this->pdo, 'DELETE FROM rate_limits WHERE "key" = :key')
+        Statement::prepare($this->db, 'DELETE FROM rate_limits WHERE "key" = :key')
             ->execute(['key' => $key]);
     }
 
@@ -105,7 +115,7 @@ final readonly class RateLimiter
      */
     public function recordLoginAttempt(string $email, string $ip): void
     {
-        Statement::prepare($this->pdo, 'INSERT INTO login_attempts (id, email, ip_address, attempted_at) VALUES (:id, :email, :ip, :at)')
+        Statement::prepare($this->db, 'INSERT INTO login_attempts (id, email, ip_address, attempted_at) VALUES (:id, :email, :ip, :at)')
             ->execute([
                 'id'    => bin2hex(random_bytes(16)),
                 'email' => $email,
@@ -121,7 +131,7 @@ final readonly class RateLimiter
      */
     public function pruneExpired(): int
     {
-        return (int) $this->pdo->exec('DELETE FROM rate_limits WHERE expires < ' . time());
+        return $this->db->execute('DELETE FROM rate_limits WHERE expires < ' . time());
     }
 
     /**
@@ -131,7 +141,7 @@ final readonly class RateLimiter
     private function ensureSchema(): void
     {
         if (!$this->tableExists('rate_limits')) {
-            $this->pdo->exec(<<<'SQL'
+            $this->db->execute(<<<'SQL'
                     CREATE TABLE IF NOT EXISTS rate_limits (
                         "key" VARCHAR(255) PRIMARY KEY,
                         count INTEGER NOT NULL DEFAULT 0,
@@ -141,7 +151,7 @@ final readonly class RateLimiter
         }
 
         if (!$this->tableExists('login_attempts')) {
-            $this->pdo->exec(<<<'SQL'
+            $this->db->execute(<<<'SQL'
                     CREATE TABLE IF NOT EXISTS login_attempts (
                         id VARCHAR(32) PRIMARY KEY,
                         email VARCHAR(255) NOT NULL,
@@ -149,14 +159,14 @@ final readonly class RateLimiter
                         attempted_at DATETIME DEFAULT CURRENT_TIMESTAMP
                     )
                 SQL);
-            $this->pdo->exec('CREATE INDEX IF NOT EXISTS idx_login_attempts_email ON login_attempts(email)');
-            $this->pdo->exec('CREATE INDEX IF NOT EXISTS idx_login_attempts_ip ON login_attempts(ip_address)');
+            $this->db->execute('CREATE INDEX IF NOT EXISTS idx_login_attempts_email ON login_attempts(email)');
+            $this->db->execute('CREATE INDEX IF NOT EXISTS idx_login_attempts_ip ON login_attempts(ip_address)');
         }
     }
 
     private function tableExists(string $name): bool
     {
-        $stmt = Statement::prepare($this->pdo, "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = :name");
+        $stmt = Statement::prepare($this->db, "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = :name");
         $stmt->execute(['name' => $name]);
 
         return false !== $stmt->fetchColumn();
