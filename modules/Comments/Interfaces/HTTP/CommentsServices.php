@@ -29,7 +29,7 @@ final class CommentsServices
     {
         return self::$comments ??= new CommentsService(
             new CommentRepository(
-                DatabaseConnectionManager::instance()->connection('comments'),
+                DatabaseConnectionManager::instance()->connect('comments'),
             ),
             new RateLimiter(
                 DatabaseConnectionManager::instance()->connect('users'),

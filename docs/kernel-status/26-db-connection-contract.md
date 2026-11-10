@@ -125,10 +125,19 @@ upsert, so on a routed connection the first `isAllowed()` marks the request
 written. That is not a defect, it is what a counter must do, and it is why the
 read-heavy surfaces, not the throttled ones, are where a replica pays.
 
+`Comments` was the next one and cost six sites: the helper, one repository,
+the dashboard metric that opened its own handle, the factory, and two tests.
+The metric is the interesting half of that round: it is a card provider, so it
+does not run inside a request that routing already covers, and the only thing
+standing between it and the contract was its own `connection()` call. That is
+the shape of the remaining work in general, a handle opened where the caller
+is rather than passed where the caller is, and each one is found by grepping
+for `connection(` rather than by reading the module.
+
 `StatementHelperContractTest` pins two stages
-(`CONTRACT_MODULES = ['Audit', 'Security', 'Users']`): each stage is
-byte-identical inside itself, and each shape is asserted directly, so a module
-cannot drift from `\PDO` to the contract without being named.
+(`CONTRACT_MODULES = ['Audit', 'Comments', 'Security', 'Users']`): each stage
+is byte-identical inside itself, and each shape is asserted directly, so a
+module cannot drift from `\PDO` to the contract without being named.
 
 ## Measured: reads are a small slice of a request
 
@@ -159,7 +168,7 @@ which is the case a replica exists for.
 
 ## What is not done
 
-- 12 modules still take `\PDO`. Each moves in its own round, with its own
+- 11 modules still take `\PDO`. Each moves in its own round, with its own
   catalogue reinstall; the two-stage helper test is what keeps the movement
   visible instead of letting both shapes grow.
 - Module migrators keep `\PDO` on purpose. DDL runs before any repository

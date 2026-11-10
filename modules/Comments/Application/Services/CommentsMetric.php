@@ -14,6 +14,7 @@ use Modules\Cardboard\Infrastructure\Attributes\AsMetricProvider;
 use Modules\Cardboard\Infrastructure\Registry\CardboardRegistry;
 use Modules\Comments\Domain\Entities\Comment;
 use Modules\Comments\Infrastructure\Persistence\Statement;
+use Modules\Database\Contracts\ConnectionInterface;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 
 /**
@@ -30,18 +31,18 @@ final readonly class CommentsMetric implements MetricContract
     public function registerCards(Period $period): void
     {
         try {
-            $pdo = DatabaseConnectionManager::instance()->connection('comments');
+            $db = DatabaseConnectionManager::instance()->connect('comments');
 
-            $total = $this->countInPeriod($pdo, $period->sqlInterval());
+            $total = $this->countInPeriod($db, $period->sqlInterval());
             $previous = $this->countBetweenPeriods(
-                $pdo,
+                $db,
                 $period->previousSqlInterval(),
                 $period->sqlInterval(),
             );
 
             $trend = Trend::make($total, $previous);
 
-            $statusCounts = $this->countByStatus($pdo, $period->sqlInterval());
+            $statusCounts = $this->countByStatus($db, $period->sqlInterval());
             $donut = new Donut([
                 ['value' => $statusCounts[Comment::STATUS_PENDING], 'color' => 'var(--m-warning)'],
                 ['value' => $statusCounts[Comment::STATUS_APPROVED], 'color' => 'var(--m-success)'],
@@ -68,9 +69,9 @@ final readonly class CommentsMetric implements MetricContract
         }
     }
 
-    private function countInPeriod(\PDO $pdo, string $interval): int
+    private function countInPeriod(ConnectionInterface $db, string $interval): int
     {
-        $stmt = Statement::prepare($pdo,
+        $stmt = Statement::prepare($db,
             'SELECT COUNT(*) FROM comments WHERE created_at >= datetime(\'now\', :interval)',
         );
         $stmt->execute([':interval' => $interval]);
@@ -78,9 +79,9 @@ final readonly class CommentsMetric implements MetricContract
         return (int) $stmt->fetchColumn();
     }
 
-    private function countBetweenPeriods(\PDO $pdo, string $fromInterval, string $toInterval): int
+    private function countBetweenPeriods(ConnectionInterface $db, string $fromInterval, string $toInterval): int
     {
-        $stmt = Statement::prepare($pdo,
+        $stmt = Statement::prepare($db,
             'SELECT COUNT(*) FROM comments WHERE created_at >= datetime(\'now\', :from) AND created_at < datetime(\'now\', :to)',
         );
         $stmt->execute([':from' => $fromInterval, ':to' => $toInterval]);
@@ -91,9 +92,9 @@ final readonly class CommentsMetric implements MetricContract
     /**
      * @return array<string, int>
      */
-    private function countByStatus(\PDO $pdo, string $interval): array
+    private function countByStatus(ConnectionInterface $db, string $interval): array
     {
-        $stmt = Statement::prepare($pdo,
+        $stmt = Statement::prepare($db,
             'SELECT status, COUNT(*) as cnt FROM comments WHERE created_at >= datetime(\'now\', :interval) GROUP BY status',
         );
         $stmt->execute([':interval' => $interval]);

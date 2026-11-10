@@ -156,7 +156,7 @@ final class CommentHoneypotTest extends TestCase
         self::assertSame(1, $this->commentCount(), 'a clean submission must still reach the moderation queue');
 
         $status = Statement::query(
-            DatabaseConnectionManager::instance()->connection('comments'),
+            DatabaseConnectionManager::instance()->connect('comments'),
             'SELECT status FROM comments',
         )->fetchColumn();
 
@@ -207,7 +207,7 @@ final class CommentHoneypotTest extends TestCase
     private function commentCount(): int
     {
         return (int) Statement::query(
-            DatabaseConnectionManager::instance()->connection('comments'),
+            DatabaseConnectionManager::instance()->connect('comments'),
             'SELECT COUNT(*) FROM comments',
         )->fetchColumn();
     }

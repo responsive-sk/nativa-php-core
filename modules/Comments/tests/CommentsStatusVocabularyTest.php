@@ -8,6 +8,7 @@ use Modules\Comments\Application\Services\CommentsMetric;
 use Modules\Comments\Domain\Entities\Comment;
 use Modules\Comments\Infrastructure\Persistence\Statement;
 use Modules\Comments\Interfaces\HTTP\Actions\CommentsAdminAction;
+use Modules\Database\Infrastructure\Persistence\PdoConnection;
 use PDO;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -68,8 +69,9 @@ final class CommentsStatusVocabularyTest extends TestCase
     {
         $pdo = new PDO('sqlite::memory:');
         $pdo->exec('CREATE TABLE comments (status TEXT NOT NULL, created_at TEXT NOT NULL)');
+        $db = new PdoConnection($pdo, 'comments');
 
-        $insert = Statement::prepare($pdo, 'INSERT INTO comments (status, created_at) VALUES (:status, datetime(\'now\'))');
+        $insert = Statement::prepare($db, 'INSERT INTO comments (status, created_at) VALUES (:status, datetime(\'now\'))');
 
         foreach ([
             Comment::STATUS_PENDING,
@@ -81,7 +83,7 @@ final class CommentsStatusVocabularyTest extends TestCase
         }
 
         $method = new ReflectionMethod(CommentsMetric::class, 'countByStatus');
-        $counts = $method->invoke(new CommentsMetric(), $pdo, '-7 days');
+        $counts = $method->invoke(new CommentsMetric(), $db, '-7 days');
 
         self::assertSame(
             [
