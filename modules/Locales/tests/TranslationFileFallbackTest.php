@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Locales\Tests;
 
 use View\ViewRenderer;
+use Modules\Database\Infrastructure\Persistence\PdoConnection;
 use Modules\Locales\Application\Services\TranslationService;
 use Modules\Locales\Domain\Model\Locale;
 use Modules\Locales\Domain\Model\Translation;
@@ -84,7 +85,7 @@ final class TranslationFileFallbackTest extends TestCase
             )
             SQL);
 
-        $this->repository = new TranslationRepository($this->pdo);
+        $this->repository = new TranslationRepository(new PdoConnection($this->pdo, 'locales'));
         $this->loader = new JsonTranslationLoader($this->directory);
         $this->service = new TranslationService($this->repository, $this->loader);
     }

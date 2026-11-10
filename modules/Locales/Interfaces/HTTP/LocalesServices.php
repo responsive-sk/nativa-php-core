@@ -44,7 +44,7 @@ final class LocalesServices
     {
         return self::$translations ??= new TranslationService(
             new TranslationRepository(
-                DatabaseConnectionManager::instance()->connection('locales'),
+                DatabaseConnectionManager::instance()->connect('locales'),
             ),
             new JsonTranslationLoader(),
         );

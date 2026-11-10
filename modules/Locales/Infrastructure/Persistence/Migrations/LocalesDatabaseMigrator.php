@@ -7,6 +7,8 @@ namespace Modules\Locales\Infrastructure\Persistence\Migrations;
 use Modules\Core\Infrastructure\Attributes\AsMigrator;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Core\Interfaces\CLI\MigratorInterface;
+use Modules\Database\Contracts\ConnectionInterface;
+use Modules\Database\Infrastructure\Persistence\PdoConnection;
 use Modules\Locales\Infrastructure\Persistence\SeedData;
 use Modules\Locales\Infrastructure\Persistence\Statement;
 
@@ -20,8 +22,14 @@ use Modules\Locales\Infrastructure\Persistence\Statement;
 #[AsMigrator(module: 'locales', table: 'translations')]
 final readonly class LocalesDatabaseMigrator implements MigratorInterface
 {
+    private ConnectionInterface $connection;
+
     public function __construct(private \PDO $pdo)
     {
+        // DDL stays on the raw handle, which is why the migrator keeps `\PDO`.
+        // The seed binds values, so it goes through the contract the
+        // repository uses, on the one connection this migrator owns.
+        $this->connection = new PdoConnection($pdo, 'locales');
     }
 
     public function run(CliOutput $output): void
@@ -70,7 +78,7 @@ final readonly class LocalesDatabaseMigrator implements MigratorInterface
      */
     private function seedDefaultTranslations(): int
     {
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->connection,
             'INSERT OR IGNORE INTO translations (id, translation_key, locale, value, group_name, created_at, updated_at)
              VALUES (:id, :key, :locale, :value, :group, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
         );

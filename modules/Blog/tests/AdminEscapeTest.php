@@ -7,6 +7,7 @@ namespace Modules\Blog\Tests;
 use Modules\Blog\Interfaces\HTTP\Actions\BlogInlineEditAction;
 use Modules\Blog\Interfaces\HTTP\ArticlesTableRenderer;
 use Modules\Core\Infrastructure\Http\Request;
+use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Locales\Infrastructure\Persistence\Repositories\TranslationRepository;
 use Modules\Locales\Interfaces\HTTP\LocalesServices;
 use PHPUnit\Framework\Attributes\Test;
@@ -83,13 +84,12 @@ final class AdminEscapeTest extends TestCase
 
     private static function repository(): TranslationRepository
     {
-        // Throwaway handle: opened, read, dropped — it never outlives the
-        // call, so it cannot disturb other tests' connections.
-        $pdo = new \PDO('sqlite:' . self::LOCALES_DB);
-        $repo = new TranslationRepository($pdo);
-        unset($pdo);
-
-        return $repo;
+        // The manager's own handle rather than a throwaway one: reads only,
+        // and the same connection the admin writes through, so a test cannot
+        // pass on a wiring production does not have.
+        return new TranslationRepository(
+            DatabaseConnectionManager::instance()->connect('locales'),
+        );
     }
 
     #[Test]
