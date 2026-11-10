@@ -29,7 +29,7 @@ final class AuditServices
     {
         return self::$audit ??= new AuditService(
             new AuditLogRepository(
-                DatabaseConnectionManager::instance()->connection('audit'),
+                DatabaseConnectionManager::instance()->connect('audit'),
             ),
         );
     }

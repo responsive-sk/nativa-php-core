@@ -6,6 +6,7 @@ namespace Modules\Audit\Infrastructure\Persistence\Repositories;
 
 use Modules\Audit\Domain\Entities\AuditEntry;
 use Modules\Audit\Infrastructure\Persistence\Statement;
+use Modules\Database\Contracts\ConnectionInterface;
 
 /**
  * AuditLogRepository — append-only persistence for audit_log.
@@ -17,7 +18,7 @@ use Modules\Audit\Infrastructure\Persistence\Statement;
  */
 final readonly class AuditLogRepository
 {
-    public function __construct(private \PDO $pdo)
+    public function __construct(private ConnectionInterface $db)
     {
     }
 
@@ -27,7 +28,7 @@ final readonly class AuditLogRepository
     public function insert(AuditEntry $entry): void
     {
         $data = $entry->toArray();
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->db,
             'INSERT INTO audit_log (id, actor_user_id, actor_name, action, target, detail, ip_address, created_at)
              VALUES (:id, :actor_user_id, :actor_name, :action, :target, :detail, :ip_address, :created_at)',
         );
@@ -54,7 +55,7 @@ final readonly class AuditLogRepository
      */
     public function recent(int $limit): array
     {
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->db,
             'SELECT * FROM audit_log ORDER BY created_at DESC, rowid DESC LIMIT :limit',
         );
         $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
@@ -74,7 +75,7 @@ final readonly class AuditLogRepository
      */
     public function count(): int
     {
-        $stmt = Statement::query($this->pdo, 'SELECT COUNT(*) FROM audit_log');
+        $stmt = Statement::query($this->db, 'SELECT COUNT(*) FROM audit_log');
 
         return (int) $stmt->fetchColumn();
     }

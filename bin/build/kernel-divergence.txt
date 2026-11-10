@@ -228,3 +228,18 @@ OWNED src/View # the kernel's view helpers, moved from Core in Boot 56
 OWNED src/Discovery # the kernel's discovery runtime, moved from Core in Boot 60
 OWNED src/Seo # the kernel's SEO primitives and sitemap port, moved from Core in Boot 61
 OWNED src/Themes/AssetManager.php # theme bundle manifest reader, moved from Core in Boot 56
+
+# --- Read/write connection contract (2026-11-10) -----------------------------
+# The routing is opt-in: without `DB_<NAME>_READ` the manager returns the same
+# `PdoConnection` it did before, so a kernel-only export boots and answers
+# exactly as it did. A replica is opened `query_only`, so a write routed to it
+# fails loudly instead of diverging from the primary.
+OWNED src/Modules/Database/Contracts/ConnectionInterface.php # the connection shape a repository is typed against, so routing is invisible to the caller
+OWNED src/Modules/Database/Contracts/StatementInterface.php # the slice of `\PDOStatement` the tree uses (fetch/fetchAll/fetchColumn/rowCount/bindValue), with no `false` branch
+OWNED src/Modules/Database/Contracts/PrimaryReadInterface.php # `onPrimary()` — a read that must see a write made earlier in the same request, nested as a stack
+OWNED src/Modules/Database/Exceptions/ReadException.php # what a read that exhausted its replicas raises; separate from a write failure so callers can tell the two apart
+OWNED src/Modules/Database/Infrastructure/Persistence/PdoConnection.php # one PDO handle behind the contract; the hardening stays in DatabaseConnectionManager, the one place a handle is created
+OWNED src/Modules/Database/Infrastructure/Persistence/PdoStatement.php # the PDO statement behind the contract; no behaviour, only the `false` branch removed
+OWNED src/Modules/Database/Infrastructure/Persistence/ReadWriteConnection.php # sticky-write routing: reads go to a replica until the request writes, then to the primary; failover down the replica list
+OWNED src/Modules/Database/Infrastructure/Persistence/ReplicaSelector.php # which replica serves the next read: random or weighted per connection name
+OWNED src/Modules/Database/Infrastructure/Persistence/StatementIntent.php # fail-closed read/write intent for `prepare()`, the one place a prepared statement's side is guessed

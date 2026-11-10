@@ -13,6 +13,7 @@ use Modules\Cardboard\Domain\Model\Trend;
 use Modules\Cardboard\Domain\Contracts\MetricContract;
 use Modules\Cardboard\Infrastructure\Attributes\AsMetricProvider;
 use Modules\Cardboard\Infrastructure\Registry\CardboardRegistry;
+use Modules\Database\Contracts\ConnectionInterface;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 
 /**
@@ -29,18 +30,18 @@ final readonly class AuditMetric implements MetricContract
     public function registerCards(Period $period): void
     {
         try {
-            $pdo = DatabaseConnectionManager::instance()->connection('audit');
+            $db = DatabaseConnectionManager::instance()->connect('audit');
 
-            $total = $this->countInPeriod($pdo, $period->sqlInterval());
+            $total = $this->countInPeriod($db, $period->sqlInterval());
             $previous = $this->countBetweenPeriods(
-                $pdo,
+                $db,
                 $period->previousSqlInterval(),
                 $period->sqlInterval(),
             );
 
             $trend = Trend::make($total, $previous);
 
-            $topActions = $this->topActions($pdo, $period->sqlInterval());
+            $topActions = $this->topActions($db, $period->sqlInterval());
             $bar = new Bar($topActions);
 
             CardboardRegistry::register(
@@ -59,9 +60,9 @@ final readonly class AuditMetric implements MetricContract
         }
     }
 
-    private function countInPeriod(\PDO $pdo, string $interval): int
+    private function countInPeriod(ConnectionInterface $db, string $interval): int
     {
-        $stmt = Statement::prepare($pdo,
+        $stmt = Statement::prepare($db,
             'SELECT COUNT(*) FROM audit_log WHERE created_at >= datetime(\'now\', :interval)',
         );
         $stmt->execute([':interval' => $interval]);
@@ -69,9 +70,9 @@ final readonly class AuditMetric implements MetricContract
         return (int) $stmt->fetchColumn();
     }
 
-    private function countBetweenPeriods(\PDO $pdo, string $fromInterval, string $toInterval): int
+    private function countBetweenPeriods(ConnectionInterface $db, string $fromInterval, string $toInterval): int
     {
-        $stmt = Statement::prepare($pdo,
+        $stmt = Statement::prepare($db,
             'SELECT COUNT(*) FROM audit_log WHERE created_at >= datetime(\'now\', :from) AND created_at < datetime(\'now\', :to)',
         );
         $stmt->execute([':from' => $fromInterval, ':to' => $toInterval]);
@@ -84,9 +85,9 @@ final readonly class AuditMetric implements MetricContract
      *
      * @return list<array{label: string, value: int, color: string}>
      */
-    private function topActions(\PDO $pdo, string $interval): array
+    private function topActions(ConnectionInterface $db, string $interval): array
     {
-        $stmt = Statement::prepare($pdo,
+        $stmt = Statement::prepare($db,
             'SELECT action, COUNT(*) as cnt FROM audit_log WHERE created_at >= datetime(\'now\', :interval) GROUP BY action ORDER BY cnt DESC LIMIT 5',
         );
         $stmt->execute([':interval' => $interval]);

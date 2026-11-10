@@ -353,7 +353,12 @@ final class NameOwnershipContractTest extends TestCase
     // 292 = 287 + the five constants the `src/Seo` sitemap primitives need:
     // two public policy defaults, one private list, the registry-test fixture
     // name, and `FrontendLayout::DEFAULT_DESCRIPTION`.
-    private const int MAX_DECLARATIONS = 292;
+    //
+    // 293 with the read/write connection: `StatementIntent::READ_KEYWORDS` is
+    // the one list that decides which prepared statement a fail-closed router
+    // may send to a replica. It has to live in the class, and it names three
+    // statements no other module's constant names.
+    private const int MAX_DECLARATIONS = 293;
 
     /**
      * 203 → 204 with MAX_DECLARATIONS: `ModuleTreeState::IGNORED` is a name as
@@ -408,7 +413,10 @@ final class NameOwnershipContractTest extends TestCase
     // 229 = 225 + the four distinct names the new `src/Seo` and layout files
     // introduce (`DEFAULT_CHANGEFREQ`, `DEFAULT_PRIORITY`, `CHANGEFREQS`,
     // `DEFAULT_DESCRIPTION`); `MODULE` in the registry test reuses a name.
-    private const int MAX_NAMES = 229;
+    //
+    // 230 with the read/write connection: `READ_KEYWORDS` is a name as well as
+    // a declaration, so both ceilings moved for the same one constant.
+    private const int MAX_NAMES = 230;
 
     /**
      * `name => modules/<Name>` or `modules/<Group>/<Name>`, resolved once. A

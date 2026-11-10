@@ -11,7 +11,7 @@ use RecursiveIteratorIterator;
 use SplFileInfo;
 
 /**
- * StatementHelperContractTest — thirteen copies of one file, held to one shape.
+ * StatementHelperContractTest — fifteen copies of one file, held to one shape.
  *
  * `PDO::prepare()` and `PDO::query()` are declared as returning
  * `PDOStatement|false`, so every `$stmt = $pdo->prepare(…); $stmt->execute();`
@@ -22,22 +22,20 @@ use SplFileInfo;
  * The copies are deliberate. Modules are independent slices: `Modules\Blog` may
  * not import `Modules\Media`, and a helper in `Modules\Database` would put a new
  * file into the kernel slice, which `extract-kernel --check` holds against
- * upstream. Thirteen small files is the cost of those two rules, and THIS is
+ * upstream. Fifteen small files is the cost of those two rules, and THIS is
  * what keeps the copying honest: a single shared file would be one edit, and
- * thirteen files are thirteen chances to fix one module and forget the other
- * twelve.
+ * fifteen files are fifteen chances to fix one module and forget the others.
  *
  * The failure this test exists for is quiet in exactly that way. Change the
  * throw message, the guard, or the return type in the helper a module happens
  * to need, and nothing in the tree objects: every module still has a checked
  * `Statement`, every call site still type-checks, `mago analyze` still reports
- * 0 — and one module now behaves differently from the twelve beside it. That
- * difference is only visible by comparing the files, which is what this test
- * does.
+ * 0 — and one module now behaves differently from the others. That difference
+ * is only visible by comparing the files, which is what this test does.
  *
  * Three things are pinned:
  *
- *  - the SET of modules that ship a helper — a ratchet, so a fourteenth module
+ *  - the SET of modules that ship a helper — a ratchet, so a fifteenth module
  *    that prepares SQL is a decision someone records (and copies the file for),
  *    not a side effect of a merge;
  *  - each helper's namespace, derived from where the file sits, so a copy that
@@ -47,7 +45,17 @@ use SplFileInfo;
  *    "identical except the namespace" is checked, not asserted in a docblock.
  *
  * The guarded methods are pinned by name as well, because identity alone would
- * accept thirteen copies of a helper that had lost its `if (false === …)`.
+ * accept fifteen copies of a helper that had lost its `if (false === …)`.
+ *
+ * ## Two shapes, one ratchet each
+ *
+ * A module moves from `\PDO` to `Modules\Database\Contracts\ConnectionInterface`
+ * one at a time, and the helpers of the two stages cannot be byte-identical:
+ * the `false` guard belongs to the `\PDO` shape only, because the contract's
+ * adapter raises where PDO returned false. `CONTRACT_MODULES` records which
+ * stage a module is in, so the set only grows and each group still has to be
+ * identical inside itself. A module that silently drifts to the new signature
+ * without being named here fails, which is the point.
  *
  * @internal
  *
@@ -81,6 +89,19 @@ final class StatementHelperContractTest extends TestCase
         'Security',
         'Settings',
         'Users',
+    ];
+
+    /**
+     * Modules whose helper already takes the connection contract.
+     *
+     * Add a module here in the same commit that changes its helper and the
+     * repositories that call it. The list only grows; a module that goes back
+     * to `\PDO` is a revert, not a quiet edit.
+     *
+     * @var list<string>
+     */
+    private const array CONTRACT_MODULES = [
+        'Audit',
     ];
 
     /**
@@ -124,58 +145,118 @@ final class StatementHelperContractTest extends TestCase
     public function theHelpersAreIdenticalApartFromTheirNamespace(): void
     {
         $helpers = $this->helpers();
-        $reference = self::MODULES[0];
 
-        self::assertArrayHasKey($reference, $helpers, 'The reference module lost its helper — fix MODULES before trusting this comparison.');
-
-        $referenceBody = $this->withoutNamespace($helpers[$reference], $reference);
-
-        foreach ($helpers as $module => $file) {
-            if ($module === $reference) {
-                continue;
-            }
-
-            $body = $this->withoutNamespace($file, $module);
-
-            self::assertSame(
-                $referenceBody,
-                $body,
-                sprintf(
-                    "%s and %s have diverged beyond their namespace.%s\nThirteen copies are only safe while they are the same file; make the change in every module, or in none.",
-                    $this->relative($helpers[$reference]),
-                    $this->relative($file),
-                    $this->firstDifference($referenceBody, $body),
-                ),
-            );
-        }
+        $this->assertGroupIsIdentical($helpers, $this->pdoModules());
+        $this->assertGroupIsIdentical($helpers, self::CONTRACT_MODULES);
     }
 
     #[Test]
-    public function everyHelperRefusesFalseInBothMethods(): void
+    public function everyHelperWrapsTheShapeOfItsStage(): void
     {
-        // Identity cannot catch a guard removed from all thirteen at once, so the
-        // shape that makes the helper worth copying is asserted directly.
-        $body = $this->withoutNamespace($this->helpers()[self::MODULES[0]], self::MODULES[0]);
+        $helpers = $this->helpers();
+        $pdoModules = $this->pdoModules();
+
+        self::assertSame(
+            [],
+            array_values(array_diff(self::CONTRACT_MODULES, self::MODULES)),
+            'CONTRACT_MODULES must be a subset of MODULES: a name here that ships no helper would make the shape check vacuous.',
+        );
+
+        // Identity inside a group cannot catch a guard removed from every copy
+        // of that group at once, so the shape is asserted directly as well.
+        $pdoBody = $this->withoutNamespace($helpers[$pdoModules[0]], $pdoModules[0]);
 
         foreach (['prepare', 'query'] as $method) {
             self::assertSame(
                 1,
-                preg_match('/public static function ' . $method . '\(\\\\PDO \$pdo, string \$sql\): \\\\PDOStatement/', $body),
+                preg_match('/public static function ' . $method . '\(\\\\PDO \$pdo, string \$sql\): \\\\PDOStatement/', $pdoBody),
                 sprintf('`Statement::%s()` must keep the signature every call site is written against.', $method),
             );
         }
 
         self::assertSame(
             2,
-            substr_count($body, 'if (false === $statement) {'),
+            substr_count($pdoBody, 'if (false === $statement) {'),
             'Both methods must refuse `false` explicitly — a helper that hands back `PDOStatement|false` moves the problem, not the type.',
         );
 
         self::assertSame(
             2,
-            substr_count($body, 'throw new \\RuntimeException('),
+            substr_count($pdoBody, 'throw new \\RuntimeException('),
             'Both guards must raise: the point of the helper is that a failed prepare is not a value a caller has to branch on.',
         );
+
+        $contractBody = $this->withoutNamespace(
+            $helpers[self::CONTRACT_MODULES[0]],
+            self::CONTRACT_MODULES[0],
+        );
+
+        foreach (['prepare', 'query'] as $method) {
+            self::assertSame(
+                1,
+                preg_match('/public static function ' . $method . '\(ConnectionInterface \$connection, string \$sql\): StatementInterface/', $contractBody),
+                sprintf('`Statement::%s()` in a contract-stage module must take ConnectionInterface and return StatementInterface.', $method),
+            );
+        }
+
+        self::assertStringNotContainsString(
+            'if (false === $statement) {',
+            $contractBody,
+            'The contract stage has no `false` branch: the connection adapter raises, so a guard here would check a value that cannot occur.',
+        );
+    }
+
+    /**
+     * The modules still on the `\PDO` shape.
+     *
+     * @return list<string>
+     */
+    private function pdoModules(): array
+    {
+        $modules = array_values(array_diff(self::MODULES, self::CONTRACT_MODULES));
+        sort($modules);
+
+        return $modules;
+    }
+
+    /**
+     * Assert that one stage's helpers are the same file apart from the module
+     * namespace.
+     *
+     * @param array<string, string> $helpers
+     * @param list<string>          $modules
+     */
+    private function assertGroupIsIdentical(array $helpers, array $modules): void
+    {
+        self::assertNotSame([], $modules, 'An empty stage group would make this comparison vacuous.');
+
+        $reference = $modules[0];
+        self::assertArrayHasKey(
+            $reference,
+            $helpers,
+            'The reference module lost its helper — fix MODULES before trusting this comparison.',
+        );
+
+        $referenceBody = $this->withoutNamespace($helpers[$reference], $reference);
+
+        foreach ($modules as $module) {
+            if ($module === $reference) {
+                continue;
+            }
+
+            $body = $this->withoutNamespace($helpers[$module], $module);
+
+            self::assertSame(
+                $referenceBody,
+                $body,
+                sprintf(
+                    "%s and %s have diverged beyond their namespace.%s\nCopies are only safe while they are the same file; make the change in every module of that stage, or in none.",
+                    $this->relative($helpers[$reference]),
+                    $this->relative($helpers[$module]),
+                    $this->firstDifference($referenceBody, $body),
+                ),
+            );
+        }
     }
 
     /**
