@@ -172,20 +172,25 @@ which is the case a replica exists for.
   catalogue reinstall; the two-stage helper test is what keeps the movement
   visible instead of letting both shapes grow.
 - Module migrators keep `\PDO` on purpose. DDL runs before any repository
-exists and does not read or write rows, so routing it would buy nothing and
-cost the one consumer that is happy with the driver.
+  exists and does not read or write rows, so routing it would buy nothing and
+  cost the one consumer that is happy with the driver.
 - Replicas are SQLite files in this tree. Nothing here has been measured
   against MySQL or Postgres replication lag, and the sticky write is a
   request-scoped answer to lag, not a clock.
 
 ## Verified
 
-- `composer test`: 1174 tests, 7509 assertions, 1 skipped. Besides the route
+- `composer test`: 1182 tests, 7518 assertions, 1 skipped. Besides the route
   through a real `Kernel` (`tests/Http/ReadReplicaRoutingTest.php`),
   `tests/Database/UnitOfWorkTest.php` pins the per-database nesting stack:
   two instances over one database open a savepoint instead of a second
   transaction, a nested failure rolls back to its savepoint, and two databases
   keep two stacks.
+- `tests/Database/PdoStatementParityTest.php` replays the binding shape of
+  every `bindValue()` call site through `PdoConnection` beside a bare `\PDO`,
+  and drives the one call site already on the contract end to end. It exists
+  because a wrapper that dropped those bindings passed the whole suite and was
+  caught by a booted server, which is a bad way to find a 500.
 - `make lint`, PHPStan level 9, Rector dry, PHP CS Fixer dry, `make
   mago-guard`, `make mago-lint`: clean.
 - `make extract-check`: OK, 185 identical, 103 recorded divergences
