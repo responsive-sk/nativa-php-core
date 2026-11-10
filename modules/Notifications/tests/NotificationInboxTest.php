@@ -231,8 +231,8 @@ final class NotificationInboxTest extends TestCase
     {
         NotificationsServices::inbox()->push(['user-a'], 'comment', 'Through the facade', 'Body', '/mark/comments');
 
-        $pdo = new \PDO('sqlite:' . $this->tmpDir . '/notifications.db');
-        $count = Statement::query($pdo, 'SELECT COUNT(*) FROM notifications WHERE notifiable_id = \'user-a\'')->fetchColumn();
+        $connection = DatabaseConnectionManager::instance()->connect('notifications');
+        $count = Statement::query($connection, 'SELECT COUNT(*) FROM notifications WHERE notifiable_id = \'user-a\'')->fetchColumn();
 
         self::assertSame(1, (int) $count);
     }
@@ -249,8 +249,8 @@ final class NotificationInboxTest extends TestCase
      */
     private function pushAt(string $notifiableId, string $title, string $createdAt): void
     {
-        $pdo = new \PDO('sqlite:' . $this->tmpDir . '/notifications.db');
-        $stmt = Statement::prepare($pdo,
+        $connection = DatabaseConnectionManager::instance()->connect('notifications');
+        $stmt = Statement::prepare($connection,
             'INSERT INTO notifications (id, notifiable_id, kind, title, body, href, read_at, created_at)'
             . ' VALUES (?, ?, ?, ?, ?, ?, NULL, ?)',
         );

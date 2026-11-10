@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Notifications\Infrastructure\Persistence\Repositories;
 
+use Modules\Database\Contracts\ConnectionInterface;
 use Modules\Notifications\Domain\Model\Notification;
 use Modules\Notifications\Infrastructure\Persistence\Statement;
 
@@ -24,7 +25,7 @@ use Modules\Notifications\Infrastructure\Persistence\Statement;
 final readonly class SqliteNotificationRepository
 {
     public function __construct(
-        private \PDO $pdo,
+        private ConnectionInterface $connection,
     ) {
     }
 
@@ -32,7 +33,7 @@ final readonly class SqliteNotificationRepository
     {
         $data = $notification->toArray();
 
-        $stmt = Statement::prepare($this->pdo, '
+        $stmt = Statement::prepare($this->connection, '
             INSERT INTO notifications (id, notifiable_id, kind, title, body, href, read_at, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ');
@@ -51,9 +52,9 @@ final readonly class SqliteNotificationRepository
 
     public function findById(string $id): ?Notification
     {
-        $stmt = Statement::prepare($this->pdo, 'SELECT * FROM notifications WHERE id = ?');
+        $stmt = Statement::prepare($this->connection, 'SELECT * FROM notifications WHERE id = ?');
         $stmt->execute([$id]);
-        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $row = $stmt->fetch();
 
         if (false === $row || !is_array($row)) {
             return null;
@@ -73,7 +74,7 @@ final readonly class SqliteNotificationRepository
      */
     public function forNotifiable(string $notifiableId, int $limit = 50, int $offset = 0): array
     {
-        $stmt = Statement::prepare($this->pdo, '
+        $stmt = Statement::prepare($this->connection, '
             SELECT * FROM notifications
             WHERE notifiable_id = ?
             ORDER BY created_at DESC, rowid DESC
@@ -81,7 +82,7 @@ final readonly class SqliteNotificationRepository
         ');
         $stmt->execute([$notifiableId, max(1, $limit), max(0, $offset)]);
 
-        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $rows = $stmt->fetchAll();
 
         /** @var list<Notification> $notifications */
         $notifications = [];
@@ -95,7 +96,7 @@ final readonly class SqliteNotificationRepository
 
     public function countFor(string $notifiableId): int
     {
-        $stmt = Statement::prepare($this->pdo, 'SELECT COUNT(*) FROM notifications WHERE notifiable_id = ?');
+        $stmt = Statement::prepare($this->connection, 'SELECT COUNT(*) FROM notifications WHERE notifiable_id = ?');
         $stmt->execute([$notifiableId]);
 
         return (int) $stmt->fetchColumn();
@@ -103,7 +104,7 @@ final readonly class SqliteNotificationRepository
 
     public function unreadCount(string $notifiableId): int
     {
-        $stmt = Statement::prepare($this->pdo,
+        $stmt = Statement::prepare($this->connection,
             'SELECT COUNT(*) FROM notifications WHERE notifiable_id = ? AND read_at IS NULL',
         );
         $stmt->execute([$notifiableId]);
@@ -119,7 +120,7 @@ final readonly class SqliteNotificationRepository
      */
     public function markRead(string $id, string $notifiableId): bool
     {
-        $stmt = Statement::prepare($this->pdo, '
+        $stmt = Statement::prepare($this->connection, '
             UPDATE notifications
             SET read_at = ?
             WHERE id = ? AND notifiable_id = ? AND read_at IS NULL
@@ -137,7 +138,7 @@ final readonly class SqliteNotificationRepository
      */
     public function markAllAsRead(string $notifiableId): int
     {
-        $stmt = Statement::prepare($this->pdo, '
+        $stmt = Statement::prepare($this->connection, '
             UPDATE notifications
             SET read_at = ?
             WHERE notifiable_id = ? AND read_at IS NULL

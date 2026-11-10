@@ -191,7 +191,9 @@ final class AdminInboxWiringTest extends TestCase
     {
         $mailer = $this->recorder();
         $unmigrated = new NotificationInbox(
-            new SqliteNotificationRepository(new \PDO('sqlite:' . $this->tmpDir . '/never-migrated.db')),
+            new SqliteNotificationRepository(
+                new PdoConnection(new \PDO('sqlite:' . $this->tmpDir . '/never-migrated.db'), 'notifications'),
+            ),
         );
 
         $sent = (new AdminNotificationHandler(

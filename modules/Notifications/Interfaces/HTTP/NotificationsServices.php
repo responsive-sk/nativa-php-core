@@ -26,7 +26,7 @@ final class NotificationsServices
     {
         return self::$inbox ??= new NotificationInbox(
             new SqliteNotificationRepository(
-                DatabaseConnectionManager::instance()->connection('notifications'),
+                DatabaseConnectionManager::instance()->connect('notifications'),
             ),
         );
     }

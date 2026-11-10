@@ -141,11 +141,18 @@ the SQL, so the repository's own queries had never run through the wrapper.
 It now does, on a temp file, which is the only thing that would notice a
 change to how the wrapper rewrites `execute()`.
 
-`StatementHelperContractTest` pins two stages
-(`CONTRACT_MODULES = ['Audit', 'Comments', 'Questions', 'Security', 'Users']`):
-each stage is byte-identical inside itself, and each shape is asserted
-directly, so a module cannot drift from `\PDO` to the contract without being
-named.
+`Notifications` was the third and cost four sites, plus two outside the
+module: its own two tests wrote to the file with a raw handle, and `Users`'
+inbox wiring test built the repository with one. Those moved to
+`connect('notifications')` too, so the tests now exercise the same wiring the
+badge does instead of a parallel path to the same file. The unmigrated-inbox
+test still fails for the right reason: `no such table` now arrives from the
+wrapper, which is what makes it a test of the wrapper's error path.
+
+`StatementHelperContractTest` pins two stages (`CONTRACT_MODULES = ['Audit',
+'Comments', 'Notifications', 'Questions', 'Security', 'Users']`): each stage is
+byte-identical inside itself, and each shape is asserted directly, so a module
+cannot drift from `\PDO` to the contract without being named.
 
 ## Measured: reads are a small slice of a request
 
@@ -178,14 +185,13 @@ which is the case a replica exists for.
 
 ### What is left, module by module
 
-Eleven modules still name `\PDO` somewhere a caller can see it. Counted from
+Ten modules still name `\PDO` somewhere a caller can see it. Counted from
 the tree, not from memory: type sites outside `Migrations/` and `tests/`,
 construction sites outside the module's own installed copy, and test files
 that build a raw `\PDO` for these classes.
 
 | Module | Database | Type | Build sites | Raw-PDO tests | Round |
 |---|---|---:|---:|---:|---|
-| Notifications | `notifications` | 3 | 1 | 2 | One repository; Users' inbox test builds it. |
 | Cardboard | `config` | 3 | 1 | 2 | `AdminNavService` only, read on every `/mark`. |
 | Locales | `locales` | 3 | 3 | 2 | One repository; Blog's escape test builds it. |
 | Forms | `forms` | 6 | 2 | 0 | Two repositories, a metric, two binds. |
@@ -198,9 +204,10 @@ that build a raw `\PDO` for these classes.
 | Clickhouse | foreign | 3 | 0 | 3 | Reads a file it does not own, read-only. |
 
 The two columns that decide a round are the last two counts: what a module
-builds and where a repository is built from outside it. Notifications is one
-file; Settings is four classes and five construction sites because Cardboard
-and Locales each build its repositories for their own screens.
+builds and where a repository is built from outside it. Locales is one
+repository with three construction sites; Settings is four classes and five,
+because Cardboard and Locales each build its repositories for their own
+screens.
 
 Blog and Media carry the routing value: a public article page reads `blog`
 several times and a gallery reads `media`, while the rounds that only touch an
@@ -222,7 +229,7 @@ the connection, and every read after it is on the primary anyway. Moving it
 would be a mechanical round with a real regression risk (`reserve()` is the
 one place a double-dispatch would hurt) and no latency to win.
 
-- Nine modules remain real targets, at roughly one to three files each plus a
+- Eight modules remain real targets, at roughly one to three files each plus a
   catalogue reinstall. Each moves in its own round; the two-stage helper test
   is what keeps the movement visible instead of letting both shapes grow.
 - Module migrators keep `\PDO` on purpose. DDL runs before any repository
