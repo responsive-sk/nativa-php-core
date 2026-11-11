@@ -266,6 +266,14 @@ final class ReadWriteConnectionTest extends TestCase
                 return false;
             }
 
+            public function transaction(
+                callable $callback,
+                int $attempts = 1,
+                int|\Closure|null $backoff = null,
+            ): mixed {
+                throw new \PDOException('SQLSTATE[HY000]: unable to open database file');
+            }
+
             public function beginTransaction(): void
             {
             }

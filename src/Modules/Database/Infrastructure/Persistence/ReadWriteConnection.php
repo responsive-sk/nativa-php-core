@@ -104,6 +104,18 @@ final class ReadWriteConnection implements ConnectionInterface, PrimaryReadInter
         return $this->write->inTransaction();
     }
 
+    public function transaction(
+        callable $callback,
+        int $attempts = 1,
+        int|\Closure|null $backoff = null,
+    ): mixed {
+        // Every attempt writes, so the read side has to be on the primary
+        // before the first statement of the first attempt runs.
+        $this->markWritten();
+
+        return TransactionRetry::run($this, static fn (ConnectionInterface $db): mixed => $callback($db), $attempts, $backoff);
+    }
+
     public function beginTransaction(): void
     {
         // A transaction is a write intent: its first read must see the rows its

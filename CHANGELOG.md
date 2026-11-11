@@ -22,20 +22,31 @@ contract above. Both passed every gate, and both are fixed here.
   worker keeps the connection across jobs, so the old reset handed an open
   transaction to the next one.
 
+**Added**
+
+- `ConnectionInterface::transaction($callback, $attempts = 1, $backoff = null)`
+  runs the whole transaction again when it fails with a
+  `TransactionConflictException`, up to `$attempts` runs. `detect()` classifies
+  the driver's failure: SQLSTATE 40001 and 40P01, MySQL 1213, and SQLite's
+  `database is locked`. Only a classified conflict is retried, and a nested
+  call never retries at all: the outermost transaction owns it.
+- The delay between attempts is exponential with full jitter by default, a
+  fixed number of milliseconds, or a closure that decides.
+
 **Not changed, and known**
 
-- No transaction retry, no `afterCommit()`/`afterRollback()`, and no
+- No `afterCommit()`/`afterRollback()`, and no
   `driverName()`/`quoteIdentifier()`/`supportsReturning()` on the contract.
-  They belong to the Postgres driver, where a serialization conflict is a
-  normal outcome rather than a bug.
+  They belong to the Postgres driver, whose plan is
+  `docs/kernel-status/27-postgres-driver-plan.md`.
 
 **Measured**
 
-- `composer test`: 1189 tests, 7544 assertions, 1 skipped. PHPStan, Rector,
+- `composer test`: 1199 tests, 7585 assertions, 1 skipped. PHPStan, Rector,
   CS Fixer, mago-lint and mago-guard clean; `make extract-check` reports 185
   identical files and 103 recorded.
-- The kernel moved from 185 219 B to 189 778 B and from 47 to 48 files.
-  Database now reads 3 interface and 9 concrete.
+- The kernel moved from 185 219 B to 203 318 B and from 47 to 50 files.
+  Database now reads 3 interface and 11 concrete.
 
 ### The connection contract: every module repository on `ConnectionInterface`
 

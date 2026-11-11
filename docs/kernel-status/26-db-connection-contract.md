@@ -444,12 +444,51 @@ The second gap is the worker: `resetSticky()` dropped two flags and left a
 transaction open. `reset()` unwinds it. Marko's `ResettableInterface::reset()`
 does the same, and for the same reason.
 
-Still open, and recorded rather than planned: no transaction retry
-(`attempts`/`backoff`/`TransactionConflictException`), no `afterCommit()` or
+Still open, and recorded rather than planned: no `afterCommit()` or
 `afterRollback()`, no `driverName()`/`quoteIdentifier()`/`supportsReturning()`
 on the contract, and `lastInsertId()` still returns `string` where Marko
-returns `int`. The first two belong to the Postgres driver, where a
-serialization conflict is a normal outcome rather than a bug.
+returns `int`. They belong to the Postgres driver, where a serialization
+conflict is a normal outcome rather than a bug, and its plan is part 27.
+
+### Addendum, 2026-11-11: the retry moved into the contract
+
+The comparison counted one gap too many. A transaction in this tree could
+fail on a deadlock or a serialization failure and there was no way to ask for
+it again, which on SQLite is rare enough to ignore and on PostgreSQL is the
+documented outcome of a concurrent write.
+
+`ConnectionInterface::transaction(callable $callback, int $attempts = 1,
+int|\Closure|null $backoff = null)` now runs the whole transaction again when
+it fails with a `TransactionConflictException`, up to `$attempts` runs, and
+`TransactionConflictException::detect()` is what decides: SQLSTATE 40001 and
+40P01, MySQL's 1213, and SQLite's `database is locked`, which is the same
+serialization failure without a state of its own. A lock wait timeout is
+deliberately not a conflict, because the engine gave up while the transaction
+was still alive and the work may have half-run.
+
+Two rules keep the retry from being a duplicate-row generator. Only a
+classified conflict is retried, never a failure nobody identified. And a call
+made inside an open transaction is not retried at all: the outermost
+transaction owns the retry, because it is the only one that can undo the whole
+attempt. `UnitOfWork` therefore hands its outermost scope to the connection
+and keeps its savepoints for the nested ones, which is also why a conflict
+raised inside a nested scope travels up rather than being replayed on top of
+work the outer transaction already did.
+
+The waiting is Marko's shape, adopted rather than invented: `null` is
+exponential backoff with full jitter between 0 and `min(500, 10 * 2 **
+($attempt - 1))` milliseconds, an int is that many milliseconds, and a closure
+can compute the delay from the failed attempt and the conflict. Full jitter is
+the part that matters: two transactions that collided once do not collide again
+at the same instant.
+
+- `composer test`: 1199 tests, 7585 assertions, 1 skipped. Ten of them are
+  `tests/Database/TransactionRetryTest.php`, which pins the three ways a retry
+  loop goes wrong: it retries a failure nobody classified, it replays a nested
+  scope, or it loops without giving up.
+- `make kernel-size`: **203 318 B / 50 files**, delta -134 874 B. Database
+  reads 3 interface / 11 concrete: `TransactionRetry` and
+  `TransactionConflictException`.
 
 - `make kernel-size` after the addendum: **189 778 B / 48 files**, delta
   -148 414 B. Database reads 3 interface / 9 concrete. The 4 559 B are
