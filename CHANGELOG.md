@@ -5,6 +5,38 @@ says so here too, because a changelog that only lists what worked is a brochure.
 
 ## Unreleased
 
+### Failover for prepared reads, and a reset that rolls back
+
+A comparison against Marko's `ReadWriteConnection` found two gaps in the
+contract above. Both passed every gate, and both are fixed here.
+
+**Changed**
+
+- A prepared read returns a `FailoverStatement` instead of a statement on one
+  replica. The replica is chosen at `execute()`, which is where a failure is
+  visible, and the bindings a caller set with `bindValue()` are replayed on the
+  retry. This mattered more than it looks: 382 call sites prepare and 52 call
+  `query()`, so the failover covered a ninth of the reads.
+- `ReadWriteConnection::resetSticky()` is now `reset()`, and it rolls back a
+  transaction the unit of work left open before dropping the flags. A queue
+  worker keeps the connection across jobs, so the old reset handed an open
+  transaction to the next one.
+
+**Not changed, and known**
+
+- No transaction retry, no `afterCommit()`/`afterRollback()`, and no
+  `driverName()`/`quoteIdentifier()`/`supportsReturning()` on the contract.
+  They belong to the Postgres driver, where a serialization conflict is a
+  normal outcome rather than a bug.
+
+**Measured**
+
+- `composer test`: 1189 tests, 7544 assertions, 1 skipped. PHPStan, Rector,
+  CS Fixer, mago-lint and mago-guard clean; `make extract-check` reports 185
+  identical files and 103 recorded.
+- The kernel moved from 185 219 B to 189 778 B and from 47 to 48 files.
+  Database now reads 3 interface and 9 concrete.
+
 ### The connection contract: every module repository on `ConnectionInterface`
 
 One round per module, fourteen rounds, each one a commit that had to pass the

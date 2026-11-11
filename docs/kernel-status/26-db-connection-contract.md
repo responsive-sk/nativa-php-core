@@ -55,13 +55,18 @@ wished it had, and it is why the contract-stage helper has no `false` guard.
 more than one. With it unset, `connect()` returns a `PdoConnection`, the same
 handle as before. With it set, `connect()` returns a `ReadWriteConnection`:
 
-- `query()`, `prepare()` of a read, and `fetch*` go to a replica;
+- `query()` and the `fetch*` of its statement go to a replica; `prepare()` of
+  a read returns a `FailoverStatement`, which chooses its replica at
+  `execute()` rather than at `prepare()`, so a replica that dies between the
+  two costs a retry instead of the read;
 - `execute()` is a write, and so is `beginTransaction()`. The first write
   marks the request and every later read goes to the primary (sticky write);
 - `onPrimary(callable)` is the explicit escape for a read that must see a
   write from the same request, nested as a stack;
-- a replica that raises `ReadException` is dropped from the order and the next
-  one is tried; the primary is the last resort.
+- a replica that raises is dropped and the next one in the order is tried;
+  when every replica failed the read raises `ReadException` naming each of
+  them, because falling back to the primary would hide a broken replica
+  behind a working site.
 
 `DB_READ_STRATEGY` is `random` (default) or `weighted`, with
 `DB_<NAME>_READ_WEIGHTS` keyed by connection name, not by index, so a replica
@@ -73,6 +78,12 @@ SQL it did not compose. `StatementIntent` accepts `SELECT`, `EXPLAIN` and
 misrouted read costs a primary query; a misrouted write would corrupt the
 replica, so the guess fails closed.
 
+The deferred statement carries no handle until it runs, so the bindings it
+collects (`bindValue()`, then `execute($bindings)`) are what a retry replays.
+The second replica knows nothing about what the first one bound, and a
+statement object that dropped the values would answer an empty result rather
+than fail: `aFailedOverPreparedReadReplaysItsBoundValues()` is that guard.
+
 Replicas open with `PRAGMA query_only = 1` rather than a `mode=ro` DSN, so a
 write that reached one fails loudly with SQLite's own error instead of
 silently doing nothing.
@@ -81,6 +92,11 @@ silently doing nothing.
 request boundary. A PHP-FPM worker serves many requests with one container; a
 write from the previous one would pin every later read in that worker to the
 primary, and nothing would look broken.
+
+The reset also closes a transaction the unit of work left open, one level per
+`rollBack()`. That is the queue worker's half of the same problem: a job that
+threw inside a transaction would hand the open transaction to the next job, or
+make it fail to begin one at all.
 
 ### The moved modules
 
@@ -375,12 +391,17 @@ everything else, which is the property the doc is about.
 
 ## Verified
 
-- `composer test`: 1186 tests, 7536 assertions, 1 skipped. Besides the route
+- `composer test`: 1189 tests, 7544 assertions, 1 skipped. Besides the route
   through a real `Kernel` (`tests/Http/ReadReplicaRoutingTest.php`),
   `tests/Database/UnitOfWorkTest.php` pins the per-database nesting stack:
   two instances over one database open a savepoint instead of a second
   transaction, a nested failure rolls back to its savepoint, and two databases
   keep two stacks.
+- `tests/Database/ReadWriteConnectionTest.php` pins the two later additions:
+  `aPreparedSelectFallsOverToTheNextReplica()` and
+  `aFailedOverPreparedReadReplaysItsBoundValues()` both raise without
+  `FailoverStatement`, and `resettingRollsBackATransactionAWorkerLeftOpen()`
+  leaves the handle inside the transaction if `reset()` only drops the flags.
 - `tests/Database/PdoStatementParityTest.php` replays the binding shape of
   every `bindValue()` call site through `PdoConnection` beside a bare `\PDO`,
   and drives the one call site already on the contract end to end. It exists
@@ -395,12 +416,42 @@ everything else, which is the property the doc is about.
   mago-guard`, `make mago-lint`: clean.
 - `make extract-check`: OK, 185 identical, 103 recorded divergences
   (`UnitOfWork` is `DIVERGED`: the upstream row is the raw-handle version).
-- `make kernel-size`: **185 219 B / 47 files**, delta -152 973 B vs baseline.
-  Core types unchanged (8 interface / 28 concrete); Database reads 3
-  interface / 8 concrete in the same report. The 184 903 B measured when
+- `make kernel-size`: **185 219 B / 47 files**, delta -152 973 B vs baseline
+  when the series closed; the addendum below re-measured it. Core types
+  unchanged (8 interface / 28 concrete); Database read 3 interface / 8
+  concrete at that point. The 184 903 B measured when
   `Users` and `UnitOfWork` landed was not the last word: `PdoStatement`
   grew 316 B when `execute()` without arguments stopped forwarding an empty
   binding list, which had dropped everything a caller set with
   `bindValue()`. The wrapper passed the whole suite and 500ed
   `/mark/audit`; the 316 B are the fix and the test that pins both call
   shapes, and they are the shape the series closes on.
+
+### Addendum, 2026-11-11: prepared reads fail over, and reset rolls back
+
+A comparison against Marko's `ReadWriteConnection` found the two gaps this
+section closes. Both were real and neither showed in a passing suite.
+
+Measured on this tree: **382** call sites use `Statement::prepare` and **52**
+use `Statement::query`. The failover added with the series lived in `query()`,
+so it covered a ninth of the reads. Marko does not have the gap because its
+repository layer runs every read through `query($sql, $bindings)` and never
+prepares a read at all. `FailoverStatement` closes it without moving a single
+call site: the replica is chosen at `execute()`, the bindings are replayed on
+the retry, and a statement executed twice reuses the handle it got.
+
+The second gap is the worker: `resetSticky()` dropped two flags and left a
+transaction open. `reset()` unwinds it. Marko's `ResettableInterface::reset()`
+does the same, and for the same reason.
+
+Still open, and recorded rather than planned: no transaction retry
+(`attempts`/`backoff`/`TransactionConflictException`), no `afterCommit()` or
+`afterRollback()`, no `driverName()`/`quoteIdentifier()`/`supportsReturning()`
+on the contract, and `lastInsertId()` still returns `string` where Marko
+returns `int`. The first two belong to the Postgres driver, where a
+serialization conflict is a normal outcome rather than a bug.
+
+- `make kernel-size` after the addendum: **189 778 B / 48 files**, delta
+  -148 414 B. Database reads 3 interface / 9 concrete. The 4 559 B are
+  `FailoverStatement` and the `reset()` rollback.
+- `composer test`: 1189 tests, 7544 assertions, 1 skipped.

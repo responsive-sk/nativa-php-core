@@ -238,6 +238,7 @@ OWNED src/Modules/Database/Contracts/ConnectionInterface.php # the connection sh
 OWNED src/Modules/Database/Contracts/StatementInterface.php # the slice of `\PDOStatement` the tree uses (fetch/fetchAll/fetchColumn/rowCount/bindValue), with no `false` branch
 OWNED src/Modules/Database/Contracts/PrimaryReadInterface.php # `onPrimary()` — a read that must see a write made earlier in the same request, nested as a stack
 OWNED src/Modules/Database/Exceptions/ReadException.php # what a read that exhausted its replicas raises; separate from a write failure so callers can tell the two apart
+OWNED src/Modules/Database/Infrastructure/Persistence/FailoverStatement.php # a prepared read chooses its replica at `execute()` and replays its bindings on the retry
 OWNED src/Modules/Database/Infrastructure/Persistence/PdoConnection.php # one PDO handle behind the contract; the hardening stays in DatabaseConnectionManager, the one place a handle is created
 OWNED src/Modules/Database/Infrastructure/Persistence/PdoStatement.php # the PDO statement behind the contract; no behaviour, only the `false` branch removed
 OWNED src/Modules/Database/Infrastructure/Persistence/ReadWriteConnection.php # sticky-write routing: reads go to a replica until the request writes, then to the primary; failover down the replica list
