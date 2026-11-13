@@ -108,7 +108,9 @@ consumer resolves the closure, downloads every missing archive, checks each
 SHA-256, rejects symlinks and unsafe paths, extracts into a temporary directory,
 and only then copies into `modules/`. The existing `ModuleInstaller` still owns
 the install and its dependency-first plan, so the panel has one lifecycle rather
-than a second one for remote modules.
+than a second one for remote modules. If the installer refuses after that copy,
+catalogues that did not become installed slices are removed, so a failed remote
+install is not left behind as installable code.
 
 `version` labels the snapshot; an entry may override it with its own `version`.
 The panel shows that label beside each remote module. `MODULE_REGISTRY_URL` must
