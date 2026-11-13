@@ -323,7 +323,13 @@ final class NameOwnershipContractTest extends TestCase
     // the document an operator writes is not renaming a constant, and an
     // assertion of the wire's method and envelope is the contract itself. No
     // token, URL or budget is among them.
-    private const int MAX_LITERAL_PLACES = 515;
+    //
+    // 517 with the tampered-form test, measured 2026-11-13: +2 places. The
+    // request helper states the default `page` strategy the form falls back to,
+    // and the duplicate-action case spells `list` twice on purpose, because two
+    // identical entries are the input under test. A helper that builds the
+    // document an operator submits is not renaming a constant.
+    private const int MAX_LITERAL_PLACES = 517;
 
     /**
      * Rule 3 — measured 2026-10-17 on the tracked scope.

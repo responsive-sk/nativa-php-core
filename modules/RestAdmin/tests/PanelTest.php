@@ -13,6 +13,7 @@ use Modules\RestAdmin\Infrastructure\Persistence\Migrations\RestAdminDatabaseMig
 use Modules\RestAdmin\Interfaces\HTTP\Actions\ItemDeleteAction;
 use Modules\RestAdmin\Interfaces\HTTP\Actions\ItemFormAction;
 use Modules\RestAdmin\Interfaces\HTTP\Actions\ItemsIndexAction;
+use Modules\RestAdmin\Interfaces\HTTP\Actions\ResourceFormAction;
 use Modules\RestAdmin\Interfaces\HTTP\Actions\RestAdminIndexAction;
 use Modules\RestAdmin\Interfaces\HTTP\Actions\ServiceFormAction;
 use Modules\RestAdmin\Interfaces\HTTP\RestAdminServices;
@@ -279,6 +280,52 @@ final class PanelTest extends TestCase
         self::assertSame(302, $response->getStatusCode());
         self::assertSame('DELETE', $transport->lastRequest()->method);
         self::assertStringEndsWith('/posts/7', $transport->lastRequest()->url);
+    }
+
+    /**
+     * A vocabulary the form does not own must be a field error, not a crash:
+     * both the pagination strategy and the action allowlist refuse an unknown
+     * word in their constructor, and a POST is just text.
+     */
+    #[Test]
+    public function aTamperedResourceFormIsRefusedAsAFieldError(): void
+    {
+        $this->seed('Blog', []);
+
+        $pagination = (new ResourceFormAction(PanelTestDoubles::router()))
+            ->createSubmit($this->resourceRequest(['pagination' => 'offset']));
+
+        self::assertSame(422, $pagination->getStatusCode());
+        self::assertStringContainsString('not a pagination strategy', $pagination->getContent());
+
+        $actions = (new ResourceFormAction(PanelTestDoubles::router()))
+            ->createSubmit($this->resourceRequest(['actions' => ['list', 'list']]));
+
+        self::assertSame(422, $actions->getStatusCode());
+        self::assertStringContainsString('listed twice', $actions->getContent());
+
+        $spec = RestAdminServices::repository()->find('blog');
+        self::assertNotNull($spec);
+        self::assertSame([], $spec->resources);
+    }
+
+    /**
+     * @param array<string, mixed> $overrides
+     */
+    private function resourceRequest(array $overrides): Request
+    {
+        $request = Request::create('POST', '/mark/rest/services/blog/resources', body: $overrides + [
+            'name'       => 'posts',
+            'path'       => '/posts',
+            'item_path'  => '/posts/{id}',
+            'id_field'   => 'id',
+            'pagination' => 'page',
+            'actions'    => ['list', 'read'],
+            'fields'     => '[{"name":"id","label":"ID","type":"text"}]',
+        ]);
+        $request->setRouteParams(['id' => 'blog']);
+
+        return $request;
     }
 
     /**

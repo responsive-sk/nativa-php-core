@@ -184,6 +184,25 @@ final class ResourceFormAction
 
         $actions = array_values(array_filter($actions, 'is_string'));
 
+        // Both constructors own their vocabulary and throw on a word they do
+        // not know. The form is a text input, so a tampered or stale POST can
+        // carry one; that is the operator's mistake to see beside the field,
+        // not a 500. The defaults keep the page renderable and the errors keep
+        // the document from being saved.
+        try {
+            $actionSet = new ActionSet($actions);
+        } catch (\InvalidArgumentException $exception) {
+            $errors[] = $exception->getMessage();
+            $actionSet = new ActionSet();
+        }
+
+        try {
+            $pagination = new PaginationSpec((string) $values['pagination']);
+        } catch (\InvalidArgumentException $exception) {
+            $errors[] = $exception->getMessage();
+            $pagination = new PaginationSpec();
+        }
+
         $resource = new ResourceSpec(
             serviceId: $spec->service->id,
             name: (string) $values['name'],
@@ -191,8 +210,8 @@ final class ResourceFormAction
             itemPath: (string) $values['item_path'],
             idField: '' === (string) $values['id_field'] ? 'id' : (string) $values['id_field'],
             fields: $fields,
-            actions: new ActionSet($actions),
-            pagination: new PaginationSpec((string) $values['pagination']),
+            actions: $actionSet,
+            pagination: $pagination,
             relations: null === $existing ? [] : $existing->relations,
         );
 
