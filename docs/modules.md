@@ -147,8 +147,9 @@ made directly inside `src/Modules/<Name>/`; the catalogue remains the source of
 truth.
 
 A successful uninstall through the panel or `module:remove` also clears the
-module's lock entry and consumes its rollback backup when a registry is
-configured, so removal does not leave a lock describing a slice that is gone.
+module's lock entry and consumes its rollback backup, even after
+`MODULE_REGISTRY_URL` is unset, so removal does not leave a lock describing a
+slice that is gone.
 
 `MODULE_REGISTRY_URL` is still a snapshot index rather than a resolver. It has
 no semver ranges, no dependency upgrade plan, and no remote history; the lock is
