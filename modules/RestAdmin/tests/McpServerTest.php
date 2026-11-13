@@ -299,6 +299,54 @@ final class McpServerTest extends TestCase
         self::assertSame([], $transport->requests());
     }
 
+    /**
+     * The vocabulary refusals the panel shows beside a field are tool errors
+     * here: the domain still throws InvalidArgumentException, and the registry
+     * turns it into `isError: true` rather than letting it escape the stdio
+     * loop. The repository must be unchanged after a refused call.
+     */
+    #[Test]
+    public function anInvalidResourceIsAToolErrorAndIsNotSaved(): void
+    {
+        $this->tool('register_service', [
+            'id'       => 'blog',
+            'name'     => 'Blog',
+            'base_url' => 'https://api.example.test',
+        ]);
+
+        $pagination = $this->tool('create_resource', [
+            'service_id' => 'blog',
+            'name'       => 'posts',
+            'path'       => '/posts',
+            'pagination' => 'offset',
+        ]);
+
+        self::assertTrue($pagination['isError']);
+        self::assertStringContainsString('pagination', $this->text($pagination));
+
+        $actions = $this->tool('create_resource', [
+            'service_id' => 'blog',
+            'name'       => 'posts',
+            'path'       => '/posts',
+            'actions'    => ['list', 'list'],
+        ]);
+
+        self::assertTrue($actions['isError']);
+        self::assertStringContainsString('listed twice', $this->text($actions));
+
+        $missing = $this->tool('create_resource', [
+            'service_id' => 'blog',
+            'path'       => '/posts',
+        ]);
+
+        self::assertTrue($missing['isError']);
+        self::assertStringContainsString('name', $this->text($missing));
+
+        $spec = RestAdminServices::repository()->find('blog');
+        self::assertNotNull($spec);
+        self::assertSame([], $spec->resources);
+    }
+
     private function seedDeletableService(): void
     {
         $this->tool('register_service', [

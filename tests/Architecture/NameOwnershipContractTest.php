@@ -324,12 +324,13 @@ final class NameOwnershipContractTest extends TestCase
     // assertion of the wire's method and envelope is the contract itself. No
     // token, URL or budget is among them.
     //
-    // 517 with the tampered-form test, measured 2026-11-13: +2 places. The
-    // request helper states the default `page` strategy the form falls back to,
-    // and the duplicate-action case spells `list` twice on purpose, because two
-    // identical entries are the input under test. A helper that builds the
-    // document an operator submits is not renaming a constant.
-    private const int MAX_LITERAL_PLACES = 517;
+    // 518, measured 2026-11-13: +2 places for the tampered-form test and +1 for
+    // the MCP equivalent. The request helpers state the default `page` strategy
+    // the form falls back to, and both duplicate-action cases spell `list`
+    // twice on purpose, because two identical entries are the input under test.
+    // A helper that builds the request an operator sends is not renaming a
+    // constant.
+    private const int MAX_LITERAL_PLACES = 518;
 
     /**
      * Rule 3 — measured 2026-10-17 on the tracked scope.
