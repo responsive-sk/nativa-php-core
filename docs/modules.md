@@ -81,6 +81,39 @@ file to learn that `Cardboard` needs `Navigation`, `Settings` and the rest. It
 deliberately carries no version yet — that belongs to the release registry, not
 to the directory tree.
 
+## Remote registry (opt-in)
+
+Settings → Modules can also offer modules that are not in the local catalogue.
+Set `MODULE_REGISTRY_URL` to a JSON index; while it is empty no request leaves
+the server and the registry section is absent.
+
+The index is the shape `bin/build/module-registry.php --out=<dir>` produces:
+
+```json
+{
+  "schema_version": 1,
+  "modules": {
+    "BlogFaq": {
+      "requires": ["Blog"],
+      "archive": "archives/BlogFaq.tar.gz",
+      "sha256": "<64 lowercase hex>"
+    }
+  }
+}
+```
+
+An archive is a gzip-compressed tar with the module's files at its root. The
+consumer resolves the closure, downloads every missing archive, checks each
+SHA-256, rejects symlinks and unsafe paths, extracts into a temporary directory,
+and only then copies into `modules/`. The existing `ModuleInstaller` still owns
+the install and its dependency-first plan, so the panel has one lifecycle rather
+than a second one for remote modules.
+
+The URL is a snapshot index, not a version solver yet: it carries no version and
+no update/rollback semantics. `MODULE_REGISTRY_URL` must be HTTPS except for
+loopback development, and the whole feature is off by default. The first failure
+is shown in the panel; it does not turn the Modules page into a 500.
+
 ## SEO contributions
 
 A content module owns the public URLs it serves, so it also owns its rows in the
