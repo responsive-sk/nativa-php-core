@@ -111,11 +111,36 @@ the install and its dependency-first plan, so the panel has one lifecycle rather
 than a second one for remote modules.
 
 `version` labels the snapshot; an entry may override it with its own `version`.
-The panel shows that label beside each remote module. This is still a snapshot
-index, not an update or rollback mechanism: installing again is not an update,
-and there is no archive history yet. `MODULE_REGISTRY_URL` must be HTTPS except
-for loopback development, and the whole feature is off by default. The first
-failure is shown in the panel; it does not turn the Modules page into a 500.
+The panel shows that label beside each remote module. `MODULE_REGISTRY_URL` must
+be HTTPS except for loopback development, and the whole feature is off by
+default. The first failure is shown in the panel; it does not turn the Modules
+page into a 500.
+
+### Lock, update and rollback
+
+Every successful registry install records the module, version, archive and
+SHA-256 in `storage/data/module-registry.json`. The lock lives under
+`storage/`, not in the tracked catalogue, because it describes this deployment,
+not the source tree. The panel compares the lock with the current index by
+SHA-256: a different archive is an update, a different label alone is not code.
+
+Update is deliberately one module at a time. Before touching the tree it stages
+and verifies the new archive, requires every direct dependency to be installed,
+and copies the old catalogue into `storage/data/module-registry-backups/`. It
+then removes the installed slice, replaces the catalogue and reinstalls through
+`ModuleInstaller`. Any failure after that point restores the backed-up catalogue
+and reinstalls it; the lock is written only after the new slice is in place.
+The update does not upgrade dependencies implicitly.
+
+Rollback restores that catalogue backup and re-adds the slice, then consumes the
+backup. It is one step, not a version history: updating twice replaces the
+previous backup, and there is no remote archive cache. An update discards edits
+made directly inside `src/Modules/<Name>/`; the catalogue remains the source of
+truth.
+
+`MODULE_REGISTRY_URL` is still a snapshot index rather than a resolver. It has
+no semver ranges, no dependency upgrade plan, and no remote history; the lock is
+enough to make one local update reversible.
 
 ## SEO contributions
 
