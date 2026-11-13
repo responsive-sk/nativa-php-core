@@ -190,6 +190,9 @@ jobs:
       - name: Lint every PHP file
         run: make lint
 
+      - name: Check the module catalogue index
+        run: make catalogue-check
+
       - name: Run PHPStan
         run: composer phpstan
 

@@ -145,6 +145,12 @@ fi
 
 echo "    $pruned path(s) pruned"
 
+# The source index names every module in the source catalogue; the export has a
+# smaller one. Regenerate it in the pruned tree instead of shipping a list that
+# describes modules this tree does not carry.
+step "Rebuilding the module catalogue index"
+( cd "$TARGET" && php bin/build/module-catalogue.php --write )
+
 step "Installing the export profile"
 mkdir -p "$TARGET/.github/workflows" "$TARGET/config"
 for file in Makefile .gitignore README.md AGENTS.md config/deploy.php; do

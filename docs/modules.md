@@ -66,6 +66,21 @@ slice another module imports is a refusal that names the holders, and `--force`
 stays a CLI decision made by someone who knows what depends on what. Neither
 step touches module data, and uninstall reports what it left on disk.
 
+## The generated catalogue index
+
+`modules/catalogue.json` is a deterministic, tracked index of the catalogue:
+for every module it records the source path and the direct dependency closure.
+It is generated, never edited; `php bin/build/module-catalogue.php --write`
+rewrites it, and `make catalogue-check` (also a CI gate) fails when a module or
+an import has changed without it. The export regenerates the index after
+pruning, so the shipped list names only modules that tree actually carries.
+
+The index is not an installer and does not fetch code. It is the stable list a
+release registry can serve later: a consumer should not have to scan every PHP
+file to learn that `Cardboard` needs `Navigation`, `Settings` and the rest. It
+deliberately carries no version yet — that belongs to the release registry, not
+to the directory tree.
+
 ## SEO contributions
 
 A content module owns the public URLs it serves, so it also owns its rows in the

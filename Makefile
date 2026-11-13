@@ -160,6 +160,12 @@ themes-sync: ## Copy modules/Themes from the nativa-themes repository
 	bin/build/sync-themes.sh --write $(if $(THEMES_ROOT),--from $(THEMES_ROOT),)
 
 ##@ Catalogue
+# Generated, not edited: the index is the machine-readable form of `modules/`,
+# and `--check` is the gate that catches a module or import that changed without
+# it. Run `php bin/build/module-catalogue.php --write` after such a change.
+catalogue-check: ## Gate: modules/catalogue.json matches every module and its closure
+	@$(PHP) bin/build/module-catalogue.php --check
+
 # The same two steps the `modules` and `admin-smoke` CI jobs run, so a red job
 # can be reproduced here in one command instead of by reading the workflow.
 modules-install: ## Install every catalogued module (closure order; refuses a cycle)

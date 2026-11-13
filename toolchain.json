@@ -170,6 +170,18 @@
       "answers": "copies the theme modules from the nativa-themes checkout"
     },
     {
+      "target": "catalogue-check",
+      "tier": "catalogue",
+      "can_fail": true,
+      "answers": "does modules/catalogue.json list every catalogued module, its source path and dependency closure",
+      "ci": [
+        {
+          "job": "analysis",
+          "note": "a step beside lint"
+        }
+      ]
+    },
+    {
       "target": "modules-install",
       "tier": "catalogue",
       "can_fail": true,
