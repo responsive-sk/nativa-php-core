@@ -5,6 +5,47 @@ says so here too, because a changelog that only lists what worked is a brochure.
 
 ## Unreleased
 
+### REST admin: a panel, a specification and an MCP server
+
+**Added**
+
+- `RestAdmin`, a module that renders an admin panel at `/mark/rest` from a
+  runtime JSON specification instead of generated PHP: services, resources,
+  typed fields, an action allowlist and a pagination strategy. The panel covers
+  service and resource editing, collection pages with paging, item detail, and
+  opt-in create/update/delete forms. It installs beside `Cardboard`, which does
+  not import it back (`make mago-guard`).
+- `bin/cardboard-rest-mcp`, a stdio JSON-RPC 2.0 server with fifteen tools over
+  the same specification and the same readers. `delete_item`, and an
+  `update_resource` that changes actions, require `confirm: true`.
+- A strict validator and one aggregate: unknown keys, paths without `{id}`,
+  unknown actions or pagination words, missing relation targets and cycles are
+  refused before anything is written. Rows live in `restadmin.db`; a versioned
+  JSON snapshot is written atomically beside it.
+- An outbound seam (`HttpRequestSpec`, `HttpResponse`, curl and fake transports,
+  an SSRF allowlist) and a mapping layer (envelope detection, dotted-path
+  fields, page/link/cursor pagination, typed API errors with field errors).
+- Panel writes are audited through `Modules\Audit` when it is installed; the
+  reference is guarded and best-effort, because the write has already committed.
+
+**Security**
+
+- A service stores the **name** of a token environment variable, never the
+  token. `RESTADMIN_ALLOWED_HOSTS` is checked before `curl_init`; redirects are
+  not followed and response bodies are capped at 2 MiB.
+- Writes are opt-in per resource and checked twice (rendered button and route);
+  MCP item writes reject undeclared and read-only fields.
+
+**Known**
+
+- No OAuth2 PKCE/refresh and no cookie/session authentication; tokens are static
+  environment variables. Relations are validated and stored but not edited by
+  the panel in v1. `docs/rest-admin.md` lists the limits with their reasons.
+- PHP 8.5.12 segfaults while loading a class that combines eleven argument
+  helpers with five schema builders, and on a `TestCase` method returning an
+  anonymous class. The module splits `Schemas` out and keeps test doubles in
+  plain classes; both are documented where they live.
+
 ### Failover for prepared reads, and a reset that rolls back
 
 A comparison against Marko's `ReadWriteConnection` found two gaps in the

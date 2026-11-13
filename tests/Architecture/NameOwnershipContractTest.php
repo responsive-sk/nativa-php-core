@@ -267,7 +267,63 @@ final class NameOwnershipContractTest extends TestCase
      * that imported the Blog module for the string would tie a presentation to
      * a feature module it must render without.
      */
-    private const int MAX_LITERAL_PLACES = 410;
+    // 411 with RestAdmin, measured 2026-11-13: one place spells `/mark/rest`
+    // outside the table row that owns it — the fallback nav href, which is what
+    // makes the new surface findable. The route attribute did not add a second
+    // place. A rise of one on a new surface is the honest measurement; the
+    // ceiling stays measured rather than assumed.
+    //
+    // 427 with the RestAdmin spec layer (F2), measured 2026-11-13: the new
+    // surface's own vocabulary, not a second name for a value that had one.
+    // Six spellings are the three write verbs inside `ActionSet` — twice each,
+    // once in `known()` and once in `writes()`, the allowlist that decides
+    // whether a resource may write at all. Five are `page` (two in
+    // `PaginationSpec`, three in the fixture documents), five are `create` in
+    // those fixtures, and one is the upper-case `Blog` the id rule is fed to
+    // prove it is refused. `page` and `create` are owned elsewhere by
+    // coincidence — a question subject, an audit action — exactly as the
+    // renderer's `article` is; a pagination strategy and a REST verb are the
+    // words themselves, and a fixture that writes `['list', 'read', 'create']`
+    // is the document an operator writes. One place left the count rather
+    // than joining it: `ResourceSpec`'s `'page'` default now lives in
+    // `PaginationSpec`, and the validator and repository read the model
+    // instead of re-spelling the default beside it.
+    //
+    // 441 with the RestAdmin mapping layer (F3), measured 2026-11-13: the
+    // protocol vocabulary of a new surface. Ten are `data` — the list key
+    // `Envelope` tries, and eight fixture documents whose subject IS the
+    // wrapper (`['data' => [...]]` is the shape under test). Four are `page`:
+    // the query parameter `RequestFactory` sends, the one the Link-header
+    // parser reads, and one fixture. `data` and `page` are owned elsewhere by
+    // coincidence — a taxonomy file prefix and a question subject — exactly as
+    // the renderer's `article` is; an envelope key is the word itself, and a
+    // test that builds a protocol document is not renaming a constant.
+    //
+    // 478 with the panel (F4), measured 2026-11-13: +37 places, all of them
+    // markup vocabulary the panel cannot get from anywhere else — `m-field`,
+    // `m-table`, `m-btn`, the `POST`/`PATCH`/`DELETE` methods a write form
+    // names, the `page`/`cursor` query keys the pager carries forward, and the
+    // form field names (`name`, `path`, `actions`) that are the operator's own
+    // vocabulary. No value is an owned budget, a URL, or a secret: a form
+    // input's name is not a constant, it is the key the browser will submit.
+    // 504 with MCP (F5), measured 2026-11-13: +26 places, and they are the
+    // protocol's own words — `service_id`, `data`, `page`, `create`,
+    // `update`, `delete`. British spelling counts too: the acceptance test
+    // spells the action allowlist it is asserting. A tool schema's property
+    // name is the key a client will send; renaming it to a constant would
+    // change the wire contract, not deduplicate a value. No token, URL or
+    // budget is among them.
+    //
+    // 515 with the RestAdmin scenario test (F6), measured 2026-11-13: +11
+    // places, the vocabulary the path test has to spell to walk the path: the
+    // service's display name `Blog`, the three write verbs of the action
+    // allowlist (twice each, because the resource is saved once and then edited
+    // with one more field), the `page` parameter the pager sends and the two
+    // `data` envelopes the fake transport answers with. A fixture that builds
+    // the document an operator writes is not renaming a constant, and an
+    // assertion of the wire's method and envelope is the contract itself. No
+    // token, URL or budget is among them.
+    private const int MAX_LITERAL_PLACES = 515;
 
     /**
      * Rule 3 — measured 2026-10-17 on the tracked scope.
@@ -358,7 +414,36 @@ final class NameOwnershipContractTest extends TestCase
     // the one list that decides which prepared statement a fail-closed router
     // may send to a replica. It has to live in the class, and it names three
     // statements no other module's constant names.
-    private const int MAX_DECLARATIONS = 293;
+    // 294 with RestAdmin: its module test carries the `MODULE` guard every
+    // module test in the tree declares. The name already existed, so only the
+    // declaration count moves.
+    //
+    // 302 with the RestAdmin transport (F1): `BLOCKED_RANGES` and
+    // `MAX_BODY_BYTES` are the two values the new seam owns; `CONNECT_TIMEOUT`
+    // and `TIMEOUT` are names `CloudinaryApi` already holds for the same two
+    // facts, and each of the four new module tests carries the `MODULE` guard
+    // every module test in the tree declares. Eight declarations, two names.
+    //
+    // 306 with the RestAdmin spec layer (F2): `SpecStore::VERSION` is the one
+    // new name, and the three new module tests carry the `MODULE` guard every
+    // module test in the tree declares. Four declarations, one name.
+    //
+    // 310 with the RestAdmin mapping tests (F3): each of the four new module
+    // tests carries that same `MODULE` guard and no new name. The token env
+    // name a reader test sets is spelled where it is used, not claimed as a
+    // constant: the spec tests already spelled it, and a constant would have
+    // made four existing fixtures count as re-spellings of a new owner.
+    //
+    // 311 with the panel test (F4): one `MODULE` guard, no new name. The
+    // panel's actions, helpers and controls declare no constants of their own.
+    //
+    // 312 with the MCP test (F5): one more `MODULE` guard, no new name. The
+    // server, registry, result and fifteen tools declare no constants.
+    //
+    // 313 with the scenario test (F6): one more `MODULE` guard, no new name. The
+    // audit bridge is a class with a method, not a constant, and the path test
+    // states its expectations as literals because that is what it asserts.
+    private const int MAX_DECLARATIONS = 313;
 
     /**
      * 203 → 204 with MAX_DECLARATIONS: `ModuleTreeState::IGNORED` is a name as
@@ -416,7 +501,11 @@ final class NameOwnershipContractTest extends TestCase
     //
     // 230 with the read/write connection: `READ_KEYWORDS` is a name as well as
     // a declaration, so both ceilings moved for the same one constant.
-    private const int MAX_NAMES = 230;
+    //
+    // 232 with the RestAdmin transport: `BLOCKED_RANGES` (the ranges no remote
+    // service may live in) and `MAX_BODY_BYTES` (the cap that keeps an endless
+    // answer from becoming an OOM) name two facts nothing else names.
+    private const int MAX_NAMES = 232;
 
     /**
      * `name => modules/<Name>` or `modules/<Group>/<Name>`, resolved once. A

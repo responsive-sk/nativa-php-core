@@ -12,6 +12,7 @@
     ],
     "minimum-stability": "stable",
     "require": {
+        "ext-curl": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
         "ext-pdo": "*",

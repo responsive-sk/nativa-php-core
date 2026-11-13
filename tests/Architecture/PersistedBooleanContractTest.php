@@ -73,6 +73,11 @@ final class PersistedBooleanContractTest extends TestCase
                 . 'only picks the target attribute.',
             'menu_items.is_active' => 'A menu entry is shown or hidden; ordering is a separate '
                 . 'column, so the boolean is not carrying the vocabulary.',
+            'fields.is_required' => 'A remote field is required by its API or optional; validation'
+                . ' branches on exactly this pair and no third state exists.',
+            'fields.is_read_only' => 'A field is rendered editable or read-only; whether a write is'
+                . ' ACCEPTED is decided by the resource\'s actions and the transport, never by this'
+                . ' flag, so the boolean is a presentation hint with no vocabulary behind it.',
         ];
     }
 

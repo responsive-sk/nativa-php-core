@@ -106,6 +106,10 @@ final class AdminRoutePolicy
 
         // Admin-only: these can reshape access itself, so they are never part
         // of a content role.
+        // REST admin: registering a remote service and the token it reads is
+        // configuration, not content, so it shares the admin-only row the
+        // settings screens hold. One row, not a new permission.
+        '/mark/rest'             => Permissions::SETTINGS,
         '/mark/locales'          => Permissions::SETTINGS,
         '/mark/settings'         => Permissions::SETTINGS,
         '/mark/users'            => Permissions::USERS,
