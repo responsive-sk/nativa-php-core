@@ -133,7 +133,8 @@ then removes the installed slice, replaces the catalogue and reinstalls through
 `ModuleInstaller`. Any failure after that point restores the backed-up catalogue
 and reinstalls it; the lock is written only after the new slice is in place.
 The update does not upgrade dependencies implicitly. "Update all" runs that same
-verified transaction in name order and stops at the first failure: modules
+verified transaction in dependency order, with independent modules in name
+order, and stops at the first failure: modules
 already updated in the run keep their new version, the failing module is
 restored by its own update, and the panel reports the partial result. It is not
 an atomic multi-module update.
