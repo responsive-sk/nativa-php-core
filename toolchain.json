@@ -224,6 +224,18 @@
       ]
     },
     {
+      "target": "dist-modules-check",
+      "tier": "dist",
+      "can_fail": true,
+      "answers": "does a clean clone install the catalogue and ship an artifact carrying that module set",
+      "ci": [
+        {
+          "job": "dist",
+          "note": "installs the catalogue before the build"
+        }
+      ]
+    },
+    {
       "target": "dist-profile-test",
       "tier": "dist",
       "can_fail": true,

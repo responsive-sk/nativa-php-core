@@ -86,6 +86,7 @@ after cloning, enable the enforcer: `cp bin/git-hooks/commit-msg .git/hooks/comm
 make assets                    # theme bundles → public/dist/ (gitignored)
 bin/build/build-dist.sh        # → dist/ : assets, migrated databases, smoke-tested
 make dist-check                # same build, but from a clean clone of HEAD
+make dist-modules-check       # clean clone + modules-install + module-set artifact
 ```
 
 `make dist-check` is the gate CI runs: it clones `HEAD` into a temp directory —
@@ -96,6 +97,11 @@ local `dist/` that a clone cannot reproduce fails there. `make dist-profile-test
 covers the three identity branches — Settings absent, `--no-profile`, and a
 profile that is wrong while Settings IS installed (that one must fail the
 build) — each in its own clone, with no HTTP smoke run.
+
+`make dist-modules-check` is the prod build the kernel-only clone cannot prove:
+it installs the catalogue in a clean clone, builds the artifact, and requires
+the artifact to carry the same installed module count and no second `modules/`
+catalogue. Use it before deploying a module-backed site.
 
 `dist/` carries no `vendor/`, no `Frontend/` sources, no dev configs, no
 `fixtures/` (the theme-gallery inputs a build-time script reads) and **one**

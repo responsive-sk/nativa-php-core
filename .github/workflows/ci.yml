@@ -1085,7 +1085,7 @@ jobs:
   dist:
     name: Dist artifact (clean clone)
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
 
     steps:
       - name: Checkout code
@@ -1100,6 +1100,12 @@ jobs:
 
       - name: Build and smoke the artifact from a clean clone
         run: make dist-check
+
+      # The module-set artifact: the same clean clone, but with the catalogue
+      # installed first. This is the build a deployment actually receives; a
+      # kernel-only build cannot prove that `src/Modules/` made it through.
+      - name: Install the catalogue and build the module-set artifact
+        run: make dist-modules-check
 
       # The three profile branches: kernel-only → skip, `--no-profile` → skip, and
       # Settings installed + a broken profile → the build MUST fail. All three

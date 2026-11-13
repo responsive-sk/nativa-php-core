@@ -197,6 +197,9 @@ clickhouse-smoke: ## Smoke the bridge against a local ClickHouse (attach, status
 dist-check: ## Gate: build dist from a clean clone (no vendor/) and smoke it
 	@bin/build/dist-check.sh
 
+dist-modules-check: ## Gate: a clean clone installs the catalogue and ships that module set
+	@bin/build/dist-check.sh --with-modules
+
 # The profile branches all end in a GREEN build except the broken one, which is
 # why each of them needs its own assertion rather than a single happy-path run.
 dist-profile-test: ## Gate: the three deployment-profile branches (skip / skip / fail)
