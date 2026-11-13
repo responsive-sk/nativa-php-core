@@ -77,8 +77,7 @@ pruning, so the shipped list names only modules that tree actually carries.
 
 The index is not an installer and does not fetch code. It is the stable list a
 release registry can serve later: a consumer should not have to scan every PHP
-file to learn that `Cardboard` needs `Navigation`, `Settings` and the rest. It
-deliberately carries no version yet — that belongs to the release registry, not
+file to learn that `Cardboard` needs `Navigation`, `Settings` and the rest. It deliberately carries no version — that belongs to the release registry, not
 to the directory tree.
 
 ## Remote registry (opt-in)
@@ -87,11 +86,13 @@ Settings → Modules can also offer modules that are not in the local catalogue.
 Set `MODULE_REGISTRY_URL` to a JSON index; while it is empty no request leaves
 the server and the registry section is absent.
 
-The index is the shape `bin/build/module-registry.php --out=<dir>` produces:
+The index is the shape `bin/build/module-registry.php --out=<dir> --version=<label>`
+produces:
 
 ```json
 {
   "schema_version": 1,
+  "version": "2026.11.13",
   "modules": {
     "BlogFaq": {
       "requires": ["Blog"],
@@ -109,10 +110,12 @@ and only then copies into `modules/`. The existing `ModuleInstaller` still owns
 the install and its dependency-first plan, so the panel has one lifecycle rather
 than a second one for remote modules.
 
-The URL is a snapshot index, not a version solver yet: it carries no version and
-no update/rollback semantics. `MODULE_REGISTRY_URL` must be HTTPS except for
-loopback development, and the whole feature is off by default. The first failure
-is shown in the panel; it does not turn the Modules page into a 500.
+`version` labels the snapshot; an entry may override it with its own `version`.
+The panel shows that label beside each remote module. This is still a snapshot
+index, not an update or rollback mechanism: installing again is not an update,
+and there is no archive history yet. `MODULE_REGISTRY_URL` must be HTTPS except
+for loopback development, and the whole feature is off by default. The first
+failure is shown in the panel; it does not turn the Modules page into a 500.
 
 ## SEO contributions
 

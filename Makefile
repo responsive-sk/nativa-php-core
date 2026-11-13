@@ -166,6 +166,12 @@ themes-sync: ## Copy modules/Themes from the nativa-themes repository
 catalogue-check: ## Gate: modules/catalogue.json matches every module and its closure
 	@$(PHP) bin/build/module-catalogue.php --check
 
+# The output is a static directory: registry.json plus one archive per module.
+# Publish it anywhere HTTPS serves files; the consumer reads only that tree.
+registry: ## Build a versioned static module registry (REGISTRY_OUT=<dir>, REGISTRY_VERSION=<label>)
+	@test -n "$(REGISTRY_OUT)" || { echo 'usage: make registry REGISTRY_OUT=../nativa-modules [REGISTRY_VERSION=2026.11.13] [REGISTRY_FORCE=1]' >&2; exit 1; }
+	@$(PHP) bin/build/module-registry.php --out="$(REGISTRY_OUT)" --root="$(CURDIR)" $(if $(REGISTRY_VERSION),--version="$(REGISTRY_VERSION)",) $(if $(REGISTRY_FORCE),--force,)
+
 # The same two steps the `modules` and `admin-smoke` CI jobs run, so a red job
 # can be reproduced here in one command instead of by reading the workflow.
 modules-install: ## Install every catalogued module (closure order; refuses a cycle)

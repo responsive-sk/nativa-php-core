@@ -188,6 +188,12 @@
       "answers": "does every catalogued module install in closure order (refuses a cycle)"
     },
     {
+      "target": "registry",
+      "tier": "catalogue",
+      "can_fail": false,
+      "answers": "builds a versioned static module registry with archives and checksums (REGISTRY_OUT)"
+    },
+    {
       "target": "admin-smoke",
       "tier": "catalogue",
       "can_fail": true,
