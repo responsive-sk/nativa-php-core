@@ -57,6 +57,10 @@ final class ScenarioTest extends TestCase
         // directory too: storage/data/audit.db is append-only by trigger, so a
         // test row written there cannot be taken back out.
         putenv('DB_AUDIT=' . $this->tmpDir . '/audit.db');
+        // Audit resolves the actor through AuthService over users.db. No
+        // session exists here, so nothing is queried, but the connection must
+        // still not be the developer's file.
+        putenv('DB_USERS=' . $this->tmpDir . '/users.db');
         DatabaseConnectionManager::resetInstance();
         RestAdminServices::reset();
         $this->resetAudit();
@@ -78,6 +82,7 @@ final class ScenarioTest extends TestCase
             putenv('RESTADMIN_SPEC_DIR');
             putenv('RESTADMIN_BLOG_TOKEN');
             putenv('DB_AUDIT');
+            putenv('DB_USERS');
             $this->resetAudit();
             DatabaseConnectionManager::resetInstance();
             RestAdminServices::reset();
@@ -101,47 +106,11 @@ final class ScenarioTest extends TestCase
     #[Test]
     public function serviceResourceFieldAndItemTravelTheWholePath(): void
     {
-        $service = (new ServiceFormAction(ScenarioDoubles::router()))->createSubmit(
-            Request::create('POST', '/mark/rest/services', body: [
-                'name'            => 'Blog',
-                'base_url'        => 'https://api.example.test',
-                'token_env'       => 'RESTADMIN_BLOG_TOKEN',
-                'auth_header'     => 'Authorization',
-                'timeout_seconds' => '10',
-                'headers'         => '{}',
-            ]),
-        );
-
-        self::assertSame(302, $service->getStatusCode());
-
-        $resource = (new ResourceFormAction(ScenarioDoubles::router()))->createSubmit(
-            $this->request('POST', '/mark/rest/services/blog/resources', [
-                'name'       => 'posts',
-                'path'       => '/posts',
-                'item_path'  => '/posts/{id}',
-                'id_field'   => 'id',
-                'pagination' => 'page',
-                'actions'    => ['list', 'read', 'create', 'update', 'delete'],
-                'fields'     => '[{"name":"id","label":"ID","type":"text"},{"name":"title","label":"Title","type":"text"}]',
-            ], ['id' => 'blog']),
-        );
-
-        self::assertSame(302, $resource->getStatusCode());
+        $this->createService();
+        $this->createResource();
 
         // The field step: the same resource with one more declared key.
-        $edited = (new ResourceFormAction(ScenarioDoubles::router()))->editSubmit(
-            $this->request('POST', '/mark/rest/services/blog/resources/posts', [
-                'name'       => 'posts',
-                'path'       => '/posts',
-                'item_path'  => '/posts/{id}',
-                'id_field'   => 'id',
-                'pagination' => 'page',
-                'actions'    => ['list', 'read', 'create', 'update', 'delete'],
-                'fields'     => '[{"name":"id","label":"ID","type":"text"},{"name":"title","label":"Title","type":"text"},{"name":"published_at","label":"Published","type":"date"}]',
-            ], ['id' => 'blog', 'resource' => 'posts']),
-        );
-
-        self::assertSame(302, $edited->getStatusCode());
+        $this->addPublishedField();
 
         $spec = RestAdminServices::repository()->find('blog');
         self::assertNotNull($spec);
@@ -219,6 +188,100 @@ final class ScenarioTest extends TestCase
 
         self::assertSame(502, $refused->getStatusCode());
         self::assertNotFalse(stripos($refused->getContent(), 'token'));
+    }
+
+    /**
+     * The audit trail is a second witness: the panel commits a specification
+     * without an HTTP trip, so `Audit` is the only record that a service or a
+     * resource was registered. A refused submission must leave no row, because
+     * an audit line that claims a write that did not happen is worse than none.
+     */
+    #[Test]
+    public function aSuccessfulWriteIsAuditedAndARefusedOneIsNot(): void
+    {
+        if (!class_exists('Modules\\Audit\\Interfaces\\HTTP\\AuditServices')) {
+            $this->markTestSkipped('Audit is not installed.');
+        }
+
+        $this->createService();
+        $this->createResource();
+
+        self::assertSame([
+            ['action' => 'restadmin.service.create', 'target' => 'blog', 'actor_name' => 'system'],
+            ['action' => 'restadmin.resource.create', 'target' => 'blog/posts', 'actor_name' => 'system'],
+        ], $this->auditRows());
+
+        $refused = (new ServiceFormAction(ScenarioDoubles::router()))->createSubmit(
+            Request::create('POST', '/mark/rest/services', body: ['name' => '']),
+        );
+
+        self::assertNotSame(302, $refused->getStatusCode());
+        self::assertCount(2, $this->auditRows());
+    }
+
+    private function createService(): void
+    {
+        $response = (new ServiceFormAction(ScenarioDoubles::router()))->createSubmit(
+            Request::create('POST', '/mark/rest/services', body: [
+                'name'            => 'Blog',
+                'base_url'        => 'https://api.example.test',
+                'token_env'       => 'RESTADMIN_BLOG_TOKEN',
+                'auth_header'     => 'Authorization',
+                'timeout_seconds' => '10',
+                'headers'         => '{}',
+            ]),
+        );
+
+        self::assertSame(302, $response->getStatusCode());
+    }
+
+    private function createResource(): void
+    {
+        $response = (new ResourceFormAction(ScenarioDoubles::router()))->createSubmit(
+            $this->request('POST', '/mark/rest/services/blog/resources', [
+                'name'       => 'posts',
+                'path'       => '/posts',
+                'item_path'  => '/posts/{id}',
+                'id_field'   => 'id',
+                'pagination' => 'page',
+                'actions'    => ['list', 'read', 'create', 'update', 'delete'],
+                'fields'     => '[{"name":"id","label":"ID","type":"text"},{"name":"title","label":"Title","type":"text"}]',
+            ], ['id' => 'blog']),
+        );
+
+        self::assertSame(302, $response->getStatusCode());
+    }
+
+    private function addPublishedField(): void
+    {
+        $response = (new ResourceFormAction(ScenarioDoubles::router()))->editSubmit(
+            $this->request('POST', '/mark/rest/services/blog/resources/posts', [
+                'name'       => 'posts',
+                'path'       => '/posts',
+                'item_path'  => '/posts/{id}',
+                'id_field'   => 'id',
+                'pagination' => 'page',
+                'actions'    => ['list', 'read', 'create', 'update', 'delete'],
+                'fields'     => '[{"name":"id","label":"ID","type":"text"},{"name":"title","label":"Title","type":"text"},{"name":"published_at","label":"Published","type":"date"}]',
+            ], ['id' => 'blog', 'resource' => 'posts']),
+        );
+
+        self::assertSame(302, $response->getStatusCode());
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function auditRows(): array
+    {
+        $pdo = new \PDO('sqlite:' . $this->tmpDir . '/audit.db');
+        $statement = $pdo->query('SELECT action, target, actor_name FROM audit_log ORDER BY rowid');
+        self::assertNotFalse($statement);
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $statement->fetchAll(\PDO::FETCH_ASSOC);
+
+        return $rows;
     }
 
     private function resetAudit(): void

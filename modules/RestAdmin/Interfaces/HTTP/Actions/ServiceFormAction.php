@@ -235,7 +235,7 @@ final class ServiceFormAction
         int $status,
     ): Response {
         return Response::html(
-            AdminLayout::render($title, $this->form($title, $action, $values, $errors), 'rest', [], [], $this->router()),
+            AdminLayout::render($title, $this->form($title, $action, $values, $errors, $submit), 'rest', [], [], $this->router()),
             $status,
         );
     }
