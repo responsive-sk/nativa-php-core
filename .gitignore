@@ -74,6 +74,10 @@ src/Modules/*
 # by MonoBuildFreezeTest.
 !/public/dist/mono/
 !/public/dist/nativa/
+# Freeze exception (admin): the panel stylesheets resolve from this manifest
+# and their Gilroy fonts from public/fonts/mark/. Without it /mark renders
+# unstyled; same contract as the nativa bundle above.
+!/public/dist/moonshine/
 
 # pnpm workspace dependencies (Frontend/packages). The theme SOURCES are
 # tracked — they are what `make assets` builds; node_modules and pnpm's

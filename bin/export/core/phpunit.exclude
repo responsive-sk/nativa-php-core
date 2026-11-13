@@ -24,18 +24,13 @@ tests/Architecture/ScenarioTestBindingContractTest.php # it reads openspec/ and 
 tests/Content/EmDashContractTest.php # it ratchets the em dash count of docs/
 tests/Content/ProseRhythmContractTest.php # its wrapped list is docs/ files
 
-# The minimal catalogue. These tests measure the 26-module development tree,
-# not a defect: their subject is a module the export deliberately does not ship,
-# or a collision/second provider that cannot exist with one theme and one module.
-# Measured in the export-shaped tree (Nativa + Settings): 6 errors, 9 failures
-# and 19 skips before this list existed.
-tests/Architecture/StatementHelperContractTest.php # its helper set is every module that ships a Statement helper; the catalogue has two
+# The catalogue is not the 26-module development tree. These tests measure the
+# whole tree or a subject the export deliberately does not ship; the admin
+# stack itself now ships, so its tests run.
+tests/Architecture/StatementHelperContractTest.php # its helper set spans 16 modules; the catalogue carries 8 of them
 tests/Discovery/DiscoveryCacheTest.php # it installs Scratch from the catalogue
 tests/Modules/ModuleLifecycleTest.php # it installs and removes Scratch from the catalogue
-tests/Architecture/AdminRouteUrlNamesTest.php # it walks every module's admin routes; no module ships one here
-tests/Architecture/MetricRegistryResolutionTest.php # it asserts every #[AsMetricProvider] is registered; none is shipped
-tests/Architecture/ModuleCatalogueShapeTest.php # it asserts a catalogue of theme groups this tree does not carry
-tests/Architecture/SecurityEventPayloadContractTest.php # its vocabulary is modules/Outbox/Domain/SecurityEvents.php
+tests/Architecture/ModuleCatalogueShapeTest.php # it asserts the four theme groups this tree does not carry
 tests/Theme/ThemeClassOwnershipTest.php # its shared-contract ledger needs two themes; one theme cannot collide with itself
-tests/Architecture/AdminClassContractTest.php # its stylesheet rules belong to Cardboard, which is not catalogued
 tests/Theme/FontPreloadTest.php # it needs a theme that declares a webfont; Nativa declares none by design
+modules/PageCache/tests/PageCacheInvalidationTest.php # two cases read modules/Blog call sites, which the catalogue does not carry

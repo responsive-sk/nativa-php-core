@@ -13,43 +13,33 @@
 # They record how THIS tree was built, and the numbers in them belong to it.
 docs
 
-# The catalogue: the export ships the Nativa theme, Settings (the theme vote)
-# and ContentLocale (the locale-to-URL-prefix rule every theme asks for). Docs
-# is a module with no guides in this export, so it is pruned with the other
-# optional modules. `modules/Settings`, `modules/ContentLocale` and
-# `modules/Themes/Nativa` stay.
+# The catalogue: the export ships the Nativa theme, Settings (the theme vote),
+# ContentLocale (the locale-to-URL-prefix rule every theme asks for), RestAdmin
+# (the REST panel under /mark/rest) and the admin stack RestAdmin's closure
+# needs: Cardboard, Users, Auth, Locales, Navigation, Notifications, Outbox,
+# PageCache, Pagination, Security, Uploads and Validation. Cardboard and Users
+# are what make /mark a gated admin area at all; RestAdmin cannot install
+# without them. Docs is a module with no guides in this export, so it is pruned
+# with the other optional modules.
 #
-# Measured before this list was written (`bin/lab/core-surfaces.sh`): the theme
-# renders with Settings + ContentLocale; the copy surface (Locales) costs +143
-# files and drags in a Cardboard whose `/mark` answers 500 without Users;
-# content (Blog, Pages) costs +373 and content is not a dependency; the panel
-# (Users, Cardboard) costs +209.
+# Measured (`bin/lab/core-surfaces.sh` and the file counts of the slices): the
+# theme renders with Settings + ContentLocale; the admin surface (RestAdmin
+# plus the closure of Cardboard and Users) costs +311 files; content (Blog,
+# Pages) costs +373 and content is not a dependency.
 modules/Audit
-modules/Auth
 modules/Blog
-modules/Cardboard
 modules/Clickhouse
 modules/Comments
 modules/Docs
 modules/Forms
 modules/Health
-modules/Locales
 modules/Markdown
 modules/Media
-modules/Navigation
-modules/Notifications
-modules/Outbox
-modules/PageCache
 modules/Pages
-modules/Pagination
 modules/Questions
 modules/Queue
 modules/Scheduler
 modules/Scratch
-modules/Security
-modules/Uploads
-modules/Users
-modules/Validation
 modules/Themes/Boson
 modules/Themes/Erik
 modules/Themes/Griffe
@@ -68,7 +58,6 @@ Frontend/packages/jednotka
 Frontend/packages/magazine
 Frontend/packages/minimal
 Frontend/packages/mono
-Frontend/packages/moonshine
 Frontend/packages/starter
 
 # Content corpora. The export ships the storage skeleton and no articles.
@@ -76,11 +65,8 @@ storage/blog
 storage/blog-images
 storage/pages
 
-# Public fonts: no shipped theme declares an @font-face and no stylesheet in
-# the export writes a url() into public/. They are leftovers from the themes,
-# and the docs/mark sheets, that are pruned above; Nativa's own header says it
-# ships "no @font-face" on purpose.
-public/fonts
+# Public fonts ship: the admin stylesheet declares Gilroy, and its url()s
+# resolve under public/fonts/mark/. Nativa itself still declares no @font-face.
 
 # Theme-gallery inputs. The one reader, `bin/build/render-theme-pages.php`, is
 # pruned below, and `build-dist.sh` already excludes the directory from the
