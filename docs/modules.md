@@ -45,7 +45,8 @@ slice and puts one button on each row, for the state that row is in:
 
 | state | button | route |
 |---|---|---|
-| `not-installed` | Install | `POST /mark/settings/modules/{name}/install` |
+| `not-installed`, closure complete | Install | `POST /mark/settings/modules/{name}/install` |
+| `not-installed`, closure incomplete | Install with dependencies | `POST /mark/settings/modules/{name}/install-with-dependencies` |
 | `identical` | Uninstall | `POST /mark/settings/modules/{name}/uninstall` |
 | `drifted` | Reinstall and Uninstall | `POST /mark/settings/modules/{name}/reinstall` |
 
@@ -55,10 +56,15 @@ state's, so the ordinary row has nothing a stray click can destroy.
 
 Install obeys the same closure rule as `module:add`: a module with a missing
 dependency is refused before anything is copied, and the installer's own message
-is what the page shows. Uninstall is **never** forced from the panel: a slice
-another module imports is a refusal that names the holders, and `--force` stays
-a CLI decision made by someone who knows what depends on what. Neither step
-touches module data, and uninstall reports what it left on disk.
+is what the page shows. When that closure is incomplete, the row offers
+**Install with dependencies** instead: `ModuleInstaller::addWithDependencies()`
+resolves the plan first, then copies dependencies in order and the requested
+module last. A cycle or a dependency that is not installed and not catalogued
+refuses the whole plan before anything is copied; already-installed
+dependencies are left alone. Uninstall is **never** forced from the panel: a
+slice another module imports is a refusal that names the holders, and `--force`
+stays a CLI decision made by someone who knows what depends on what. Neither
+step touches module data, and uninstall reports what it left on disk.
 
 ## SEO contributions
 
