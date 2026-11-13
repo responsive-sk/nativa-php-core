@@ -17,27 +17,25 @@ docs
 # ContentLocale (the locale-to-URL-prefix rule every theme asks for), RestAdmin
 # (the REST panel under /mark/rest) and the admin stack RestAdmin's closure
 # needs: Cardboard, Users, Auth, Locales, Navigation, Notifications, Outbox,
-# PageCache, Pagination, Security, Uploads and Validation. Cardboard and Users
-# are what make /mark a gated admin area at all; RestAdmin cannot install
-# without them. Docs is a module with no guides in this export, so it is pruned
-# with the other optional modules.
+# PageCache, Pagination, Security, Uploads and Validation. Blog ships too: it
+# owns /blog and the articles admin at /mark/articles, with the closure it
+# needs (Audit, Markdown, Media, Queue). Cardboard and Users are what make
+# /mark a gated admin area at all; RestAdmin and Blog cannot install without
+# them. Docs is a module with no guides in this export, so it is pruned with
+# the other optional modules.
 #
 # Measured (`bin/lab/core-surfaces.sh` and the file counts of the slices): the
 # theme renders with Settings + ContentLocale; the admin surface (RestAdmin
-# plus the closure of Cardboard and Users) costs +311 files; content (Blog,
-# Pages) costs +373 and content is not a dependency.
-modules/Audit
-modules/Blog
+# plus the closure of Cardboard and Users) costs +311 files; the Blog surface
+# (Blog plus Audit, Markdown, Media and Queue) costs +156; Pages costs +18
+# and is not a dependency.
 modules/Clickhouse
 modules/Comments
 modules/Docs
 modules/Forms
 modules/Health
-modules/Markdown
-modules/Media
 modules/Pages
 modules/Questions
-modules/Queue
 modules/Scheduler
 modules/Scratch
 modules/Themes/Boson

@@ -27,10 +27,9 @@ tests/Content/ProseRhythmContractTest.php # its wrapped list is docs/ files
 # The catalogue is not the 26-module development tree. These tests measure the
 # whole tree or a subject the export deliberately does not ship; the admin
 # stack itself now ships, so its tests run.
-tests/Architecture/StatementHelperContractTest.php # its helper set spans 16 modules; the catalogue carries 8 of them
+tests/Architecture/StatementHelperContractTest.php # its helper set spans 16 modules; the catalogue carries 11 of them
 tests/Discovery/DiscoveryCacheTest.php # it installs Scratch from the catalogue
 tests/Modules/ModuleLifecycleTest.php # it installs and removes Scratch from the catalogue
 tests/Architecture/ModuleCatalogueShapeTest.php # it asserts the four theme groups this tree does not carry
 tests/Theme/ThemeClassOwnershipTest.php # its shared-contract ledger needs two themes; one theme cannot collide with itself
 tests/Theme/FontPreloadTest.php # it needs a theme that declares a webfont; Nativa declares none by design
-modules/PageCache/tests/PageCacheInvalidationTest.php # two cases read modules/Blog call sites, which the catalogue does not carry
