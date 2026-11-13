@@ -106,7 +106,7 @@ produces:
 An archive is a gzip-compressed tar with the module's files at its root. The
 consumer resolves the closure, downloads every missing archive, checks each
 SHA-256, rejects symlinks and unsafe paths, caps the expanded tree at 128 MiB
-and 10,000 file entries, extracts into a temporary directory,
+and 10,000 archive entries, extracts into a temporary directory,
 and only then copies into `modules/`. The existing `ModuleInstaller` still owns
 the install and its dependency-first plan, so the panel has one lifecycle rather
 than a second one for remote modules. If the installer refuses after that copy,
