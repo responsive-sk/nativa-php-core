@@ -450,7 +450,14 @@ final class NameOwnershipContractTest extends TestCase
     // 313 with the scenario test (F6): one more `MODULE` guard, no new name. The
     // audit bridge is a class with a method, not a constant, and the path test
     // states its expectations as literals because that is what it asserts.
-    private const int MAX_DECLARATIONS = 313;
+    // Was 313. 314 with the field context vocabulary (fields, measured
+    // 2026-11-15): the one declaration is `FieldContextTest::MODULE`, the skip
+    // guard every module test file carries — a constant the idiom requires, not
+    // a second name for a value that already had one. The eight enum cases
+    // (three contexts, and `ResourceAction`'s five tokens moved out of two
+    // methods) are not counted here, which is why a new vocabulary of eight
+    // tokens moved this number by one and the distinct-name ratchet not at all.
+    private const int MAX_DECLARATIONS = 314;
 
     /**
      * 203 → 204 with MAX_DECLARATIONS: `ModuleTreeState::IGNORED` is a name as

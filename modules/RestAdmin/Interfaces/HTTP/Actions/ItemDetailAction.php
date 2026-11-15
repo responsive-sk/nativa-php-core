@@ -12,6 +12,7 @@ use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\RestAdmin\Application\Mapping\ApiException;
 use Modules\RestAdmin\Application\Mapping\FieldMapper;
 use Modules\RestAdmin\Application\Mapping\MappingException;
+use Modules\RestAdmin\Domain\Model\FieldContext;
 use Modules\RestAdmin\Domain\Model\ResourceSpec;
 use Modules\RestAdmin\Domain\Model\ServiceSpec;
 use Modules\RestAdmin\Interfaces\HTTP\Panel;
@@ -63,6 +64,10 @@ final class ItemDetailAction
         $details = '<dl class="m-dl">';
 
         foreach ($resource->fields as $field) {
+            if (!$field->visibleIn(FieldContext::Detail)) {
+                continue;
+            }
+
             $details .= '<dt>' . AdminLayout::e($field->label) . '</dt><dd>'
                 . AdminLayout::e($mapper->has($item, $field->name) ? PanelHtml::format($mapper->read($item, $field->name)) : '—')
                 . '</dd>';

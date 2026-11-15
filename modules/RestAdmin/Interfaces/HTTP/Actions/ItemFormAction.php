@@ -14,6 +14,7 @@ use Modules\RestAdmin\Application\Mapping\ApiException;
 use Modules\RestAdmin\Application\Mapping\FieldMapper;
 use Modules\RestAdmin\Application\Mapping\MappingException;
 use Modules\RestAdmin\Application\Services\Audit;
+use Modules\RestAdmin\Domain\Model\FieldContext;
 use Modules\RestAdmin\Domain\Model\FieldSpec;
 use Modules\RestAdmin\Domain\Model\FieldType;
 use Modules\RestAdmin\Domain\Model\ResourceSpec;
@@ -369,8 +370,12 @@ final class ItemFormAction
         $controls = '';
 
         foreach ($resource->fields as $field) {
+            if (!$field->visibleIn(FieldContext::Form)) {
+                continue;
+            }
+
             $fieldError = implode(' ', $fieldErrors[$field->name] ?? []);
-            $controls .= FieldControl::render($field, $values[$field->name] ?? null, $fieldError);
+            $controls .= FieldControl::render($field, $values[$field->name] ?? null, $fieldError, FieldContext::Form);
         }
 
         $title = null === $id ? 'New ' . $resource->name : 'Edit ' . $resource->name . ' ' . $id;
