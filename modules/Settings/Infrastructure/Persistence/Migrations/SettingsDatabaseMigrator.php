@@ -33,30 +33,28 @@ final readonly class SettingsDatabaseMigrator implements MigratorInterface
      * the deployment that installs it — the seed is a starting point, not a
      * policy.
      *
+     * ## Why there are no admin rows here any more
+     *
+     * The admin sidebar used to be seeded from a second copy of the nav (this
+     * list, plus `AdminNavService::FALLBACK` as a third). Both named modules
+     * that may not be installed — `Pages`, `Comments`, `Questions`, `Forms`
+     * have no catalogue slice in this tree — and a fresh install therefore
+     * carried links to 404s until the route filter dropped them at render.
+     *
+     * The nav is now declared where it belongs: each installed module annotates
+     * one class with `#[AsAdminNavItem]`, `AdminNavRegistry` discovers it, and
+     * `AdminNavService` renders the discovered set. A stored `menu_items` row
+     * with the same href still wins (label, order, icon, visibility), so this
+     * table remains the operator's override rather than a second source. Row
+     * ordering is therefore load-bearing for that pairing, which is why the
+     * order numbers below are the ones the attributes use.
+     *
      * @var list<array{0: string, 1: string, 2: string, 3: int, 4?: string}>
      */
     private const array DEFAULT_MENU_ITEMS = [
         ['Home', '/', 'header', 10],
         ['Articles', '/blog', 'header', 15],
         ['Admin', '/mark', 'header', 20],
-        // Admin panel navigation (location = 'admin') — label, href, location, sort, icon
-        ['Dashboard', '/mark', 'admin', 10, 'dashboard'],
-        ['Notifications', '/mark/notifications', 'admin', 15, 'bell'],
-        ['Users', '/mark/users', 'admin', 20, 'users'],
-        ['Roles', '/mark/roles', 'admin', 30, 'shield'],
-        ['Settings', '/mark/settings', 'admin', 40, 'settings'],
-        ['Locales', '/mark/locales', 'admin', 50, 'globe'],
-        ['Media', '/mark/media', 'admin', 60, 'image'],
-        ['Blog', '/mark/articles', 'admin', 70, 'rss'],
-        ['Articles', '/mark/articles', 'admin', 71, 'file-text'],
-        ['Categories', '/mark/categories', 'admin', 72, 'folder'],
-        ['Tags', '/mark/tags', 'admin', 73, 'tag'],
-        ['Pages', '/mark/pages', 'admin', 80, 'file'],
-        ['Comments', '/mark/comments', 'admin', 100, 'message'],
-        ['Questions', '/mark/questions', 'admin', 102, 'help-circle'],
-        ['Forms', '/mark/forms', 'admin', 105, 'inbox'],
-        ['Outbox', '/mark/outbox', 'admin', 108, 'inbox'],
-        ['Audit', '/mark/audit', 'admin', 110, 'clipboard'],
     ];
 
     private ConnectionInterface $connection;
@@ -230,9 +228,6 @@ final readonly class SettingsDatabaseMigrator implements MigratorInterface
             $inserted += $this->seedMenuItem($existsStmt, $stmt, $item);
         }
 
-        // Nest Tags and Categories under Articles (parent_item_id) — idempotent.
-        $this->nestChildrenUnderArticles();
-
         return $inserted;
     }
 
@@ -263,28 +258,4 @@ final readonly class SettingsDatabaseMigrator implements MigratorInterface
         return 1;
     }
 
-    /**
-     * Nest Articles, Tags, and Categories under Blog (expandable group).
-     */
-    private function nestChildrenUnderArticles(): void
-    {
-        $stmt = Statement::query($this->connection,
-            "SELECT id FROM menu_items WHERE label = 'Blog' AND location = 'admin' AND parent_item_id IS NULL LIMIT 1",
-        );
-
-        $blogId = $stmt->fetchColumn();
-
-        if (false === $blogId || '' === $blogId) {
-            return;
-        }
-
-        $nestStmt = Statement::prepare($this->connection,
-            'UPDATE menu_items SET parent_item_id = :parent, updated_at = CURRENT_TIMESTAMP
-             WHERE label = :label AND location = :loc AND parent_item_id IS NULL',
-        );
-
-        foreach (['Articles', 'Tags', 'Categories'] as $childLabel) {
-            $nestStmt->execute([':parent' => $blogId, ':label' => $childLabel, ':loc' => 'admin']);
-        }
-    }
 }

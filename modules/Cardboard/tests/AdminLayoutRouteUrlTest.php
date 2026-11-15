@@ -146,6 +146,7 @@ final class AdminLayoutRouteUrlTest extends TestCase
                 'url'          => $this->url(),
                 'settingsTabs' => AdminLayout::settingsTabs($this->url(), $active),
                 'errorHtml'    => '',
+                'declaredNavTable' => '',
                 'csrf'         => '',
                 'siteName'     => '',
                 'siteDescription' => '',
