@@ -596,12 +596,10 @@ final readonly class ModuleRegistry
         $this->writeLock($lock);
 
         if (null !== $backup) {
-            try {
-                self::remove($backup);
-            } catch (\Throwable) {
-                // The lock is already clear; an orphan backup is not worth turning
-                // a successful uninstall into a failure.
-            }
+            // The lock is already clear, and remove() is this class's best-effort
+            // remover: an orphan backup is not worth turning a successful
+            // uninstall into a failure.
+            self::remove($backup);
         }
     }
 
@@ -662,13 +660,9 @@ final readonly class ModuleRegistry
                 }
             } catch (\Throwable $e) {
                 foreach ($copied as $target) {
-                    if (is_dir($target)) {
-                        try {
-                            ModuleInstaller::deleteTree($target);
-                        } catch (\Throwable) {
-                            // Best effort: the original failure is the one worth reporting.
-                        }
-                    }
+                    // Best effort: the original failure is the one worth reporting,
+                    // and remove() logs a cleanup that could not run.
+                    self::remove($target);
                 }
 
                 throw $e;
@@ -681,18 +675,18 @@ final readonly class ModuleRegistry
                     // An installed slice is keeping this catalogue entry alive; only
                     // a module the installer never installed may be removed.
                     if (!$this->catalog->isInstalled($module) && is_dir($target)) {
-                        try {
-                            ModuleInstaller::deleteTree($target);
-                        } catch (\Throwable) {
-                            // Best effort: the install refusal is the failure worth reporting.
-                        }
+                        // Best effort: the install refusal is the failure worth
+                        // reporting, and remove() logs a cleanup that could not run.
+                        self::remove($target);
                     }
                 }
 
                 try {
                     (new ModuleCatalogueIndex($this->catalog))->write();
-                } catch (\Throwable) {
-                    // The install refusal is the failure worth reporting.
+                } catch (\Throwable $e) {
+                    // The install refusal is the failure worth reporting; a stale
+                    // index is not, but it must not vanish without a trace.
+                    error_log('[modules] catalogue index refresh failed: ' . $e->getMessage());
                 }
 
                 throw $e;
@@ -1273,8 +1267,10 @@ final readonly class ModuleRegistry
         if (is_dir($path)) {
             try {
                 ModuleInstaller::deleteTree($path);
-            } catch (\Throwable) {
-                // The temp directory is best-effort cleanup after the result is known.
+            } catch (\Throwable $e) {
+                // The temp directory is best-effort cleanup after the result is
+                // known; a path that could not be removed is still a fact.
+                error_log('[modules] could not remove ' . $path . ': ' . $e->getMessage());
             }
 
             return;
