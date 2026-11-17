@@ -261,8 +261,12 @@ final class QueueAction
         $rows = '';
         foreach (['queue' => 'Queue', 'handler' => 'Handler', 'state' => 'State', 'available_at' => 'Available at', 'reserved_at' => 'Reserved at', 'created_at' => 'Created'] as $key => $label) {
             $value = $job[$key] ?? null;
+            $display = null === $value || '' === (string) $value
+                ? '—'
+                : (str_ends_with($key, '_at') ? CardboardLayout::formatTime((string) $value) : (string) $value);
+
             $rows .= '<tr><td>' . $label . '</td><td class="m-mono">'
-                . CardboardLayout::e(null !== $value ? (string) $value : '—') . '</td></tr>';
+                . CardboardLayout::e($display) . '</td></tr>';
         }
 
         $rows .= '<tr><td>Attempts</td><td class="m-mono">'

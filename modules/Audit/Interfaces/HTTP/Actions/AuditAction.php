@@ -50,8 +50,7 @@ final class AuditAction
 
     private function row(AuditEntry $entry): string
     {
-        $datetime = $entry->createdAt()->format('Y-m-d\TH:i:s');
-        $time = CardboardLayout::relativeTime($datetime);
+        $time = CardboardLayout::relativeTime($entry->createdAt());
         $actor = CardboardLayout::e($entry->actorName());
         $action = '<span class="m-badge m-badge-success">' . CardboardLayout::e($entry->action()) . '</span>';
         $target = CardboardLayout::e($entry->target());

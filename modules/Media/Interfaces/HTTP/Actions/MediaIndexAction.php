@@ -125,7 +125,7 @@ final class MediaIndexAction
         $urlEscaped = CardboardLayout::e('' !== $url ? $url : $editHref);
         $size = $this->formatSize($asset->size());
         $mime = CardboardLayout::e($asset->mimeType());
-        $date = CardboardLayout::e(substr($asset->createdAt(), 0, 10));
+        $date = CardboardLayout::e(CardboardLayout::formatTime($asset->createdAt(), 'Y-m-d'));
         $viewCount = $asset->viewCount();
         $category = $asset->category();
         $tags = $asset->tags();

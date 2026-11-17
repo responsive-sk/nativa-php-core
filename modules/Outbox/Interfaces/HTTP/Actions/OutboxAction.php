@@ -85,7 +85,7 @@ final class OutboxAction
             . '<td class="m-mono">' . CardboardLayout::e($message->eventType()) . '</td>'
             . '<td>' . $this->badge($message->status()) . '</td>'
             . '<td class="m-mono">' . $message->attempts() . '/' . $message->maxAttempts() . '</td>'
-            . '<td class="m-mono">' . CardboardLayout::e($message->createdAt()) . '</td>'
+            . '<td class="m-mono">' . CardboardLayout::e(CardboardLayout::formatTime($message->createdAt())) . '</td>'
             . '</tr>';
     }
 
@@ -107,11 +107,17 @@ final class OutboxAction
             'Type' => $message->eventType(),
             'Status' => $message->status(),
             'Attempts' => $message->attempts() . '/' . $message->maxAttempts(),
-            'Last attempt' => $message->lastAttemptAt() ?? '—',
-            'Processed at' => $message->processedAt() ?? '—',
-            'Created' => $message->createdAt(),
         ] as $label => $value) {
             $rows .= '<tr><td>' . $label . '</td><td class="m-mono">' . CardboardLayout::e($value) . '</td></tr>';
+        }
+
+        foreach ([
+            'Last attempt' => $message->lastAttemptAt(),
+            'Processed at' => $message->processedAt(),
+            'Created' => $message->createdAt(),
+        ] as $label => $value) {
+            $rows .= '<tr><td>' . $label . '</td><td class="m-mono">'
+                . CardboardLayout::e(null !== $value && '' !== $value ? CardboardLayout::formatTime($value) : '—') . '</td></tr>';
         }
 
         $error = $message->errorMessage();

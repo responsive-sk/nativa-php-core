@@ -37,10 +37,11 @@ final class RestPanelIndexAction
 
         foreach ($services as $service) {
             $href = $this->url('mark.rest.service', ['id' => $service['id']]);
+            $updatedAt = (string) $service['updated_at'];
             $rows[] = [
                 ['html' => '<a href="' . CardboardLayout::e($href) . '">' . CardboardLayout::e($service['name']) . '</a>'],
                 $service['base_url'],
-                '' === $service['updated_at'] ? '—' : $service['updated_at'],
+                '' === $updatedAt ? '—' : CardboardLayout::formatTime($updatedAt),
             ];
         }
 
