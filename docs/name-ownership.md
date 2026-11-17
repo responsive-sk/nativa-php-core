@@ -57,7 +57,7 @@ because **two of them were not what the exemption claimed**:
 | `'users.manage'` | `USERS` (Users) · `REQUIRED` (tests/Http) | **gone.** `Permissions::USERS` is the owner and the kernel owns it. The test imported it — and while doing so a fourth spelling turned up in the same file (`new AuthIdentity('u-42', false, ['users.manage'])`, the one place that bypassed the constant the four others used), which is what a second owner produces |
 | `'#94a3b8'` | `DIFF_CONTEXT_INK` · `VERSION_INK_MUTED` | **gone.** Not "two roles in one palette" — one class declaring the same colour twice, and the alias used it ONCE (the dev-version stamp). `DIFF_CONTEXT_INK` is the member of the `DIFF_*` set, so the alias is gone |
 | `'griffe'` | `BUNDLE` · `THEME` | **gone.** `GriffeTheme::name()`/`::bundle()`/`::jsKey()` all return it; that class is the owner. `GriffeBuildFreezeTest` asked the owner instead of declaring it, which makes the freeze STRONGER: renaming the bundle without re-freezing now fails that test |
-| `'Cardboard'` | `ADMIN_MODULE` · `MODULE` | **stays.** See below |
+| `'Cardboard'` | `MARK_MODULE` · `MODULE` | **stays.** See below |
 | `'203.0.113.7'` | `CLIENT_IP` · `REMOTE` | **stays**, and its old reason was simply false |
 
 **Why `'Cardboard'` stays.** Two tests that each guard their own skip, in
@@ -139,7 +139,7 @@ while `MarkRoutePolicy::DEFAULT_PREFIX` keeps the value owned — the remaining
 admin redirects now address routes by name, and the three that spelled the bare
 `/mark` were the ones this rule could see. It moved 499 → 496 with task 2.9,
 which did the same for HTML links and forms; the rest of both refactors is held
-by `AdminRouteUrlNamesTest`, which scans `href`, `action` and HTMX URLs. That is
+by `MarkRouteUrlNamesTest`, which scans `href`, `action` and HTMX URLs. That is
 the only legal direction, and it moved as work rather than as an accounting
 change.
 
@@ -162,7 +162,7 @@ arrive in the database row:
 
 | place | value |
 |---|---|
-| `modules/Outbox/tests/OutboxAdminListTest.php:93` | `'article.published'` |
+| `modules/Outbox/tests/OutboxListTest.php:99` | `'article.published'` |
 | `modules/Outbox/tests/OutboxMetricTest.php:110` | `'article.published'` |
 | `modules/Outbox/tests/ProcessOutboxCommandTest.php:114,186` | `'article.published'` |
 | `modules/Outbox/tests/ProcessOutboxCommandTest.php:115` | `'article.unpublished'` |

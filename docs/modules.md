@@ -288,7 +288,7 @@ middleware. A provider module ships an `AuthProvider` marked
 asks the registry and constructs the Auth middleware behind `class_exists`,
 so `src/http.php` names no Auth class in a type position. With Auth and a
 provider installed the gate exists; with no provider, or no Auth module, the
-kernel answers 404 through `AdminUnavailableMiddleware`. A route is not a
+kernel answers 404 through `MarkUnavailableMiddleware`. A route is not a
 guard, and an ungated admin route must not answer 200. (`Users` used to ship an
 `AuthWiring::wire()` entry point for this; it was deleted when discovery
 landed — see `docs/kernel-status/04-kernel-contracts.md` §6 and

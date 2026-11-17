@@ -5,7 +5,7 @@
       "id": "queue.endpoint_list",
       "kind": "endpoint",
       "version": 1,
-      "description": "GET /mark/queue \u2014 QueueAdminAction::handle: live jobs and parked jobs",
+      "description": "GET /mark/queue \u2014 QueueAction::handle: live jobs and parked jobs",
       "method": "GET",
       "path": "/mark/queue",
       "invokes": "queue.list_jobs"
@@ -14,7 +14,7 @@
       "id": "queue.endpoint_detail",
       "kind": "endpoint",
       "version": 1,
-      "description": "GET /mark/queue/{id} \u2014 QueueAdminAction::detail: the one page that shows a payload, pretty-printed and poison-tolerant",
+      "description": "GET /mark/queue/{id} \u2014 QueueAction::detail: the one page that shows a payload, pretty-printed and poison-tolerant",
       "method": "GET",
       "path": "/mark/queue/{id}",
       "invokes": "queue.find_job"

@@ -68,7 +68,7 @@ three answer `false`, and the reason goes to `error_log`. That is only honest
 because the reason has a place to survive the request; a boolean whose reason
 exists nowhere is a lie.
 
-The same shape is in the queue: `Modules\Users\Application\Services\AdminNotificationHandler`
+The same shape is in the queue: `Modules\Users\Application\Services\MarkNotificationHandler`
 returns a boolean, and the worker **discards** it. What the worker acts on is
 whether the handler threw. The return value is for a human reading the code,
 not for control flow — so converting it to a `Result` would give the worker a
