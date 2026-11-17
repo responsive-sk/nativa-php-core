@@ -18,7 +18,7 @@ use RecursiveIteratorIterator;
  * defined nowhere, and the design token it should have read (`--m-muted`) had
  * existed since the panel was built. No gate could see it. `ThemeClassOwnership`
  * asks who owns a class, `FormBlockTest` asks whether a form's classes exist in
- * its stylesheet; the ADMIN sheet had neither question.
+ * its stylesheet; the mark sheet had neither question.
  *
  * ## What counts as defined
  *

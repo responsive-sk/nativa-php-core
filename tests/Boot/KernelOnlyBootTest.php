@@ -60,7 +60,7 @@ final class KernelOnlyBootTest extends TestCase
         // before routing, so an anonymous request is 302 whether or not the
         // route exists — and never the 200 that served the admin dashboard
         // to a guest (the measured defect, plan fix-mark-access-control).
-        yield 'admin'      => ['GET', '/mark',        $gated ? 302 : 404];
+        yield 'mark'       => ['GET', '/mark',        $gated ? 302 : 404];
     }
 
     #[Test]

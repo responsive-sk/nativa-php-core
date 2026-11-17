@@ -11,9 +11,8 @@ use Modules\Core\Infrastructure\Env;
  *
  * ## Why this lives in the kernel and not in `Modules\Users`
  *
- * Measured 2026-10-17, while auditing who owned a name. This was
- * `Modules\Core\Domain\MarkRoutePolicy`, and it turned out no single module
- * could own it:
+ * Measured 2026-10-17, while auditing who owned a name. The table turned out
+ * to belong to no single module:
  *
  *   - `Cardboard` kept a **local copy** of this table to avoid importing Users,
  *     documented in `CardboardNavService.php:219–223` as *"no Users import —

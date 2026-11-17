@@ -29,14 +29,14 @@ use PHPUnit\Framework\TestCase;
 final class MarkWithoutProviderTest extends TestCase
 {
     #[Test]
-    public function aRoutedAdminPathWithoutAProviderAnswers404(): void
+    public function aRoutedMarkPathWithoutAProviderAnswers404(): void
     {
         $kernel = $this->kernelWith([MarkRoutePolicy::prefix(), 'mark.dashboard']);
 
         $response = $kernel->handle(Request::create('GET', MarkRoutePolicy::prefix()));
 
         self::assertSame(404, $response->getStatusCode());
-        self::assertStringNotContainsString('admin-fixture', $response->getContent());
+        self::assertStringNotContainsString('mark-fixture', $response->getContent());
     }
 
     #[Test]
@@ -47,7 +47,7 @@ final class MarkWithoutProviderTest extends TestCase
         $response = $kernel->handle(Request::create('GET', '/'));
 
         self::assertSame(200, $response->getStatusCode());
-        self::assertStringContainsString('admin-fixture', $response->getContent());
+        self::assertStringContainsString('mark-fixture', $response->getContent());
     }
 
     #[Test]
@@ -93,6 +93,6 @@ final class MarkFixtureAction
 {
     public function handle(Request $request): Response
     {
-        return Response::html('admin-fixture');
+        return Response::html('mark-fixture');
     }
 }
