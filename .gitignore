@@ -157,3 +157,6 @@ src/Modules/*
 # under modules/Themes/ is the copy, and two copies in git is the drift the
 # gate exists to catch.
 /.upstream/
+
+# The adopted pre-rename database backup is operator state, not code.
+/storage/data/*.adopted-backup
