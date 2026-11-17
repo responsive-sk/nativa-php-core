@@ -197,7 +197,13 @@
       "target": "mark-smoke",
       "tier": "catalogue",
       "can_fail": true,
-      "answers": "does the booted panel walk its admin flows over HTTP on temp databases"
+      "answers": "does the booted panel walk its admin flows over HTTP on temp databases",
+      "ci": [
+        {
+          "job": "mark-smoke",
+          "note": "the panel booted, over make, with no vendor/ and no composer install"
+        }
+      ]
     },
     {
       "target": "clickhouse-smoke",

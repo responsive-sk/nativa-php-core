@@ -703,7 +703,7 @@ jobs:
           PY
 
   # ---------------------------------------------------------------------------
-  # ADMIN-SMOKE — the panel, booted, with a real session and a real token
+  # MARK-SMOKE — the panel, booted, with a real session and a real token
   # ---------------------------------------------------------------------------
   # The suite above proves the guards a class at a time. This job boots the
   # server the way a deployment does and walks the flows an operator walks:
@@ -756,8 +756,12 @@ jobs:
       # repositories, starts `php -S` with opcache off, runs the matrix, asserts
       # the outbox rows, and stops the server — one entry point, so a red job is
       # `make mark-smoke` on a workstation.
-      - name: The admin flows over HTTP
-        run: bin/build/mark-smoke.sh
+      # `make mark-smoke`, not the script path: the Makefile target is what this
+      # job's comment promises a workstation can reproduce, and keeping the job
+      # on the command (not on where the script happens to live) means a moved
+      # script is one edit in the Makefile, not two places to remember.
+      - name: The panel flows over HTTP
+        run: make mark-smoke
 
   # ---------------------------------------------------------------------------
   # CLICKHOUSE SMOKE — OPTIONAL: a real server, and nothing blocks on it
