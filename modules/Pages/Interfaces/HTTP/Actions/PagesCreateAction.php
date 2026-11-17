@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Pages\Interfaces\HTTP\Actions;
 
 use Modules\Audit\Interfaces\HTTP\AuditServices;
-use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
+use Modules\Cardboard\Interfaces\HTTP\CardboardLayout;
 use Modules\PageCache\Application\Services\CacheInvalidator;
 use View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;
@@ -74,7 +74,7 @@ final class PagesCreateAction
         $redirect = $this->url('pages.index') . '?locale=' . $locale . '&toast=Page+created+successfully';
 
         // HTMX: return redirect header for partial update.
-        if (AdminLayout::isHtmx($request)) {
+        if (CardboardLayout::isHtmx($request)) {
             $response = Response::html('');
             $response->setHeader('HX-Redirect', $redirect);
 
@@ -90,14 +90,14 @@ final class PagesCreateAction
      */
     private function form(array $data, string $locale, array $errors = []): string
     {
-        $errorHtml = AdminLayout::messages($errors, 'err');
-        $csrf = AdminLayout::csrfField();
+        $errorHtml = CardboardLayout::messages($errors, 'err');
+        $csrf = CardboardLayout::csrfField();
 
         $localeParam = ContentLocaleServices::mapper()->languageCode($locale);
         $backHref = $this->url('pages.index') . '?locale=' . $localeParam;
 
-        $content = '<form method="POST" action="' . AdminLayout::e($this->url('pages.create')) . '?locale=' . $localeParam . '"'
-            . ' hx-post="' . AdminLayout::e($this->url('pages.create')) . '?locale=' . $localeParam . '"'
+        $content = '<form method="POST" action="' . CardboardLayout::e($this->url('pages.create')) . '?locale=' . $localeParam . '"'
+            . ' hx-post="' . CardboardLayout::e($this->url('pages.create')) . '?locale=' . $localeParam . '"'
             . ' hx-indicator="#create-spinner">'
             . $errorHtml
             . $csrf
@@ -110,7 +110,7 @@ final class PagesCreateAction
             . '</form>'
             . MediaEditorHelper::editorScript($this->router(), 'body');
 
-        return AdminLayout::render('New page', $content, 'pages', router: $this->router());
+        return CardboardLayout::render('New page', $content, 'pages', router: $this->router());
     }
 
     /**
@@ -118,7 +118,7 @@ final class PagesCreateAction
      */
     private function formFields(array $data, string $locale): string
     {
-        $e = static fn (string $key, string $default = ''): string => AdminLayout::e($data[$key] ?? $default);
+        $e = static fn (string $key, string $default = ''): string => CardboardLayout::e($data[$key] ?? $default);
 
         $localeInput = '<input type="hidden" name="locale" value="' . $e('locale', $locale) . '">';
         $titleValue = $e('title');

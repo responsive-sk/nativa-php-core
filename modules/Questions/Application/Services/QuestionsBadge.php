@@ -25,14 +25,14 @@ use Modules\Questions\Application\QuestionsServices;
  * The count is only ever asked for an item the sidebar ALREADY decided to
  * render, which means the permission filter runs first: a session without
  * `content.manage` never sees the Questions item and is therefore never asked
- * for its count. See `AdminLayout::navLinkHtml()`.
+ * for its count. See `CardboardLayout::navLinkHtml()`.
  */
 #[AsNavBadge(priority: 90)]
 final readonly class QuestionsBadge implements NavBadgeContract
 {
     /**
      * The admin surface this badge belongs to — the same string
-     * `AdminRoutePolicy` gates behind `content.manage` and the same string a
+     * `MarkRoutePolicy` gates behind `content.manage` and the same string a
      * seeded nav row carries. NOT the nav item's `id` column, which is a
      * generated hash: a provider keyed on `_questions` matches nothing in a
      * real install while looking right against the hardcoded fallback list.

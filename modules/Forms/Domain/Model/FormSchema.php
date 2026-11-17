@@ -158,7 +158,7 @@ final readonly class FormSchema
     }
 
     /**
-     * The messages in the order the rows appear, for `AdminLayout::messages()`.
+     * The messages in the order the rows appear, for `CardboardLayout::messages()`.
      *
      * @return list<string>
      */

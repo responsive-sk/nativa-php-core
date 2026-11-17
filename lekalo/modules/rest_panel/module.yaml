@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "rest_panel",
+      "kind": "module",
+      "version": 1,
+      "description": "RestPanel — the REST panel seam: the `/mark/rest` panel gated under settings.manage (service list, service and resource specification forms, collection pages, item detail and opt-in create/update/delete forms); a strict specification (service, resources, fields, relations, actions, pagination) validated into one aggregate; the decomposed rows in restpanel.db; an atomically replaced, versioned JSON snapshot; the outbound HTTP seam (request/response DTOs, curl transport, SSRF guard, fake transport); the mapping layer (envelope detection, dotted-path fields, page/link/cursor strategies, typed API errors); and a stdio JSON-RPC MCP server (`bin/cardboard-rest-mcp`, 15 tools) that shares the same specification and readers. Writes are opt-in per resource, the token is only ever an env variable name, and delete plus action changes require confirm."
+    }
+  ]
+}

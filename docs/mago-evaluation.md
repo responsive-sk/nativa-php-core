@@ -203,7 +203,7 @@ Runtime, model and supply chain:
 |---|---|---|---|
 | `composer test` | `tests/` | `modules/*/tests/` | the `modules` suite skips a test whose module is not installed; CI's `modules` job installs the catalogue first, so there it runs |
 | `make modules-install` | — | every entry | closure order, refuses a cycle, installs into `src/Modules/` |
-| `make admin-smoke` | — | installed catalogue | boots the panel on temp DBs and walks the admin flows over HTTP |
+| `make mark-smoke` | — | installed catalogue | boots the panel on temp DBs and walks the admin flows over HTTP |
 | `make lekalo-check` | the model under `lekalo/` | per-module model | the MODEL, not the PHP: `adapters 0` means nothing compares the two |
 | `make security-audit` | tracked files | tracked files | no tracked `.env`, no secret-shaped literal |
 | `make dist-check` | build + smoke | **no** | a clean clone builds and boots; the catalogue ships only with `build-dist.sh --with-catalogue` |

@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Forms\Interfaces\HTTP\Actions;
 
 use Modules\Audit\Interfaces\HTTP\AuditServices;
-use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
+use Modules\Cardboard\Interfaces\HTTP\CardboardLayout;
 use Modules\PageCache\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
@@ -42,7 +42,7 @@ final readonly class FormsEditAction
 
         if (null === $form) {
             return Response::html(
-                AdminLayout::render('Form not found', AdminLayout::emptyState(
+                CardboardLayout::render('Form not found', CardboardLayout::emptyState(
                     'Form not found',
                     'The definition was removed or moved to another locale.',
                     $this->url('mark.forms') . '?locale=' . $language,
@@ -126,7 +126,7 @@ final readonly class FormsEditAction
             $fieldErrors,
         );
 
-        return AdminLayout::render('Edit form', $content, 'forms', router: $this->router());
+        return CardboardLayout::render('Edit form', $content, 'forms', router: $this->router());
     }
 
     private function locale(Request $request): string

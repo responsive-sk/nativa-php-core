@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Docs\Tests;
 
 use Modules\Docs\Application\Services\DocsCatalog;
-use Modules\Core\Domain\AdminRoutePolicy;
+use Modules\Core\Domain\MarkRoutePolicy;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Docs\Interfaces\HTTP\Actions\LlmsTxtAction;
@@ -98,7 +98,7 @@ final class DocsSurfaceDiscoveryTest extends TestCase
         // The admin prefix is spelled by its owner, not retyped here: this
         // test reads the surface, and a second `'/mark'` in the tree is
         // exactly the duplication `NameOwnershipContractTest` ratchets.
-        foreach (['/blog', AdminRoutePolicy::prefix(), '/authors'] as $moduleRoute) {
+        foreach (['/blog', MarkRoutePolicy::prefix(), '/authors'] as $moduleRoute) {
             self::assertStringNotContainsString(
                 $moduleRoute,
                 $body,
@@ -117,7 +117,7 @@ final class DocsSurfaceDiscoveryTest extends TestCase
     {
         $body = self::render(new SitemapAction());
 
-        self::assertStringNotContainsString(AdminRoutePolicy::prefix(), $body);
+        self::assertStringNotContainsString(MarkRoutePolicy::prefix(), $body);
         self::assertStringNotContainsString('/docs', $body);
     }
 

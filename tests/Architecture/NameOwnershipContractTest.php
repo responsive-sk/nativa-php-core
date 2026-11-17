@@ -161,7 +161,7 @@ final class NameOwnershipContractTest extends TestCase
         // (`Cardboard`) and nothing else; that spelling is the SUBJECT of the
         // test, not a duplicate it failed to notice, and the module name has an
         // owner in the catalogue, which this file asks instead of guessing.
-        'tests/Architecture/AdminClassContractTest.php',
+        'tests/Architecture/MarkClassContractTest.php',
         // The drift gate beside the service it measures. It builds a fixture
         // catalogue out of temp directories, so it spells a group name, a theme
         // name and a flat module name — the layout it asserts, not a second
@@ -173,18 +173,18 @@ final class NameOwnershipContractTest extends TestCase
     /**
      * Rule 2 — measured 2026-10-17 on the tracked scope. A ceiling, not a list.
      *
-     * Was 533, then 532 after `AdminLayout::markCssLinks()` started reading
+     * Was 533, then 532 after `CardboardLayout::markCssLinks()` started reading
      * `ThemeResolver::ADMIN_THEME` instead of `'moonshine'` and moving
-     * `AdminRoutePolicy` and `Permissions` into `Modules\Core\Domain` deleted
+     * `MarkRoutePolicy` and `Permissions` into `Modules\Core\Domain` deleted
      * Cardboard's local copy of the admin permission table.
      *
      * Then 514, and that is work rather than an accounting change: task 2.2
-     * made `QuestionsAdminAction` read `Question::STATUS_*` in both count maps
-     * and `CommentsMetric` plus `CommentsAdminAction` read
+     * made `QuestionsAction` read `Question::STATUS_*` in both count maps
+     * and `CommentsMetric` plus `CommentsAction` read
      * `Comment::STATUS_*`, retiring 18 owned literals.
      *
      * Then 502: task 0.3 removed the two `ADMIN_PATH` constants and the three
-     * call sites that retyped `'/mark'` beside them. `AdminRoutePolicy` still
+     * call sites that retyped `'/mark'` beside them. `MarkRoutePolicy` still
      * declares the default (`DEFAULT_PREFIX`), so the value stays owned and
      * the remaining `/mark` literals are still counted — the gate must not
      * lose sight of a value just because its owner became configurable.
@@ -195,7 +195,7 @@ final class NameOwnershipContractTest extends TestCase
      *
      * Now 496: task 2.9 did the same for the HTML links and forms, and again
      * only the bare `/mark` occurrences are visible to this rule. The rest of
-     * that work is held by `AdminRouteUrlNamesTest`, which scans `href`,
+     * that work is held by `MarkRouteUrlNamesTest`, which scans `href`,
      * `action` and HTMX URLs as well.
      * Now 507: the boson theme is a whole new module, so it adds places
      * without duplicating an existing one — six in `BosonTheme` (`boson` three
@@ -267,13 +267,13 @@ final class NameOwnershipContractTest extends TestCase
      * that imported the Blog module for the string would tie a presentation to
      * a feature module it must render without.
      */
-    // 411 with RestAdmin, measured 2026-11-13: one place spells `/mark/rest`
+    // 411 with RestPanel, measured 2026-11-13: one place spells `/mark/rest`
     // outside the table row that owns it — the fallback nav href, which is what
     // makes the new surface findable. The route attribute did not add a second
     // place. A rise of one on a new surface is the honest measurement; the
     // ceiling stays measured rather than assumed.
     //
-    // 427 with the RestAdmin spec layer (F2), measured 2026-11-13: the new
+    // 427 with the RestPanel spec layer (F2), measured 2026-11-13: the new
     // surface's own vocabulary, not a second name for a value that had one.
     // Six spellings are the three write verbs inside `ActionSet` — twice each,
     // once in `known()` and once in `writes()`, the allowlist that decides
@@ -289,7 +289,7 @@ final class NameOwnershipContractTest extends TestCase
     // `PaginationSpec`, and the validator and repository read the model
     // instead of re-spelling the default beside it.
     //
-    // 441 with the RestAdmin mapping layer (F3), measured 2026-11-13: the
+    // 441 with the RestPanel mapping layer (F3), measured 2026-11-13: the
     // protocol vocabulary of a new surface. Ten are `data` — the list key
     // `Envelope` tries, and eight fixture documents whose subject IS the
     // wrapper (`['data' => [...]]` is the shape under test). Four are `page`:
@@ -314,7 +314,7 @@ final class NameOwnershipContractTest extends TestCase
     // change the wire contract, not deduplicate a value. No token, URL or
     // budget is among them.
     //
-    // 515 with the RestAdmin scenario test (F6), measured 2026-11-13: +11
+    // 515 with the RestPanel scenario test (F6), measured 2026-11-13: +11
     // places, the vocabulary the path test has to spell to walk the path: the
     // service's display name `Blog`, the three write verbs of the action
     // allowlist (twice each, because the resource is saved once and then edited
@@ -343,7 +343,7 @@ final class NameOwnershipContractTest extends TestCase
      * direction this ratchet exists to enforce.
      *
      * Now 238: task 0.3 deleted `ADMIN_PATH` from the Settings provider (and
-     * its installed slice) and `AdminRoutePolicy` added `DEFAULT_PREFIX` in
+     * its installed slice) and `MarkRoutePolicy` added `DEFAULT_PREFIX` in
      * its place — one default for one panel, not two spellings of one name.
      *
      * 242 with the boson theme: `BosonTheme::DEFAULT_COPY` and `::WORKS` are
@@ -421,21 +421,21 @@ final class NameOwnershipContractTest extends TestCase
     // the one list that decides which prepared statement a fail-closed router
     // may send to a replica. It has to live in the class, and it names three
     // statements no other module's constant names.
-    // 294 with RestAdmin: its module test carries the `MODULE` guard every
+    // 294 with RestPanel: its module test carries the `MODULE` guard every
     // module test in the tree declares. The name already existed, so only the
     // declaration count moves.
     //
-    // 302 with the RestAdmin transport (F1): `BLOCKED_RANGES` and
+    // 302 with the RestPanel transport (F1): `BLOCKED_RANGES` and
     // `MAX_BODY_BYTES` are the two values the new seam owns; `CONNECT_TIMEOUT`
     // and `TIMEOUT` are names `CloudinaryApi` already holds for the same two
     // facts, and each of the four new module tests carries the `MODULE` guard
     // every module test in the tree declares. Eight declarations, two names.
     //
-    // 306 with the RestAdmin spec layer (F2): `SpecStore::VERSION` is the one
+    // 306 with the RestPanel spec layer (F2): `SpecStore::VERSION` is the one
     // new name, and the three new module tests carry the `MODULE` guard every
     // module test in the tree declares. Four declarations, one name.
     //
-    // 310 with the RestAdmin mapping tests (F3): each of the four new module
+    // 310 with the RestPanel mapping tests (F3): each of the four new module
     // tests carries that same `MODULE` guard and no new name. The token env
     // name a reader test sets is spelled where it is used, not claimed as a
     // constant: the spec tests already spelled it, and a constant would have
@@ -509,7 +509,7 @@ final class NameOwnershipContractTest extends TestCase
     // 230 with the read/write connection: `READ_KEYWORDS` is a name as well as
     // a declaration, so both ceilings moved for the same one constant.
     //
-    // 232 with the RestAdmin transport: `BLOCKED_RANGES` (the ranges no remote
+    // 232 with the RestPanel transport: `BLOCKED_RANGES` (the ranges no remote
     // service may live in) and `MAX_BODY_BYTES` (the cap that keeps an endless
     // answer from becoming an OOM) name two facts nothing else names.
     private const int MAX_NAMES = 232;

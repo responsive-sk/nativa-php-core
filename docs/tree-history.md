@@ -39,7 +39,7 @@ One row per landing point on the first-parent line — the commits a reader of
 | 10-15 | `30e3e9c` | 790 | the `/mark` access-control fix |
 | 10-16 | `ebf619d` (PR #3) | 800 | the security-audit findings |
 | 10-16 | `363bc94` (PR #4) | 811 | auth provider discovery, the mail transport, the catalogue installed in CI, and the log split into `docs/kernel-status/` |
-| 10-16 | `7335611` (PR #5) | 811 | `admin-smoke.sh` from 29 checks to 75 — a gate that walks content, the anonymous world and the workers |
+| 10-16 | `7335611` (PR #5) | 811 | `mark-smoke.sh` from 29 checks to 75 — a gate that walks content, the anonymous world and the workers |
 | 10-16 | `3177e45` (PR #6) | 814 | `bin/cms queue:work` and `src/composition.php` (the handler pairing outside the web process) |
 | 10-16 | `e41462e` (PR #7) | 824 | module commands reachable without `vendor/`; the first real queue producer |
 | 10-16 | `5379eb8`, `5464936` (PR #10, #11) | 826, 831 | the cover delete, and the retention `failed_jobs` never had |

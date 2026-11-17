@@ -92,7 +92,7 @@ OWNED Frontend/packages/boson # Boson theme package (module-carried), added in t
 OWNED src/Modules/Core/Interfaces/HTTP/ResolvesRouteUrls.php # admin redirects and admin HTML links address routes by name; the name is the one stable thing a route keeps when its URL moves
 OWNED src/Modules/Core/Interfaces/CLI/CommandOptions.php # the one argv parser bin/cms and the Blog, Outbox and Clickhouse commands share; a typo is refused instead of silently defaulting
 OWNED src/Modules/Core/Domain/Permissions.php # the admin permission table lives in the kernel, because the gate that reads it is the kernel's
-OWNED src/Modules/Core/Domain/AdminRoutePolicy.php # the admin path is an optional prefix (ADMIN_PATH, default /mark) and an alias, owned once and applied to both spellings; a malformed value falls back to /mark rather than hiding the panel
+OWNED src/Modules/Core/Domain/MarkRoutePolicy.php # the admin path is an optional prefix (ADMIN_PATH, default /mark) and an alias, owned once and applied to both spellings; a malformed value falls back to /mark rather than hiding the panel
 OWNED config/deploy.php # the committed deployment profile: the settings a build starts a site from, so an artifact cannot silently rebrand itself into the kernel's own (theme, site name). Applied by `bin/cms settings:profile` right after migrate; --no-profile skips it
 OWNED src/Modules/Tooling # module catalogue + lifecycle, moved out of Core/Application/Services (bin/cms ships it; born here, never upstream)
 OWNED src/Modules/Core/Domain/Contracts/RateLimiter.php # limiter shape the middleware guards (Boot 11)
@@ -184,7 +184,7 @@ OWNED src/Modules/Core/Domain/Contracts/SecurityEventSink.php # 4147809: the ker
 OWNED src/Modules/Core/Domain/SubmitResult.php # 8c57c3c: submit answers as a type instead of an array
 OWNED src/Themes/ThemeSetting.php # fea7c1e: a theme declares its admin-editable settings
 OWNED src/Themes/ThemeSettingValues.php # fea7c1e: the values such settings hold
-OWNED src/Modules/Core/Interfaces/HTTP/Middleware/AdminUnavailableMiddleware.php # the admin prefix answers 404 when no module supplies the auth port
+OWNED src/Modules/Core/Interfaces/HTTP/Middleware/MarkUnavailableMiddleware.php # the admin prefix answers 404 when no module supplies the auth port
 OWNED Frontend/packages/nativa # the Nativa theme source; upstream packages do not carry it
 
 # --- Shared surfaces moved out (2026-11-09, round 4) --------------------------

@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Pages\Interfaces\HTTP;
 
 use Modules\Cardboard\Application\Services\BulkActions;
-use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
+use Modules\Cardboard\Interfaces\HTTP\CardboardLayout;
 use Modules\Core\Kernel\Contracts\RouterInterface;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Locales\Interfaces\HTTP\LocalesServices;
@@ -35,9 +35,9 @@ final class PagesTableRenderer
         }
 
         $headers = BulkActions::headerCell()
-            . AdminLayout::sortableHeader('Title', 'title', $sort, $dir, $baseParams)
+            . CardboardLayout::sortableHeader('Title', 'title', $sort, $dir, $baseParams)
             . '<th>Slug</th>'
-            . AdminLayout::sortableHeader('Status', 'published', $sort, $dir, $baseParams)
+            . CardboardLayout::sortableHeader('Status', 'published', $sort, $dir, $baseParams)
             . '<th>Actions</th>';
 
         return '<div class="m-table-scroll">'
@@ -79,14 +79,14 @@ final class PagesTableRenderer
 
         // Defense in depth beside the actions' boundary allowlist: a future
         // caller passing a raw param must not get attribute breakout.
-        $locale = AdminLayout::e($locale);
-        $slug = AdminLayout::e($page['slug']);
-        $title = AdminLayout::e($page['title']);
+        $locale = CardboardLayout::e($locale);
+        $slug = CardboardLayout::e($page['slug']);
+        $title = CardboardLayout::e($page['title']);
         $editHref = $router->url('pages.edit', ['slug' => $slug]) . '?locale=' . $locale;
         $switch = BulkActions::markSwitch(
             $router->url('pages.publish-toggle', ['slug' => $slug]) . '?locale=' . $locale,
             $locale,
-            AdminLayout::csrfField(),
+            CardboardLayout::csrfField(),
             $page['published'],
             self::switchLabels(),
         );
@@ -97,28 +97,28 @@ final class PagesTableRenderer
         $mapper = ContentLocaleServices::mapper();
         $slugUrl = $mapper->urlPrefix($mapper->code($locale)) . '/' . $page['slug'];
         $pair = is_string($page['translation'] ?? null) && '' !== $page['translation']
-            ? ' &rarr; <code>' . AdminLayout::e($page['translation']) . '</code>'
+            ? ' &rarr; <code>' . CardboardLayout::e($page['translation']) . '</code>'
             : '';
         $copyIcon = '<svg class="m-copy__icon" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>';
         $checkbox = BulkActions::checkboxCell($page['slug']);
-        $csrf = AdminLayout::csrfField();
-        $iconView = AdminLayout::iconView();
-        $iconEdit = AdminLayout::iconEdit();
-        $iconDelete = AdminLayout::iconDelete();
+        $csrf = CardboardLayout::csrfField();
+        $iconView = CardboardLayout::iconView();
+        $iconEdit = CardboardLayout::iconEdit();
+        $iconDelete = CardboardLayout::iconDelete();
 
         return '<tr>'
             . $checkbox
             . '<td><strong>' . $title . '</strong></td>'
-            . '<td><span class="m-copy" data-copy="' . AdminLayout::e($slugUrl) . '"><code>' . $slug . '</code>' . $copyIcon . $pair . '</span></td>'
+            . '<td><span class="m-copy" data-copy="' . CardboardLayout::e($slugUrl) . '"><code>' . $slug . '</code>' . $copyIcon . $pair . '</span></td>'
             . '<td>' . $switch . '</td>'
             . '<td style="white-space:nowrap;">'
             . '<div class="m-btn-group">'
-            . '<a class="m-btn m-btn-sm m-btn-icon" href="' . AdminLayout::e($slugUrl) . '"'
+            . '<a class="m-btn m-btn-sm m-btn-icon" href="' . CardboardLayout::e($slugUrl) . '"'
             . ' target="_blank" rel="noopener" data-tooltip="View page" title="View">' . $iconView . '</a>'
             . '<a class="m-btn m-btn-sm m-btn-icon" href="' . $editHref . '"'
             . ' data-tooltip="Edit page" title="Edit">' . $iconEdit . '</a>'
-            . '<form method="POST" action="' . AdminLayout::e($router->url('pages.delete', ['slug' => $slug]) . '?locale=' . $locale) . '"'
-            . ' hx-delete="' . AdminLayout::e($router->url('pages.delete', ['slug' => $slug]) . '?locale=' . $locale) . '"'
+            . '<form method="POST" action="' . CardboardLayout::e($router->url('pages.delete', ['slug' => $slug]) . '?locale=' . $locale) . '"'
+            . ' hx-delete="' . CardboardLayout::e($router->url('pages.delete', ['slug' => $slug]) . '?locale=' . $locale) . '"'
             . ' data-confirm="' . ($page['published'] ? 'Delete this page? It will be unpublished first, then deleted.' : 'Delete this page?') . '"'
             . ' hx-target="closest tr"'
             . ' hx-swap="outerHTML swap:500ms"'

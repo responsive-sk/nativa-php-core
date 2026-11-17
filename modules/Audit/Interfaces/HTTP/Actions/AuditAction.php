@@ -6,7 +6,7 @@ namespace Modules\Audit\Interfaces\HTTP\Actions;
 
 use Modules\Audit\Domain\Entities\AuditEntry;
 use Modules\Audit\Interfaces\HTTP\AuditServices;
-use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
+use Modules\Cardboard\Interfaces\HTTP\CardboardLayout;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
@@ -45,18 +45,18 @@ final class AuditAction
                 . '<tbody>' . $rows . '</tbody></table></div>';
         }
 
-        return Response::html(AdminLayout::render('Audit log', $content, 'audit', router: $this->router()));
+        return Response::html(CardboardLayout::render('Audit log', $content, 'audit', router: $this->router()));
     }
 
     private function row(AuditEntry $entry): string
     {
         $datetime = $entry->createdAt()->format('Y-m-d\TH:i:s');
-        $time = AdminLayout::relativeTime($datetime);
-        $actor = AdminLayout::e($entry->actorName());
-        $action = '<span class="m-badge m-badge-success">' . AdminLayout::e($entry->action()) . '</span>';
-        $target = AdminLayout::e($entry->target());
-        $detail = AdminLayout::e($entry->detail());
-        $ip = AdminLayout::e((string) ($entry->ipAddress() ?? ''));
+        $time = CardboardLayout::relativeTime($datetime);
+        $actor = CardboardLayout::e($entry->actorName());
+        $action = '<span class="m-badge m-badge-success">' . CardboardLayout::e($entry->action()) . '</span>';
+        $target = CardboardLayout::e($entry->target());
+        $detail = CardboardLayout::e($entry->detail());
+        $ip = CardboardLayout::e((string) ($entry->ipAddress() ?? ''));
 
         return '<tr>'
             . '<td>' . $time . '</td>'

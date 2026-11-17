@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Forms\Interfaces\HTTP;
 
-use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
+use Modules\Cardboard\Interfaces\HTTP\CardboardLayout;
 use View\InlineJs;
 use View\ViewRenderer;
 use Modules\Forms\Domain\Entities\Form;
@@ -35,17 +35,17 @@ final readonly class FormEditor
         array $errors = [],
         array $fieldErrors = [],
     ): string {
-        $localeInput = '<input type="hidden" name="locale" value="' . AdminLayout::e($locale) . '">';
+        $localeInput = '<input type="hidden" name="locale" value="' . CardboardLayout::e($locale) . '">';
 
-        $content = '<form method="POST" action="' . AdminLayout::e($actionUrl) . '">'
-            . AdminLayout::csrfField()
-            . AdminLayout::messages($errors, 'err')
+        $content = '<form method="POST" action="' . CardboardLayout::e($actionUrl) . '">'
+            . CardboardLayout::csrfField()
+            . CardboardLayout::messages($errors, 'err')
             . ViewRenderer::render('Modules/Forms/Interfaces/HTTP/templates/form-editor.phtml', [
                 'localeInput'      => $localeInput,
-                'slugValue'        => AdminLayout::e($data['slug']),
-                'titleValue'       => AdminLayout::e($data['title']),
-                'introValue'       => AdminLayout::e($data['intro']),
-                'successValue'     => AdminLayout::e($data['success_message']),
+                'slugValue'        => CardboardLayout::e($data['slug']),
+                'titleValue'       => CardboardLayout::e($data['title']),
+                'introValue'       => CardboardLayout::e($data['intro']),
+                'successValue'     => CardboardLayout::e($data['success_message']),
                 'publishedChecked' => $data['published'] ? 'checked' : '',
                 'rows'             => self::rows($data['fields'], $fieldErrors),
             ])

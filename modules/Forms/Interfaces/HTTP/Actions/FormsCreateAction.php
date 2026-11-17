@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Forms\Interfaces\HTTP\Actions;
 
 use Modules\Audit\Interfaces\HTTP\AuditServices;
-use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
+use Modules\Cardboard\Interfaces\HTTP\CardboardLayout;
 use Modules\PageCache\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
@@ -97,7 +97,7 @@ final readonly class FormsCreateAction
             $fieldErrors,
         );
 
-        return AdminLayout::render('New form', $content, 'forms', router: $this->router());
+        return CardboardLayout::render('New form', $content, 'forms', router: $this->router());
     }
 
     private function locale(Request $request): string

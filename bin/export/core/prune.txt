@@ -14,18 +14,18 @@
 docs
 
 # The catalogue: the export ships the Nativa theme, Settings (the theme vote),
-# ContentLocale (the locale-to-URL-prefix rule every theme asks for), RestAdmin
-# (the REST panel under /mark/rest) and the admin stack RestAdmin's closure
+# ContentLocale (the locale-to-URL-prefix rule every theme asks for), RestPanel
+# (the REST panel under /mark/rest) and the admin stack RestPanel's closure
 # needs: Cardboard, Users, Auth, Locales, Navigation, Notifications, Outbox,
 # PageCache, Pagination, Security, Uploads and Validation. Blog ships too: it
 # owns /blog and the articles admin at /mark/articles, with the closure it
 # needs (Audit, Markdown, Media, Queue). Cardboard and Users are what make
-# /mark a gated admin area at all; RestAdmin and Blog cannot install without
+# /mark a gated admin area at all; RestPanel and Blog cannot install without
 # them. Docs is a module with no guides in this export, so it is pruned with
 # the other optional modules.
 #
 # Measured (`bin/lab/core-surfaces.sh` and the file counts of the slices): the
-# theme renders with Settings + ContentLocale; the admin surface (RestAdmin
+# theme renders with Settings + ContentLocale; the admin surface (RestPanel
 # plus the closure of Cardboard and Users) costs +311 files; the Blog surface
 # (Blog plus Audit, Markdown, Media and Queue) costs +156; Pages costs +18
 # and is not a dependency.
@@ -83,12 +83,12 @@ bin/generate
 
 # Tools whose subject the export does not carry: the production wrapper calls
 # the pruned `extract-kernel.sh`, ClickHouse has no module and no Makefile
-# target here, and `admin-smoke.sh` installs nine modules (Audit, Cardboard,
+# target here, and `mark-smoke.sh` installs nine modules (Audit, Cardboard,
 # Comments, Forms, Outbox, Queue, Scheduler, Security, Users) the catalogue
 # does not have. On a fresh export it exits on its first line.
 bin/build/build-prod.sh
 bin/build/clickhouse-smoke.sh
-bin/build/admin-smoke.sh
+bin/build/mark-smoke.sh
 
 # The architectural IR model and its lockfile. The model covers this tree's
 # modules; the exported Makefile has no target that reads it.

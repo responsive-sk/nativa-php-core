@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Pages\Interfaces\HTTP\Actions;
 
 use Modules\Audit\Interfaces\HTTP\AuditServices;
-use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
+use Modules\Cardboard\Interfaces\HTTP\CardboardLayout;
 use Modules\PageCache\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
@@ -35,7 +35,7 @@ final class PagesEditAction
         $page = $service->find($slug, $locale);
 
         if (null === $page) {
-            return Response::html(AdminLayout::render('Not found', '<div class="m-card"><p>Page not found.</p></div>', router: $this->router()), 404);
+            return Response::html(CardboardLayout::render('Not found', '<div class="m-card"><p>Page not found.</p></div>', router: $this->router()), 404);
         }
 
         if ($request->isMethod('POST')) {
@@ -86,7 +86,7 @@ final class PagesEditAction
         $redirect = $this->url('pages.index') . '?locale=' . $localeParam . '&toast=Page+saved+successfully';
 
         // HTMX: return redirect header for partial update.
-        if (AdminLayout::isHtmx($request)) {
+        if (CardboardLayout::isHtmx($request)) {
             $response = Response::html('');
             $response->setHeader('HX-Redirect', $redirect);
 
@@ -105,9 +105,9 @@ final class PagesEditAction
     {
         $data = $override ?: $this->normalizePage($page, $slug);
         $localeParam = ContentLocaleServices::mapper()->languageCode($locale);
-        $slugEscaped = AdminLayout::e($slug);
+        $slugEscaped = CardboardLayout::e($slug);
         $backHref = $this->url('pages.index') . '?locale=' . $localeParam;
-        $bodyValue = AdminLayout::e($data['body']);
+        $bodyValue = CardboardLayout::e($data['body']);
 
         $actions = '<div class="m-filter-bar">'
             . '<button class="m-btn m-btn-primary" type="submit">'
@@ -115,11 +115,11 @@ final class PagesEditAction
             . '<a class="m-btn m-btn-ghost" href="' . $backHref . '">Cancel</a>'
             . '</div>';
 
-        $content = '<form method="POST" action="' . AdminLayout::e($this->url('pages.edit', ['slug' => $slugEscaped])) . '?locale=' . $localeParam . '"'
-            . ' hx-post="' . AdminLayout::e($this->url('pages.edit', ['slug' => $slugEscaped])) . '?locale=' . $localeParam . '"'
+        $content = '<form method="POST" action="' . CardboardLayout::e($this->url('pages.edit', ['slug' => $slugEscaped])) . '?locale=' . $localeParam . '"'
+            . ' hx-post="' . CardboardLayout::e($this->url('pages.edit', ['slug' => $slugEscaped])) . '?locale=' . $localeParam . '"'
             . ' hx-indicator="#edit-spinner">'
-            . AdminLayout::messages($errors, 'err')
-            . AdminLayout::csrfField()
+            . CardboardLayout::messages($errors, 'err')
+            . CardboardLayout::csrfField()
             . $this->formFields($data, $slug, $locale)
             . '<div class="m-card"><label style="font-size:14px;font-weight:600;">Content (Markdown)</label>'
             . '<textarea id="body" name="body" rows="20" style="width:100%;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;padding:12px;border:1px solid var(--m-border);border-radius:8px;background:var(--m-surface);color:var(--m-ink);box-sizing:border-box;">' . $bodyValue . '</textarea></div>'
@@ -127,7 +127,7 @@ final class PagesEditAction
             . '</form>'
             . MediaEditorHelper::editorScript($this->router(), 'body');
 
-        return AdminLayout::render('Edit: ' . $slug, $content, 'pages', router: $this->router());
+        return CardboardLayout::render('Edit: ' . $slug, $content, 'pages', router: $this->router());
     }
 
     /**
@@ -158,8 +158,8 @@ final class PagesEditAction
      */
     private function formFields(array $data, string $slug, string $locale): string
     {
-        $e = static fn (string $key, string $default = ''): string => AdminLayout::e($data[$key] ?? $default);
-        $slugEscaped = AdminLayout::e($slug);
+        $e = static fn (string $key, string $default = ''): string => CardboardLayout::e($data[$key] ?? $default);
+        $slugEscaped = CardboardLayout::e($slug);
         $localeInput = '<input type="hidden" name="locale" value="' . $e('locale', $locale) . '">';
         $publishedChecked = '1' === $data['published'] ? 'checked' : '';
 

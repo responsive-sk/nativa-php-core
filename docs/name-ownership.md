@@ -134,7 +134,7 @@ The ceiling moved 532 → 514 with task 2.2: reading `Question::STATUS_*` and
 `Comment::STATUS_*` in the admin actions and the comments metric retired 18
 owned literals. It moved 514 → 502 with task 0.3: the two `ADMIN_PATH`
 constants and the three call sites that retyped `'/mark'` beside them are gone,
-while `AdminRoutePolicy::DEFAULT_PREFIX` keeps the value owned — the remaining
+while `MarkRoutePolicy::DEFAULT_PREFIX` keeps the value owned — the remaining
 `/mark` literals are still counted. It moved 502 → 499 with task 2.8: the 130
 admin redirects now address routes by name, and the three that spelled the bare
 `/mark` were the ones this rule could see. It moved 499 → 496 with task 2.9,
@@ -220,7 +220,7 @@ declarations rather than adding one. Down again: 240 → 239 and 203 → 202, wh
 the theme gate's `UNPREFIXED_ALLOWED` list was deleted — PHPStan had proved the
 empty array could never match a class, so it was a constant guarding nothing.
 Down once more: 239 → 238 when task 0.3 deleted the Settings provider's
-`ADMIN_PATH` constant and `AdminRoutePolicy` gained `DEFAULT_PREFIX` in its
+`ADMIN_PATH` constant and `MarkRoutePolicy` gained `DEFAULT_PREFIX` in its
 place — one default for one panel, not two spellings of one name. The distinct
 name count stayed 202: one name left and one arrived.
 Up once more: 266 → 269 and 212 → 214 for the Cloudinary library, which owns

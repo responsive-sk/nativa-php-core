@@ -4,9 +4,9 @@ declare(strict_types = 1);
 
 namespace Modules\Pages\Interfaces\HTTP\Actions;
 
-use Modules\Cardboard\Application\Services\AdminLocale;
+use Modules\Cardboard\Application\Services\CardboardLocale;
 use Modules\Cardboard\Application\Services\BulkActions;
-use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
+use Modules\Cardboard\Interfaces\HTTP\CardboardLayout;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
@@ -34,8 +34,8 @@ final class PagesIndexAction
     {
         // Allowlisted at the boundary: the raw param is re-emitted into
         // row/filter/create URLs, so anything outside sk/en would reflect
-        // verbatim (AdminLocale::raw() is the identity on legit values).
-        $localeRaw = AdminLocale::raw($request->queryString('locale', 'sk'));
+        // verbatim (CardboardLocale::raw() is the identity on legit values).
+        $localeRaw = CardboardLocale::raw($request->queryString('locale', 'sk'));
         $locale = ContentLocaleServices::mapper()->code($localeRaw);
         $search = $request->queryString('q');
         $pageParam = $request->query('page');
@@ -55,13 +55,13 @@ final class PagesIndexAction
         $enClass = 'en_US' === $locale ? 'm-pill m-pill-active' : 'm-pill';
 
         $localeBar = '<div class="m-filter-bar">'
-            . '<a class="' . $skClass . '" href="' . AdminLayout::e($this->url('pages.index') . '?locale=sk') . '">SK</a>'
-            . '<a class="' . $enClass . '" href="' . AdminLayout::e($this->url('pages.index') . '?locale=en') . '">EN</a>'
+            . '<a class="' . $skClass . '" href="' . CardboardLayout::e($this->url('pages.index') . '?locale=sk') . '">SK</a>'
+            . '<a class="' . $enClass . '" href="' . CardboardLayout::e($this->url('pages.index') . '?locale=en') . '">EN</a>'
             . '</div>';
 
         $grid = $this->renderGrid($paginated, $localeRaw, $search, $page, $totalPages, $total, $sort, $dir);
 
-        $breadcrumb = AdminLayout::breadcrumb([
+        $breadcrumb = CardboardLayout::breadcrumb([
             ['label' => 'Dashboard', 'href' => $this->url('mark.dashboard')],
             ['label' => 'Pages'],
         ]);
@@ -69,19 +69,19 @@ final class PagesIndexAction
         $content = $breadcrumb . $localeBar . $grid;
 
         // HTMX: return only the content div (no search input to avoid re-triggering).
-        if (AdminLayout::isHtmx($request)) {
+        if (CardboardLayout::isHtmx($request)) {
             return Response::html($this->renderContent($paginated, $localeRaw, $search, $page, $totalPages, $total, $sort, $dir));
         }
 
         $toast = '';
         $toastMessage = $request->queryString('toast');
         if ('' !== $toastMessage) {
-            $toast = AdminLayout::toast(urldecode($toastMessage));
+            $toast = CardboardLayout::toast(urldecode($toastMessage));
         }
 
         $recentPages = $this->recentItems($paginated, $localeRaw);
 
-        return Response::html(AdminLayout::render(
+        return Response::html(CardboardLayout::render(
             'Pages',
             $content . $toast,
             'pages',
@@ -174,7 +174,7 @@ final class PagesIndexAction
             $cta = '' !== $search ? '' : $this->url('pages.create') . '?locale=' . $locale;
             $ctaLabel = '' !== $search ? '' : 'New page';
 
-            return $searchInput . AdminLayout::emptyState($emptyTitle, $emptyDesc, $cta, $ctaLabel);
+            return $searchInput . CardboardLayout::emptyState($emptyTitle, $emptyDesc, $cta, $ctaLabel);
         }
 
         $bulkBar = BulkActions::actionBarWithPublish(
@@ -201,7 +201,7 @@ final class PagesIndexAction
         $countInfo = '<div class="m-muted" style="font-size:13px;margin-bottom:12px;">Showing ' . count($pages) . ' of ' . $total . ' pages</div>';
         $tableHtml = PagesTableRenderer::table($pages, $locale, $sort, $dir, ['locale' => $locale, 'q' => $search], $this->router());
 
-        $skeleton = AdminLayout::skeletonTable([
+        $skeleton = CardboardLayout::skeletonTable([
             ['5%'], ['30%'], ['20%'], ['20%'], ['15%'],
         ]);
 
@@ -218,11 +218,11 @@ final class PagesIndexAction
      */
     private function renderSearchInput(string $search, string $locale, string $sort = 'date', string $dir = 'desc'): string
     {
-        $escapedSearch = AdminLayout::e($search);
+        $escapedSearch = CardboardLayout::e($search);
         $sortInclude = 'date' !== $sort || 'desc' !== $dir ? ', [name="sort"], [name="dir"]' : '';
         $sortHidden = 'date' !== $sort || 'desc' !== $dir
-            ? '<input type="hidden" name="sort" value="' . AdminLayout::e($sort) . '">'
-                . '<input type="hidden" name="dir" value="' . AdminLayout::e($dir) . '">'
+            ? '<input type="hidden" name="sort" value="' . CardboardLayout::e($sort) . '">'
+                . '<input type="hidden" name="dir" value="' . CardboardLayout::e($dir) . '">'
             : '';
 
         return '<div class="m-filter-bar" style="margin-bottom:16px;">'
@@ -235,7 +235,7 @@ final class PagesIndexAction
             . ' hx-indicator="#pages-skeleton"'
             . ' placeholder="Search pages..."'
             . ' style="flex:1;padding:8px 12px;border:1px solid var(--m-border);border-radius:var(--m-r-md);background:var(--m-surface);color:var(--m-ink);font-size:14px;">'
-            . '<input type="hidden" name="locale" value="' . AdminLayout::e($locale) . '">'
+            . '<input type="hidden" name="locale" value="' . CardboardLayout::e($locale) . '">'
             . $sortHidden
             . '</div>';
     }

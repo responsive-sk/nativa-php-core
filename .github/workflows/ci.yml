@@ -541,7 +541,7 @@ jobs:
   #     Cardboard`, and the two observability edges are now guarded (the
   #     catalogue installs in four rounds);
   #   - the migrators run, because a module test that reads a module database
-  #     skips when the file is absent (Blog's AdminEscapeTest on locales.db);
+  #     skips when the file is absent (Blog's MarkEscapeTest on locales.db);
   #   - the bundles are built, because `public/dist/*` is gitignored and
   #     ErikThemeTest skips when its manifest is not on disk;
   #   - and the run is ASSERTED, not eyeballed: every test file the catalogue
@@ -601,7 +601,7 @@ jobs:
         working-directory: Frontend/packages
 
       # The loop lives in bin/build/install-catalogue.sh, not here: the
-      # `admin-smoke` job below needs the same installed tree, and two copies of
+      # `mark-smoke` job below needs the same installed tree, and two copies of
       # a topological sort is one copy too many. `make modules-install` runs the
       # same script, so a red job is reproducible in one command.
       - name: Install every catalogue module
@@ -714,7 +714,7 @@ jobs:
   # moderation, publication) and both queues — the outbox drain that delivers the
   # events the run records, and the Queue worker over a job nobody can route,
   # retried and dropped through the panel. Boot 27 measured that matrix by hand;
-  # `bin/build/admin-smoke.sh` makes it enforceable — a change that 500s the
+  # `bin/build/mark-smoke.sh` makes it enforceable — a change that 500s the
   # panel or silently drops a security event now fails a job.
   #
   # No `composer install` here, deliberately, for the same reason the `boot` job
@@ -733,7 +733,7 @@ jobs:
   # is exempt from throttling by design and a `php -S` probe cannot set
   # REMOTE_ADDR, so the register/reset throttles and the rate-limit 429 stay
   # pinned by unit tests under the `modules` job.
-  admin-smoke:
+  mark-smoke:
     name: Admin flows (booted server)
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -755,9 +755,9 @@ jobs:
       # The script migrates, seeds its own accounts through the modules'
       # repositories, starts `php -S` with opcache off, runs the matrix, asserts
       # the outbox rows, and stops the server — one entry point, so a red job is
-      # `make admin-smoke` on a workstation.
+      # `make mark-smoke` on a workstation.
       - name: The admin flows over HTTP
-        run: bin/build/admin-smoke.sh
+        run: bin/build/mark-smoke.sh
 
   # ---------------------------------------------------------------------------
   # CLICKHOUSE SMOKE — OPTIONAL: a real server, and nothing blocks on it
@@ -865,7 +865,7 @@ jobs:
 
       # The build output is gitignored, so nothing below can pass by finding a
       # committed artifact. `mark`, `mark-switch` and `moonshine` are the entries
-      # `AdminLayout::markCssLinks()` resolves out of this manifest for /mark;
+      # `CardboardLayout::markCssLinks()` resolves out of this manifest for /mark;
       # the names are load-bearing and a rename breaks the admin chrome
       # silently (a page with no stylesheet still answers 200).
       #

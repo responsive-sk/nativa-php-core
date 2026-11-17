@@ -172,13 +172,13 @@ registry: ## Build a versioned static module registry (REGISTRY_OUT=<dir>, REGIS
 	@test -n "$(REGISTRY_OUT)" || { echo 'usage: make registry REGISTRY_OUT=../nativa-modules [REGISTRY_VERSION=2026.11.13] [REGISTRY_FORCE=1]' >&2; exit 1; }
 	@$(PHP) bin/build/module-registry.php --out="$(REGISTRY_OUT)" --root="$(CURDIR)" $(if $(REGISTRY_VERSION),--version="$(REGISTRY_VERSION)",) $(if $(REGISTRY_FORCE),--force,)
 
-# The same two steps the `modules` and `admin-smoke` CI jobs run, so a red job
+# The same two steps the `modules` and `mark-smoke` CI jobs run, so a red job
 # can be reproduced here in one command instead of by reading the workflow.
 modules-install: ## Install every catalogued module (closure order; refuses a cycle)
 	bin/build/install-catalogue.sh
 
-admin-smoke: ## Boot the panel with temp DBs and walk the admin flows over HTTP
-	bin/build/admin-smoke.sh
+mark-smoke: ## Boot the panel with temp DBs and walk the admin flows over HTTP
+	bin/build/mark-smoke.sh
 
 # The bridge against a server this target starts: the DDL, the status
 # read-back, the `user_files` refusal, `--typed` and the write gate are facts

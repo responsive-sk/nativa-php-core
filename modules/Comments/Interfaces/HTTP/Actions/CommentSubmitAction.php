@@ -10,7 +10,7 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Queue\Interfaces\HTTP\QueueServices;
-use Modules\Users\Application\Services\AdminNotificationHandler;
+use Modules\Users\Application\Services\MarkNotificationHandler;
 use Modules\Users\Application\Services\NotificationPayload;
 
 /**
@@ -118,7 +118,7 @@ final class CommentSubmitAction
     {
         try {
             QueueServices::queue()->push(
-                AdminNotificationHandler::HANDLER,
+                MarkNotificationHandler::HANDLER,
                 NotificationPayload::comment($slug, $author, $body, '/mark/comments'),
                 // One attempt: a retried notification is a second email for a
                 // comment the admin may already have moderated.

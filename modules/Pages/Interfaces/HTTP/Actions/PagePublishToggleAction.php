@@ -5,8 +5,8 @@ declare(strict_types = 1);
 namespace Modules\Pages\Interfaces\HTTP\Actions;
 
 use Modules\Audit\Interfaces\HTTP\AuditServices;
-use Modules\Cardboard\Application\Services\AdminLocale;
-use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
+use Modules\Cardboard\Application\Services\CardboardLocale;
+use Modules\Cardboard\Interfaces\HTTP\CardboardLayout;
 use Modules\PageCache\Application\Services\CacheInvalidator;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
@@ -33,8 +33,8 @@ final class PagePublishToggleAction
     {
         $slug = (string) ($request->routeParam('slug') ?? '');
         $localeRaw = $request->queryString('locale', 'sk');
-        $localeParam = AdminLocale::raw($localeRaw);
-        $locale = AdminLocale::canonical($localeRaw);
+        $localeParam = CardboardLocale::raw($localeRaw);
+        $locale = CardboardLocale::canonical($localeRaw);
 
         $crud = new PageCrudService();
         $toRaw = $request->body('to');
@@ -54,7 +54,7 @@ final class PagePublishToggleAction
             );
         }
 
-        if (AdminLayout::isHtmx($request)) {
+        if (CardboardLayout::isHtmx($request)) {
             $pages = $crud->list($locale);
             foreach ($pages as $page) {
                 if ($page['slug'] === $slug) {

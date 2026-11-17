@@ -10,7 +10,7 @@ use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Queue\Interfaces\HTTP\QueueServices;
-use Modules\Users\Application\Services\AdminNotificationHandler;
+use Modules\Users\Application\Services\MarkNotificationHandler;
 use Modules\Users\Application\Services\NotificationPayload;
 use Modules\Pages\Interfaces\HTTP\Actions\PageViewAction;
 use Modules\Questions\Application\QuestionsServices;
@@ -171,7 +171,7 @@ final class QuestionSubmitAction
     {
         try {
             QueueServices::queue()->push(
-                AdminNotificationHandler::HANDLER,
+                MarkNotificationHandler::HANDLER,
                 NotificationPayload::question(
                     $subjectType,
                     $subjectSlug,

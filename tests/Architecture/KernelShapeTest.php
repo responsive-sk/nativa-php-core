@@ -65,7 +65,7 @@ final class KernelShapeTest extends TestCase
      */
     private const array ALLOW_LIST = [
         'src/Modules/Core/Application/Services/DisposalRegistry.php',
-        'src/Modules/Core/Domain/AdminRoutePolicy.php',
+        'src/Modules/Core/Domain/MarkRoutePolicy.php',
         'src/Modules/Core/Domain/Permissions.php',
         'src/Modules/Core/Domain/SubmitResult.php',
         'src/Modules/Core/Infrastructure/Attributes/AsMiddleware.php',
@@ -85,7 +85,7 @@ final class KernelShapeTest extends TestCase
         'src/Modules/Core/Interfaces/HTTP/Attributes/Route.php',
         'src/Modules/Core/Interfaces/HTTP/ErrorPageRenderer.php',
         'src/Modules/Core/Interfaces/HTTP/Kernel.php',
-        'src/Modules/Core/Interfaces/HTTP/Middleware/AdminUnavailableMiddleware.php',
+        'src/Modules/Core/Interfaces/HTTP/Middleware/MarkUnavailableMiddleware.php',
         'src/Modules/Core/Interfaces/HTTP/Middleware/CsrfMiddleware.php',
         'src/Modules/Core/Interfaces/HTTP/Middleware/MiddlewareRegistry.php',
         'src/Modules/Core/Interfaces/HTTP/Middleware/RateLimitMiddleware.php',
@@ -164,7 +164,7 @@ final class KernelShapeTest extends TestCase
      * contributors. The home and Pages share the builder, and the namespace is
      * not an HTTP dispatch member.
      *
-     * 66 → 67 is the admin-prefix round: `AdminUnavailableMiddleware` answers
+     * 66 → 67 is the admin-prefix round: `MarkUnavailableMiddleware` answers
      * 404 for the admin prefix when no auth provider is wired. The kernel owns
      * the prefix, so the kernel is the only layer that can refuse a panel a
      * module still routes; measured 2026-11-09, Cardboard without Users served

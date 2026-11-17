@@ -194,7 +194,7 @@
       "answers": "builds a versioned static module registry with archives and checksums (REGISTRY_OUT)"
     },
     {
-      "target": "admin-smoke",
+      "target": "mark-smoke",
       "tier": "catalogue",
       "can_fail": true,
       "answers": "does the booted panel walk its admin flows over HTTP on temp databases"
@@ -409,7 +409,7 @@
       "can_fail": true
     },
     {
-      "key": "admin-smoke",
+      "key": "mark-smoke",
       "name": "Admin flows (booted server)",
       "can_fail": true
     },

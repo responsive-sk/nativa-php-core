@@ -514,7 +514,7 @@ when there are some.
    tree verified by digest: the bare name back → the delivery test red; the guard
    removed → red; `ip` dropped from the declaration → red; the inactive branch made
    to record → red. The same claim is then made against a **booted server**:
-   `bin/build/admin-smoke.sh` walks an author's `GET /mark/users` to the 403, reads
+   `bin/build/mark-smoke.sh` walks an author's `GET /mark/users` to the 403, reads
    the `security.authz.denied` message back out of the outbox by its `path`
    (`json_extract`, because `json_encode` escapes the slashes), and — after the
    end-of-request drain has provably run — asserts the audit row that names
@@ -827,7 +827,7 @@ premise, the surfaces matrix, starting points, the three-column band, the
 principles band and the closing call. Their text is this project's, read from
 `PageContext::$copy` first with a `DEFAULT_COPY` floor (the same shape Erik,
 Mono and Jednotka use), and the links point at `/blog` and the
-`AdminRoutePolicy` prefix, never at boson-php. The testimonials band survives
+`MarkRoutePolicy` prefix, never at boson-php. The testimonials band survives
 as three unattributed principles: the reference's named endorsements cannot
 be ported without inventing quotes.
 
@@ -908,7 +908,7 @@ due path driven at a fixed 13:00 against the real outbox.db —
 ## The queue's worker > `bin/cms queue:work` (measured 2026-10-16)
 
 `DatabaseQueue::work()` shipped with exactly one call site in the tree: an
-inline `php` heredoc inside `bin/build/admin-smoke.sh`. The queue therefore had
+inline `php` heredoc inside `bin/build/mark-smoke.sh`. The queue therefore had
 a worker that
 
 - no operator could put in crontab (it was not a command),
@@ -1142,7 +1142,7 @@ SQLite or synthetic timetables, never real closures or `storage/`.
 `/mark/queue` (jobs newest-first with `?queue=` filter, failed table
 below, job detail with pretty JSON args) and `/mark/outbox` (status
 filter, message detail with payload/metadata/error) mirror
-`CommentsAdminAction`: `m-table` + `AdminLayout::e()` escaping,
+`CommentsAction`: `m-table` + `CardboardLayout::e()` escaping,
 redirect-back POSTs, per-action `AuditServices::log` rows. Failed jobs
 re-queue under their own id with attempts reset (`retryFailed`) or drop
 (`deleteFailed`); missing ids redirect without an audit row. Behind the

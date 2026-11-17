@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Forms\Interfaces\HTTP\Actions;
 
-use Modules\Cardboard\Interfaces\HTTP\AdminLayout;
+use Modules\Cardboard\Interfaces\HTTP\CardboardLayout;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
@@ -34,15 +34,15 @@ final readonly class FormsIndexAction
         $locale = $this->locale($request);
         $language = ContentLocaleServices::mapper()->languageCode($locale);
         $forms = FormsServices::forms()->listForLocale($locale);
-        $csrf = AdminLayout::csrfField();
+        $csrf = CardboardLayout::csrfField();
 
         $content = '<div class="m-filter-bar">'
-            . '<a class="m-btn m-btn-primary" href="' . AdminLayout::e($this->url('mark.forms.create') . '?locale=' . $language) . '">New form</a>'
+            . '<a class="m-btn m-btn-primary" href="' . CardboardLayout::e($this->url('mark.forms.create') . '?locale=' . $language) . '">New form</a>'
             . $this->localeLinks($language, $locale)
             . '</div>';
 
         if ([] === $forms) {
-            $content .= AdminLayout::emptyState(
+            $content .= CardboardLayout::emptyState(
                 'No forms in this locale',
                 'Create a form, then embed it on a page with {{form:slug}} or in a page front matter with form: slug.',
             );
@@ -58,7 +58,7 @@ final readonly class FormsIndexAction
             $content .= '</tbody></table></div>';
         }
 
-        return Response::html(AdminLayout::render('Forms', $content, 'forms', router: $this->router()));
+        return Response::html(CardboardLayout::render('Forms', $content, 'forms', router: $this->router()));
     }
 
     private function row(Form $form, string $language, string $csrf): string
@@ -68,19 +68,19 @@ final readonly class FormsIndexAction
         $new = FormsServices::submissions()->countNewForForm($form->id);
 
         return '<tr>'
-            . '<td>' . AdminLayout::e($form->title) . '</td>'
-            . '<td><code>{{form:' . AdminLayout::e($form->slug) . '}}</code></td>'
+            . '<td>' . CardboardLayout::e($form->title) . '</td>'
+            . '<td><code>{{form:' . CardboardLayout::e($form->slug) . '}}</code></td>'
             . '<td>' . \count($form->schema->fields()) . '</td>'
             . '<td>' . ($form->published ? 'Published' : 'Draft') . '</td>'
             . '<td>' . ($new > 0 ? (string) $new : '0') . '</td>'
             . '<td>'
-            . '<a class="m-btn m-btn-ghost" href="' . AdminLayout::e($this->url('mark.forms.edit', ['slug' => $form->slug]) . $localeQuery) . '">Edit</a> '
-            . '<a class="m-btn m-btn-ghost" href="' . AdminLayout::e($this->url('mark.forms.submissions', ['slug' => $form->slug]) . $localeQuery) . '">Submissions</a> '
-            . '<form method="POST" action="' . AdminLayout::e($this->url('mark.forms.publish-toggle', ['slug' => $form->slug]) . $localeQuery) . '" style="display:inline">'
+            . '<a class="m-btn m-btn-ghost" href="' . CardboardLayout::e($this->url('mark.forms.edit', ['slug' => $form->slug]) . $localeQuery) . '">Edit</a> '
+            . '<a class="m-btn m-btn-ghost" href="' . CardboardLayout::e($this->url('mark.forms.submissions', ['slug' => $form->slug]) . $localeQuery) . '">Submissions</a> '
+            . '<form method="POST" action="' . CardboardLayout::e($this->url('mark.forms.publish-toggle', ['slug' => $form->slug]) . $localeQuery) . '" style="display:inline">'
             . $csrf
             . '<button class="m-btn m-btn-ghost" type="submit">' . ($form->published ? 'Unpublish' : 'Publish') . '</button>'
             . '</form> '
-            . '<form method="POST" action="' . AdminLayout::e($this->url('mark.forms.delete', ['slug' => $form->slug]) . $localeQuery) . '" style="display:inline" onsubmit="return confirm(\'Delete this form and its submissions?\')">'
+            . '<form method="POST" action="' . CardboardLayout::e($this->url('mark.forms.delete', ['slug' => $form->slug]) . $localeQuery) . '" style="display:inline" onsubmit="return confirm(\'Delete this form and its submissions?\')">'
             . $csrf
             . '<button class="m-btn m-btn-ghost" type="submit">Delete</button>'
             . '</form>'
@@ -93,8 +93,8 @@ final readonly class FormsIndexAction
 
         foreach (ContentLocaleServices::mapper()->locales() as $code) {
             $lang = ContentLocaleServices::mapper()->languageCode($code);
-            $html .= '<a class="m-btn m-btn-ghost" href="' . AdminLayout::e($this->url('mark.forms') . '?locale=' . $lang) . '">'
-                . ($code === $locale ? '[' . AdminLayout::e($lang) . ']' : AdminLayout::e($lang)) . '</a> ';
+            $html .= '<a class="m-btn m-btn-ghost" href="' . CardboardLayout::e($this->url('mark.forms') . '?locale=' . $lang) . '">'
+                . ($code === $locale ? '[' . CardboardLayout::e($lang) . ']' : CardboardLayout::e($lang)) . '</a> ';
         }
 
         return $html;

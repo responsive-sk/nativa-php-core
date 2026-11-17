@@ -7,7 +7,7 @@ namespace Modules\Comments\Tests;
 use Modules\Comments\Application\Services\CommentsMetric;
 use Modules\Comments\Domain\Entities\Comment;
 use Modules\Comments\Infrastructure\Persistence\Statement;
-use Modules\Comments\Interfaces\HTTP\Actions\CommentsAdminAction;
+use Modules\Comments\Interfaces\HTTP\Actions\CommentsAction;
 use Modules\Database\Infrastructure\Persistence\PdoConnection;
 use PDO;
 use PHPUnit\Framework\Attributes\Test;
@@ -20,8 +20,8 @@ use ReflectionMethod;
  * count and compare by the status names `Comment` owns.
  *
  * Task 2.2 of the const audit found the same defect here that it fixed in
- * `QuestionsAdminAction`: `CommentsMetric` keyed its donut and breakdown by
- * `'pending'` / `'approved'` / `'rejected'`, and `CommentsAdminAction`
+ * `QuestionsAction`: `CommentsMetric` keyed its donut and breakdown by
+ * `'pending'` / `'approved'` / `'rejected'`, and `CommentsAction`
  * compared the same strings directly. `Comment` already owns them
  * (`STATUS_PENDING`, `STATUS_APPROVED`, `STATUS_REJECTED`), so a rename would
  * leave the metric at zero and the approve/reject buttons on every row — no
@@ -102,7 +102,7 @@ final class CommentsStatusVocabularyTest extends TestCase
     {
         $offenders = [];
 
-        foreach ([CommentsMetric::class, CommentsAdminAction::class] as $class) {
+        foreach ([CommentsMetric::class, CommentsAction::class] as $class) {
             $file = (new ReflectionClass($class))->getFileName();
 
             if (!is_string($file)) {

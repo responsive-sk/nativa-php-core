@@ -38,23 +38,23 @@ if (!isset($viewRendererGuard)) {
             <fieldset class="forms-row" data-form-row>
                 <legend>Field <?php echo $row['index'] + 1; ?></legend>
                 <?php if ('' !== $row['error']): ?>
-                <p class="m-note m-note-err"><?php echo Modules\Cardboard\Interfaces\HTTP\AdminLayout::e($row['error']); ?></p>
+                <p class="m-note m-note-err"><?php echo Modules\Cardboard\Interfaces\HTTP\CardboardLayout::e($row['error']); ?></p>
                 <?php endif; ?>
                 <div class="m-form">
                     <label>Key</label>
-                    <input type="text" name="fields[<?php echo $row['index']; ?>][key]" value="<?php echo Modules\Cardboard\Interfaces\HTTP\AdminLayout::e($row['key']); ?>" placeholder="name" maxlength="40">
+                    <input type="text" name="fields[<?php echo $row['index']; ?>][key]" value="<?php echo Modules\Cardboard\Interfaces\HTTP\CardboardLayout::e($row['key']); ?>" placeholder="name" maxlength="40">
                     <label>Label</label>
-                    <input type="text" name="fields[<?php echo $row['index']; ?>][label]" value="<?php echo Modules\Cardboard\Interfaces\HTTP\AdminLayout::e($row['label']); ?>" placeholder="Your name" maxlength="120">
+                    <input type="text" name="fields[<?php echo $row['index']; ?>][label]" value="<?php echo Modules\Cardboard\Interfaces\HTTP\CardboardLayout::e($row['label']); ?>" placeholder="Your name" maxlength="120">
                     <label>Type</label>
                     <select name="fields[<?php echo $row['index']; ?>][type]">
 <?php foreach (Modules\Forms\Domain\Model\FormFieldType::tokens() as $type): ?>
-                        <option value="<?php echo Modules\Cardboard\Interfaces\HTTP\AdminLayout::e($type); ?>" <?php echo $row['type'] === $type ? 'selected' : ''; ?>><?php echo Modules\Cardboard\Interfaces\HTTP\AdminLayout::e($type); ?></option>
+                        <option value="<?php echo Modules\Cardboard\Interfaces\HTTP\CardboardLayout::e($type); ?>" <?php echo $row['type'] === $type ? 'selected' : ''; ?>><?php echo Modules\Cardboard\Interfaces\HTTP\CardboardLayout::e($type); ?></option>
 <?php endforeach; ?>
                     </select>
                     <label>Max length (text, e-mail, textarea)</label>
-                    <input type="number" name="fields[<?php echo $row['index']; ?>][max]" value="<?php echo Modules\Cardboard\Interfaces\HTTP\AdminLayout::e($row['max']); ?>" min="1" max="5000" placeholder="500">
+                    <input type="number" name="fields[<?php echo $row['index']; ?>][max]" value="<?php echo Modules\Cardboard\Interfaces\HTTP\CardboardLayout::e($row['max']); ?>" min="1" max="5000" placeholder="500">
                     <label>Options, one per line (select and radio only)</label>
-                    <textarea name="fields[<?php echo $row['index']; ?>][options]" rows="3" placeholder="Sales&#10;Support"><?php echo Modules\Cardboard\Interfaces\HTTP\AdminLayout::e($row['options']); ?></textarea>
+                    <textarea name="fields[<?php echo $row['index']; ?>][options]" rows="3" placeholder="Sales&#10;Support"><?php echo Modules\Cardboard\Interfaces\HTTP\CardboardLayout::e($row['options']); ?></textarea>
                     <label class="m-check">
                         <input type="checkbox" name="fields[<?php echo $row['index']; ?>][required]" value="1" <?php echo $row['required']; ?>>
                         Required
@@ -79,7 +79,7 @@ if (!isset($viewRendererGuard)) {
                     <label>Type</label>
                     <select data-name="type">
 <?php foreach (Modules\Forms\Domain\Model\FormFieldType::tokens() as $type): ?>
-                        <option value="<?php echo Modules\Cardboard\Interfaces\HTTP\AdminLayout::e($type); ?>"><?php echo Modules\Cardboard\Interfaces\HTTP\AdminLayout::e($type); ?></option>
+                        <option value="<?php echo Modules\Cardboard\Interfaces\HTTP\CardboardLayout::e($type); ?>"><?php echo Modules\Cardboard\Interfaces\HTTP\CardboardLayout::e($type); ?></option>
 <?php endforeach; ?>
                     </select>
                     <label>Max length (text, e-mail, textarea)</label>
