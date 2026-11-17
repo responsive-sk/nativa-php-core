@@ -74,6 +74,72 @@ renamed.
   translation group and the `user:admin` command string: configuration, RBAC and
   content data, not paths. Renaming any of them is a migration.
 
+### UTC timestamps: one clock on disk, the operator's clock on screen
+
+The writers stamped `date()` and the panels printed the stored string back, so
+both ends depended on the process timezone while the columns they were compared
+with (`CURRENT_TIMESTAMP`, `datetime('now', …)`) are UTC. This round moves the
+write side to one base and gives the read side exactly one seam.
+
+**Changed**
+
+- `Audit`, `Queue`, `Outbox`, `Notifications` and `Media` stamp their timestamps
+  with `gmdate()`: `audit_log.created_at`, the queue's `available_at`, the
+  outbox's `created_at`/`last_attempt_at`/`processed_at`, the inbox's
+  `created_at`/`read_at` and `assets.created_at`. `AuditEntry` also hydrates
+  `created_at` as a UTC `DateTimeImmutable`, so a row read back is the instant
+  that was written.
+- The two writers outside that set follow: `Security\RateLimiter` writes
+  `login_attempts.attempted_at` in UTC, and `Locales\Translation` creates,
+  hydrates and edits `created_at`/`updated_at` through one `now()` helper
+  pinned to UTC.
+- The read side converts once, in `AdminLayout`: `displayTimezone()` resolves
+  `APP_TIMEZONE`, `storedTime()` reads a zone-less column AS UTC (an ISO 8601
+  value keeps its own offset) and `formatTime()` renders it in that zone.
+  `relativeTime()` takes a `DateTimeImmutable`, and its `<time datetime="…">`
+  carries the display offset. The audit log, the outbox list and detail, the
+  queue detail, media dates and `RestAdmin`'s `updated_at` now go through it
+  instead of printing the column.
+- The public author profile follows the same seam: "Member since" reads
+  `users.created_at` as UTC and shows it in `APP_TIMEZONE` instead of letting
+  `strtotime()` read the column in the process timezone, which put a member who
+  joined just after local midnight on the previous day.
+
+**Added**
+
+- Eleven tests on both sides of that seam: a UTC stamp per write-side module
+  asserted under `Pacific/Kiritimati` (UTC+14), a failed login attempt stamped
+  in UTC, `TranslationTimestampTest` for create and edit, and
+  `AdminLayoutTimeTest` for UTC parsing, offset-bearing `<time>` values and an
+  empty timestamp that stays empty instead of becoming "now".
+- `AuthorMemberSinceTest` (three) pins the public profile's side of the same
+  seam. `memberSince()` is private, so the test reaches it by reflection and
+  asserts the stored UTC stamp under `Pacific/Kiritimati`, that the process
+  zone does not move it, and that an empty column stays empty instead of
+  rendering a bare "Member since ".
+
+**Measured**
+
+- `make test`: 887 tests, 3149 assertions, 3 skipped. `make mago-lint`: exit 0,
+  0 issues; `make analyze` and `make lint`: exit 0. On `localhost:8000` a queue
+  probe and the audit rows were stored at `23:21` UTC while the panels showed
+  `00:21` CET.
+
+**Operational note**
+
+- An edit to a catalogue slice stays inert until the module is reinstalled:
+  `php bin/cms module:remove Blog --force && php bin/cms module:add Blog`. The
+  first run of `AuthorMemberSinceTest` failed against the installed copy for
+  exactly that reason. `module:remove` leaves the module's data behind
+  (`storage/data/blog.db`), so the reinstall is not destructive.
+
+**Not changed, with the reason recorded**
+
+- `RestAdmin`'s `SpecStore` keeps `gmdate('c')`. The ISO 8601 string is the
+  documented snapshot contract (`SpecStoreTest` pins the offset shape) and is
+  never compared with a database column; only its presentation in the service
+  list converts.
+
 ### REST admin: a panel, a specification and an MCP server
 
 **Added**
