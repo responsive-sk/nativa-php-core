@@ -80,6 +80,10 @@ security-audit: ## Gate: no tracked .env, no secret-shaped literals in tracked c
 # exits 1 on).
 dependency-audit: ## Gate: no high/critical advisories in either lockfile
 	composer audit --locked --ignore-severity=low --ignore-severity=medium
+	# picomatch's ReDoS advisory (GHSA-fc5q-39xc-vjpf) has no patched release —
+	# every version is affected — so the one ignore lives in
+	# Frontend/packages/pnpm-workspace.yaml (`auditConfig.ignoreGhsas`), where
+	# pnpm keeps it. Drop it there when a fixed picomatch ships.
 	cd Frontend/packages && pnpm audit --audit-level high
 
 ##@ Mago
