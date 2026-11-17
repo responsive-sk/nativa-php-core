@@ -26,8 +26,8 @@ export class MarkToast extends LitElement {
     }
 
     .toast {
-      background: var(--admin-card-bg, #1e1e2d);
-      color: var(--admin-text-primary, #ffffff);
+      background: var(--mark-card-bg, #1e1e2d);
+      color: var(--mark-text-primary, #ffffff);
       padding: 1rem 1.5rem;
       border-radius: 0.6rem;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -67,7 +67,7 @@ export class MarkToast extends LitElement {
     .close-btn {
         background: transparent;
         border: none;
-        color: var(--admin-text-secondary, #a1a5b7);
+        color: var(--mark-text-secondary, #a1a5b7);
         cursor: pointer;
         padding: 0;
         display: flex;
@@ -80,8 +80,8 @@ export class MarkToast extends LitElement {
     }
 
     /* Types */
-    .type-success { --toast-color: var(--admin-success, #50cd89); }
-    .type-error { --toast-color: var(--admin-danger, #f1416c); }
+    .type-success { --toast-color: var(--mark-success, #50cd89); }
+    .type-error { --toast-color: var(--mark-danger, #f1416c); }
     .type-warning { --toast-color: #ffc700; }
     .type-info { --toast-color: #009ef7; }
   `;

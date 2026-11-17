@@ -8,13 +8,13 @@ export class MarkSidebar extends LitElement {
       display: flex;
       flex-direction: column;
       height: 100%;
-      background-color: var(--admin-sidebar-bg, #1e1e2d);
-      color: var(--admin-sidebar-text, #a1a5b7);
-      border-right: 1px solid var(--admin-border-color, #2b2b40);
+      background-color: var(--mark-sidebar-bg, #1e1e2d);
+      color: var(--mark-sidebar-text, #a1a5b7);
+      border-right: 1px solid var(--mark-border-color, #2b2b40);
     }
 
     .logo-area {
-      height: var(--admin-header-height, 70px);
+      height: var(--mark-header-height, 70px);
       display: flex;
       align-items: center;
       padding: 0 1.5rem;
@@ -46,7 +46,7 @@ export class MarkSidebar extends LitElement {
       display: flex;
       align-items: center;
       padding: 0.75rem 1.5rem;
-      color: var(--admin-sidebar-text, #a1a5b7);
+      color: var(--mark-sidebar-text, #a1a5b7);
       text-decoration: none;
       transition: all 0.2s;
       font-size: 0.95rem;
@@ -56,13 +56,13 @@ export class MarkSidebar extends LitElement {
     }
 
     ::slotted(a:hover) {
-      color: var(--admin-sidebar-active, #ffffff);
+      color: var(--mark-sidebar-active, #ffffff);
       background: rgba(255, 255, 255, 0.03);
     }
 
     ::slotted(a.active) {
-      color: var(--admin-sidebar-active, #ffffff);
-      background: var(--admin-sidebar-active-bg, #1b1b28);
+      color: var(--mark-sidebar-active, #ffffff);
+      background: var(--mark-sidebar-active-bg, #1b1b28);
       border-left-color: #007bff;
     }
     

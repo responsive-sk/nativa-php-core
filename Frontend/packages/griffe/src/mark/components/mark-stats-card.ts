@@ -37,14 +37,14 @@ export class MarkStatsCard extends LitElement {
     .stat-title {
       margin: 0;
       font-size: 0.9rem;
-      color: var(--admin-text-secondary, #a1a5b7);
+      color: var(--mark-text-secondary, #a1a5b7);
       font-weight: 600;
     }
 
     .stat-value {
       font-size: 2rem;
       font-weight: 700;
-      color: var(--admin-text-primary, #ffffff);
+      color: var(--mark-text-primary, #ffffff);
     }
     
     .stat-trend {

@@ -14,8 +14,8 @@ export class MarkHeader extends LitElement {
       align-items: center;
       justify-content: space-between;
       padding: 0 2rem;
-      background: var(--admin-card-bg, #1e1e2d);
-      color: var(--admin-text-primary, #ffffff);
+      background: var(--mark-card-bg, #1e1e2d);
+      color: var(--mark-text-primary, #ffffff);
     }
 
     h1 {
@@ -38,12 +38,12 @@ export class MarkHeader extends LitElement {
     .user-name {
         font-weight: 600; 
         font-size: 0.9rem;
-        color: var(--admin-text-primary, #fff);
+        color: var(--mark-text-primary, #fff);
     }
 
     .user-role {
         font-size: 0.8rem; 
-        color: var(--admin-text-secondary, #6c757d);
+        color: var(--mark-text-secondary, #6c757d);
     }
 
     .user-avatar {

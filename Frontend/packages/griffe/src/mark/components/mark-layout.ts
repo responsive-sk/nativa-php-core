@@ -7,8 +7,8 @@ export class MarkLayout extends LitElement {
     :host {
       display: block;
       min-height: 100vh;
-      background-color: var(--admin-bg, #151521);
-      color: var(--admin-text-primary, #ffffff);
+      background-color: var(--mark-bg, #151521);
+      color: var(--mark-text-primary, #ffffff);
       font-family: 'Inter', sans-serif;
     }
 
@@ -19,8 +19,8 @@ export class MarkLayout extends LitElement {
 
     /* Sidebar Area */
     .sidebar-area {
-      width: var(--admin-sidebar-width-desktop, 280px);
-      background-color: var(--admin-sidebar-bg, #1e1e2d);
+      width: var(--mark-sidebar-width-desktop, 280px);
+      background-color: var(--mark-sidebar-bg, #1e1e2d);
       flex-shrink: 0;
       position: fixed;
       height: 100vh;
@@ -35,18 +35,18 @@ export class MarkLayout extends LitElement {
     /* Main Content Area */
     .main-area {
       flex: 1;
-      margin-left: var(--admin-sidebar-width-desktop, 280px);
+      margin-left: var(--mark-sidebar-width-desktop, 280px);
       display: flex;
       flex-direction: column;
-      width: calc(100% - var(--admin-sidebar-width-desktop, 280px));
+      width: calc(100% - var(--mark-sidebar-width-desktop, 280px));
       transition: margin-left 0.3s ease, width 0.3s ease;
     }
 
     /* Header Area */
     .header-area {
-      height: var(--admin-header-height, 70px);
-      background: var(--admin-card-bg, #1e1e2d);
-      border-bottom: 1px solid var(--admin-border-color, #2b2b40);
+      height: var(--mark-header-height, 70px);
+      background: var(--mark-card-bg, #1e1e2d);
+      border-bottom: 1px solid var(--mark-border-color, #2b2b40);
       position: sticky;
       top: 0;
       z-index: 900;

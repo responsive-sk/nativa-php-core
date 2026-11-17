@@ -6,13 +6,13 @@ export class MarkCard extends LitElement {
     static styles = css`
     :host {
       display: block;
-      background: var(--admin-card-bg, #1e1e2d);
-      border: 1px solid var(--admin-border-color, #2b2b40);
+      background: var(--mark-card-bg, #1e1e2d);
+      border: 1px solid var(--mark-border-color, #2b2b40);
       border-radius: 0.85rem;
       /* padding needs to be configurable or default */
       padding: 1.5rem; 
       box-shadow: 0 0.1rem 1rem 0.25rem rgba(0,0,0,0.03);
-      color: var(--admin-text-primary, #ffffff);
+      color: var(--mark-text-primary, #ffffff);
     }
     
     :host([no-padding]) {

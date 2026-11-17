@@ -27,7 +27,7 @@ export class MarkTable extends LitElement {
     /* Header Styles */
     ::slotted(thead) {
       background: transparent;
-      border-bottom: 1px solid var(--admin-border-color, #2b2b40);
+      border-bottom: 1px solid var(--mark-border-color, #2b2b40);
     }
     
     /* Using deep selectors or assuming standardized HTML structure because Shadow DOM blocks table styling */
@@ -67,22 +67,22 @@ export class MarkTable extends LitElement {
             mark-table table {
                 width: 100%;
                 border-collapse: collapse;
-                color: var(--admin-text-primary, #ffffff);
+                color: var(--mark-text-primary, #ffffff);
             }
             
             mark-table thead th {
                 text-align: left; 
                 padding: 1.25rem 1.5rem; 
-                color: var(--admin-text-secondary, #6c757d); 
+                color: var(--mark-text-secondary, #6c757d); 
                 font-weight: 600; 
                 font-size: 0.85rem; 
                 text-transform: uppercase; 
                 letter-spacing: 0.05em;
-                border-bottom: 1px solid var(--admin-border-color, #2b2b40);
+                border-bottom: 1px solid var(--mark-border-color, #2b2b40);
             }
 
             mark-table tbody tr {
-                border-bottom: 1px solid var(--admin-border-color, #2b2b40); /* Dashed or solid */
+                border-bottom: 1px solid var(--mark-border-color, #2b2b40); /* Dashed or solid */
                 transition: background 0.2s;
             }
             
@@ -91,7 +91,7 @@ export class MarkTable extends LitElement {
             }
 
             mark-table tbody tr:hover {
-                background: var(--admin-bg-hover, rgba(255,255,255,0.02));
+                background: var(--mark-bg-hover, rgba(255,255,255,0.02));
             }
 
             mark-table td {

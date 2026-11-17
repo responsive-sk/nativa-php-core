@@ -20,7 +20,7 @@ export class MarkInput extends LitElement {
       display: block;
       margin-bottom: 0.5rem;
       font-weight: 600;
-      color: var(--admin-text-secondary, #a1a5b7);
+      color: var(--mark-text-secondary, #a1a5b7);
       font-size: 0.9rem;
     }
 
@@ -29,9 +29,9 @@ export class MarkInput extends LitElement {
     input, textarea, select {
         width: 100%;
         padding: 0.75rem 1rem;
-        border: 1px solid var(--admin-border-color, #2b2b40);
-        background-color: var(--admin-input-bg, #151521);
-        color: var(--admin-text-primary, #ffffff);
+        border: 1px solid var(--mark-border-color, #2b2b40);
+        background-color: var(--mark-input-bg, #151521);
+        color: var(--mark-text-primary, #ffffff);
         border-radius: 0.6rem;
         font-size: 1rem;
         outline: none;
