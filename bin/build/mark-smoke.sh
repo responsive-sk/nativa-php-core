@@ -171,7 +171,7 @@ done
 
 # ---------------------------------------------------------------------------
 # A temp tree: migrate, then the accounts (the migrator seeds no roles, so the
-# admin role and the five permissions are built through the module's own
+# operator role and the five permissions are built through the module's own
 # repositories — Permissions::all() stays the one owner of that vocabulary)
 # ---------------------------------------------------------------------------
 php bin/cms migrate > "$TMP/migrate.log" 2>&1 || { cat "$TMP/migrate.log"; bad "bin/cms migrate failed"; exit 1; }
@@ -192,7 +192,7 @@ $roles = new RoleRepository($db);
 $users = new UserRepository($db);
 $hasher = new PasswordHasher();
 
-$roles->createRole('smoke00000000000000000000000001', 'admin', 'Smoke admin');
+$roles->createRole('smoke00000000000000000000000001', 'operator', 'Smoke operator');
 $roles->createRole('smoke00000000000000000000000002', 'author', 'Smoke author');
 
 // One owner for the vocabulary: the permission names come from the class the

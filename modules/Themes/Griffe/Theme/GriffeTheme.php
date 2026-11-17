@@ -231,7 +231,7 @@ final class GriffeTheme implements ThemeModule, ThemeSettings
         }
 
         // The admin prefix is a policy answer, never a literal: `/mark` is
-        // `MarkRoutePolicy`'s to spell (`ADMIN_PATH` can move it).
+        // `MarkRoutePolicy`'s to spell (`MARK_PATH` can move it).
         $navigation = [
             ['label' => 'Home', 'href' => '/'],
             ['label' => 'Blog', 'href' => '/blog'],

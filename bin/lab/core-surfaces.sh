@@ -160,7 +160,7 @@ build_row() {
         ( cd "$row" && php bin/cms settings:profile >/dev/null )
     fi
     if installed "$row" Users; then
-        ( cd "$row" && php bin/cms user:admin >/dev/null )
+        ( cd "$row" && php bin/cms user:operator >/dev/null )
     fi
 }
 

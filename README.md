@@ -73,8 +73,8 @@ fresh tree has no account and `/mark` answers 403. Create the first
 administrator — the admin role and the five permissions with it — in one line:
 
 ```sh
-php bin/cms user:admin                                  # admin@example.test / admin1234
-php bin/cms user:admin you@example.com 'your-password'  # your own credentials
+php bin/cms user:operator                                  # admin@example.test / admin1234
+php bin/cms user:operator you@example.com 'your-password'  # your own credentials
 ```
 
 Commit messages carry no agent footer (the nativa-minimal convention) —
