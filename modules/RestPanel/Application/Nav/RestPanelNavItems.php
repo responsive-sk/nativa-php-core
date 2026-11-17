@@ -11,6 +11,6 @@ use Modules\Core\Domain\Permissions;
  * configuration, so it holds the settings row the policy already gives it.
  */
 #[\Modules\Cardboard\Infrastructure\Attributes\AsAdminNavItem(label: 'REST', href: '/mark/rest', permission: Permissions::SETTINGS, order: 45, icon: 'link')]
-final class RestAdminNavItems
+final class RestPanelNavItems
 {
 }
