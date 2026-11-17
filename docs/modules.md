@@ -308,6 +308,42 @@ and hands it to the Auth middleware and `RateLimitMiddleware`. Both middlewares
 name no module, so a kernel-only tree drops the record and still answers the
 request — and `mago guard` sees a kernel with no module dependency at all.
 
+## The panel nav is declared, not seeded
+
+The sidebar under `/mark` is not a table of seed rows and not a list in
+Cardboard. Every installed module annotates one class under
+`src/Modules/<Name>/Application/Nav` with `#[AsCardboardNavItem]`, and
+`CardboardNavRegistry` collects them from the installed tree with the same scan
+`MetricRegistry` uses. A fresh install therefore renders its nav with no
+`menu_items` rows, and `module:remove` takes the entry with the module, so there is
+no second copy in another module to forget.
+
+The attribute takes a label, an `href`, a permission, an order, and an optional
+icon and parent label. Three of those are deliberate:
+
+- `href` is a PATH, not a route name. The panel renders links and the route
+  table answers reachability by path, so an entry whose module is not installed
+  drops out instead of becoming a 404 in the sidebar.
+- `parent` is the parent's LABEL, because a declaration is not a row: stored
+  rows are paired with declarations by href, in declared order, so an operator
+  who renames a row still overrides the declaration instead of orphaning it.
+- `permission` is the gate only where `MarkRoutePolicy` does not classify the
+  path. Where the policy answers, `CardboardNavContractTest` holds the
+  declaration to the policy's own answer, so the nav can never offer a link the
+  middleware refuses.
+
+`CardboardNavService` merges the two sides: a stored row (location `mark`) with
+the same href is the operator's override and wins outright (label, order, icon
+and visibility), and a row that matches no declaration is kept as an
+operator-added link.
+
+Discovery reads files as text and loads a class only after its name resolves,
+which is the lesson `MetricRegistry` already paid for. The failure mode is the
+quiet one: a declaration file spelled with a retired namespace or attribute
+answers "no items" exactly like a module that declares nothing, so
+`CardboardNavContractTest` asserts both halves of the scan for every file in an
+`Application/Nav` directory rather than trusting it.
+
 ## The closure rule
 
 `module:add` refuses when any closure member is not installed, names the
