@@ -134,6 +134,13 @@ final class NameOwnershipContractTest extends TestCase
      */
     private const array GATE_FILES = [
         'tests/Architecture/NameOwnershipContractTest.php',
+        // The documentation-reference gate. Its four constants are the suffix,
+        // prefix and extension tables it compares prose against, and those
+        // spellings ARE the subject of the test rather than duplication it
+        // failed to notice. Counting them would let a docs edit move a ceiling
+        // that exists to measure production spellings. Rule 1 still reads this
+        // file.
+        'tests/Architecture/DocsReferenceContractTest.php',
         'tests/Architecture/MetricRegistryResolutionTest.php',
         // Task 2.7's CSS gate. It needs the theme names to measure ownership
         // and a handful of constants to hold its exceptions; counting those
