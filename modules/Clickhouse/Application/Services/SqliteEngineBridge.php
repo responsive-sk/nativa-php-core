@@ -59,6 +59,14 @@ final class SqliteEngineBridge
     {
         self::assertName('prefix', $prefix);
 
+        if (null !== $only) {
+            // An explicit name is the operator's input, and the rule it breaks
+            // is worth naming: the enumeration skips such a file, so answering
+            // "no match" would hide why nothing matched.
+            self::assertName('database name', $only);
+            self::assertName('database name', $prefix . $only);
+        }
+
         $attachments = [];
         $matched = false;
 
@@ -219,7 +227,23 @@ final class SqliteEngineBridge
 
         if (false !== $files) {
             foreach ($files as $file) {
-                $names[basename($file, '.db')] = true;
+                $name = basename($file, '.db');
+
+                // A file name ClickHouse cannot accept is not a database this
+                // bridge may plan against. Refusing the whole command over an
+                // unrelated backup would hide every other database's drift, so
+                // the file is named and skipped instead.
+                if (1 !== preg_match(self::NAME_PATTERN, $name)) {
+                    error_log(sprintf(
+                        '[clickhouse] ignoring %s: %s is not a ClickHouse database name',
+                        $file,
+                        var_export($name, true),
+                    ));
+
+                    continue;
+                }
+
+                $names[$name] = true;
             }
         }
 
@@ -234,8 +258,10 @@ final class SqliteEngineBridge
                 // The suffix test is the HealthServices rule, re-derived: a
                 // `DB_HOST=db.internal` from an unrelated tool's environment
                 // would otherwise become a database named `host`.
-                if (is_string($value) && str_ends_with($value, '.db')) {
-                    $names[strtolower(substr($key, 3))] = true;
+                $name = strtolower(substr($key, 3));
+
+                if (is_string($value) && str_ends_with($value, '.db') && 1 === preg_match(self::NAME_PATTERN, $name)) {
+                    $names[$name] = true;
                 }
             }
         }

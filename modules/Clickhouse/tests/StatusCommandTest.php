@@ -109,10 +109,20 @@ final class StatusCommandTest extends TestCase
         $files = glob(AppPaths::instance()->data('*.db')) ?: [];
         $prefix = 'nativa_';
 
-        return array_values(array_map(
-            static fn (string $file): string => $prefix . basename($file, '.db'),
-            $files,
-        ));
+        $names = [];
+
+        foreach ($files as $file) {
+            $name = basename($file, '.db');
+
+            // The bridge skips a file whose stem is not a ClickHouse
+            // identifier, so the expectation skips it too: this asserts what
+            // the product reports, not what happens to sit on disk.
+            if (1 === preg_match('/^[A-Za-z][A-Za-z0-9_]*$/', $name)) {
+                $names[] = $prefix . $name;
+            }
+        }
+
+        return $names;
     }
 
     private function command(ClickHouseTransport $transport): StatusCommand
