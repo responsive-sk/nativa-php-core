@@ -50,7 +50,7 @@ slice and puts one button on each row, for the state that row is in:
 | `identical` | Uninstall | `POST /mark/settings/modules/{name}/uninstall` |
 | `drifted` | Reinstall and Uninstall | `POST /mark/settings/modules/{name}/reinstall` |
 
-Every one is a POST behind the admin's CSRF token, because each replaces or
+Every one is a POST behind the Mark panel's CSRF token, because each replaces or
 deletes the slice the running site boots from. The button that appears is the
 state's, so the ordinary row has nothing a stray click can destroy.
 
@@ -260,7 +260,7 @@ that guard the catalogue ask one of them rather than spelling a path
 themselves. `installedPath()` returns the grouped path even before anything is
 copied, which is what makes `module:add` land in the same shape the catalogue
 uses. That matters
-because the admin page compares the catalogue with the slice, and a
+because the Mark page compares the catalogue with the slice, and a
 hand-built `modules/<Name>/` would fail `is_dir()` there, return "no
 differences" and report every theme as `identical` — a false green that
 testing the happy path cannot catch.
@@ -280,7 +280,7 @@ The scan reads files as TEXT and never loads a class it describes, so a module
 whose dependencies are absent is still describable. A scanner that fatals on a
 missing class cannot report the very closure that is missing.
 
-The admin gate is picked up the same way, one level down: the `Auth` module
+The Mark gate is picked up the same way, one level down: the `Auth` module
 owns the `AuthProvider` port, the identity value object, the registry and the
 middleware. A provider module ships an `AuthProvider` marked
 `#[AsAuthProvider]`, and the registry finds it by file name —
@@ -289,7 +289,7 @@ asks the registry and constructs the Auth middleware behind `class_exists`,
 so `src/http.php` names no Auth class in a type position. With Auth and a
 provider installed the gate exists; with no provider, or no Auth module, the
 kernel answers 404 through `MarkUnavailableMiddleware`. A route is not a
-guard, and an ungated admin route must not answer 200. (`Users` used to ship an
+guard, and an ungated mark route must not answer 200. (`Users` used to ship an
 `AuthWiring::wire()` entry point for this; it was deleted when discovery
 landed — see `docs/kernel-status/04-kernel-contracts.md` §6 and
 `docs/kernel-status/06-auth-discovery-and-mail-transport.md` §10 for the
@@ -475,7 +475,7 @@ when there are some.
    `SecurityEventHandler::register()` binds one handler per type in
    `SecurityEvents::all()`, which holds `security.authz.denied` and not the bare
    `authz.denied` the middleware passed through `noteEvent()` verbatim — so every
-   refused admin path wrote an outbox message no handler could ever claim: five
+   refused mark path wrote an outbox message no handler could ever claim: five
    retries, then parked, with no row. The dilemma (name the owned type, or bind the
    bare one) had already been answered twice in code nobody had read:
 

@@ -1,6 +1,6 @@
-# REST admin: one panel for the APIs you already run
+# REST panel: one panel for the APIs you already run
 
-`RestPanel` puts a small admin panel and an MCP server in front of remote REST
+`RestPanel` puts a small panel and an MCP server in front of remote REST
 APIs. It is not a CRUD generator and it does not generate PHP: an operator
 writes a specification (services, resources, fields, actions and pagination)
 and the panel renders it at runtime. Add a collection to the JSON and the next
@@ -13,7 +13,7 @@ php bin/cms module:add RestPanel
 php bin/cms migrate
 ```
 
-It depends on `Cardboard` (the admin shell) and nothing else. `Cardboard` does
+It depends on `Cardboard` (the panel shell) and nothing else. `Cardboard` does
 not import it back; `make mago-guard` holds that direction.
 
 ## What it serves

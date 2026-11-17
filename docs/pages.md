@@ -10,7 +10,7 @@ follow: **what it serves, what it owns, what it refuses**.
 | route | what it answers |
 |---|---|
 | `GET /{slug}` | a published page, rendered inside the active theme |
-| `GET /mark/pages` | the admin list: search, sort, locale toggle, pagination |
+| `GET /mark/pages` | the Mark list: search, sort, locale toggle, pagination |
 | `GET /mark/pages/create`, `/edit`, `/delete` | the CRUD form and its actions |
 | `POST /mark/pages/publish` | the publish toggle |
 
@@ -91,7 +91,7 @@ arrangement is deliberate and holds without a list anyone maintains:
 - **The router matches literal patterns before parameterized ones**, so `/docs`
   (the guide index) wins over `/{slug}` — a page whose slug happens to be `docs`
   can never shadow the documentation surface. The same rule protects `/`, `/blog`
-  and the admin prefix.
+  and the mark prefix.
 - **`LocaleMiddleware` strips `/sk` and `/en` before routing**, so `/sk/docs` and
   `/en/docs` reach the same guide; the prefix belongs to the locale family, not
   to the page's own slug.
@@ -112,5 +112,5 @@ became one, and is never served.
 `Pages` is an ordinary module: `bin/cms module:add Pages` copies the slice in,
 `bin/cms module:remove Pages` takes it out and leaves the pages on disk
 untouched — the content is data, not code, and removal deletes no data. The
-admin list it adds disappears with the slice; the public `/{slug}` route 404s
+Mark list it adds disappears with the slice; the public `/{slug}` route 404s
 on a fresh server after removal.

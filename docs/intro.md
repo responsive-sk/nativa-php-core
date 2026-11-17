@@ -2,7 +2,7 @@
 
 Nativa PHP is a modular-monolith CMS with one rule holding it together: **the
 kernel never imports a module; a module may import the kernel.** Everything on
-responsive.sk — pages, blog, admin, themes — is either the kernel or a module
+responsive.sk — pages, blog, Mark, themes — is either the kernel or a module
 sitting on top of it. This guide says which is which and where to read next.
 
 ## The kernel
