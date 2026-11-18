@@ -5,6 +5,17 @@ says so here too, because a changelog that only lists what worked is a brochure.
 
 ## Unreleased
 
+### The database seam knows its driver
+
+Steps 1 and 2 of the plan in `docs/kernel-status/27-postgres-driver-plan.md`:
+`DB_DRIVER` selects `sqlite` (default) or `pgsql`, `DB_<NAME>` holds a file
+path or a DSN body accordingly, and the connection contract now answers
+`driverName()`, `quoteIdentifier()` and `supportsReturning()`. The dialect
+object expresses the seven measured SQL differences; the SQLite session
+settings moved into one class without changing a statement. Migrations, error
+mapping and concurrency are still steps 3 to 5, and no PostgreSQL server was
+measured against.
+
 ### One authored tree
 
 The four repositories became one. The six theme modules were imported from
