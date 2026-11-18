@@ -475,6 +475,44 @@ final class CardboardNavContractTest extends TestCase
     }
 
     /**
+     * A label two rows share resolves to neither of them.
+     *
+     * The hint carries a name and the editor does not forbid two rows with the
+     * same one; a name that fits both is not an answer. Left as "last row
+     * wins", `sort_order` — a column an operator drags — decided which branch
+     * opened, and a wrong branch that opens looks exactly like a right one.
+     * The id still resolves, which is how a caller that knows the row keeps its
+     * active state.
+     */
+    #[Test]
+    public function aSharedLabelExpandsNeitherItem(): void
+    {
+        $this->clearPanelMenu();
+        $this->insertItem('first-report', 'First', 'https://example.test/first', null, 10);
+        $this->insertItem('second-report', 'Second', 'https://example.test/second', null, 20);
+        $this->insertItem('first-child', 'Reports', 'https://example.test/first/reports', 'first-report', 10);
+        $this->insertItem('second-child', 'Reports', 'https://example.test/second/reports', 'second-report', 10);
+
+        $tree = CardboardServices::panelNav()->hierarchicalItems('Reports');
+        $first = $this->findItem($tree, 'first-report');
+        $second = $this->findItem($tree, 'second-report');
+
+        self::assertNotNull($first);
+        self::assertNotNull($second);
+        self::assertFalse($first['is_expanded'], 'a shared label names no branch');
+        self::assertFalse($second['is_expanded']);
+
+        $byId = CardboardServices::panelNav()->hierarchicalItems('second-child');
+        $first = $this->findItem($byId, 'first-report');
+        $second = $this->findItem($byId, 'second-report');
+
+        self::assertNotNull($first);
+        self::assertNotNull($second);
+        self::assertTrue($second['is_expanded'], 'the id names exactly one row');
+        self::assertFalse($first['is_expanded']);
+    }
+
+    /**
      * @param list<array<string, mixed>> $tree
      *
      * @return array<string, mixed>|null

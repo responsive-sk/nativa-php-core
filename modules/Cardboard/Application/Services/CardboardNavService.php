@@ -159,9 +159,23 @@ final readonly class CardboardNavService
     {
         $byId = [];
         $byLabel = [];
+        $seen = [];
         foreach ($flat as $item) {
             $byId[$item['id']] = $item + ['children' => [], 'is_expanded' => false];
-            $byLabel[strtolower($item['label'])] = $item['id'];
+
+            $label = strtolower($item['label']);
+            if (isset($seen[$label])) {
+                // Two rows share a name and the editor does not forbid it, so
+                // the name fits both and therefore names neither. Left as
+                // "last row wins", `sort_order` — a column an operator drags —
+                // decided which branch opened, and a wrong branch that opens
+                // looks exactly like a right one. The id still resolves.
+                unset($byLabel[$label]);
+                continue;
+            }
+
+            $seen[$label] = true;
+            $byLabel[$label] = $item['id'];
         }
 
         return ['byId' => $byId, 'byLabel' => $byLabel];
@@ -177,6 +191,9 @@ final readonly class CardboardNavService
      * lowercase form, so a caller that spells the label the way the sidebar
      * shows it ('Articles') used to miss and lose the active state silently —
      * the page rendered, the branch stayed shut.
+     *
+     * A label two rows share is absent from `byLabel` (see `indexItems()`), so
+     * it resolves to no item rather than to whichever row sorted last.
      *
      * @param array{byId: array<string, NavTreeItem>, byLabel: array<string, string>} $index
      */
