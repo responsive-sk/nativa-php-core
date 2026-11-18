@@ -40,6 +40,13 @@ use Modules\Database\Contracts\ConnectionInterface;
  * `Modules\Core\Domain\MarkRoutePolicy` exactly as it already imported
  * `Permissions`.
  *
+ * `activeSection()` — a path-to-id resolver no caller ever used, and whose
+ * prefix fallback answered with the FIRST href that matched instead of the
+ * longest (`/mark` would have named the dashboard for `/mark/users/1`) — is
+ * gone too. `hierarchicalItems()` takes the id or the label and resolves it
+ * once; a path-shaped caller can grow a path-shaped resolver when it appears,
+ * rather than leaving a wrong one in place against a future use.
+ *
  * Reads `config.db.menu_items` (location = 'mark') through its own `Statement`
  * to avoid importing another module's Infrastructure layer.
  *
@@ -623,31 +630,4 @@ final readonly class CardboardNavService
         return array_values($merged);
     }
 
-    /**
-     * Determine the active section ID from the current request path.
-     *
-     * Matches the href of nav items to identify which sidebar/top-nav link
-     * should be highlighted. If a child matches, returns the child's ID
-     * (the caller can look up the parent for group expansion).
-     */
-    public function activeSection(string $currentPath): string
-    {
-        $items = $this->activeItems();
-
-        foreach ($items as $item) {
-            if ($item['href'] === $currentPath) {
-                return $item['id'];
-            }
-        }
-
-        // Fallback: match by prefix (e.g. /mark/users/123 → users)
-        foreach ($items as $item) {
-            $href = $item['href'];
-            if ('/' !== $href && str_starts_with($currentPath, $href)) {
-                return $item['id'];
-            }
-        }
-
-        return '';
-    }
 }
