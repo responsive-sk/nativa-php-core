@@ -862,6 +862,17 @@ want_at_least 'security events that became audit rows' 4 "$audited"
 middleware_row="$(dbq DB_AUDIT "SELECT COUNT(*) FROM audit_log WHERE action = 'security.authz.denied' AND target = '/mark/users'")"
 want_at_least 'the refused /mark/users path became an audit row' 1 "$middleware_row"
 
+# The same delivery for the path the sidebar hid. `settings.manage` in the
+# detail is the point, not decoration: the middleware records the REQUIRED
+# permission, and the literal `no-policy` is what it writes when the path is
+# missing from MarkRoutePolicy instead. Those two refusals look identical to the
+# client, and the audit row is where an investigation tells them apart —
+# "the author lacks the permission" versus "the route table does not cover the
+# path". A 403 with the wrong line here would send that investigation after the
+# wrong fix.
+rest_row="$(dbq DB_AUDIT "SELECT COUNT(*) FROM audit_log WHERE action = 'security.authz.denied' AND target = '/mark/rest' AND detail LIKE '%needs settings.manage%'")"
+want_at_least 'the refused /mark/rest path became an audit row naming settings.manage' 1 "$rest_row"
+
 # And nothing may sit under the bare name that no handler claims — the precise
 # shape of the defect this section keeps closed. (Other event types are legitimate
 # here: the content section publishes an article, so `blog.article.published`
