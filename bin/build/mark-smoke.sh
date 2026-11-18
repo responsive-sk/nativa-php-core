@@ -10,10 +10,12 @@
 # reviewer's memory.
 #
 # What it walks, in order: the guest surfaces, the admin account surfaces (users,
-# roles, bulk refusal), the content editors (an article and a page, with the FILE
-# as the assertion), the public comment form (honeypot, moderation, publication)
-# and the two queues (the outbox drain that delivers the events this run records,
-# and the Queue module's worker over a job nobody can route).
+# roles, bulk refusal), the panel-nav editor (a declared entry, the row that
+# overrides it, and what hiding that row does), the content editors (an article
+# and a page, with the FILE as the assertion), the public comment form (honeypot,
+# moderation, publication) and the two queues (the outbox drain that delivers the
+# events this run records, and the Queue module's worker over a job nobody can
+# route).
 #
 # It is deliberately NOT a substitute for the suite: it asserts the statuses,
 # the rows and the recorded events, and it seeds its own accounts through the
@@ -534,6 +536,64 @@ check 'author GET /mark/rest' '/mark/rest' 403 -b "$AUTHOR_JAR" -c "$AUTHOR_JAR"
 # version of this line failed the run while the audit row below it passed.)
 refused="$(dbq DB_OUTBOX "SELECT COUNT(*) FROM outbox_messages WHERE event_type = 'security.authz.denied' AND json_extract(event_payload, '\$.path') = '/mark/users'")"
 want_at_least 'the middleware refusal recorded' 1 "$refused"
+
+# ---------------------------------------------------------------------------
+# The panel-nav EDITOR — where a declaration becomes an operator's override
+# ---------------------------------------------------------------------------
+# A sidebar entry is declared in code (`#[AsCardboardNavItem]`) and overridden by
+# a `menu_items` row with the same href. The suite pins the merge a class at a
+# time; this walks it through a booted server and real POSTs, because what it
+# guards is the two halves staying paired: an item the editor cannot see, a row
+# that does not win in the sidebar, or a hidden row whose link stays behind.
+check 'admin GET /mark/settings' '/mark/settings' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+body_has 'the editor lists the /mark/rest declaration' '<code>/mark/rest</code>'
+body_has 'the declaration is shown as code-only' 'Code only'
+
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav" \
+    --data-urlencode 'label=Smoke REST' --data-urlencode 'href=/mark/rest' \
+    --data-urlencode 'sort_order=5' --data-urlencode 'icon=link' \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/panel-nav' 302 "$got"
+
+REST_ROW="$(dbq DB_CONFIG "SELECT id FROM menu_items WHERE location = 'mark' AND href = '/mark/rest'")"
+if [ -n "$REST_ROW" ]; then ok 'the override row was written to menu_items'; else bad 'the panel-nav POST wrote no menu_items row'; fi
+
+# The override has to WIN in the sidebar, not merely exist: a row that loses to
+# the declaration is an editor whose saves do nothing.
+check 'admin GET /mark (overridden)' '/mark' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+body_has 'the sidebar shows the overriding label' 'Smoke REST'
+body_has 'the overriding row keeps the href it overrides' 'href="/mark/rest"'
+
+status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav/$REST_ROW/toggle" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/panel-nav/{id}/toggle' 302 "$got"
+
+# Hidden means gone, for the row AND for the declaration it shadows: a hidden
+# row that lets its declaration render again makes the Vis column a lie, and the
+# operator's only working control a delete.
+check 'admin GET /mark (hidden override)' '/mark' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+if grep -qF 'href="/mark/rest"' "$TMP/last.out"; then
+    bad 'a hidden override left /mark/rest in the sidebar'
+else
+    ok 'a hidden override removed /mark/rest from the sidebar'
+fi
+
+status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav/$REST_ROW/delete" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/panel-nav/{id}/delete' 302 "$got"
+
+left="$(dbq DB_CONFIG "SELECT COUNT(*) FROM menu_items WHERE location = 'mark' AND href = '/mark/rest'")"
+want 'the deleted override row is gone' 0 "$left"
+
+# Deleting the row gives the declaration back — the other half of the pairing,
+# and the reason the editor is safe to try: nothing it does is final.
+check 'admin GET /mark (override deleted)' '/mark' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+body_has 'the declaration is back in the sidebar' 'href="/mark/rest"'
 
 # ---------------------------------------------------------------------------
 # Content: an ARTICLE is written, served and deleted through the panel
