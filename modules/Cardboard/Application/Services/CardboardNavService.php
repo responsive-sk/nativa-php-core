@@ -79,11 +79,29 @@ final readonly class CardboardNavService
         $expandedGroups = $this->expandedGroups($index, $activeId);
         $tree = $this->withoutUnreachable($this->buildTree($index['byId']), $reachable);
 
-        // Set is_expanded on group items.
-        foreach ($tree as &$group) {
-            $group['is_expanded'] = isset($expandedGroups[$group['id']]);
+        return $this->withExpandedGroups($tree, $expandedGroups);
+    }
+
+    /**
+     * Mark every group the walk decided is open, at any depth.
+     *
+     * The flag used to be written on top-level items only, so a nested group
+     * whose child was the active page rendered CLOSED: the sidebar showed the
+     * branch and hid the way into it. Depth is unbounded now, so the flag is
+     * applied by recursion rather than by one pass over the roots.
+     *
+     * @param list<NavTreeItem>   $tree
+     * @param array<string, true> $expanded
+     *
+     * @return list<NavTreeItem>
+     */
+    private function withExpandedGroups(array $tree, array $expanded): array
+    {
+        foreach ($tree as $index => $item) {
+            $item['is_expanded'] = isset($expanded[$item['id']]);
+            $item['children'] = $this->withExpandedGroups($item['children'], $expanded);
+            $tree[$index] = $item;
         }
-        unset($group);
 
         return $tree;
     }

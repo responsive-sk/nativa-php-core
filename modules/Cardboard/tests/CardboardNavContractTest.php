@@ -377,6 +377,95 @@ final class CardboardNavContractTest extends TestCase
         self::assertNotContains('item-tags', $ids);
     }
 
+    /**
+     * A third level survives the tree assembly.
+     *
+     * `buildTree()` used to write each child's snapshot into its parent, and a
+     * snapshot taken before the child's own children were attached is a child
+     * with nothing under it — so a nested group rendered as a plain link and
+     * its contents vanished. Two levels looked right, which is why the smoke
+     * passed; the depth the bug actually broke is the one below.
+     */
+    #[Test]
+    public function aThirdLevelSurvivesTheTreeAssembly(): void
+    {
+        $this->clearPanelMenu();
+        $this->insertItem('row-outer', 'Outer', 'https://example.test/outer', null, 10);
+        $this->insertItem('row-middle', 'Middle', 'https://example.test/middle', 'row-outer', 11);
+        $this->insertItem('row-inner', 'Inner', 'https://example.test/inner', 'row-middle', 12);
+
+        $outer = $this->findItem(CardboardServices::panelNav()->hierarchicalItems(), 'row-outer');
+
+        self::assertNotNull($outer, 'the outermost row is a root');
+        self::assertSame(['row-middle'], array_column($outer['children'], 'id'));
+        self::assertSame(['row-inner'], array_column($outer['children'][0]['children'], 'id'));
+    }
+
+    /**
+     * Every ancestor of the active item is expanded, not just its parent.
+     *
+     * The flag was applied to top-level items only, so a nested group whose
+     * child was the page being viewed rendered closed — the sidebar offered a
+     * branch and hid the way in.
+     */
+    #[Test]
+    public function everyAncestorOfTheActiveItemExpands(): void
+    {
+        $this->clearPanelMenu();
+        $this->insertItem('deep-outer', 'Outer', 'https://example.test/outer', null, 10);
+        $this->insertItem('deep-middle', 'Middle', 'https://example.test/middle', 'deep-outer', 11);
+        $this->insertItem('deep-inner', 'Inner', 'https://example.test/inner', 'deep-middle', 12);
+
+        $outer = $this->findItem(CardboardServices::panelNav()->hierarchicalItems('inner'), 'deep-outer');
+
+        self::assertNotNull($outer);
+        self::assertTrue($outer['is_expanded'], 'the grandparent of the active item is open');
+        self::assertTrue($outer['children'][0]['is_expanded'], 'the parent of the active item is open too');
+    }
+
+    /**
+     * A parent chain that loops renders nothing rather than recursing.
+     *
+     * The move control refuses a cycle, and this is the second line: rows can
+     * be written by the add form and by anything that touches `menu_items`, and
+     * neither may turn a request into an infinite walk.
+     */
+    #[Test]
+    public function aCycleRendersNothingRatherThanRecursing(): void
+    {
+        $this->clearPanelMenu();
+        $this->insertItem('cycle-a', 'A', 'https://example.test/a', null, 10);
+        $this->insertItem('cycle-b', 'B', 'https://example.test/b', 'cycle-a', 11);
+
+        // The add form cannot build this: `parent_item_id` is a foreign key, so
+        // the second half of the loop is written the way a stale row or a
+        // hand-made UPDATE would leave it.
+        $this->connection
+            ->prepare("UPDATE menu_items SET parent_item_id = 'cycle-b' WHERE id = 'cycle-a'")
+            ->execute();
+
+        $ids = array_column(CardboardServices::panelNav()->hierarchicalItems(), 'id');
+
+        self::assertNotContains('cycle-a', $ids);
+        self::assertNotContains('cycle-b', $ids, 'a row whose parent chain never reaches a root is not a root');
+    }
+
+    /**
+     * @param list<array<string, mixed>> $tree
+     *
+     * @return array<string, mixed>|null
+     */
+    private function findItem(array $tree, string $id): ?array
+    {
+        foreach ($tree as $item) {
+            if (($item['id'] ?? null) === $id) {
+                return $item;
+            }
+        }
+
+        return null;
+    }
+
     private function clearPanelMenu(): void
     {
         $this->connection->prepare("DELETE FROM menu_items WHERE location = 'mark'")->execute();
