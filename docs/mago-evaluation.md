@@ -110,10 +110,12 @@ fix becomes a merge conflict. `phpstan` remains the analysis gate; the analyzer
 count is a reading, and a bigger reading is the point of widening it.
 
 The linter is the one place the extension had to be qualified: `modules/Themes/`
-is a byte-verified mirror of `nativa-themes` (`bin/build/sync-themes.sh --check`
-fails on a changed byte) whose 5 `readable-literal` findings can only be fixed
-upstream, so `[linter] excludes` names that one directory. Everything else under
-`modules/` is lint-covered with no exception.
+arrived as a byte-verified copy of `nativa-themes` whose 5 `readable-literal`
+findings could only be fixed upstream on the day they were counted. Those themes
+are authored here since 2026-11-18 and that repository is archived, so the
+original reason for the exclusion is gone and the fix now belongs to this tree;
+`[linter] excludes` still names the directory until it is made. Everything else
+under `modules/` is lint-covered with no exception.
 
 ### The catalogue's own reading
 

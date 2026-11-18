@@ -1,8 +1,9 @@
 # Repositories > what is authored, what is generated
 
-Four repositories serve this project, and only one of them is authored. This
-page states the direction once, so a change lands in the tree that owns it
-instead of in the copy that the next build replaces.
+Three repositories serve this project, and only one of them is authored; a
+fourth is kept read-only. This page states the direction once, so a change
+lands in the tree that owns it instead of in the copy that the next build
+replaces.
 
 ## The map
 
@@ -10,8 +11,12 @@ instead of in the copy that the next build replaces.
 |---|---|---|
 | `responsive-sk/nativa-php-core` | **authored** | the kernel, the module catalogue, the theme modules, the docs, the CI and the build tools |
 | `responsive-sk/nativa-core` | generated | the public starting point: an export of a commit of this tree, written by `bin/build/publish-core.sh` |
-| `evan70/nativa-themes` | gallery | the static theme gallery, now under `themes/gallery/` here; its module slices were imported on 2026-11-18 |
+| `evan70/nativa-themes` | **archived** | the pre-import snapshot of the static theme gallery, now under `themes/gallery/` here; its module slices were imported on 2026-11-18 and the repository was made read-only the same day |
 | `evan70/nativa-minimal` | showcase | a full site, private; its kernel slice is the ancestor of this one, not a source |
+
+An archived repository is a snapshot, not a place to edit: it keeps the state
+before the import and the `pre-unify-2026-11-18` tag, and every later change
+belongs in `themes/gallery/` or `modules/Themes/` here.
 
 ## How each one gets its bytes
 
