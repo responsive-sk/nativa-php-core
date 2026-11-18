@@ -825,6 +825,34 @@ got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel
     --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
 want 'admin POST /mark/settings/panel-nav/{id}/delete (last shared name)' 302 "$got"
 
+# A row pointing at a page this tree does not serve is dropped from the sidebar
+# at render. Losing a saved link without a word is the same class of silence as
+# the shared name above, so the editor says it where the row was added — and
+# says nothing about an external link, which the router does not own.
+status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav" \
+    --data-urlencode 'label=Smoke Ghost' --data-urlencode 'href=/mark/ghost' \
+    --data-urlencode 'sort_order=92' \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/panel-nav (link no route serves)' 302 "$got"
+
+SMOKE_GHOST="$(dbq DB_CONFIG "SELECT id FROM menu_items WHERE location = 'mark' AND href = '/mark/ghost'")"
+
+check 'admin GET /mark/settings (unserved link)' '/mark/settings' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+body_has 'the editor names a link no route serves' 'No route serves this nav link, so the sidebar hides it: <code>/mark/ghost</code>'
+if grep -qF 'so the sidebar hides it: <code>https://' "$TMP/last.out"; then
+    bad 'the warning named an external link, which the router does not own'
+else
+    ok 'the warning stays quiet about external links'
+fi
+
+status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav/$SMOKE_GHOST/delete" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/panel-nav/{id}/delete (unserved link)' 302 "$got"
+
 # Back to a page, not the redirect body: the next section reads its CSRF token
 # out of this GET, and a POST response carries none.
 status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null

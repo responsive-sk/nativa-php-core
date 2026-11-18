@@ -547,6 +547,32 @@ final class CardboardNavContractTest extends TestCase
     }
 
     /**
+     * The editor can name a row the sidebar will hide.
+     *
+     * A row whose `/mark` href no GET route serves is dropped at render — the
+     * right outcome, delivered silently: an operator saves a link and the
+     * panel shows no trace of it. The editor asks the same question the
+     * renderer asks, through the same closure, so the answer it prints is the
+     * answer the sidebar applies. An external href is never reported: the
+     * router is not the authority for somebody else's URL.
+     */
+    #[Test]
+    public function theEditorCanNameALinkNoRouteServes(): void
+    {
+        $this->clearPanelMenu();
+        $this->insertItem('ghost-row', 'Ghost', '/mark/ghost', null, 10);
+        $this->insertItem('served-row', 'Served', '/mark/settings', null, 20);
+        $this->insertItem('external-row', 'External', 'https://example.test/somewhere', null, 30);
+
+        $unserved = CardboardServices::panelNav()->unservedStoredItems(
+            static fn (string $path): bool => '/mark/settings' === $path,
+        );
+
+        self::assertSame(['ghost-row'], array_column($unserved, 'id'));
+        self::assertSame([], CardboardServices::panelNav()->unservedStoredItems(null), 'no router is no claim');
+    }
+
+    /**
      * The tree names the current row, so a renderer does not have to.
      *
      * `CardboardLayout` receives a hint and used to decide for itself by

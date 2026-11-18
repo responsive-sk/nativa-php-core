@@ -166,7 +166,7 @@ final readonly class CardboardNavService
 
         foreach ($tree as $item) {
             $children = $this->withoutUnreachable($item['children'], $reachable);
-            $served = !str_starts_with($item['href'], '/mark') || $reachable($item['href']);
+            $served = self::isServed($item['href'], $reachable);
 
             if (!$served && [] === $children) {
                 continue;
@@ -177,6 +177,45 @@ final readonly class CardboardNavService
         }
 
         return $kept;
+    }
+
+    /**
+     * Whether the tree serves a nav href.
+     *
+     * A path outside `/mark` counts as served: an operator's custom link is not
+     * the router's business, and a missing external page is not this panel's
+     * answer. The rule lives here once so the renderer that hides a link and
+     * the editor that reports it cannot disagree about what hidden means.
+     */
+    private static function isServed(string $href, \Closure $reachable): bool
+    {
+        return !str_starts_with($href, '/mark') || $reachable($href);
+    }
+
+    /**
+     * Stored rows whose href the tree does not serve, so the sidebar hides
+     * them.
+     *
+     * `withoutUnreachable()` drops such a row at render, which is right — a
+     * nav that leads to a 404 teaches the author the panel is broken — and it
+     * is invisible: the operator saves a link, opens the panel, and the link
+     * is simply not there. Declarations are left out on purpose: they ship
+     * with the module that routes them, while the row is the editable half.
+     *
+     * @param (\Closure(string): bool)|null $reachable
+     *
+     * @return list<NavItem>
+     */
+    public function unservedStoredItems(?\Closure $reachable): array
+    {
+        if (null === $reachable) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            $this->storedItems(),
+            static fn (array $item): bool => !self::isServed($item['href'], $reachable),
+        ));
     }
 
     /**

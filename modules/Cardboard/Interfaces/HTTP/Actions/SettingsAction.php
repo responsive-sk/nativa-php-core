@@ -500,9 +500,22 @@ final class SettingsAction
                 $conflicts,
             ));
 
-            $warning = '<div class="cba-msg cba-msg--err">Two or more nav items share a name: '
+            $warning .= '<div class="cba-msg cba-msg--err">Two or more nav items share a name: '
                 . $names
                 . '. A shared name marks neither item active — rename one of them.</div>';
+        }
+
+        // The sidebar drops a link no GET route serves — right, and silent: the
+        // row is saved, the panel is opened, and the link is not there. Naming
+        // it beside the table is the difference between a configured link and
+        // a broken one.
+        $unserved = CardboardServices::panelNav()->unservedStoredItems(
+            CardboardLayout::reachablePaths($this->router),
+        );
+
+        foreach ($unserved as $row) {
+            $warning .= '<div class="cba-msg cba-msg--err">No route serves this nav link, so the sidebar hides it: <code>'
+                . CardboardLayout::e($row['href']) . '</code> (' . CardboardLayout::e($row['label']) . ').</div>';
         }
 
         return ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/settings-nav-table.phtml', ['url' => $this->urlBuilder(), 'panelNavRows' => $rows, 'panelNavWarning' => $warning]);
