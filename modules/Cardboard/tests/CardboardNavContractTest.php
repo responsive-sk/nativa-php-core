@@ -527,6 +527,26 @@ final class CardboardNavContractTest extends TestCase
     }
 
     /**
+     * The editor can name the label a hint cannot tell apart.
+     *
+     * `indexItems()` resolves a shared label to nothing and, on its own, says
+     * nothing: the editor accepted both rows, the sidebar stopped marking
+     * either active, and no screen connected the two facts. The settings page
+     * asks this question, and it is answered with the same key the resolution
+     * uses — casing and surrounding space are not a different name.
+     */
+    #[Test]
+    public function theEditorCanNameTheLabelsTwoRowsShare(): void
+    {
+        $this->clearPanelMenu();
+        $this->insertItem('shared-a', 'Reports', 'https://example.test/a', null, 10);
+        $this->insertItem('shared-b', ' reports ', 'https://example.test/b', null, 20);
+        $this->insertItem('shared-unique', 'Unique', 'https://example.test/unique', null, 30);
+
+        self::assertSame(['Reports'], CardboardServices::panelNav()->conflictingLabels());
+    }
+
+    /**
      * The tree names the current row, so a renderer does not have to.
      *
      * `CardboardLayout` receives a hint and used to decide for itself by

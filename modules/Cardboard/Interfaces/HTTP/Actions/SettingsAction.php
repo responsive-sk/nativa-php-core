@@ -487,7 +487,25 @@ final class SettingsAction
             return '<p class="m-muted">No admin nav items — using defaults.</p>';
         }
 
-        return ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/settings-nav-table.phtml', ['url' => $this->urlBuilder(), 'panelNavRows' => $rows]);
+        // The add form accepts two rows with one name, and the sidebar then
+        // resolves that name to neither of them. On the panel the row simply
+        // stops looking active — which is what a correct page looks like too —
+        // so the editor is the only place the mistake can be seen.
+        $conflicts = CardboardServices::panelNav()->conflictingLabels();
+        $warning = '';
+
+        if ([] !== $conflicts) {
+            $names = implode(', ', array_map(
+                static fn (string $label): string => '"' . CardboardLayout::e($label) . '"',
+                $conflicts,
+            ));
+
+            $warning = '<div class="cba-msg cba-msg--err">Two or more nav items share a name: '
+                . $names
+                . '. A shared name marks neither item active — rename one of them.</div>';
+        }
+
+        return ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/settings-nav-table.phtml', ['url' => $this->urlBuilder(), 'panelNavRows' => $rows, 'panelNavWarning' => $warning]);
     }
 
     /**

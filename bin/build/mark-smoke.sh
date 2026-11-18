@@ -778,6 +778,56 @@ check 'admin GET /mark/settings (move controls)' '/mark/settings' 200 -b "$ADMIN
 body_has 'the editor offers a move control per row' 'title="Move under"'
 body_has 'the declared table writes a row for a declaration' 'Add row'
 
+# A name two rows share is a name the sidebar cannot resolve: the label map
+# drops it, so the page keeps its URL and loses its active highlight, and
+# nothing on the panel says why. The add form accepted the second row, so the
+# editor is where the mistake has to be named — and the warning has to go away
+# when one of the two rows does, or it is wallpaper.
+status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav" \
+    --data-urlencode 'label=Smoke Shared Name' --data-urlencode 'href=https://example.test/shared-a' \
+    --data-urlencode 'sort_order=93' \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/panel-nav (first shared name)' 302 "$got"
+
+SMOKE_SHARED_A="$(dbq DB_CONFIG "SELECT id FROM menu_items WHERE location = 'mark' AND href = 'https://example.test/shared-a'")"
+
+status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav" \
+    --data-urlencode 'label=Smoke Shared Name' --data-urlencode 'href=https://example.test/shared-b' \
+    --data-urlencode 'sort_order=94' \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/panel-nav (second shared name)' 302 "$got"
+
+SMOKE_SHARED_B="$(dbq DB_CONFIG "SELECT id FROM menu_items WHERE location = 'mark' AND href = 'https://example.test/shared-b'")"
+
+check 'admin GET /mark/settings (shared name)' '/mark/settings' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+body_has 'the editor names the label two rows share' 'share a name: "Smoke Shared Name"'
+
+status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav/$SMOKE_SHARED_B/delete" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/panel-nav/{id}/delete (one of two shared names)' 302 "$got"
+
+check 'admin GET /mark/settings (one shared name left)' '/mark/settings' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+if grep -qF 'share a name:' "$TMP/last.out"; then
+    bad 'the shared-name warning outlived the row that made the name shared'
+else
+    ok 'the warning goes when one of the two rows is deleted'
+fi
+
+status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav/$SMOKE_SHARED_A/delete" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/panel-nav/{id}/delete (last shared name)' 302 "$got"
+
+# Back to a page, not the redirect body: the next section reads its CSRF token
+# out of this GET, and a POST response carries none.
+status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
 ADMIN_TOKEN="$(token)"
 got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav" \
     --data-urlencode 'label=Smoke Group One' --data-urlencode 'href=https://example.test/one' \

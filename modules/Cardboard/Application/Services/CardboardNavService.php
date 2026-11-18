@@ -188,13 +188,21 @@ final readonly class CardboardNavService
         foreach ($flat as $item) {
             $byId[$item['id']] = $item + ['children' => [], 'is_expanded' => false];
 
-            $label = strtolower($item['label']);
+            $label = self::labelKey($item['label']);
+            if ('' === $label) {
+                // A blank label is not a name: keyed on '', two nameless rows
+                // would resolve each other, and the empty hint is already
+                // "nothing active".
+                continue;
+            }
+
             if (isset($seen[$label])) {
-                // Two rows share a name and the editor does not forbid it, so
-                // the name fits both and therefore names neither. Left as
-                // "last row wins", `sort_order` — a column an operator drags —
-                // decided which branch opened, and a wrong branch that opens
-                // looks exactly like a right one. The id still resolves.
+                // Two rows share a name — the editor warns about it but does
+                // not forbid it — so the name fits both and therefore names
+                // neither. Left as "last row wins", `sort_order` — a column an
+                // operator drags — decided which branch opened, and a wrong
+                // branch that opens looks exactly like a right one. The id
+                // still resolves.
                 unset($byLabel[$label]);
                 continue;
             }
@@ -204,6 +212,58 @@ final readonly class CardboardNavService
         }
 
         return ['byId' => $byId, 'byLabel' => $byLabel];
+    }
+
+    /**
+     * The labels several active rows share, as the operator spells them.
+     *
+     * A shared name is the one thing the resolution cannot tell apart, and the
+     * editor does not forbid it: the row that owns the page then loses its
+     * active state and nothing on the panel says why. The settings screen asks
+     * this and prints the answer, so the rule is read from the same key the
+     * resolution uses instead of being restated beside it.
+     *
+     * Inactive rows are left out: a hidden row is not in the tree, so its name
+     * cannot collide with anything on the sidebar.
+     *
+     * @return list<string>
+     */
+    public function conflictingLabels(): array
+    {
+        $counts = [];
+        $labels = [];
+
+        foreach ($this->activeItems() as $item) {
+            $key = self::labelKey($item['label']);
+
+            if ('' === $key) {
+                continue;
+            }
+
+            $counts[$key] = ($counts[$key] ?? 0) + 1;
+            $labels[$key] ??= trim($item['label']);
+        }
+
+        $shared = [];
+
+        foreach ($counts as $key => $count) {
+            if ($count > 1) {
+                $shared[] = $labels[$key];
+            }
+        }
+
+        sort($shared);
+
+        return $shared;
+    }
+
+    /**
+     * The form a label is indexed by: casing and surrounding space do not make
+     * a different name.
+     */
+    private static function labelKey(string $label): string
+    {
+        return strtolower(trim($label));
     }
 
     /**

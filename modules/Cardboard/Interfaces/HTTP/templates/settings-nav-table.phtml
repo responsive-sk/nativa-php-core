@@ -11,7 +11,7 @@ if (!isset($viewRendererGuard)) {
     throw new \RuntimeException('Template must be rendered via ViewRenderer.');
 }
 
-?>            <div class="m-table-toolbar">
+?><?php echo $panelNavWarning . "\n"; ?>            <div class="m-table-toolbar">
                 <p class="m-muted">Drag rows to reorder. Click "Save order" when done.</p>
                 <button type="button" class="m-btn m-btn-primary m-btn-sm" id="panel-nav-save-order" data-nav-save-order>Save order</button>
             </div>
