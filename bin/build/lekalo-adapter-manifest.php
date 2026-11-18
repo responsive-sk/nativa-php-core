@@ -31,7 +31,7 @@ function canon(mixed $value): string
 {
     if (is_array($value)) {
         if (array_is_list($value)) {
-            return '[' . implode(',', array_map('canon', $value)) . ']';
+            return '[' . implode(',', array_map(canon(...), $value)) . ']';
         }
         $keys = array_keys($value);
         usort($keys, static fn ($a, $b): int => strcmp((string) $a, (string) $b));
@@ -85,7 +85,7 @@ if (!is_array($manifest)) {
 // their declared order, and the verifier requires that order to be the
 // sorted one (`package_root_bytes`, ADR-0042).
 $listed = array_map(static fn (array $file): string => $file['path'], $manifest['integrity']['files']);
-usort($listed, static fn (string $a, string $b): int => strcmp($a, $b));
+usort($listed, strcmp(...));
 $bytes = [];
 foreach ($listed as $name) {
     $bytes[$name] = (string) file_get_contents($dir . '/' . $name);
