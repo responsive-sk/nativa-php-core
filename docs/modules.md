@@ -411,7 +411,7 @@ in `docs/mago-evaluation.md`.
 | | |
 |---|---|
 | what runs | `make lekalo-check` = `lekalo lock --check` + the whole model + **every module on its own** (`bin/build/lekalo-modules.sh`), in the `Lint + PHPStan + Lekalo model` CI job |
-| the CLI | pinned to release `v0.6.5` with a sha256-verified archive — the same pin and checksum `nativa-minimal` uses, so the two projects cannot drift into validating against different binaries |
+| the CLI | pinned to release `v1.2.0` with a sha256-verified archive; `nativa-minimal` must carry the same pin and checksum, so the two projects cannot drift into validating against different binaries |
 | measured | run 38933437965: the install step and the gate step both green on a real runner |
 
 **What it verifies:** the model is well-formed and self-consistent — every `ref`

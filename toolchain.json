@@ -25,10 +25,10 @@
     },
     {
       "name": "lekalo",
-      "version": "v0.6.5",
+      "version": "v1.2.0",
       "target": "x86_64-unknown-linux-gnu",
-      "sha256": "27cdb64ae99d7180530a05fbc722834c129e73faa693ddafc8c08b60e7794694",
-      "why": "the model gate; same version and checksum as nativa-minimal's install step, so the two projects cannot validate against different binaries",
+      "sha256": "142dc3deb2b7dffd64eaee1350258c6d37cb7bd59b1d085c8ec47cc67276b950",
+      "why": "the model gate; version and checksum must match nativa-minimal's install step, so the two projects cannot validate against different binaries",
       "needles": {
         "files": [
           ".github/workflows/ci.yml"

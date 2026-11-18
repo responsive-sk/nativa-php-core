@@ -238,7 +238,7 @@ short version; the Lekalo side is documented in `docs/modules.md`.
 | answers | "is the model well-formed and self-consistent?" — every `ref` resolves, grammar holds, ids are unique, CLI contract versions match | "what does the code do that a written rule forbids?" — kernel→module edges, 570 lint findings at the default preset, formatting |
 | blind spot | the model↔code gap: `lekalo.lock` reports `adapters 0`, no PHP adapter, so a stale or even FALSE description still validates | intent: a name heuristic cannot tell a CSRF fixture from a password — 2 curated `@mago-expect` sites, reviewed |
 | the gate here | `make lekalo-check` = lock check + whole model + every module separately; CI job `Lint + PHPStan + Lekalo model` | `make mago-guard` (empty report) and `make mago-lint` (zero findings); CI jobs `kernel-dependency` and `curated-lint` |
-| pin | CLI `v0.6.5`, sha256-verified archive | `mago 1.58.2`, sha256-verified archive |
+| pin | CLI `v1.2.0`, sha256-verified archive | `mago 1.58.2`, sha256-verified archive |
 | what closes its gap | PHPUnit contract tests: `ModelPayloadContractTest`, `ModelReferenceContractTest`, `SecurityEventPayloadContractTest` | `KernelCouplingTest` states the same perimeter rule in PHP, and the count gates refuse the next finding |
 | in `dist/` | `lekalo/` and `lekalo.lock` are excluded (model of the build, not the build) | `mago.toml` is excluded (how the tree is checked, not how it runs) |
 

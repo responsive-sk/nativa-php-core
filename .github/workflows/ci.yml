@@ -233,20 +233,20 @@ jobs:
       # model, not a switch waiting for an adapter to exist.
       # -------------------------------------------------------------------------
 
-      - name: Install lekalo CLI (pinned v0.6.5, checksum-verified)
+      - name: Install lekalo CLI (pinned v1.2.0, checksum-verified)
         run: |
           set -euo pipefail
-          version=v0.6.5
+          version=v1.2.0
           target=x86_64-unknown-linux-gnu
           archive="lekalo-${version}-${target}.tar.gz"
           # The tag is immutable and the checksum is the identity: a re-rolled
           # upstream asset fails here instead of silently changing what the gate
-          # ran, and the job needs no Rust toolchain. Same version and checksum
-          # as nativa-minimal's install step, so the two projects cannot drift
-          # into validating against different binaries.
+          # ran, and the job needs no Rust toolchain. Version and checksum must
+          # match nativa-minimal's install step, so the two projects cannot
+          # drift into validating against different binaries.
           curl -fsSL -o "/tmp/${archive}" \
             "https://github.com/ichinya/lekalo/releases/download/${version}/${archive}"
-          echo "27cdb64ae99d7180530a05fbc722834c129e73faa693ddafc8c08b60e7794694  /tmp/${archive}" | sha256sum -c -
+          echo "142dc3deb2b7dffd64eaee1350258c6d37cb7bd59b1d085c8ec47cc67276b950  /tmp/${archive}" | sha256sum -c -
           mkdir -p "$HOME/.local/bin"
           tar xzf "/tmp/${archive}" -C /tmp
           install -m 0755 "/tmp/lekalo-${version}-${target}/lekalo" "$HOME/.local/bin/lekalo"

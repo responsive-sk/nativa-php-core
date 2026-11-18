@@ -2,8 +2,8 @@
 # lekalo-modules.sh — the whole model, and every module on its own.
 #
 # `lekalo validate` covers the whole project; `lekalo validate --module <id>` adds
-# that module's own report. Four things about the pinned v0.6.5 were measured on
-# 2026-10-16 and shape this script:
+# that module's own report. Four things about the pinned CLI were measured on
+# v0.6.5 (2026-10-16) and re-checked on v1.2.0 (2026-11-18), and shape this script:
 #
 #   1. `--module` scopes the REPORT, not the validation. The whole project is
 #      validated either way, so a healthy module answers exit 1 while another
