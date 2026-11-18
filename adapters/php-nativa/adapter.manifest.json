@@ -1,0 +1,131 @@
+{
+    "adapter": {
+        "id": "lekalo-target-php-nativa",
+        "name": "Nativa PHP target adapter",
+        "version": "0.1.0"
+    },
+    "capabilities": {
+        "constraints": [],
+        "named": {
+            "scan.symbols": "partial",
+            "verify.scenarios": "unsupported"
+        },
+        "operations": [
+            "describe",
+            "scan",
+            "validate",
+            "verify"
+        ],
+        "profiles": [],
+        "readScopes": [
+            ".lekalo/ir/**",
+            "bin/**",
+            "modules/**",
+            "src/**",
+            "tests/**"
+        ],
+        "targets": [
+            "php-nativa"
+        ],
+        "transports": [
+            "file",
+            "stdin"
+        ],
+        "writeScopes": []
+    },
+    "compatibility": {
+        "extensions": [],
+        "irVersions": [
+            "0.2.16"
+        ],
+        "protocolVersions": [
+            "0.3.2"
+        ]
+    },
+    "conformance": {
+        "badge": {
+            "ir": "0.2.16",
+            "profile": "default",
+            "protocol": "0.3.2"
+        },
+        "reportDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "suiteRegistry": "dev.lekalo.adapter-conformance@0.2.16"
+    },
+    "executable": {
+        "argvPreview": [
+            "php",
+            "adapter.php"
+        ],
+        "assets": [],
+        "entry": "adapter.php",
+        "runtime": {
+            "kind": "php",
+            "minVersion": "8.5.0"
+        }
+    },
+    "hooks": [],
+    "identity": "dev.lekalo.adapter-manifest@0.6.4",
+    "integrity": {
+        "files": [
+            {
+                "path": "adapter.php",
+                "digest": "sha256:bcc01747986936b53196e19b910511356e009285cf3bf05edcbc5783b20f9374",
+                "bytes": 199336
+            },
+            {
+                "path": "notice.md",
+                "digest": "sha256:fb6255e08bee213818e5721b22fc6ef895c2f949ce873f606585bd502fd10380",
+                "bytes": 671
+            }
+        ],
+        "packageDigest": "sha256:c1f437d71efde2e40ef18ba73a0faaee962dafa2734bf69f074f080ba5b0bbd1",
+        "signature": null,
+        "signaturePolicy": "unsigned"
+    },
+    "license": {
+        "file": "notice.md",
+        "fileDigest": "sha256:fb6255e08bee213818e5721b22fc6ef895c2f949ce873f606585bd502fd10380",
+        "spdx": "MIT"
+    },
+    "permissions": {
+        "environment": {
+            "allowlist": []
+        },
+        "filesystem": {
+            "readScopes": [
+                ".lekalo/ir/**",
+                "bin/**",
+                "modules/**",
+                "src/**",
+                "tests/**"
+            ],
+            "writeScopes": []
+        },
+        "network": {
+            "destinations": [],
+            "mode": "denied"
+        },
+        "processes": {
+            "children": "denied"
+        },
+        "secrets": {
+            "handles": []
+        }
+    },
+    "platforms": [
+        "any"
+    ],
+    "publisher": {
+        "id": "nativa",
+        "name": "Nativa PHP Core",
+        "trustAnchor": "none"
+    },
+    "revocation": null,
+    "schemaVersion": "lekalo/adapter-manifest/v0.6.4",
+    "source": {
+        "coordinate": "path:adapters/php-nativa",
+        "digest": "sha256:3f5381e0d493385ddbcb3794df5f597b481d6b86f9ce5b4fda8640ebcd67a7a5",
+        "kind": "path"
+    },
+    "status": "active"
+}

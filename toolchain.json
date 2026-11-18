@@ -302,6 +302,18 @@
       ]
     },
     {
+      "target": "lekalo-adapter-test",
+      "tier": "repo",
+      "can_fail": true,
+      "answers": "is the php-nativa target adapter still what it claims: its manifest digests recompute and the conformance battery passes",
+      "ci": [
+        {
+          "job": "analysis",
+          "note": "after the checksum-verified CLI install"
+        }
+      ]
+    },
+    {
       "target": "lekalo-module",
       "tier": "repo",
       "can_fail": true,

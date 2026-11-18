@@ -255,6 +255,13 @@ jobs:
       - name: Lekalo gate (lock --check + validate)
         run: make lekalo-check
 
+      # The target adapter is a package, not a script: this resolves its
+      # manifest, recomputes the package digest against the exact bytes, then
+      # runs the conformance battery through the confined client. It needs no
+      # install into .lekalo/adapters — that store is local custody.
+      - name: Target adapter conformance (php-nativa)
+        run: make lekalo-adapter-test
+
   # ---------------------------------------------------------------------------
   # KERNEL DEPENDENCY — mago guard, the rule KernelCouplingTest states in PHP
   # ---------------------------------------------------------------------------

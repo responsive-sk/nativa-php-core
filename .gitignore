@@ -160,3 +160,8 @@ src/Modules/*
 
 # The adopted pre-rename database backup is operator state, not code.
 /storage/data/*.adopted-backup
+
+# The installed target-adapter store. `lekalo adapter install` writes it from
+# `adapters/php-nativa`; the package bytes live in the repository, the pinned
+# inventory is custody. Re-installing after a byte change is the update path.
+/.lekalo/adapters/
