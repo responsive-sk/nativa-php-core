@@ -55,14 +55,14 @@ these totals are higher than the scope-extension table above.
 | `guard` | 0 issues | **0 issues** |
 
 Measured on PHP 8.5.12, `mago.toml`'s current scope. The analyzer reports 112
-fewer issues (28 fewer errors) on identical input — narrower inference in
-1.59/1.60, not a rule this tree switched off.
+fewer issues (28 fewer errors) on identical input; that is narrower inference
+in 1.59/1.60, not a rule this tree switched off.
 
 The linter is where the bump paid for itself. The first `1.60.2` run reported
 **one finding** the old binary could not see: `no-unused-return-value` on
 `MarkdownBlockRegistry::loadAndRegister()`, a `private static` method returning
-`bool` whose only caller discarded it. The method is `void` now — the early
-exits kept their branches — which is the fix the rule asks for rather than a
+`bool` whose only caller discarded it. The method is `void` now (the early
+exits kept their branches), which is the fix the rule asks for rather than a
 pragma. The ceiling was 0 before the bump and is 0 after it.
 
 `format` is the one reading that did not move with the binary: both versions
@@ -136,7 +136,7 @@ reading measures the catalogue itself rather than the distance between two
 scopes.
 
 Re-measured on `1.60.2` (2026-11-18) against the current catalogue: **0 lint
-findings, 1484 analyzer issues (663 errors)** — and `1.58.2` reports 1537 (684
+findings, 1484 analyzer issues (663 errors)**, and `1.58.2` reports 1537 (684
 errors) on the same tree, so the drop is the binary, not a code change.
 
 CI publishes the reading on every push and pull request: the `module-quality`
