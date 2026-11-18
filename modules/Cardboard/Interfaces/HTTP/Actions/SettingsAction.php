@@ -94,6 +94,8 @@ final class SettingsAction
         $declaredNavTable = self::declaredNavTable(
             CardboardServices::panelNav()->declaredItems(),
             $storedNavItems,
+            $csrf,
+            $this->url('mark.settings.panel-nav'),
         );
 
         $content = ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/settings-form.phtml', ['url' => $this->urlBuilder(), 'settingsTabs' => CardboardLayout::settingsTabs($this->urlBuilder(), 'general'), 'adminEmail' => $adminEmail, 'panelNavTable' => $panelNavTable, 'declaredNavTable' => $declaredNavTable, 'csrf' => $csrf, 'errorHtml' => $errorHtml, 'iconOptions' => $iconOptions, 'layoutSelect' => $layoutSelect, 'locale' => $locale, 'navTable' => $navTable, 'parentOptions' => $parentOptions, 'regChecked' => $regChecked, 'siteDescription' => $siteDescription, 'siteName' => $siteName, 'themeSelect' => $themeSelect, 'themeSettingsCard' => $themeSettingsCard, 'timezone' => $timezone, 'tokenTable' => $tokenTable]);
@@ -356,10 +358,9 @@ final class SettingsAction
      * its own before anything can be nested under it, which is the rule the add
      * form already follows.
      *
-     * Top-level rows only, and never the row itself: the sidebar renders one
-     * level of children, so a group inside a group is a link whose own children
-     * would be dropped at render time. Moving a row to the top level is the
-     * empty option, which is why it is always present.
+     * Any depth is offered now that the sidebar draws a group inside a group,
+     * but never the row itself or anything beneath it: that is a cycle, and the
+     * tree it would build references itself.
      *
      * @param list<array{id: string, label: string, href: string, sort_order: int, is_active: bool, icon: string, parent_id: ?string}> $stored
      */
@@ -367,8 +368,13 @@ final class SettingsAction
     {
         $options = '<option value=""' . (null === $currentParent ? ' selected' : '') . '>Top level</option>';
 
+        $parentOf = [];
+        foreach ($stored as $row) {
+            $parentOf[$row['id']] = $row['parent_id'] ?? null;
+        }
+
         foreach ($stored as $candidate) {
-            if ($candidate['id'] === $itemId || null !== ($candidate['parent_id'] ?? null)) {
+            if ($candidate['id'] === $itemId || self::isInside($parentOf, $candidate['id'], $itemId)) {
                 continue;
             }
 
@@ -378,6 +384,38 @@ final class SettingsAction
         }
 
         return $options;
+    }
+
+    /**
+     * Is `$id` somewhere under `$ancestor`? Walks the stored parent chain.
+     *
+     * The one shape no renderer survives is a cycle: moving an item under its
+     * own descendant makes the tree reference itself, and the sidebar either
+     * recurses until the request dies or loses the branch. The same walk keeps
+     * the row's own subtree out of its "Move under" select.
+     *
+     * @param array<string, ?string> $parentOf
+     */
+    private static function isInside(array $parentOf, string $id, string $ancestor): bool
+    {
+        $guard = [];
+
+        while (isset($parentOf[$id]) && !isset($guard[$id])) {
+            $guard[$id] = true;
+            $parent = $parentOf[$id];
+
+            if (null === $parent) {
+                return false;
+            }
+
+            if ($parent === $ancestor) {
+                return true;
+            }
+
+            $id = $parent;
+        }
+
+        return false;
     }
 
     /**
@@ -468,7 +506,7 @@ final class SettingsAction
      * @param list<array{id: string, label: string, href: string, sort_order: int, is_active: bool, icon: string, parent_id: ?string, permission: ?string}> $declared
      * @param list<array{id: string, label: string, href: string, sort_order: int, is_active: bool, icon: string, parent_id: ?string, permission: ?string}> $stored
      */
-    public static function declaredNavTable(array $declared, array $stored): string
+    public static function declaredNavTable(array $declared, array $stored, string $csrf = '', string $addUrl = ''): string
     {
         if ([] === $declared) {
             return '';
@@ -494,6 +532,23 @@ final class SettingsAction
                 ? '<span class="m-muted">—</span>'
                 : CardboardLayout::e($labelsById[$item['parent_id']] ?? $item['parent_id']);
 
+            // A declaration cannot be a parent: `menu_items.parent_item_id`
+            // is a foreign key, so the clever form of this control is to write
+            // the row for the operator instead of asking them to retype the
+            // label, the href, the order and the icon by hand.
+            $addCell = '';
+
+            if (!$overridden && '' !== $csrf && '' !== $addUrl) {
+                $addCell = '<form method="POST" action="' . CardboardLayout::e($addUrl) . '" class="m-inline-form">'
+                    . $csrf
+                    . '<input type="hidden" name="label" value="' . CardboardLayout::e($item['label']) . '">'
+                    . '<input type="hidden" name="href" value="' . CardboardLayout::e($item['href']) . '">'
+                    . '<input type="hidden" name="sort_order" value="' . $item['sort_order'] . '">'
+                    . '<input type="hidden" name="icon" value="' . CardboardLayout::e($item['icon']) . '">'
+                    . '<button class="m-btn m-btn-sm">Add row</button>'
+                    . '</form>';
+            }
+
             $rows .= '<tr>'
                 . '<td>' . CardboardLayout::e($item['label']) . '</td>'
                 . '<td><code>' . CardboardLayout::e($item['href']) . '</code></td>'
@@ -502,13 +557,14 @@ final class SettingsAction
                 . '<td>' . $parent . '</td>'
                 . '<td>' . CardboardLayout::e($item['permission'] ?? '—') . '</td>'
                 . '<td>' . $source . '</td>'
+                . '<td>' . $addCell . '</td>'
                 . '</tr>';
         }
 
         return '<h3 class="m-heading">Declared in code</h3>'
             . '<p class="m-muted m-card-intro">Each installed module declares its own entry. A stored row with the same href overrides the declaration — that is what the table above edits; add one below to relabel a declared item or change its order.</p>'
             . '<div class="m-table-scroll"><table class="m-table m-table--wide"><thead><tr>'
-            . '<th>Label</th><th>Href</th><th>Order</th><th>Icon</th><th>Parent</th><th>Permission</th><th>Source</th>'
+            . '<th>Label</th><th>Href</th><th>Order</th><th>Icon</th><th>Parent</th><th>Permission</th><th>Source</th><th>Row</th>'
             . '</tr></thead><tbody>' . $rows . '</tbody></table></div>';
     }
 
@@ -815,16 +871,15 @@ final class SettingsAction
 
         /** @var array<string, array{parent_id: ?string}> $byId */
         $byId = [];
-        /** @var array<string, list<string>> $children */
-        $children = [];
 
         foreach ($items as $item) {
             $byId[$item['id']] = $item;
-            $parent = $item['parent_id'] ?? null;
+        }
 
-            if (null !== $parent) {
-                $children[$parent][] = $item['id'];
-            }
+        /** @var array<string, ?string> $parentOf */
+        $parentOf = [];
+        foreach ($items as $item) {
+            $parentOf[$item['id']] = $item['parent_id'] ?? null;
         }
 
         if (!isset($byId[$id])) {
@@ -844,15 +899,13 @@ final class SettingsAction
                     : ['The chosen parent no longer exists.']));
             }
 
-            if (null !== ($byId[$parentId]['parent_id'] ?? null)) {
+            // A cycle is the one shape no renderer survives: walking down from
+            // the item must never reach the parent it is being moved under.
+            // Everything else nests now — the sidebar draws a group inside a
+            // group, so a group with children is a legal passenger.
+            if (self::isInside($parentOf, $parentId, $id)) {
                 return Response::html($this->settingsPage(
-                    ['A nav item can only be moved under a top-level item — the sidebar renders one level of children.'],
-                ));
-            }
-
-            if ([] !== ($children[$id] ?? [])) {
-                return Response::html($this->settingsPage(
-                    ['A group with children cannot be nested — move its children out first.'],
+                    ['A nav item cannot be moved under its own child.'],
                 ));
             }
         }

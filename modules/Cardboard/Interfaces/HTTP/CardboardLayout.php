@@ -5,17 +5,17 @@ declare(strict_types = 1);
 namespace Modules\Cardboard\Interfaces\HTTP;
 
 use Modules\Cardboard\Application\Services\IconRegistry;
-use Themes\AssetManager;
-use View\ViewRenderer;
 use Modules\Core\Infrastructure\Env;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Paths\AppPaths;
-use Modules\Navigation\Infrastructure\Registry\NavBadgeRegistry;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
-use Themes\ThemeResolver;
-use Modules\Core\Kernel\Contracts\RouterInterface;
 use Modules\Core\Interfaces\HTTP\Router;
+use Modules\Core\Kernel\Contracts\RouterInterface;
+use Modules\Navigation\Infrastructure\Registry\NavBadgeRegistry;
 use Shell\ShellContextProviderRegistry;
+use Themes\AssetManager;
+use Themes\ThemeResolver;
+use View\ViewRenderer;
 
 /**
  * CardboardLayout — shared admin page shell (task 9.5).
@@ -121,7 +121,7 @@ final class CardboardLayout
     }
 
     /**
-     * The route table's answer to "does this tree serve that menu link?"
+     * The route table's answer to "does this tree serve that menu link?".
      *
      * A callback rather than a Router dependency in `CardboardNavService`: the
      * service stays connection-only and the layout decides what a served path
@@ -813,18 +813,34 @@ final class CardboardLayout
         $html .= '<div class="layout-sidebar__children"><div class="layout-sidebar__children-inner">';
 
         foreach ($item['children'] as $child) {
-            $state = self::navActiveState($child, $activeSection);
-            $childIcon = self::navIcon((string) $child['id'], (string) $child['icon']);
-
-            $html .= '<a class="layout-sidebar__link layout-sidebar__link--child' . $state['class'] . '" href="' . self::e((string) $child['href']) . '"' . $state['aria'] . '>';
-            $html .= $childIcon;
-            $html .= '<span class="layout-sidebar__link-label">' . self::e((string) $child['label']) . '</span>';
-            $html .= '</a>';
+            // A child that has children of its own is a group again, one level
+            // in. Recursing is what makes the tree in `CardboardNavService`
+            // reachable: before this, a nested group rendered as its own href
+            // and its children were dropped without a word.
+            $html .= [] !== $child['children']
+                ? self::navGroupHtml($child, $activeSection)
+                : self::navChildHtml($child, $activeSection);
         }
 
         $html .= '</div></div></div>';
 
         return $html;
+    }
+
+    /**
+     * One leaf child of a group.
+     *
+     * @param array{id: string, label: string, href: string, sort_order: int, is_active: bool, icon: string, parent_id: ?string} $child
+     */
+    private static function navChildHtml(array $child, string $activeSection): string
+    {
+        $state = self::navActiveState($child, $activeSection);
+        $childIcon = self::navIcon((string) $child['id'], (string) $child['icon']);
+
+        return '<a class="layout-sidebar__link layout-sidebar__link--child' . $state['class'] . '" href="' . self::e((string) $child['href']) . '"' . $state['aria'] . '>'
+            . $childIcon
+            . '<span class="layout-sidebar__link-label">' . self::e((string) $child['label']) . '</span>'
+            . '</a>';
     }
 
     /**

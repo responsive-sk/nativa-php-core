@@ -71,6 +71,11 @@
 }
 .layout-sidebar__link--child:hover { border-left-color: var(--m-primary); }
 .layout-sidebar__link--child.layout-sidebar__link--active { border-left-color: var(--m-primary); }
+/* A group nested in a group. The children container already indents, so the
+   nested toggle keeps the child type size instead of the top-level one. */
+.layout-sidebar__children .layout-sidebar__link--group {
+    font-size: 12px; padding: 6px 10px;
+}
 
 .layout-sidebar__footer { padding: 8px; border-top: 1px solid rgba(255,255,255,.08); }
 .layout-sidebar__user {

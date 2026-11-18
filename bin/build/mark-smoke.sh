@@ -762,6 +762,7 @@ sidebar_has 'the restored group carries its Tags child' 'href="/mark/tags"'
 # would silently drop its own children.
 check 'admin GET /mark/settings (move controls)' '/mark/settings' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
 body_has 'the editor offers a move control per row' 'title="Move under"'
+body_has 'the declared table writes a row for a declaration' 'Add row'
 
 ADMIN_TOKEN="$(token)"
 got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav" \
@@ -809,14 +810,6 @@ body_has 'the refusal explains the row requirement' 'declaration, not a stored r
 want 'the refused declaration left the child where it was' "$SMOKE_ONE" \
     "$(dbq DB_CONFIG "SELECT parent_item_id FROM menu_items WHERE id = '$SMOKE_CHILD'")"
 
-# A nested group is refused too: the child has a parent of its own.
-ADMIN_TOKEN="$(token)"
-got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav/$SMOKE_ONE/parent" \
-    --data-urlencode "parent_item_id=$SMOKE_CHILD" \
-    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
-want 'admin POST /mark/settings/panel-nav/{id}/parent refused (nested group)' 200 "$got"
-body_has 'the refusal names the one-level rule' 'moved under a top-level item'
-
 # The move that is allowed: the row keeps its id, its icon and its order, which
 # is the reason this is a control and not delete-and-re-add.
 status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
@@ -836,6 +829,45 @@ if grep -qF "data-toggle-group=\"$SMOKE_ONE\"" "$TMP/sidebar.html"; then
 else
     ok 'group one collapsed to a link once its child moved'
 fi
+
+# Nesting a group that has a child is now a legal move: the renderer draws a
+# group inside a group, and the child keeps the parent it already had.
+status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav/$SMOKE_TWO/parent" \
+    --data-urlencode "parent_item_id=$SMOKE_ONE" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/panel-nav/{id}/parent (group with a child)' 302 "$got"
+
+group_order() { grep -o 'data-toggle-group="[^"]*"' "$TMP/sidebar.html" | sed 's/.*="//; s/"//' | tr '\n' ' '; }
+
+check 'admin GET /mark (nested groups)' '/mark' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+sidebar
+sidebar_has 'the outer group still renders' "data-toggle-group=\"$SMOKE_ONE\""
+sidebar_has 'the nested group renders inside it' "data-toggle-group=\"$SMOKE_TWO\""
+case " $(group_order) " in
+    *"$SMOKE_ONE $SMOKE_TWO"*) ok 'the nested group is inside the outer one, in one children block' ;;
+    *) bad "the nested group is not under the outer one (order: $(group_order))" ;;
+esac
+sidebar_has 'the child of the nested group is still a child link' 'layout-sidebar__link--child" href="/mark/rest"'
+
+# The cycle: the outer group cannot be moved under the group now inside it.
+status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav/$SMOKE_ONE/parent" \
+    --data-urlencode "parent_item_id=$SMOKE_TWO" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/panel-nav/{id}/parent refused (cycle)' 200 "$got"
+body_has 'the cycle refusal names the child' 'moved under its own child'
+
+# Unwind: group two goes back to the top level, one row id and all.
+status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav/$SMOKE_TWO/parent" \
+    --data-urlencode 'parent_item_id=' \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/panel-nav/{id}/parent back to the top' 302 "$got"
+want 'group two is top-level again' '' "$(dbq DB_CONFIG "SELECT parent_item_id FROM menu_items WHERE id = '$SMOKE_TWO'")"
 
 # Clean up through the panel so the next section sees the tree it expects.
 for row in "$SMOKE_CHILD" "$SMOKE_ONE" "$SMOKE_TWO"; do

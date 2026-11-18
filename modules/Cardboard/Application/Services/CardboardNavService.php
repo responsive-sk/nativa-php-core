@@ -66,7 +66,7 @@ final readonly class CardboardNavService
      * Null means "no filtering": callers with no user in hand (the settings
      * screen that configures the nav itself) render the full tree.
      *
-     * @param list<string>|null $granted
+     * @param list<string>|null             $granted
      * @param (\Closure(string): bool)|null $reachable answers whether a path is served
      *
      * @return list<NavTreeItem>
@@ -101,7 +101,7 @@ final readonly class CardboardNavService
      * panel-nav screen, and the router is not the authority for an external
      * URL. A group survives when at least one child survives.
      *
-     * @param list<NavTreeItem> $tree
+     * @param list<NavTreeItem>             $tree
      * @param (\Closure(string): bool)|null $reachable
      *
      * @return list<NavTreeItem>
@@ -185,9 +185,22 @@ final readonly class CardboardNavService
             return $expanded;
         }
 
-        $activeItem = $index['byId'][$activeId];
-        if (null !== $activeItem['parent_id'] && isset($index['byId'][$activeItem['parent_id']])) {
-            $expanded[$activeItem['parent_id']] = true;
+        // Every ancestor, not just the parent: a group inside a group is shown
+        // only when the whole chain is open, and a deep item whose grandparent
+        // stayed collapsed is a page the sidebar claims to link.
+        $current = $activeId;
+        $guard = [];
+
+        while (isset($index['byId'][$current]) && !isset($guard[$current])) {
+            $guard[$current] = true;
+            $parent = $index['byId'][$current]['parent_id'];
+
+            if (null === $parent || !isset($index['byId'][$parent])) {
+                break;
+            }
+
+            $expanded[$parent] = true;
+            $current = $parent;
         }
 
         // Also expand the item itself if it is a group. Asked of the merged set
@@ -196,6 +209,7 @@ final readonly class CardboardNavService
         foreach ($index['byId'] as $candidate) {
             if ($activeId === $candidate['parent_id']) {
                 $expanded[$activeId] = true;
+
                 break;
             }
         }
@@ -215,16 +229,40 @@ final readonly class CardboardNavService
      */
     private function buildTree(array $byId): array
     {
+        /** @var array<string, list<string>> $childrenByParent */
+        $childrenByParent = [];
         foreach ($byId as $item) {
             if (null !== $item['parent_id'] && isset($byId[$item['parent_id']])) {
-                $byId[$item['parent_id']]['children'][] = $byId[$item['id']];
+                $childrenByParent[$item['parent_id']][] = $item['id'];
             }
         }
+
+        // Assembled top-down, not by patching a copy of each child into its
+        // parent: PHP arrays are values, so the copy written into a parent was
+        // the snapshot from BEFORE its own children were attached and a third
+        // level was silently lost.
+        $build = function (string $id, array $seen) use (&$build, $byId, $childrenByParent): array {
+            $item = $byId[$id];
+            $seen[$id] = true;
+            $children = [];
+
+            foreach ($childrenByParent[$id] ?? [] as $childId) {
+                if (isset($seen[$childId])) {
+                    continue;
+                }
+
+                $children[] = $build($childId, $seen);
+            }
+
+            $item['children'] = $children;
+
+            return $item;
+        };
 
         $tree = [];
         foreach ($byId as $item) {
             if (null === $item['parent_id'] || !isset($byId[$item['parent_id']])) {
-                $tree[] = $item;
+                $tree[] = $build($item['id'], []);
             }
         }
 
@@ -362,7 +400,8 @@ final readonly class CardboardNavService
      */
     public function storedItems(): array
     {
-        $stmt = Statement::prepare($this->connection,
+        $stmt = Statement::prepare(
+            $this->connection,
             'SELECT id, label, href, sort_order, is_active, icon, parent_item_id FROM menu_items
              WHERE location = :loc ORDER BY sort_order ASC, created_at ASC',
         );
