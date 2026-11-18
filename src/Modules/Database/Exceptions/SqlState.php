@@ -17,7 +17,7 @@ final class SqlState
 {
     /**
      * @return array{sqlstate: string, driver: int|null}|null null when the
-     *                                                         failure did not come from a driver
+     *                                                        failure did not come from a driver
      */
     public static function of(\Throwable $failure): ?array
     {
