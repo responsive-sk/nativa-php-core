@@ -916,9 +916,10 @@ ported to zero dependencies: `CronExpression` (5-field matching),
 reclaimable expiry under `storage/cache/scheduler-mutexes/`, and a
 `ScheduleRunner` that counts executed/failed/skipped — a throwing task is
 reported, never stops the rest. `modules/Queue/` is the SQLite half:
-`jobs` + `failed_jobs` in `queue.db`, `DatabaseQueue` reserving under
-`BEGIN IMMEDIATE` with a guarded `UPDATE` (SQLite has no `SKIP LOCKED` —
-the second contender's update matches zero rows instead), `attempts`
+`jobs` + `failed_jobs` in `queue.db`, `DatabaseQueue` reserving under the
+dialect's write transaction with a guarded `UPDATE` (`BEGIN IMMEDIATE` on
+SQLite, `FOR UPDATE SKIP LOCKED` on PostgreSQL; the second contender's
+update matches zero rows either way), `attempts`
 authoritative, exhausted jobs parked in `failed_jobs` with the error.
 Unknown handlers and corrupt payloads fail the job, never fatal the
 worker.
