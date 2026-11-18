@@ -1,5 +1,6 @@
 <?php
-declare(strict_types=1);
+
+declare(strict_types = 1);
 
 /**
  * Recompute the Nativa target adapter's package manifest digests.
@@ -39,8 +40,10 @@ function canon(mixed $value): string
             $members[] = json_encode((string) $key, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 . ':' . canon($value[$key]);
         }
+
         return '{' . implode(',', $members) . '}';
     }
+
     return json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 }
 
@@ -56,6 +59,7 @@ function withoutMember(mixed $value, string $member): mixed
         }
         $next[$key] = is_array($item) ? withoutMember($item, $member) : $item;
     }
+
     return $next;
 }
 
@@ -67,6 +71,7 @@ function digest(string $bytes): string
 function framed(string $path, string $bytes): string
 {
     $part = $path . "\0" . pack('J', strlen($bytes)) . "\0" . $bytes;
+
     return pack('J', strlen($part)) . $part;
 }
 
@@ -93,7 +98,7 @@ $manifest['integrity']['files'] = array_map(
         'digest' => digest($bytes[$name]),
         'bytes' => strlen($bytes[$name]),
     ],
-    $listed
+    $listed,
 );
 
 $snapshot = '';
@@ -116,7 +121,7 @@ $manifest['integrity']['packageDigest'] = $packageDigest;
 ksort($manifest);
 $rendered = json_encode(
     $manifest,
-    JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+    JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE,
 ) . "\n";
 
 if ($check) {

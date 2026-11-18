@@ -16,7 +16,7 @@ ini_set('display_startup_errors', '0');
 
 /** The generated wire vocabulary of the target protocol (issue #106). */
 final class Protocol {
-    public const WIRE_TOKEN = "lekalo.target/v1";
+    public const WIRE_TOKEN = "lekalo.target/v1"; // audit-ok: the protocol token, not a credential
     public const SUPPORTED_PROTOCOL_VERSIONS = ["0.3.2","0.6.4"];
     public const BASE_OPERATIONS = ["bind","clean","describe","generate","plan-clean","plan-native","scan","validate","verify"];
     public const LATEST_OPERATIONS = ["bind","clean","describe","generate","lint","plan-clean","plan-native","scan","validate","verify"];
@@ -3328,7 +3328,9 @@ final class Serve {
 //
 // Everything above this line is the generated lekalo-adapter-sdk-php
 // bundle v0.8.0 (protocol vocabulary, strict decoding, builders, serve
-// loop), vendored byte-for-byte under MIT OR Apache-2.0. See notice.md.
+// loop), vendored under MIT OR Apache-2.0 unchanged except for the one
+// `audit-ok` annotation the tracked-tree secret audit requires on the
+// protocol token. See notice.md.
 // Everything below is this adapter's own code.
 //
 // Honest surface: describe, scan, validate, verify. The adapter reads the
