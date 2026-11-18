@@ -11,12 +11,17 @@ replaces.
 |---|---|---|
 | `responsive-sk/nativa-php-core` | **authored** | the kernel, the module catalogue, the theme modules, the docs, the CI and the build tools |
 | `responsive-sk/nativa-core` | generated | the public starting point: an export of a commit of this tree, written by `bin/build/publish-core.sh` |
-| `evan70/nativa-themes` | **archived** | the pre-import snapshot of the static theme gallery, now under `themes/gallery/` here; its module slices were imported on 2026-11-18 and the repository was made read-only the same day |
+| `evan70/nativa-themes` | **archived, kept for its link** | the pre-import snapshot of the static theme gallery, now under `themes/gallery/` here; its module slices were imported on 2026-11-18 and the repository was made read-only the same day, because its Pages build is the gallery URL the showcase links to |
 | `evan70/nativa-minimal` | showcase | a full site, private; its kernel slice is the ancestor of this one, not a source |
 
 An archived repository is a snapshot, not a place to edit: it keeps the state
 before the import and the `pre-unify-2026-11-18` tag, and every later change
-belongs in `themes/gallery/` or `modules/Themes/` here.
+belongs in `themes/gallery/` or `modules/Themes/` here. Deleting it would break
+the gallery link the showcase carries: `https://evan70.github.io/nativa-themes/`
+answered 200 on 2026-11-18, while GitHub Pages refuses build queries for an
+archived repository (`409`), so that build is a frozen snapshot and not a
+surface this tree can update. If the showcase must show the current gallery,
+the gallery needs its own Pages deployment from `themes/gallery/` here.
 
 ## How each one gets its bytes
 

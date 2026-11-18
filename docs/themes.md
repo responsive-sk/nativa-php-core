@@ -127,7 +127,10 @@ The gallery is a consumer, not a second source: it renders the theme class
 names and reads `nativa-minimal`'s frontend sources through `pnpm run sync`,
 and `pnpm run sync:check` protects the gallery's `src/` against that upstream.
 It does not protect the six theme modules, and it never did; `RULES.md` said so
-in those words. The gallery's own gate is unchanged by the move.
+in those words. The gallery's own gate is unchanged by the move. The published
+demo at `https://evan70.github.io/nativa-themes/` is built from the archived
+repository, so it shows the gallery as it stood before the move; changing what
+that URL serves would need a Pages deployment from `themes/gallery/` here.
 
 What this changes for an author: edit `modules/Themes/<Name>/` here, reinstall
 the slice (`php bin/cms module:remove <Name> --force` then
@@ -137,7 +140,7 @@ step and no gate comparing two checkouts, because there is one checkout.
 ## Open, with the numbers that decide them
 
 1. ~~**Does `Boson` belong to `nativa-minimal` or to this tree?**~~ Settled by the move: it
-   lives in `nativa-themes/modules/Themes/Boson/` as a kernel theme, and the gallery renders
+   lives in `modules/Themes/Boson/` here as a kernel theme, and the gallery renders
    its 14 pages from the theme itself. Its provenance is the repository that now owns it.
 2. **Build source inside the module?** `4.1` of the plan. Until it is answered, a theme repo
    distributes a renderable theme that nobody can rebuild — and `make assets` says "OK".
