@@ -190,9 +190,13 @@ a **local** gate; the workflow below deliberately does not pretend to run it.
 
 ## Deployment
 
-`.github/workflows/pages.yml` builds `dist/` and deploys it to GitHub Pages on
-every push to `main`. Enable it once in the repository settings
-(*Settings → Pages → Source: GitHub Actions*).
+The workflow lives at the repository root, because GitHub reads only
+`.github/workflows/`: `gallery-pages.yml` builds `dist/` from `themes/gallery/`
+and deploys it to `https://responsive-sk.github.io/nativa-php-core/` on every
+push to `master` that touches the gallery. Pages is enabled once in the
+repository settings (*Settings → Pages → Source: GitHub Actions*),
+`gallery-pages-check.yml` re-checks the published pages weekly without
+deploying anything.
 
 A deploy can succeed while the site serves something else — a stale artefact,
 a moved base path, a directory uploaded one level too deep. `shoot` cannot see
@@ -200,7 +204,7 @@ that (it checks a local preview), so the workflow has a third job, `verify`,
 that runs after `deploy` and fetches the **published** URLs:
 
 ```bash
-pnpm run check:pages https://<user>.github.io/nativa-themes
+pnpm run check:pages https://responsive-sk.github.io/nativa-php-core
 ```
 
 Every page in `scripts/pages.mjs` must answer 200, be `text/html`, and still

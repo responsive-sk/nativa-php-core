@@ -5,6 +5,16 @@ says so here too, because a changelog that only lists what worked is a brochure.
 
 ## Unreleased
 
+### The theme gallery is published from this tree
+
+The gallery used to be deployed from `evan70/nativa-themes`, which is archived,
+so its Pages build stopped at the pre-import state. The deploy runs here now:
+`.github/workflows/gallery-pages.yml` publishes `themes/gallery/` to
+`https://responsive-sk.github.io/nativa-php-core/` on every push that touches
+it, with a post-deploy check of the served pages, and
+`gallery-pages-check.yml` re-checks them weekly. The archived URL keeps
+answering as a snapshot.
+
 ### The vocabulary reaches configuration and data
 
 The file names were one surface. Five more carried the word as a contract: the

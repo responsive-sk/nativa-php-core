@@ -1,11 +1,16 @@
-name: Deploy theme gallery to Pages
+name: Deploy the theme gallery to Pages
 
-# The gallery is a static build of the demo pages plus the real theme
-# stylesheets, so publishing is: verify the theme copy is fresh, typecheck,
-# build, upload dist/. No runtime, no PHP.
+# GitHub reads workflows only from the repository root, so this file lives here
+# rather than beside the gallery it builds. The gallery is a static build of
+# the demo pages plus the real theme stylesheets: verify, typecheck, build,
+# upload. No runtime, no PHP.
+
 on:
   push:
-    branches: [main]
+    branches: [master]
+    paths:
+      - 'themes/gallery/**'
+      - '.github/workflows/gallery-pages.yml'
   workflow_dispatch:
 
 permissions:
@@ -13,10 +18,14 @@ permissions:
   pages: write
   id-token: write
 
-# One deployment at a time — a second push must not race the first upload.
+# One deployment at a time: a second push must not race the first upload.
 concurrency:
-  group: pages
+  group: gallery-pages
   cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: themes/gallery
 
 jobs:
   build:
@@ -24,24 +33,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6.0.10
         with:
-          version: 9
+          version: 12
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: 24
+          node-version: "24"
           cache: pnpm
+          cache-dependency-path: themes/gallery/pnpm-lock.yaml
 
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      # NOTE: `pnpm run sync:check` (copied theme sources still match
-      # natura-minimal) is deliberately NOT a step here. natura-minimal is a
-      # private repository, so a fresh runner has no sibling checkout and the
-      # check can only ever report "skipped". Run it locally — `pnpm verify`
-      # is the real gate before pushing.
-
+      # `pnpm run sync:check` is deliberately NOT a step here: it compares the
+      # gallery's src/ with a private repository, so a fresh runner has no
+      # sibling checkout and the check can only report "skipped".
       - name: Typecheck
         run: pnpm run typecheck
 
@@ -58,7 +65,7 @@ jobs:
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: themes/gallery/dist
 
   deploy:
     needs: build
@@ -75,7 +82,7 @@ jobs:
   # The deploy can succeed while the site serves something else: a stale
   # artefact, a base path that moved, a directory uploaded one level too deep.
   # `shoot` cannot see that (it checks a local preview), so the deployed URLs
-  # are checked here — every page in scripts/pages.mjs must answer 200, be HTML,
+  # are checked here: every page in scripts/pages.mjs must answer 200, be HTML,
   # and still contain its theme's marker (`expect` in pages.mjs).
   verify:
     needs: deploy
@@ -83,9 +90,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: 24
+          node-version: "24"
 
       # Pages serves the new artefact within seconds, but not always the first
       # one. Each retry is the same assertion, not a weaker one.
@@ -94,8 +101,8 @@ jobs:
           set -o pipefail
           url="${{ needs.deploy.outputs.page_url }}"
           for attempt in 1 2 3 4 5 6; do
-            echo "attempt $attempt: node scripts/check-pages.mjs $url"
-            if node scripts/check-pages.mjs "$url"; then exit 0; fi
+            echo "attempt $attempt: node themes/gallery/scripts/check-pages.mjs $url"
+            if node themes/gallery/scripts/check-pages.mjs "$url"; then exit 0; fi
             sleep 15
           done
           echo "check-pages failed 6 times against $url"

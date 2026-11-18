@@ -20,8 +20,11 @@ belongs in `themes/gallery/` or `modules/Themes/` here. Deleting it would break
 the gallery link the showcase carries: `https://evan70.github.io/nativa-themes/`
 answered 200 on 2026-11-18, while GitHub Pages refuses build queries for an
 archived repository (`409`), so that build is a frozen snapshot and not a
-surface this tree can update. If the showcase must show the current gallery,
-the gallery needs its own Pages deployment from `themes/gallery/` here.
+surface this tree can update. The current gallery is deployed from here:
+`.github/workflows/gallery-pages.yml` builds `themes/gallery/` and publishes it
+to `https://responsive-sk.github.io/nativa-php-core/` on every push that
+touches the gallery, and `gallery-pages-check.yml` re-checks the served pages
+weekly.
 
 ## How each one gets its bytes
 

@@ -127,6 +127,12 @@ bin/build/lekalo-modules.sh
 bin/build/mago-modules-report.sh
 bin/ops/lekalo-reports.php
 
+# The gallery's Pages workflows. The gallery is pruned above, so the exported
+# tree has nothing for them to build or deploy, and a workflow that can only
+# report "path does not exist" is worse than no workflow.
+.github/workflows/gallery-pages.yml
+.github/workflows/gallery-pages-check.yml
+
 # The generator belongs to the source repository: the export has no profile to
 # read and nothing to publish from its own copy.
 bin/build/export-core.sh
