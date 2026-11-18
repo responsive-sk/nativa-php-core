@@ -37,9 +37,11 @@ the deployable artifact; both the profile and `bin/build/build-dist.sh` leave
 it out.
 
 The showcase is where this kernel came from and remains a site that installs
-modules, not a second kernel source. `bin/build/kernel-divergence.txt` records
-the divergence up to the point the kernel became this tree's own, and it is the
-only place that comparison is written down.
+modules, not a second kernel source. The byte comparison that measured the
+divergence was retired on 2026-11-18
+(`docs/kernel-status/28-retiring-the-extract-check.md`): this tree is the kernel
+source now, so nothing here is generated from the showcase and no file records
+a divergence that no longer has a second side to compare against.
 
 ## What follows for a change
 
