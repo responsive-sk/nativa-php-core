@@ -29,7 +29,7 @@
 # Usage:
 #   bin/build/kernel-size.sh      (or: make kernel-size)
 #
-# No dependencies beyond bash + find + awk (the same floor extract-kernel.sh
+# No dependencies beyond bash + find + awk (the same floor the other build scripts
 # holds), because what measures the kernel must run where the kernel runs.
 # =============================================================================
 

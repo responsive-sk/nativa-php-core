@@ -106,7 +106,6 @@ generated from the registry, so it cannot go stale.
 | `make admin-smoke` | the panel boots and walks its admin flows over HTTP |
 | `make assets` | do the bundles build, and does every manifest name assets that exist |
 | `make dist-check` | a clean clone builds a green artifact |
-| `make extract-check` | this tree still matches the upstream kernel slice |
 
 The CI `assets` job asserts more than the target does — the admin manifest still
 carries its `mark`, `mark-switch` and `moonshine` entries, the two frozen

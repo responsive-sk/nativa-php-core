@@ -73,6 +73,8 @@ above. Keep the headings in the log's own vocabulary (`Boot N` for a round of
 work, `§N` for a numbered finding) so the references the code already carries
 keep resolving to the section that holds them.
 
+| [`kernel-status/28-retiring-the-extract-check.md`](kernel-status/28-retiring-the-extract-check.md) | the retired comparison | the gate that was red on the machine and `NOT RUN` in CI: 249 recorded divergences, 7 unrecorded differences at retirement, and the decision that this tree is the kernel source, with the job, target, registry rows and prune lines removed together |
+
 ## The other record
 
 - `docs/boolean-vocabulary.md` — when a `bool` is the whole answer, when the

@@ -120,10 +120,6 @@ mago-lint: ## Gate: curated lint findings must be zero
 kernel-size: ## Measure the kernel shape (bytes, files, layers, interface/concrete split)
 	@bin/build/kernel-size.sh
 
-##@ Extraction (task 2.1)
-extract-check: ## Verify this tree against the upstream kernel slice
-	bin/build/extract-kernel.sh --check --minimal-root $(MINIMAL_ROOT)
-
 ##@ Publishing the kernel
 # `nativa-core` is generated from a commit of this tree: the kernel, the module
 # catalogue and the Frontend sources, without the measurement log, the article

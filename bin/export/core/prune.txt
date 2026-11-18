@@ -86,8 +86,8 @@ public/demo
 # `theme-css.mjs` is imported only by these two scripts.
 bin/generate
 
-# Tools whose subject the export does not carry: the production wrapper calls
-# the pruned `extract-kernel.sh`, ClickHouse has no module and no Makefile
+# Tools whose subject the export does not carry: the production wrapper is a
+# source-repo instrument, ClickHouse has no module and no Makefile
 # target here, and `mark-smoke.sh` installs nine modules (Audit, Cardboard,
 # Comments, Forms, Outbox, Queue, Scheduler, Security, Users) the catalogue
 # does not have. On a fresh export it exits on its first line.
@@ -121,8 +121,6 @@ README.md
 # Scripts that keep this tree in step with a sibling repository, measure this
 # tree's shape, or render the nativa-themes gallery. The exported Makefile
 # names none of them.
-bin/build/extract-kernel.sh
-bin/build/kernel-divergence.txt
 bin/build/kernel-size.sh
 bin/build/render-theme-pages.php
 bin/build/lekalo-modules.sh

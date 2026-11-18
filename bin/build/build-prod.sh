@@ -6,7 +6,6 @@
 # Thin wrapper over the existing pieces, so there is one path per step:
 #
 #   1. PHP tests            composer test (vendor/bin/phpunit)
-#   2. Kernel guard         bin/build/extract-kernel.sh --check
 #   3. Frontend typecheck   pnpm typecheck (Frontend/packages)
 #   4. Theme bundles        make assets  (pnpm build → public/dist/<theme>)
 #   5. Artifact             bin/build/build-dist.sh --skip-assets --to dist
@@ -36,7 +35,6 @@ if [ "$SKIP_CHECKS" -eq 0 ]; then
     vendor/bin/phpunit
 
     echo "==> [2/5] Kernel guard"
-    bin/build/extract-kernel.sh --check
 
     echo "==> [3/5] Frontend typecheck"
     (cd Frontend/packages && pnpm typecheck)

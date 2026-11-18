@@ -55,25 +55,20 @@
 #                         deliberately: the kernel runtime has zero Composer
 #                         dependencies, and this is where that claim is either
 #                         true or not.
-#   8. Extract-check    — NOT run: `bin/build/extract-kernel.sh --check` needs
-#                         a checkout of upstream, which is PRIVATE, and the
-#                         run's GITHUB_TOKEN cannot read it. The job records
-#                         that (with the measured evidence and how to enable
-#                         it) instead of reporting a pass it did not earn.
-#   9. Kernel dependency— `mago guard`, the same sentence `KernelCouplingTest`
+#   8. Kernel dependency— `mago guard`, the same sentence `KernelCouplingTest`
 #                         asserts in PHP, stated declaratively and resolved from
 #                         source rather than from `use` lines. No baseline: its
 #                         first run found 8 `Modules\Outbox\…` reaches behind
 #                         inline FQCNs, and those were removed by giving the
 #                         kernel a `SecurityEventSink` port instead of listing
 #                         them. Evidence in docs/mago-evaluation.md.
-#  10. Curated lint      — `mago lint` under the curated rule set, counted. The
+#   9. Curated lint      — `mago lint` under the curated rule set, counted. The
 #                         linter exits 1 while anything is left, so the gate is
 #                         a CEILING of 0: all 22 findings it once reported are
 #                         fixed in the code with no rule disabled, and the first
 #                         new one fails the job instead of quietly joining a
 #                         number in the document.
-#  11. Dist artifact     — `make dist-check` clones HEAD (tracked bytes only: no
+#  10. Dist artifact     — `make dist-check` clones HEAD (tracked bytes only: no
 #                         vendor/, no locally installed modules, no uncommitted
 #                         edits) and builds the deployable tree there, then
 #                         asserts the build's own HTTP smoke test, the absent
@@ -83,7 +78,7 @@
 #                         `make dist-profile-test`: kernel-only and `--no-profile`
 #                         must skip the profile, and a broken one with Settings
 #                         installed must fail the build.
-#  12. Security audit   — `make security-audit`: `.env` may never be tracked,
+#  11. Security audit   — `make security-audit`: `.env` may never be tracked,
 #                         and a secret-shaped assignment counts only when the
 #                         value is a quoted literal of 8+ characters. It lives
 #                         in `bin/build/` because the vendored `$aif` script
@@ -92,7 +87,7 @@
 #                         script after its first section, and 20 benign
 #                         `$token = $_SESSION[...]` lines were reported as
 #                         credentials.
-#  13. Dependency audit — `make dependency-audit`, both lockfiles at once:
+#  12. Dependency audit — `make dependency-audit`, both lockfiles at once:
 #                         `composer audit --locked` for the development
 #                         tooling (the kernel runtime ships no packages) and
 #                         `pnpm audit` for `Frontend/packages`. Neither reads
@@ -102,7 +97,7 @@
 #                         this tree has met — `launch-editor`, through vite —
 #                         was found by a person reading (868adfd), which is
 #                         what a gate exists to stop being necessary.
-#  14. Module quality   — NOT a gate: `mago lint` + `mago analyze` over the
+#  13. Module quality   — NOT a gate: `mago lint` + `mago analyze` over the
 #                         committed catalogue alone (`--scope=modules`), with
 #                         the counts published to the run summary. The lint
 #                         count is already gated at 0 by job 11 and the
@@ -112,7 +107,7 @@
 #                         day after it is measured. `continue-on-error`: a
 #                         publisher that can redden a pull request is a gate
 #                         wearing a different name.
-#  15. ClickHouse smoke — OPTIONAL: `make clickhouse-smoke` against a released
+#  14. ClickHouse smoke — OPTIONAL: `make clickhouse-smoke` against a released
 #                         ClickHouse server, downloaded once and cached by
 #                         version (`toolchain.json` pins the version and the
 #                         checksum). The suite drives the transport seam, so
@@ -1118,63 +1113,3 @@ jobs:
       # clone HEAD on their own, so this step borrows nothing from the checkout.
       - name: The three deployment-profile branches
         run: make dist-profile-test
-
-  # ---------------------------------------------------------------------------
-  # EXTRACT-CHECK — not run here, and the reason is measured, not assumed
-  # ---------------------------------------------------------------------------
-  # This job was briefly a real gate: a cross-repository `actions/checkout` of
-  # `evan70/nativa-minimal` plus `extract-kernel.sh --check --minimal-root
-  # .upstream/nativa-minimal`. It failed inside the action, at
-  # `Determining the default branch`:
-  #
-  #     Error: Not Found - https://docs.github.com/rest/repos/repos#get-a-repository
-  #
-  # THE UPSTREAM REPOSITORY IS PRIVATE. The run's GITHUB_TOKEN is scoped to
-  # THIS repository, so `GET /repos/evan70/nativa-minimal` answers 404 — for a
-  # private repo it answers 404 even to a token that exists.
-  #
-  # The first version of this job concluded the opposite from a workstation
-  # measurement, and the way it was wrong is worth keeping: an "anonymous"
-  # `git ls-remote https://github.com/evan70/nativa-minimal` SUCCEEDS locally —
-  # because this machine's git config carries `credential.helper = store`, so
-  # the call was authenticated by a stored token and reported nothing about
-  # publicness. With the helpers disabled it is unambiguous:
-  #
-  #     GIT_CONFIG_GLOBAL=/dev/null GIT_ASKPASS=/bin/true git ls-remote …
-  #     remote: Repository not found.
-  #     fatal: Authentication failed for 'https://github.com/evan70/nativa-minimal/'
-  #
-  # and the API agrees: `GET /repos/evan70/nativa-minimal` is 404 without a
-  # token, 200 with the owner's, which reports `"private": true`.
-  #
-  # So the linkage is deleted rather than propped up with a secret. The guard
-  # itself is unchanged and runs where upstream IS a checkout — a workstation:
-  # `make extract-check`. What it needs to return here is a credential the
-  # runner has none of: a fine-grained PAT with `contents: read` on the private
-  # upstream, stored as the `UPSTREAM_TOKEN` secret, then `actions/checkout`
-  # with `repository: evan70/nativa-minimal` and that token, and the guard
-  # pointed at wherever the checkout lands with `--minimal-root` (a path INSIDE
-  # the workspace: the action throws on any `path` that escapes it —
-  # `Repository path '…' is not under '…'`, src/input-helper.ts).
-  #
-  # Recorded as not-run, not as a pass. A gate that cannot run must say so.
-  extract-check:
-    name: Extract-check
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Extract-check needs a credential this runner does not have
-        run: |
-          echo "NOT RUN: bin/build/extract-kernel.sh --check diffs this tree against evan70/nativa-minimal."
-          echo "That repository is PRIVATE and this run's GITHUB_TOKEN is scoped to this one, so a"
-          echo "cross-repository checkout fails with: Not Found (GET /repos/evan70/nativa-minimal)."
-          echo
-          echo "Run it where upstream is a sibling checkout:  make extract-check"
-          echo "To run it here: add a fine-grained PAT (contents: read on the private repo) as the"
-          echo "UPSTREAM_TOKEN secret and check the upstream out with it, then pass the checkout"
-          echo "path to the guard as --minimal-root."
-

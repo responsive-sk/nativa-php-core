@@ -110,18 +110,6 @@
       ]
     },
     {
-      "target": "extract-check",
-      "tier": "kernel",
-      "can_fail": true,
-      "answers": "does this tree still match the upstream kernel slice",
-      "ci": [
-        {
-          "job": "extract-check",
-          "note": "against ../nativa-minimal"
-        }
-      ]
-    },
-    {
       "target": "kernel-size",
       "tier": "kernel",
       "can_fail": false,
@@ -437,11 +425,6 @@
     {
       "key": "dist",
       "name": "Dist artifact (clean clone)",
-      "can_fail": true
-    },
-    {
-      "key": "extract-check",
-      "name": "Extract-check",
       "can_fail": true
     }
   ]
