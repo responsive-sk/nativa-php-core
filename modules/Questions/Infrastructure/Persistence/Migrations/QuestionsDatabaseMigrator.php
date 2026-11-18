@@ -7,6 +7,7 @@ namespace Modules\Questions\Infrastructure\Persistence\Migrations;
 use Modules\Core\Infrastructure\Attributes\AsMigrator;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Core\Interfaces\CLI\MigratorInterface;
+use Modules\Database\Infrastructure\Persistence\SqlDialect;
 
 /**
  * Questions Database Migrator — creates the questions.db schema.
@@ -27,8 +28,14 @@ use Modules\Core\Interfaces\CLI\MigratorInterface;
 #[AsMigrator(module: 'questions', table: 'questions')]
 final readonly class QuestionsDatabaseMigrator implements MigratorInterface
 {
+    private SqlDialect $dialect;
+
+    private string $timestamp;
+
     public function __construct(private \PDO $pdo)
     {
+        $this->dialect = SqlDialect::forPdo($pdo);
+        $this->timestamp = $this->dialect->timestampType();
     }
 
     public function run(CliOutput $output): void
@@ -43,7 +50,7 @@ final readonly class QuestionsDatabaseMigrator implements MigratorInterface
 
     private function createQuestionsTable(): void
     {
-        $this->pdo->exec(<<<'SQL'
+        $this->pdo->exec(<<<SQL
                 CREATE TABLE IF NOT EXISTS questions (
                     id              VARCHAR(32) PRIMARY KEY,
                     subject_type    VARCHAR(12) NOT NULL CHECK (subject_type IN ('article', 'page')),
@@ -55,7 +62,7 @@ final readonly class QuestionsDatabaseMigrator implements MigratorInterface
                     author_user_id  VARCHAR(64) DEFAULT NULL,
                     status          VARCHAR(12) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
                     ip_address      VARCHAR(45) DEFAULT NULL,
-                    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
+                    created_at      {$this->timestamp} DEFAULT CURRENT_TIMESTAMP
                 )
             SQL);
     }

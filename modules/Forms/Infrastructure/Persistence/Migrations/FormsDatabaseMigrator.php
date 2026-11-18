@@ -7,6 +7,7 @@ namespace Modules\Forms\Infrastructure\Persistence\Migrations;
 use Modules\Core\Infrastructure\Attributes\AsMigrator;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Core\Interfaces\CLI\MigratorInterface;
+use Modules\Database\Infrastructure\Persistence\SqlDialect;
 
 /**
  * Forms Database Migrator — creates the forms.db schema.
@@ -34,8 +35,14 @@ use Modules\Core\Interfaces\CLI\MigratorInterface;
 #[AsMigrator(module: 'forms', table: 'forms')]
 final readonly class FormsDatabaseMigrator implements MigratorInterface
 {
+    private SqlDialect $dialect;
+
+    private string $timestamp;
+
     public function __construct(private \PDO $pdo)
     {
+        $this->dialect = SqlDialect::forPdo($pdo);
+        $this->timestamp = $this->dialect->timestampType();
     }
 
     public function run(CliOutput $output): void
@@ -52,7 +59,7 @@ final readonly class FormsDatabaseMigrator implements MigratorInterface
 
     private function createFormsTable(): void
     {
-        $this->pdo->exec(<<<'SQL'
+        $this->pdo->exec(<<<SQL
                 CREATE TABLE IF NOT EXISTS forms (
                     id              VARCHAR(32) PRIMARY KEY,
                     slug            VARCHAR(80) NOT NULL,
@@ -62,15 +69,15 @@ final readonly class FormsDatabaseMigrator implements MigratorInterface
                     success_message VARCHAR(300) NOT NULL DEFAULT '',
                     fields          TEXT NOT NULL,
                     published       INTEGER NOT NULL DEFAULT 0 CHECK (published IN (0, 1)),
-                    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    updated_at      DATETIME DEFAULT CURRENT_TIMESTAMP
+                    created_at      {$this->timestamp} DEFAULT CURRENT_TIMESTAMP,
+                    updated_at      {$this->timestamp} DEFAULT CURRENT_TIMESTAMP
                 )
             SQL);
     }
 
     private function createSubmissionsTable(): void
     {
-        $this->pdo->exec(<<<'SQL'
+        $this->pdo->exec(<<<SQL
                 CREATE TABLE IF NOT EXISTS form_submissions (
                     id          VARCHAR(32) PRIMARY KEY,
                     form_id     VARCHAR(32) NOT NULL,
@@ -80,8 +87,8 @@ final readonly class FormsDatabaseMigrator implements MigratorInterface
                     status      VARCHAR(12) NOT NULL DEFAULT 'new'
                                 CHECK (status IN ('new', 'handled')),
                     ip_address  VARCHAR(45) DEFAULT NULL,
-                    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    handled_at  DATETIME DEFAULT NULL
+                    created_at  {$this->timestamp} DEFAULT CURRENT_TIMESTAMP,
+                    handled_at  {$this->timestamp} DEFAULT NULL
                 )
             SQL);
     }

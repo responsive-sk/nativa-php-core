@@ -7,6 +7,7 @@ namespace Modules\Comments\Infrastructure\Persistence\Migrations;
 use Modules\Core\Infrastructure\Attributes\AsMigrator;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Core\Interfaces\CLI\MigratorInterface;
+use Modules\Database\Infrastructure\Persistence\SqlDialect;
 
 /**
  * Comments Database Migrator — creates the comments.db schema.
@@ -19,8 +20,14 @@ use Modules\Core\Interfaces\CLI\MigratorInterface;
 #[AsMigrator(module: 'comments', table: 'comments')]
 final readonly class CommentsDatabaseMigrator implements MigratorInterface
 {
+    private SqlDialect $dialect;
+
+    private string $timestamp;
+
     public function __construct(private \PDO $pdo)
     {
+        $this->dialect = SqlDialect::forPdo($pdo);
+        $this->timestamp = $this->dialect->timestampType();
     }
 
     public function run(CliOutput $output): void
@@ -35,7 +42,7 @@ final readonly class CommentsDatabaseMigrator implements MigratorInterface
 
     private function createCommentsTable(): void
     {
-        $this->pdo->exec(<<<'SQL'
+        $this->pdo->exec(<<<SQL
                 CREATE TABLE IF NOT EXISTS comments (
                     id           VARCHAR(32) PRIMARY KEY,
                     article_slug VARCHAR(200) NOT NULL,
@@ -45,7 +52,7 @@ final readonly class CommentsDatabaseMigrator implements MigratorInterface
                     body         TEXT NOT NULL,
                     status       VARCHAR(12) NOT NULL DEFAULT 'pending',
                     ip_address   VARCHAR(45) DEFAULT NULL,
-                    created_at   DATETIME DEFAULT CURRENT_TIMESTAMP
+                    created_at   {$this->timestamp} DEFAULT CURRENT_TIMESTAMP
                 )
             SQL);
     }
