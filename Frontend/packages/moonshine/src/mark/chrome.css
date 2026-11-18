@@ -14,6 +14,10 @@
 .layout-sidebar__brand svg { flex-shrink: 0; width: 22px; height: 22px; }
 .layout-sidebar__nav { flex: 1; padding: 4px 8px; overflow-y: auto; }
 .layout-sidebar__link {
+    /* A flex item's automatic minimum width is its longest word; without this
+       a nested link grows past the 220px rail and its label never shrinks, so
+       the ellipsis below has nothing to act on. */
+    min-width: 0;
     display: flex; align-items: center; gap: 10px; padding: 9px 10px;
     color: #cbd5e1; text-decoration: none; font-size: 13px; font-weight: 500;
     border-radius: var(--m-r-md); white-space: nowrap; transition: all 150ms ease;
@@ -21,7 +25,13 @@
 .layout-sidebar__link:hover { color: #fff; background: rgba(255,255,255,.08); }
 .layout-sidebar__link--active { color: #fff; background: var(--m-primary); }
 .layout-sidebar__link svg { flex-shrink: 0; width: 18px; height: 18px; }
-.layout-sidebar__link-label { transition: opacity 150ms ease; }
+/* A label longer than the 220px rail ends in an ellipsis rather than being cut
+   mid-glyph. The third level has about 110px of that rail, so `white-space:
+   nowrap` alone leaves a fragment of a word as the last thing the reader sees. */
+.layout-sidebar__link-label {
+    min-width: 0; overflow: hidden; text-overflow: ellipsis;
+    transition: opacity 150ms ease;
+}
 
 /* ── Sidebar count badge ──
    `--m-primary` + white is the pair the accent contract already grades for
@@ -52,7 +62,12 @@
     transform: rotate(90deg);
 }
 .layout-sidebar__children {
-    display: grid; grid-template-rows: 0fr; transition: grid-template-rows 200ms ease;
+    /* The 0fr -> 1fr row is the open/close animation; the COLUMN has to be
+       minmax(0, 1fr) or it sizes to the widest label's max-content, tells every
+       nested link it fits, and the rail clips the text instead of the label
+       ellipsising it. */
+    display: grid; grid-template-rows: 0fr; grid-template-columns: minmax(0, 1fr);
+    transition: grid-template-rows 200ms ease;
     padding-left: 18px;
 }
 .layout-sidebar__group.is-expanded .layout-sidebar__children {
