@@ -87,6 +87,12 @@ jobs:
   verify:
     needs: deploy
     runs-on: ubuntu-latest
+    # The workflow-wide working directory is the gallery. This job runs the
+    # gallery's checker from the repository root instead, which is the path the
+    # script's imports and the pages list are written against.
+    defaults:
+      run:
+        working-directory: .
     steps:
       - uses: actions/checkout@v4
 
