@@ -530,6 +530,28 @@ check 'author GET /mark/users' '/mark/users' 403 -b "$AUTHOR_JAR" -c "$AUTHOR_JA
 # session, and a 403 alone leaves the author clicking a dead link.
 check 'author GET /mark/rest' '/mark/rest' 403 -b "$AUTHOR_JAR" -c "$AUTHOR_JAR"
 
+# And the whole sidebar, not one link: every href it puts in front of the author
+# has to open for that author. The filter is class-level (`permittedItems()`
+# raising each declaration's permission to the route's own policy), but the claim
+# that matters is about the RENDERED page — a nav item declared with too weak a
+# permission, or an href the policy table does not classify, shows up here as a
+# link the panel offers and the router refuses. One assertion per href, because
+# the name of the offending link is the whole value of the failure.
+status -b "$AUTHOR_JAR" -c "$AUTHOR_JAR" "$BASE/mark" > /dev/null
+author_nav="$(sed -n '/<nav class="layout-sidebar__nav"/,/<\/nav>/p' "$TMP/last.out" \
+    | grep -o 'href="/mark[^"]*"' | sed 's/^href="//; s/"$//' | sort -u)"
+if [ -z "$author_nav" ]; then
+    bad 'the author sidebar rendered no /mark links to check'
+fi
+asked=0
+while IFS= read -r href; do
+    [ -n "$href" ] || continue
+    asked=$((asked + 1))
+    got="$(status -b "$AUTHOR_JAR" -c "$AUTHOR_JAR" "$BASE$href")"
+    want "author sidebar link $href" 200 "$got"
+done <<< "$author_nav"
+ok "author sidebar links held to the router → $asked"
+
 # `json_extract`, not a LIKE: the payload is `json_encode`d, which escapes the
 # slashes — the stored path is `\/mark\/users`, so a LIKE '%/mark/users%' matches
 # nothing and the check reports a refusal that is right there. (Measured: that
