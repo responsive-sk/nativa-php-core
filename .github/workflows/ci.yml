@@ -60,20 +60,20 @@
 #                         run's GITHUB_TOKEN cannot read it. The job records
 #                         that (with the measured evidence and how to enable
 #                         it) instead of reporting a pass it did not earn.
-#  10. Kernel dependency— `mago guard`, the same sentence `KernelCouplingTest`
+#   9. Kernel dependency— `mago guard`, the same sentence `KernelCouplingTest`
 #                         asserts in PHP, stated declaratively and resolved from
 #                         source rather than from `use` lines. No baseline: its
 #                         first run found 8 `Modules\Outbox\…` reaches behind
 #                         inline FQCNs, and those were removed by giving the
 #                         kernel a `SecurityEventSink` port instead of listing
 #                         them. Evidence in docs/mago-evaluation.md.
-#  11. Curated lint      — `mago lint` under the curated rule set, counted. The
+#  10. Curated lint      — `mago lint` under the curated rule set, counted. The
 #                         linter exits 1 while anything is left, so the gate is
 #                         a CEILING of 0: all 22 findings it once reported are
 #                         fixed in the code with no rule disabled, and the first
 #                         new one fails the job instead of quietly joining a
 #                         number in the document.
-#  12. Dist artifact     — `make dist-check` clones HEAD (tracked bytes only: no
+#  11. Dist artifact     — `make dist-check` clones HEAD (tracked bytes only: no
 #                         vendor/, no locally installed modules, no uncommitted
 #                         edits) and builds the deployable tree there, then
 #                         asserts the build's own HTTP smoke test, the absent
@@ -83,7 +83,7 @@
 #                         `make dist-profile-test`: kernel-only and `--no-profile`
 #                         must skip the profile, and a broken one with Settings
 #                         installed must fail the build.
-#  13. Security audit   — `make security-audit`: `.env` may never be tracked,
+#  12. Security audit   — `make security-audit`: `.env` may never be tracked,
 #                         and a secret-shaped assignment counts only when the
 #                         value is a quoted literal of 8+ characters. It lives
 #                         in `bin/build/` because the vendored `$aif` script
@@ -92,7 +92,7 @@
 #                         script after its first section, and 20 benign
 #                         `$token = $_SESSION[...]` lines were reported as
 #                         credentials.
-#  14. Dependency audit — `make dependency-audit`, both lockfiles at once:
+#  13. Dependency audit — `make dependency-audit`, both lockfiles at once:
 #                         `composer audit --locked` for the development
 #                         tooling (the kernel runtime ships no packages) and
 #                         `pnpm audit` for `Frontend/packages`. Neither reads
@@ -102,7 +102,7 @@
 #                         this tree has met — `launch-editor`, through vite —
 #                         was found by a person reading (868adfd), which is
 #                         what a gate exists to stop being necessary.
-#  15. Module quality   — NOT a gate: `mago lint` + `mago analyze` over the
+#  14. Module quality   — NOT a gate: `mago lint` + `mago analyze` over the
 #                         committed catalogue alone (`--scope=modules`), with
 #                         the counts published to the run summary. The lint
 #                         count is already gated at 0 by job 11 and the
@@ -112,7 +112,7 @@
 #                         day after it is measured. `continue-on-error`: a
 #                         publisher that can redden a pull request is a gate
 #                         wearing a different name.
-#  16. ClickHouse smoke — OPTIONAL: `make clickhouse-smoke` against a released
+#  15. ClickHouse smoke — OPTIONAL: `make clickhouse-smoke` against a released
 #                         ClickHouse server, downloaded once and cached by
 #                         version (`toolchain.json` pins the version and the
 #                         checksum). The suite drives the transport seam, so
