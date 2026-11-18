@@ -43,6 +43,7 @@ same headings, same numbers, nothing rewritten in the move.
 | [`kernel-status/24-seo-data-boundary.md`](kernel-status/24-seo-data-boundary.md) | **Boot 61** | the SEO data boundary: `WebsiteStructuredData` moving to `src/Seo`, `SitemapAction` merging Blog and Pages contributions, `siteDescription` joining the shell port with `Settings` as its owner, and `FrontendLayout` resolving explicit -> stored -> kernel fallback; the measured 155 832 B -> 154 346 B / 38 -> 37 files and `MAX_APPROVED` 28 -> 27 |
 | [`kernel-status/26-db-connection-contract.md`](kernel-status/26-db-connection-contract.md) | **Boot 63** | one connection contract for repositories: `ConnectionInterface` and `StatementInterface` replacing the `\PDO` a repository is typed against, `ReadWriteConnection` serving reads from `DB_<NAME>_READ` until the request writes, `onPrimary()` for a read that must see its own write, a replica dropped on failure with `ReadException` naming the ones that failed (falling back to the primary would hide a broken replica); the pilot is `Audit`, and with no replica configured the manager returns the same handle as before; the measured 159 059 B -> 185 219 B / 38 -> 47 files, Core types unchanged at 8 interface / 28 concrete; then the failover addendum (`FailoverStatement` defers a prepared read's replica choice to `execute()`, `reset()` rolls back an open transaction) at 189 778 B / 48 files, and the retry addendum (`transaction(attempts, backoff)` with `TransactionConflictException`) at 203 318 B / 50 files |
 | [`kernel-status/27-postgres-driver-plan.md`](kernel-status/27-postgres-driver-plan.md) | **Boot 64, planned** | the driver behind the same contract, ordered by the measured SQLite surface it has to replace: 43 lines across 43 SQL-bearing files (`PRAGMA` 15, `INSERT OR IGNORE` 12, `AUTOINCREMENT` 5, `sqlite_master` 4, `COLLATE NOCASE` 4, `RETURNING` 2, `datetime('now')` 1), and five steps each shippable on SQLite alone; the retry the previous round added is what a serialization failure needs, so the driver's job is classification rather than a loop |
+| [`kernel-status/28-retiring-the-extract-check.md`](kernel-status/28-retiring-the-extract-check.md) | the retired comparison | the gate that was red on the machine and `NOT RUN` in CI: 249 recorded divergences, 7 unrecorded differences at retirement, and the decision that this tree is the kernel source, with the job, target, registry rows and prune lines removed together |
 
 Section names are stable and that is how the code refers to them: "Boot 23" is
 the discovery round whose prose trap is described in part 03, "§6" is part 04.
@@ -72,8 +73,6 @@ closed, and the next round starts a new part and adds its row to the table
 above. Keep the headings in the log's own vocabulary (`Boot N` for a round of
 work, `§N` for a numbered finding) so the references the code already carries
 keep resolving to the section that holds them.
-
-| [`kernel-status/28-retiring-the-extract-check.md`](kernel-status/28-retiring-the-extract-check.md) | the retired comparison | the gate that was red on the machine and `NOT RUN` in CI: 249 recorded divergences, 7 unrecorded differences at retirement, and the decision that this tree is the kernel source, with the job, target, registry rows and prune lines removed together |
 
 ## The other record
 
