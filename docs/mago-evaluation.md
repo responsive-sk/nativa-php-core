@@ -109,13 +109,14 @@ reason the catalogue exists: it is re-imported on every module update, so a loca
 fix becomes a merge conflict. `phpstan` remains the analysis gate; the analyzer
 count is a reading, and a bigger reading is the point of widening it.
 
-The linter is the one place the extension had to be qualified: `modules/Themes/`
-arrived as a byte-verified copy of `nativa-themes` whose 5 `readable-literal`
-findings could only be fixed upstream on the day they were counted. Those themes
-are authored here since 2026-11-18 and that repository is archived, so the
-original reason for the exclusion is gone and the fix now belongs to this tree;
-`[linter] excludes` still names the directory until it is made. Everything else
-under `modules/` is lint-covered with no exception.
+The linter needed no exception in the end: `modules/Themes/` arrived as a
+byte-verified copy of `nativa-themes` whose findings could only be fixed
+upstream on the day they were counted, and the exclusion that followed said so.
+Since 2026-11-18 those themes are authored here and that repository is archived
+read-only, so the exclusion was removed. Linting the directory surfaced 7
+findings (six `readable-literal` budget constants and one redundant
+concatenation in `NativaTheme`) and they were fixed in the catalogue the same
+day. Every module is now lint-covered with no exception.
 
 ### The catalogue's own reading
 

@@ -1023,7 +1023,7 @@ final class BosonThemeTest extends TestCase
 
         foreach ([1, 3, 5] as $offset) {
             $value = hexdec(substr($hex, $offset, 2)) / 255;
-            $channels[] = $value <= 0.03928 ? $value / 12.92 : (($value + 0.055) / 1.055) ** 2.4;
+            $channels[] = $value <= 0.039_28 ? $value / 12.92 : (($value + 0.055) / 1.055) ** 2.4;
         }
 
         return 0.2126 * $channels[0] + 0.7152 * $channels[1] + 0.0722 * $channels[2];
