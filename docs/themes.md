@@ -117,8 +117,7 @@ package — a green `make assets` is not evidence that every theme was built.
 ## The theme modules are authored here, measured 2026-11-18
 
 Until 2026-11-18 the six themes were authored in `evan70/nativa-themes` and
-arrived as a copy; `bin/build/sync-themes.sh` compared the bytes and
-`make themes-check` was the gate. The catalogue and that repository were
+arrived as a copy, and a checksum gate compared the two checkouts. The catalogue and that repository were
 byte-identical at the move (`identical=23 diverged=0`), so the import was
 history only: the slices now live here, at `modules/Themes/<Name>/`, with the
 theme repository's commits behind them, and its gallery came with them under

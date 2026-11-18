@@ -11,7 +11,6 @@ COMPOSER ?= composer
 MINIMAL_ROOT ?= ../nativa-minimal
 # Empty by default: the theme script fetches the nativa-themes repository's HEAD
 # into storage/cache and compares against that. A sibling clone can be behind,
-# which is how a green local `make themes-check` shipped a red CI job; set this
 # only to compare against a checkout you mean to measure.
 THEMES_ROOT ?=
 LEKALO ?= $(shell command -v lekalo 2>/dev/null || echo "$$HOME/.cargo/bin/lekalo")

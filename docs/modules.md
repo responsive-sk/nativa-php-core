@@ -626,8 +626,7 @@ takes its theme with it — nothing is edited, nothing lingers.
 Six of the modules in that group are authored **outside this tree**, in
 `evan70/nativa-themes` under the same `modules/Themes/<Name>/` path. The
 catalogue here is their copy, because `bin/cms module:add <Name>` installs from
-it; `make themes-check` (`bin/build/sync-themes.sh --check`) proves the copy by
-SHA-256 and `make themes-sync` refreshes it. A fix typed into this catalogue is
+it; the theme modules are authored here since 2026-11-18, so this tree is the source and not a copy of one. A fix typed into this catalogue is
 therefore drift the gate reports — even though `git status` shows it as an
 ordinary edit, which is exactly why the gate exists.
 
