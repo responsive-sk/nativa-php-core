@@ -40,7 +40,7 @@ declare(strict_types = 1);
  */
 function prunedMarkers(): array
 {
-    return ['lekalo', 'openspec', 'kernel-status', 'docs/', 'nativa-minimal', 'nativa-themes', 'extract-kernel', 'sync-themes'];
+    return ['lekalo', 'openspec', 'kernel-status', 'docs/', 'nativa-minimal', 'nativa-themes', 'extract-kernel'];
 }
 
 /**

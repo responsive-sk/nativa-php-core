@@ -105,7 +105,6 @@ $pruned = [
     'storage/pages',
     'bin/export',
     'bin/build/extract-kernel.sh',
-    'bin/build/sync-themes.sh',
     'CONTRIBUTING.md',
     '.ai-factory',
 ];
@@ -138,7 +137,7 @@ foreach (array_unique($paths[0]) as $path) {
     }
 }
 
-foreach (['lekalo', 'openspec', 'nativa-minimal', 'nativa-themes', 'kernel-status', 'extract-kernel', 'sync-themes'] as $token) {
+foreach (['lekalo', 'openspec', 'nativa-minimal', 'nativa-themes', 'kernel-status', 'extract-kernel'] as $token) {
     if (str_contains($makefile, $token)) {
         $problems[] = 'exported Makefile names a pruned thing: ' . $token;
     }

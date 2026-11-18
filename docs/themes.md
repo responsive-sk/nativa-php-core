@@ -114,58 +114,26 @@ So the bundle is the only thing that disappears; PHP keeps rendering from the mo
 a page without its full stylesheet. A move therefore needs a gate that names the missing
 package — a green `make assets` is not evidence that every theme was built.
 
-## `evan70/nativa-themes`: the theme repository, measured 2026-10-21
+## The theme modules are authored here, measured 2026-11-18
 
-Updated after the repository became the themes' home (`af593f7`, `134c79a`). It holds **224
-tracked files** — 23 of them the theme modules — and two things, and the split is the point:
+Until 2026-11-18 the six themes were authored in `evan70/nativa-themes` and
+arrived as a copy; `bin/build/sync-themes.sh` compared the bytes and
+`make themes-check` was the gate. The catalogue and that repository were
+byte-identical at the move (`identical=23 diverged=0`), so the import was
+history only: the slices now live here, at `modules/Themes/<Name>/`, with the
+theme repository's commits behind them, and its gallery came with them under
+`themes/gallery/`.
 
-| path | what it is | edited there? |
-|---|---|---|
-| `modules/Themes/<Name>/` | the six kernel themes — the **source** | yes |
-| `boson/`, `jednotka/`, `mono/`, `starter/`, `erik/`, `magazine/`, `moonshine/`, `font-set/` | the static gallery (60 pages) | generated, or hand-written against the theme's class names |
-| `src/`, `build/` | the gallery's copies of `nativa-minimal`'s frontend sources | no — `pnpm run sync` deletes and recopies them |
+The gallery is a consumer, not a second source: it renders the theme class
+names and reads `nativa-minimal`'s frontend sources through `pnpm run sync`,
+and `pnpm run sync:check` protects the gallery's `src/` against that upstream.
+It does not protect the six theme modules, and it never did; `RULES.md` said so
+in those words. The gallery's own gate is unchanged by the move.
 
-A theme is edited there and arrives here as a copy: `bin/build/sync-themes.sh --check`
-(`make themes-check`) compares `modules/Themes/<Name>/` by SHA-256 and names every differing
-path — `missing`, `changed`, `only-here`, `theme-only-here`; `--write` (`make themes-sync`)
-replaces the catalogue with the repository's copy. The gate has two directions on purpose: a
-missing file is drift, and so is a file upstream no longer has.
-
-`bin/cms module:add <Name>` installs the catalogue into `src/Modules/Themes/<Name>/`, exactly
-as before — nothing about the tool changed. What changed is where a fix belongs.
-
-**Why a script and not a submodule.** A submodule pins one commit, but `module:add` and
-`make assets` need files, not a pin: every clone would still need `--recursive` before either
-worked, and a missing initialisation reads as "no themes". The script needs the checkout only
-when it runs, and `--check` is one command with a non-zero exit. The cost is
-that no commit id is written down anywhere — the catalogue's bytes *are* the pin, and `--check`
-is what compares them. That is a weaker guarantee than a submodule's pin, so it has to run in
-CI (Fáza 3.3), not only on the machine that remembers it.
-
-Where the checkout comes from is the part that failed once. The default used to be a sibling
-clone (`../nativa-themes`), and a clone that was behind reported `identical=19` while CI, with a
-fresh checkout, reported Boson's critical CSS as `changed` — the gate measured the neighbour
-rather than the repository. Without `--from` the script now clones `evan70/nativa-themes` into
-the gitignored `storage/cache/nativa-themes` and fast-forwards it on every run, so a developer
-and CI compare the same bytes; the report line carries the commit it saw (`@6d3ef9c`). `--from`
-still takes an explicit path, which is how CI hands over the checkout it already made and how a
-contributor measures a local branch on purpose.
-
-The gallery stays at the repository root and is a **consumer**: `modules/` is not a pnpm
-package and Vite reads only its explicit inputs, so nothing collides; moving the gallery into
-`gallery/` would rewrite every input path, `publicDir`, the sync map and the Pages artifact
-path for no benefit. Its own gate, `pnpm run sync:check`, protects the gallery's `src/`
-against `nativa-minimal` — **it does not protect the six theme modules**, and `RULES.md`
-says so in those words. `pages.yml` uploads `dist/` from the root and deliberately does not run
-`sync:check` (the upstream checkout is private, so a runner could only report "skipped").
-
-Coverage, measured: `boson`, `jednotka` and `mono` are **generated** — 7 surfaces × 2 locales =
-42 documents, re-rendered by `bin/build/render-theme-pages.php`; `starter`, `erik`, `magazine`
-and `moonshine` are hand-written; `font-set/` is one page. `griffe` has **no** page: its
-homepage is composed from attributes by its own web components, so a static render is empty.
-`erik` has pages but its gallery CSS is `nativa-minimal`'s full stylesheet, not this module's
-355-line critical fallback — a gallery page is not evidence of what the module serves.
-`minimal` has no build entry at all.
+What this changes for an author: edit `modules/Themes/<Name>/` here, reinstall
+the slice (`php bin/cms module:remove <Name> --force` then
+`php bin/cms module:add <Name>`) and let the theme tests run. There is no sync
+step and no gate comparing two checkouts, because there is one checkout.
 
 ## Open, with the numbers that decide them
 

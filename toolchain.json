@@ -158,18 +158,6 @@
       "answers": "the catalogue alone: lint + analyze, never a gate"
     },
     {
-      "target": "themes-check",
-      "tier": "catalogue",
-      "can_fail": true,
-      "answers": "is modules/Themes byte-identical to the nativa-themes checkout"
-    },
-    {
-      "target": "themes-sync",
-      "tier": "catalogue",
-      "can_fail": false,
-      "answers": "copies the theme modules from the nativa-themes checkout"
-    },
-    {
       "target": "catalogue-check",
       "tier": "catalogue",
       "can_fail": true,
@@ -449,11 +437,6 @@
     {
       "key": "dist",
       "name": "Dist artifact (clean clone)",
-      "can_fail": true
-    },
-    {
-      "key": "themes-check",
-      "name": "Themes-check (catalogue vs nativa-themes)",
       "can_fail": true
     },
     {

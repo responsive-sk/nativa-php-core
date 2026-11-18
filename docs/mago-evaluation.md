@@ -236,7 +236,6 @@ Static analysis and style:
 | `make mago-lint` (ceiling 0) | yes | **yes**, minus `modules/Themes/` | the curated rule set, count gated |
 | `make mago-guard` | yes | **no** | kernel→module edges; the catalogue is the other side of the rule |
 | `make lint` (`php -l`) | yes | yes | parse errors over every tracked `.php` file outside `vendor/` — and only parse errors |
-| `make themes-check` | — | `modules/Themes/` only | byte identity with `nativa-themes`, not quality |
 | `make mago-modules` | — | yes, as a reading | informational: 0 findings, 1484 analyzer issues, never fails |
 
 Runtime, model and supply chain:
@@ -257,8 +256,7 @@ One consequence follows, and it is not readable off any single config:
   catalogue's 348 analyzer errors are a reading. `make mago-lint` (zero
   findings, everything under `modules/` except the theme mirror) is the only
   *static-analysis* gate over it; behaviour is covered by the module tests CI
-  installs the catalogue to run, and the theme mirror by `themes-check`'s byte
-  compare. `make lint` reaches the catalogue too, but `php -l` only answers
+  installs the catalogue to run, and the theme modules by their own tests. `make lint` reaches the catalogue too, but `php -l` only answers
   "does this parse".
 
 The split is held by three files that have to move together: `phpstan.neon`

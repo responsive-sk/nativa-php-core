@@ -58,6 +58,11 @@ Frontend/packages/minimal
 Frontend/packages/mono
 Frontend/packages/starter
 
+# The theme gallery: a static site that renders the theme class names, not
+# part of the application and not part of the exported tree. The modules it
+# renders live under modules/Themes and ship as installed slices.
+themes
+
 # Content corpora. The export ships the storage skeleton and no articles.
 storage/blog
 storage/blog-images
@@ -118,7 +123,6 @@ README.md
 # names none of them.
 bin/build/extract-kernel.sh
 bin/build/kernel-divergence.txt
-bin/build/sync-themes.sh
 bin/build/kernel-size.sh
 bin/build/render-theme-pages.php
 bin/build/lekalo-modules.sh

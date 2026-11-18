@@ -28,10 +28,10 @@ the measured state of the boot. Read this file before changing anything.
 - **The boundary rule:** a kernel file may not import a module; a module may
   import the kernel. `make mago-guard` fails on a kernel→module edge, inline
   FQCNs included.
-- **Themes are authored elsewhere.** `modules/Themes/` is a byte-verified copy
-  of the `nativa-themes` repository, not a source: change a theme there, run
-  `make themes-sync`, then re-install the module. `make themes-check` fails on a
-  hand edit here and names the file.
+- **Themes are authored here.** `modules/Themes/` is the source; the theme
+  gallery is a consumer and lives under `themes/gallery/`. Edit a theme in
+  place, then re-install the slice:
+  `php bin/cms module:remove <Name> --force && php bin/cms module:add <Name>`.
 - **The public tree is generated.** `responsive-sk/nativa-core` is exported
   from a commit of this one by `bin/build/export-core.sh`; the profile is
   `bin/export/core/` and `make core-export-check` runs its own suite. A change
@@ -106,7 +106,6 @@ generated from the registry, so it cannot go stale.
 | `make admin-smoke` | the panel boots and walks its admin flows over HTTP |
 | `make assets` | do the bundles build, and does every manifest name assets that exist |
 | `make dist-check` | a clean clone builds a green artifact |
-| `make themes-check` | `modules/Themes` is byte-identical to `nativa-themes` |
 | `make extract-check` | this tree still matches the upstream kernel slice |
 
 The CI `assets` job asserts more than the target does — the admin manifest still

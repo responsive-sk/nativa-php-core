@@ -90,6 +90,8 @@ APPLY_PROFILE=true
 #                       excluded below, so nothing in the artifact reads them;
 #                       `public/demo/`, when present, keeps the images a
 #                       deployment serves
+#   ./themes            the theme GALLERY: a static site that renders the
+#                       theme class names, not code the artifact runs
 #   ./Frontend          theme SOURCES: the artifact ships built bundles only
 #   ./vendor            the kernel runtime has zero Composer packages — this is
 #                       the claim the smoke test below is about to check
@@ -124,6 +126,7 @@ EXCLUDES=(
     "./.github"
     "./tests"
     "./fixtures"
+    "./themes"
     "./Frontend"
     "./vendor"
     "./bin/build"

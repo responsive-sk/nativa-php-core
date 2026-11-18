@@ -152,17 +152,6 @@ core-export-check: ## Gate: the exported tree assembles, lints and passes its ow
 publish-core: ## Replace the public nativa-core repository with a fresh export (PUBLISH_ARGS=--dry-run)
 	@bin/build/publish-core.sh $(PUBLISH_ARGS)
 
-##@ Themes (the source is nativa-themes, not this tree)
-# The six theme modules are authored in `evan70/nativa-themes`; the catalogue
-# here is their copy, because `bin/cms module:add` installs from this tree.
-# `themes-check` is the gate — a hand edit under modules/Themes/ is drift, not
-# a fix, and `themes-sync` is how a reviewed change lands.
-themes-check: ## Verify the theme catalogue against the nativa-themes repository
-	bin/build/sync-themes.sh --check $(if $(THEMES_ROOT),--from $(THEMES_ROOT),)
-
-themes-sync: ## Copy modules/Themes from the nativa-themes repository
-	bin/build/sync-themes.sh --write $(if $(THEMES_ROOT),--from $(THEMES_ROOT),)
-
 ##@ Catalogue
 # Generated, not edited: the index is the machine-readable form of `modules/`,
 # and `--check` is the gate that catches a module or import that changed without
