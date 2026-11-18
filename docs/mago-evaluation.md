@@ -21,7 +21,10 @@ Plan: `.ai-factory/plans/feature-evaluate-mago-toolchain.md`.
 Measured 2026-10-22 with `mago 1.58.2` on PHP 8.5.11, over `mago.toml`'s scope
 (123 `.php` files + `bin/cms`, the same nine paths `phpstan.neon` analyses).
 The scope grew on 2026-10-27 — the table below is the kernel-scope measurement;
-[Scope extension](#scope-extension-2026-10-27) records what changed.
+[Scope extension](#scope-extension-2026-10-27) records what changed. The pin
+moved to `1.60.2` on 2026-11-18, and
+[Re-measured on 1.60.2](#re-measured-on-1602-2026-11-18) holds the numbers for
+the binary this tree runs today.
 
 ## Verdict at a glance
 
@@ -31,6 +34,41 @@ The scope grew on 2026-10-27 — the table below is the kernel-scope measurement
 | `mago lint` | 570 findings at the default preset, **0** with the curated rule set | **gate** — `make mago-lint` fails on any finding; all 22 resolved, no rule silenced |
 | `mago format` | 124 of 124 files would change (~0,03 s) | **not a replacement** — house rules it cannot express |
 | `mago guard` | 0 issues after the `SecurityEventSink` refactor; catches a planted kernel→module import | **gate** — CI job `kernel-dependency`, empty report is the claim |
+
+Those numbers are the 2026-10-22 kernel-scope measurement on `1.58.2`. They are
+kept as the dated record; the reading over the current tree and the current
+binary is below.
+
+### Re-measured on 1.60.2, 2026-11-18
+
+The pin moved from `1.58.2` to `1.60.2`, four releases on. Both binaries were
+run over the same checkout, so the difference between the two columns is the
+tool and nothing else; the tree has also grown since 2026-10-27, which is why
+these totals are higher than the scope-extension table above.
+
+| reading | `1.58.2` | `1.60.2` |
+|---|---|---|
+| `analyze`, config scope (kernel + `modules/`) | 1918 issues (831 error / 695 warning / 392 help) | **1806 (803 / 634 / 369)** |
+| `analyze`, `modules/` alone | 1537 (684 / 532 / 321) | **1484 (663 / 523 / 298)** |
+| `lint`, curated rule set | 0 findings | **0 findings**, after one fix |
+| `format --dry-run` | 158 files | 158 files |
+| `guard` | 0 issues | **0 issues** |
+
+Measured on PHP 8.5.12, `mago.toml`'s current scope. The analyzer reports 112
+fewer issues (28 fewer errors) on identical input — narrower inference in
+1.59/1.60, not a rule this tree switched off.
+
+The linter is where the bump paid for itself. The first `1.60.2` run reported
+**one finding** the old binary could not see: `no-unused-return-value` on
+`MarkdownBlockRegistry::loadAndRegister()`, a `private static` method returning
+`bool` whose only caller discarded it. The method is `void` now — the early
+exits kept their branches — which is the fix the rule asks for rather than a
+pragma. The ceiling was 0 before the bump and is 0 after it.
+
+`format` is the one reading that did not move with the binary: both versions
+rewrite the same 158 files, so the formatter verdict above is unchanged. The
+count grew from the 124 of 2026-10-22 because the tree did, not because the
+formatter learned a rule.
 
 Reproduce any line with:
 
@@ -96,6 +134,10 @@ Measured 2026-10-27: **0 lint findings, 884 analyzer issues (348 errors)**.
 The full-scope run above reports the same 884 at `modules/` locations, so this
 reading measures the catalogue itself rather than the distance between two
 scopes.
+
+Re-measured on `1.60.2` (2026-11-18) against the current catalogue: **0 lint
+findings, 1484 analyzer issues (663 errors)** — and `1.58.2` reports 1537 (684
+errors) on the same tree, so the drop is the binary, not a code change.
 
 CI publishes the reading on every push and pull request: the `module-quality`
 job runs `bin/build/mago-modules-report.sh`, which executes the same scope and
@@ -195,7 +237,7 @@ Static analysis and style:
 | `make mago-guard` | yes | **no** | kernel→module edges; the catalogue is the other side of the rule |
 | `make lint` (`php -l`) | yes | yes | parse errors over every tracked `.php` file outside `vendor/` — and only parse errors |
 | `make themes-check` | — | `modules/Themes/` only | byte identity with `nativa-themes`, not quality |
-| `make mago-modules` | — | yes, as a reading | informational: 0 findings, 884 analyzer issues, never fails |
+| `make mago-modules` | — | yes, as a reading | informational: 0 findings, 1484 analyzer issues, never fails |
 
 Runtime, model and supply chain:
 
