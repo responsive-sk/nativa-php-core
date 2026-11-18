@@ -54,7 +54,7 @@ foreach ($router->toEntries() as $entry) {
         continue;
     }
 
-    ++$pages;
+    $pages++;
 
     if (!in_array($path, $declared, true)) {
         $orphans[] = $path;
