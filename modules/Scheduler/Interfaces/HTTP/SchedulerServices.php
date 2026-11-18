@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
+use Modules\Database\Infrastructure\Persistence\SqlDialect;
 use Modules\Outbox\Application\Services\OutboxDrain;
 use Modules\Outbox\Interfaces\HTTP\OutboxServices;
 use Modules\Scheduler\Scheduling\FileTaskMutex;
@@ -120,14 +121,10 @@ final class SchedulerServices
     private static function queueDatabaseReady(): bool
     {
         try {
-            $statement = DatabaseConnectionManager::instance()
-                ->connection('queue')
-                ->query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'jobs'");
+            $connection = DatabaseConnectionManager::instance()->connection('queue');
+            $statement = $connection->prepare(SqlDialect::forPdo($connection)->tableExists());
+            $statement->execute(['jobs']);
         } catch (\Throwable) {
-            return false;
-        }
-
-        if (false === $statement) {
             return false;
         }
 
