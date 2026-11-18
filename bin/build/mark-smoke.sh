@@ -514,6 +514,20 @@ want 'admin POST /mark/roles/create' 302 "$got"
 ROLE_ID="$(dbq DB_USERS "SELECT id FROM roles WHERE name = 'smoke-role'")"
 if [ -n "$ROLE_ID" ]; then ok 'the created role row exists'; else bad 'the created role row is missing'; fi
 
+# An id the form never offered. `role_permissions.permission_id` is a foreign
+# key into `permissions`, and the ids arrive from the page, so a stale tab or a
+# hand-made POST used to be a constraint violation inside the transaction and a
+# 500 for the operator. The row is written only when the permission exists.
+status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/roles" > /dev/null
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/roles/$ROLE_ID/permissions" \
+    --data-urlencode 'permissions[]=no-such-permission' \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/roles/{id}/permissions with an unknown id' 302 "$got"
+
+tampered="$(dbq DB_USERS "SELECT COUNT(*) FROM role_permissions WHERE role_id = '$ROLE_ID'")"
+want 'the unknown permission id wrote no row' 0 "$tampered"
+
 got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/roles/$ROLE_ID/delete" \
     --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
 want 'admin POST /mark/roles/{id}/delete' 302 "$got"
