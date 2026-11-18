@@ -3701,4 +3701,9 @@ $handlers = [
     },
 ];
 
-exit(Serve::serve(['identity' => $identity, 'handlers' => $handlers]));
+// The extractor is a pure function over source bytes, so a test can load this
+// file for its functions by defining the constant first. The confined host
+// never sets it, so the entry point still serves the request on stdin.
+if (!defined('NATIVA_ADAPTER_LIBRARY')) {
+    exit(Serve::serve(['identity' => $identity, 'handlers' => $handlers]));
+}

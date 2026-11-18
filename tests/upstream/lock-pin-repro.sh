@@ -21,8 +21,8 @@
 #       row.digest = manifest.package_digest()
 #
 # Measured with the adapter package beside this script: the executable digest
-# is sha256:c33229b0c9fbf08bd706fe112eb91d9513d51de6ee2736840ce6432ce3ba4e33,
-# the package digest is sha256:5b2e75a570e610a4b1c26e9e850a0185a49e2886d4991900f585f13e49780515.
+# is sha256:bb100064cf9ef86d6d1601b5298e9b18168d9eff5cf29264cd1370f4aaa579da,
+# the package digest is sha256:2e064c9e3071f5cedf98ce3a14b4838e04371ac804d945bfdbe75b8873a22209.
 # The two are equal only for a package with one file and no manifest, which
 # the format never produces: the package digest frames every declared file
 # and then the manifest (ADR-0042). So the filter matches nothing for every
