@@ -61,7 +61,12 @@ ok() { printf 'ok    %s\n' "$1"; }
 bad() { printf '::error::%s\n' "$1"; FAILED=1; }
 
 status() { curl -s -o "$TMP/last.out" -w '%{http_code}' --max-time 15 "$@"; }
-token() { sed -n 's/.*name="_token" value="\([^"]*\)".*/\1/p' "$TMP/last.out" | head -1; }
+# One pass, and it quits on its own: `sed ... | head -1` dies with SIGPIPE (141)
+# once the page carries more than a pipe buffer of tokens — the settings screen
+# renders one per row, so the nav table growing broke the gate instead of the
+# page. `q` after the print cannot race a reader that is not there.
+# shellcheck disable=SC2016 # awk, not shell: the program is awk's own
+token() { awk 'match($0, /name="_token" value="[^"]*"/) { sub(/.*name="_token" value="/, ""); sub(/".*$/, ""); print; exit }' "$TMP/last.out"; }
 # Read one value back out of a module database (the temp ones above).
 # shellcheck disable=SC2016 # PHP, not shell: the single quotes are php -r's own, $argv is PHP's
 #
@@ -126,6 +131,23 @@ body_has() {
         ok "$label"
     else
         bad "$label — '$needle' is not in the page"
+    fi
+}
+
+# The sidebar BLOCK of the page `status` just wrote, and one assertion on it.
+#
+# A nav claim has to be about the nav: `/mark/articles` also appears in a
+# dashboard widget, so a page-wide grep reports a link the sidebar never
+# carried — measured when the hidden-group check "found" Articles in a sidebar
+# that no longer had it.
+sidebar() { sed -n '/<nav class="layout-sidebar__nav"/,/<\/nav>/p' "$TMP/last.out" > "$TMP/sidebar.html"; }
+
+sidebar_has() {
+    local label="$1" needle="$2"
+    if grep -qF -- "$needle" "$TMP/sidebar.html"; then
+        ok "$label"
+    else
+        bad "$label — '$needle' is not in the sidebar"
     fi
 }
 
@@ -333,6 +355,49 @@ fi
 for page in $ADMIN_PAGES; do
     check "admin GET $page" "$page" 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
 done
+
+# ---------------------------------------------------------------------------
+# The operator's sidebar, held to the router in BOTH directions
+# ---------------------------------------------------------------------------
+# One direction: every href the sidebar renders opens for the operator. The
+# other: no page the panel serves is missing from it. `$ADMIN_PAGES` above is
+# the authority for "serves" — the same scan that just opened each one — so a
+# module that ships a page and forgets its `#[AsCardboardNavItem]` fails here
+# instead of shipping a page only its author knows about. Measured before this
+# check: seven top-level pages had no link at all.
+status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark" > /dev/null
+operator_nav="$(sed -n '/<nav class="layout-sidebar__nav"/,/<\/nav>/p' "$TMP/last.out" \
+    | grep -o 'href="/mark[^"]*"' | sed 's/^href="//; s/"$//' | sort -u)"
+if [ -z "$operator_nav" ]; then
+    bad 'the operator sidebar rendered no /mark links to check'
+fi
+asked=0
+while IFS= read -r href; do
+    [ -n "$href" ] || continue
+    asked=$((asked + 1))
+    got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE$href")"
+    want "operator sidebar link $href" 200 "$got"
+done <<< "$operator_nav"
+ok "operator sidebar links held to the router → $asked"
+
+# Top-level pages only: a sub-page such as `/mark/settings/modules` is reached
+# from its parent's screen, not from the menu, and demanding an entry for it
+# would push a link into the sidebar that no operator asked for.
+orphans=""
+for page in $ADMIN_PAGES; do
+    case "$page" in
+        /mark/*/*) continue ;;
+    esac
+    case " $(printf '%s' "$operator_nav" | tr '\n' ' ') " in
+        *" $page "*) ;;
+        *) orphans="$orphans $page" ;;
+    esac
+done
+if [ -n "$orphans" ]; then
+    bad "the panel serves pages the sidebar does not link:$orphans"
+else
+    ok 'every top-level page the panel serves is in the operator sidebar'
+fi
 
 # The module list answers 200 through a BOOTED server, and that is the whole
 # reason this line exists. The page was written with its #[Route] attributes on
@@ -616,6 +681,69 @@ want 'the deleted override row is gone' 0 "$left"
 # and the reason the editor is safe to try: nothing it does is final.
 check 'admin GET /mark (override deleted)' '/mark' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
 body_has 'the declaration is back in the sidebar' 'href="/mark/rest"'
+
+# ---------------------------------------------------------------------------
+# A group, and what hiding its parent does to its children
+# ---------------------------------------------------------------------------
+# Blog declares a parent and three children, so the editor's nesting is already
+# on screen. The group renders as a BUTTON (`data-toggle-group=`) with its
+# children in `.layout-sidebar__children`; hiding the parent has to take the
+# three links with it. Before the service learned the rule, the children stayed
+# active, `buildTree()` found no parent and promoted them to the top level — the
+# operator turned one row off and the sidebar grew three loose links.
+check 'admin GET /mark (group)' '/mark' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+sidebar
+if grep -qF 'data-toggle-group=' "$TMP/sidebar.html" && grep -qF 'layout-sidebar__children' "$TMP/sidebar.html"; then
+    ok 'the sidebar renders the declared parent as a group'
+else
+    bad 'the sidebar renders no group for the declared children'
+fi
+sidebar_has 'the group carries its Articles child' 'href="/mark/articles"'
+sidebar_has 'the group carries its Categories child' 'href="/mark/categories"'
+sidebar_has 'the group carries its Tags child' 'href="/mark/tags"'
+
+status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav" \
+    --data-urlencode 'label=Blog' --data-urlencode 'href=/mark/articles' \
+    --data-urlencode 'sort_order=70' \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/panel-nav (group row)' 302 "$got"
+
+GROUP_ROW="$(dbq DB_CONFIG "SELECT id FROM menu_items WHERE location = 'mark' AND href = '/mark/articles'")"
+if [ -n "$GROUP_ROW" ]; then ok 'the group override row was written'; else bad 'no row was written for the group'; fi
+
+status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav/$GROUP_ROW/toggle" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/panel-nav/{id}/toggle (group)' 302 "$got"
+
+check 'admin GET /mark (group hidden)' '/mark' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+sidebar
+if grep -qF 'data-toggle-group=' "$TMP/sidebar.html"; then
+    bad 'the hidden group still renders as a group'
+else
+    ok 'the hidden group left the sidebar'
+fi
+for child in /mark/articles /mark/categories /mark/tags; do
+    if grep -qF "href=\"$child\"" "$TMP/sidebar.html"; then
+        bad "hiding the group promoted $child to the top level"
+    else
+        ok "hiding the group removed $child"
+    fi
+done
+
+# Deleting the row brings the group back, children included.
+status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav/$GROUP_ROW/delete" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/panel-nav/{id}/delete (group)' 302 "$got"
+check 'admin GET /mark (group restored)' '/mark' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+sidebar
+sidebar_has 'the group is back in the sidebar' 'layout-sidebar__children'
+sidebar_has 'the restored group carries its Tags child' 'href="/mark/tags"'
 
 # ---------------------------------------------------------------------------
 # Content: an ARTICLE is written, served and deleted through the panel

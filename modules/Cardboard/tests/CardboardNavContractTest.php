@@ -101,9 +101,12 @@ final class CardboardNavContractTest extends TestCase
         self::assertContains('Dashboard', array_column($items, 'label'));
         self::assertContains('/mark/articles', array_column($items, 'href'));
 
-        // No catalogue slice, no attribute, no entry — the seed used to carry
-        // this link to a 404 and `withoutUnreachable()` hid it again.
-        self::assertNotContains('/mark/pages', array_column($items, 'href'));
+        // Pages carries a catalogue slice again, so its entry is the module's.
+        // The reverse direction — a served page nothing links to — is asserted
+        // against a booted server in `bin/build/mark-smoke.sh`, where the route
+        // table and the rendered sidebar are the same tree; `allItems()` here
+        // cannot see whether a page renders at all.
+        self::assertContains('/mark/pages', array_column($items, 'href'));
     }
 
     /**
@@ -341,6 +344,37 @@ final class CardboardNavContractTest extends TestCase
                 sprintf('%s sits in the namespace of its own module, so the scan can resolve its class.', $file),
             );
         }
+    }
+
+    /**
+     * Hiding a parent hides its children.
+     *
+     * The panel-nav screen's Vis column is one control per row, and a row that
+     * is off has to take its subtree with it. Before this the child stayed
+     * active, `buildTree()` found no parent and rendered it at the top level —
+     * the operator hid "Blog" and the sidebar grew three loose links instead.
+     */
+    #[Test]
+    public function aHiddenParentTakesItsChildrenWithIt(): void
+    {
+        $this->clearPanelMenu();
+        $this->insertItem('group-writing', 'Writing', '/mark/articles', null, 10);
+        $this->insertItem('item-articles', 'Articles', '/mark/articles', 'group-writing', 11);
+        $this->insertItem('item-tags', 'Tags', '/mark/tags', 'group-writing', 12);
+
+        $nav = CardboardServices::panelNav();
+
+        self::assertContains('item-articles', array_column($nav->activeItems(), 'id'));
+
+        $this->connection
+            ->prepare("UPDATE menu_items SET is_active = 0 WHERE id = 'group-writing'")
+            ->execute();
+
+        $ids = array_column($nav->activeItems(), 'id');
+
+        self::assertNotContains('group-writing', $ids);
+        self::assertNotContains('item-articles', $ids, 'a child of a hidden parent is hidden with it, not promoted to the top level');
+        self::assertNotContains('item-tags', $ids);
     }
 
     private function clearPanelMenu(): void

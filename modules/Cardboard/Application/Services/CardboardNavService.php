@@ -234,13 +234,53 @@ final readonly class CardboardNavService
     /**
      * Active admin nav items, sorted by sort_order (flat).
      *
+     * An item goes with its parent: hiding a group in the panel-nav screen has
+     * to take the group's children with it. Without that rule the child row is
+     * still active, `buildTree()` cannot find its parent and promotes it to the
+     * top level, so the operator hides "Blog" and the sidebar silently grows
+     * three loose links — the opposite of what the Vis column promised.
+     *
+     * A child whose parent is absent from the merged set keeps its old
+     * behaviour: it renders at the top level. That parent is a module that is
+     * not installed, not a row somebody switched off.
+     *
      * @return list<NavItem>
      */
     public function activeItems(): array
     {
+        $items = $this->allItems();
+
+        /** @var array<string, NavItem> $byId */
+        $byId = [];
+        foreach ($items as $item) {
+            $byId[$item['id']] = $item;
+        }
+
+        /** @var array<string, bool> $hidden */
+        $hidden = [];
+
+        $hiddenWithParent = function (string $id) use (&$hiddenWithParent, &$hidden, $byId): bool {
+            if (isset($hidden[$id])) {
+                return $hidden[$id];
+            }
+
+            // Seeded false before the walk: a parent chain that loops hides
+            // nothing rather than recursing until the request dies.
+            $hidden[$id] = false;
+
+            $item = $byId[$id] ?? null;
+            if (null === $item || null === $item['parent_id'] || !isset($byId[$item['parent_id']])) {
+                return false;
+            }
+
+            $parent = $byId[$item['parent_id']];
+
+            return $hidden[$id] = !$parent['is_active'] || $hiddenWithParent($parent['id']);
+        };
+
         return array_values(array_filter(
-            $this->allItems(),
-            static fn (array $item): bool => $item['is_active'],
+            $items,
+            static fn (array $item): bool => $item['is_active'] && !$hiddenWithParent($item['id']),
         ));
     }
 
