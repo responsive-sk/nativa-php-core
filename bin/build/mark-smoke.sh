@@ -288,6 +288,18 @@ got="$(status -c "$ADMIN_JAR" -b "$ADMIN_JAR" -X POST "$BASE/login" \
 want 'admin POST /login' 302 "$got"
 
 check 'admin GET /mark' '/mark' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+
+# The nav item the RestPanel module DECLARES, seen where an operator sees it.
+# `/mark/rest` is asserted as a route below (every GET `/mark` page is opened by
+# the scan); this is the other half — a route nothing links to is a page only
+# its author knows about. The href and not the label: `REST` is also a word a
+# page body may carry, and the link is what a browser follows.
+if grep -qF 'href="/mark/rest"' "$TMP/last.out"; then
+    ok 'the sidebar offers /mark/rest to the operator'
+else
+    bad 'the sidebar has no /mark/rest link for the operator'
+fi
+
 check 'admin GET /mark/users' '/mark/users' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
 check 'admin GET /mark/roles' '/mark/roles' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
 
@@ -476,6 +488,19 @@ got="$(status -c "$AUTHOR_JAR" -b "$AUTHOR_JAR" -X POST "$BASE/login" \
 want 'author POST /login' 302 "$got"
 
 check 'author GET /mark' '/mark' 200 -b "$AUTHOR_JAR" -c "$AUTHOR_JAR"
+
+# The same page, one permission down: `/mark/rest` is gated under
+# `settings.manage` (MarkRoutePolicy), so the author's sidebar must not carry
+# the link. A nav that leads to a refusal is worse than no nav — the author
+# learns the panel is broken — and the filter is `CardboardNavService::
+# permittedItems()` asking the same policy the middleware enforces, so this is
+# the check that the two answers agree through a booted server.
+if grep -qF '/mark/rest' "$TMP/last.out"; then
+    bad 'the sidebar offers /mark/rest to an author without settings.manage'
+else
+    ok 'the sidebar hides /mark/rest from an author without settings.manage'
+fi
+
 AUTHOR_TOKEN="$(token)"
 
 got="$(status -b "$AUTHOR_JAR" -c "$AUTHOR_JAR" -X POST "$BASE/mark/bulk-publish" \
@@ -497,6 +522,11 @@ want_at_least 'security.authz.denied events' 1 "$denied"
 # booted server; its delivery is asserted in the worker section below, where the
 # drain has provably run.
 check 'author GET /mark/users' '/mark/users' 403 -b "$AUTHOR_JAR" -c "$AUTHOR_JAR"
+
+# And the link the sidebar hid would have been a refusal. Both halves matter:
+# hiding the link alone is decoration if the path answers 200 to the same
+# session, and a 403 alone leaves the author clicking a dead link.
+check 'author GET /mark/rest' '/mark/rest' 403 -b "$AUTHOR_JAR" -c "$AUTHOR_JAR"
 
 # `json_extract`, not a LIKE: the payload is `json_encode`d, which escapes the
 # slashes — the stored path is `\/mark\/users`, so a LIKE '%/mark/users%' matches
