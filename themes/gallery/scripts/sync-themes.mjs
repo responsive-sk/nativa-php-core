@@ -21,10 +21,14 @@ import { fileURLToPath } from 'node:url';
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const check = process.argv.includes('--check');
 
-/** Sibling checkout of the app that owns the real theme sources. */
+/**
+ * Sibling checkout of the app that owns the real theme sources. This default
+ * was written when the gallery was its own repository and climbed one
+ * directory; inside the kernel the gallery sits three below the project root.
+ */
 const appRoot =
   process.env.NATIVA_MINIMAL ??
-  resolve(repoRoot, '..', 'nativa-minimal');
+  resolve(repoRoot, '..', '..', '..', 'nativa-minimal');
 
 /**
  * Every copy is a directory or a single file, addressed from the app root.
