@@ -9,10 +9,6 @@
 PHP ?= php
 COMPOSER ?= composer
 MINIMAL_ROOT ?= ../nativa-minimal
-# Empty by default: the theme script fetches the nativa-themes repository's HEAD
-# into storage/cache and compares against that. A sibling clone can be behind,
-# only to compare against a checkout you mean to measure.
-THEMES_ROOT ?=
 LEKALO ?= $(shell command -v lekalo 2>/dev/null || echo "$$HOME/.cargo/bin/lekalo")
 # Modules the advisory coupling / architecture-profile reports cover (two, not
 # one: a single module says nothing about whether the shape holds elsewhere).
