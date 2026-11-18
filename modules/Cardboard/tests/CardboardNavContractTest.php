@@ -451,6 +451,30 @@ final class CardboardNavContractTest extends TestCase
     }
 
     /**
+     * A label hint is matched whatever its casing.
+     *
+     * `byLabel` is keyed on the lowercase form and the type says `string`, so
+     * a caller spelling the label as the sidebar shows it ('Articles') used to
+     * miss: the page rendered and the branch stayed shut, with nothing to see
+     * in a log. Surrounding whitespace came from the same place — an untrimmed
+     * query value is not a different page.
+     */
+    #[Test]
+    public function aLabelHintMatchesWhateverItsCasing(): void
+    {
+        $this->clearPanelMenu();
+        $this->insertItem('case-group', 'Writing', '/mark/articles', null, 10);
+        $this->insertItem('case-child', 'Articles', '/mark/articles', 'case-group', 11);
+
+        foreach (['articles', 'Articles', 'ARTICLES', ' Articles '] as $hint) {
+            $group = $this->findItem(CardboardServices::panelNav()->hierarchicalItems($hint), 'case-group');
+
+            self::assertNotNull($group, 'the group is a root');
+            self::assertTrue($group['is_expanded'], sprintf('"%s" names the Articles page', $hint));
+        }
+    }
+
+    /**
      * @param list<array<string, mixed>> $tree
      *
      * @return array<string, mixed>|null

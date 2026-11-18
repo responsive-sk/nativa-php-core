@@ -173,10 +173,17 @@ final readonly class CardboardNavService
      * Actions pass lowercase labels (e.g. 'tags'), but $byId is indexed by
      * hex DB IDs — resolve ids directly, falling back to the label map.
      *
+     * A label hint is matched whatever its casing: `byLabel` is keyed on the
+     * lowercase form, so a caller that spells the label the way the sidebar
+     * shows it ('Articles') used to miss and lose the active state silently —
+     * the page rendered, the branch stayed shut.
+     *
      * @param array{byId: array<string, NavTreeItem>, byLabel: array<string, string>} $index
      */
     private function resolveActiveId(array $index, string $activeSection): string
     {
+        $activeSection = strtolower(trim($activeSection));
+
         if ('' === $activeSection) {
             return '';
         }
