@@ -44,7 +44,7 @@ use Modules\Database\Contracts\ConnectionInterface;
  * to avoid importing another module's Infrastructure layer.
  *
  * @phpstan-type NavItem array{id: string, label: string, href: string, sort_order: int, is_active: bool, icon: string, parent_id: ?string, permission: ?string}
- * @phpstan-type NavTreeItem array{id: string, label: string, href: string, sort_order: int, is_active: bool, icon: string, parent_id: ?string, permission: ?string, children: list<NavItem>, is_expanded: bool}
+ * @phpstan-type NavTreeItem array{id: string, label: string, href: string, sort_order: int, is_active: bool, icon: string, parent_id: ?string, permission: ?string, children: list<NavItem>, is_expanded: bool, is_current: bool}
  */
 final readonly class CardboardNavService
 {
@@ -79,7 +79,32 @@ final readonly class CardboardNavService
         $expandedGroups = $this->expandedGroups($index, $activeId);
         $tree = $this->withoutUnreachable($this->buildTree($index['byId']), $reachable);
 
-        return $this->withExpandedGroups($tree, $expandedGroups);
+        return $this->withCurrentItem($this->withExpandedGroups($tree, $expandedGroups), $activeId);
+    }
+
+    /**
+     * Mark the one item the hint resolved to, so a renderer never compares
+     * labels.
+     *
+     * The layout used to decide "active" by comparing its hint against every
+     * label in the tree, so two rows sharing a name were BOTH highlighted while
+     * the tree expanded neither branch: the sidebar pointed at two pages and
+     * opened none. Resolution already happens here, once, so the answer travels
+     * with the item instead of being re-derived from a name.
+     *
+     * @param list<NavTreeItem> $tree
+     *
+     * @return list<NavTreeItem>
+     */
+    private function withCurrentItem(array $tree, string $activeId): array
+    {
+        foreach ($tree as $index => $item) {
+            $item['is_current'] = '' !== $activeId && $item['id'] === $activeId;
+            $item['children'] = $this->withCurrentItem($item['children'], $activeId);
+            $tree[$index] = $item;
+        }
+
+        return $tree;
     }
 
     /**

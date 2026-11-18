@@ -501,6 +501,8 @@ final class CardboardNavContractTest extends TestCase
         self::assertNotNull($second);
         self::assertFalse($first['is_expanded'], 'a shared label names no branch');
         self::assertFalse($second['is_expanded']);
+        self::assertFalse($first['is_current'], 'and highlights neither row');
+        self::assertFalse($second['is_current']);
 
         $byId = CardboardServices::panelNav()->hierarchicalItems('second-child');
         $first = $this->findItem($byId, 'first-report');
@@ -510,6 +512,44 @@ final class CardboardNavContractTest extends TestCase
         self::assertNotNull($second);
         self::assertTrue($second['is_expanded'], 'the id names exactly one row');
         self::assertFalse($first['is_expanded']);
+
+        // A group named by id is current itself, not merely open: the flag
+        // marks the row the hint resolved to, and the two are different rows
+        // when the hint names a child.
+        $byGroupId = CardboardServices::panelNav()->hierarchicalItems('first-report');
+        $first = $this->findItem($byGroupId, 'first-report');
+        $second = $this->findItem($byGroupId, 'second-report');
+
+        self::assertNotNull($first);
+        self::assertNotNull($second);
+        self::assertTrue($first['is_current']);
+        self::assertFalse($second['is_current']);
+    }
+
+    /**
+     * The tree names the current row, so a renderer does not have to.
+     *
+     * `CardboardLayout` receives a hint and used to decide for itself by
+     * comparing that hint against every label it rendered — the half of the
+     * duplicate-name bug the service could not reach, because the service does
+     * not render. The flag is the resolution's single answer, and it travels
+     * with the row it belongs to.
+     */
+    #[Test]
+    public function theTreeMarksOneCurrentItem(): void
+    {
+        $this->clearPanelMenu();
+        $this->insertItem('live-leaf', 'Live leaf', 'https://example.test/leaf', null, 10);
+        $this->insertItem('other-leaf', 'Other leaf', 'https://example.test/other', null, 20);
+
+        $tree = CardboardServices::panelNav()->hierarchicalItems('Live leaf');
+        $live = $this->findItem($tree, 'live-leaf');
+        $other = $this->findItem($tree, 'other-leaf');
+
+        self::assertNotNull($live);
+        self::assertNotNull($other);
+        self::assertTrue($live['is_current'], 'the resolved row carries the answer');
+        self::assertFalse($other['is_current'], 'and no other row claims it');
     }
 
     /**

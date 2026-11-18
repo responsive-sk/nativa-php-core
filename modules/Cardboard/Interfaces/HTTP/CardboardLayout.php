@@ -722,13 +722,21 @@ final class CardboardLayout
     /**
      * Active state helpers shared by leaf links and group buttons.
      *
-     * @param array{id: string, label: string} $item full nav item or child entry
+     * `is_current` is the service's answer, resolved once from the hint where
+     * the tree is built. Re-deriving it here from labels marked every row that
+     * shares a name at once while the tree expanded none of them — two pages
+     * highlighted, neither open. Items built by hand (tests, other callers)
+     * carry no flag and keep the label comparison.
+     *
+     * @param array{id: string, label: string, is_current?: bool} $item full nav item or child entry
      *
      * @return array{class: string, aria: string}
      */
     private static function navActiveState(array $item, string $activeSection): array
     {
-        $isActive = strtolower($item['label']) === $activeSection || $item['id'] === $activeSection;
+        $isActive = array_key_exists('is_current', $item)
+            ? (bool) $item['is_current']
+            : (strtolower($item['label']) === $activeSection || $item['id'] === $activeSection);
 
         return [
             'class' => $isActive ? ' layout-sidebar__link--active' : '',
