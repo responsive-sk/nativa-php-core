@@ -247,9 +247,10 @@ lekalo-check: ## Lekalo gate: lock --check, the whole model, and every module on
 	@$(LEKALO) lock --check
 	@bin/build/lekalo-modules.sh
 
-lekalo-adapter-test: ## Lekalo gate: the php-nativa target adapter (manifest digests + conformance battery)
+lekalo-adapter-test: ## Lekalo gate: the php-nativa target adapter (manifest, conformance battery, scan rows)
 	@$(PHP) bin/build/lekalo-adapter-manifest.php --check
 	@$(LEKALO) adapter test php adapters/php-nativa/adapter.php
+	@bin/build/lekalo-adapter-scan.sh
 
 lekalo-module: ## Lekalo: one module's own report (MODULE=<id>, e.g. blog)
 	@test -n "$(MODULE)" || { echo "usage: make lekalo-module MODULE=<id>   (ids: ls lekalo/modules/)" >&2; exit 1; }

@@ -10,8 +10,12 @@ lekalo adapter test php adapters/php-nativa/adapter.php
 # badge verified protocol=0.3.2 ir=0.2.16
 ```
 
-`make lekalo-adapter-test` runs that battery, and
-`bin/build/lekalo-adapter-manifest.php [--check]` owns the manifest digests.
+`make lekalo-adapter-test` runs that battery, then
+`bin/build/lekalo-adapter-scan.sh`'s scan rows — a real exchange that asserts
+the entry projection, the typed refusal for a path the wire cannot carry, and
+determinism over identical bytes, because the conformance suite has no scan row
+for a 0.3.2 target. `bin/build/lekalo-adapter-manifest.php [--check]` owns the
+manifest digests.
 
 ## What it declares, and what it does not
 
