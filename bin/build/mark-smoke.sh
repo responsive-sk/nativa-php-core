@@ -865,6 +865,48 @@ case " $(group_order) " in
 esac
 sidebar_has 'the child of the nested group is still a child link' 'layout-sidebar__link--child" href="/mark/rest"'
 
+# A THIRD level, which the two-level case cannot fail on: a renderer that drops
+# one level of children looks identical with two groups, because the child at
+# the bottom becomes a link inside the middle one either way. Group three goes
+# inside group two and the child inside group three, so the panel has to draw
+# three toggles, in order, with the child still a child link at the bottom.
+status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav" \
+    --data-urlencode 'label=Smoke Group Three' --data-urlencode 'href=https://example.test/three' \
+    --data-urlencode 'sort_order=98' \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/panel-nav (group three)' 302 "$got"
+
+SMOKE_DEEP="$(dbq DB_CONFIG "SELECT id FROM menu_items WHERE location = 'mark' AND label = 'Smoke Group Three'")"
+
+status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav/$SMOKE_DEEP/parent" \
+    --data-urlencode "parent_item_id=$SMOKE_TWO" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/panel-nav/{id}/parent (group three under group two)' 302 "$got"
+
+status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav/$SMOKE_CHILD/parent" \
+    --data-urlencode "parent_item_id=$SMOKE_DEEP" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/panel-nav/{id}/parent (child under group three)' 302 "$got"
+want 'the child now names group three' "$SMOKE_DEEP" \
+    "$(dbq DB_CONFIG "SELECT parent_item_id FROM menu_items WHERE id = '$SMOKE_CHILD'")"
+
+check 'admin GET /mark (three levels)' '/mark' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+sidebar
+sidebar_has 'the first-level group renders' "data-toggle-group=\"$SMOKE_ONE\""
+sidebar_has 'the second-level group renders' "data-toggle-group=\"$SMOKE_TWO\""
+sidebar_has 'the third-level group renders as a group, not a link' "data-toggle-group=\"$SMOKE_DEEP\""
+case " $(group_order) " in
+    *"$SMOKE_ONE $SMOKE_TWO $SMOKE_DEEP"*) ok 'three groups render outermost first, each inside the previous one' ;;
+    *) bad "the three levels are not nested in order (order: $(group_order))" ;;
+esac
+sidebar_has 'the child at the bottom is still a child link' 'layout-sidebar__link--child" href="/mark/rest"'
+
 # The cycle: the outer group cannot be moved under the group now inside it.
 status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
 ADMIN_TOKEN="$(token)"
@@ -884,7 +926,7 @@ want 'admin POST /mark/settings/panel-nav/{id}/parent back to the top' 302 "$got
 want 'group two is top-level again' '' "$(dbq DB_CONFIG "SELECT parent_item_id FROM menu_items WHERE id = '$SMOKE_TWO'")"
 
 # Clean up through the panel so the next section sees the tree it expects.
-for row in "$SMOKE_CHILD" "$SMOKE_ONE" "$SMOKE_TWO"; do
+for row in "$SMOKE_CHILD" "$SMOKE_DEEP" "$SMOKE_ONE" "$SMOKE_TWO"; do
     status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
     ADMIN_TOKEN="$(token)"
     got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav/$row/delete" \
