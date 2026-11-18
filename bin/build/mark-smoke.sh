@@ -151,6 +151,9 @@ sidebar_has() {
     fi
 }
 
+# How many groups the sidebar block is currently drawing.
+sidebar_groups() { grep -o 'data-toggle-group=' "$TMP/sidebar.html" | wc -l | tr -d ' '; }
+
 check() {
     local label="$1" path="$2" want="$3"
     shift 3
@@ -744,6 +747,112 @@ check 'admin GET /mark (group restored)' '/mark' 200 -b "$ADMIN_JAR" -c "$ADMIN_
 sidebar
 sidebar_has 'the group is back in the sidebar' 'layout-sidebar__children'
 sidebar_has 'the restored group carries its Tags child' 'href="/mark/tags"'
+
+# ---------------------------------------------------------------------------
+# Moving a row under a parent, and moving a child away again
+# ---------------------------------------------------------------------------
+# The add form can create a child; nothing could MOVE one, so fixing a wrong
+# parent meant delete and re-add — losing the icon, the order and the audit
+# trail. The control is one per row (`title="Move under"`) and it offers STORED
+# rows only, which is a measured rule rather than a preference:
+# `menu_items.parent_item_id` is a foreign key into `menu_items`, so a select
+# that offered a declaration (`_blog`) made the panel answer 500 to a value its
+# own form had offered. The depth is one level for the same kind of reason —
+# the renderer emits a group's children as links, so a group inside a group
+# would silently drop its own children.
+check 'admin GET /mark/settings (move controls)' '/mark/settings' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+body_has 'the editor offers a move control per row' 'title="Move under"'
+
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav" \
+    --data-urlencode 'label=Smoke Group One' --data-urlencode 'href=https://example.test/one' \
+    --data-urlencode 'sort_order=95' \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/panel-nav (group one)' 302 "$got"
+
+SMOKE_ONE="$(dbq DB_CONFIG "SELECT id FROM menu_items WHERE location = 'mark' AND label = 'Smoke Group One'")"
+
+status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav" \
+    --data-urlencode 'label=Smoke Group Two' --data-urlencode 'href=https://example.test/two' \
+    --data-urlencode 'sort_order=96' \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/panel-nav (group two)' 302 "$got"
+
+SMOKE_TWO="$(dbq DB_CONFIG "SELECT id FROM menu_items WHERE location = 'mark' AND label = 'Smoke Group Two'")"
+
+status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav" \
+    --data-urlencode 'label=Smoke Child' --data-urlencode 'href=/mark/rest' \
+    --data-urlencode 'sort_order=97' --data-urlencode "parent_item_id=$SMOKE_ONE" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/panel-nav (child under group one)' 302 "$got"
+
+SMOKE_CHILD="$(dbq DB_CONFIG "SELECT id FROM menu_items WHERE location = 'mark' AND label = 'Smoke Child'")"
+
+check 'admin GET /mark (child under group one)' '/mark' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+sidebar
+sidebar_has 'group one renders as a group' "data-toggle-group=\"$SMOKE_ONE\""
+sidebar_has 'the child renders as a child, not a top-level link' 'layout-sidebar__link--child" href="/mark/rest"'
+
+# A declaration cannot be the parent. The foreign key would refuse the write,
+# so the handler has to refuse it in words instead of answering 500.
+status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav/$SMOKE_CHILD/parent" \
+    --data-urlencode 'parent_item_id=_blog' \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/panel-nav/{id}/parent on a declaration refused' 200 "$got"
+body_has 'the refusal explains the row requirement' 'declaration, not a stored row'
+want 'the refused declaration left the child where it was' "$SMOKE_ONE" \
+    "$(dbq DB_CONFIG "SELECT parent_item_id FROM menu_items WHERE id = '$SMOKE_CHILD'")"
+
+# A nested group is refused too: the child has a parent of its own.
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav/$SMOKE_ONE/parent" \
+    --data-urlencode "parent_item_id=$SMOKE_CHILD" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/panel-nav/{id}/parent refused (nested group)' 200 "$got"
+body_has 'the refusal names the one-level rule' 'moved under a top-level item'
+
+# The move that is allowed: the row keeps its id, its icon and its order, which
+# is the reason this is a control and not delete-and-re-add.
+status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
+ADMIN_TOKEN="$(token)"
+got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav/$SMOKE_CHILD/parent" \
+    --data-urlencode "parent_item_id=$SMOKE_TWO" \
+    --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+want 'admin POST /mark/settings/panel-nav/{id}/parent' 302 "$got"
+want 'the child row now names group two' "$SMOKE_TWO" "$(dbq DB_CONFIG "SELECT parent_item_id FROM menu_items WHERE id = '$SMOKE_CHILD'")"
+
+check 'admin GET /mark (child re-parented)' '/mark' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+sidebar
+sidebar_has 'group two now renders as a group' "data-toggle-group=\"$SMOKE_TWO\""
+sidebar_has 'the moved child renders inside it' 'layout-sidebar__link--child" href="/mark/rest"'
+if grep -qF "data-toggle-group=\"$SMOKE_ONE\"" "$TMP/sidebar.html"; then
+    bad 'group one still renders as a group after its child moved'
+else
+    ok 'group one collapsed to a link once its child moved'
+fi
+
+# Clean up through the panel so the next section sees the tree it expects.
+for row in "$SMOKE_CHILD" "$SMOKE_ONE" "$SMOKE_TWO"; do
+    status -b "$ADMIN_JAR" -c "$ADMIN_JAR" "$BASE/mark/settings" > /dev/null
+    ADMIN_TOKEN="$(token)"
+    got="$(status -b "$ADMIN_JAR" -c "$ADMIN_JAR" -X POST "$BASE/mark/settings/panel-nav/$row/delete" \
+        --data-urlencode "_token=$ADMIN_TOKEN" -H "Origin: $BASE")"
+    want "admin POST /mark/settings/panel-nav/{id}/delete ($row)" 302 "$got"
+done
+check 'admin GET /mark (custom rows deleted)' '/mark' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
+sidebar
+want 'the sidebar is back to the Blog group alone' 1 "$(sidebar_groups)"
+if grep -qF 'Smoke Group' "$TMP/sidebar.html"; then
+    bad 'a custom group survived its delete'
+else
+    ok 'the custom groups are gone'
+fi
 
 # ---------------------------------------------------------------------------
 # Content: an ARTICLE is written, served and deleted through the panel
