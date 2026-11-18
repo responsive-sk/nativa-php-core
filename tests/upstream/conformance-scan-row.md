@@ -86,6 +86,42 @@ paths are not checked against the fixture view: that contract would need an
 enumerable source root in the fixture first.
 ```
 
+## Partial support: the missed files have to be visible
+
+`scan.symbols` may be declared `partial`, and the battery currently cannot see
+the difference between a partial scan that admits its boundary and one that
+looks complete. The wire offers exactly two channels for a file a scan did not
+carry:
+
+* `ScanEntry.kind` is a free token, not an enum, so a missed file can be an
+  entry with `kind: "skipped"` and a closed reason code in `detail`. This works
+  only while the path itself is representable.
+* `error.code` / `error.message` (and `error.detail`, 128 bytes) on a refusal.
+  This is the only channel for a path the logical-path grammar cannot carry,
+  because such a path cannot be an entry either — not even a skipped one.
+
+`findings` is not available: `validate_response_payload` admits it only for
+`validate` and `verify`, so a scan result that carries findings is an invalid
+response, not a richer one.
+
+The convention this proposal recommends for a `partial` declaration:
+
+1. every PHP file the scan read nothing from is one `skipped` entry with a
+   stable reason code (`nativa.scan-symlink`, `nativa.scan-vendor` in the PHP
+   adapter), never a silent omission and never a fabricated symbol;
+2. a path the grammar cannot carry refuses the exchange, and the refusal counts
+   the paths and names the first in sorted order, so the refusal is
+   reproducible;
+3. `full` must never emit a `skipped` entry — a full scan that skipped a file
+   has a false declaration, and that is what a later row should catch.
+
+`responsive-sk/nativa-php-core` pins (1) and (2) in its own gate today
+(`scan.partial-skipped`, `scan.partial-refusal-names-file`, next to
+`scan.entries`, `scan.refusal-path-grammar` and `scan.determinism`). Pinning
+(3) in the battery needs a fixture adapter variant that declares `full` and
+answers with a `skipped` entry; that variant does not exist yet, so this patch
+does not claim the rule.
+
 ## Open questions for maintainers
 
 1. Should `scan.symbols: full` require a non-empty entry set? The row cannot
@@ -94,4 +130,8 @@ enumerable source root in the fixture first.
    `scan.symbols: partial` and refuses with `nativa.scan-path-grammar` when a
    path is outside the wire's lowercase grammar. That refusal passes this row
    by design; if maintainers prefer a `partial`-specific row, it belongs in the
-   same phase.
+   same phase and should assert the `skipped` convention above rather than a
+   particular reason vocabulary.
+3. Should a `skipped` entry count as an entry for `constraints.max_entries`?
+   The PHP adapter counts it, so a tree of symlinks cannot push the symbol
+   entries past the bound while the skips stay unreported.

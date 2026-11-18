@@ -12,7 +12,8 @@ lekalo adapter test php adapters/php-nativa/adapter.php
 
 `make lekalo-adapter-test` runs that battery, then
 `bin/build/lekalo-adapter-scan.sh`'s scan rows — a real exchange that asserts
-the entry projection, the typed refusal for a path the wire cannot carry, and
+the entry projection, the `skipped` entries a `partial` scan must show, the
+typed refusal (and the paths it names) for a path the wire cannot carry, and
 determinism over identical bytes, because the conformance suite has no scan row
 for a 0.3.2 target. `bin/build/lekalo-adapter-manifest.php [--check]` owns the
 manifest digests.
@@ -24,7 +25,7 @@ The surface is deliberately small and honest:
 | Operation | Behavior |
 |---|---|
 | `describe` | identity, protocol `0.3.2`, IR `0.2.16`, operations `describe`/`scan`/`validate`/`verify`, transports `file`/`stdin`, read scopes `.lekalo/ir/**`, `src/**`, `modules/**`, `bin/**`, `tests/**`, **no write scope** |
-| `scan` | walks those four roots in the granted project view and reports one entry per PHP declaration — class-like, function, method, constant — named by its namespace-qualified name, from `token_get_all`, so no file is ever executed |
+| `scan` | walks those four roots in the granted project view and reports one entry per PHP declaration — class-like, function, method, constant — named by its namespace-qualified name, from `token_get_all`, so no file is ever executed. A PHP file it does not read (a symlink, or one under `vendor/`) is a `skipped` entry with a closed reason code, so the entry set never reads as the whole tree |
 | `validate` | reads the wire IR from the granted view; refuses a missing, unreadable, unparseable or non-object document with a closed error envelope |
 | `verify` | same probe, then an honest empty finding set |
 
@@ -34,8 +35,10 @@ kernel's tree is `src/Modules/<Name>/<File>.php`. A scan cannot lowercase,
 rename or drop such a path without lying about where a symbol lives, and the
 protocol requires a lossy scan to refuse — so the scanner reports the real
 relative paths and refuses the whole exchange with `nativa.scan-path-grammar`
-when the wire cannot carry them. It never fabricates a path and never quietly
-skips a file. On a tree whose paths the grammar admits, the same scan answers
+when the wire cannot carry them. That refusal counts the paths and names the
+alphabetically first one, because a path the grammar cannot carry cannot be an
+entry either — not even a `skipped` one — so the refusal is the only place it
+can be seen. It never fabricates a path and never quietly skips a file. On a tree whose paths the grammar admits, the same scan answers
 with entries; a member of an anonymous class is reported as a `method` by its
 bare name, because it has no stable qualified name to report.
 

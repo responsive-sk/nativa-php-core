@@ -7,8 +7,9 @@
 # with the wrong entries, would still report `verdict pass`. This step closes
 # that hole. It drives a real exchange — the adapter process, a request
 # envelope on stdin, a project view on disk — and asserts the projection of
-# entries exactly, plus the typed refusal the closed wire requires when a path
-# cannot be represented, plus determinism over identical bytes.
+# entries exactly, plus the skips a `partial` scan has to show, plus the typed
+# refusal the closed wire requires when a path cannot be represented, plus
+# determinism over identical bytes.
 #
 # Rows are named and printed like the conformance suite's, so a failure here
 # reads as a battery row rather than a second vocabulary.
@@ -145,6 +146,55 @@ else
     row_fail "scan.refusal-path-grammar" "expected 'error nativa.scan-path-grammar', saw '$upper'"
 fi
 
+# --- a partial claim must show the files it did not read -------------------
+mkdir -p "$work/view-partial/src/vendor"
+cp "$work/view/src/widget.php" "$work/view-partial/src/widget.php"
+cp "$work/view/src/widget.php" "$work/view-partial/src/vendor/lib.php"
+cat > "$work/outside.php" <<'PHP'
+<?php
+namespace App\Outside;
+
+final class Outside { public function o(): void {} }
+PHP
+ln -s "$work/outside.php" "$work/view-partial/src/linked.php"
+cat > "$work/expected-partial.txt" <<'EXPECTED'
+skipped|nativa.scan-symlink|src/linked.php
+skipped|nativa.scan-vendor|src/vendor/lib.php
+enum|App\Demo\Kind|src/widget.php
+trait|App\Demo\Labelled|src/widget.php
+method|App\Demo\Labelled::label|src/widget.php
+interface|App\Demo\Renderable|src/widget.php
+method|App\Demo\Renderable::render|src/widget.php
+class|App\Demo\Widget|src/widget.php
+class-constant|App\Demo\Widget::DEFAULTS|src/widget.php
+method|App\Demo\Widget::render|src/widget.php
+function|App\Demo\makeWidget|src/widget.php
+EXPECTED
+
+run_scan "$work/view-partial" "$work/partial.json"
+if detail="$("$PHP" "$work/assert.php" "$work/partial.json" "$work/expected-partial.txt" 2>&1)"; then
+    row_pass "scan.partial-skipped"
+else
+    row_fail "scan.partial-skipped" "$detail"
+fi
+
+# --- a path the grammar cannot carry is named in the refusal ---------------
+mkdir -p "$work/view-grammar/src/Upper"
+cp "$work/view/src/widget.php" "$work/view-grammar/src/Upper/Widget.php"
+cp "$work/view/src/sub/util.php" "$work/view-grammar/src/Upper/Helper.php"
+run_scan "$work/view-grammar" "$work/grammar.json"
+grammar="$("$PHP" -r '
+    $response = json_decode((string) file_get_contents($argv[1]), true, 512, JSON_THROW_ON_ERROR);
+    printf("%s\n%s", $response["error"]["code"] ?? "-", $response["error"]["message"] ?? "-");
+' "$work/grammar.json" 2>&1)"
+case "$grammar" in
+    "nativa.scan-path-grammar"*"2 project path(s)"*"src/Upper/Helper.php"*)
+        row_pass "scan.partial-refusal-names-file" ;;
+    *)
+        row_fail "scan.partial-refusal-names-file" \
+            "the refusal must count the paths it could not name and name the first, saw: $(printf '%s' "$grammar" | tr '\n' ' ')" ;;
+esac
+
 # --- identical bytes must produce identical bytes --------------------------
 run_scan "$work/view" "$work/second.json"
 if cmp -s "$work/first.json" "$work/second.json"; then
@@ -157,5 +207,5 @@ if [ "$failures" -ne 0 ]; then
     printf 'verdict fail (%d row(s) failed)\n' "$failures"
     exit 1
 fi
-printf 'verdict pass (3 scan rows)\n'
+printf 'verdict pass (5 scan rows)\n'
 exit 0

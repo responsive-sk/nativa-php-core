@@ -3584,7 +3584,8 @@ function nativaScanSymbols(array $request): array
 
     $entries = [];
     $files = 0;
-    $unrepresentable = null;
+    $unrepresentable = 0;
+    $sample = [];
     $truncated = false;
     $prefixLength = strlen($root) + 1;
 
@@ -3597,16 +3598,15 @@ function nativaScanSymbols(array $request): array
             new \RecursiveDirectoryIterator($base, \FilesystemIterator::SKIP_DOTS)
         );
         foreach ($walk as $file) {
-            if (!$file instanceof \SplFileInfo || !$file->isFile() || $file->isLink()) {
+            if (!$file instanceof \SplFileInfo || !$file->isFile()) {
                 continue;
             }
             if (strtolower($file->getExtension()) !== 'php') {
+                // Out of scope, not missed: this scan claims PHP declarations,
+                // and a stylesheet has none to miss.
                 continue;
             }
             $relative = str_replace('\\', '/', substr($file->getPathname(), $prefixLength));
-            if (str_starts_with($relative, 'vendor/') || str_contains($relative, '/vendor/')) {
-                continue;
-            }
             $files++;
             if ($files > NATIVA_SCAN_MAX_FILES) {
                 return nativaScanRefusal(
@@ -3615,7 +3615,30 @@ function nativaScanSymbols(array $request): array
                 );
             }
             if (!Paths::isLogicalPath($relative)) {
-                $unrepresentable ??= $relative;
+                // The wire cannot name this path, so no entry can carry it --
+                // not even a `skipped` one. The refusal is the diagnostic, and
+                // it has to count what it could not name.
+                $unrepresentable++;
+                if (count($sample) < 3) {
+                    $sample[] = $relative;
+                }
+                continue;
+            }
+            // A PHP file this scan does not read is a miss, and a `partial`
+            // claim has to show it instead of letting a reader mistake the
+            // entry set for the whole tree: one `skipped` entry, closed reason.
+            $reason = null;
+            if ($file->isLink()) {
+                $reason = 'nativa.scan-symlink';
+            } elseif (str_starts_with($relative, 'vendor/') || str_contains($relative, '/vendor/')) {
+                $reason = 'nativa.scan-vendor';
+            }
+            if ($reason !== null) {
+                if (count($entries) >= NATIVA_SCAN_MAX_ENTRIES) {
+                    $truncated = true;
+                    break 2;
+                }
+                $entries[] = ['path' => $relative, 'kind' => 'skipped', 'detail' => $reason];
                 continue;
             }
             $bytes = file_get_contents($file->getPathname());
@@ -3642,12 +3665,16 @@ function nativaScanSymbols(array $request): array
         }
     }
 
-    if ($unrepresentable !== null) {
-        return nativaScanRefusal(
-            'nativa.scan-path-grammar',
-            'the wire logical path grammar cannot carry this project path: '
-                . substr($unrepresentable, 0, 120)
+    if ($unrepresentable > 0) {
+        // Sorted, so the named path does not depend on the walk's directory
+        // order: the refusal has to be the same bytes on every filesystem.
+        sort($sample, SORT_STRING);
+        $message = sprintf(
+            'the wire logical path grammar cannot carry %d project path(s); first: %s',
+            $unrepresentable,
+            implode(', ', $sample)
         );
+        return nativaScanRefusal('nativa.scan-path-grammar', substr($message, 0, 250));
     }
 
     usort($entries, static function (array $a, array $b): int {

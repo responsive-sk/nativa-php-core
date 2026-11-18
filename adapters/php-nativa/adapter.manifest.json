@@ -69,8 +69,8 @@
         "files": [
             {
                 "path": "adapter.php",
-                "digest": "sha256:bb100064cf9ef86d6d1601b5298e9b18168d9eff5cf29264cd1370f4aaa579da",
-                "bytes": 199765
+                "digest": "sha256:6f8938f0b2c1cca2e3f511e14a39ae485973eb6aa9b12ba0e0a76f2cfca98f93",
+                "bytes": 201151
             },
             {
                 "path": "notice.md",
@@ -78,7 +78,7 @@
                 "bytes": 671
             }
         ],
-        "packageDigest": "sha256:2e064c9e3071f5cedf98ce3a14b4838e04371ac804d945bfdbe75b8873a22209",
+        "packageDigest": "sha256:53e6220196c56012124efdd273073e55b16bcc6fae230e45d90bc9d66203bc76",
         "signature": null,
         "signaturePolicy": "unsigned"
     },
@@ -124,7 +124,7 @@
     "schemaVersion": "lekalo/adapter-manifest/v0.6.4",
     "source": {
         "coordinate": "path:adapters/php-nativa",
-        "digest": "sha256:ae033d4480c0f8915af2ff84adab7ccb44ec463f43b1d587205ed0cd23c7222c",
+        "digest": "sha256:cbe62fdaf314103f11bb8f663ba1ed23c7890ce334a6216f2dd1f325d379e243",
         "kind": "path"
     },
     "status": "active"
