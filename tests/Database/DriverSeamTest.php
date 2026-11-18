@@ -39,8 +39,8 @@ final class DriverSeamTest extends TestCase
     #[Test]
     public function sqliteIsTheDefaultAndItsTargetIsAFile(): void
     {
-        self::assertSame(Driver::SQLITE, DatabaseConnectionManager::instance()->driverName());
-        self::assertSame('sqlite:/tmp/probe.db', DsnBuilder::build(Driver::SQLITE, '/tmp/probe.db'));
+        self::assertSame(Driver::Sqlite->value, DatabaseConnectionManager::instance()->driverName());
+        self::assertSame('sqlite:/tmp/probe.db', DsnBuilder::build(Driver::Sqlite, '/tmp/probe.db'));
     }
 
     #[Test]
@@ -48,7 +48,7 @@ final class DriverSeamTest extends TestCase
     {
         self::assertSame(
             'pgsql:host=db;port=5432;dbname=probe',
-            DsnBuilder::build(Driver::PGSQL, 'host=db;port=5432;dbname=probe'),
+            DsnBuilder::build(Driver::Pgsql, 'host=db;port=5432;dbname=probe'),
         );
     }
 

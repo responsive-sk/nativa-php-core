@@ -244,7 +244,7 @@ final class ReadWriteConnectionTest extends TestCase
 
             public function driverName(): string
             {
-                return Driver::SQLITE;
+                return Driver::Sqlite->value;
             }
 
             public function quoteIdentifier(string $identifier): string

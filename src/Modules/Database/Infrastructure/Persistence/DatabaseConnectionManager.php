@@ -183,7 +183,7 @@ final class DatabaseConnectionManager
             }
 
             $key = $name . ':' . $index;
-            $target = Driver::SQLITE === $this->driverName()
+            $target = Driver::Sqlite === $this->driver()
                 ? $this->resolvePath($path)
                 : $path;
 
@@ -234,7 +234,7 @@ final class DatabaseConnectionManager
      */
     private function createConnection(string $name): \PDO
     {
-        if (Driver::SQLITE !== $this->driverName()) {
+        if (Driver::Sqlite !== $this->driver()) {
             $target = $this->env('DB_' . strtoupper($name));
 
             if (null === $target) {
@@ -263,9 +263,14 @@ final class DatabaseConnectionManager
      */
     public function driverName(): string
     {
+        return $this->driver()->value;
+    }
+
+    private function driver(): Driver
+    {
         $configured = $this->env('DB_DRIVER');
 
-        return Driver::assert(null === $configured ? Driver::SQLITE : strtolower($configured));
+        return Driver::fromName($configured ?? Driver::Sqlite->value);
     }
 
     /**
@@ -288,7 +293,7 @@ final class DatabaseConnectionManager
             $options[\PDO::ATTR_STATEMENT_CLASS] = [$this->statementClass, []];
         }
 
-        $driver = $this->driverName();
+        $driver = $this->driver();
         $pdo = new \PDO(DsnBuilder::build($driver, $target), null, null, $options);
 
         SessionSettings::apply($pdo, $driver, $readOnly, $target);

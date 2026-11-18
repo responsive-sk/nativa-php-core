@@ -20,9 +20,9 @@ final class SessionSettings
      * @param string $label what the log line names: the file path for SQLite,
      *                      the module name for a DSN that may carry credentials
      */
-    public static function apply(\PDO $pdo, string $driver, bool $readOnly, string $label): void
+    public static function apply(\PDO $pdo, Driver $driver, bool $readOnly, string $label): void
     {
-        if (Driver::SQLITE === $driver) {
+        if (Driver::Sqlite === $driver) {
             self::applySqlite($pdo, $readOnly, $label);
 
             return;

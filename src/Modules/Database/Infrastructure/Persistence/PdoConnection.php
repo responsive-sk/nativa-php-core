@@ -47,12 +47,17 @@ final readonly class PdoConnection implements ConnectionInterface
 
     public function quoteIdentifier(string $identifier): string
     {
-        return SqlDialect::forDriver($this->driverName())->quoteIdentifier($identifier);
+        return SqlDialect::forDriver($this->driver())->quoteIdentifier($identifier);
     }
 
     public function supportsReturning(): bool
     {
-        return SqlDialect::forDriver($this->driverName())->supportsReturning($this->pdo);
+        return SqlDialect::forDriver($this->driver())->supportsReturning($this->pdo);
+    }
+
+    private function driver(): Driver
+    {
+        return Driver::fromName($this->driverName());
     }
 
     public function query(string $sql): StatementInterface

@@ -22,15 +22,15 @@ final class SqlDialectTest extends TestCase
     #[Test]
     public function quotingEscapesTheQuoteCharacter(): void
     {
-        self::assertSame('"users"', SqlDialect::forDriver(Driver::SQLITE)->quoteIdentifier('users'));
-        self::assertSame('"a""b"', SqlDialect::forDriver(Driver::PGSQL)->quoteIdentifier('a"b'));
+        self::assertSame('"users"', SqlDialect::forDriver(Driver::Sqlite)->quoteIdentifier('users'));
+        self::assertSame('"a""b"', SqlDialect::forDriver(Driver::Pgsql)->quoteIdentifier('a"b'));
     }
 
     #[Test]
     public function theFormsDifferWhereTheEnginesDo(): void
     {
-        $sqlite = SqlDialect::forDriver(Driver::SQLITE);
-        $pgsql = SqlDialect::forDriver(Driver::PGSQL);
+        $sqlite = SqlDialect::forDriver(Driver::Sqlite);
+        $pgsql = SqlDialect::forDriver(Driver::Pgsql);
 
         self::assertSame(
             'INSERT INTO t VALUES (1) ON CONFLICT DO NOTHING',
@@ -53,7 +53,7 @@ final class SqlDialectTest extends TestCase
     #[Test]
     public function theDriverNameIsReportedBack(): void
     {
-        self::assertSame('pgsql', SqlDialect::forDriver(Driver::PGSQL)->driver());
+        self::assertSame('pgsql', SqlDialect::forDriver(Driver::Pgsql)->driver());
     }
 
     #[Test]
@@ -62,7 +62,7 @@ final class SqlDialectTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('mysql');
 
-        SqlDialect::forDriver('mysql');
+        Driver::fromName('mysql');
     }
 
     #[Test]
@@ -71,7 +71,7 @@ final class SqlDialectTest extends TestCase
         $pdo = new \PDO('sqlite::memory:');
 
         self::assertTrue(
-            SqlDialect::forDriver(Driver::SQLITE)->supportsReturning($pdo),
+            SqlDialect::forDriver(Driver::Sqlite)->supportsReturning($pdo),
             'the test engine is newer than 3.35',
         );
     }

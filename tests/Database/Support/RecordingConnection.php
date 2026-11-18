@@ -35,7 +35,7 @@ final class RecordingConnection implements ConnectionInterface
 
     public function driverName(): string
     {
-        return Driver::SQLITE;
+        return Driver::Sqlite->value;
     }
 
     public function quoteIdentifier(string $identifier): string

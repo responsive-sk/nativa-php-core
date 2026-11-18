@@ -15,12 +15,11 @@ namespace Modules\Database\Infrastructure\Persistence;
  */
 final class DsnBuilder
 {
-    public static function build(string $driver, string $target): string
+    public static function build(Driver $driver, string $target): string
     {
-        Driver::assert($driver);
-
-        return Driver::SQLITE === $driver
-            ? 'sqlite:' . $target
-            : 'pgsql:' . $target;
+        return match ($driver) {
+            Driver::Sqlite => 'sqlite:' . $target,
+            Driver::Pgsql => 'pgsql:' . $target,
+        };
     }
 }

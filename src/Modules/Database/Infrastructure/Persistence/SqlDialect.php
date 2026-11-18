@@ -18,18 +18,18 @@ namespace Modules\Database\Infrastructure\Persistence;
  */
 final readonly class SqlDialect
 {
-    private function __construct(private string $driver)
+    private function __construct(private Driver $driver)
     {
     }
 
-    public static function forDriver(string $driver): self
+    public static function forDriver(Driver $driver): self
     {
-        return new self(Driver::assert($driver));
+        return new self($driver);
     }
 
     public function driver(): string
     {
-        return $this->driver;
+        return $this->driver->value;
     }
 
     public function quoteIdentifier(string $identifier): string
@@ -51,14 +51,14 @@ final readonly class SqlDialect
      */
     public function autoIncrementColumn(string $name = 'id'): string
     {
-        return Driver::SQLITE === $this->driver
+        return Driver::Sqlite === $this->driver
             ? $name . ' INTEGER PRIMARY KEY AUTOINCREMENT'
             : $name . ' BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY';
     }
 
     public function currentTimestamp(): string
     {
-        return Driver::SQLITE === $this->driver ? "datetime('now')" : 'now()';
+        return Driver::Sqlite === $this->driver ? "datetime('now')" : 'now()';
     }
 
     /**
@@ -67,7 +67,7 @@ final readonly class SqlDialect
      */
     public function noCase(string $expression): string
     {
-        return Driver::SQLITE === $this->driver
+        return Driver::Sqlite === $this->driver
             ? $expression . ' COLLATE NOCASE'
             : 'LOWER(' . $expression . ')';
     }
@@ -77,7 +77,7 @@ final readonly class SqlDialect
      */
     public function tableExists(): string
     {
-        return Driver::SQLITE === $this->driver
+        return Driver::Sqlite === $this->driver
             ? "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?"
             : 'SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = ?';
     }
@@ -93,7 +93,7 @@ final readonly class SqlDialect
 
     public function supportsReturning(\PDO $pdo): bool
     {
-        if (Driver::SQLITE !== $this->driver) {
+        if (Driver::Sqlite !== $this->driver) {
             return true;
         }
 
