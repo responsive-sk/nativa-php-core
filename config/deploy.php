@@ -39,6 +39,8 @@ declare(strict_types = 1);
  * @return array<string, string|bool>
  */
 return [
-    'theme'     => 'boson',
-    'site_name' => 'responsive.sk',
+    'theme'            => 'boson',
+    'site_name'        => 'responsive.sk',
+    'site_description' => 'Weby a webové aplikácie na mieru.',
+    'timezone'         => 'Europe/Bratislava',
 ];
