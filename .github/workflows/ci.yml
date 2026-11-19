@@ -1117,9 +1117,11 @@ jobs:
   # ---------------------------------------------------------------------------
   # POSTGRES — the engine seam against a real server
   # ---------------------------------------------------------------------------
-  # `tests/Postgres` owns `DB_DRIVER=pgsql` and skips without it; this job sets
-  # the DSNs, migrates thirteen empty databases, and runs that suite with
-  # `--fail-on-skipped`, so a missing server is red rather than a green no-op.
+  # `tests/Postgres` owns `DB_DRIVER=pgsql` and skips without it; this job runs
+  # `make test-postgres`, which sets the driver, migrates thirteen empty schemas
+  # and runs that suite with `--fail-on-skipped`, so a missing server is red
+  # rather than a green no-op. The DSN is passed through from the job env, so
+  # that env stays the only place the credentials are written.
   # The last step walks the operator's path on the same server: a real login
   # with a real CSRF token, the dashboard the metric cards render on, and the
   # outbox drain that clears the security event the login recorded.
@@ -1172,14 +1174,8 @@ jobs:
       - name: Install the catalogue
         run: bin/build/install-catalogue.sh
 
-      - name: Run the migrators on PostgreSQL
-        run: |
-          set -euo pipefail
-          php bin/cms migrate | tee /tmp/pg-migrate.log
-          grep -q 'Migrated:' /tmp/pg-migrate.log
-
-      - name: Run the PostgreSQL suite (a skip is a failure)
-        run: vendor/bin/phpunit --testsuite postgres --fail-on-skipped
+      - name: Run the migrators and the PostgreSQL suite (a skip is a failure)
+        run: make test-postgres PG_DSN="$DB_DSN"
 
       - name: Run the full suite on PostgreSQL
         run: vendor/bin/phpunit --no-coverage --exclude-group postgres
@@ -1300,9 +1296,10 @@ jobs:
   # ---------------------------------------------------------------------------
   # MARIADB — the second real server
   # ---------------------------------------------------------------------------
-  # `tests/MariaDb` owns `DB_DRIVER=mariadb` and skips without it; this job sets
-  # the server DSN, lets the manager create one `nativa_<module>` database per
-  # module, and runs that suite with `--fail-on-skipped`. It then walks the same
+  # `tests/MariaDb` owns `DB_DRIVER=mariadb` and skips without it; this job runs
+  # `make test-mariadb`, which checks the target namespace has no foreign
+  # tables, lets the manager create one `nativa_<module>` database per module,
+  # and runs that suite with `--fail-on-skipped`. It then walks the same
   # operator path as PostgreSQL: login, dashboard, and the outbox drain.
   #
   # The matrix covers the two LTS lines an operator can still deploy: 10.11 and
@@ -1354,14 +1351,8 @@ jobs:
       - name: Install the catalogue
         run: bin/build/install-catalogue.sh
 
-      - name: Run the migrators on MariaDB
-        run: |
-          set -euo pipefail
-          php bin/cms migrate | tee /tmp/mariadb-migrate.log
-          grep -q 'Migrated:' /tmp/mariadb-migrate.log
-
-      - name: Run the MariaDB suite (a skip is a failure)
-        run: vendor/bin/phpunit --testsuite mariadb --fail-on-skipped
+      - name: Run the preflight, the migrators and the MariaDB suite (a skip is a failure)
+        run: make test-mariadb MARIADB_DSN="$DB_DSN" MARIADB_PREFIX="$DB_DATABASE_PREFIX"
 
       - name: Run the full suite on MariaDB
         run: vendor/bin/phpunit --no-coverage --exclude-group mariadb
