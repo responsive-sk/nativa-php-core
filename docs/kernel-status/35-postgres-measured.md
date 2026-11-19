@@ -38,15 +38,28 @@ returns for a boolean column, next to SQLite's `1`/`0`.
 - The SQLite suite is unchanged and green: 1512 tests, and the export gate
   still discovers 947. Static analysis, style and mago are clean.
 
+## The engine-aware suite
+
+`DriverSeamTest` now restores the ambient `DB_DRIVER` instead of leaving it
+unset, which is what made the rest of a PostgreSQL run fall into SQLite while
+`DB_<NAME>` still held DSNs. The PostgreSQL measurement itself lives in
+`tests/Postgres`: it owns `DB_DRIVER=pgsql`, refuses to run without every module
+DSN, and asserts the migrated schemas, a boolean user round trip, all nine
+metric windows and the six ordering shapes. The `postgres` CI job starts a
+`postgres:16` service, creates the thirteen databases, installs the catalogue,
+migrates, runs that suite with `--fail-on-skipped`, then walks the admin flow:
+a real login with a CSRF token, the dashboard, and the outbox drain that
+records the login's security event.
+
+`AuthorMemberSinceTest` also pins the `TIMESTAMPTZ` shapes a reader gets back
+(`+00`, `+01:00`, `-05`), so an offset is treated as the instant it names
+rather than a second wall clock.
+
 ## Still open
 
-- **The whole PHPUnit suite under `DB_DRIVER=pgsql` is not green yet.** Fifteen
-  tests seed SQLite files through `DB_<NAME>` without pinning `DB_DRIVER`, and
-  `DriverSeamTest` unsets it mid-run, so the process half-switches engines
-  depending on test order. A PostgreSQL CI job needs those tests to state
-  their engine, or a separate suite that owns the PostgreSQL setup.
-- **The `postgres:16` job** is therefore still not added.
-- **The `TIMESTAMPTZ` text shape** a reader gets back (timezone offset
-  included) is not asserted anywhere yet.
+- **The full suite is still SQLite-shaped.** Tests that seed their own SQLite
+  files do not yet pin `DB_DRIVER=sqlite`; the PostgreSQL job runs the suite
+  that owns that engine, not the catalogue's 1500 tests. Making every seeding
+  test engine-aware is the next step if the whole suite must run on both.
 - **ClickHouse** stays on SQLite by design: its bridge is not part of this
   port.

@@ -1113,3 +1113,122 @@ jobs:
       # clone HEAD on their own, so this step borrows nothing from the checkout.
       - name: The three deployment-profile branches
         run: make dist-profile-test
+
+  # ---------------------------------------------------------------------------
+  # POSTGRES — the engine seam against a real server
+  # ---------------------------------------------------------------------------
+  # `tests/Postgres` owns `DB_DRIVER=pgsql` and skips without it; this job sets
+  # the DSNs, migrates thirteen empty databases, and runs that suite with
+  # `--fail-on-skipped`, so a missing server is red rather than a green no-op.
+  # The last step walks the operator's path on the same server: a real login
+  # with a real CSRF token, the dashboard the metric cards render on, and the
+  # outbox drain that clears the security event the login recorded.
+  postgres:
+    name: PostgreSQL (real server)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DB_DRIVER: pgsql
+      PGPASSWORD: postgres
+      DB_USERS: "host=127.0.0.1;port=5432;dbname=nativa_users;user=postgres;password=postgres"
+      DB_AUDIT: "host=127.0.0.1;port=5432;dbname=nativa_audit;user=postgres;password=postgres"
+      DB_CONFIG: "host=127.0.0.1;port=5432;dbname=nativa_config;user=postgres;password=postgres"
+      DB_QUEUE: "host=127.0.0.1;port=5432;dbname=nativa_queue;user=postgres;password=postgres"
+      DB_OUTBOX: "host=127.0.0.1;port=5432;dbname=nativa_outbox;user=postgres;password=postgres"
+      DB_BLOG: "host=127.0.0.1;port=5432;dbname=nativa_blog;user=postgres;password=postgres"
+      DB_COMMENTS: "host=127.0.0.1;port=5432;dbname=nativa_comments;user=postgres;password=postgres"
+      DB_FORMS: "host=127.0.0.1;port=5432;dbname=nativa_forms;user=postgres;password=postgres"
+      DB_LOCALES: "host=127.0.0.1;port=5432;dbname=nativa_locales;user=postgres;password=postgres"
+      DB_MEDIA: "host=127.0.0.1;port=5432;dbname=nativa_media;user=postgres;password=postgres"
+      DB_NOTIFICATIONS: "host=127.0.0.1;port=5432;dbname=nativa_notifications;user=postgres;password=postgres"
+      DB_QUESTIONS: "host=127.0.0.1;port=5432;dbname=nativa_questions;user=postgres;password=postgres"
+      DB_RESTPANEL: "host=127.0.0.1;port=5432;dbname=nativa_restpanel;user=postgres;password=postgres"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: json, mbstring, pdo, pdo_pgsql, pdo_sqlite, sqlite3
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Create the module databases
+        run: |
+          set -euo pipefail
+          for db in users audit config queue outbox blog comments forms locales media notifications questions restpanel; do
+            psql -h 127.0.0.1 -U postgres -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = 'nativa_$db'" | grep -q 1 \
+              || createdb -h 127.0.0.1 -U postgres "nativa_$db"
+          done
+          psql -h 127.0.0.1 -U postgres -d postgres -tAc "SELECT count(*) FROM pg_database WHERE datname LIKE 'nativa_%'"
+
+      - name: Install the catalogue
+        run: bin/build/install-catalogue.sh
+
+      - name: Run the migrators on PostgreSQL
+        run: |
+          set -euo pipefail
+          php bin/cms migrate | tee /tmp/pg-migrate.log
+          grep -q 'Migrated:' /tmp/pg-migrate.log
+
+      - name: Run the PostgreSQL suite (a skip is a failure)
+        run: vendor/bin/phpunit --testsuite postgres --fail-on-skipped
+
+      - name: Admin flow on PostgreSQL
+        run: |
+          set -euo pipefail
+          php bin/cms user:operator admin@example.test 'AdminPass123!' --name='PG Admin'
+
+          php -d opcache.enable_cli=0 -S 127.0.0.1:8000 -t public public/index.php > /tmp/pg-server.log 2>&1 &
+          server=$!
+          trap 'kill $server 2>/dev/null || true' EXIT
+
+          for i in $(seq 1 30); do
+            if curl -fsS -o /dev/null http://127.0.0.1:8000/ 2>/dev/null; then break; fi
+            sleep 1
+          done
+
+          status() { curl -s -o /tmp/pg-last.out -w '%{http_code}' -c /tmp/pg-jar -b /tmp/pg-jar "$@"; }
+          token() { awk 'match($0, /name="_token" value="[^"]*"/) { sub(/.*name="_token" value="/, ""); sub(/".*$/, ""); print; exit }' /tmp/pg-last.out; }
+
+          test "$(status http://127.0.0.1:8000/)" = 200
+          test "$(status http://127.0.0.1:8000/blog)" = 200
+          test "$(status http://127.0.0.1:8000/mark)" = 302
+          test "$(status http://127.0.0.1:8000/login)" = 200
+
+          csrf="$(token)"
+          test -n "$csrf"
+          got="$(status -X POST http://127.0.0.1:8000/login \
+            --data-urlencode 'email=admin@example.test' \
+            --data-urlencode 'password=AdminPass123!' \
+            --data-urlencode "_token=$csrf" \
+            -H 'Origin: http://127.0.0.1:8000')"
+          test "$got" = 302
+          test "$(status http://127.0.0.1:8000/mark)" = 200
+          grep -q 'Dashboard\|Sign out' /tmp/pg-last.out
+
+          php bin/cms outbox:process --no-prune
+          pending="$(psql -h 127.0.0.1 -U postgres -d nativa_outbox -tAc "SELECT count(*) FROM outbox_messages WHERE status = 'pending'")"
+          test "$pending" = 0
+          echo "admin flow ok on PostgreSQL (pending outbox: $pending)"

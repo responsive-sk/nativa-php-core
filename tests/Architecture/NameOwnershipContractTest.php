@@ -457,14 +457,18 @@ final class NameOwnershipContractTest extends TestCase
     // 313 with the scenario test (F6): one more `MODULE` guard, no new name. The
     // audit bridge is a class with a method, not a constant, and the path test
     // states its expectations as literals because that is what it asserts.
-    // Was 313. 314 with the field context vocabulary (fields, measured
-    // 2026-11-15): the one declaration is `FieldContextTest::MODULE`, the skip
+    // Was 313. 316 with the field context vocabulary (fields, measured
+    // 2026-11-15) and the PostgreSQL suite fixtures (schemas and metric
+    // windows): the one declaration then was `FieldContextTest::MODULE`, the skip
     // guard every module test file carries — a constant the idiom requires, not
     // a second name for a value that already had one. The eight enum cases
     // (three contexts, and `ResourceAction`'s five tokens moved out of two
     // methods) are not counted here, which is why a new vocabulary of eight
     // tokens moved this number by one and the distinct-name ratchet not at all.
-    private const int MAX_DECLARATIONS = 314;
+    // 316 with the PostgreSQL suite's fixture constants (the schema map and the
+    // metric-window list), which live in tests/ and are counted like every other
+    // declaration. The ratchet moves only with the file that needs it.
+    private const int MAX_DECLARATIONS = 316;
 
     /**
      * 203 → 204 with MAX_DECLARATIONS: `ModuleTreeState::IGNORED` is a name as
@@ -526,7 +530,9 @@ final class NameOwnershipContractTest extends TestCase
     // 232 with the RestPanel transport: `BLOCKED_RANGES` (the ranges no remote
     // service may live in) and `MAX_BODY_BYTES` (the cap that keeps an endless
     // answer from becoming an OOM) name two facts nothing else names.
-    private const int MAX_NAMES = 232;
+    // 234 with the PostgreSQL suite's fixture names, which are new constants
+    // rather than a second name for anything that already had one.
+    private const int MAX_NAMES = 234;
 
     /**
      * `name => modules/<Name>` or `modules/<Group>/<Name>`, resolved once. A

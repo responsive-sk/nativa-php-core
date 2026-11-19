@@ -403,6 +403,11 @@
       "can_fail": true
     },
     {
+      "key": "postgres",
+      "name": "PostgreSQL (real server)",
+      "can_fail": true
+    },
+    {
       "key": "mark-smoke",
       "name": "Admin flows (booted server)",
       "can_fail": true
