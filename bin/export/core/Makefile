@@ -58,11 +58,11 @@ MARIADB_PREFIX ?= nativa_
 
 test-postgres: ## Gate: the PostgreSQL suite against a real server, migrated first (PG_DSN=…)
 	DB_DRIVER=pgsql DB_DSN="$(PG_DSN)" $(PHP) bin/cms migrate
-	DB_DRIVER=pgsql DB_DSN="$(PG_DSN)" $(PHP) vendor/bin/phpunit --testsuite postgres --fail-on-skipped
+	DB_DRIVER=pgsql DB_DSN="$(PG_DSN)" $(COMPOSER) test -- --testsuite postgres --fail-on-skipped
 
 test-mariadb: ## Gate: the MariaDB suite against a real server, migrated first (MARIADB_DSN=…, MARIADB_PREFIX=…)
 	DB_DRIVER=mariadb DB_DSN="$(MARIADB_DSN)" DB_DATABASE_PREFIX="$(MARIADB_PREFIX)" $(PHP) bin/cms migrate
-	DB_DRIVER=mariadb DB_DSN="$(MARIADB_DSN)" DB_DATABASE_PREFIX="$(MARIADB_PREFIX)" $(PHP) vendor/bin/phpunit --testsuite mariadb --fail-on-skipped
+	DB_DRIVER=mariadb DB_DSN="$(MARIADB_DSN)" DB_DATABASE_PREFIX="$(MARIADB_PREFIX)" $(COMPOSER) test -- --testsuite mariadb --fail-on-skipped
 
 ##@ Mago
 mago-spike: ## Informational: run mago lint/analyze/format/guard over the phpstan scope

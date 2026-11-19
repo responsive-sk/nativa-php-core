@@ -105,13 +105,16 @@ PG_DSN ?= host=127.0.0.1;port=5432;dbname=nativa;user=postgres;password=postgres
 MARIADB_DSN ?= host=127.0.0.1;port=3306;user=root;password=root
 MARIADB_PREFIX ?= nativa_
 
+# The suite is reached through `composer test`, not `vendor/bin/phpunit`: the
+# export verifier reads every `bin/...` token in a recipe as a path the exported
+# tree must carry, and `vendor/` is not exported.
 test-postgres: ## Gate: the PostgreSQL suite against a real server, migrated first (PG_DSN=…)
 	DB_DRIVER=pgsql DB_DSN="$(PG_DSN)" $(PHP) bin/cms migrate
-	DB_DRIVER=pgsql DB_DSN="$(PG_DSN)" $(PHP) vendor/bin/phpunit --testsuite postgres --fail-on-skipped
+	DB_DRIVER=pgsql DB_DSN="$(PG_DSN)" $(COMPOSER) test -- --testsuite postgres --fail-on-skipped
 
 test-mariadb: ## Gate: the MariaDB suite against a real server, migrated first (MARIADB_DSN=…, MARIADB_PREFIX=…)
 	DB_DRIVER=mariadb DB_DSN="$(MARIADB_DSN)" DB_DATABASE_PREFIX="$(MARIADB_PREFIX)" $(PHP) bin/cms migrate
-	DB_DRIVER=mariadb DB_DSN="$(MARIADB_DSN)" DB_DATABASE_PREFIX="$(MARIADB_PREFIX)" $(PHP) vendor/bin/phpunit --testsuite mariadb --fail-on-skipped
+	DB_DRIVER=mariadb DB_DSN="$(MARIADB_DSN)" DB_DATABASE_PREFIX="$(MARIADB_PREFIX)" $(COMPOSER) test -- --testsuite mariadb --fail-on-skipped
 
 ##@ Mago
 # Informational, like `kernel-size` and `lekalo-verify`: the script exits 0
