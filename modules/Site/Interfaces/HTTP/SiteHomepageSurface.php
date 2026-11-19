@@ -77,7 +77,7 @@ final class SiteHomepageSurface implements HomepageSurface
                 is_array($copy['audience']['items'] ?? null) ? $copy['audience']['items'] : [],
                 numbered: false,
             )
-            . self::stack($copy)
+            . self::stack($copy, $context)
             . self::contact($copy)
             . '</div>';
     }
@@ -143,8 +143,12 @@ final class SiteHomepageSurface implements HomepageSurface
      *
      * @param array<string, mixed> $copy
      */
-    private static function stack(array $copy): string
+    private static function stack(array $copy, PageContext $context): string
     {
+        // Where the blog lives for this visitor. Same source as the hero's CTA,
+        // so the two links cannot disagree about the blog's address.
+        $blog = rtrim((string) ($context->blogHref ?? '/blog'), '/');
+
         $html = '<section class="site-section" id="technologie">'
             . '<p class="site-section__label">' . self::e(self::text($copy, 'stack', 'label')) . '</p>'
             . '<h2 class="site-section__title">' . self::e(self::text($copy, 'stack', 'title')) . '</h2>'
@@ -163,7 +167,7 @@ final class SiteHomepageSurface implements HomepageSurface
                 . '<ul class="site-stack__lines">';
 
             foreach (is_array($group['lines'] ?? null) ? $group['lines'] : [] as $line) {
-                $html .= is_array($line) ? self::stackLine($line) : '';
+                $html .= is_array($line) ? self::stackLine($line, $blog) : '';
             }
 
             $html .= '</ul></section>';
@@ -173,29 +177,70 @@ final class SiteHomepageSurface implements HomepageSurface
     }
 
     /**
-     * One line of a group: a language with the tools under it, or a single tool
-     * that is not a family — `SQLite` has no children and renders as itself.
+     * One line of a group: a language with the tools under it, or a tool that is
+     * not a family — `SQLite` has no children and renders as itself.
+     *
+     * Every line and every item carries the moment we reach for it, because a
+     * name alone tells a visitor what we have used and not what it is for.
      *
      * @param array<string, mixed> $line
      */
-    private static function stackLine(array $line): string
+    private static function stackLine(array $line, string $blog): string
     {
-        $title = self::e((string) ($line['title'] ?? ''));
+        $html = '<li class="site-stack__line">'
+            . self::stackName('site-stack__line-title', (string) ($line['title'] ?? ''), self::tagHref($blog, $line['tag'] ?? null))
+            . self::stackNote('site-stack__line-note', $line['note'] ?? null);
+
         $items = is_array($line['items'] ?? null) ? $line['items'] : [];
 
         if ([] === $items) {
-            return '<li class="site-stack__line"><span class="site-stack__item">' . $title . '</span></li>';
+            return $html . '</li>';
         }
 
-        $html = '<li class="site-stack__line">'
-            . '<span class="site-stack__line-title">' . $title . '</span>'
-            . '<ul class="site-stack__items">';
+        $html .= '<ul class="site-stack__items">';
 
         foreach ($items as $item) {
-            $html .= '<li class="site-stack__item">' . self::e((string) $item) . '</li>';
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $html .= '<li class="site-stack__item">'
+                . self::stackName('site-stack__item-title', (string) ($item['title'] ?? ''), self::tagHref($blog, $item['tag'] ?? null))
+                . self::stackNote('site-stack__item-note', $item['note'] ?? null)
+                . '</li>';
         }
 
         return $html . '</ul></li>';
+    }
+
+    private static function stackName(string $class, string $text, string $href = ''): string
+    {
+        return '' === $href
+            ? '<span class="' . $class . '">' . self::e($text) . '</span>'
+            : '<a class="' . $class . ' site-stack__link" href="' . self::e($href) . '">' . self::e($text) . '</a>';
+    }
+
+    /**
+     * The tag page for a name, or nothing when the copy names no tag: a link to
+     * `/blog/tags/<tag>` that no post carries is a 404, so the absence of a tag
+     * has to mean an unlinked name rather than a broken one.
+     */
+    private static function tagHref(string $blog, mixed $tag): string
+    {
+        return is_string($tag) && '' !== trim($tag)
+            ? $blog . '/tags/' . rawurlencode($tag)
+            : '';
+    }
+
+    /**
+     * The note is optional: copy that has no sentence for a tool still renders a
+     * tool, so a half-written section is thin rather than broken.
+     */
+    private static function stackNote(string $class, mixed $note): string
+    {
+        return is_string($note) && '' !== trim($note)
+            ? '<span class="' . $class . '">' . self::e($note) . '</span>'
+            : '';
     }
 
     /**
@@ -310,14 +355,18 @@ final class SiteHomepageSurface implements HomepageSurface
         .site-card__number{display:block;margin-bottom:.75rem;font-size:.8rem;letter-spacing:.12em;color:var(--site-accent)}
         .site-card__title{margin:0 0 .5rem;font-size:1.05rem}
         .site-card__text{margin:0;font-size:.95rem;color:var(--site-muted)}
-        .site-stack{display:grid;gap:.75rem;margin:1.5rem 0 0;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr))}
+        .site-stack{display:grid;gap:.75rem;margin:1.5rem 0 0;grid-template-columns:repeat(auto-fit,minmax(17rem,1fr))}
         .site-stack__group{border:1px solid var(--site-line);border-radius:.6rem;padding:1.1rem 1.2rem;background:var(--site-surface)}
         .site-stack__group-title{margin:0 0 .9rem;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--site-accent)}
-        .site-stack__lines{display:grid;gap:.9rem;margin:0;padding:0;list-style:none}
+        .site-stack__lines{display:grid;gap:1.1rem;margin:0;padding:0;list-style:none}
         .site-stack__line{margin:0}
-        .site-stack__line-title{display:block;margin:0 0 .4rem;font-size:.95rem;font-weight:600}
-        .site-stack__items{display:flex;flex-wrap:wrap;gap:.4rem;margin:0;padding:0;list-style:none}
-        .site-stack__item{border:1px solid var(--site-line);border-radius:2rem;padding:.2rem .7rem;font-size:.85rem;color:var(--site-muted)}
+        .site-stack__line-title{display:block;font-size:.95rem;font-weight:600}
+        .site-stack__line-note,.site-stack__item-note{display:block;margin-top:.15rem;font-size:.82rem;line-height:1.45;color:var(--site-muted)}
+        .site-stack__items{display:grid;gap:.6rem;margin:.7rem 0 0;padding:0;list-style:none}
+        .site-stack__item{border-left:2px solid var(--site-line);padding:.05rem 0 .05rem .7rem}
+        .site-stack__item-title{display:block;font-size:.88rem;font-weight:600}
+        .site-stack__link{color:var(--site-accent);text-decoration:none;border-bottom:1px solid transparent}
+        .site-stack__link:hover{border-bottom-color:currentColor}
         .site-contact{border-top:1px solid var(--site-line);padding-top:3rem}
         .site-contact__title{margin:0 0 .75rem;font-size:clamp(1.5rem,3vw,2rem);line-height:1.2}
         .site-contact__text{margin:0;color:var(--site-muted);max-width:36rem}

@@ -124,21 +124,51 @@ final class SiteCopy
                     [
                         'title' => 'Backend',
                         'lines' => [
-                            ['title' => 'PHP 8.5', 'items' => ['Nativa', 'Laravel', 'Symfony', 'Nette']],
-                            ['title' => 'SQLite'],
+                            // `tag` links the name to /blog/tags/<tag>, and only
+                            // where the blog has posts under it: an unused tag
+                            // answers 404, so a guess here would be a dead link.
+                            [
+                                'title' => 'PHP 8.5',
+                                'note' => 'Jazyk, na ktorom stojí celý náš stack.',
+                                'tag' => 'php',
+                                'items' => [
+                                    ['title' => 'Nativa', 'tag' => 'nativa', 'note' => 'Keď má aplikácia vydržať roky a nemá so sebou ťahať aj framework.'],
+                                    ['title' => 'Laravel', 'note' => 'Keď tím klienta Laravel pozná a prevádzka musí ostať v jeho rukách.'],
+                                    ['title' => 'Symfony', 'note' => 'Keď projekt obsahuje viac domén, ktoré si potrebujú vlastné hranice.'],
+                                    ['title' => 'Nette', 'note' => 'Keď preberáme existujúcu Nette aplikáciu a nemá zmysel ju prepisovať.'],
+                                ],
+                            ],
+                            [
+                                'title' => 'SQLite',
+                                'note' => 'Keď sa dáta zmestia do jedného súboru a databázový server je zbytočná položka v rozpočte.',
+                            ],
                         ],
                     ],
                     [
                         'title' => 'Frontend',
                         'lines' => [
-                            ['title' => 'TypeScript', 'items' => ['React', 'Svelte', 'Vue']],
-                            ['title' => 'HTML a CSS bez balíka'],
+                            [
+                                'title' => 'TypeScript',
+                                'note' => 'Keď má rozhranie viac stavov, než sa dá udržať v hlave.',
+                                'items' => [
+                                    ['title' => 'React', 'note' => 'Keď tím React pozná alebo potrebuje komponenty, ktoré už niekto napísal.'],
+                                    ['title' => 'Svelte', 'note' => 'Keď chceme menej kódu v prehliadači a stránka je skôr obsah než dashboard.'],
+                                    ['title' => 'Vue', 'note' => 'Keď projekt preberáme po niekom, kto už Vue používa.'],
+                                ],
+                            ],
+                            [
+                                'title' => 'HTML a CSS bez balíka',
+                                'note' => 'Keď je stránka obsah a pri builde sa nemá čo pokaziť.',
+                            ],
                         ],
                     ],
                     [
                         'title' => 'Rozhrania',
                         'lines' => [
-                            ['title' => 'REST API a integrácie'],
+                            [
+                                'title' => 'REST API a integrácie',
+                                'note' => 'Keď účtovníctvo, sklad alebo e-shop musia hovoriť s tým naším.',
+                            ],
                         ],
                     ],
                 ],
@@ -208,21 +238,51 @@ final class SiteCopy
                     [
                         'title' => 'Backend',
                         'lines' => [
-                            ['title' => 'PHP 8.5', 'items' => ['Nativa', 'Laravel', 'Symfony', 'Nette']],
-                            ['title' => 'SQLite'],
+                            // The posts are Slovak, so English readers are sent
+                            // to the same tag page rather than to a translation
+                            // that does not exist.
+                            [
+                                'title' => 'PHP 8.5',
+                                'note' => 'The language the whole stack stands on.',
+                                'tag' => 'php',
+                                'items' => [
+                                    ['title' => 'Nativa', 'tag' => 'nativa', 'note' => 'When the application has to last for years without dragging a framework along.'],
+                                    ['title' => 'Laravel', 'note' => 'When the client already knows it and running it has to stay in their hands.'],
+                                    ['title' => 'Symfony', 'note' => 'When the project holds several domains that need boundaries of their own.'],
+                                    ['title' => 'Nette', 'note' => 'When we take over an existing Nette application and rewriting it makes no sense.'],
+                                ],
+                            ],
+                            [
+                                'title' => 'SQLite',
+                                'note' => 'When the data fits in one file and a database server is a wasted line in the budget.',
+                            ],
                         ],
                     ],
                     [
                         'title' => 'Frontend',
                         'lines' => [
-                            ['title' => 'TypeScript', 'items' => ['React', 'Svelte', 'Vue']],
-                            ['title' => 'HTML and CSS without a bundle'],
+                            [
+                                'title' => 'TypeScript',
+                                'note' => 'When the interface has more states than anyone can hold in their head.',
+                                'items' => [
+                                    ['title' => 'React', 'note' => 'When the team knows React or needs components someone has already written.'],
+                                    ['title' => 'Svelte', 'note' => 'When we want less code in the browser and the page is content rather than a dashboard.'],
+                                    ['title' => 'Vue', 'note' => 'When we inherit a project from someone already using Vue.'],
+                                ],
+                            ],
+                            [
+                                'title' => 'HTML and CSS without a bundle',
+                                'note' => 'When the page is content and the build has nothing left to break.',
+                            ],
                         ],
                     ],
                     [
                         'title' => 'Interfaces',
                         'lines' => [
-                            ['title' => 'REST APIs and integrations'],
+                            [
+                                'title' => 'REST APIs and integrations',
+                                'note' => 'When accounting, the warehouse or the shop has to talk to ours.',
+                            ],
                         ],
                     ],
                 ],

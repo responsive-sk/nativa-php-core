@@ -135,10 +135,83 @@ final class SiteHomepageTest extends TestCase
         }
 
         self::assertStringContainsString(
-            '<span class="site-stack__item">SQLite</span>',
+            '<span class="site-stack__line-title">SQLite</span>',
             $html,
             'A tool with no family of its own still has to appear.',
         );
+        self::assertStringContainsString(
+            'Keď sa dáta zmestia do jedného súboru',
+            $html,
+            'A tool name alone says what we have used, not when we reach for it.',
+        );
+    }
+
+    /**
+     * The blog is the only place that says how a tool was actually used, so the
+     * name of a tool the blog has written about is a door to those posts. A name
+     * with nothing behind it stays plain text.
+     */
+    #[Test]
+    public function aToolTheBlogHasWrittenAboutOpensThosePosts(): void
+    {
+        $html = $this->page('/');
+
+        self::assertStringContainsString(
+            '<a class="site-stack__item-title site-stack__link" href="/blog/tags/nativa">Nativa</a>',
+            $html,
+            'Nativa has twelve posts behind it; the name should reach them.',
+        );
+        self::assertStringContainsString(
+            'href="/blog/tags/php">PHP 8.5</a>',
+            $html,
+            'PHP is the language those posts are written in, so it links too.',
+        );
+        self::assertStringNotContainsString(
+            'href="/blog/tags/laravel"',
+            $html,
+            'No post carries that tag; /blog/tags/laravel answers 404.',
+        );
+    }
+
+    /**
+     * A tag link is only as good as the posts behind it: `/blog/tags/<tag>` with
+     * nothing tagged answers 404, so the day the last post of a tag is retagged
+     * or removed this fails instead of shipping a dead link from the front door.
+     */
+    #[Test]
+    public function everyStackLinkPointsAtATagTheBlogActuallyUses(): void
+    {
+        $posts = glob(APP_BASE_PATH . '/storage/blog/*.md') ?: [];
+
+        if ([] === $posts) {
+            $this->markTestSkipped('No blog posts on this install — the links have nothing to point at yet.');
+        }
+
+        $tags = [];
+        foreach ($posts as $post) {
+            $frontMatter = (string) file_get_contents($post);
+
+            if (preg_match('/^tags:\s*\[(.*?)\]/m', $frontMatter, $match) !== 1) {
+                continue;
+            }
+
+            foreach (explode(',', $match[1]) as $tag) {
+                $tags[trim($tag, " \t\"'")] = true;
+            }
+        }
+
+        preg_match_all('#href="/blog/tags/([^"]+)"#', $this->page('/'), $matches);
+        $links = array_values(array_unique($matches[1]));
+
+        self::assertNotSame([], $links, 'The stack should link the names the blog has written about.');
+
+        foreach ($links as $tag) {
+            self::assertArrayHasKey(
+                urldecode($tag),
+                $tags,
+                'Nothing in storage/blog is tagged "' . $tag . '", so that link answers 404.',
+            );
+        }
     }
 
     #[Test]
@@ -190,10 +263,24 @@ final class SiteHomepageTest extends TestCase
      * The markup under one line title, up to the end of that line — enough to
      * tell whether a tool sits inside the language or somewhere else on the page.
      */
+    #[Test]
+    public function everyToolCarriesTheMomentWeReachForItInBothLanguages(): void
+    {
+        $sk = $this->page('/');
+        $en = $this->page('/en');
+
+        $slovakNote = 'Keď má aplikácia vydržať roky a nemá so sebou ťahať aj framework.';
+        $englishNote = 'When the application has to last for years without dragging a framework along.';
+
+        self::assertStringContainsString($slovakNote, $sk, 'Nativa needs its sentence in Slovak.');
+        self::assertStringContainsString($englishNote, $en, 'Nativa needs its sentence in English.');
+        self::assertStringNotContainsString($slovakNote, $en, 'The English page must not fall back to the Slovak copy.');
+    }
+
     private static function stackLine(string $html, string $title): string
     {
         preg_match(
-            '/<span class="site-stack__line-title">' . preg_quote($title, '/') . '<\/span>(.*?)<\/ul><\/li>/s',
+            '/<(?:span|a) class="site-stack__line-title[^"]*"(?: href="[^"]*")?>' . preg_quote($title, '/') . '<\/(?:span|a)>(.*?)<\/ul><\/li>/s',
             $html,
             $match,
         );
