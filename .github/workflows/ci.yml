@@ -649,13 +649,13 @@ jobs:
           }
           PHP
 
-      # No `--exclude-group` here any more: `openspec/` is tracked as of
-      # 2026-10-27 (`.gitignore` carries the reversal), so the scenario↔test
-      # binding finds its specs in this checkout, runs, and is held to the same
-      # no-skips rule as everything else. While the tree was gitignored the
-      # check could only skip here and this job had to exclude it by group.
+      # The only group excluded is `postgres`: its suite owns DB_DRIVER=pgsql
+      # and skips without a server, while this job's rule is that a skip is a
+      # red job. The `postgres` job runs it with --fail-on-skipped instead.
+      # Everything else, `openspec/` included, still runs and is held to the
+      # same no-skips rule.
       - name: Run the full suite (kernel + catalogue)
-        run: composer test -- --log-junit /tmp/modules-junit.xml
+        run: composer test -- --log-junit /tmp/modules-junit.xml --exclude-group postgres
 
       # The assertion this job exists for. "OK, but some tests were skipped" is
       # how a deleted guard looks from here, so the JUnit log is read instead of

@@ -7,6 +7,7 @@ namespace Tests\Postgres;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Database\Infrastructure\Persistence\Driver;
 use Modules\Database\Infrastructure\Persistence\SqlDialect;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -23,6 +24,7 @@ use PHPUnit\Framework\TestCase;
  * PHPStan analyses in a kernel-only checkout, so reaching for `Modules\Users`
  * would make the analyser of a tree without that module fail.
  */
+#[Group('postgres')]
 final class PostgresDatabaseTest extends TestCase
 {
     /**
