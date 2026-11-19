@@ -55,7 +55,7 @@ final class BlogCategoriesAction
         );
 
         return Response::html(FrontendLayout::render(
-            'Categories ... ' . BlogServices::brandSuffix(),
+            'Categories — ' . BlogServices::brandSuffix(),
             $content,
             currentPath: $request->getPathInfo(),
             noindex: true,
@@ -104,7 +104,7 @@ final class BlogCategoriesAction
         );
 
         return Response::html(FrontendLayout::render(
-            $category . ' ... ' . BlogServices::brandSuffix(),
+            $category . ' — ' . BlogServices::brandSuffix(),
             $content,
             currentPath: $request->getPathInfo(),
             noindex: true,
@@ -154,7 +154,7 @@ final class BlogCategoriesAction
             . '</section>';
 
         return Response::html(
-            FrontendLayout::render('Not Found ... ' . BlogServices::brandSuffix(), $content, currentPath: $currentPath, noindex: true),
+            FrontendLayout::render('Not Found — ' . BlogServices::brandSuffix(), $content, currentPath: $currentPath, noindex: true),
             404,
         );
     }

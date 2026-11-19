@@ -122,7 +122,7 @@ final class AuthorProfileAction
         $profileUrl = $request->absoluteUrl($this->profilePath($locale, $slug));
 
         return Response::html(FrontendLayout::render(
-            $profile['name'] . ' ... ' . BlogServices::brandSuffix(),
+            $profile['name'] . ' — ' . BlogServices::brandSuffix(),
             $content,
             currentPath: $request->getPathInfo(),
             canonicalUrl: $profileUrl,
@@ -172,7 +172,7 @@ final class AuthorProfileAction
             . '</section>';
 
         return Response::html(
-            FrontendLayout::render('Not Found ... ' . BlogServices::brandSuffix(), $content, currentPath: '/authors/'),
+            FrontendLayout::render('Not Found — ' . BlogServices::brandSuffix(), $content, currentPath: '/authors/'),
             404,
         );
     }

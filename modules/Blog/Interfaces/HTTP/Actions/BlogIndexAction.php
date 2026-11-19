@@ -71,7 +71,7 @@ final class BlogIndexAction
         }
 
         return Response::html(FrontendLayout::render(
-            '' !== $query ? 'Search ... ' . BlogServices::brandSuffix() : 'Blog ... ' . BlogServices::brandSuffix(),
+            '' !== $query ? 'Search — ' . BlogServices::brandSuffix() : 'Blog — ' . BlogServices::brandSuffix(),
             $content,
             currentPath: $request->getPathInfo(),
             canonicalUrl: $canonical,

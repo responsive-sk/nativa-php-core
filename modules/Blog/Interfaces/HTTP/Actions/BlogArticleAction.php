@@ -278,7 +278,7 @@ final class BlogArticleAction
         );
 
         return Response::html(FrontendLayout::render(
-            $title . ' ... ' . BlogServices::brandSuffix(),
+            $title . ' — ' . BlogServices::brandSuffix(),
             $content,
             description: $excerpt,
             currentPath: $request->getPathInfo(),
@@ -615,7 +615,7 @@ final class BlogArticleAction
             . '</section>';
 
         return Response::html(
-            FrontendLayout::render('Not Found ... ' . BlogServices::brandSuffix(), $content, currentPath: $currentPath),
+            FrontendLayout::render('Not Found — ' . BlogServices::brandSuffix(), $content, currentPath: $currentPath),
             404,
         );
     }

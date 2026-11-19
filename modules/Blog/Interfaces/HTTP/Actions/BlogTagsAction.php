@@ -50,7 +50,7 @@ final class BlogTagsAction
         );
 
         return Response::html(FrontendLayout::render(
-            'Tags ... ' . BlogServices::brandSuffix(),
+            'Tags — ' . BlogServices::brandSuffix(),
             $content,
             currentPath: $request->getPathInfo(),
             noindex: true,
@@ -94,7 +94,7 @@ final class BlogTagsAction
         );
 
         return Response::html(FrontendLayout::render(
-            'Tag: ' . $tag . ' ... ' . BlogServices::brandSuffix(),
+            'Tag: ' . $tag . ' — ' . BlogServices::brandSuffix(),
             $content,
             currentPath: $request->getPathInfo(),
             noindex: true,
@@ -163,7 +163,7 @@ final class BlogTagsAction
             . '</section>';
 
         return Response::html(
-            FrontendLayout::render('Not Found ... ' . BlogServices::brandSuffix(), $content, currentPath: $currentPath, noindex: true),
+            FrontendLayout::render('Not Found — ' . BlogServices::brandSuffix(), $content, currentPath: $currentPath, noindex: true),
             404,
         );
     }
