@@ -368,6 +368,26 @@ final class SiteHomepageTest extends TestCase
     }
 
     /**
+     * The hero carries the reference's orb, and it carries it EMPTY: the rings
+     * are built by the theme's script (which the page already loads), and an
+     * empty box renders as a static dot field instead of a hole. It is
+     * decoration, so it is hidden from assistive tech by the markup itself.
+     */
+    #[Test]
+    public function theHeroCarriesTheOrbAsDecorationOnly(): void
+    {
+        $html = $this->page('/');
+
+        self::assertStringContainsString(
+            '<div class="site-orb" data-orb aria-hidden="true"></div>',
+            $html,
+            'The hero must ship an empty, hidden orb — the script fills it.',
+        );
+        self::assertStringContainsString('.site-orb{position:relative', $html, 'The orb needs its own box to size the rings.');
+        self::assertStringContainsString('.site-orb:empty{', $html, 'Without the script the box must still draw something.');
+    }
+
+    /**
      * The stack's picture is the same tree the list renders, and it is NOT part
      * of the first paint: Mermaid arrives only when the figure is scrolled
      * into view, so the six-request number the copy states stays true.

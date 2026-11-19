@@ -834,6 +834,24 @@ final class BosonThemeTest extends TestCase
      * The reference's CSS and artwork are not fetched at runtime, and the
      * inline block cannot carry an at-rule InlineCss strips.
      */
+    /**
+     * The reference's signature mark is a ring of squares that reacts to the
+     * pointer. This port keeps the behaviour in the vendored script — no
+     * runtime, no second request — and it must stay opt-in three ways: the
+     * markup gate, the reduced-motion check, and the viewport gate that stops
+     * the loop when the hero scrolls away.
+     */
+    #[Test]
+    public function theVendoredScriptCarriesTheOrbAndItsGates(): void
+    {
+        $script = (string) file_get_contents(__DIR__ . '/../assets/scripts/boson.js');
+
+        self::assertStringContainsString("'[data-orb]'", $script, 'The orb init must gate on its own markup.');
+        self::assertStringContainsString('prefers-reduced-motion', $script, 'A reader who asked for less motion gets static rings.');
+        self::assertStringContainsString('IntersectionObserver', $script, 'The loop must stop when the hero leaves the viewport.');
+        self::assertStringContainsString('requestAnimationFrame', $script);
+    }
+
     #[Test]
     public function theStylesheetIsSelfContained(): void
     {

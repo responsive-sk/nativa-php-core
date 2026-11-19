@@ -92,6 +92,7 @@ final class SiteHomepageSurface implements HomepageSurface
         $blogHref = self::blogHref($context);
 
         return '<section class="site-hero">'
+            . '<div class="site-hero__copy">'
             . '<p class="site-hero__eyebrow">' . self::e(self::text($copy, 'hero', 'eyebrow')) . '</p>'
             . '<h1 class="site-hero__title">'
             . '<span class="site-hero__title-line">' . self::e(self::text($copy, 'hero', 'title')) . '</span> '
@@ -104,6 +105,13 @@ final class SiteHomepageSurface implements HomepageSurface
             . '<a class="site-button" href="' . self::e($blogHref) . '">'
             . self::e(self::text($copy, 'hero', 'secondary')) . '</a>'
             . '</p>'
+            . '</div>'
+            // The reference's signature mark: an empty box the theme's script
+            // fills with rings of squares that react to the pointer. Empty on
+            // purpose — without the script it is a faint CSS dot field, and
+            // with it nothing is downloaded: the behaviour rides the theme
+            // bundle the page already loads. `aria-hidden`: it is decoration.
+            . '<div class="site-orb" data-orb aria-hidden="true"></div>'
             . '</section>';
     }
 
@@ -501,7 +509,14 @@ final class SiteHomepageSurface implements HomepageSurface
         return <<<'HTML'
         <style nonce="__CSP_NONCE_PLACEHOLDER__">
         .site-home{--site-ink:currentColor;--site-muted:color-mix(in srgb,currentColor 62%,transparent);--site-line:color-mix(in srgb,currentColor 16%,transparent);--site-accent:#2563eb;--site-surface:color-mix(in srgb,currentColor 4%,transparent);max-width:72rem;margin:0 auto;padding:4rem 1.5rem 5rem;line-height:1.6}
-        .site-hero{max-width:48rem;margin-bottom:5rem}
+        .site-hero{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:3rem;align-items:center;margin-bottom:5rem}
+        .site-hero__copy{max-width:48rem}
+        .site-orb{position:relative;aspect-ratio:1;width:100%;max-width:32rem;justify-self:center}
+        .site-orb:empty{background:radial-gradient(circle at center,color-mix(in srgb,currentColor 14%,transparent) 1px,transparent 1.5px) 0 0/14px 14px;border-radius:50%}
+        .site-orb__dot{position:absolute;background:color-mix(in srgb,currentColor 42%,transparent);transform:translate(-50%,-50%);will-change:transform}
+        .site-orb__dot--inner{background:var(--site-accent)}
+        @media (max-width:56rem){.site-hero{grid-template-columns:minmax(0,1fr)}.site-orb{max-width:20rem;order:-1}}
+        @media (prefers-reduced-motion:reduce){.site-orb__dot{will-change:auto}}
         .site-hero__eyebrow{margin:0 0 1rem;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--site-muted)}
         .site-hero__title{margin:0 0 1.5rem;font-size:clamp(2.1rem,5vw,3.5rem);line-height:1.1;letter-spacing:-.02em;text-wrap:balance}
         .site-hero__title-line{display:block}

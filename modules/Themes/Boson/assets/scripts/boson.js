@@ -7,6 +7,8 @@
  * ES2015-safe for the Chrome 70 baseline, and nothing to download.
  *
  *   - header   — adds `bo-header--scrolled` once the page scrolls;
+ *   - orb      — the reference's ring of squares, pushed away from the
+ *                cursor with smoothing (the landing's hero only);
  *   - menu     — syncs the checkbox menu's scroll lock, Escape and outside
  *                click (the open state itself is CSS, so it works with this
  *                file missing);
@@ -26,6 +28,207 @@
         } else {
             fn();
         }
+    }
+
+    /* ------------------------------------------------------------------- orb */
+
+    /**
+     * The reference's signature mark: concentric rings of small squares — the
+     * outer ones quiet, the inner ones in the accent — that are pushed away
+     * from the pointer and settle back with the same lag the Lit element used
+     * (`smoothing`, `animationStrength`, `mouseRadius`).
+     *
+     * Ported as behaviour only: the squares are built here, transformed with
+     * `translate` (no layout work per frame), the loop stops when the hero
+     * leaves the viewport, and a reader who asked for reduced motion gets the
+     * static rings. The markup is an empty `.site-orb`; without this script it
+     * renders as a faint CSS dot field instead of an empty hole.
+     */
+    function initOrb() {
+        var orb = document.querySelector('[data-orb]');
+
+        if (!orb) {
+            return;
+        }
+
+        // Sparser than the reference on purpose. Its logo filled a 550 px
+        // stage with ~1400 squares; a hero decoration does not need a thousand
+        // nodes, and every one of them is a style write while the pointer
+        // moves. This lands at ~220 on a desktop orb.
+        var CONFIG = {
+            base: 520,
+            outerRadius: 250,
+            outerLayers: 7,
+            innerRadius: 72,
+            innerLayers: 3,
+            gapBetweenCircles: 12,
+            spacing: 30,
+            size: 5,
+            mouseRadius: 160,
+            strength: 22,
+            smoothing: 0.5
+        };
+
+        var dots = [];
+        var pointer = { x: -9999, y: -9999 };
+        var target = { x: -9999, y: -9999 };
+        var frame = null;
+        var inView = true;
+        var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        function place(element, x, y, size) {
+            element.style.left = x + 'px';
+            element.style.top = y + 'px';
+            element.style.width = size + 'px';
+            element.style.height = size + 'px';
+            element.style.transform = 'translate(-50%, -50%)';
+            orb.appendChild(element);
+            dots.push({ node: element, x: x, y: y });
+        }
+
+        function ring(radius, count, className, size) {
+            var width = orb.clientWidth;
+            var height = orb.clientHeight;
+
+            for (var i = 0; i < count; i++) {
+                var angle = (i / count) * Math.PI * 2;
+                var dot = document.createElement('span');
+                dot.className = className;
+                place(dot, width / 2 + Math.cos(angle) * radius, height / 2 + Math.sin(angle) * radius, size);
+            }
+        }
+
+        function build() {
+            var width = orb.clientWidth;
+            var height = orb.clientHeight;
+
+            if (!width || !height) {
+                return;
+            }
+
+            orb.innerHTML = '';
+            dots = [];
+
+            var scale = Math.min(width, height) / CONFIG.base;
+            var spacing = CONFIG.spacing * scale;
+            var size = Math.max(2, CONFIG.size * scale);
+            var outerRadius = Math.min(CONFIG.outerRadius * scale, Math.min(width, height) / 2 - 2 * spacing);
+            var outerLayers = width < 320 ? 5 : CONFIG.outerLayers;
+
+            for (var layer = 0; layer < outerLayers; layer++) {
+                var radius = outerRadius - layer * spacing;
+
+                if (radius <= 0) {
+                    break;
+                }
+
+                ring(radius, Math.max(6, Math.floor((2 * Math.PI * radius) / spacing)), 'site-orb__dot', size);
+            }
+
+            // The accent core sits at a fraction of the ring, not "whatever is
+            // left inside the outer layers": at hero sizes those layers reach
+            // the centre, and the subtraction went negative — which is how the
+            // first build rendered 160 grey dots and not one accent square.
+            var innerRadius = Math.max(spacing, Math.min(CONFIG.innerRadius * scale, outerRadius * 0.35));
+            var innerLayers = width < 320 ? 2 : CONFIG.innerLayers;
+
+            for (var i = 0; i < innerLayers; i++) {
+                var inner = innerRadius - i * spacing;
+
+                if (inner <= 2) {
+                    break;
+                }
+
+                ring(inner, Math.max(4, Math.floor((2 * Math.PI * inner) / spacing)), 'site-orb__dot site-orb__dot--inner', size + 1);
+            }
+        }
+
+        function settle() {
+            for (var i = 0; i < dots.length; i++) {
+                dots[i].node.style.transform = 'translate(-50%, -50%)';
+            }
+        }
+
+        function step() {
+            frame = null;
+
+            if (!inView) {
+                return;
+            }
+
+            pointer.x += (target.x - pointer.x) * CONFIG.smoothing;
+            pointer.y += (target.y - pointer.y) * CONFIG.smoothing;
+
+            var radius = CONFIG.mouseRadius;
+            var radiusSq = radius * radius;
+
+            for (var i = 0; i < dots.length; i++) {
+                var dot = dots[i];
+                var dx = dot.x - pointer.x;
+                var dy = dot.y - pointer.y;
+                var distanceSq = dx * dx + dy * dy;
+
+                if (distanceSq >= radiusSq || 0 === distanceSq) {
+                    dot.node.style.transform = 'translate(-50%, -50%)';
+
+                    continue;
+                }
+
+                var distance = Math.sqrt(distanceSq);
+                var push = ((radius - distance) / radius) * CONFIG.strength;
+                var inverse = 0.7 / distance;
+
+                dot.node.style.transform = 'translate(calc(-50% + ' + dx * inverse * push + 'px), calc(-50% + ' + dy * inverse * push + 'px))';
+            }
+
+            schedule();
+        }
+
+        function schedule() {
+            if (null === frame && !reduce) {
+                frame = window.requestAnimationFrame(step);
+            }
+        }
+
+        orb.addEventListener('pointermove', function (event) {
+            var rect = orb.getBoundingClientRect();
+            target.x = event.clientX - rect.left;
+            target.y = event.clientY - rect.top;
+            schedule();
+        });
+
+        orb.addEventListener('pointerleave', function () {
+            target.x = -9999;
+            target.y = -9999;
+
+            if (reduce) {
+                settle();
+            } else {
+                schedule();
+            }
+        });
+
+        if (window.IntersectionObserver) {
+            new window.IntersectionObserver(function (entries) {
+                inView = entries[0].isIntersecting;
+
+                if (inView) {
+                    schedule();
+                }
+            }).observe(orb);
+        }
+
+        var rebuild = null;
+
+        window.addEventListener('resize', function () {
+            window.clearTimeout(rebuild);
+            rebuild = window.setTimeout(function () {
+                build();
+                settle();
+            }, 150);
+        });
+
+        build();
     }
 
     /* ---------------------------------------------------------------- header */
@@ -489,6 +692,7 @@
 
     ready(function () {
         initHeader();
+        initOrb();
         initMenu();
         initAccordion();
         initToc();
