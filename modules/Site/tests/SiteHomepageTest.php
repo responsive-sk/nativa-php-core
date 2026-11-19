@@ -107,6 +107,40 @@ final class SiteHomepageTest extends TestCase
         );
     }
 
+    /**
+     * The stack answers "what would you build this in", so it has to nest:
+     * backend in PHP, with Nativa or Laravel under that language. A visitor who
+     * reads a flat row of chips learns the vocabulary and not the pairing.
+     */
+    #[Test]
+    public function theStackIsReadTopDownGroupThenLanguageThenTools(): void
+    {
+        $html = $this->page('/');
+
+        self::assertStringContainsString(
+            '<h3 class="site-stack__group-title">Backend</h3>',
+            $html,
+            'The stack groups what belongs to a layer before naming tools.',
+        );
+        self::assertStringContainsString('<h3 class="site-stack__group-title">Frontend</h3>', $html);
+
+        $php = self::stackLine($html, 'PHP 8.5');
+        foreach (['Nativa', 'Laravel', 'Symfony', 'Nette'] as $tool) {
+            self::assertStringContainsString($tool, $php, $tool . ' is a PHP framework and belongs under PHP.');
+        }
+
+        $typescript = self::stackLine($html, 'TypeScript');
+        foreach (['React', 'Svelte', 'Vue'] as $tool) {
+            self::assertStringContainsString($tool, $typescript, $tool . ' belongs under TypeScript, not beside it.');
+        }
+
+        self::assertStringContainsString(
+            '<span class="site-stack__item">SQLite</span>',
+            $html,
+            'A tool with no family of its own still has to appear.',
+        );
+    }
+
     #[Test]
     public function theShareImageTheSurfaceNamesActuallyExists(): void
     {
@@ -150,6 +184,23 @@ final class SiteHomepageTest extends TestCase
             $html,
             'English copy under `<html lang="sk">` is a Slovak page as far as a crawler knows.',
         );
+    }
+
+    /**
+     * The markup under one line title, up to the end of that line — enough to
+     * tell whether a tool sits inside the language or somewhere else on the page.
+     */
+    private static function stackLine(string $html, string $title): string
+    {
+        preg_match(
+            '/<span class="site-stack__line-title">' . preg_quote($title, '/') . '<\/span>(.*?)<\/ul><\/li>/s',
+            $html,
+            $match,
+        );
+
+        self::assertArrayHasKey(1, $match, $title . ' must have a line of its own in the stack.');
+
+        return $match[1];
     }
 
     private static function canonical(string $html): string

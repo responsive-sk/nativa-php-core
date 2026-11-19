@@ -23,9 +23,9 @@ namespace Modules\Site\Application;
  *
  * ## Contacts
  *
- * `CONTACT` stays empty until the real address and number are confirmed: the
- * page renders only the rows that have a value, so an unpublished number is an
- * absent line rather than a `mailto:` to nowhere.
+ * `contacts()` is the one place an address or a number is written down. The page
+ * renders only the rows that have a value, so a number that is not confirmed yet
+ * is an absent line rather than a `mailto:` to nowhere.
  */
 final class SiteCopy
 {
@@ -117,7 +117,31 @@ final class SiteCopy
                 'label' => 'Technológie',
                 'title' => 'Na čom to stojí',
                 'text' => 'Vyberáme podľa problému, nie podľa popularity. Všetko, čo nasadíme, viete prevádzkovať aj bez nás.',
-                'items' => ['PHP 8.5', 'SQLite', 'JavaScript a TypeScript', 'HTML a CSS bez balíka', 'REST API a integrácie'],
+                // Group, then language, then what we build with it. A flat list
+                // of chips answered "which words do you know", not "what would
+                // you build this in".
+                'groups' => [
+                    [
+                        'title' => 'Backend',
+                        'lines' => [
+                            ['title' => 'PHP 8.5', 'items' => ['Nativa', 'Laravel', 'Symfony', 'Nette']],
+                            ['title' => 'SQLite'],
+                        ],
+                    ],
+                    [
+                        'title' => 'Frontend',
+                        'lines' => [
+                            ['title' => 'TypeScript', 'items' => ['React', 'Svelte', 'Vue']],
+                            ['title' => 'HTML a CSS bez balíka'],
+                        ],
+                    ],
+                    [
+                        'title' => 'Rozhrania',
+                        'lines' => [
+                            ['title' => 'REST API a integrácie'],
+                        ],
+                    ],
+                ],
             ],
             'contact' => [
                 'label' => 'Kontakt',
@@ -180,7 +204,28 @@ final class SiteCopy
                 'label' => 'Technology',
                 'title' => 'What it stands on',
                 'text' => 'We pick for the problem, not for popularity. Everything we ship, you can run without us.',
-                'items' => ['PHP 8.5', 'SQLite', 'JavaScript and TypeScript', 'HTML and CSS without a bundle', 'REST APIs and integrations'],
+                'groups' => [
+                    [
+                        'title' => 'Backend',
+                        'lines' => [
+                            ['title' => 'PHP 8.5', 'items' => ['Nativa', 'Laravel', 'Symfony', 'Nette']],
+                            ['title' => 'SQLite'],
+                        ],
+                    ],
+                    [
+                        'title' => 'Frontend',
+                        'lines' => [
+                            ['title' => 'TypeScript', 'items' => ['React', 'Svelte', 'Vue']],
+                            ['title' => 'HTML and CSS without a bundle'],
+                        ],
+                    ],
+                    [
+                        'title' => 'Interfaces',
+                        'lines' => [
+                            ['title' => 'REST APIs and integrations'],
+                        ],
+                    ],
+                ],
             ],
             'contact' => [
                 'label' => 'Contact',

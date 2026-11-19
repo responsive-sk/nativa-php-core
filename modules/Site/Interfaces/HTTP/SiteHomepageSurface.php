@@ -133,24 +133,69 @@ final class SiteHomepageSurface implements HomepageSurface
     }
 
     /**
+     * The technology tree: backend in PHP with Nativa or Laravel, frontend in
+     * TypeScript with React, Svelte or Vue.
+     *
+     * A flat row of chips listed every word once — `PHP 8.5`, `SQLite`,
+     * `JavaScript a TypeScript` — and a visitor could not tell which tool went
+     * with which layer. The nesting is the answer to "what do you build this in",
+     * so it is the markup, not a sentence explaining the markup.
+     *
      * @param array<string, mixed> $copy
      */
     private static function stack(array $copy): string
     {
-        $html = '<section class="site-section site-section--split" id="technologie">'
-            . '<div class="site-section__intro">'
+        $html = '<section class="site-section" id="technologie">'
             . '<p class="site-section__label">' . self::e(self::text($copy, 'stack', 'label')) . '</p>'
             . '<h2 class="site-section__title">' . self::e(self::text($copy, 'stack', 'title')) . '</h2>'
             . '<p class="site-section__text">' . self::e(self::text($copy, 'stack', 'text')) . '</p>'
-            . '</div><ul class="site-stack">';
+            . '<div class="site-stack">';
 
-        $items = is_array($copy['stack']['items'] ?? null) ? $copy['stack']['items'] : [];
+        $groups = is_array($copy['stack']['groups'] ?? null) ? $copy['stack']['groups'] : [];
+
+        foreach ($groups as $group) {
+            if (!is_array($group)) {
+                continue;
+            }
+
+            $html .= '<section class="site-stack__group">'
+                . '<h3 class="site-stack__group-title">' . self::e((string) ($group['title'] ?? '')) . '</h3>'
+                . '<ul class="site-stack__lines">';
+
+            foreach (is_array($group['lines'] ?? null) ? $group['lines'] : [] as $line) {
+                $html .= is_array($line) ? self::stackLine($line) : '';
+            }
+
+            $html .= '</ul></section>';
+        }
+
+        return $html . '</div></section>';
+    }
+
+    /**
+     * One line of a group: a language with the tools under it, or a single tool
+     * that is not a family — `SQLite` has no children and renders as itself.
+     *
+     * @param array<string, mixed> $line
+     */
+    private static function stackLine(array $line): string
+    {
+        $title = self::e((string) ($line['title'] ?? ''));
+        $items = is_array($line['items'] ?? null) ? $line['items'] : [];
+
+        if ([] === $items) {
+            return '<li class="site-stack__line"><span class="site-stack__item">' . $title . '</span></li>';
+        }
+
+        $html = '<li class="site-stack__line">'
+            . '<span class="site-stack__line-title">' . $title . '</span>'
+            . '<ul class="site-stack__items">';
 
         foreach ($items as $item) {
             $html .= '<li class="site-stack__item">' . self::e((string) $item) . '</li>';
         }
 
-        return $html . '</ul></section>';
+        return $html . '</ul></li>';
     }
 
     /**
@@ -265,8 +310,14 @@ final class SiteHomepageSurface implements HomepageSurface
         .site-card__number{display:block;margin-bottom:.75rem;font-size:.8rem;letter-spacing:.12em;color:var(--site-accent)}
         .site-card__title{margin:0 0 .5rem;font-size:1.05rem}
         .site-card__text{margin:0;font-size:.95rem;color:var(--site-muted)}
-        .site-stack{display:flex;flex-wrap:wrap;gap:.5rem;margin:0;padding:0;list-style:none}
-        .site-stack__item{border:1px solid var(--site-line);border-radius:2rem;padding:.35rem .9rem;font-size:.9rem;color:var(--site-muted)}
+        .site-stack{display:grid;gap:.75rem;margin:1.5rem 0 0;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr))}
+        .site-stack__group{border:1px solid var(--site-line);border-radius:.6rem;padding:1.1rem 1.2rem;background:var(--site-surface)}
+        .site-stack__group-title{margin:0 0 .9rem;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--site-accent)}
+        .site-stack__lines{display:grid;gap:.9rem;margin:0;padding:0;list-style:none}
+        .site-stack__line{margin:0}
+        .site-stack__line-title{display:block;margin:0 0 .4rem;font-size:.95rem;font-weight:600}
+        .site-stack__items{display:flex;flex-wrap:wrap;gap:.4rem;margin:0;padding:0;list-style:none}
+        .site-stack__item{border:1px solid var(--site-line);border-radius:2rem;padding:.2rem .7rem;font-size:.85rem;color:var(--site-muted)}
         .site-contact{border-top:1px solid var(--site-line);padding-top:3rem}
         .site-contact__title{margin:0 0 .75rem;font-size:clamp(1.5rem,3vw,2rem);line-height:1.2}
         .site-contact__text{margin:0;color:var(--site-muted);max-width:36rem}
