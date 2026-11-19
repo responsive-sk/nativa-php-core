@@ -6,6 +6,8 @@ namespace Modules\Forms\Infrastructure\Persistence\Repositories;
 
 use Modules\Database\Contracts\ConnectionInterface;
 use Modules\Database\Contracts\StatementInterface;
+use Modules\Database\Infrastructure\Persistence\Driver;
+use Modules\Database\Infrastructure\Persistence\SqlDialect;
 use Modules\Forms\Domain\Entities\Form;
 use Modules\Forms\Infrastructure\Persistence\Statement;
 
@@ -19,8 +21,11 @@ use Modules\Forms\Infrastructure\Persistence\Statement;
  */
 final readonly class FormRepository
 {
+    private SqlDialect $dialect;
+
     public function __construct(private ConnectionInterface $connection)
     {
+        $this->dialect = SqlDialect::forDriver(Driver::fromName($connection->driverName()));
     }
 
     public function insert(Form $form): void
@@ -98,7 +103,7 @@ final readonly class FormRepository
     public function listForLocale(string $locale): array
     {
         $stmt = Statement::prepare($this->connection,
-            'SELECT * FROM forms WHERE locale = :locale ORDER BY title COLLATE NOCASE',
+            'SELECT * FROM forms WHERE locale = :locale ORDER BY ' . $this->dialect->noCase('title'),
         );
         $stmt->execute(['locale' => $locale]);
 

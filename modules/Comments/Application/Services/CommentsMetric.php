@@ -16,6 +16,8 @@ use Modules\Comments\Domain\Entities\Comment;
 use Modules\Comments\Infrastructure\Persistence\Statement;
 use Modules\Database\Contracts\ConnectionInterface;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
+use Modules\Database\Infrastructure\Persistence\Driver;
+use Modules\Database\Infrastructure\Persistence\SqlDialect;
 
 /**
  * CommentsMetric — aggregated comment metric cards for the dashboard.
@@ -71,8 +73,9 @@ final readonly class CommentsMetric implements MetricContract
 
     private function countInPeriod(ConnectionInterface $db, string $interval): int
     {
+        $dialect = SqlDialect::forDriver(Driver::fromName($db->driverName()));
         $stmt = Statement::prepare($db,
-            'SELECT COUNT(*) FROM comments WHERE created_at >= datetime(\'now\', :interval)',
+            'SELECT COUNT(*) FROM comments WHERE created_at >= ' . $dialect->shiftedTimestamp(':interval'),
         );
         $stmt->execute([':interval' => $interval]);
 
@@ -81,8 +84,10 @@ final readonly class CommentsMetric implements MetricContract
 
     private function countBetweenPeriods(ConnectionInterface $db, string $fromInterval, string $toInterval): int
     {
+        $dialect = SqlDialect::forDriver(Driver::fromName($db->driverName()));
         $stmt = Statement::prepare($db,
-            'SELECT COUNT(*) FROM comments WHERE created_at >= datetime(\'now\', :from) AND created_at < datetime(\'now\', :to)',
+            'SELECT COUNT(*) FROM comments WHERE created_at >= ' . $dialect->shiftedTimestamp(':from')
+            . ' AND created_at < ' . $dialect->shiftedTimestamp(':to'),
         );
         $stmt->execute([':from' => $fromInterval, ':to' => $toInterval]);
 
@@ -94,8 +99,10 @@ final readonly class CommentsMetric implements MetricContract
      */
     private function countByStatus(ConnectionInterface $db, string $interval): array
     {
+        $dialect = SqlDialect::forDriver(Driver::fromName($db->driverName()));
         $stmt = Statement::prepare($db,
-            'SELECT status, COUNT(*) as cnt FROM comments WHERE created_at >= datetime(\'now\', :interval) GROUP BY status',
+            'SELECT status, COUNT(*) as cnt FROM comments WHERE created_at >= '
+            . $dialect->shiftedTimestamp(':interval') . ' GROUP BY status',
         );
         $stmt->execute([':interval' => $interval]);
 

@@ -5,6 +5,8 @@ declare(strict_types = 1);
 namespace Modules\Forms\Infrastructure\Persistence\Repositories;
 
 use Modules\Database\Contracts\ConnectionInterface;
+use Modules\Database\Infrastructure\Persistence\Driver;
+use Modules\Database\Infrastructure\Persistence\SqlDialect;
 use Modules\Forms\Domain\Entities\FormSubmission;
 use Modules\Forms\Infrastructure\Persistence\Statement;
 
@@ -22,8 +24,11 @@ use Modules\Forms\Infrastructure\Persistence\Statement;
  */
 final readonly class SubmissionRepository
 {
+    private SqlDialect $dialect;
+
     public function __construct(private ConnectionInterface $connection)
     {
+        $this->dialect = SqlDialect::forDriver(Driver::fromName($connection->driverName()));
     }
 
     public function insert(FormSubmission $submission): void
@@ -49,7 +54,8 @@ final readonly class SubmissionRepository
     public function listForForm(string $formId): array
     {
         $stmt = Statement::prepare($this->connection,
-            'SELECT * FROM form_submissions WHERE form_id = :id ORDER BY created_at DESC, rowid DESC',
+            'SELECT * FROM form_submissions WHERE form_id = :id ORDER BY created_at DESC, '
+            . $this->dialect->insertionOrder() . ' DESC',
         );
         $stmt->execute(['id' => $formId]);
 
@@ -130,7 +136,7 @@ final readonly class SubmissionRepository
     {
         $stmt = Statement::prepare($this->connection,
             'SELECT payload FROM form_submissions WHERE form_id = :id'
-            . ' ORDER BY created_at DESC, rowid DESC LIMIT :limit',
+            . ' ORDER BY created_at DESC, ' . $this->dialect->insertionOrder() . ' DESC LIMIT :limit',
         );
         $stmt->bindValue(':id', $formId);
         $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
