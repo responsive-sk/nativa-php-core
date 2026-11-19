@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Themes\Boson\Tests;
 
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Themes\AssetManager;
 use View\InlineCss;
 use View\InlineJs;
@@ -412,6 +413,39 @@ final class BosonThemeTest extends TestCase
         );
 
         $this->assertStringContainsString('href="/en/blog"', (new BosonTheme())->homepage($context));
+    }
+
+    /**
+     * The footer's Blog cell was the one link in the shell with a hardcoded
+     * `/blog`, so an English reader who used the footer left the English tree
+     * — on an `/en` page every other href (search action, locale switcher,
+     * article links) carried the prefix.
+     */
+    #[Test]
+    public function theFooterBlogLinkFollowsTheActiveLocale(): void
+    {
+        $theme = new BosonTheme();
+        // Prefix and languages come from the mapper the theme itself reads, so
+        // this test cannot disagree with the tree about where English lives.
+        $mapper = ContentLocaleServices::mapper();
+        $languages = [$mapper->languageCode('sk_SK'), $mapper->languageCode('en_US')];
+        $english = ShellContext::from(
+            'Boson Test',
+            [],
+            [],
+            $mapper->urlPrefix('en_US') . '/references',
+            null,
+            $mapper->languageCode('en_US'),
+            $languages,
+            false,
+        );
+        $slovak = ShellContext::from('Boson Test', [], [], '/referencie', null, $mapper->languageCode('sk_SK'), $languages, false);
+
+        $this->assertStringContainsString(
+            'bo-footer__social" href="' . $mapper->urlPrefix('en_US') . '/blog"',
+            $theme->footer($english),
+        );
+        $this->assertStringContainsString('bo-footer__social" href="/blog"', $theme->footer($slovak));
     }
 
     /**
