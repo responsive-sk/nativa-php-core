@@ -120,6 +120,11 @@ final class SiteCopy
                 'label' => 'Technológie',
                 'title' => 'Na čom to stojí',
                 'text' => 'Vyberáme podľa problému, nie podľa popularity. Všetko, čo nasadíme, viete prevádzkovať aj bez nás.',
+                // Measured, not asserted: 2026-11-19, this release, Chrome
+                // headless on Slow 4G (1.6 Mbit/s, 150 ms RTT, 4x CPU throttle),
+                // cache disabled, 7 runs: LCP 696-720 ms warm, 1008 ms cold,
+                // 6 requests, 165 kB uncompressed. The bound is the cold run.
+                'fact' => 'Tento web je postavený na tom istom strome: 6 requestov, kritické CSS priamo v HTML a JavaScript až po obsahu. Na pomalom 4G (1,6 Mbit/s, 4× spomalené CPU) sa najväčší prvok vykreslí do 1 s.',
                 // Group, then language, then what we build with it. A flat list
                 // of chips answered "which words do you know", not "what would
                 // you build this in".
@@ -238,6 +243,7 @@ final class SiteCopy
                 'label' => 'Technology',
                 'title' => 'What it stands on',
                 'text' => 'We pick for the problem, not for popularity. Everything we ship, you can run without us.',
+                'fact' => 'This site runs on the same tree: 6 requests, the critical CSS inline in the HTML and JavaScript only after the content. On Slow 4G (1.6 Mbit/s, 4x slower CPU) the largest element paints within 1 s.',
                 'groups' => [
                     [
                         'title' => 'Backend',

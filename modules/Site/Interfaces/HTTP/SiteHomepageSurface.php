@@ -186,7 +186,19 @@ final class SiteHomepageSurface implements HomepageSurface
             $html .= '</ul></section>';
         }
 
-        return $html . '</div></section>';
+        $html .= '</div>';
+
+        // The one number in this section, and it is about THIS page: a measured
+        // sentence is the only kind of performance claim the copy is allowed to
+        // make. The profile is part of the sentence so the number cannot be read
+        // as "loads in 1 s everywhere".
+        $fact = self::text($copy, 'stack', 'fact');
+
+        if ('' !== $fact) {
+            $html .= '<p class="site-section__fact">' . self::e($fact) . '</p>';
+        }
+
+        return $html . '</section>';
     }
 
     /**
@@ -383,6 +395,7 @@ final class SiteHomepageSurface implements HomepageSurface
         .site-section__label{margin:0 0 .5rem;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--site-muted)}
         .site-section__title{margin:0 0 2rem;font-size:clamp(1.5rem,3vw,2.1rem);line-height:1.2;letter-spacing:-.01em}
         .site-section__text{margin:0;color:var(--site-muted)}
+        .site-section__fact{margin:2rem 0 0;padding-top:1.25rem;border-top:1px solid var(--site-line);font-size:.95rem;color:var(--site-muted);max-width:44rem}
         .site-section__more{margin:2rem 0 0;font-weight:600}
         .site-section__more a{color:var(--site-accent);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--site-accent) 40%,transparent)}
         .site-section--split{display:grid;gap:2rem;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}

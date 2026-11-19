@@ -345,6 +345,40 @@ final class SiteHomepageTest extends TestCase
         );
     }
 
+    #[Test]
+    public function theMeasuredRequestCountInTheCopyMatchesTheLanding(): void
+    {
+        // The copy states a measured number ("6 requestov"), so the markup has
+        // to keep making exactly that many requests: the document, the deferred
+        // bundle, the two preloaded fonts and the two icons a desktop browser
+        // asks for. A theme or bundle change that adds a request must fail here
+        // and send someone back to the measurement, not quietly falsify a
+        // published number.
+        $slovak = $this->page('/');
+        $english = $this->page('/en');
+
+        self::assertMatchesRegularExpression('#(\d+) requestov#', $slovak, 'The landing states how many requests it makes.');
+        self::assertMatchesRegularExpression('#(\d+) requests#', $english, 'The English landing states the same.');
+
+        preg_match('#(\d+) requestov#', $slovak, $skCount);
+        preg_match('#(\d+) requests#', $english, $enCount);
+
+        self::assertSame((int) $skCount[1], self::requestsIn($slovak), 'The Slovak number is stale — re-measure before changing it.');
+        self::assertSame((int) $enCount[1], self::requestsIn($english), 'The English number is stale — re-measure before changing it.');
+    }
+
+    /**
+     * The requests a first visit makes, as the markup declares them.
+     */
+    private static function requestsIn(string $html): int
+    {
+        $scripts = preg_match_all('#<script[^>]+src="[^"]+"#', $html);
+        $preloads = preg_match_all('#<link[^>]+rel="preload"#', $html);
+        $icons = preg_match_all('#<link[^>]+rel="icon"#', $html);
+
+        return 1 + $scripts + $preloads + $icons;
+    }
+
     private static function stackLine(string $html, string $title): string
     {
         preg_match(
