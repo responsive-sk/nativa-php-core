@@ -60,7 +60,11 @@ final class FormSubmitActionTest extends TestCase
 
         (new FormsDatabaseMigrator(DatabaseConnectionManager::instance()->connection('forms')))->run($output);
         (new \Modules\Settings\Infrastructure\Persistence\Migrations\SettingsDatabaseMigrator(new \PDO('sqlite:' . $this->dir . '/config.db')))->run($output);
-        (new \Modules\Questions\Infrastructure\Persistence\Migrations\QuestionsDatabaseMigrator(new \PDO('sqlite:' . $this->dir . '/questions.db')))->run($output);
+
+        // Questions is optional and absent from the export profile.
+        if (is_dir(APP_BASE_PATH . '/src/Modules/Questions')) {
+            (new \Modules\Questions\Infrastructure\Persistence\Migrations\QuestionsDatabaseMigrator(new \PDO('sqlite:' . $this->dir . '/questions.db')))->run($output);
+        }
     }
 
     protected function tearDown(): void
