@@ -155,6 +155,11 @@ src/Modules/*
 # syntax after a pattern, so the parentheses became part of it and the rule
 # silently matched nothing.
 /dist/
+# Release artifacts, one directory per build
+# (`bin/build/build-dist.sh --to releases/<UTC-date>`). Same rationale as
+# /dist/: the directory is what gets uploaded and what a rollback points at,
+# not source. Immutability is the rollback story, so it is kept on disk.
+/releases/
 # The theme repository, checked out where `bin/build/sync-themes.sh` looks by
 # default (--from overrides it). A sibling clone is `../nativa-themes`; CI and
 # a fresh checkout use this path, so it must never be committed: the catalogue
