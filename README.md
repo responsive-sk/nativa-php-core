@@ -202,6 +202,61 @@ checkout has the profile file but no `Settings` module to apply it with, so that
 build keeps the kernel defaults and says so — the failure that would matter
 (the module is installed, the profile is wrong) still fails the build.
 
+## Update a running deployment
+
+An update replaces the CODE. It never replaces `storage/`, because that is where
+the site is: `storage/pages/`, `storage/blog/`, `storage/blog-images/`,
+`storage/uploads/` and one SQLite file per module under `storage/data/`. The
+artifact carries a migrated `storage/` skeleton for a first install, so copying
+it over a running site deletes the content and leaves a database-shaped shell
+behind. Measured 2026-10-17: that is exactly what made a rebuilt responsive.sk
+look deleted while nothing had touched the content.
+
+```sh
+# 1. A release is a directory with a provenance stamp, built from HEAD.
+bin/build/build-dist.sh --skip-assets --to releases/2026-11-19
+cat releases/2026-11-19/.build-info                             # VERSION, COMMIT, VENDOR=absent
+( cd releases && find 2026-11-19 -type f -print0 | sort -z | xargs -0 sha256sum > 2026-11-19.sha256 )
+( cd releases && sha256sum -c 2026-11-19.sha256 --quiet )
+
+# 2. Snapshot first, on the server, before anything moves.
+php bin/cms db:export storage/backups/2026-11-19
+tar czf storage/backups/2026-11-19-files.tgz \
+    storage/pages storage/blog storage/blog-images storage/uploads
+
+# 3. Optionally take the site out of service (/mark → Settings → maintenance_mode).
+
+# 4. Code only — rsync with an exclude, never `cp -R`.
+rsync -a --delete --exclude 'storage/' --exclude '.build-info' \
+    releases/2026-11-19/ /var/www/responsive.sk/
+install -m 644 releases/2026-11-19/.build-info /var/www/responsive.sk/.build-info
+
+# 5. Schema on the target (idempotent; the first request would run it anyway).
+php bin/cms migrate
+```
+
+Then hand `storage/` to the PHP user the web server runs as — `chgrp -R www-data
+storage` (or `nginx`, `_www`). An rsync user that owns `storage/` and a SAPI user
+that cannot write it is a 500 on every request, or a 503 once the per-request
+re-migration it triggers hits the timeout.
+
+Verify the update, not just the upload: `curl -s /health` answers 200 with every
+probe healthy, `/` answers 200, and the file counts under `storage/pages`,
+`storage/uploads` and the number of `storage/data/*.db` files are the same as
+before the rsync. A count that dropped is a copy that included `storage/`.
+
+**Do not run `settings:profile` on an update.** `config/deploy.php` describes
+what a *build* starts as; on a running site it would write the build's
+`site_name`, `theme`, `site_description` and `timezone` over whatever the
+operator set in `/mark` → Settings. It belongs to `bin/build/build-dist.sh`
+(which runs it inside the artifact, before the site exists), and nowhere else.
+
+Rollback is the previous release directory plus the snapshot: rsync the older
+`releases/<date>/` back the same way (code only), then
+`php bin/cms db:import storage/backups/<date> --force` if the schema moved. That
+is why the release directory is kept and why it is gitignored rather than
+rebuilt on demand (`/releases/`, next to `/dist/`).
+
 ## The published tree
 
 `responsive-sk/nativa-core` is **generated** from a commit of this tree: the

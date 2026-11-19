@@ -75,9 +75,17 @@ final class HomepageAction
         // title, its description. Nothing installed answers null and the theme's
         // own homepage renders, exactly as before — the kernel is the floor, not
         // the finished page.
-        $homepage = HomepageSurfaceRegistry::first()?->homepage($context);
+        $surface = HomepageSurfaceRegistry::first();
+        $homepage = null === $surface ? null : $surface->homepage($context);
 
-        $content = $homepage?->content ?? ThemeKernel::for($theme)->homepage($context);
+        $content = null === $homepage
+            ? ThemeKernel::for($theme)->homepage($context)
+            : $homepage->content;
+
+        // The landing's own head, where it names one: a title that says what the
+        // site does, alternates for its languages, an absolute share image.
+        $title = null === $homepage ? $siteName : ($homepage->title ?? $siteName);
+        $hreflang = null === $homepage || [] === $homepage->hreflang ? null : $homepage->hreflang;
 
         $homeUrl = $request->absoluteUrl('/');
 
@@ -86,12 +94,12 @@ final class HomepageAction
         // request's, so a kernel with nothing installed still emits a truthful
         // block; Blog's article builders live with the module that owns them.
         return Response::html(FrontendLayout::render(
-            $homepage?->title ?? $siteName,
+            $title,
             $content,
             description: $homepage?->description,
             currentPath: '/',
             lang: $homepage?->lang,
-            hreflangLinks: [] === ($homepage?->hreflang ?? []) ? null : $homepage->hreflang,
+            hreflangLinks: $hreflang,
             canonicalUrl: $homeUrl,
             ogImage: $homepage?->ogImage,
             structuredData: WebsiteStructuredData::website($siteName, $homeUrl),
