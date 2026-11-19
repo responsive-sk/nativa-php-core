@@ -87,7 +87,7 @@ final class SiteHomepageSurface implements HomepageSurface
      */
     private static function hero(array $copy, PageContext $context): string
     {
-        $blogHref = $context->blogHref ?? '/blog';
+        $blogHref = self::blogHref($context);
 
         return '<section class="site-hero">'
             . '<p class="site-hero__eyebrow">' . self::e(self::text($copy, 'hero', 'eyebrow')) . '</p>'
@@ -147,7 +147,7 @@ final class SiteHomepageSurface implements HomepageSurface
     {
         // Where the blog lives for this visitor. Same source as the hero's CTA,
         // so the two links cannot disagree about the blog's address.
-        $blog = rtrim((string) ($context->blogHref ?? '/blog'), '/');
+        $blog = self::blogHref($context);
 
         $html = '<section class="site-section" id="technologie">'
             . '<p class="site-section__label">' . self::e(self::text($copy, 'stack', 'label')) . '</p>'
@@ -269,6 +269,27 @@ final class SiteHomepageSurface implements HomepageSurface
             . '<p class="site-contact__text">' . self::e(self::text($copy, 'contact', 'text')) . '</p>'
             . ('' === $rows ? '' : '<ul class="site-contact__rows">' . $rows . '</ul>')
             . '</section>';
+    }
+
+    /**
+     * The blog in the visitor's language: `/blog` for the default locale,
+     * `/en/blog` for English.
+     *
+     * `PageContext::$blogHref` is the port meant to carry this, but the homepage
+     * context is built without one, so it answers `/blog` for every language and
+     * `/en` sent its readers to the Slovak posts. The prefixes are the locator's
+     * knowledge (`''` for the default, `/en` for the rest), so they come from the
+     * ContentLocale mapper; no mapper means no prefix to claim.
+     */
+    private static function blogHref(PageContext $context): string
+    {
+        if (!class_exists(ContentLocaleServices::class)) {
+            return rtrim($context->blogHref ?? '/blog', '/');
+        }
+
+        $prefix = ContentLocaleServices::mapper()->urlPrefix($context->locale);
+
+        return rtrim($prefix . '/blog', '/');
     }
 
     /**

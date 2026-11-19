@@ -179,6 +179,33 @@ final class SiteHomepageTest extends TestCase
     }
 
     /**
+     * The homepage context carries no `blogHref`, so the CTA defaulted to
+     * `/blog` in every language and `/en` handed its readers the Slovak posts.
+     * The English page has to stay inside `/en`.
+     */
+    #[Test]
+    public function theEnglishLandingKeepsItsBlogLinksInEnglish(): void
+    {
+        $html = $this->page('/en');
+
+        self::assertStringContainsString(
+            'href="/en/blog"',
+            $html,
+            'The English CTA belongs on the English blog.',
+        );
+        self::assertStringNotContainsString(
+            'class="site-button" href="/blog"',
+            $html,
+            'The surface\'s own CTA must not fall back to the Slovak blog.',
+        );
+        self::assertStringNotContainsString(
+            '/blog/tags/',
+            $html,
+            'The English blog has no posts, so tagging nothing is the honest answer.',
+        );
+    }
+
+    /**
      * A tag link is only as good as the posts behind it: `/blog/tags/<tag>` with
      * nothing tagged answers 404, so the day the last post of a tag is retagged
      * or removed this fails instead of shipping a dead link from the front door.

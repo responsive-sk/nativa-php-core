@@ -238,16 +238,16 @@ final class SiteCopy
                     [
                         'title' => 'Backend',
                         'lines' => [
-                            // The posts are Slovak, so English readers are sent
-                            // to the same tag page rather than to a translation
-                            // that does not exist.
+                            // No `tag` here on purpose: the stack links a name to
+                            // `/en/blog/tags/<tag>`, and the English blog has no
+                            // posts yet, so every one of those links would answer
+                            // 404. Slovak copy above carries the tags.
                             [
                                 'title' => 'PHP 8.5',
                                 'note' => 'The language the whole stack stands on.',
-                                'tag' => 'php',
                                 'items' => [
-                                    ['title' => 'Nativa', 'tag' => 'nativa', 'note' => 'When the application has to last for years without dragging a framework along.'],
-                                    ['title' => 'Laravel', 'tag' => 'laravel', 'note' => 'When the client already knows it and running it has to stay in their hands.'],
+                                    ['title' => 'Nativa', 'note' => 'When the application has to last for years without dragging a framework along.'],
+                                    ['title' => 'Laravel', 'note' => 'When the client already knows it and running it has to stay in their hands.'],
                                     ['title' => 'Symfony', 'note' => 'When the project holds several domains that need boundaries of their own.'],
                                     ['title' => 'Nette', 'note' => 'When we take over an existing Nette application and rewriting it makes no sense.'],
                                 ],
