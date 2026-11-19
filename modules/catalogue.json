@@ -76,7 +76,8 @@
             "source": "modules/Docs",
             "requires": [
                 "ContentLocale",
-                "Markdown"
+                "Markdown",
+                "Settings"
             ]
         },
         "Erik": {
@@ -186,6 +187,7 @@
                 "Markdown",
                 "Media",
                 "PageCache",
+                "Settings",
                 "Validation"
             ]
         },
@@ -240,6 +242,10 @@
         },
         "Settings": {
             "source": "modules/Settings",
+            "requires": []
+        },
+        "Site": {
+            "source": "modules/Site",
             "requires": []
         },
         "Uploads": {

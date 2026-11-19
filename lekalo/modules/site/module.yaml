@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "site",
+      "kind": "module",
+      "version": 1,
+      "description": "Site — the landing page the site owns: a `HomepageSurface` the kernel renders at `/`, with its own copy per locale, its own title and description, and its own `site-` markup so no theme’s fallback pitch is served as the front door."
+    }
+  ]
+}
