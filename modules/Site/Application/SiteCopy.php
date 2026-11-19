@@ -78,10 +78,10 @@ final class SiteCopy
         return [
             'lang' => 'sk',
             'hero' => [
-                'eyebrow' => 'Weby ' . "\u{00B7}" . ' e-shopy ' . "\u{00B7}" . ' aplikácie',
+                'eyebrow' => 'Weby ' . "\u{00B7}" . ' aplikácie ' . "\u{00B7}" . ' integrácie',
                 'title' => 'Weby a aplikácie,',
                 'accent' => 'ktoré rastú s vami',
-                'text' => 'Staviame weby, e-shopy a interné aplikácie, ktoré sa načítajú rýchlo a dajú sa spravovať bez programátora ' . "\u{2014}" . ' od prvého návrhu po nasadenie a ďalší rozvoj.',
+                'text' => 'Staviame weby a interné aplikácie na mieru ' . "\u{2014}" . ' od prvého návrhu po nasadenie a ďalší rozvoj.',
                 'primary' => 'Napíšte nám',
                 'secondary' => 'Pozrieť blog',
             ],
@@ -89,8 +89,8 @@ final class SiteCopy
                 'label' => 'Služby',
                 'title' => 'Čo pre vás postavíme',
                 'items' => [
-                    ['title' => 'Weby', 'text' => 'Prezentačné a firemné stránky: rýchle načítanie, čitateľná štruktúra a obsah, ktorý upravíte v administrácii.'],
-                    ['title' => 'E-shopy', 'text' => 'Predaj od produktu po objednávku ' . "\u{2014}" . ' platby, doprava a napojenie na to, čo už používate.'],
+                    ['title' => 'Weby', 'text' => 'Prezentačné a firemné stránky: čitateľná štruktúra a obsah, ktorý upravíte v administrácii.'],
+                    ['title' => 'Integrácie', 'text' => 'Napojenie na to, čo už používate ' . "\u{2014}" . ' účtovníctvo, sklad a rozhrania pre ďalšie systémy.'],
                     ['title' => 'Aplikácie', 'text' => 'Interné nástroje na mieru: evidencie, rezervácie, reporty. Tam, kde tabuľka prestáva stačiť.'],
                     ['title' => 'Rozvoj', 'text' => 'Údržba, meranie a postupné zlepšovanie toho, čo už beží.'],
                 ],
@@ -167,7 +167,7 @@ final class SiteCopy
                         'lines' => [
                             [
                                 'title' => 'REST API a integrácie',
-                                'note' => 'Keď účtovníctvo, sklad alebo e-shop musia hovoriť s tým naším.',
+                                'note' => 'Keď účtovníctvo alebo sklad musia hovoriť s tým naším.',
                             ],
                         ],
                     ],
@@ -182,7 +182,7 @@ final class SiteCopy
             ],
             'seo' => [
                 'title' => $siteName . " \u{2014} weby a aplikácie na mieru",
-                'description' => 'Tvoríme weby, e-shopy a webové aplikácie na mieru ' . "\u{2014}" . ' od prvého návrhu po nasadenie a ďalší rozvoj.',
+                'description' => 'Tvoríme weby, webové aplikácie a integrácie na mieru ' . "\u{2014}" . ' od prvého návrhu po nasadenie a ďalší rozvoj.',
             ],
         ];
     }
@@ -195,10 +195,10 @@ final class SiteCopy
         return [
             'lang' => 'en',
             'hero' => [
-                'eyebrow' => 'Websites ' . "\u{00B7}" . ' online stores ' . "\u{00B7}" . ' apps',
+                'eyebrow' => 'Websites ' . "\u{00B7}" . ' apps ' . "\u{00B7}" . ' integrations',
                 'title' => 'Websites and apps',
                 'accent' => 'that grow with you',
-                'text' => 'We build websites, online stores and internal apps that load fast and can be edited without a programmer ' . "\u{2014}" . ' from the first sketch to launch and beyond.',
+                'text' => 'We build custom websites and internal apps ' . "\u{2014}" . ' from the first sketch to launch and beyond.',
                 'primary' => 'Get in touch',
                 'secondary' => 'Read the blog',
             ],
@@ -206,8 +206,8 @@ final class SiteCopy
                 'label' => 'Services',
                 'title' => 'What we build for you',
                 'items' => [
-                    ['title' => 'Websites', 'text' => 'Company and presentation sites: fast to load, clear structure, content you can edit yourself.'],
-                    ['title' => 'Online stores', 'text' => 'From product to order ' . "\u{2014}" . ' payments, shipping and the systems you already run.'],
+                    ['title' => 'Websites', 'text' => 'Company and presentation sites: clear structure and content you can edit yourself.'],
+                    ['title' => 'Integrations', 'text' => 'Connecting to what you already run ' . "\u{2014}" . ' accounting, the warehouse and other systems.'],
                     ['title' => 'Applications', 'text' => 'Custom internal tools: records, bookings, reports. Where a spreadsheet stops working.'],
                     ['title' => 'Maintenance', 'text' => 'Upkeep, measurement and steady improvement of what is already running.'],
                 ],
@@ -281,7 +281,7 @@ final class SiteCopy
                         'lines' => [
                             [
                                 'title' => 'REST APIs and integrations',
-                                'note' => 'When accounting, the warehouse or the shop has to talk to ours.',
+                                'note' => 'When accounting or the warehouse has to talk to ours.',
                             ],
                         ],
                     ],
@@ -296,7 +296,7 @@ final class SiteCopy
             ],
             'seo' => [
                 'title' => $siteName . " \u{2014} websites and web applications",
-                'description' => 'We build websites, online stores and custom web applications ' . "\u{2014}" . ' from the first sketch to launch and beyond.',
+                'description' => 'We build custom websites, web applications and integrations ' . "\u{2014}" . ' from the first sketch to launch and beyond.',
             ],
         ];
     }

@@ -66,7 +66,7 @@ final class SiteHomepageTest extends TestCase
             'The landing title names what the site does, not only the site name.',
         );
         self::assertStringContainsString(
-            '<meta name="description" content="Tvoríme weby, e-shopy a webové aplikácie na mieru',
+            '<meta name="description" content="Tvoríme weby, webové aplikácie a integrácie na mieru',
             $html,
             'The landing description comes from the surface, not from the site-wide fallback.',
         );
