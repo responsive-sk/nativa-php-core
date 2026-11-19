@@ -1282,6 +1282,71 @@ jobs:
       - name: Run the full suite on MariaDB
         run: vendor/bin/phpunit --no-coverage --exclude-group mariadb
 
+      # The engine-switch path, on real engines: build a clean SQLite source,
+      # export it, then restore it into fresh MariaDB databases. The separate
+      # prefix keeps the audit probe rows from the real-server suite away from
+      # the forced import; `audit_log` is append-only and an empty target must
+      # be left alone. The export/import summaries must agree, and the three
+      # spot checks prove the target has the seeded config and translations
+      # while the audit stayed empty.
+      - name: Export SQLite and import into MariaDB
+        run: |
+          set -euo pipefail
+          mariadb_dsn="$DB_DSN"
+          work=$(mktemp -d)
+          trap 'rm -rf "$work"' EXIT
+
+          modules="audit blog comments config forms locales media notifications outbox questions queue restpanel users"
+          for module in $modules; do
+            upper=$(printf '%s' "$module" | tr '[:lower:]' '[:upper:]')
+            export "DB_${upper}=$work/$module.db"
+          done
+          unset DB_DSN
+          export DB_DRIVER=sqlite
+
+          php bin/cms migrate > /tmp/mariadb-transfer-source.log
+          php bin/cms db:export "$work/export" | tee /tmp/mariadb-transfer-export.log
+          grep -q '13 database(s), 31 table(s)' /tmp/mariadb-transfer-export.log
+
+          for module in $modules; do
+            upper=$(printf '%s' "$module" | tr '[:lower:]' '[:upper:]')
+            unset "DB_${upper}"
+          done
+          export DB_DRIVER=mariadb
+          export DB_DSN="$mariadb_dsn"
+          export DB_DATABASE_PREFIX=nativa_xfer_
+
+          php bin/cms db:import "$work/export" --force | tee /tmp/mariadb-transfer-import.log
+          exported=$(sed -n 's/^db:export: //p' /tmp/mariadb-transfer-export.log)
+          imported=$(sed -n 's/^db:import: //p' /tmp/mariadb-transfer-import.log)
+          test -n "$exported"
+          test "$exported" = "$imported"
+
+          php <<'PHP'
+          <?php
+          require 'vendor/autoload.php';
+          require 'src/init.php';
+
+          $manager = Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager::instance();
+          $checks = [
+              'config' => ['settings', 1],
+              'locales' => ['translations', 1],
+              'audit' => ['audit_log', 0],
+          ];
+
+          foreach ($checks as $database => [$table, $minimum]) {
+              $count = (int) $manager->connection($database)->query("SELECT COUNT(*) FROM {$table}")->fetchColumn();
+              printf("%s.%s=%d\n", $database, $table, $count);
+
+              if ($count < $minimum || ('audit' === $database && 0 !== $count)) {
+                  fwrite(STDERR, "unexpected {$database}.{$table} count: {$count}\n");
+                  exit(1);
+              }
+          }
+          PHP
+
+          echo "SQLite -> MariaDB transfer ok"
+
       - name: Admin flow on MariaDB
         run: |
           set -euo pipefail
