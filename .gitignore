@@ -19,6 +19,10 @@
 /storage/data/*.db-journal
 /storage/data/*.db-wal
 /storage/data/*.db-shm
+# The engine the Settings panel writes into storage/config/database.json. It
+# holds a DSN with a password, so it is runtime state: never committed, and
+# never carried into the export (which is built from tracked files).
+/storage/config/*.json
 # The Blog taxonomy registry is the same kind of thing: a running site writes
 # it (BlogServices::taxonomy()->createCategory()), CategoriesManageAction reads
 # it back, and TaxonomyRegistryTest snapshots and restores it as SHARED runtime
