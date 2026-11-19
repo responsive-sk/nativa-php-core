@@ -1145,19 +1145,7 @@ jobs:
     env:
       DB_DRIVER: pgsql
       PGPASSWORD: postgres
-      DB_USERS: "host=127.0.0.1;port=5432;dbname=nativa_users;user=postgres;password=postgres"
-      DB_AUDIT: "host=127.0.0.1;port=5432;dbname=nativa_audit;user=postgres;password=postgres"
-      DB_CONFIG: "host=127.0.0.1;port=5432;dbname=nativa_config;user=postgres;password=postgres"
-      DB_QUEUE: "host=127.0.0.1;port=5432;dbname=nativa_queue;user=postgres;password=postgres"
-      DB_OUTBOX: "host=127.0.0.1;port=5432;dbname=nativa_outbox;user=postgres;password=postgres"
-      DB_BLOG: "host=127.0.0.1;port=5432;dbname=nativa_blog;user=postgres;password=postgres"
-      DB_COMMENTS: "host=127.0.0.1;port=5432;dbname=nativa_comments;user=postgres;password=postgres"
-      DB_FORMS: "host=127.0.0.1;port=5432;dbname=nativa_forms;user=postgres;password=postgres"
-      DB_LOCALES: "host=127.0.0.1;port=5432;dbname=nativa_locales;user=postgres;password=postgres"
-      DB_MEDIA: "host=127.0.0.1;port=5432;dbname=nativa_media;user=postgres;password=postgres"
-      DB_NOTIFICATIONS: "host=127.0.0.1;port=5432;dbname=nativa_notifications;user=postgres;password=postgres"
-      DB_QUESTIONS: "host=127.0.0.1;port=5432;dbname=nativa_questions;user=postgres;password=postgres"
-      DB_RESTPANEL: "host=127.0.0.1;port=5432;dbname=nativa_restpanel;user=postgres;password=postgres"
+      DB_DSN: "host=127.0.0.1;port=5432;dbname=nativa;user=postgres;password=postgres"
 
     steps:
       - name: Checkout code
@@ -1174,14 +1162,12 @@ jobs:
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 
-      - name: Create the module databases
+      - name: Create the shared database
         run: |
           set -euo pipefail
-          for db in users audit config queue outbox blog comments forms locales media notifications questions restpanel; do
-            psql -h 127.0.0.1 -U postgres -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = 'nativa_$db'" | grep -q 1 \
-              || createdb -h 127.0.0.1 -U postgres "nativa_$db"
-          done
-          psql -h 127.0.0.1 -U postgres -d postgres -tAc "SELECT count(*) FROM pg_database WHERE datname LIKE 'nativa_%'"
+          psql -h 127.0.0.1 -U postgres -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = 'nativa'" | grep -q 1 \
+            || createdb -h 127.0.0.1 -U postgres nativa
+          psql -h 127.0.0.1 -U postgres -d postgres -tAc "SELECT count(*) FROM pg_database WHERE datname = 'nativa'"
 
       - name: Install the catalogue
         run: bin/build/install-catalogue.sh
@@ -1232,6 +1218,6 @@ jobs:
           grep -q 'Dashboard\|Sign out' /tmp/pg-last.out
 
           php bin/cms outbox:process --no-prune
-          pending="$(psql -h 127.0.0.1 -U postgres -d nativa_outbox -tAc "SELECT count(*) FROM outbox_messages WHERE status = 'pending'")"
+          pending="$(psql -h 127.0.0.1 -U postgres -d nativa -tAc "SELECT count(*) FROM outbox.outbox_messages WHERE status = 'pending'")"
           test "$pending" = 0
           echo "admin flow ok on PostgreSQL (pending outbox: $pending)"

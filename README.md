@@ -30,7 +30,7 @@ over the per-round boot log kept in `docs/kernel-status/`.
 
 A surface that needs a module is a surface that belongs to a module. The kernel
 owns: routing, the request/response pair, the middleware pipeline and its
-discovery, the migrator runner, the SQLite connection manager, the asset
+discovery, the migrator runner, the database connection manager, the asset
 resolver, markdown rendering, the error pages and the SEO text surfaces
 (`/robots.txt`, `/sitemap.xml`) — degraded to what they can answer with nothing
 installed.
@@ -68,14 +68,31 @@ PHPUnit). It is not a prerequisite: `src/init.php` installs a PSR-4 fallback
 loader for the tree that has none, and the CI job called "Boot (kernel-only, no
 vendor)" exists precisely to keep that claim honest.
 
-The first request (or `php bin/cms migrate`) builds the databases EMPTY, so a
-fresh tree has no account and `/mark` answers 403. Create the first
-administrator — the admin role and the five permissions with it — in one line:
+The first request (or `php bin/cms migrate`) builds the databases or module
+schemas EMPTY, so a fresh tree has no account and `/mark` answers 403. Create
+the first administrator — the admin role and the five permissions with it — in
+one line:
 
 ```sh
 php bin/cms user:operator                                  # admin@example.test / admin1234
 php bin/cms user:operator you@example.com 'your-password'  # your own credentials
 ```
+
+## Database engines
+
+SQLite is the default: one file per module under `storage/data/`. PostgreSQL
+uses one database for every module. Each module gets a schema named after it,
+created and selected by the manager on first connection, so unqualified table
+names and the existing migrations stay unchanged.
+
+```env
+DB_DRIVER=pgsql
+DB_DSN=host=127.0.0.1;port=5432;dbname=nativa;user=nativa;password=secret
+```
+
+The database role needs `CREATE` on the database to create the module schemas.
+`php bin/cms migrate` builds every schema, and `db:export` / `db:import` keep
+working one module at a time because each connection sees only its own schema.
 
 Commit messages carry no agent footer (the nativa-minimal convention) —
 after cloning, enable the enforcer: `cp bin/git-hooks/commit-msg .git/hooks/commit-msg`.
