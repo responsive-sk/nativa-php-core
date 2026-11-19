@@ -89,6 +89,18 @@ final class HomepageAction
 
         $homeUrl = $request->absoluteUrl('/');
 
+        // A translated landing is its own page. The canonical used to be `/` for
+        // every language, so `/en` told a crawler that the English page IS the
+        // Slovak one while its `hreflang` alternates said otherwise — and a
+        // canonical that contradicts the alternates wins, dropping the English
+        // home from the index. The surface already answers where each language
+        // lives (`hreflang`); the canonical is that same answer for the page's
+        // own language. `/sk` resolves to `/`, which is its canonical alias.
+        $lang = $homepage?->lang;
+        $canonicalUrl = null !== $lang && isset($homepage->hreflang[$lang])
+            ? $homepage->hreflang[$lang]
+            : $homeUrl;
+
         // The home surface announces the site itself (Organization + WebSite,
         // with a SearchAction). The name is the port's answer, the URL the
         // request's, so a kernel with nothing installed still emits a truthful
@@ -100,7 +112,7 @@ final class HomepageAction
             currentPath: '/',
             lang: $homepage?->lang,
             hreflangLinks: $hreflang,
-            canonicalUrl: $homeUrl,
+            canonicalUrl: $canonicalUrl,
             ogImage: $homepage?->ogImage,
             structuredData: WebsiteStructuredData::website($siteName, $homeUrl),
             theme: $theme,

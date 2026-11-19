@@ -113,6 +113,31 @@ final class SiteHomepageTest extends TestCase
         self::assertFileExists(APP_BASE_PATH . '/public' . SiteCopy::shareImage(), 'The head points at a file the deployment must serve.');
     }
 
+    /**
+     * A translated landing is its own page. Before this, `/en` carried the same
+     * canonical and og:url as `/`, so the English page told a crawler it WAS the
+     * Slovak one — and a canonical that contradicts `hreflang` wins, taking the
+     * English home out of the index while every gate stayed green.
+     */
+    #[Test]
+    public function theCanonicalIsTheLanguagesOwnUrlAndNotTheDefaultOne(): void
+    {
+        $base = Request::create('GET', '/')->absoluteUrl('/');
+
+        self::assertSame($base, self::canonical($this->page('/')), 'The default locale owns `/`.');
+        self::assertSame($base, self::canonical($this->page('/sk')), '`/sk` is an alias of `/`, and says so.');
+        self::assertSame(
+            $base . 'en/',
+            self::canonical($this->page('/en')),
+            'The English landing must not claim to be the Slovak one.',
+        );
+        self::assertStringContainsString(
+            '<meta property="og:url" content="' . $base . 'en/">',
+            $this->page('/en'),
+            'og:url mirrors the canonical; a scraper that disagrees with it shows the wrong language.',
+        );
+    }
+
     #[Test]
     public function theEnglishRootRendersTheEnglishCopy(): void
     {
@@ -125,6 +150,13 @@ final class SiteHomepageTest extends TestCase
             $html,
             'English copy under `<html lang="sk">` is a Slovak page as far as a crawler knows.',
         );
+    }
+
+    private static function canonical(string $html): string
+    {
+        preg_match('/<link rel="canonical" href="([^"]*)">/', $html, $match);
+
+        return $match[1] ?? '';
     }
 
     private function page(string $path): string
