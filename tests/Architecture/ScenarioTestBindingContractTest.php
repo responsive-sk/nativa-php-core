@@ -240,14 +240,15 @@ final class ScenarioTestBindingContractTest extends TestCase
 
         self::assertIsInt($jobs, 'The job keys are not where this check looks for them.');
         self::assertSame(
-            15,
+            16,
             $jobs,
-            'CI runs 15 jobs. The 15th is the PostgreSQL gate added with the engine-seam suite and'
-            . ' its registry pin; the optional ClickHouse smoke is the 14th (`continue-on-error`), not'
-            . ' a gate this binding rides in. Grow the toolchain on purpose and raise this number in'
-            . ' that change, not silently here. It fell from 16 when the themes-check job retired'
-            . ' with the theme import, and to 14 when the extract-check job retired with the upstream'
-            . ' comparison; a ratchet only moves that way when a job is deleted on purpose.',
+            'CI runs 16 jobs. The 15th is the PostgreSQL gate added with the engine-seam suite and'
+            . ' its registry pin; the 16th is the MariaDB gate with the same contract. The optional'
+            . ' ClickHouse smoke is the 14th (`continue-on-error`), not a gate this binding rides in.'
+            . ' Grow the toolchain on purpose and raise this number in that change, not silently here.'
+            . ' It fell from 16 when the themes-check job retired with the theme import, and to 14 when'
+            . ' the extract-check job retired with the upstream comparison; a ratchet only moves that'
+            . ' way when a job is deleted on purpose.',
         );
     }
 

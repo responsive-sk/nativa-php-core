@@ -1221,3 +1221,111 @@ jobs:
           pending="$(psql -h 127.0.0.1 -U postgres -d nativa -tAc "SELECT count(*) FROM outbox.outbox_messages WHERE status = 'pending'")"
           test "$pending" = 0
           echo "admin flow ok on PostgreSQL (pending outbox: $pending)"
+
+  # ---------------------------------------------------------------------------
+  # MARIADB — the second real server
+  # ---------------------------------------------------------------------------
+  # `tests/MariaDb` owns `DB_DRIVER=mariadb` and skips without it; this job sets
+  # the server DSN, lets the manager create one `nativa_<module>` database per
+  # module, and runs that suite with `--fail-on-skipped`. It then walks the same
+  # operator path as PostgreSQL: login, dashboard, and the outbox drain.
+  mariadb:
+    name: MariaDB (real server)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DB_DRIVER: mariadb
+      DB_DSN: "host=127.0.0.1;port=3306;user=root;password=root"
+      DB_DATABASE_PREFIX: nativa_
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: json, mbstring, pdo, pdo_mysql, pdo_sqlite, sqlite3
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Install the catalogue
+        run: bin/build/install-catalogue.sh
+
+      - name: Run the migrators on MariaDB
+        run: |
+          set -euo pipefail
+          php bin/cms migrate | tee /tmp/mariadb-migrate.log
+          grep -q 'Migrated:' /tmp/mariadb-migrate.log
+
+      - name: Run the MariaDB suite (a skip is a failure)
+        run: vendor/bin/phpunit --testsuite mariadb --fail-on-skipped
+
+      - name: Run the full suite on MariaDB
+        run: vendor/bin/phpunit --no-coverage --exclude-group mariadb
+
+      - name: Admin flow on MariaDB
+        run: |
+          set -euo pipefail
+          php bin/cms user:operator admin@example.test 'AdminPass123!' --name='MariaDB Admin'
+
+          php -d opcache.enable_cli=0 -S 127.0.0.1:8000 -t public public/index.php > /tmp/mariadb-server.log 2>&1 &
+          server=$!
+          trap 'kill $server 2>/dev/null || true' EXIT
+
+          for i in $(seq 1 30); do
+            if curl -fsS -o /dev/null http://127.0.0.1:8000/ 2>/dev/null; then break; fi
+            sleep 1
+          done
+
+          status() { curl -s -o /tmp/mariadb-last.out -w '%{http_code}' -c /tmp/mariadb-jar -b /tmp/mariadb-jar "$@"; }
+          token() { awk 'match($0, /name="_token" value="[^"]*"/) { sub(/.*name="_token" value="/, ""); sub(/".*$/, ""); print; exit }' /tmp/mariadb-last.out; }
+
+          test "$(status http://127.0.0.1:8000/)" = 200
+          test "$(status http://127.0.0.1:8000/blog)" = 200
+          test "$(status http://127.0.0.1:8000/mark)" = 302
+          test "$(status http://127.0.0.1:8000/login)" = 200
+
+          csrf="$(token)"
+          test -n "$csrf"
+          got="$(status -X POST http://127.0.0.1:8000/login \
+            --data-urlencode 'email=admin@example.test' \
+            --data-urlencode 'password=AdminPass123!' \
+            --data-urlencode "_token=$csrf" \
+            -H 'Origin: http://127.0.0.1:8000')"
+          test "$got" = 302
+          test "$(status http://127.0.0.1:8000/mark)" = 200
+          grep -q 'Dashboard\|Sign out' /tmp/mariadb-last.out
+
+          php bin/cms outbox:process --no-prune
+          pending=$(php <<'PHP'
+          <?php
+          require 'vendor/autoload.php';
+          require 'src/init.php';
+
+          echo Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager::instance()
+              ->connection('outbox')
+              ->query("SELECT COUNT(*) FROM outbox_messages WHERE status = 'pending'")
+              ->fetchColumn();
+          PHP
+          )
+          test "$pending" = 0
+          echo "admin flow ok on MariaDB (pending outbox: $pending)"

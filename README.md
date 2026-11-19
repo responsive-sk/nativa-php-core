@@ -80,10 +80,11 @@ php bin/cms user:operator you@example.com 'your-password'  # your own credential
 
 ## Database engines
 
-SQLite is the default: one file per module under `storage/data/`. PostgreSQL
-uses one database for every module. Each module gets a schema named after it,
-created and selected by the manager on first connection, so unqualified table
-names and the existing migrations stay unchanged.
+SQLite is the default: one file per module under `storage/data/`.
+
+PostgreSQL uses one database for every module. Each module gets a schema named
+after it, created and selected by the manager on first connection, so
+unqualified table names and the existing migrations stay unchanged.
 
 ```env
 DB_DRIVER=pgsql
@@ -93,6 +94,23 @@ DB_DSN=host=127.0.0.1;port=5432;dbname=nativa;user=nativa;password=secret
 The database role needs `CREATE` on the database to create the module schemas.
 `php bin/cms migrate` builds every schema, and `db:export` / `db:import` keep
 working one module at a time because each connection sees only its own schema.
+
+MariaDB has no schema layer inside a database, so the isolation boundary is one
+database per module. `DB_DSN` is the server DSN (no `dbname`); the manager
+creates `<DB_DATABASE_PREFIX><module>` (default `nativa_`) on first connection
+and selects it with the connection's `dbname`:
+
+```env
+DB_DRIVER=mariadb
+DB_DSN=host=127.0.0.1;port=3306;user=nativa;password=secret
+DB_DATABASE_PREFIX=nativa_
+```
+
+The role needs `CREATE` on the server. MariaDB connections run with
+`time_zone = '+00:00'` and SERIALIZABLE transactions, because the application
+stores UTC text and the outbox drain relies on the strongest isolation.
+`db:export` / `db:import` work unchanged; the snapshot still has one entry per
+module.
 
 Commit messages carry no agent footer (the nativa-minimal convention) —
 after cloning, enable the enforcer: `cp bin/git-hooks/commit-msg .git/hooks/commit-msg`.

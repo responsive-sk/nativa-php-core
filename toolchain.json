@@ -408,6 +408,11 @@
       "can_fail": true
     },
     {
+      "key": "mariadb",
+      "name": "MariaDB (real server)",
+      "can_fail": true
+    },
+    {
       "key": "mark-smoke",
       "name": "Admin flows (booted server)",
       "can_fail": true
