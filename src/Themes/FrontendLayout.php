@@ -670,7 +670,10 @@ final class FrontendLayout
      * previews (Facebook/LinkedIn/WhatsApp read og:*, Twitter reads both).
      * og:url mirrors the canonical URL when present (otherwise the scraper
      * falls back to the page URL); og:locale is derived from the html lang.
-     * All values arrive already escaped by the caller.
+     * Title, description and site name arrive escaped by the caller. The two
+     * URLs do not: they are built from the request (a `Host` header the tree
+     * may not have constrained), so they are escaped here — a quote in the host
+     * must not end the attribute it lands in.
      */
     private static function ogTags(
         string $title,
@@ -693,12 +696,14 @@ final class FrontendLayout
             . '<meta name="twitter:description" content="' . $description . '">' . "\n";
 
         if (null !== $canonicalUrl) {
-            $tags .= '<meta property="og:url" content="' . $canonicalUrl . '">' . "\n";
+            $tags .= '<meta property="og:url" content="' . self::e($canonicalUrl) . '">' . "\n";
         }
 
         if (null !== $ogImage) {
-            $tags .= '<meta property="og:image" content="' . $ogImage . '">' . "\n"
-                . '<meta name="twitter:image" content="' . $ogImage . '">' . "\n";
+            $ogImageEscaped = self::e($ogImage);
+
+            $tags .= '<meta property="og:image" content="' . $ogImageEscaped . '">' . "\n"
+                . '<meta name="twitter:image" content="' . $ogImageEscaped . '">' . "\n";
         }
 
         return $tags;
