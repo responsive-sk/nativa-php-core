@@ -113,7 +113,7 @@ final readonly class DocsPageAction
         $content = FrontendLayout::readerLayout($content, $headings);
 
         return Response::html(FrontendLayout::render(
-            $guide['title'] . ' — Nativa',
+            $guide['title'] . ' — ' . FrontendLayout::brandSuffix(),
             $content,
             description: 'Repository guide: ' . $key,
             currentPath: '/docs/' . $key,

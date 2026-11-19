@@ -127,7 +127,7 @@ final class PageViewAction
             . '</section>';
 
         return Response::html(FrontendLayout::render(
-            $seoTitle . ' — Nativa',
+            $seoTitle . ' — ' . FrontendLayout::brandSuffix(),
             $content,
             description: '' !== $seoDescription ? $seoDescription : null,
             currentPath: $request->getPathInfo(),

@@ -97,7 +97,7 @@ final readonly class DocsIndexAction
         // higher than `/blog`, which is two surfaces of one site reading at two
         // different heights.
         return Response::html(FrontendLayout::render(
-            'Documentation — Nativa',
+            'Documentation — ' . FrontendLayout::brandSuffix(),
             $module instanceof DocsPageTheme
                 ? ($shellHasField ? '' : $this->searchField($module->prefix(), ''))
                     . $module->docsIndex($this->catalog->entries())
