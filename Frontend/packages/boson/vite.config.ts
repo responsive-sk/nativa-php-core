@@ -12,12 +12,15 @@
  * the installed slice is derived from it (`src/Modules/*` is gitignored and,
  * in CI, does not exist yet when this build runs).
  *
- * Single entry, like griffe and mono: the deferred `<script>` is a classic
- * script on the Chrome 70 baseline and cannot execute ES module imports.
+ * Two entries: `boson` is the deferred classic script (a `<script defer>` on
+ * the Chrome 70 baseline cannot execute ES module imports), and `diagram` is a
+ * module chunk that only the landing imports — lazily, when the stack figure
+ * nears the viewport. Mermaid is 600 kB of gzip nobody should pay for before
+ * scrolling, so it lives in its own entry instead of the theme script.
  */
 import { createThemeConfig } from '../build/vite-theme-factory.ts';
 
 export default createThemeConfig({
   theme: 'boson',
-  inputs: { boson: 'src/boson.ts' },
+  inputs: { boson: 'src/boson.ts', diagram: 'src/diagram.ts' },
 });

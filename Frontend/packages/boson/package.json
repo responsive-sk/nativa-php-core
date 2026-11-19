@@ -9,5 +9,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "mermaid": "^12.3.0"
   }
 }

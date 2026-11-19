@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Site\Interfaces\HTTP;
 
+use Themes\AssetManager;
 use Shell\AsHomepageSurface;
 use Shell\Homepage;
 use Shell\HomepageSurface;
@@ -166,6 +167,7 @@ final class SiteHomepageSurface implements HomepageSurface
             . '<p class="site-section__label">' . self::e(self::text($copy, 'stack', 'label')) . '</p>'
             . '<h2 class="site-section__title">' . self::e(self::text($copy, 'stack', 'title')) . '</h2>'
             . '<p class="site-section__text">' . self::e(self::text($copy, 'stack', 'text')) . '</p>'
+            . self::diagram($copy, $context)
             . '<div class="site-stack">';
 
         $groups = is_array($copy['stack']['groups'] ?? null) ? $copy['stack']['groups'] : [];
@@ -199,6 +201,124 @@ final class SiteHomepageSurface implements HomepageSurface
         }
 
         return $html . '</section>';
+    }
+
+    /**
+     * The stack as one picture: a Mermaid flowchart built from the SAME copy
+     * array the list below it renders, so the drawing and the text cannot
+     * disagree about what the tree is.
+     *
+     * Rendered only when the bundle that draws it exists — the diagram is an
+     * addition to the list, never a replacement, so a tree without
+     * `public/dist/<theme>/` (a fresh checkout, a kernel-only install) renders
+     * the section exactly as it did before this existed. Mermaid is 600 kB of
+     * gzip: the figure carries the source in `data-mermaid`, and the inline
+     * module imports the chunk only when the figure nears the viewport, so the
+     * landing's first paint keeps its measured request count.
+     *
+     * @param array<string, mixed> $copy
+     */
+    private static function diagram(array $copy, PageContext $context): string
+    {
+        $source = self::diagramSource($copy);
+
+        if ('' === $source) {
+            return '';
+        }
+
+        $chunk = (new AssetManager($context->theme))->jsUrl('diagram');
+
+        if (null === $chunk) {
+            return '';
+        }
+
+        $caption = self::text($copy, 'stack', 'diagram_caption');
+        $aria = self::e('' === $caption ? self::text($copy, 'stack', 'title') : $caption);
+
+        return '<figure class="site-diagram" data-mermaid="' . self::e($source) . '" aria-busy="true" aria-label="' . $aria . '">'
+            . ('' === $caption ? '' : '<figcaption class="site-diagram__caption">' . self::e($caption) . '</figcaption>')
+            . '</figure>'
+            . '<script type="module" nonce="__CSP_NONCE_PLACEHOLDER__">'
+            . 'const f=document.querySelector("[data-mermaid]");'
+            . 'if(f){'
+            . 'if("IntersectionObserver" in window){'
+            . 'const io=new IntersectionObserver((es)=>{'
+            . 'if(!es.some((e)=>e.isIntersecting))return;'
+            . 'io.disconnect();'
+            . 'import("' . self::e($chunk) . '").catch(()=>{f.hidden=true});'
+            . '},{rootMargin:"300px"});'
+            . 'io.observe(f);}else{f.hidden=true}}'
+            . '</script>';
+    }
+
+    /**
+     * The Mermaid source for the stack: one node per group with its lines under
+     * it, left to right. Item names stay out — a diagram that repeats the list
+     * word for word is a picture of the list, not a map of the tree.
+     *
+     * Labels are content, so they are quoted and their own quotes escaped: a
+     * title carrying `"` must not be able to end the label and start Mermaid
+     * syntax of its choosing.
+     *
+     * @param array<string, mixed> $copy
+     */
+    private static function diagramSource(array $copy): string
+    {
+        $groups = is_array($copy['stack']['groups'] ?? null) ? $copy['stack']['groups'] : [];
+        $nodes = [];
+        $edges = [];
+
+        foreach ($groups as $index => $group) {
+            if (!is_array($group)) {
+                continue;
+            }
+
+            $title = self::label((string) ($group['title'] ?? ''));
+
+            if ('' === $title) {
+                continue;
+            }
+
+            $groupNode = 'g' . $index;
+            // A stadium, not a colour class: the palette belongs to the theme
+            // the reader is in, and a classDef hardcoded here painted light
+            // boxes on the dark site (measured 2026-11-19). Mermaid's markdown
+            // strings (`**bold**`) need backticks the label cleaner strips.
+            $nodes[] = $groupNode . '(["' . $title . '"])';
+
+            foreach (is_array($group['lines'] ?? null) ? $group['lines'] : [] as $lineIndex => $line) {
+                if (!is_array($line)) {
+                    continue;
+                }
+
+                $lineTitle = self::label((string) ($line['title'] ?? ''));
+
+                if ('' === $lineTitle) {
+                    continue;
+                }
+
+                $lineNode = 'l' . $index . '_' . $lineIndex;
+                $nodes[] = $lineNode . '["' . $lineTitle . '"]';
+                $edges[] = '  ' . $groupNode . ' --> ' . $lineNode;
+            }
+        }
+
+        if ([] === $edges) {
+            return '';
+        }
+
+        return 'flowchart LR' . "\n"
+            . implode("\n", array_map(static fn (string $node): string => '  ' . $node, $nodes)) . "\n"
+            . implode("\n", $edges);
+    }
+
+    /**
+     * One Mermaid label: trimmed, with the characters that would end a quoted
+     * label neutralised.
+     */
+    private static function label(string $text): string
+    {
+        return trim(str_replace(['"', '`', '<', '>'], ['', '', '', ''], $text));
     }
 
     /**
@@ -404,6 +524,9 @@ final class SiteHomepageSurface implements HomepageSurface
         .site-card__number{display:block;margin-bottom:.75rem;font-size:.8rem;letter-spacing:.12em;color:var(--site-accent)}
         .site-card__title{margin:0 0 .5rem;font-size:1.05rem}
         .site-card__text{margin:0;font-size:.95rem;color:var(--site-muted)}
+        .site-diagram{margin:2rem 0 0;padding:1.1rem;border:1px solid var(--site-line);border-radius:.6rem;background:var(--site-surface);min-height:16rem;overflow-x:auto}
+        .site-diagram__caption{margin:0 0 .9rem;font-size:.8rem;color:var(--site-muted)}
+        .site-diagram svg{display:block;max-width:100%;height:auto;margin:0 auto}
         .site-stack{display:grid;gap:.75rem;margin:1.5rem 0 0;grid-template-columns:repeat(auto-fit,minmax(17rem,1fr))}
         .site-stack__group{border:1px solid var(--site-line);border-radius:.6rem;padding:1.1rem 1.2rem;background:var(--site-surface)}
         .site-stack__group-title{margin:0 0 .9rem;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--site-accent)}

@@ -368,6 +368,47 @@ final class SiteHomepageTest extends TestCase
     }
 
     /**
+     * The stack's picture is the same tree the list renders, and it is NOT part
+     * of the first paint: Mermaid arrives only when the figure is scrolled
+     * into view, so the six-request number the copy states stays true.
+     *
+     * The bundle is a build artifact (gitignored), so a tree without one skips:
+     * the section then renders without the figure, which is the whole fallback.
+     */
+    #[Test]
+    public function theStackDiagramIsTheSameTreeAndItIsNotInTheFirstPaint(): void
+    {
+        if (!is_file(APP_BASE_PATH . '/public/dist/boson/manifest.json')) {
+            $this->markTestSkipped('No boson build — the diagram ships as a chunk of it.');
+        }
+
+        $html = $this->page('/');
+
+        self::assertStringContainsString('class="site-diagram"', $html, 'The stack section carries a picture of the tree.');
+        // The attribute is escaped in the document: `"` reaches the browser as
+        // `&quot;`, and the assertion reads the markup, not the DOM.
+        self::assertStringContainsString('data-mermaid="flowchart LR', $html, 'The diagram is a Mermaid flowchart.');
+        self::assertStringContainsString('Strom, na ktorom tento web stojí.', $html);
+
+        foreach (['Backend', 'Frontend', 'Rozhrania'] as $group) {
+            self::assertStringContainsString(
+                '([&quot;' . $group . '&quot;])',
+                $html,
+                'The figure must be drawn from the copy the list renders, not from a second list: ' . $group . ' is missing.',
+            );
+        }
+
+        // Lazily: the chunk is imported by the inline module and never declared
+        // as a <script src>, so it is not a request the count has to carry.
+        self::assertMatchesRegularExpression(
+            '#<script type="module"[^>]*>.*?import\("/dist/[^"]+/assets/diagram-[^"]+\.js"\)#',
+            $html,
+            'The diagram chunk must be imported on demand, not loaded with the page.',
+        );
+        self::assertDoesNotMatchRegularExpression('#<script[^>]+src="[^"]*diagram-#', $html);
+    }
+
+    /**
      * The requests a first visit makes, as the markup declares them.
      */
     private static function requestsIn(string $html): int
