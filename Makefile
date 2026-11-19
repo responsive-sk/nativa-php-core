@@ -81,6 +81,38 @@ dependency-audit: ## Gate: no high/critical advisories in either lockfile
 	# pnpm keeps it. Drop it there when a fixed picomatch ships.
 	cd Frontend/packages && pnpm audit --audit-level high
 
+##@ Database engines
+# `make test` runs the SQLite default; `tests/Postgres` and `tests/MariaDb` are
+# excluded from that suite because both describe a real server rather than this
+# tree, and PHPUnit skips them silently when `DB_DRIVER` says otherwise. These
+# two targets are the one-command run: they carry the driver and DSN through the
+# whole recipe — no `export` line to forget — migrate first (the suites assert
+# against a migrated server, and a suite run before `migrate` fails on missing
+# tables rather than on a bug), and pass `--fail-on-skipped` so a missing or
+# unreachable server is a red run instead of a green no-op.
+#
+# The defaults are the credentials the `postgres` and `mariadb` CI jobs use, so
+# a service container started the same way answers without arguments. Point a
+# target at your own server on the command line; a socket DSN works too:
+#
+#   make test-mariadb MARIADB_DSN="unix_socket=/run/mysqld/mysqld.sock;user=root;password="
+#
+# PostgreSQL needs the database named in `dbname=` to exist (`createdb nativa`)
+# and the role needs CREATE on it, because each module is a schema. MariaDB
+# creates its own `<prefix><module>` databases, so its role needs CREATE on the
+# server and the prefix must not point at databases that matter.
+PG_DSN ?= host=127.0.0.1;port=5432;dbname=nativa;user=postgres;password=postgres
+MARIADB_DSN ?= host=127.0.0.1;port=3306;user=root;password=root
+MARIADB_PREFIX ?= nativa_
+
+test-postgres: ## Gate: the PostgreSQL suite against a real server, migrated first (PG_DSN=…)
+	DB_DRIVER=pgsql DB_DSN="$(PG_DSN)" $(PHP) bin/cms migrate
+	DB_DRIVER=pgsql DB_DSN="$(PG_DSN)" $(PHP) vendor/bin/phpunit --testsuite postgres --fail-on-skipped
+
+test-mariadb: ## Gate: the MariaDB suite against a real server, migrated first (MARIADB_DSN=…, MARIADB_PREFIX=…)
+	DB_DRIVER=mariadb DB_DSN="$(MARIADB_DSN)" DB_DATABASE_PREFIX="$(MARIADB_PREFIX)" $(PHP) bin/cms migrate
+	DB_DRIVER=mariadb DB_DSN="$(MARIADB_DSN)" DB_DATABASE_PREFIX="$(MARIADB_PREFIX)" $(PHP) vendor/bin/phpunit --testsuite mariadb --fail-on-skipped
+
 ##@ Mago
 # Informational, like `kernel-size` and `lekalo-verify`: the script exits 0
 # whatever the tools say, because none of the numbers has been triaged into a

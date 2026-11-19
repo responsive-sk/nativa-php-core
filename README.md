@@ -112,6 +112,19 @@ stores UTC text and the outbox drain relies on the strongest isolation.
 `db:export` / `db:import` work unchanged; the snapshot still has one entry per
 module.
 
+Switching back is `DB_DRIVER=sqlite` (or removing the lines): the three engines
+are one seam, and nothing else in the tree reads the driver.
+
+`make test` runs SQLite only — `tests/Postgres` and `tests/MariaDb` describe a
+real server and are excluded from that suite, and PHPUnit skips them silently
+when `DB_DRIVER` says otherwise. Their one-command run carries the driver and
+DSN itself, migrates first, and treats a skip as a failure:
+
+```sh
+make test-postgres                                        # PG_DSN=… to point elsewhere
+make test-mariadb MARIADB_DSN="unix_socket=/run/mysqld/mysqld.sock;user=root;password="
+```
+
 Commit messages carry no agent footer (the nativa-minimal convention) —
 after cloning, enable the enforcer: `cp bin/git-hooks/commit-msg .git/hooks/commit-msg`.
 
