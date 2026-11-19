@@ -1229,14 +1229,23 @@ jobs:
   # the server DSN, lets the manager create one `nativa_<module>` database per
   # module, and runs that suite with `--fail-on-skipped`. It then walks the same
   # operator path as PostgreSQL: login, dashboard, and the outbox drain.
+  #
+  # The matrix covers the two LTS lines an operator can still deploy: 10.11 and
+  # 11.4. The dialect only needs 10.6 features, but 10.6 is EOL; pinning it here
+  # would preserve a version nobody should run. `fail-fast: false` keeps a
+  # failure in one line from hiding the other line's result.
   mariadb:
     name: MariaDB (real server)
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        mariadb: ['10.11', '11.4']
 
     services:
       mariadb:
-        image: mariadb:11.4
+        image: mariadb:${{ matrix.mariadb }}
         env:
           MARIADB_ROOT_PASSWORD: root
         ports:
