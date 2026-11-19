@@ -655,7 +655,7 @@ jobs:
       # them with --fail-on-skipped instead. Everything else, `openspec/`
       # included, still runs and is held to the same no-skips rule.
       - name: Run the full suite (kernel + catalogue)
-        run: composer test -- --log-junit /tmp/modules-junit.xml --exclude-group postgres,mariadb
+        run: composer test -- --log-junit /tmp/modules-junit.xml --exclude-group postgres --exclude-group mariadb
 
       # The assertion this job exists for. "OK, but some tests were skipped" is
       # how a deleted guard looks from here, so the JUnit log is read instead of
