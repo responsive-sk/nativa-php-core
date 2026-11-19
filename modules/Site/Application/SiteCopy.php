@@ -133,7 +133,7 @@ final class SiteCopy
                                 'tag' => 'php',
                                 'items' => [
                                     ['title' => 'Nativa', 'tag' => 'nativa', 'note' => 'Keď má aplikácia vydržať roky a nemá so sebou ťahať aj framework.'],
-                                    ['title' => 'Laravel', 'note' => 'Keď tím klienta Laravel pozná a prevádzka musí ostať v jeho rukách.'],
+                                    ['title' => 'Laravel', 'tag' => 'laravel', 'note' => 'Keď tím klienta Laravel pozná a prevádzka musí ostať v jeho rukách.'],
                                     ['title' => 'Symfony', 'note' => 'Keď projekt obsahuje viac domén, ktoré si potrebujú vlastné hranice.'],
                                     ['title' => 'Nette', 'note' => 'Keď preberáme existujúcu Nette aplikáciu a nemá zmysel ju prepisovať.'],
                                 ],
@@ -247,7 +247,7 @@ final class SiteCopy
                                 'tag' => 'php',
                                 'items' => [
                                     ['title' => 'Nativa', 'tag' => 'nativa', 'note' => 'When the application has to last for years without dragging a framework along.'],
-                                    ['title' => 'Laravel', 'note' => 'When the client already knows it and running it has to stay in their hands.'],
+                                    ['title' => 'Laravel', 'tag' => 'laravel', 'note' => 'When the client already knows it and running it has to stay in their hands.'],
                                     ['title' => 'Symfony', 'note' => 'When the project holds several domains that need boundaries of their own.'],
                                     ['title' => 'Nette', 'note' => 'When we take over an existing Nette application and rewriting it makes no sense.'],
                                 ],

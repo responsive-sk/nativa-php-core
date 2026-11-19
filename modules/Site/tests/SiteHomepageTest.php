@@ -166,10 +166,15 @@ final class SiteHomepageTest extends TestCase
             $html,
             'PHP is the language those posts are written in, so it links too.',
         );
-        self::assertStringNotContainsString(
+        self::assertStringContainsString(
             'href="/blog/tags/laravel"',
             $html,
-            'No post carries that tag; /blog/tags/laravel answers 404.',
+            'The Laravel post exists, so the framework name reaches it.',
+        );
+        self::assertStringNotContainsString(
+            'href="/blog/tags/symfony"',
+            $html,
+            'No post carries that tag; /blog/tags/symfony answers 404.',
         );
     }
 
