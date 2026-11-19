@@ -47,6 +47,8 @@ final class FormSubmitActionTest extends TestCase
 
         putenv('DB_FORMS=' . $this->dir . '/forms.db');
         putenv('DB_USERS=' . $this->dir . '/users.db');
+        putenv('DB_CONFIG=' . $this->dir . '/config.db');
+        putenv('DB_QUESTIONS=' . $this->dir . '/questions.db');
         DatabaseConnectionManager::resetInstance();
         FormsServices::reset();
 
@@ -57,6 +59,8 @@ final class FormSubmitActionTest extends TestCase
         };
 
         (new FormsDatabaseMigrator(DatabaseConnectionManager::instance()->connection('forms')))->run($output);
+        (new \Modules\Settings\Infrastructure\Persistence\Migrations\SettingsDatabaseMigrator(new \PDO('sqlite:' . $this->dir . '/config.db')))->run($output);
+        (new \Modules\Questions\Infrastructure\Persistence\Migrations\QuestionsDatabaseMigrator(new \PDO('sqlite:' . $this->dir . '/questions.db')))->run($output);
     }
 
     protected function tearDown(): void
@@ -79,6 +83,8 @@ final class FormSubmitActionTest extends TestCase
         DatabaseConnectionManager::resetInstance();
         putenv('DB_FORMS');
         putenv('DB_USERS');
+        putenv('DB_CONFIG');
+        putenv('DB_QUESTIONS');
 
         foreach (glob($this->dir . '/*') ?: [] as $file) {
             is_file($file) && unlink($file);

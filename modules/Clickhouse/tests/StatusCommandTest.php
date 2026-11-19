@@ -12,7 +12,6 @@ use Modules\Clickhouse\Interfaces\HTTP\ClickhouseServices;
 use Modules\Core\Infrastructure\Env;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Core\Interfaces\CLI\CliOutput;
-use Tests\Support\SqliteDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -23,36 +22,53 @@ use PHPUnit\Framework\TestCase;
  * `system.databases`, the path from `SHOW CREATE DATABASE`, the table count
  * from `SHOW TABLES`. So the two facts this command exists to check — the
  * server's path and its reachability — are the two the test varies.
+ *
+ * The test seeds its own files through `DB_<NAME>` instead of reading the
+ * checkout's `storage/data`: the bridge takes both sources, so a fresh tree
+ * with no migrated databases exercises the same plan, and nothing here has to
+ * run after a seed step. Ambient files, when present, are attached as well so
+ * the agreeing-server case still reports no drift.
  */
 final class StatusCommandTest extends TestCase
 {
-    use SqliteDatabase;
-
     private const MODULE = 'Clickhouse';
 
     /** @var list<string> */
+    private array $created = [];
+
+    /** @var array<string, string|false> */
     private array $previousEnv = [];
 
     protected function setUp(): void
     {
-        $this->pinSqliteDatabase();
-
         if (!is_dir(APP_BASE_PATH . '/src/Modules/' . self::MODULE)) {
             $this->markTestSkipped(self::MODULE . ' is not installed — the command lives in that module.');
         }
 
         $this->useEnv('CLICKHOUSE_URL', 'http://localhost:8123');
+        $this->database('blog');
+        $this->database('zzstatus');
     }
 
     protected function tearDown(): void
     {
-        $this->restoreDatabaseEnvironment();
-
         foreach ($this->previousEnv as $name => $value) {
-            putenv($name . '=' . $value);
+            if (false === $value) {
+                putenv($name);
+            } else {
+                putenv($name . '=' . $value);
+            }
         }
 
         $this->previousEnv = [];
+
+        foreach ($this->created as $path) {
+            if (is_file($path)) {
+                unlink($path);
+            }
+        }
+
+        $this->created = [];
 
         // PHPUnit runs tearDown() even when setUp() skipped, so in a
         // kernel-only checkout this class does not exist yet.
@@ -63,8 +79,6 @@ final class StatusCommandTest extends TestCase
         Env::reset();
         Env::loadImmutable('');
         AppPaths::resetInstance();
-
-        $this->restoreDatabaseEnvironment();
     }
 
     #[Test]
@@ -115,21 +129,45 @@ final class StatusCommandTest extends TestCase
      */
     private function attachedNames(): array
     {
-        $files = glob(AppPaths::instance()->data('*.db')) ?: [];
-        $prefix = 'nativa_';
+        /** @var array<string, true> $found */
+        $found = [];
 
-        $names = [];
-
-        foreach ($files as $file) {
+        foreach (glob(AppPaths::instance()->data('*.db')) ?: [] as $file) {
             $name = basename($file, '.db');
 
             // The bridge skips a file whose stem is not a ClickHouse
             // identifier, so the expectation skips it too: this asserts what
             // the product reports, not what happens to sit on disk.
             if (1 === preg_match('/^[A-Za-z][A-Za-z0-9_]*$/', $name)) {
-                $names[] = $prefix . $name;
+                $found[$name] = true;
             }
         }
+
+        // The test's own files arrive the same way a deployment relocates a
+        // database, and the bridge reads them from the environment.
+        foreach (getenv() as $key => $value) {
+            if (!str_starts_with($key, 'DB_') || 'DB_' === $key) {
+                continue;
+            }
+
+            if (!is_string($value) || !str_ends_with($value, '.db')) {
+                continue;
+            }
+
+            $name = strtolower(substr($key, 3));
+
+            if (1 === preg_match('/^[A-Za-z][A-Za-z0-9_]*$/', $name)) {
+                $found[$name] = true;
+            }
+        }
+
+        $names = [];
+
+        foreach (array_keys($found) as $name) {
+            $names[] = 'nativa_' . $name;
+        }
+
+        sort($names);
 
         return $names;
     }
@@ -139,9 +177,21 @@ final class StatusCommandTest extends TestCase
         return new StatusCommand(client: new ClickHouseClient($transport));
     }
 
+    private function database(string $name): void
+    {
+        $path = sys_get_temp_dir() . '/nativa-clickhouse-status-' . $name . '-' . bin2hex(random_bytes(6)) . '.db';
+        file_put_contents($path, '');
+        $this->created[] = $path;
+
+        $this->useEnv('DB_' . strtoupper($name), $path);
+    }
+
     private function useEnv(string $name, string $value): void
     {
-        $this->previousEnv[$name] = getenv($name) ?: '';
+        if (!array_key_exists($name, $this->previousEnv)) {
+            $this->previousEnv[$name] = getenv($name);
+        }
+
         putenv($name . '=' . $value);
         Env::reset();
     }

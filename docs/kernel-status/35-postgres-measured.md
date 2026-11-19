@@ -64,13 +64,16 @@ removes the DSN-shaped values SQLite cannot read as paths, and sets
 `DB_DRIVER=sqlite`; its restore puts the run's values back and is called both
 at the start and at the end of `tearDown`, so a test that unsets or rewrites a
 variable in its own cleanup cannot leave the next test on the wrong engine.
-The ClickHouse status test reads the local `storage/data` files, so it pins
-SQLite too.
+The ClickHouse status test and Blog's mark-escape test seed their own files
+through the same `DB_<NAME>` overrides a deployment uses. Tests that boot the
+locale layer or the admin dashboard build a temporary `config.db` (and the
+questions fixture they render) with the module migrators. No test in the full
+suite depends on a migrated `storage/data`.
 
-That makes the whole catalogue suite engine-aware. The `postgres` job seeds
-those SQLite files with the default migrators, then runs the full suite with
-`--exclude-group postgres` next to the PostgreSQL-specific suite. Both runs are
-1516 tests, and the full suite takes about half a minute on either engine.
+That makes the whole catalogue suite engine-aware. The `postgres` job runs the
+full suite with `--exclude-group postgres` next to the PostgreSQL-specific
+suite. Both runs are 1516 tests, and the full suite takes about half a minute
+on either engine.
 
 **ClickHouse** stays on SQLite by design: its bridge is not part of this
 port.
