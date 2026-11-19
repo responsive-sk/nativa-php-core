@@ -46,9 +46,13 @@ final class PageViewAction
         $page = $service->find($slug, $locale);
 
         // A slug with no page of its own may still be a page's PREVIOUS slug:
-        // the rename left it in `aliases:`, so every old URL keeps working.
+        // the rename left it in `aliases:`, so every old URL keeps working —
+        // and a slug with no page in THIS language may be the same page under
+        // its canonical slug, which is what a single menu links to.
         if (null === $page) {
-            return $this->aliasRedirect($request, $slug, $locale, $service);
+            return $this->aliasRedirect($request, $slug, $locale, $service)
+                ?? $this->translationRedirect($request, $slug, $locale, $service)
+                ?? $this->notFound($request);
         }
 
         // Not published — styled 404. Never redirect at an unpublished page:
@@ -66,18 +70,60 @@ final class PageViewAction
      * preserved (the Router's trailing-slash canonicalization is the
      * behavioral precedent). A refusal carries no Location header.
      */
-    private function aliasRedirect(Request $request, string $slug, string $locale, PageCrudService $service): Response
+    private function aliasRedirect(Request $request, string $slug, string $locale, PageCrudService $service): ?Response
     {
         $target = $service->aliasTarget($slug, $locale);
 
         if (null === $target || !$service->isPublished($target, $locale)) {
-            return $this->notFound($request);
+            return null;
         }
 
         $path = $this->pageHref($locale, $target);
         $query = http_build_query($request->getQueryParams());
 
         error_log(sprintf('[pages] alias redirect %s -> %s locale=%s', $slug, $target, $locale));
+
+        return Response::redirect('' === $query ? $path : $path . '?' . $query, 301);
+    }
+
+    /**
+     * 301 a canonical slug requested under the wrong language to its OWN slug
+     * in that language.
+     *
+     * A menu row is stored once (`/referencie`) and the shell renders it under
+     * the locale prefix of the page the reader is on (`LocalizedNav`). The
+     * localized URL of a translated page is not the prefixed canonical slug,
+     * though — the pair is declared in front matter, and `/referencie` is
+     * paired with `/en/references`. Without this answer that link is a 404,
+     * which is exactly what a menu pointing at a page would have produced.
+     *
+     * Only the canonical slug is redirected: a slug that is nobody's page in
+     * the default language still 404s, and so does a pair whose translation is
+     * unpublished — a 301 that lands on a 404 is a broken promise (the alias
+     * redirect keeps the same rule).
+     */
+    private function translationRedirect(Request $request, string $slug, string $locale, PageCrudService $service): ?Response
+    {
+        $canonical = ContentLocaleServices::mapper()->defaultLocale();
+
+        if ($locale === $canonical || $this->otherLocale($canonical) !== $locale) {
+            return null;
+        }
+
+        if (null === $service->find($slug, $canonical)) {
+            return null;
+        }
+
+        $translated = $service->translationOf($slug, $canonical);
+
+        if (null === $translated || !$service->isPublished($translated, $locale)) {
+            return null;
+        }
+
+        $path = $this->pageHref($locale, $translated);
+        $query = http_build_query($request->getQueryParams());
+
+        error_log(sprintf('[pages] translation redirect %s -> %s locale=%s', $slug, $translated, $locale));
 
         return Response::redirect('' === $query ? $path : $path . '?' . $query, 301);
     }
