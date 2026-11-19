@@ -7,6 +7,7 @@ namespace Modules\Health\Tests;
 use Modules\Health\Interfaces\HTTP\HealthServices;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Tests\Support\SqliteDatabase;
 
 /**
  * HealthServicesTest — the one part of the module that had to guess: which
@@ -21,10 +22,14 @@ use PHPUnit\Framework\TestCase;
  */
 final class HealthServicesTest extends TestCase
 {
+    use SqliteDatabase;
+
     private string $tempDir;
 
     protected function setUp(): void
     {
+        $this->pinSqliteDatabase();
+
         parent::setUp();
 
         if (!is_dir(APP_BASE_PATH . '/src/Modules/Health')) {
@@ -37,6 +42,8 @@ final class HealthServicesTest extends TestCase
 
     protected function tearDown(): void
     {
+        $this->restoreDatabaseEnvironment();
+
         putenv('DB_OTHER');
         putenv('DB_FOREIGN');
 
@@ -62,6 +69,8 @@ final class HealthServicesTest extends TestCase
         }
 
         parent::tearDown();
+
+        $this->restoreDatabaseEnvironment();
     }
 
     #[Test]

@@ -13,6 +13,7 @@ use Modules\Scheduler\Scheduling\RunnerOutput;
 use Modules\Scheduler\Scheduling\Schedule;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Tests\Support\SqliteDatabase;
 use RuntimeException;
 
 /**
@@ -27,6 +28,8 @@ use RuntimeException;
  */
 final class ScheduleRunCommandTest extends TestCase
 {
+    use SqliteDatabase;
+
     private string $dir;
 
     private ?string $dbFile = null;
@@ -35,6 +38,8 @@ final class ScheduleRunCommandTest extends TestCase
 
     protected function setUp(): void
     {
+        $this->pinSqliteDatabase();
+
         parent::setUp();
 
         if (!is_dir(APP_BASE_PATH . '/src/Modules/Scheduler')) {
@@ -47,6 +52,8 @@ final class ScheduleRunCommandTest extends TestCase
 
     protected function tearDown(): void
     {
+        $this->restoreDatabaseEnvironment();
+
         if (isset($this->dir)) {
             foreach (glob($this->dir . '/*') ?: [] as $file) {
                 unlink($file);
@@ -72,6 +79,8 @@ final class ScheduleRunCommandTest extends TestCase
         }
 
         parent::tearDown();
+
+        $this->restoreDatabaseEnvironment();
     }
 
     private function collector(): RunnerOutput

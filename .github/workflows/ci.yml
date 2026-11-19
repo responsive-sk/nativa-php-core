@@ -1195,6 +1195,15 @@ jobs:
       - name: Run the PostgreSQL suite (a skip is a failure)
         run: vendor/bin/phpunit --testsuite postgres --fail-on-skipped
 
+      - name: Seed the SQLite files the storage-shaped tests read
+        run: |
+          set -euo pipefail
+          for name in $(env | sed -n 's/^\(DB_[A-Z_]*\)=.*/\1/p'); do unset "$name"; done
+          php bin/cms migrate | tail -5
+
+      - name: Run the full suite on PostgreSQL
+        run: vendor/bin/phpunit --no-coverage --exclude-group postgres
+
       - name: Admin flow on PostgreSQL
         run: |
           set -euo pipefail

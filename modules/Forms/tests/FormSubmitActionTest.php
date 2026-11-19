@@ -15,6 +15,7 @@ use Modules\Forms\Interfaces\HTTP\Actions\FormSubmitAction;
 use Modules\Pages\Application\Services\PageCrudService;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Tests\Support\SqliteDatabase;
 
 /**
  * FormSubmitActionTest — the public write path.
@@ -26,6 +27,8 @@ use PHPUnit\Framework\TestCase;
  */
 final class FormSubmitActionTest extends TestCase
 {
+    use SqliteDatabase;
+
     private string $dir;
 
     /** @var list<string> */
@@ -33,6 +36,8 @@ final class FormSubmitActionTest extends TestCase
 
     protected function setUp(): void
     {
+        $this->pinSqliteDatabase();
+
         if (!is_dir(APP_BASE_PATH . '/src/Modules/Forms')) {
             $this->markTestSkipped('Forms is not installed.');
         }
@@ -56,6 +61,8 @@ final class FormSubmitActionTest extends TestCase
 
     protected function tearDown(): void
     {
+        $this->restoreDatabaseEnvironment();
+
         if (!isset($this->dir)) {
             return;
         }
@@ -78,6 +85,8 @@ final class FormSubmitActionTest extends TestCase
         }
 
         is_dir($this->dir) && rmdir($this->dir);
+
+        $this->restoreDatabaseEnvironment();
     }
 
     /**

@@ -35,8 +35,9 @@ returns for a boolean column, next to SQLite's `1`/`0`.
   `audit`, `forms`, `notifications` and `restpanel`.
 - HTTP through `php -S`: `/` 200, `/blog` 200, `/sk/` 200, `/mark` 302, with
   no `SQLSTATE` in any body or server log.
-- The SQLite suite is unchanged and green: 1512 tests, and the export gate
-  still discovers 947. Static analysis, style and mago are clean.
+- The same suite is green on both engines: 1516 tests on SQLite (one skip)
+  and 1516 on PostgreSQL (two skips). Static analysis, style and mago are
+  clean.
 
 ## The engine-aware suite
 
@@ -55,11 +56,21 @@ records the login's security event.
 (`+00`, `+01:00`, `-05`), so an offset is treated as the instant it names
 rather than a second wall clock.
 
-## Still open
+## Both engines, one suite
 
-- **The full suite is still SQLite-shaped.** Tests that seed their own SQLite
-  files do not yet pin `DB_DRIVER=sqlite`; the PostgreSQL job runs the suite
-  that owns that engine, not the catalogue's 1500 tests. Making every seeding
-  test engine-aware is the next step if the whole suite must run on both.
-- **ClickHouse** stays on SQLite by design: its bridge is not part of this
-  port.
+Every test that seeds a SQLite file now pins the engine through
+`Tests\Support\SqliteDatabase`. The trait snapshots every `DB_*` variable,
+removes the DSN-shaped values SQLite cannot read as paths, and sets
+`DB_DRIVER=sqlite`; its restore puts the run's values back and is called both
+at the start and at the end of `tearDown`, so a test that unsets or rewrites a
+variable in its own cleanup cannot leave the next test on the wrong engine.
+The ClickHouse status test reads the local `storage/data` files, so it pins
+SQLite too.
+
+That makes the whole catalogue suite engine-aware. The `postgres` job seeds
+those SQLite files with the default migrators, then runs the full suite with
+`--exclude-group postgres` next to the PostgreSQL-specific suite. Both runs are
+1516 tests, and the full suite takes about half a minute on either engine.
+
+**ClickHouse** stays on SQLite by design: its bridge is not part of this
+port.

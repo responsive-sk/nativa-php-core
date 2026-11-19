@@ -12,6 +12,7 @@ use Modules\Clickhouse\Interfaces\HTTP\ClickhouseServices;
 use Modules\Core\Infrastructure\Env;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Core\Interfaces\CLI\CliOutput;
+use Tests\Support\SqliteDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -25,6 +26,8 @@ use PHPUnit\Framework\TestCase;
  */
 final class StatusCommandTest extends TestCase
 {
+    use SqliteDatabase;
+
     private const MODULE = 'Clickhouse';
 
     /** @var list<string> */
@@ -32,6 +35,8 @@ final class StatusCommandTest extends TestCase
 
     protected function setUp(): void
     {
+        $this->pinSqliteDatabase();
+
         if (!is_dir(APP_BASE_PATH . '/src/Modules/' . self::MODULE)) {
             $this->markTestSkipped(self::MODULE . ' is not installed — the command lives in that module.');
         }
@@ -41,6 +46,8 @@ final class StatusCommandTest extends TestCase
 
     protected function tearDown(): void
     {
+        $this->restoreDatabaseEnvironment();
+
         foreach ($this->previousEnv as $name => $value) {
             putenv($name . '=' . $value);
         }
@@ -56,6 +63,8 @@ final class StatusCommandTest extends TestCase
         Env::reset();
         Env::loadImmutable('');
         AppPaths::resetInstance();
+
+        $this->restoreDatabaseEnvironment();
     }
 
     #[Test]

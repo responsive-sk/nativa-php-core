@@ -17,6 +17,7 @@ use PDO;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Tests\Support\SqliteDatabase;
 
 /**
  * CommentHoneypotTest — the comment form carries the same bot defense as the
@@ -40,10 +41,14 @@ use PHPUnit\Framework\TestCase;
  */
 final class CommentHoneypotTest extends TestCase
 {
+    use SqliteDatabase;
+
     private string $tmpDir = '';
 
     protected function setUp(): void
     {
+        $this->pinSqliteDatabase();
+
         parent::setUp();
 
         foreach (['Comments', 'Security', 'Users', 'Validation'] as $module) {
@@ -68,6 +73,8 @@ final class CommentHoneypotTest extends TestCase
 
     protected function tearDown(): void
     {
+        $this->restoreDatabaseEnvironment();
+
         // PHPUnit runs tearDown() even when setUp() skipped (module absent).
         if ('' !== $this->tmpDir && is_dir($this->tmpDir)) {
             putenv('DB_COMMENTS');
@@ -87,6 +94,8 @@ final class CommentHoneypotTest extends TestCase
         $_SESSION = [];
 
         parent::tearDown();
+
+        $this->restoreDatabaseEnvironment();
     }
 
     /**

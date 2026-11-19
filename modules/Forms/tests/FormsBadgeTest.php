@@ -14,6 +14,7 @@ use Modules\Forms\Domain\Model\FormSchema;
 use Modules\Forms\Infrastructure\Persistence\Migrations\FormsDatabaseMigrator;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Tests\Support\SqliteDatabase;
 
 /**
  * FormsBadgeTest — the nav badge is queue depth, not an unread marker.
@@ -24,10 +25,14 @@ use PHPUnit\Framework\TestCase;
  */
 final class FormsBadgeTest extends TestCase
 {
+    use SqliteDatabase;
+
     private string $dir;
 
     protected function setUp(): void
     {
+        $this->pinSqliteDatabase();
+
         if (!is_dir(APP_BASE_PATH . '/src/Modules/Forms')) {
             $this->markTestSkipped('Forms is not installed.');
         }
@@ -42,6 +47,8 @@ final class FormsBadgeTest extends TestCase
 
     protected function tearDown(): void
     {
+        $this->restoreDatabaseEnvironment();
+
         if (!isset($this->dir)) {
             return;
         }
@@ -55,6 +62,8 @@ final class FormsBadgeTest extends TestCase
         }
 
         is_dir($this->dir) && rmdir($this->dir);
+
+        $this->restoreDatabaseEnvironment();
     }
 
     private function migrate(): void

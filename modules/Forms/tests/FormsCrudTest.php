@@ -18,6 +18,7 @@ use Modules\Forms\Infrastructure\Persistence\Migrations\FormsDatabaseMigrator;
 use Modules\Users\Infrastructure\Persistence\Migrations\UsersDatabaseMigrator;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Tests\Support\SqliteDatabase;
 
 /**
  * FormsCrudTest — the admin surface, through the actions the router calls.
@@ -29,12 +30,16 @@ use PHPUnit\Framework\TestCase;
  */
 final class FormsCrudTest extends TestCase
 {
+    use SqliteDatabase;
+
     private string $dir;
 
     private RouterInterface $router;
 
     protected function setUp(): void
     {
+        $this->pinSqliteDatabase();
+
         if (!is_dir(APP_BASE_PATH . '/src/Modules/Forms')) {
             $this->markTestSkipped('Forms is not installed.');
         }
@@ -88,6 +93,8 @@ final class FormsCrudTest extends TestCase
 
     protected function tearDown(): void
     {
+        $this->restoreDatabaseEnvironment();
+
         if (!isset($this->dir)) {
             return;
         }
@@ -104,6 +111,8 @@ final class FormsCrudTest extends TestCase
         }
 
         is_dir($this->dir) && rmdir($this->dir);
+
+        $this->restoreDatabaseEnvironment();
     }
 
     /**
