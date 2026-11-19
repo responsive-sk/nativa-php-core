@@ -649,13 +649,13 @@ jobs:
           }
           PHP
 
-      # The only group excluded is `postgres`: its suite owns DB_DRIVER=pgsql
-      # and skips without a server, while this job's rule is that a skip is a
-      # red job. The `postgres` job runs it with --fail-on-skipped instead.
-      # Everything else, `openspec/` included, still runs and is held to the
-      # same no-skips rule.
+      # The only groups excluded are `postgres` and `mariadb`: their suites own
+      # DB_DRIVER=pgsql / DB_DRIVER=mariadb and skip without a server, while
+      # this job's rule is that a skip is a red job. Their dedicated jobs run
+      # them with --fail-on-skipped instead. Everything else, `openspec/`
+      # included, still runs and is held to the same no-skips rule.
       - name: Run the full suite (kernel + catalogue)
-        run: composer test -- --log-junit /tmp/modules-junit.xml --exclude-group postgres
+        run: composer test -- --log-junit /tmp/modules-junit.xml --exclude-group postgres,mariadb
 
       # The assertion this job exists for. "OK, but some tests were skipped" is
       # how a deleted guard looks from here, so the JUnit log is read instead of
