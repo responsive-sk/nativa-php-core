@@ -246,7 +246,9 @@
         },
         "Site": {
             "source": "modules/Site",
-            "requires": []
+            "requires": [
+                "ContentLocale"
+            ]
         },
         "Uploads": {
             "source": "modules/Uploads",

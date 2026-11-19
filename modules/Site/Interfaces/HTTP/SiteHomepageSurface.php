@@ -8,6 +8,7 @@ use Shell\AsHomepageSurface;
 use Shell\Homepage;
 use Shell\HomepageSurface;
 use Shell\PageContext;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Site\Application\SiteCopy;
 
 /**
@@ -42,6 +43,9 @@ final class SiteHomepageSurface implements HomepageSurface
             title: is_string($copy['seo']['title'] ?? null) ? $copy['seo']['title'] : null,
             description: is_string($copy['seo']['description'] ?? null) ? $copy['seo']['description'] : null,
             lang: is_string($copy['lang'] ?? null) ? $copy['lang'] : null,
+            // Absolute: a crawler does not resolve `og:image` against the page.
+            ogImage: $context->request->absoluteUrl(SiteCopy::shareImage()),
+            hreflang: self::hreflang($context),
         );
     }
 
@@ -175,6 +179,42 @@ final class SiteHomepageSurface implements HomepageSurface
             . '<p class="site-contact__text">' . self::e(self::text($copy, 'contact', 'text')) . '</p>'
             . ('' === $rows ? '' : '<ul class="site-contact__rows">' . $rows . '</ul>')
             . '</section>';
+    }
+
+    /**
+     * The page's language alternates: one absolute URL per published locale,
+     * plus `x-default` pointing at the default locale's version.
+     *
+     * The prefixes are the locator's knowledge, not this module's, so they come
+     * from the ContentLocale mapper (`''` for the default, `/en` for the rest).
+     * Measured before this existed (2026-11-19): `/`, `/sk` and `/en` all served
+     * the landing with one canonical and no alternates, so a crawler could not
+     * tell the two languages apart at the front door, while `/blog` pages had
+     * alternates from the Blog module's own pair logic.
+     *
+     * No mapper, no alternates: a tree without the module renders the page and
+     * says nothing it cannot back up.
+     *
+     * @return array<string, string>
+     */
+    private static function hreflang(PageContext $context): array
+    {
+        if (!class_exists(ContentLocaleServices::class)) {
+            return [];
+        }
+
+        $mapper = ContentLocaleServices::mapper();
+        $base = $context->request->absoluteUrl('');
+        $links = [];
+
+        foreach ($mapper->locales() as $code) {
+            $links[$mapper->languageCode($code)] = $base . $mapper->urlPrefix($code) . '/';
+        }
+
+        $default = $mapper->defaultLocale();
+        $links['x-default'] = $base . $mapper->urlPrefix($default) . '/';
+
+        return $links;
     }
 
     /**

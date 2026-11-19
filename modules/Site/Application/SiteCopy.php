@@ -30,6 +30,16 @@ namespace Modules\Site\Application;
 final class SiteCopy
 {
     /**
+     * The image a shared link shows. One file per site, served from `public/`:
+     * a 1200\u00d7630 PNG generated once and committed, because an `og:image`
+     * that has to be produced per request is an image no crawler waits for.
+     */
+    public static function shareImage(): string
+    {
+        return '/og/home.png';
+    }
+
+    /**
      * Real contact details, once they are confirmed — empty means the row is
      * not rendered at all.
      *

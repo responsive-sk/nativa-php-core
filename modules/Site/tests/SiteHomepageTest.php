@@ -7,6 +7,7 @@ namespace Modules\Site\Tests;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Interfaces\HTTP\Kernel;
 use Modules\Core\Interfaces\HTTP\Router;
+use Modules\Site\Application\SiteCopy;
 use Modules\Site\Interfaces\HTTP\SiteHomepageSurface;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -69,6 +70,35 @@ final class SiteHomepageTest extends TestCase
             $html,
             'The landing description comes from the surface, not from the site-wide fallback.',
         );
+    }
+
+    #[Test]
+    public function theHeadDeclaresTheLanguageAlternatesAndTheShareImage(): void
+    {
+        $html = $this->page('/');
+
+        self::assertStringContainsString(
+            '<link rel="alternate" hreflang="sk"',
+            $html,
+            'A bilingual landing with no `sk` alternate is two languages a crawler cannot pair.',
+        );
+        self::assertStringContainsString('<link rel="alternate" hreflang="en"', $html);
+        self::assertStringContainsString(
+            '<link rel="alternate" hreflang="x-default"',
+            $html,
+            'x-default is what a visitor from an unlisted language is served.',
+        );
+        self::assertMatchesRegularExpression(
+            '/<meta property="og:image" content="http:\/\/[^"]+\/og\/home\.png">/',
+            $html,
+            'A shared link without og:image shows no image at all.',
+        );
+    }
+
+    #[Test]
+    public function theShareImageTheSurfaceNamesActuallyExists(): void
+    {
+        self::assertFileExists(APP_BASE_PATH . '/public' . SiteCopy::shareImage(), 'The head points at a file the deployment must serve.');
     }
 
     #[Test]

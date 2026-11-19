@@ -91,6 +91,7 @@ final class HomepageAction
             description: $homepage?->description,
             currentPath: '/',
             lang: $homepage?->lang,
+            hreflangLinks: [] === ($homepage?->hreflang ?? []) ? null : $homepage->hreflang,
             canonicalUrl: $homeUrl,
             ogImage: $homepage?->ogImage,
             structuredData: WebsiteStructuredData::website($siteName, $homeUrl),
