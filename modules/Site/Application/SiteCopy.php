@@ -112,6 +112,9 @@ final class SiteCopy
                     ['title' => 'Prevádzky s vlastným procesom', 'text' => 'Rezervácie, sklady a objednávky tam, kde tabuľky prestávajú stačiť.'],
                     ['title' => 'Tímy s vlastným vývojom', 'text' => 'Doplníme kapacitu alebo prevezmeme časť, ktorá nemá vlastníka.'],
                 ],
+                // The page behind the claim above, not another paragraph about it:
+                // `/referencie` lists only what a visitor can open and check.
+                'link' => ['label' => 'Referencie: čo si viete overiť', 'href' => '/referencie'],
             ],
             'stack' => [
                 'label' => 'Technológie',
@@ -229,6 +232,7 @@ final class SiteCopy
                     ['title' => 'Businesses with their own process', 'text' => 'Bookings, stock and orders where spreadsheets stop working.'],
                     ['title' => 'Teams with in-house developers', 'text' => 'We add capacity, or take over the part nobody owns.'],
                 ],
+                'link' => ['label' => 'References: what you can check', 'href' => '/en/references'],
             ],
             'stack' => [
                 'label' => 'Technology',

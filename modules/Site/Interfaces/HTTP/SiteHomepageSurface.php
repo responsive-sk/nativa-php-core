@@ -76,6 +76,7 @@ final class SiteHomepageSurface implements HomepageSurface
                 self::text($copy, 'audience', 'title'),
                 is_array($copy['audience']['items'] ?? null) ? $copy['audience']['items'] : [],
                 numbered: false,
+                link: is_array($copy['audience']['link'] ?? null) ? $copy['audience']['link'] : null,
             )
             . self::stack($copy, $context)
             . self::contact($copy)
@@ -110,7 +111,7 @@ final class SiteHomepageSurface implements HomepageSurface
      *
      * @param list<array{title: string, text: string}> $items
      */
-    private static function cards(string $id, string $label, string $title, array $items, bool $numbered): string
+    private static function cards(string $id, string $label, string $title, array $items, bool $numbered, ?array $link = null): string
     {
         $html = '<section class="site-section" id="' . self::e($id) . '">'
             . '<p class="site-section__label">' . self::e($label) . '</p>'
@@ -129,7 +130,19 @@ final class SiteHomepageSurface implements HomepageSurface
                 . '</article>';
         }
 
-        return $html . '</div></section>';
+        $html .= '</div>';
+
+        // The section's own link, when the copy names one: a claim that has a
+        // page behind it should point at the page instead of restating it.
+        $href = is_string($link['href'] ?? null) ? $link['href'] : '';
+        $label = is_string($link['label'] ?? null) ? $link['label'] : '';
+
+        if ('' !== $href && '' !== $label) {
+            $html .= '<p class="site-section__more"><a href="' . self::e($href) . '">'
+                . self::e($label) . '</a></p>';
+        }
+
+        return $html . '</section>';
     }
 
     /**
@@ -370,6 +383,8 @@ final class SiteHomepageSurface implements HomepageSurface
         .site-section__label{margin:0 0 .5rem;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--site-muted)}
         .site-section__title{margin:0 0 2rem;font-size:clamp(1.5rem,3vw,2.1rem);line-height:1.2;letter-spacing:-.01em}
         .site-section__text{margin:0;color:var(--site-muted)}
+        .site-section__more{margin:2rem 0 0;font-weight:600}
+        .site-section__more a{color:var(--site-accent);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--site-accent) 40%,transparent)}
         .site-section--split{display:grid;gap:2rem;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
         .site-grid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))}
         .site-card{border:1px solid var(--site-line);border-radius:.6rem;padding:1.4rem;background:var(--site-surface)}

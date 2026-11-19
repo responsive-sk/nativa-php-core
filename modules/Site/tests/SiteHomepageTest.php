@@ -309,6 +309,42 @@ final class SiteHomepageTest extends TestCase
         self::assertStringNotContainsString($slovakNote, $en, 'The English page must not fall back to the Slovak copy.');
     }
 
+    #[Test]
+    public function theAudienceSectionLinksToAReferencesPageThatAnswers(): void
+    {
+        if (!class_exists(\Modules\Pages\Interfaces\HTTP\Actions\PageViewAction::class)) {
+            $this->markTestSkipped('Pages is not installed — the references page is a page.');
+        }
+
+        $slovak = $this->page('/');
+        self::assertMatchesRegularExpression(
+            '#<p class="site-section__more"><a href="(/referencie)">Referencie: čo si viete overiť</a></p>#',
+            $slovak,
+            'The audience cards claim a track record; the link must name the page behind it.',
+        );
+
+        // The link is only worth having when the page answers: a section that
+        // points at a 404 is the defect this test exists to catch.
+        self::assertStringContainsString(
+            'Prečo tu nie sú logá',
+            $this->page('/referencie'),
+            'The references page must render its own body, not a shell around an empty page.',
+        );
+
+        $english = $this->page('/en');
+        self::assertMatchesRegularExpression(
+            '#<p class="site-section__more"><a href="(/en/references)">References: what you can check</a></p>#',
+            $english,
+            'The English landing keeps its references in English.',
+        );
+
+        self::assertStringContainsString(
+            'Why there are no logos',
+            $this->page('/en/references'),
+            'The English references page is its own page, not a fallback to the Slovak one.',
+        );
+    }
+
     private static function stackLine(string $html, string $title): string
     {
         preg_match(
