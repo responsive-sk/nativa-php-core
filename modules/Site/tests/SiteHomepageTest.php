@@ -379,10 +379,19 @@ final class SiteHomepageTest extends TestCase
         $html = $this->page('/');
 
         self::assertStringContainsString(
-            '<div class="site-orb" data-orb aria-hidden="true"></div>',
+            '<div class="site-orb" data-orb aria-hidden="true">',
             $html,
-            'The hero must ship an empty, hidden orb — the script fills it.',
+            'The hero must ship the orb box; the script fills the rings into it.',
         );
+        // The mark is the tab's artwork, INLINED. An <img> here would be a
+        // second request for a file the head already asks for, and the landing
+        // states six.
+        self::assertMatchesRegularExpression(
+            '#<div class="site-orb" data-orb aria-hidden="true"><svg[^>]*class="site-orb__mark"#',
+            $html,
+            'The site mark belongs inside the orb, inlined from the favicon.',
+        );
+        self::assertStringNotContainsString('site-orb"><img', $html);
         self::assertStringContainsString('.site-orb{position:relative', $html, 'The orb needs its own box to size the rings.');
         self::assertStringContainsString('.site-orb:empty{', $html, 'Without the script the box must still draw something.');
     }

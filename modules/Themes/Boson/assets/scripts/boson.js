@@ -106,7 +106,14 @@
                 return;
             }
 
-            orb.innerHTML = '';
+            // Only the dots are ours: the box also carries the site mark, and
+            // an `innerHTML = ''` here deleted the logo on the first resize.
+            var built = orb.querySelectorAll('.site-orb__dot');
+
+            for (var existing = 0; existing < built.length; existing++) {
+                built[existing].parentNode.removeChild(built[existing]);
+            }
+
             dots = [];
 
             var scale = Math.min(width, height) / CONFIG.base;
@@ -125,21 +132,21 @@
                 ring(radius, Math.max(6, Math.floor((2 * Math.PI * radius) / spacing)), 'site-orb__dot', size);
             }
 
-            // The accent core sits at a fraction of the ring, not "whatever is
-            // left inside the outer layers": at hero sizes those layers reach
-            // the centre, and the subtraction went negative — which is how the
-            // first build rendered 160 grey dots and not one accent square.
-            var innerRadius = Math.max(spacing, Math.min(CONFIG.innerRadius * scale, outerRadius * 0.35));
+            // The accent band sits BETWEEN the mark and the grey field, not at
+            // the centre: the middle of this orb is the site's logo, and a ring
+            // drawn into it reads as a mistake (measured 2026-11-19 — the first
+            // build put accent dots on top of the mark).
+            var innerRadius = outerRadius * 0.45;
             var innerLayers = width < 320 ? 2 : CONFIG.innerLayers;
 
             for (var i = 0; i < innerLayers; i++) {
-                var inner = innerRadius - i * spacing;
+                var inner = innerRadius + i * spacing;
 
-                if (inner <= 2) {
+                if (inner >= outerRadius - spacing) {
                     break;
                 }
 
-                ring(inner, Math.max(4, Math.floor((2 * Math.PI * inner) / spacing)), 'site-orb__dot site-orb__dot--inner', size + 1);
+                ring(inner, Math.max(6, Math.floor((2 * Math.PI * inner) / spacing)), 'site-orb__dot site-orb__dot--inner', size);
             }
         }
 

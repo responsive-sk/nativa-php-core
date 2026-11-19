@@ -111,8 +111,40 @@ final class SiteHomepageSurface implements HomepageSurface
             // purpose — without the script it is a faint CSS dot field, and
             // with it nothing is downloaded: the behaviour rides the theme
             // bundle the page already loads. `aria-hidden`: it is decoration.
-            . '<div class="site-orb" data-orb aria-hidden="true"></div>'
+            . '<div class="site-orb" data-orb aria-hidden="true">' . self::mark() . '</div>'
             . '</section>';
+    }
+
+    /**
+     * The site mark in the middle of the orb: the same artwork the browser tab
+     * carries, inlined rather than linked.
+     *
+     * An `<img src="/favicon.svg">` here would be a SECOND request for a file
+     * the head already asks for — measured 2026-11-19, that is exactly the
+     * seven-request landing the copy's "6 requestov" cannot claim. The SVG is
+     * 4.8 kB of path data, it is decoration inside an `aria-hidden` box, and
+     * the file's own comment (which explains the artwork) is stripped on the
+     * way in.
+     */
+    private static function mark(): string
+    {
+        static $mark = null;
+
+        if (null === $mark) {
+            $path = APP_BASE_PATH . '/public/favicon.svg';
+            $svg = is_file($path) ? (string) file_get_contents($path) : '';
+            $svg = (string) preg_replace('/<!--.*?-->/s', '', $svg);
+            $svg = preg_replace(
+                '/<svg\b([^>]*)>/',
+                '<svg$1 class="site-orb__mark" aria-hidden="true" focusable="false">',
+                $svg,
+                1,
+            );
+
+            $mark = is_string($svg) && str_starts_with(trim($svg), '<svg') ? trim($svg) : '';
+        }
+
+        return $mark;
     }
 
     /**
@@ -513,6 +545,7 @@ final class SiteHomepageSurface implements HomepageSurface
         .site-hero__copy{max-width:48rem}
         .site-orb{position:relative;aspect-ratio:1;width:100%;max-width:32rem;justify-self:center}
         .site-orb:empty{background:radial-gradient(circle at center,color-mix(in srgb,currentColor 14%,transparent) 1px,transparent 1.5px) 0 0/14px 14px;border-radius:50%}
+        .site-orb__mark{position:absolute;inset:0;margin:auto;width:22%;max-width:5rem;height:auto}
         .site-orb__dot{position:absolute;background:color-mix(in srgb,currentColor 42%,transparent);transform:translate(-50%,-50%);will-change:transform}
         .site-orb__dot--inner{background:var(--site-accent)}
         @media (max-width:56rem){.site-hero{grid-template-columns:minmax(0,1fr)}.site-orb{max-width:20rem;order:-1}}
