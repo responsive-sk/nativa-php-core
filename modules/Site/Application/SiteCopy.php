@@ -123,12 +123,12 @@ final class SiteCopy
                 'text' => 'Vyberáme podľa problému, nie podľa popularity. Všetko, čo nasadíme, viete prevádzkovať aj bez nás.',
                 // Measured, not asserted: 2026-11-20, this release, Chrome
                 // headless over CDP on Slow 4G (1.6 Mbit/s, 150 ms RTT, 4x CPU
-                // throttle), cache disabled, 7 runs: LCP 768-776 ms, median
-                // 772 ms; the first run of a freshly started browser is
-                // 1076 ms, which is why the copy cites the median and not a
-                // bound. 6 requests, 181 kB uncompressed (php -S, no gzip).
+                // throttle), cache disabled, 14 runs in two batches of seven:
+                // median 736-740 ms; the first run of a freshly started browser
+                // is 1032 ms, which is why the copy cites the median and not a
+                // bound. 6 requests, 154 kB uncompressed (php -S, no gzip).
                 'diagram_caption' => 'Strom, na ktorom tento web stojí.',
-                'fact' => 'Tento web je postavený na tom istom strome: 6 requestov, kritické CSS priamo v HTML a JavaScript až po obsahu. Diagram nad zoznamom si Mermaid dotiahne až pri scrollovaní, takže prvá obrazovka platí len to, čo vidíte. Na pomalom 4G (1,6 Mbit/s, 4× spomalené CPU) sa najväčší prvok vykreslí za 0,8 s (medián siedmich meraní).',
+                'fact' => 'Tento web je postavený na tom istom strome: 6 requestov, kritické CSS priamo v HTML a JavaScript až po obsahu. Diagram nad zoznamom si Mermaid dotiahne až pri scrollovaní, takže prvá obrazovka platí len to, čo vidíte. Na pomalom 4G (1,6 Mbit/s, 4× spomalené CPU) sa najväčší prvok vykreslí za 0,7 s (medián štrnástich meraní).',
                 // Group, then language, then what we build with it. A flat list
                 // of chips answered "which words do you know", not "what would
                 // you build this in".
@@ -249,7 +249,7 @@ final class SiteCopy
                 'title' => 'What it stands on',
                 'text' => 'We pick for the problem, not for popularity. Everything we ship, you can run without us.',
                 'diagram_caption' => 'The tree this site stands on.',
-                'fact' => 'This site runs on the same tree: 6 requests, the critical CSS inline in the HTML and JavaScript only after the content. The diagram above the list pulls Mermaid in only once you scroll to it, so the first screen pays for what you see. On Slow 4G (1.6 Mbit/s, 4x slower CPU) the largest element paints in 0.8 s (median of seven runs).',
+                'fact' => 'This site runs on the same tree: 6 requests, the critical CSS inline in the HTML and JavaScript only after the content. The diagram above the list pulls Mermaid in only once you scroll to it, so the first screen pays for what you see. On Slow 4G (1.6 Mbit/s, 4x slower CPU) the largest element paints in 0.7 s (median of fourteen runs).',
                 'groups' => [
                     [
                         'title' => 'Backend',
