@@ -92,10 +92,11 @@ final class SiteHomepageSurface implements HomepageSurface
         $blogHref = self::blogHref($context);
 
         return '<section class="site-hero">'
+            . '<div class="site-wrap site-hero__inner">'
             . '<div class="site-hero__copy">'
             . '<p class="site-hero__eyebrow">' . self::e(self::text($copy, 'hero', 'eyebrow')) . '</p>'
             . '<h1 class="site-hero__title">'
-            . '<span class="site-hero__title-line">' . self::e(self::text($copy, 'hero', 'title')) . '</span> '
+            . '<span class="site-hero__title-line">' . self::e(self::text($copy, 'hero', 'title')) . '</span>'
             . '<span class="site-hero__title-accent">' . self::e(self::text($copy, 'hero', 'accent')) . '</span>'
             . '</h1>'
             . '<p class="site-hero__text">' . self::e(self::text($copy, 'hero', 'text')) . '</p>'
@@ -106,13 +107,40 @@ final class SiteHomepageSurface implements HomepageSurface
             . self::e(self::text($copy, 'hero', 'secondary')) . '</a>'
             . '</p>'
             . '</div>'
+            . '<div class="site-hero__visual">'
             // The reference's signature mark: an empty box the theme's script
             // fills with rings of squares that react to the pointer. Empty on
             // purpose — without the script it is a faint CSS dot field, and
             // with it nothing is downloaded: the behaviour rides the theme
             // bundle the page already loads. `aria-hidden`: it is decoration.
             . '<div class="site-orb" data-orb aria-hidden="true">' . self::mark() . '</div>'
+            . '</div>'
+            . '</div>'
+            // The band the reference closes its hero with: a ruled line and one
+            // sentence telling a visitor the page keeps going. It is a link, not
+            // a caption, so it also works without the pointer.
+            . '<a class="site-discover" href="#sluzby"><span class="site-wrap site-discover__inner">'
+            . '<span>' . self::e(self::text($copy, 'hero', 'discover')) . '</span>'
+            . '<span class="site-discover__arrow" aria-hidden="true">' . "\u{2193}" . '</span>'
+            . '</span></a>'
             . '</section>';
+    }
+
+    /**
+     * The heading every band shares: a `//` label, the section's one title and,
+     * when the copy has a sentence for it, the lead that sits beside the title.
+     *
+     * A section with no lead is a title across the full measure — the same
+     * shape the reference gives its ruled bands, and the reason a section does
+     * not need an empty second column to look unfinished.
+     */
+    private static function head(string $label, string $title, string $lead = ''): string
+    {
+        return '<header class="site-head">'
+            . '<p class="site-head__label">' . self::e($label) . '</p>'
+            . '<h2 class="site-head__title">' . self::e($title) . '</h2>'
+            . ('' === $lead ? '' : '<p class="site-head__lead">' . self::e($lead) . '</p>')
+            . '</header>';
     }
 
     /**
@@ -155,14 +183,15 @@ final class SiteHomepageSurface implements HomepageSurface
     private static function cards(string $id, string $label, string $title, array $items, bool $numbered, ?array $link = null): string
     {
         $html = '<section class="site-section" id="' . self::e($id) . '">'
-            . '<p class="site-section__label">' . self::e($label) . '</p>'
-            . '<h2 class="site-section__title">' . self::e($title) . '</h2>'
-            . '<div class="site-grid">';
+            . self::head($label, $title)
+            . '<div class="site-band">'
+            . '<span class="site-band__dots" aria-hidden="true"></span>'
+            . '<div class="site-band__row site-band__row--' . count($items) . '">';
 
         foreach ($items as $index => $item) {
             $mark = $numbered
                 ? '<span class="site-card__number">' . self::e(str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT)) . '</span>'
-                : '';
+                : '<span class="site-card__mark" aria-hidden="true"></span>';
 
             $html .= '<article class="site-card">'
                 . $mark
@@ -171,7 +200,9 @@ final class SiteHomepageSurface implements HomepageSurface
                 . '</article>';
         }
 
-        $html .= '</div>';
+        $html .= '</div>'
+            . '<span class="site-band__dots site-band__dots--right" aria-hidden="true"></span>'
+            . '</div>';
 
         // The section's own link, when the copy names one: a claim that has a
         // page behind it should point at the page instead of restating it.
@@ -203,14 +234,18 @@ final class SiteHomepageSurface implements HomepageSurface
         // so the two links cannot disagree about the blog's address.
         $blog = self::blogHref($context);
 
-        $html = '<section class="site-section" id="technologie">'
-            . '<p class="site-section__label">' . self::e(self::text($copy, 'stack', 'label')) . '</p>'
-            . '<h2 class="site-section__title">' . self::e(self::text($copy, 'stack', 'title')) . '</h2>'
-            . '<p class="site-section__text">' . self::e(self::text($copy, 'stack', 'text')) . '</p>'
-            . self::diagram($copy, $context)
-            . '<div class="site-stack">';
-
         $groups = is_array($copy['stack']['groups'] ?? null) ? $copy['stack']['groups'] : [];
+
+        $html = '<section class="site-section" id="technologie">'
+            . self::head(
+                self::text($copy, 'stack', 'label'),
+                self::text($copy, 'stack', 'title'),
+                self::text($copy, 'stack', 'text'),
+            )
+            . self::diagram($copy, $context)
+            . '<div class="site-band">'
+            . '<span class="site-band__dots" aria-hidden="true"></span>'
+            . '<div class="site-band__row site-band__row--' . count($groups) . ' site-stack">';
 
         foreach ($groups as $group) {
             if (!is_array($group)) {
@@ -228,7 +263,9 @@ final class SiteHomepageSurface implements HomepageSurface
             $html .= '</ul></section>';
         }
 
-        $html .= '</div>';
+        $html .= '</div>'
+            . '<span class="site-band__dots site-band__dots--right" aria-hidden="true"></span>'
+            . '</div>';
 
         // The one number in this section, and it is about THIS page: a measured
         // sentence is the only kind of performance claim the copy is allowed to
@@ -438,20 +475,22 @@ final class SiteHomepageSurface implements HomepageSurface
         $phone = $contacts['phone'];
         $rows = '';
 
-        if ('' !== $email) {
-            $rows .= '<li><span>' . self::e(self::text($copy, 'contact', 'email_label')) . '</span>'
-                . '<a href="mailto:' . self::e($email) . '">' . self::e($email) . '</a></li>';
-        }
-
+        // The address is the call itself below, so it is not repeated as a row;
+        // a phone number has no button of its own and stays a row.
         if ('' !== $phone) {
             $rows .= '<li><span>' . self::e(self::text($copy, 'contact', 'phone_label')) . '</span>'
                 . '<a href="tel:' . self::e(preg_replace('/\s+/', '', $phone) ?? $phone) . '">' . self::e($phone) . '</a></li>';
         }
 
         return '<section class="site-contact" id="kontakt">'
-            . '<p class="site-section__label">' . self::e(self::text($copy, 'contact', 'label')) . '</p>'
+            . '<p class="site-head__label">' . self::e(self::text($copy, 'contact', 'label')) . '</p>'
             . '<h2 class="site-contact__title">' . self::e(self::text($copy, 'contact', 'title')) . '</h2>'
             . '<p class="site-contact__text">' . self::e(self::text($copy, 'contact', 'text')) . '</p>'
+            . ('' === $email ? '' : '<p class="site-contact__actions">'
+                . '<a class="site-button site-button--primary" href="mailto:' . self::e($email) . '">'
+                . self::e(self::text($copy, 'hero', 'primary')) . '</a>'
+                . '<a class="site-button" href="mailto:' . self::e($email) . '">' . self::e($email) . '</a>'
+                . '</p>')
             . ('' === $rows ? '' : '<ul class="site-contact__rows">' . $rows . '</ul>')
             . '</section>';
     }
@@ -540,61 +579,123 @@ final class SiteHomepageSurface implements HomepageSurface
     {
         return <<<'HTML'
         <style nonce="__CSP_NONCE_PLACEHOLDER__">
-        .site-home{--site-ink:currentColor;--site-muted:color-mix(in srgb,currentColor 62%,transparent);--site-line:color-mix(in srgb,currentColor 16%,transparent);--site-accent:#2563eb;--site-surface:color-mix(in srgb,currentColor 4%,transparent);max-width:72rem;margin:0 auto;padding:4rem 1.5rem 5rem;line-height:1.6}
-        .site-hero{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:3rem;align-items:center;margin-bottom:5rem}
-        .site-hero__copy{max-width:48rem}
-        .site-orb{position:relative;aspect-ratio:1;width:100%;max-width:32rem;justify-self:center}
+        /* The page speaks the shell's language: the theme's display and mono
+         * stacks (already loaded, so no extra request), its hairline rules and
+         * its brand — the orange-red of the site mark, not an accent invented
+         * here. Every value is a var with a fallback so a tree without the
+         * Boson theme still renders a page rather than bare markup. */
+        .site-home{--site-accent:#f93904;--site-brand:#f93904;--site-brand-deep:#972203;--site-btn:#260c04;--site-muted:color-mix(in srgb,currentColor 60%,transparent);--site-line:color-mix(in srgb,currentColor 9%,transparent);--site-line-strong:color-mix(in srgb,currentColor 16%,transparent);--site-surface:color-mix(in srgb,currentColor 4%,transparent);--site-display:var(--bo-font-title,"Roboto Condensed","Segoe UI",Roboto,sans-serif);--site-mono:var(--bo-font-mono,ui-monospace,SFMono-Regular,Menlo,monospace);--site-gap:6rem;font-size:1.0625rem;line-height:1.7;color:inherit}
+        .site-wrap{width:90vw;max-width:90rem;margin:0 auto}
+        /* Zero-specificity resets: a plain `.site-home h3` would out-weigh the
+         * component's own class and silently undo its letter-spacing. */
+        .site-home :where(h1,h2,h3){font-family:var(--site-display);font-weight:600;line-height:1.05;letter-spacing:-.01em;margin:0;text-wrap:balance}
+        .site-home :where(p){margin:0}
+        .site-home :where(a){text-decoration:none;color:inherit}
+        /* Hero — the band the whole page is measured against. It fills the
+         * viewport under the fixed header and closes on a ruled line. */
+        .site-hero{display:flex;flex-direction:column;min-height:calc(100svh - var(--bo-header,6.25rem))}
+        .site-hero__inner{flex:1;display:flex;align-items:center;justify-content:space-between;gap:4rem;padding:3.5rem 0}
+        .site-hero__copy{flex:3;display:flex;flex-direction:column;align-items:flex-start;gap:1.5rem;min-width:0}
+        .site-hero__eyebrow{font-family:var(--site-mono);font-size:.8rem;letter-spacing:.28em;text-transform:uppercase;color:var(--site-brand)}
+        .site-hero__title{display:flex;flex-direction:column;font-size:clamp(2.75rem,7.4vw,6.5rem);line-height:.94;letter-spacing:-.02em}
+        .site-hero__title-line{color:inherit}
+        .site-hero__title-accent{color:var(--site-brand)}
+        .site-hero__text{max-width:34em;font-size:1.05rem;color:var(--site-muted)}
+        .site-hero__actions{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:.5rem}
+        .site-hero__visual{flex:2;display:flex;justify-content:center;min-width:0}
+        .site-discover{display:block;border-top:1px solid var(--site-line);color:var(--site-muted);transition:background .2s,color .2s}
+        .site-discover:hover{background:var(--site-surface);color:inherit}
+        .site-discover__inner{display:flex;align-items:center;justify-content:space-between;padding:1.6rem 0;font-family:var(--site-display);font-size:.78rem;letter-spacing:.16em;text-transform:uppercase}
+        .site-discover__arrow{font-size:1rem;transition:transform .2s}
+        .site-discover:hover .site-discover__arrow{transform:translateY(4px)}
+        /* The orb: the theme's script builds rings of squares into the box; the
+         * glowing halo, the dashed orbit and the mark in the middle are this
+         * stylesheet's. The mark is decoration, inlined from the favicon, and it
+         * sits above the dots so the rings read as orbit, not noise. */
+        .site-orb{position:relative;aspect-ratio:1;width:min(100%,30rem);justify-self:center}
+        .site-orb::before{content:"";position:absolute;inset:-10%;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--site-brand) 26%,transparent) 0,transparent 62%);pointer-events:none}
+        .site-orb::after{content:"";position:absolute;inset:5%;border:1px dashed var(--site-line-strong);border-radius:50%;pointer-events:none}
+        .site-orb__mark{position:absolute;inset:0;margin:auto;z-index:1;width:22%;max-width:5.5rem;height:auto}
         .site-orb:empty{background:radial-gradient(circle at center,color-mix(in srgb,currentColor 14%,transparent) 1px,transparent 1.5px) 0 0/14px 14px;border-radius:50%}
-        .site-orb__mark{position:absolute;inset:0;margin:auto;width:22%;max-width:5rem;height:auto}
-        .site-orb__dot{position:absolute;background:color-mix(in srgb,currentColor 42%,transparent);transform:translate(-50%,-50%);will-change:transform}
-        .site-orb__dot--inner{background:var(--site-accent)}
-        @media (max-width:56rem){.site-hero{grid-template-columns:minmax(0,1fr)}.site-orb{max-width:20rem;order:-1}}
-        @media (prefers-reduced-motion:reduce){.site-orb__dot{will-change:auto}}
-        .site-hero__eyebrow{margin:0 0 1rem;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--site-muted)}
-        .site-hero__title{margin:0 0 1.5rem;font-size:clamp(2.1rem,5vw,3.5rem);line-height:1.1;letter-spacing:-.02em;text-wrap:balance}
-        .site-hero__title-line{display:block}
-        .site-hero__title-accent{display:block;color:var(--site-accent)}
-        .site-hero__text{margin:0 0 2rem;font-size:1.125rem;color:var(--site-muted);max-width:38rem}
-        .site-hero__actions{display:flex;flex-wrap:wrap;gap:.75rem;margin:0}
-        .site-button{display:inline-flex;align-items:center;justify-content:center;padding:.75rem 1.4rem;border:1px solid var(--site-line);border-radius:.4rem;color:inherit;text-decoration:none;font-weight:600}
-        .site-button--primary{background:var(--site-accent);border-color:var(--site-accent);color:#fff}
-        .site-button:hover{border-color:var(--site-accent)}
-        .site-section{margin:0 0 4.5rem}
-        .site-section__label{margin:0 0 .5rem;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--site-muted)}
-        .site-section__title{margin:0 0 2rem;font-size:clamp(1.5rem,3vw,2.1rem);line-height:1.2;letter-spacing:-.01em}
-        .site-section__text{margin:0;color:var(--site-muted)}
-        .site-section__fact{margin:2rem 0 0;padding-top:1.25rem;border-top:1px solid var(--site-line);font-size:.95rem;color:var(--site-muted);max-width:44rem}
-        .site-section__more{margin:2rem 0 0;font-weight:600}
-        .site-section__more a{color:var(--site-accent);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--site-accent) 40%,transparent)}
-        .site-section--split{display:grid;gap:2rem;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
-        .site-grid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))}
-        .site-card{border:1px solid var(--site-line);border-radius:.6rem;padding:1.4rem;background:var(--site-surface)}
-        .site-card__number{display:block;margin-bottom:.75rem;font-size:.8rem;letter-spacing:.12em;color:var(--site-accent)}
-        .site-card__title{margin:0 0 .5rem;font-size:1.05rem}
-        .site-card__text{margin:0;font-size:.95rem;color:var(--site-muted)}
-        .site-diagram{margin:2rem 0 0;padding:1.1rem;border:1px solid var(--site-line);border-radius:.6rem;background:var(--site-surface);min-height:16rem;overflow-x:auto}
-        .site-diagram__caption{margin:0 0 .9rem;font-size:.8rem;color:var(--site-muted)}
+        .site-orb__dot{position:absolute;background:color-mix(in srgb,currentColor 34%,transparent);transform:translate(-50%,-50%);will-change:transform}
+        .site-orb__dot--inner{background:var(--site-brand)}
+        /* A section heading: `// label`, one title, an optional lead beside it. */
+        .site-section{margin:0}
+        .site-head{width:90vw;max-width:90rem;margin:var(--site-gap) auto 2.75rem;display:grid;grid-template-columns:3fr 2fr;column-gap:3rem;row-gap:1.25rem;align-items:end}
+        .site-head__label{grid-column:1;font-family:var(--site-mono);font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--site-muted)}
+        .site-head__label::before{content:"// ";color:var(--site-brand)}
+        .site-head__title{grid-column:1;font-size:clamp(2rem,4.8vw,3.75rem);line-height:1.02}
+        .site-head__lead{grid-column:2;grid-row:1 / span 2;align-self:end;color:var(--site-muted)}
+        /* Bands — full-bleed ruled grids with the reference's dotted gutters. */
+        .site-band{display:grid;grid-template-columns:7.5rem minmax(0,1fr) 7.5rem;border-top:1px solid var(--site-line);border-bottom:1px solid var(--site-line)}
+        .site-band__dots{background-image:radial-gradient(circle,color-mix(in srgb,currentColor 32%,transparent) 1px,transparent 1.5px);background-position:center;background-size:14px 14px;border-right:1px solid var(--site-line)}
+        .site-band__dots--right{border-right:0;border-left:1px solid var(--site-line)}
+        .site-band__row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+        .site-band__row--1{grid-template-columns:minmax(0,1fr)}
+        .site-band__row--2{grid-template-columns:repeat(2,minmax(0,1fr))}
+        .site-band__row--3{grid-template-columns:repeat(3,minmax(0,1fr))}
+        .site-band__row--4{grid-template-columns:repeat(4,minmax(0,1fr))}
+        .site-band__row>.site-card,.site-band__row>.site-stack__group{border-right:1px solid var(--site-line)}
+        .site-band__row>:last-child{border-right:0}
+        .site-card{position:relative;display:flex;flex-direction:column;gap:.9rem;padding:3rem 2rem}
+        .site-card::after{content:"";position:absolute;inset:0;border:1px dashed transparent;pointer-events:none;transition:border-color .2s}
+        .site-card:hover::after{border-color:var(--site-brand)}
+        .site-card__number{font-family:var(--site-mono);font-size:.78rem;letter-spacing:.2em;color:var(--site-brand)}
+        .site-card__mark{width:1.15rem;height:1.15rem;background-image:radial-gradient(circle,var(--site-brand) 1.5px,transparent 2px);background-size:6px 6px}
+        .site-card__title{font-size:1.15rem;letter-spacing:.08em;text-transform:uppercase;line-height:1.25}
+        .site-card__text{font-size:.95rem;color:var(--site-muted)}
+        .site-section__more{width:90vw;max-width:90rem;margin:2.5rem auto 0;font-family:var(--site-display);font-size:.82rem;letter-spacing:.14em;text-transform:uppercase}
+        .site-section__more a{color:var(--site-brand);border-bottom:1px solid color-mix(in srgb,var(--site-brand) 45%,transparent);padding-bottom:.15rem}
+        .site-section__fact{width:90vw;max-width:52rem;margin:2.5rem auto 0;padding-top:1.5rem;border-top:1px solid var(--site-line);font-size:.9rem;color:var(--site-muted)}
+        /* The stack: a hairline frame around the drawing, then the tree as a
+         * ruled band — the same shape the sections above use. */
+        .site-diagram{width:90vw;max-width:90rem;margin:0 auto 2.75rem;padding:1.5rem;border:1px solid var(--site-line);background:var(--site-surface);min-height:16rem;overflow-x:auto}
+        .site-diagram__caption{margin:0 0 1rem;font-family:var(--site-mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--site-muted)}
         .site-diagram svg{display:block;max-width:100%;height:auto;margin:0 auto}
-        .site-stack{display:grid;gap:.75rem;margin:1.5rem 0 0;grid-template-columns:repeat(auto-fit,minmax(17rem,1fr))}
-        .site-stack__group{border:1px solid var(--site-line);border-radius:.6rem;padding:1.1rem 1.2rem;background:var(--site-surface)}
-        .site-stack__group-title{margin:0 0 .9rem;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--site-accent)}
-        .site-stack__lines{display:grid;gap:1.1rem;margin:0;padding:0;list-style:none}
+        .site-stack__group{display:flex;flex-direction:column;gap:1.25rem;padding:2.75rem 2rem}
+        .site-stack__group-title{font-family:var(--site-mono);font-size:.72rem;font-weight:400;letter-spacing:.2em;text-transform:uppercase;color:var(--site-brand)}
+        .site-stack__lines{display:grid;gap:1.5rem;margin:0;padding:0;list-style:none}
         .site-stack__line{margin:0}
-        .site-stack__line-title{display:block;font-size:.95rem;font-weight:600}
-        .site-stack__line-note,.site-stack__item-note{display:block;margin-top:.15rem;font-size:.82rem;line-height:1.45;color:var(--site-muted)}
-        .site-stack__items{display:grid;gap:.6rem;margin:.7rem 0 0;padding:0;list-style:none}
-        .site-stack__item{border-left:2px solid var(--site-line);padding:.05rem 0 .05rem .7rem}
-        .site-stack__item-title{display:block;font-size:.88rem;font-weight:600}
-        .site-stack__link{color:var(--site-accent);text-decoration:none;border-bottom:1px solid transparent}
-        .site-stack__link:hover{border-bottom-color:currentColor}
-        .site-contact{border-top:1px solid var(--site-line);padding-top:3rem}
-        .site-contact__title{margin:0 0 .75rem;font-size:clamp(1.5rem,3vw,2rem);line-height:1.2}
-        .site-contact__text{margin:0;color:var(--site-muted);max-width:36rem}
-        .site-contact__rows{margin:1.5rem 0 0;padding:0;list-style:none;display:grid;gap:.5rem}
-        .site-contact__rows li{display:flex;gap:.75rem;flex-wrap:wrap}
-        .site-contact__rows span{color:var(--site-muted);min-width:5rem}
-        .site-contact__rows a{color:inherit}
-        @media (max-width:48rem){.site-section--split{grid-template-columns:1fr}.site-home{padding-top:2.5rem}}
+        .site-stack__line-title{display:block;font-family:var(--site-display);font-size:1.1rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+        .site-stack__line-note,.site-stack__item-note{display:block;margin-top:.35rem;font-size:.875rem;line-height:1.5;color:var(--site-muted)}
+        .site-stack__items{display:grid;gap:.85rem;margin:.9rem 0 0;padding:0;list-style:none}
+        .site-stack__item{border-left:2px solid var(--site-line);padding-left:.85rem}
+        .site-stack__item-title{display:block;font-size:.95rem;font-weight:600}
+        .site-stack__link{color:inherit;border-bottom:1px solid color-mix(in srgb,var(--site-brand) 45%,transparent)}
+        .site-stack__link:hover{color:var(--site-brand)}
+        /* Buttons: the theme's 56 px control, uppercase on the display face. */
+        .site-button{display:inline-flex;align-items:center;justify-content:center;height:3.5rem;padding:0 2rem;border:0;font-family:var(--site-display);font-size:.875rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--site-muted);transition:background .15s,color .15s}
+        .site-button:hover{background:var(--site-surface);color:inherit}
+        .site-button--primary{background:var(--site-btn);color:var(--site-brand)}
+        .site-button--primary:hover{background:#300f06;color:var(--site-brand)}
+        /* The closing call is centred and full-bleed: it is the page's last
+         * ruled band, and the only one that asks for a reply. */
+        .site-contact{display:flex;flex-direction:column;align-items:center;gap:1.5rem;padding:7rem 1.5rem;text-align:center;border-top:1px solid var(--site-line)}
+        .site-contact .site-head__label{color:var(--site-muted)}
+        .site-contact__title{font-size:clamp(2.25rem,5.5vw,4.25rem);line-height:1.02}
+        .site-contact__text{max-width:34rem;color:var(--site-muted)}
+        .site-contact__actions{display:flex;flex-wrap:wrap;justify-content:center;gap:.75rem;margin-top:.5rem}
+        .site-contact__rows{margin:.5rem 0 0;padding:0;list-style:none;display:grid;gap:.5rem;font-size:.95rem}
+        .site-contact__rows li{display:flex;justify-content:center;gap:.75rem;flex-wrap:wrap}
+        .site-contact__rows span{color:var(--site-muted)}
+        @media (max-width:56rem){
+          .site-home{--site-gap:4rem}
+          .site-hero{min-height:0}
+          .site-hero__inner{flex-direction:column;align-items:flex-start;gap:2.75rem;padding:2.5rem 0 3rem}
+          .site-hero__visual{order:-1;width:100%}
+          .site-orb{width:min(100%,17rem)}
+          .site-head{grid-template-columns:minmax(0,1fr);margin-bottom:2rem}
+          .site-head__lead{grid-column:1;grid-row:auto}
+          .site-band{grid-template-columns:minmax(0,1fr)}
+          .site-band__dots{display:none}
+          .site-band__row{grid-template-columns:minmax(0,1fr)}
+          .site-band__row>.site-card,.site-band__row>.site-stack__group{border-right:0;border-bottom:1px solid var(--site-line)}
+          .site-band__row>:last-child{border-bottom:0}
+          .site-card,.site-stack__group{padding:2.25rem 1.25rem}
+          .site-diagram{padding:1rem}
+          .site-contact{padding:4.5rem 1.25rem}
+        }
+        @media (prefers-reduced-motion:reduce){.site-orb__dot{will-change:auto}}
         </style>
         HTML;
     }
