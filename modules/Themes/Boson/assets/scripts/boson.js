@@ -62,8 +62,11 @@
             innerRadius: 72,
             innerLayers: 3,
             gapBetweenCircles: 12,
-            spacing: 30,
-            size: 5,
+            spacing: 26,
+            // Small on purpose: at 5 px the field read as squares, not as the
+            // reference's fine grain. 3 px scaled by the orb lands near 2 px on
+            // a phone and stays a dot rather than a block.
+            size: 3,
             mouseRadius: 160,
             strength: 22,
             smoothing: 0.5
@@ -76,7 +79,8 @@
         var inView = true;
         var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-        function place(element, x, y, size) {
+        function place(element, x, y, size, opacity) {
+            element.style.opacity = opacity;
             element.style.left = x + 'px';
             element.style.top = y + 'px';
             element.style.width = size + 'px';
@@ -86,7 +90,7 @@
             dots.push({ node: element, x: x, y: y });
         }
 
-        function ring(radius, count, className, size) {
+        function ring(radius, count, className, size, opacity) {
             var width = orb.clientWidth;
             var height = orb.clientHeight;
 
@@ -94,7 +98,7 @@
                 var angle = (i / count) * Math.PI * 2;
                 var dot = document.createElement('span');
                 dot.className = className;
-                place(dot, width / 2 + Math.cos(angle) * radius, height / 2 + Math.sin(angle) * radius, size);
+                place(dot, width / 2 + Math.cos(angle) * radius, height / 2 + Math.sin(angle) * radius, size, opacity);
             }
         }
 
@@ -118,7 +122,7 @@
 
             var scale = Math.min(width, height) / CONFIG.base;
             var spacing = CONFIG.spacing * scale;
-            var size = Math.max(2, CONFIG.size * scale);
+            var size = Math.max(1.5, CONFIG.size * scale);
             var outerRadius = Math.min(CONFIG.outerRadius * scale, Math.min(width, height) / 2 - 2 * spacing);
             var outerLayers = width < 320 ? 5 : CONFIG.outerLayers;
 
@@ -129,13 +133,19 @@
                     break;
                 }
 
-                ring(radius, Math.max(6, Math.floor((2 * Math.PI * radius) / spacing)), 'site-orb__dot', size);
+                // The field fades inward so the ring of the mark reads as the
+                // centre of gravity instead of competing with a flat texture.
+                var fade = 0.9 - (layer / outerLayers) * 0.45;
+
+                ring(radius, Math.max(6, Math.floor((2 * Math.PI * radius) / spacing)), 'site-orb__dot', size, fade);
             }
 
             // The accent band sits BETWEEN the mark and the grey field, not at
             // the centre: the middle of this orb is the site's logo, and a ring
             // drawn into it reads as a mistake (measured 2026-11-19 — the first
             // build put accent dots on top of the mark).
+            // 0.45 keeps the accent band clear of the dark disc the stylesheet
+            // draws under the mark; a band drawn into the disc reads as a bug.
             var innerRadius = outerRadius * 0.45;
             var innerLayers = width < 320 ? 2 : CONFIG.innerLayers;
 
@@ -146,7 +156,7 @@
                     break;
                 }
 
-                ring(inner, Math.max(6, Math.floor((2 * Math.PI * inner) / spacing)), 'site-orb__dot site-orb__dot--inner', size);
+                ring(inner, Math.max(6, Math.floor((2 * Math.PI * inner) / spacing)), 'site-orb__dot site-orb__dot--inner', size, 0.85);
             }
         }
 

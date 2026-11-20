@@ -113,7 +113,8 @@ final class SiteHomepageSurface implements HomepageSurface
             // purpose — without the script it is a faint CSS dot field, and
             // with it nothing is downloaded: the behaviour rides the theme
             // bundle the page already loads. `aria-hidden`: it is decoration.
-            . '<div class="site-orb" data-orb aria-hidden="true">' . self::mark() . '</div>'
+            . '<div class="site-orb" data-orb aria-hidden="true">' . self::mark()
+            . '<span class="site-orb__core"></span></div>'
             . '</div>'
             . '</div>'
             // The band the reference closes its hero with: a ruled line and one
@@ -608,17 +609,19 @@ final class SiteHomepageSurface implements HomepageSurface
         .site-discover__inner{display:flex;align-items:center;justify-content:space-between;padding:1.6rem 0;font-family:var(--site-display);font-size:.78rem;letter-spacing:.16em;text-transform:uppercase}
         .site-discover__arrow{font-size:1rem;transition:transform .2s}
         .site-discover:hover .site-discover__arrow{transform:translateY(4px)}
-        /* The orb: the theme's script builds rings of squares into the box; the
-         * glowing halo, the dashed orbit and the mark in the middle are this
-         * stylesheet's. The mark is decoration, inlined from the favicon, and it
-         * sits above the dots so the rings read as orbit, not noise. */
-        .site-orb{position:relative;aspect-ratio:1;width:min(100%,30rem);justify-self:center}
-        .site-orb::before{content:"";position:absolute;inset:-10%;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--site-brand) 26%,transparent) 0,transparent 62%);pointer-events:none}
-        .site-orb::after{content:"";position:absolute;inset:5%;border:1px dashed var(--site-line-strong);border-radius:50%;pointer-events:none}
-        .site-orb__mark{position:absolute;inset:0;margin:auto;z-index:1;width:22%;max-width:5.5rem;height:auto}
+        /* The orb: the theme's script builds the rings, this stylesheet rounds
+         * them into dots, fades the halo and stacks the disc and the mark on
+         * top. `isolation` is what lets the dots sit under the disc: without a
+         * stacking context their z-index would leak to the page and the field
+         * would paint over the halo instead of inside it. */
+        .site-orb{position:relative;isolation:isolate;aspect-ratio:1;width:min(100%,30rem);justify-self:center}
+        .site-orb::before{content:"";position:absolute;inset:-10%;z-index:0;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--site-brand) 55%,transparent) 0,color-mix(in srgb,var(--site-brand) 26%,transparent) 28%,color-mix(in srgb,var(--site-brand) 9%,transparent) 46%,transparent 70%);pointer-events:none}
+        .site-orb::after{content:"";position:absolute;inset:5%;z-index:4;border:1px dashed var(--site-line-strong);border-radius:50%;pointer-events:none}
+        .site-orb__core{position:absolute;inset:0;margin:auto;z-index:2;width:36%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 50% 38%,#161d2a,#090e15 70%);box-shadow:0 0 0 1px rgba(255,255,255,.06),0 0 46px color-mix(in srgb,var(--site-brand) 20%,transparent),inset 0 1px 0 rgba(255,255,255,.06)}
+        .site-orb__mark{position:absolute;inset:0;margin:auto;z-index:3;width:18%;max-width:4.5rem;height:auto}
         .site-orb:empty{background:radial-gradient(circle at center,color-mix(in srgb,currentColor 14%,transparent) 1px,transparent 1.5px) 0 0/14px 14px;border-radius:50%}
-        .site-orb__dot{position:absolute;background:color-mix(in srgb,currentColor 34%,transparent);transform:translate(-50%,-50%);will-change:transform}
-        .site-orb__dot--inner{background:var(--site-brand)}
+        .site-orb__dot{position:absolute;z-index:1;border-radius:50%;background:color-mix(in srgb,currentColor 32%,transparent);transform:translate(-50%,-50%);will-change:transform}
+        .site-orb__dot--inner{background:var(--site-brand);box-shadow:0 0 4px color-mix(in srgb,var(--site-brand) 55%,transparent)}
         /* A section heading: `// label`, one title, an optional lead beside it. */
         .site-section{margin:0}
         .site-head{width:90vw;max-width:90rem;margin:var(--site-gap) auto 2.75rem;display:grid;grid-template-columns:3fr 2fr;column-gap:3rem;row-gap:1.25rem;align-items:end}
