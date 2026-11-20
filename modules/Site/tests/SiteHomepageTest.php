@@ -368,10 +368,11 @@ final class SiteHomepageTest extends TestCase
     }
 
     /**
-     * The hero carries the reference's orb, and it carries it EMPTY: the rings
-     * are built by the theme's script (which the page already loads), and an
-     * empty box renders as a static dot field instead of a hole. It is
-     * decoration, so it is hidden from assistive tech by the markup itself.
+     * The hero carries the reference's orb, and the orb is COMPLETE in the
+     * markup: the theme's script only takes the dot field over to move it, so
+     * the stylesheet has to be the one that draws the field the deferred
+     * bundle has not arrived for. It is decoration, so it is hidden from
+     * assistive tech by the markup itself.
      */
     #[Test]
     public function theHeroCarriesTheOrbAsDecorationOnly(): void
@@ -393,7 +394,21 @@ final class SiteHomepageTest extends TestCase
         );
         self::assertStringNotContainsString('site-orb"><img', $html);
         self::assertStringContainsString('.site-orb{position:relative', $html, 'The orb needs its own box to size the rings.');
-        self::assertStringContainsString('.site-orb:empty{', $html, 'Without the script the box must still draw something.');
+        // The field is a real child of the orb, so the stylesheet can draw it
+        // before the script runs. `:empty` cannot: the orb always carries the
+        // mark and the disc, so a rule that waits for it to be empty is dead.
+        self::assertStringContainsString(
+            '<span class="site-orb__field"></span>',
+            $html,
+            'The orb needs the box the stylesheet draws its dot field into.',
+        );
+        self::assertStringContainsString('.site-orb__field{', $html, 'Without the script the field must still be drawn.');
+        self::assertStringNotContainsString('.site-orb:empty{', $html, 'The orb is never empty; that selector can never match.');
+        self::assertStringContainsString(
+            '.site-orb--live .site-orb__field{display:none}',
+            $html,
+            'Once the script builds its rings the static field must yield, or two dot grids read through each other.',
+        );
     }
 
     /**

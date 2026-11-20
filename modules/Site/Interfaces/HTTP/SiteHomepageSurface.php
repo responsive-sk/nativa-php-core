@@ -108,13 +108,16 @@ final class SiteHomepageSurface implements HomepageSurface
             . '</p>'
             . '</div>'
             . '<div class="site-hero__visual">'
-            // The reference's signature mark: an empty box the theme's script
-            // fills with rings of squares that react to the pointer. Empty on
-            // purpose — without the script it is a faint CSS dot field, and
-            // with it nothing is downloaded: the behaviour rides the theme
-            // bundle the page already loads. `aria-hidden`: it is decoration.
+            // The reference's signature mark: a field of points that reacts to
+            // the pointer. The field itself is drawn by the stylesheet below,
+            // so the box is never a hole while the deferred theme bundle is on
+            // its way — or if it never arrives. The script only takes the field
+            // over, to move it; nothing is downloaded for the behaviour beyond
+            // the bundle the page already loads. `aria-hidden`: it is
+            // decoration.
             . '<div class="site-orb" data-orb aria-hidden="true">' . self::mark()
-            . '<span class="site-orb__core"></span></div>'
+            . '<span class="site-orb__core"></span>'
+            . '<span class="site-orb__field"></span></div>'
             . '</div>'
             . '</div>'
             // The band the reference closes its hero with: a ruled line and one
@@ -609,9 +612,12 @@ final class SiteHomepageSurface implements HomepageSurface
         .site-discover__inner{display:flex;align-items:center;justify-content:space-between;padding:1.6rem 0;font-family:var(--site-display);font-size:.78rem;letter-spacing:.16em;text-transform:uppercase}
         .site-discover__arrow{font-size:1rem;transition:transform .2s}
         .site-discover:hover .site-discover__arrow{transform:translateY(4px)}
-        /* The orb: the theme's script builds the rings, this stylesheet rounds
-         * them into dots, fades the halo and stacks the disc and the mark on
-         * top. `isolation` is what lets the dots sit under the disc: without a
+        /* The orb: this stylesheet draws the halo, the dashed ring, the disc,
+         * the mark and the dot field itself; the theme's script replaces that
+         * field with rings it can move. The field is drawn here because the
+         * bundle is deferred — on a cold load it lands after the first paint,
+         * and a box that waited for it would be an empty hole in the hero until
+         * then. `isolation` is what lets the dots sit under the disc: without a
          * stacking context their z-index would leak to the page and the field
          * would paint over the halo instead of inside it. */
         .site-orb{position:relative;isolation:isolate;aspect-ratio:1;width:min(100%,30rem);justify-self:center}
@@ -619,7 +625,12 @@ final class SiteHomepageSurface implements HomepageSurface
         .site-orb::after{content:"";position:absolute;inset:5%;z-index:4;border:1px dashed var(--site-line-strong);border-radius:50%;pointer-events:none}
         .site-orb__core{position:absolute;inset:0;margin:auto;z-index:2;width:36%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 50% 38%,#161d2a,#090e15 70%);box-shadow:0 0 0 1px rgba(255,255,255,.06),0 0 46px color-mix(in srgb,var(--site-brand) 20%,transparent),inset 0 1px 0 rgba(255,255,255,.06)}
         .site-orb__mark{position:absolute;inset:0;margin:auto;z-index:3;width:18%;max-width:4.5rem;height:auto}
-        .site-orb:empty{background:radial-gradient(circle at center,color-mix(in srgb,currentColor 14%,transparent) 1px,transparent 1.5px) 0 0/14px 14px;border-radius:50%}
+        /* 5% per tile is the script's own spacing (`spacing / base`, 26/520), so
+         * the field it builds sits on the same rhythm as this one and taking
+         * over does not reflow the grain. The mask is what keeps the field
+         * inside the dashed ring; the disc and the mark paint over it. */
+        .site-orb__field{position:absolute;inset:0;z-index:1;border-radius:50%;background-image:radial-gradient(circle,color-mix(in srgb,currentColor 30%,transparent) 1px,transparent 1.6px);background-position:center;background-size:5% 5%;-webkit-mask-image:radial-gradient(circle closest-side,#000 0 88%,transparent 98%);mask-image:radial-gradient(circle closest-side,#000 0 88%,transparent 98%);pointer-events:none}
+        .site-orb--live .site-orb__field{display:none}
         .site-orb__dot{position:absolute;z-index:1;border-radius:50%;background:color-mix(in srgb,currentColor 32%,transparent);transform:translate(-50%,-50%);will-change:transform}
         .site-orb__dot--inner{background:var(--site-brand);box-shadow:0 0 4px color-mix(in srgb,var(--site-brand) 55%,transparent)}
         /* A section heading: `// label`, one title, an optional lead beside it. */

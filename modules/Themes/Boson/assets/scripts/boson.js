@@ -41,8 +41,10 @@
      * Ported as behaviour only: the squares are built here, transformed with
      * `translate` (no layout work per frame), the loop stops when the hero
      * leaves the viewport, and a reader who asked for reduced motion gets the
-     * static rings. The markup is an empty `.site-orb`; without this script it
-     * renders as a faint CSS dot field instead of an empty hole.
+     * static rings. The markup ships a dot field drawn by the stylesheet, so
+     * the orb is never a hole while this deferred script is on its way; this
+     * function only takes that field over (`site-orb--live`) once the rings it
+     * can move exist.
      */
     function initOrb() {
         var orb = document.querySelector('[data-orb]');
@@ -119,6 +121,7 @@
             }
 
             dots = [];
+            orb.classList.add('site-orb--live');
 
             var scale = Math.min(width, height) / CONFIG.base;
             var spacing = CONFIG.spacing * scale;
