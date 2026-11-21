@@ -44,12 +44,21 @@ final class RestApiVocabularyTest extends TestCase
      */
     private static function history(): array
     {
-        return [
-            'CHANGELOG.md',
+        // The export prunes `docs/`, so a boot log is listed only when this
+        // tree carries it. `CHANGELOG.md` ships and is checked every time.
+        $files = ['CHANGELOG.md'];
+
+        foreach ([
             'docs/kernel-status/32-migrations.md',
             'docs/kernel-status/34-runtime-sql.md',
             'docs/kernel-status/35-postgres-measured.md',
-        ];
+        ] as $file) {
+            if (is_file(APP_BASE_PATH . '/' . $file)) {
+                $files[] = $file;
+            }
+        }
+
+        return $files;
     }
 
     #[Test]
