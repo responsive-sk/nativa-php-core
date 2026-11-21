@@ -1195,7 +1195,7 @@ jobs:
           work=$(mktemp -d)
           trap 'rm -rf "$work"' EXIT
 
-          modules="audit blog comments config forms locales media notifications outbox questions queue restpanel users"
+          modules="audit blog comments config forms locales media notifications outbox questions queue restapi users"
           for module in $modules; do
             upper=$(printf '%s' "$module" | tr '[:lower:]' '[:upper:]')
             export "DB_${upper}=$work/$module.db"
@@ -1371,7 +1371,7 @@ jobs:
           work=$(mktemp -d)
           trap 'rm -rf "$work"' EXIT
 
-          modules="audit blog comments config forms locales media notifications outbox questions queue restpanel users"
+          modules="audit blog comments config forms locales media notifications outbox questions queue restapi users"
           for module in $modules; do
             upper=$(printf '%s' "$module" | tr '[:lower:]' '[:upper:]')
             export "DB_${upper}=$work/$module.db"

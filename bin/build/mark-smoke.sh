@@ -316,7 +316,7 @@ want 'admin POST /login' 302 "$got"
 
 check 'admin GET /mark' '/mark' 200 -b "$ADMIN_JAR" -c "$ADMIN_JAR"
 
-# The nav item the RestPanel module DECLARES, seen where an operator sees it.
+# The nav item the RestApi module DECLARES, seen where an operator sees it.
 # `/mark/rest` is asserted as a route below (every GET `/mark` page is opened by
 # the scan); this is the other half — a route nothing links to is a page only
 # its author knows about. The href and not the label: `REST` is also a word a

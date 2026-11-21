@@ -5,6 +5,24 @@ says so here too, because a changelog that only lists what worked is a brochure.
 
 ## Unreleased
 
+### The module is `RestApi`
+
+`RestPanel` named the slice after the shell it renders into. The module, its
+namespace, catalogue key, database (`restapi.db`), snapshot directory
+(`storage/data/restapi/`), audit events (`restapi.*`) and its MCP entry point
+(`bin/restapi-mcp`) are `RestApi`; `Cardboard` keeps the panel. `/mark/rest`,
+the `mark.rest*` route names, `settings.manage` and the fifteen MCP tools are
+unchanged.
+
+No aliases: `RESTADMIN_*` and `DB_RESTPANEL` are no longer read, and
+`bin/cardboard-rest-mcp` is gone rather than kept as a stub. A deployment
+renames its keys (`RESTAPI_ALLOWED_HOSTS`, `RESTAPI_SPEC_DIR`,
+`RESTAPI_<SERVICE>_TOKEN`, `DB_RESTAPI`), reinstalls the slice
+(`php bin/cms module:remove RestPanel --force && php bin/cms module:add RestApi`)
+and runs `bin/cms migrate`, which adopts the rows of `restpanel.db` — or
+`restadmin.db`, when the nearer file is absent — beside the live database and
+retires it as `restapi-legacy.db`.
+
 ### MariaDB is a third engine
 
 `DB_DRIVER=mariadb` reads `DB_DSN` as a server DSN and gives every module its

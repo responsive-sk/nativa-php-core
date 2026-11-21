@@ -219,8 +219,8 @@
                 "PageCache"
             ]
         },
-        "RestPanel": {
-            "source": "modules/RestPanel",
+        "RestApi": {
+            "source": "modules/RestApi",
             "requires": [
                 "Cardboard"
             ]
