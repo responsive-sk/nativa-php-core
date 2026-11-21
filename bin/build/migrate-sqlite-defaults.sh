@@ -9,7 +9,8 @@
 # SQLite tests, so the files have to exist and be migrated here.
 #
 # The file list is the gate, not the log line: one migrator writing its schema
-# says nothing about the other module databases the suite will open.
+# says nothing about the other module databases the suite will open, so it names
+# every database the migrate writes.
 #
 # Usage: bin/build/migrate-sqlite-defaults.sh   (from anywhere; it finds the root)
 set -euo pipefail
@@ -23,7 +24,7 @@ env -u DB_DSN -u DB_DRIVER php bin/cms migrate | tee /tmp/sqlite-migrate.log
 grep -q 'Migrated:' /tmp/sqlite-migrate.log \
     || { echo '::error::no migrators ran in a tree with the catalogue installed'; exit 1; }
 
-for db in audit blog comments config locales media outbox questions users; do
+for db in audit blog comments config forms locales media notifications outbox questions queue restapi users; do
     test -f "storage/data/$db.db" \
         || { echo "::error::storage/data/$db.db was not created"; exit 1; }
 done
