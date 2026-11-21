@@ -12,6 +12,7 @@ use Modules\Site\Interfaces\HTTP\SiteHomepageSurface;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Shell\HomepageSurfaceRegistry;
+use Themes\AssetManager;
 
 /**
  * SiteHomepageTest — `/` answers the site's own page, in the visitor's language.
@@ -355,14 +356,7 @@ final class SiteHomepageTest extends TestCase
         // and send someone back to the measurement, not quietly falsify a
         // published number.
         $slovak = $this->page('/');
-        $theme = self::renderedTheme($slovak);
-
-        if (!self::hasBuild($theme)) {
-            $this->markTestSkipped(
-                'The published request count belongs to the site\'s built theme; this run renders '
-                . ('' === $theme ? 'a theme without a bundle' : $theme) . '.',
-            );
-        }
+        $this->requireBuiltTheme($slovak);
 
         $english = $this->page('/en');
 
@@ -425,25 +419,15 @@ final class SiteHomepageTest extends TestCase
      * of the first paint: Mermaid arrives only when the figure is scrolled
      * into view, so the six-request number the copy states stays true.
      *
-     * The bundle is a build artifact (gitignored), so a tree without one skips:
-     * the section then renders without the figure, which is the whole fallback.
+     * The figure ships as a chunk of a built theme's bundle, so a run that
+     * renders an unbuilt theme skips: the section then renders without the
+     * figure, which is the whole fallback.
      */
     #[Test]
     public function theStackDiagramIsTheSameTreeAndItIsNotInTheFirstPaint(): void
     {
-        if (!is_file(APP_BASE_PATH . '/public/dist/boson/manifest.json')) {
-            $this->markTestSkipped('No boson build — the diagram ships as a chunk of it.');
-        }
-
         $html = $this->page('/');
-        $theme = self::renderedTheme($html);
-
-        if (!self::hasBuild($theme)) {
-            $this->markTestSkipped(
-                'The stack diagram ships in the site\'s built theme; this run renders '
-                . ('' === $theme ? 'a theme without a bundle' : $theme) . '.',
-            );
-        }
+        $this->requireBuiltTheme($html);
 
         self::assertStringContainsString('class="site-diagram"', $html, 'The stack section carries a picture of the tree.');
         // The attribute is escaped in the document: `"` reaches the browser as
@@ -512,28 +496,23 @@ final class SiteHomepageTest extends TestCase
     }
 
     /**
-     * The theme whose bundle the page actually loads, or '' when it loads none.
+     * The theme the page loads, or a skip when that theme has no build.
      *
-     * The published request count and the stack diagram belong to the site's
-     * built theme, not to every theme the suite can be pointed at. Reading the
-     * bundle the markup references keeps those assertions honest in a run that
-     * renders another theme.
+     * The published request count and the stack diagram describe a built
+     * deployment, not every theme the suite can be pointed at: the kernel
+     * theme the database jobs seed has neither, and the diagram is a chunk of
+     * the bundle. The name is read from the markup, so the test neither spells
+     * a theme nor depends on a theme module.
      */
-    private static function renderedTheme(string $html): string
+    private function requireBuiltTheme(string $html): void
     {
-        return 1 === preg_match('#/dist/([a-z0-9_-]+)/assets/#i', $html, $match) ? $match[1] : '';
-    }
+        $theme = 1 === preg_match('#/dist/([a-z0-9_-]+)/assets/#i', $html, $match) ? $match[1] : '';
 
-    /**
-     * Whether the rendered theme has a build the copy's claims can describe.
-     *
-     * The published request count and the stack diagram belong to a built
-     * deployment; a run on an unbuilt theme (the kernel theme the database
-     * jobs seed) has neither, so the assertions skip instead of failing.
-     */
-    private static function hasBuild(string $theme): bool
-    {
-        return '' !== $theme && is_file(APP_BASE_PATH . '/public/dist/' . $theme . '/manifest.json');
+        if ('' === $theme || !(new AssetManager($theme))->isAvailable()) {
+            $this->markTestSkipped(
+                'The landing claims describe a built deployment; this run renders '
+                . ('' === $theme ? 'a theme without a bundle' : 'an unbuilt ' . $theme) . '.',
+            );
+        }
     }
-
 }
