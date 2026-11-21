@@ -635,7 +635,7 @@ jobs:
           <?php
           require 'src/init.php';
           $connection = \Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager::instance()->connect('config');
-          (new \Modules\Settings\Infrastructure\Persistence\Repositories\SettingsRepository($connection))->set('theme', 'mono', 'design');
+          (new \Modules\Settings\Infrastructure\Persistence\Repositories\SettingsRepository($connection))->set('theme', 'boson', 'design');
           PHP
           php <<'PHP'
           <?php
@@ -1174,6 +1174,16 @@ jobs:
       - name: Install the catalogue
         run: bin/build/install-catalogue.sh
 
+      # Module tests pin SQLite and read the other modules' default databases.
+      # Without this, page rendering in a test that migrated only its own module
+      # hits an unmigrated storage/data file: `no such table: questions`. The
+      # Modules job runs the same migrate for the same reason.
+      - name: Migrate the SQLite databases the pinned tests read
+        run: |
+          set -euo pipefail
+          env -u DB_DSN -u DB_DRIVER php bin/cms migrate | tee /tmp/sqlite-migrate.log
+          grep -q 'Migrated:' /tmp/sqlite-migrate.log
+
       - name: Run the migrators and the PostgreSQL suite (a skip is a failure)
         run: make test-postgres PG_DSN="$DB_DSN"
 
@@ -1350,6 +1360,16 @@ jobs:
 
       - name: Install the catalogue
         run: bin/build/install-catalogue.sh
+
+      # Module tests pin SQLite and read the other modules' default databases.
+      # Without this, page rendering in a test that migrated only its own module
+      # hits an unmigrated storage/data file: `no such table: questions`. The
+      # Modules job runs the same migrate for the same reason.
+      - name: Migrate the SQLite databases the pinned tests read
+        run: |
+          set -euo pipefail
+          env -u DB_DSN -u DB_DRIVER php bin/cms migrate | tee /tmp/sqlite-migrate.log
+          grep -q 'Migrated:' /tmp/sqlite-migrate.log
 
       - name: Run the preflight, the migrators and the MariaDB suite (a skip is a failure)
         run: make test-mariadb MARIADB_DSN="$DB_DSN" MARIADB_PREFIX="$DB_DATABASE_PREFIX"

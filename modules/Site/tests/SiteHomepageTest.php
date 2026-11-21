@@ -355,6 +355,15 @@ final class SiteHomepageTest extends TestCase
         // and send someone back to the measurement, not quietly falsify a
         // published number.
         $slovak = $this->page('/');
+        $theme = self::renderedTheme($slovak);
+
+        if ('boson' !== $theme) {
+            $this->markTestSkipped(
+                'The published request count describes the boson deployment; this run renders '
+                . ('' === $theme ? 'a theme without a bundle' : $theme) . '.',
+            );
+        }
+
         $english = $this->page('/en');
 
         self::assertMatchesRegularExpression('#(\d+) requestov#', $slovak, 'The landing states how many requests it makes.');
@@ -427,6 +436,14 @@ final class SiteHomepageTest extends TestCase
         }
 
         $html = $this->page('/');
+        $theme = self::renderedTheme($html);
+
+        if ('boson' !== $theme) {
+            $this->markTestSkipped(
+                'The stack diagram ships in the boson bundle; this run renders '
+                . ('' === $theme ? 'a theme without a bundle' : $theme) . '.',
+            );
+        }
 
         self::assertStringContainsString('class="site-diagram"', $html, 'The stack section carries a picture of the tree.');
         // The attribute is escaped in the document: `"` reaches the browser as
@@ -493,4 +510,18 @@ final class SiteHomepageTest extends TestCase
 
         return $response->getContent();
     }
+
+    /**
+     * The theme whose bundle the page actually loads, or '' when it loads none.
+     *
+     * The published request count and the stack diagram are properties of the
+     * boson deployment, not of every theme the suite can be pointed at. Reading
+     * the bundle the markup references keeps those assertions honest in a run
+     * that renders another theme.
+     */
+    private static function renderedTheme(string $html): string
+    {
+        return 1 === preg_match('#/dist/([a-z0-9_-]+)/assets/#i', $html, $match) ? $match[1] : '';
+    }
+
 }
