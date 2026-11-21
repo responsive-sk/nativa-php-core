@@ -605,17 +605,11 @@ jobs:
         run: bin/build/install-catalogue.sh
 
       # The same idempotent run the HTTP bootstrap does on its first request,
-      # forced. A module test that reads a module database skips when the file is
-      # missing, and a skip is exactly what this job exists to remove.
+      # forced, through the script the PostgreSQL and MariaDB jobs share: a
+      # module test that reads a module database skips when the file is missing,
+      # and a skip is exactly what this job exists to remove.
       - name: Run the migrators the module tests read
-        run: |
-          set -euo pipefail
-          php bin/cms migrate | tee /tmp/migrate.log
-          grep -q 'Migrated:' /tmp/migrate.log || { echo "::error::no migrators ran in a tree with the catalogue installed"; exit 1; }
-          for db in audit blog comments config locales media outbox questions users; do
-            test -f "storage/data/$db.db" || { echo "::error::storage/data/$db.db was not created"; exit 1; }
-          done
-          echo "ok  the module databases exist"
+        run: bin/build/migrate-sqlite-defaults.sh
 
       # The suite renders the homepage with the ACTIVE theme and asserts that
       # theme's own build is inlined — and the migrators seed `theme=kernel`,
@@ -660,12 +654,13 @@ jobs:
       # The assertion this job exists for. "OK, but some tests were skipped" is
       # how a deleted guard looks from here, so the JUnit log is read instead of
       # the summary: every `modules/<Name>/tests/<Class>Test.php` the catalogue
-      # ships must have run, and the only testcase allowed to be skipped is
-      # KernelOnlyBootTest::unroutedAdminPathIsNeverForbidden — its subject is
-      # the kernel-only tree, and Cardboard is installed here, so its own reason
-      # string says why. (Every other skip was removed rather than listed: the
-      # modules are installed, the migrators ran, the bundles are built and the
-      # theme above is a built one.)
+      # ships must have run, and the set below is the WHOLE allow-list. One entry
+      # is KernelOnlyBootTest::unroutedAdminPathIsNeverForbidden whose subject is
+      # the kernel-only tree, and the other is
+      # HomepageSurfaceRegistryTest::nothingInstalledAnswersNull, whose branch an
+      # installed surface makes unreachable — the kernel-only job runs it for
+      # real. (Every other skip was removed rather than listed: the modules are
+      # installed, the migrators ran and the bundles are built.)
       - name: Assert the suite ran instead of skipping
         run: |
           set -euo pipefail
@@ -1179,15 +1174,10 @@ jobs:
       - name: Install the catalogue
         run: bin/build/install-catalogue.sh
 
-      # Module tests pin SQLite and read the other modules' default databases.
-      # Without this, page rendering in a test that migrated only its own module
-      # hits an unmigrated storage/data file: `no such table: questions`. The
-      # Modules job runs the same migrate for the same reason.
+      # The suite below pins SQLite, so the files its tests read have to exist
+      # even though this job's DSN points at the real server.
       - name: Migrate the SQLite databases the pinned tests read
-        run: |
-          set -euo pipefail
-          env -u DB_DSN -u DB_DRIVER php bin/cms migrate | tee /tmp/sqlite-migrate.log
-          grep -q 'Migrated:' /tmp/sqlite-migrate.log
+        run: bin/build/migrate-sqlite-defaults.sh
 
       - name: Run the migrators and the PostgreSQL suite (a skip is a failure)
         run: make test-postgres PG_DSN="$DB_DSN"
@@ -1366,15 +1356,10 @@ jobs:
       - name: Install the catalogue
         run: bin/build/install-catalogue.sh
 
-      # Module tests pin SQLite and read the other modules' default databases.
-      # Without this, page rendering in a test that migrated only its own module
-      # hits an unmigrated storage/data file: `no such table: questions`. The
-      # Modules job runs the same migrate for the same reason.
+      # The suite below pins SQLite, so the files its tests read have to exist
+      # even though this job's DSN points at the real server.
       - name: Migrate the SQLite databases the pinned tests read
-        run: |
-          set -euo pipefail
-          env -u DB_DSN -u DB_DRIVER php bin/cms migrate | tee /tmp/sqlite-migrate.log
-          grep -q 'Migrated:' /tmp/sqlite-migrate.log
+        run: bin/build/migrate-sqlite-defaults.sh
 
       - name: Run the preflight, the migrators and the MariaDB suite (a skip is a failure)
         run: make test-mariadb MARIADB_DSN="$DB_DSN" MARIADB_PREFIX="$DB_DATABASE_PREFIX"
