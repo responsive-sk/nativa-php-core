@@ -95,6 +95,12 @@ bin/build/build-prod.sh
 bin/build/clickhouse-smoke.sh
 bin/build/mark-smoke.sh
 
+# The SQLite default the pinned tests read covers the whole catalogue, and the
+# export prunes Forms, Comments and Questions — three of the thirteen files the
+# script asserts can never exist here. The exported Makefile carries no
+# `migrate-defaults` target; its workflow migrates inline instead.
+bin/build/migrate-sqlite-defaults.sh
+
 # The architectural IR model and its lockfile. The model covers this tree's
 # modules; the exported Makefile has no target that reads it.
 lekalo

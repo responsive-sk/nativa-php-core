@@ -104,6 +104,12 @@
       ]
     },
     {
+      "target": "migrate-defaults",
+      "tier": "kernel",
+      "can_fail": true,
+      "answers": "are the SQLite default databases the pinned module tests read present and migrated — the files, not the migrator's log line"
+    },
+    {
       "target": "analyze",
       "tier": "kernel",
       "can_fail": true,
