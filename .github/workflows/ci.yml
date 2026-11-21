@@ -672,7 +672,12 @@ jobs:
           python3 - <<'PY'
           import glob, os, sys, xml.etree.ElementTree as ET
 
-          ALLOWED_SKIPS = {('Tests.Boot.KernelOnlyBootTest', 'unroutedAdminPathIsNeverForbidden')}
+          # The registry's null branch is unreachable once a real surface is
+          # installed; the kernel-only export check exercises it for real.
+          ALLOWED_SKIPS = {
+              ('Tests.Boot.KernelOnlyBootTest', 'unroutedAdminPathIsNeverForbidden'),
+              ('Tests.Discovery.HomepageSurfaceRegistryTest', 'nothingInstalledAnswersNull'),
+          }
 
           cases = list(ET.parse('/tmp/modules-junit.xml').iter('testcase'))
           ran = {c.get('classname') for c in cases}
