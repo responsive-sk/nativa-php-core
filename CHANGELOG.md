@@ -5,6 +5,51 @@ says so here too, because a changelog that only lists what worked is a brochure.
 
 ## Unreleased
 
+### The SQLite default is migrated once, for every job
+
+Module tests pin SQLite and read the databases other modules own, while the
+PostgreSQL and MariaDB jobs point `DB_DSN` at the real server: their
+`php bin/cms migrate` built that schema and left `storage/data/*.db` untouched,
+so the first render inside a test died on `no such table: questions` — and
+`settings`. One script, `bin/build/migrate-sqlite-defaults.sh`, now drops
+`DB_DSN` and `DB_DRIVER` explicitly, migrates, and asserts the thirteen files
+the catalogue writes: audit, blog, comments, config, forms, locales, media,
+notifications, outbox, questions, queue, restapi, users. The Modules job runs
+the same script.
+
+The file list is the gate, not the migrator's log line: the first version
+asserted nine databases and would have passed a migrate that wrote only part of
+the catalogue. The step is also one `make migrate-defaults` target, registered
+in `toolchain.json`. It is source-only — `bin/export/core/prune.txt` classifies
+the script as a source tool, because the export prunes Forms, Comments and
+Questions, so three of the thirteen files can never exist there, and the
+exported registry (20 gates) does not carry it.
+
+### The landing asserts on a theme that has a build
+
+`SiteHomepageTest` had two gates for one question: a hand-checked
+`public/dist/<theme>/manifest.json` and a second, Boson-specific check in the
+diagram claim that could only pass where the first already had. Both are one
+`requireBuiltTheme()` now: it reads the theme from the markup the page loads and
+asks `AssetManager::isAvailable()`, so the test spells neither a theme nor a
+theme module — a `use Modules\Themes\Boson\…` would make the catalogue check
+read Site → Boson.
+
+The Modules job had also seeded `theme=mono`, so the landing's copy and diagram
+claims had no Boson build to read at all; it seeds `boson`. The two skips that
+remain in a catalogue-installed tree are named in the no-skip gate —
+`Tests\Boot\KernelOnlyBootTest::unroutedAdminPathIsNeverForbidden` and
+`Tests\Discovery\HomepageSurfaceRegistryTest::nothingInstalledAnswersNull` —
+and the comment above it lists both instead of one.
+
+### `APP_ENV` is set where it is read
+
+A local `.env` fills the `Env` cache, `$_ENV` and `$_SERVER` at boot, so a test
+that only called `putenv()` kept reading the deployment's `APP_ENV` and four
+mailer assertions failed on a developer machine while CI, which has no `.env`,
+stayed green. Those tests now set or clear the value on all three layers the
+reader consults.
+
 ### The module is `RestApi`
 
 `RestPanel` named the slice after the shell it renders into. The module, its
