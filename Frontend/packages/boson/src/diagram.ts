@@ -57,7 +57,9 @@ if (figure) {
     // — `elk` alone is 1.5 MB. The tree is small and acyclic, so dagre draws
     // the same picture out of a chunk that is already on the wire.
     layout: 'dagre',
-    flowchart: { defaultRenderer: 'dagre-wrapper' },
+    // Mermaid 12 dropped the separate `defaultRenderer` flowchart key: there
+    // is one wrapper renderer now, and `layout: 'dagre'` above is the choice
+    // that still exists.
   });
 
   void mermaid
