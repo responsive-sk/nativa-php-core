@@ -601,7 +601,7 @@ final class SiteHomepageSurface implements HomepageSurface
         .site-hero__inner{flex:1;display:flex;align-items:center;justify-content:space-between;gap:4rem;padding:3.5rem 0}
         .site-hero__copy{flex:3;display:flex;flex-direction:column;align-items:flex-start;gap:1.5rem;min-width:0}
         .site-hero__eyebrow{font-family:var(--site-mono);font-size:.8rem;letter-spacing:.28em;text-transform:uppercase;color:var(--site-brand)}
-        .site-hero__title{display:flex;flex-direction:column;font-size:clamp(2.75rem,7.4vw,6.5rem);line-height:.94;letter-spacing:-.02em}
+        .site-hero__title{display:flex;flex-direction:column;font-size:clamp(2.75rem,7.4vw,6.5rem);line-height:1.04;letter-spacing:-.02em}
         .site-hero__title-line{color:inherit}
         .site-hero__title-accent{color:var(--site-brand)}
         .site-hero__text{max-width:34em;font-size:1.05rem;color:var(--site-muted)}
