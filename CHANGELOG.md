@@ -5,6 +5,33 @@ says so here too, because a changelog that only lists what worked is a brochure.
 
 ## Unreleased
 
+### The hero title's two lines stop touching
+
+The landing's `.site-hero__title` is a flex column of two rows, and its
+`line-height: .94` left less leading than the first row's descenders need, so
+the second line sat in the first one's tails. It is `1.04` now — the gap the
+font actually needs, not the tightest value that still looked deliberate at one
+window width. `SiteHomepageTest` renders the page in a built theme and does not
+measure type, so nothing in the suite could see it; the check is the page.
+
+The first build that carried the fix did not serve it: `build-dist.sh` assembles
+the artifact from the **installed** slice (`src/Modules/Site`), which is
+gitignored operator state, and editing `modules/Site` does not touch it. The
+artifact kept `.94` while the tree was clean and the version carried no `-dirty`
+marker, which is exactly how a stale copy hides. Reinstalling the slice
+(`php bin/cms module:remove Site --force`, `php bin/cms module:add Site`) and
+rebuilding put `1.04` in `dist/src/Modules/Site/…` and in the served page.
+Anyone editing a landing surface should reinstall before believing an artifact.
+
+### The diagram asks mermaid 12 for what it still has
+
+`pnpm typecheck` failed on `flowchart: { defaultRenderer: 'dagre-wrapper' }`:
+mermaid 12 dropped that key from its types, and the key was redundant anyway,
+since one renderer remains. It is gone; `layout: 'dagre'` and
+`securityLevel: 'strict'` stay. The rebuilt bundle contains no
+`defaultRenderer`, and the landing still renders its diagram — the artifact
+smoke checks for the figure, not for the bundle's internals.
+
 ### The SQLite default is migrated once, for every job
 
 Module tests pin SQLite and read the databases other modules own, while the
