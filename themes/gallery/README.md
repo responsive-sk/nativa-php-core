@@ -190,21 +190,21 @@ a **local** gate; the workflow below deliberately does not pretend to run it.
 
 ## Deployment
 
-The workflow lives at the repository root, because GitHub reads only
-`.github/workflows/`: `gallery-pages.yml` builds `dist/` from `themes/gallery/`
-and deploys it to `https://responsive-sk.github.io/nativa-php-core/` on every
-push to `master` that touches the gallery. Pages is enabled once in the
-repository settings (*Settings → Pages → Source: GitHub Actions*),
-`gallery-pages-check.yml` re-checks the published pages weekly without
-deploying anything.
+**This copy does not deploy.** Since 2026-11-22 the gallery is published from
+`evan70/nativa-themes` at `https://evan70.github.io/nativa-themes/`, by that
+repository's `pages.yml`, and its `pages-check.yml` re-checks the served pages
+weekly. `gallery-pages.yml` and `gallery-pages-check.yml` here are disabled and
+the `https://responsive-sk.github.io/nativa-php-core/` Pages site is removed:
+two publishers of one gallery diverged within days, so there is one. The files
+here stay as the local copy this tree can build and check.
 
 A deploy can succeed while the site serves something else — a stale artefact,
 a moved base path, a directory uploaded one level too deep. `shoot` cannot see
-that (it checks a local preview), so the workflow has a third job, `verify`,
-that runs after `deploy` and fetches the **published** URLs:
+that (it checks a local preview), so the publisher's workflow has a third job,
+`verify`, that runs after `deploy` and fetches the **published** URLs:
 
 ```bash
-pnpm run check:pages https://responsive-sk.github.io/nativa-php-core
+pnpm run check:pages https://evan70.github.io/nativa-themes
 ```
 
 Every page in `scripts/pages.mjs` must answer 200, be `text/html`, and still

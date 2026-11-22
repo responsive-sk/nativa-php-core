@@ -127,12 +127,11 @@ The gallery is a consumer, not a second source: it renders the theme class
 names and reads `nativa-minimal`'s frontend sources through `pnpm run sync`,
 and `pnpm run sync:check` protects the gallery's `src/` against that upstream.
 It does not protect the six theme modules, and it never did; `RULES.md` said so
-in those words. The gallery's own gate is unchanged by the move. The archived
-repository's demo at `https://evan70.github.io/nativa-themes/` is frozen at the
-state before the move. The current gallery is deployed from this tree:
-`.github/workflows/gallery-pages.yml` builds `themes/gallery/` and publishes it
-to `https://responsive-sk.github.io/nativa-php-core/` whenever a push touches
-the gallery, and `gallery-pages-check.yml` re-checks the served pages weekly.
+in those words. The gallery's own gate is unchanged by the move. The gallery is
+published from `evan70/nativa-themes`, unarchived on 2026-11-22:
+`https://evan70.github.io/nativa-themes/` is built there by its own `pages.yml`
+and re-checked by `pages-check.yml`. The copy here, `themes/gallery/`, no longer
+deploys — its two workflows are disabled — so the two cannot drift apart.
 
 What this changes for an author: edit `modules/Themes/<Name>/` here, reinstall
 the slice (`php bin/cms module:remove <Name> --force` then

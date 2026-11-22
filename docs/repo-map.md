@@ -11,20 +11,17 @@ replaces.
 |---|---|---|
 | `responsive-sk/nativa-php-core` | **authored** | the kernel, the module catalogue, the theme modules, the docs, the CI and the build tools |
 | `responsive-sk/nativa-core` | generated | the public starting point: an export of a commit of this tree, written by `bin/build/publish-core.sh` |
-| `evan70/nativa-themes` | **archived, kept for its link** | the pre-import snapshot of the static theme gallery, now under `themes/gallery/` here; its module slices were imported on 2026-11-18 and the repository was made read-only the same day, because its Pages build is the gallery URL the showcase links to |
+| `evan70/nativa-themes` | **authored: the gallery** | the theme modules and the static gallery, published at `https://evan70.github.io/nativa-themes/`; its slices were imported here on 2026-11-18 and the repository was archived the same day, then unarchived on 2026-11-22 to publish the gallery again |
 | `evan70/nativa-minimal` | showcase | a full site, private; its kernel slice is the ancestor of this one, not a source |
 
-An archived repository is a snapshot, not a place to edit: it keeps the state
-before the import and the `pre-unify-2026-11-18` tag, and every later change
-belongs in `themes/gallery/` or `modules/Themes/` here. Deleting it would break
-the gallery link the showcase carries: `https://evan70.github.io/nativa-themes/`
-answered 200 on 2026-11-18, while GitHub Pages refuses build queries for an
-archived repository (`409`), so that build is a frozen snapshot and not a
-surface this tree can update. The current gallery is deployed from here:
-`.github/workflows/gallery-pages.yml` builds `themes/gallery/` and publishes it
-to `https://responsive-sk.github.io/nativa-php-core/` on every push that
-touches the gallery, and `gallery-pages-check.yml` re-checks the served pages
-weekly.
+One gallery has one publisher. It is `evan70/nativa-themes`, because that is
+the tree holding the gallery as source: the hand-written pages, `scripts/pages.mjs`
+and the two checkers that walk it. `themes/gallery/` here is a copy of that
+source, and it stopped deploying on 2026-11-22: `gallery-pages.yml` and
+`gallery-pages-check.yml` are disabled and the
+`https://responsive-sk.github.io/nativa-php-core/` Pages site was removed. Two
+publishers of one gallery diverge — measured the same day, the copy here was
+already 42 generated pages behind a re-render of the repository.
 
 ## How each one gets its bytes
 

@@ -171,8 +171,9 @@ The four repositories became one. The six theme modules were imported from
 `evan70/nativa-themes` after a byte comparison (`identical=23 diverged=0`) and
 now live at `modules/Themes/<Name>/`; the static gallery moved to
 `themes/gallery/`. `bin/build/sync-themes.sh`, its `themes-sync` target and its
-CI job are gone, because with one checkout there is no second side to compare,
-and `evan70/nativa-themes` is archived read-only. The retired `extract-check`
+CI job are gone, because with one checkout there is no second side to compare.
+`evan70/nativa-themes` was archived read-only on 2026-11-18 and unarchived on
+2026-11-22 — see "One gallery, one publisher" below. The retired `extract-check`
 is recorded in `docs/kernel-status/28-retiring-the-extract-check.md`, the theme
 import in part 29.
 
@@ -182,19 +183,37 @@ import in part 29.
   with `php bin/cms module:remove <Name> --force` and `module:add <Name>`.
 - `modules/Themes` is linted like every other module; the exclusion that hid 7
   findings is gone.
-- The gallery deploys from this tree to
-  `https://responsive-sk.github.io/nativa-php-core/`; the archived repository's
-  Pages build remains as a frozen snapshot.
+- The gallery has one publisher: `evan70/nativa-themes`, at
+  `https://evan70.github.io/nativa-themes/`. The copy in this tree no longer
+  deploys.
 
-### The theme gallery is published from this tree
+### One gallery, one publisher
 
-The gallery used to be deployed from `evan70/nativa-themes`, which is archived,
-so its Pages build stopped at the pre-import state. The deploy runs here now:
-`.github/workflows/gallery-pages.yml` publishes `themes/gallery/` to
-`https://responsive-sk.github.io/nativa-php-core/` on every push that touches
-it, with a post-deploy check of the served pages, and
-`gallery-pages-check.yml` re-checks them weekly. The archived URL keeps
-answering as a snapshot.
+The gallery is published from `evan70/nativa-themes` again, at
+`https://evan70.github.io/nativa-themes/`. The repository was unarchived on
+2026-11-22 and caught up with this tree: the eight module files that had changed
+here since 2026-11-17 (the orb in Boson's CSS and script, the footer's locale
+prefix, the rebuilt Roboto Condensed face the CSS references, three budget
+literals), that rebuilt face, and 56 demo pages re-rendered from the themes'
+own PHP. Its `pages.yml` deploys and `pages-check.yml` re-checks the served
+pages; the publishing run reported 77/77 pages served.
+
+The renderer had to be repaired first, and it had been broken in two ways that
+kept the demos stale without saying so. It still imported the retired
+`Modules\Core\Interfaces\HTTP\ContentServices`, which moved to
+`modules/ContentLocale` — running it was a fatal error, so nobody did. And its
+surface map matched `/` and `/en/` but not `/en`, so the nav's Home link on
+every English demo pointed at a path the gallery does not publish: 42 broken
+internal links once the pages were actually rendered. Fixed, and
+`--check` now exits 0 over the 56 pages.
+
+The copy in this tree stopped deploying the same day. `gallery-pages.yml` and
+`gallery-pages-check.yml` are disabled, and the
+`https://responsive-sk.github.io/nativa-php-core/` Pages site was removed: two
+publishers of one gallery had already diverged, with `themes/gallery/` 42
+generated pages behind, and a second URL that answers is a second thing to keep
+true. `themes/gallery/` stays as a local copy that this tree can still build and
+check.
 
 ### The vocabulary reaches configuration and data
 
