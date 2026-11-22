@@ -18,7 +18,7 @@ The kernel is a [public repository](https://github.com/responsive-sk/nativa-php-
 
 ## Six themes
 
-Boson, Erik, Griffe, Jednotka, Mono and Nativa. All of them live in `themes/gallery`, `make assets` builds them and the result sits in `public/dist/nativa`. A theme is a setting in `/mark` → Settings, not a code change — which is why you can compare how the same page behaves in six different skins.
+Boson, Erik, Griffe, Jednotka, Mono and Nativa. Each is a module in the [nativa-themes](https://github.com/evan70/nativa-themes) repository, and each can be opened: [the gallery](https://evan70.github.io/nativa-themes/) shows the same page in six skins — home, blog, article, tags, categories, author and search, in English and Slovak. In this tree `make assets` builds them into `public/dist/nativa`; a theme is a setting in `/mark` → Settings, not a code change, so the difference is visible without rewriting anything.
 
 ## Documentation and articles
 

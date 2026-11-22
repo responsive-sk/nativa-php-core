@@ -18,7 +18,7 @@ Jadro je [verejný repozitár](https://github.com/responsive-sk/nativa-php-core)
 
 ## Šesť tém
 
-Boson, Erik, Griffe, Jednotka, Mono a Nativa. Všetky sú v `themes/gallery`, buildí ich `make assets` a výsledok je v `public/dist/nativa`. Téma je nastavenie v `/mark` → Settings, nie zásah do kódu — preto si viete porovnať, ako sa tá istá stránka správa v šiestich rôznych šatách.
+Boson, Erik, Griffe, Jednotka, Mono a Nativa. Každá z nich je modul v repozitári [nativa-themes](https://github.com/evan70/nativa-themes) a každú si viete otvoriť: [galéria](https://evan70.github.io/nativa-themes/) ukazuje tú istú stránku v šiestich šatách — domov, blog, článok, štítky, kategórie, autora a hľadanie, po slovensky aj anglicky. Tu v strome ich builduje `make assets` do `public/dist/nativa`; téma je nastavenie v `/mark` → Settings, nie zásah do kódu, takže rozdiel vidíte bez toho, aby ste čokoľvek preprogramovali.
 
 ## Dokumentácia a články
 
