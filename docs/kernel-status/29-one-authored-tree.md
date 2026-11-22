@@ -30,7 +30,7 @@ gallery is `themes/gallery/` with 206 tracked files.
 removed in the same round, and the repository was archived read-only. That
 lasted four days: on 2026-11-22 it was unarchived and publishes the gallery
 again at `https://evan70.github.io/nativa-themes/`, because the copy in this
-tree had drifted — its `boson/`, `jednotka/` and `mono/` pages were 42 pages
+tree had drifted: its `boson/`, `jednotka/` and `mono/` pages were 42 pages
 behind a re-render. `themes/gallery/` here is the copy; its
 `gallery-pages.yml` and `gallery-pages-check.yml` are disabled and the
 `responsive-sk.github.io/nativa-php-core` Pages site is gone, so one gallery

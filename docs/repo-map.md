@@ -20,7 +20,7 @@ and the two checkers that walk it. `themes/gallery/` here is a copy of that
 source, and it stopped deploying on 2026-11-22: `gallery-pages.yml` and
 `gallery-pages-check.yml` are disabled and the
 `https://responsive-sk.github.io/nativa-php-core/` Pages site was removed. Two
-publishers of one gallery diverge — measured the same day, the copy here was
+publishers of one gallery diverge: measured the same day, the copy here was
 already 42 generated pages behind a re-render of the repository.
 
 ## How each one gets its bytes
