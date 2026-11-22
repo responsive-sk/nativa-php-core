@@ -307,7 +307,7 @@ function rewrite(string $html, int $depth, bool $home = false): string
         // Surfaces the gallery does not have: keep the control, drop the 404.
         '#^/(?:en/|sk/)?(?:docs|cookies|privacy|login|signup|admin)(?:/|$)#' => $home ? './' : '../',
         '#^/mark(?:/.*)?$#' => '#',
-        '#^/(?:en/|sk/)?$#' => $home ? './' : '../',
+        '#^/(?:en|sk)?/?$#' => $home ? './' : '../',
     ];
 
     // Icons the gallery does not ship, the canonical URL of a page that has no
