@@ -33,7 +33,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../../src/init.php';
 
 use Modules\Core\Infrastructure\Http\Request;
-use Modules\Core\Interfaces\HTTP\ContentServices;
+use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Shell\PageContext;
 use Themes\FrontendLayout;
 use Themes\ThemeRegistry;
@@ -430,7 +430,7 @@ function themesToRender(?string $requested): array
 /** The canonical locale code (`sk` → `sk_SK`), asked of the mapper that owns it. */
 function localeCode(string $locale): string
 {
-    return ContentServices::mapper()->code($locale);
+    return ContentLocaleServices::mapper()->code($locale);
 }
 
 /**
