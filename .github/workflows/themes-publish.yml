@@ -32,10 +32,6 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    env:
-      # Secrets are not available in a step-level `if`, so the token is read
-      # into the job environment and the steps test that value instead.
-      THEMES_PUSH_TOKEN: ${{ secrets.THEMES_PUSH_TOKEN }}
 
     steps:
       - uses: actions/checkout@v6
@@ -50,6 +46,12 @@ jobs:
 
       - name: Install the catalogue (the renderer loads the theme modules)
         run: make modules-install
+
+      # The renderer boots the kernel, which reads settings. A fresh runner has
+      # no storage/data, so the tables are created here; without them the
+      # publish fails on `no such table: settings`.
+      - name: Prepare the database the renderer reads
+        run: php bin/cms migrate
 
       - uses: pnpm/action-setup@v6.0.10
         with:
@@ -80,13 +82,26 @@ jobs:
           pnpm run check:dist
           pnpm run check:fonts
 
+      # A secret cannot be tested in a step-level `if`, so the presence check
+      # writes a step output and the publish steps test that instead.
+      - name: Check for the publish token
+        id: token
+        env:
+          TOKEN: ${{ secrets.THEMES_PUSH_TOKEN }}
+        run: |
+          if [ -n "$TOKEN" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Publish to the generated gallery repository
-        if: env.THEMES_PUSH_TOKEN != ''
+        if: steps.token.outputs.present == 'true'
         env:
           GH_TOKEN: ${{ secrets.THEMES_PUSH_TOKEN }}
         run: bin/build/publish-themes.sh --yes
 
       - name: Publish skipped (no THEMES_PUSH_TOKEN)
-        if: env.THEMES_PUSH_TOKEN == ''
+        if: steps.token.outputs.present != 'true'
         run: |
           echo "::notice::THEMES_PUSH_TOKEN is not set; the gallery was built and checked but not published."
