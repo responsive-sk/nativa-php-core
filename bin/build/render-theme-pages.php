@@ -475,14 +475,16 @@ function activate(string $locale): void
 $options = [];
 foreach (array_slice($argv, 1) as $argument) {
     if (str_starts_with($argument, '--')) {
-        [$key, $value] = array_pad(explode('=', substr($argument, 2), 2), 2, '1');
+        // A flag such as `--check` has no value; an option with a missing
+        // value is empty and fails rather than defaulting to a path named 1.
+        [$key, $value] = array_pad(explode('=', substr($argument, 2), 2), 2, '');
         $options[$key] = $value;
     }
 }
 
 $outDir = $options['out'] ?? null;
 
-if (null === $outDir) {
+if (null === $outDir || '' === $outDir) {
     fail('--out=<dir> is required');
 }
 

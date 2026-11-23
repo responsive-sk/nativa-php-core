@@ -96,7 +96,7 @@ rsync -a \
     "$GALLERY/" "$STAGE/"
 
 step "Rendering the demo pages from the theme modules"
-php "$ROOT/bin/build/render-theme-pages.php" --out "$STAGE"
+php "$ROOT/bin/build/render-theme-pages.php" --out="$STAGE"
 
 files="$(find "$STAGE" -type f | wc -l | tr -d ' ')"
 size="$(du -sh "$STAGE" | cut -f1)"
