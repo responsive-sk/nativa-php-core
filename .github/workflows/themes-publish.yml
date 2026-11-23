@@ -95,6 +95,12 @@ jobs:
             echo "present=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # The renderer inlines each theme's built CSS and JS from public/dist.
+      # A runner that skips this falls back to the shared critical CSS, which
+      # the deployed-page check reads as a missing theme marker.
+      - name: Build the theme assets the renderer inlines
+        run: make assets
+
       - name: Publish to the generated gallery repository
         if: steps.token.outputs.present == 'true'
         env:
