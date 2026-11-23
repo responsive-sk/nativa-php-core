@@ -76,11 +76,9 @@ final class HomepageAction
         // own homepage renders, exactly as before — the kernel is the floor, not
         // the finished page.
         $surface = HomepageSurfaceRegistry::first();
-        $homepage = null === $surface ? null : $surface->homepage($context);
+        $homepage = $surface?->homepage($context);
 
-        $content = null === $homepage
-            ? ThemeKernel::for($theme)->homepage($context)
-            : $homepage->content;
+        $content = $homepage->content ?? ThemeKernel::for($theme)->homepage($context);
 
         // The landing's own head, where it names one: a title that says what the
         // site does, alternates for its languages, an absolute share image.
