@@ -160,11 +160,9 @@ src/Modules/*
 # /dist/: the directory is what gets uploaded and what a rollback points at,
 # not source. Immutability is the rollback story, so it is kept on disk.
 /releases/
-# The theme repository, checked out where `bin/build/sync-themes.sh` looks by
-# default (--from overrides it). A sibling clone is `../nativa-themes`; CI and
-# a fresh checkout use this path, so it must never be committed: the catalogue
-# under modules/Themes/ is the copy, and two copies in git is the drift the
-# gate exists to catch.
+# A checkout of the app the gallery sync can read instead of this project
+# (`NATIVA_APP=/path/to/checkout`). Never committed: the gallery `src/` is
+# the copy, and two copies in git is the drift that `sync:check` catches.
 /.upstream/
 
 # The adopted pre-rename database backup is operator state, not code.

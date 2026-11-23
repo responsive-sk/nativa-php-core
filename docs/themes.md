@@ -124,8 +124,8 @@ theme repository's commits behind them, and its gallery came with them under
 `themes/gallery/`.
 
 The gallery is a consumer, not a second source: it renders the theme class
-names and reads `nativa-minimal`'s frontend sources through `pnpm run sync`,
-and `pnpm run sync:check` protects the gallery's `src/` against that upstream.
+names and reads this tree's frontend sources through `pnpm run sync`, and
+`pnpm run sync:check` protects the gallery's `src/` against the kernel.
 It does not protect the six theme modules, and it never did; `RULES.md` said so
 in those words. The gallery's own gate is unchanged by the move. The gallery is
 published from `evan70/nativa-themes`, unarchived on 2026-11-22:
@@ -137,6 +137,21 @@ What this changes for an author: edit `modules/Themes/<Name>/` here, reinstall
 the slice (`php bin/cms module:remove <Name> --force` then
 `php bin/cms module:add <Name>`) and let the theme tests run. There is no sync
 step and no gate comparing two checkouts, because there is one checkout.
+
+## Publishing the gallery
+
+The gallery in `themes/gallery/` is published to `evan70/nativa-themes`, and
+that repository is generated: `bin/build/publish-themes.sh` stages the gallery,
+re-renders the 56 demo pages from the theme modules, copies `modules/Themes/`,
+and pushes a commit that names the source commit. The workflow
+`.github/workflows/themes-publish.yml` runs it on every master change to
+`modules/Themes/`, `Frontend/packages/`, the gallery or the renderer, after
+`sync:check`, the typecheck, the build and the artefact checks pass.
+
+The push needs a `THEMES_PUSH_TOKEN` secret with write access to
+`evan70/nativa-themes`. Without it the workflow still builds and checks the
+gallery and skips only the push, so a fork stays green.
+`bin/build/publish-themes.sh --dry-run` stages and renders without network.
 
 ## Open, with the numbers that decide them
 

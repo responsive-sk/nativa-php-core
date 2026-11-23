@@ -308,9 +308,9 @@ jobs:
   # `unfulfilled-expect` counts as one, so a pragma cannot outlive its code.
   #
   # The scope includes `modules/` — the committed catalogue `bin/cms module:add`
-  # copies into an install, which no other gate reads — except `modules/Themes/`,
-  # a byte-verified mirror of `nativa-themes` whose findings only upstream can
-  # fix (`mago.toml` [linter] excludes, and docs/mago-evaluation.md says why).
+  # copies into an install, which no other gate reads. `modules/Themes/` is
+  # authored here since 2026-11-18 (docs/themes.md), so its findings are this
+  # tree's to fix and the directory is linted with the rest of the catalogue.
   #
   # Same binary, same checksum, same cache key as the guard job above: no PHP
   # setup and no `composer install`, so the count is measured on the checkout a

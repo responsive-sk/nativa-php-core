@@ -46,9 +46,8 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      # `pnpm run sync:check` is deliberately NOT a step here: it compares the
-      # gallery's src/ with a private repository, so a fresh runner has no
-      # sibling checkout and the check can only report "skipped".
+      # `pnpm run sync:check` runs in the publishing workflow, whose kernel
+      # checkout carries the sources it compares against.
       - name: Typecheck
         run: pnpm run typecheck
 
