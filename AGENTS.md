@@ -249,6 +249,7 @@ deciding which number fails; do not wire it into CI and leave that implied.
 | why mago's scope and ceilings are what they are | `docs/mago-evaluation.md` |
 | which names are owned, and every exemption | `docs/name-ownership.md` |
 | the kernel's approved shape | `docs/kernel-shape.md` |
+| which bundler builds the theme assets, and what may not replace it | `docs/adr/0001-theme-assets-build-with-vite.md` |
 
 When this file and a gate disagree, the gate is right: these rules are the
 reasoning behind it, and the reasoning belongs in the commit message of the
