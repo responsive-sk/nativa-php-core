@@ -1,0 +1,11 @@
+{
+    "name": "responsive-sk/nativa-resp",
+    "description": "responsive.sk Nativa ResP: the client port of the responsive.sk site. Generated from responsive-sk/nativa-php-core.",
+    "keywords": [
+        "php",
+        "nativa",
+        "responsive.sk",
+        "client-port",
+        "generated"
+    ]
+}

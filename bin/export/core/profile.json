@@ -1,0 +1,45 @@
+{
+    "schema_version": 1,
+    "slug": "core",
+    "name": "nativa-core",
+    "repository": "responsive-sk/nativa-core",
+    "description": "responsive.sk Nativa Core: kernel, module catalogue and theme sources. Generated from nativa-php-core.",
+    "source": "https://github.com/responsive-sk/nativa-php-core",
+    "visibility": "public",
+    "marker": ".nativa-core-export.json",
+    "default_target": "../nativa-core",
+    "install_modules": false,
+    "migrate_before_tests": false,
+    "minimum_tests": 150,
+    "deploy": {
+        "theme": "nativa"
+    },
+    "required_paths": [
+        "src/Modules/Core",
+        "src/Modules/Database",
+        "src/Modules/Tooling",
+        "src/Themes/kernel",
+        "modules",
+        "Frontend/packages",
+        "public/index.php",
+        "bin/cms",
+        "config",
+        "config/deploy.php",
+        "tests",
+        "LICENSE",
+        ".github/workflows/ci.yml"
+    ],
+    "pruned_paths": [
+        "docs",
+        "modules/Docs",
+        "lekalo",
+        "lekalo.lock",
+        "openspec",
+        "storage/blog",
+        "storage/blog-images",
+        "storage/pages",
+        "bin/export",
+        "CONTRIBUTING.md",
+        ".ai-factory"
+    ]
+}

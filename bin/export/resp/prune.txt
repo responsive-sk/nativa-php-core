@@ -1,0 +1,92 @@
+# The nativa-resp client port: paths that stay in nativa-php-core.
+#
+# Format: <repo-relative path> [# reason]
+#
+# A path names a file or a directory, and a directory prunes its whole subtree.
+# The exporter FAILS when an entry matches nothing, so a path that moved is a
+# red run instead of a rule that quietly stopped pruning.
+#
+# Module directories are NOT listed here. profile.json owns the allow-list, and
+# the exporter prunes every catalogue entry it does not name and fails on a
+# named module that is absent.
+
+# The boot log, the approval ledgers, the article archive and the writing rules.
+# They record how THIS tree was built, and the numbers belong to it.
+docs
+
+# The canonical specs and the local plan tree.
+openspec
+
+# The semantic model and its lockfile. adapters/ stays: phpstan.neon scans
+# adapters/php-nativa/adapter.php, and removing the directory would turn the
+# exported analyzer gate into a missing-file error.
+lekalo
+lekalo.lock
+
+# Agent tooling and factory state. The client port ships its own short
+# AGENTS.md from the profile.
+.ai-factory
+.codex
+CONTRIBUTING.md
+
+# The theme gallery and its fixtures.
+themes
+fixtures
+public/demo
+
+# The Forms and Questions stylesheet generators. The modules ship, but these
+# scripts belong to the source workspace.
+bin/generate
+
+# Instruments that measure or drive this repository, not the site.
+bin/lab
+bin/build/build-prod.sh
+bin/build/clickhouse-smoke.sh
+bin/build/mark-smoke.sh
+bin/build/migrate-sqlite-defaults.sh
+bin/build/kernel-size.sh
+bin/build/render-theme-pages.php
+bin/build/lekalo-modules.sh
+bin/build/mago-modules-report.sh
+bin/ops/lekalo-reports.php
+
+# The three frozen bundles the site does not render. The admin bundle stays:
+# /mark resolves its stylesheets from public/dist/moonshine.
+public/dist/griffe
+public/dist/mono
+public/dist/nativa
+
+# Theme sources the site does not build. The workspace keeps boson, build and
+# starter; starter is not a shipped theme, but Forms' block test reads
+# starter/src/form.css as its fixture.
+Frontend/packages/basic
+Frontend/packages/erik
+Frontend/packages/griffe
+Frontend/packages/jednotka
+Frontend/packages/magazine
+Frontend/packages/minimal
+Frontend/packages/mono
+Frontend/packages/nativa
+
+# Replaced by bin/export/resp/<same name>. Each one names something the client
+# tree does not have, or asserts a floor only this tree meets.
+Makefile
+toolchain.json
+phpunit.xml
+.github/workflows/ci.yml
+.gitignore
+README.md
+AGENTS.md
+
+# The gallery workflows have nothing to build here.
+.github/workflows/gallery-pages.yml
+.github/workflows/gallery-pages-check.yml
+
+# The generator and publisher belong to the source repository.
+bin/build/export-core.sh
+bin/build/publish-core.sh
+bin/ops/export-core-registry.php
+bin/ops/export-core-verify.php
+
+# The profile itself, after it has been moved into place.
+bin/export
