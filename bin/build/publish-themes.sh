@@ -22,7 +22,7 @@
 #   bin/build/publish-themes.sh --dry-run   # stage + render, print, no network
 #   bin/build/publish-themes.sh --yes       # clone, replace, push
 #
-#   REPO=evan70/nativa-themes BRANCH=master bin/build/publish-themes.sh --yes
+#   REPO=evan70/nativa-themes BRANCH=main bin/build/publish-themes.sh --yes
 # =============================================================================
 
 set -euo pipefail
@@ -30,7 +30,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 GALLERY="$ROOT/themes/gallery"
 REPO="${REPO:-evan70/nativa-themes}"
-BRANCH="${BRANCH:-master}"
+BRANCH="${BRANCH:-main}"
 DRY_RUN=false
 CONFIRMED=false
 CLEANUP=""
