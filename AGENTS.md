@@ -32,10 +32,12 @@ the measured state of the boot. Read this file before changing anything.
   gallery is a consumer and lives under `themes/gallery/`. Edit a theme in
   place, then re-install the slice:
   `php bin/cms module:remove <Name> --force && php bin/cms module:add <Name>`.
-- **The public tree is generated.** `responsive-sk/nativa-core` is exported
-  from a commit of this one by `bin/build/export-core.sh`; the profile is
-  `bin/export/core/` and `make core-export-check` runs its own suite. A change
-  to the public tree is made here, never there.
+- **The generated trees are exports.** `responsive-sk/nativa-core` (public)
+  and `responsive-sk/nativa-resp` (private client port) are exported from a
+  commit of this one by `bin/build/export-core.sh`; the profiles are
+  `bin/export/core/` and `bin/export/resp/`, and `make core-export-check` or
+  `make resp-export-check` runs their suites. A change to either tree is made
+  here, never there.
 
 ## Bootstrap (once per clone)
 
@@ -241,6 +243,7 @@ deciding which number fails; do not wire it into CI and leave that implied.
 | how a module is catalogued, installed, removed | `docs/modules.md` |
 | the measured boot state, round by round | `docs/kernel-status.md` · `docs/kernel-status/` |
 | what the public nativa-core tree carries, and what it drops | `bin/export/core/` · `make core-export-check` |
+| what the private nativa-resp tree carries, and what it drops | `bin/export/resp/` · `make resp-export-check` |
 | why a rule in `.gitignore` exists | `.gitignore` — every rule carries its reason |
 | what is being built, and what a test holds | `openspec/specs/` (shared) · `openspec/changes/` (local plans) |
 | why mago's scope and ceilings are what they are | `docs/mago-evaluation.md` |

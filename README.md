@@ -255,9 +255,7 @@ Rollback is the previous release directory plus the snapshot: rsync the older
 `releases/<date>/` back the same way (code only), then
 `php bin/cms db:import storage/backups/<date> --force` if the schema moved. That
 is why the release directory is kept and why it is gitignored rather than
-rebuilt on demand (`/releases/`, next to `/dist/`).
-
-## The published tree
+rebuilt on demand (`/releases/`, next to `/dist/`).## The generated trees
 
 `responsive-sk/nativa-core` is **generated** from a commit of this tree: the
 kernel, the module catalogue and the Frontend sources, without the boot log,
@@ -270,8 +268,19 @@ make core-export CORE_TO=../nativa-core    # write the tree from HEAD
 make publish-core PUBLISH_ARGS=--dry-run   # what a publish would push
 ```
 
-The profile is `bin/export/core/`: the prune list with a reason per path, the
-Makefile and CI the export ships, the PHPUnit exclusions, and the README and
-`AGENTS.md` the public tree carries.
-`docs/kernel-status/12-the-tree-we-publish-from.md` records the measured export
-and the three things this round did not close.
+`responsive-sk/nativa-resp` is the **private client port**: the same kernel
+with the measured 28-module site set, Boson, and the tracked content seed. It
+is generated from `bin/export/resp/`; a clone boots after `migrate` and one
+`settings:profile` run.
+
+```sh
+make resp-export-check                       # assemble, migrate, apply the profile, run its suite
+make resp-export RESP_TO=../nativa-resp      # write the private tree from HEAD
+make publish-resp RESP_PUBLISH_ARGS=--dry-run
+```
+
+The profiles are `bin/export/core/` and `bin/export/resp/`: each carries its
+prune list with a reason per path, the Makefile and CI the export ships, the
+PHPUnit exclusions, and the README and `AGENTS.md` the tree carries.
+`docs/kernel-status/12-the-tree-we-publish-from.md` records the core export;
+`docs/kernel-status/36-the-client-port.md` records the client port.
