@@ -875,6 +875,32 @@ final class BosonThemeTest extends TestCase
         );
     }
 
+    /**
+     * The loop rescheduled itself on every frame, so the field kept drawing for
+     * as long as the hero was in the viewport, pointer or no pointer. Measured
+     * 2026-11-23 with a forced fine pointer: 257 ms of script and 526 ms of
+     * main-thread task per 10 s of an idle hero, 301 dots; with the bundle
+     * blocked the same window cost 0 ms and 1 ms. The loop stops once the
+     * pointer has arrived, and the guarded call is what keeps it stopped.
+     */
+    #[Test]
+    public function theOrbStopsDrawingWhenTheFieldIsAtRest(): void
+    {
+        $script = (string) file_get_contents(__DIR__ . '/../assets/scripts/boson.js');
+
+        self::assertStringContainsString('function atRest()', $script, 'The loop needs a stop condition.');
+        self::assertStringContainsString('var REST = 0.5;', $script, 'Half a pixel is the threshold the field settles within.');
+
+        preg_match('/function step\(\) \{(.*?)\n        \}\n/s', $script, $match);
+        self::assertNotEmpty($match, 'The loop body is still one function.');
+        self::assertSame(
+            1,
+            substr_count($match[1], 'schedule()'),
+            'The loop reschedules once, and only through the guard.',
+        );
+        self::assertStringContainsString('if (!atRest()) {', $match[1], 'The reschedule is conditional on the field having work.');
+    }
+
     #[Test]
     public function theStylesheetIsSelfContained(): void
     {
