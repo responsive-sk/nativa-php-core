@@ -32,8 +32,8 @@ declare(strict_types = 1);
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../../src/init.php';
 
-use Modules\Core\Infrastructure\Http\Request;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
+use Modules\Core\Infrastructure\Http\Request;
 use Shell\PageContext;
 use Themes\FrontendLayout;
 use Themes\ThemeRegistry;
