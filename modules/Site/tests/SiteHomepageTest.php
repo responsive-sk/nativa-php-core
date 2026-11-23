@@ -443,10 +443,16 @@ final class SiteHomepageTest extends TestCase
             );
         }
 
-        // Lazily: the chunk is imported by the inline module and never declared
-        // as a <script src>, so it is not a request the count has to carry.
+        // Lazily: the figure names the chunk in a data attribute and the inline
+        // module imports it, so it is never declared as a <script src> and is
+        // not a request the count has to carry.
         self::assertMatchesRegularExpression(
-            '#<script type="module"[^>]*>.*?import\("/dist/[^"]+/assets/diagram-[^"]+\.js"\)#',
+            '#<figure[^>]*data-diagram-chunk="/dist/[^"]+/assets/diagram-[^"]+\.js"#',
+            $html,
+            'The figure must name the diagram chunk its module imports.',
+        );
+        self::assertMatchesRegularExpression(
+            '#<script type="module"[^>]*>.*?import\([^)]*dataset\.diagramChunk#s',
             $html,
             'The diagram chunk must be imported on demand, not loaded with the page.',
         );

@@ -435,22 +435,22 @@ final class FrontendLayout
      */
     private static function sharedThemeInitScript(): string
     {
-        return <<<'HTML'
-                <!-- Sync theme init — FOUC prevention: restore the persisted theme
-                     (or the OS preference) before first paint. Falls back to the
-                     dark default when neither is available (Chrome 70 baseline). -->
-                <script nonce="__CSP_NONCE_PLACEHOLDER__">
-                    (function() {
-                        try {
-                            var theme = localStorage.getItem('nativa-theme');
-                            if (!theme) {
-                                theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-                            }
-                            document.documentElement.setAttribute('data-theme', theme);
-                        } catch (e) {}
-                    })();
-                </script>
-            HTML;
+        $script = InlineJs::file('Themes/assets/scripts/theme-init.js');
+
+        if ('' === $script) {
+            return '';
+        }
+
+        // The asset is authored flush left; the emitted block sits four spaces
+        // in with the rest of <head>, so the base indent is added here.
+        $body = '        ' . str_replace("\n", "\n        ", rtrim($script));
+
+        return <<<HTML
+            <!-- Sync theme init - FOUC prevention: restore the persisted theme
+                 (or the OS preference) before first paint. Falls back to the
+                 dark default when neither is available (Chrome 70 baseline). -->
+            <script nonce="__CSP_NONCE_PLACEHOLDER__">{$body}</script>
+        HTML;
     }
 
     /** Canonical <link> — rendered only when the action provides a URL. */
@@ -879,30 +879,9 @@ final class FrontendLayout
      */
     private static function readerLayoutStyle(): string
     {
-        return <<<'CSS'
-            <style nonce="__CSP_NONCE_PLACEHOLDER__">
-            [data-docs-reader]{--docs-header-offset:0px;display:grid;grid-template-columns:minmax(0,1fr);gap:2.5rem}
-            @media (min-width:1024px){
-              [data-docs-reader][data-has-rail]{grid-template-columns:minmax(0,68ch) minmax(12rem,16rem);justify-content:center;align-items:start}
-            }
-            [data-docs-prose]{max-width:68ch;min-width:0}
-            [data-docs-prose] p,[data-docs-prose] li,[data-docs-prose] blockquote{max-width:68ch}
-            [data-docs-prose]>*{max-width:100%}
-            [data-docs-prose] pre,[data-docs-prose] table{max-width:100%}
-            [data-docs-prose] pre{overflow-x:auto}
-            [data-docs-prose] table{display:block;overflow-x:auto}
-            [data-docs-toc]{font-size:.875rem;line-height:1.5}
-            @media (min-width:1024px){
-              [data-docs-toc]{position:sticky;top:calc(var(--docs-header-offset) + 1.5rem);max-height:calc(100vh - var(--docs-header-offset) - 3rem);overflow:auto;padding-left:1rem;border-left:1px solid rgba(128,128,128,.35)}
-            }
-            [data-docs-toc__title]{margin:0 0 .5rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;font-size:.75rem;opacity:.7}
-            [data-docs-toc] ul{margin:0;padding:0;list-style:none}
-            [data-docs-toc] li{margin:0 0 .35rem}
-            [data-docs-toc] li[data-level="3"]{padding-left:.85rem;opacity:.85}
-            [data-docs-toc] a{text-decoration:none;opacity:.8}
-            [data-docs-toc] a:hover,[data-docs-toc] a:focus-visible{opacity:1;text-decoration:underline}
-            </style>
-            CSS;
+        return '<style nonce="__CSP_NONCE_PLACEHOLDER__">' . "\n"
+            . InlineCss::file('Themes/assets/critical/docs-reader.css')
+            . '</style>';
     }
 
     /**
