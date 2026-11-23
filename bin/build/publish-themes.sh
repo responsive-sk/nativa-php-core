@@ -158,7 +158,15 @@ EOF
 )"
 
 step "Pushing $SHORT to $REPO ($BRANCH)"
-git push --quiet origin "$BRANCH"
+
+# A runner has no git credential helper, so GH_TOKEN alone cannot answer the
+# https prompt. The header keeps the token out of the remote URL and the log.
+if [ -n "${GH_TOKEN:-}" ]; then
+    auth="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')"
+    git -c http.extraheader="AUTHORIZATION: basic $auth" push --quiet origin "$BRANCH"
+else
+    git push --quiet origin "$BRANCH"
+fi
 
 step "Published"
 echo "    repository: https://github.com/$REPO"
