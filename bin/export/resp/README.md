@@ -29,8 +29,14 @@ module may import the kernel. `make mago-guard` fails on the other direction.
 
 ```sh
 php bin/cms migrate
+php bin/cms settings:profile
 php -S 127.0.0.1:8000 -t public
 ```
+
+`migrate` seeds the kernel defaults. `settings:profile` applies
+`config/deploy.php` once, so a fresh clone boots as `responsive.sk` with Boson
+and the `Europe/Bratislava` timezone. Do not run it on an update: it would
+overwrite the settings an operator changed in `/mark`.
 
 `vendor/` is not needed. The runtime has zero Composer packages: `src/init.php`
 installs a PSR-4 fallback loader, and `composer install` is development tooling

@@ -10,7 +10,7 @@
     "default_target": "../nativa-resp",
     "install_modules": true,
     "migrate_before_tests": true,
-    "minimum_tests": 150,
+    "minimum_tests": 1100,
     "deploy": {
         "theme": "boson",
         "site_name": "responsive.sk",

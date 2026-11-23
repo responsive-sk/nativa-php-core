@@ -547,6 +547,12 @@ cp -a "$ROOT/vendor/." "$TARGET/vendor/"
 if [ "$MIGRATE_BEFORE_TESTS" = true ]; then
     step "Migrating the exported site"
     ( cd "$TARGET" && php bin/cms migrate ) || fail "the exported site did not migrate" 1
+
+    # `migrate` seeds the kernel defaults. The profile names the identity the
+    # site starts as, and `settings:profile` is how the build applies it; the
+    # check must use the same identity or its suite reads a different site.
+    step "Applying the exported deploy profile"
+    ( cd "$TARGET" && php bin/cms settings:profile ) || fail "the exported deploy profile was refused" 1
 fi
 
 step "Running the exported PHPUnit suite"

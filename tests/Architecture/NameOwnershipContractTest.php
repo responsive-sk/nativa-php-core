@@ -164,6 +164,11 @@ final class NameOwnershipContractTest extends TestCase
         // ratchet — those spellings are the SUBJECT of the test, not a duplicate
         // it failed to notice. Rule 1 still reads this file.
         'tests/Architecture/StatementHelperContractTest.php',
+        // The export-profile gate. It spells the profile schema keys, the
+        // content paths and the two visibility words to read the profiles as
+        // data; those spellings are the SUBJECT of the test, not a second owner
+        // for a production value. Rule 1 still reads this file.
+        'tests/Export/ExportProfileContractTest.php',
         // The admin-class gate. It spells the module whose markup it reads
         // (`Cardboard`) and nothing else; that spelling is the SUBJECT of the
         // test, not a duplicate it failed to notice, and the module name has an

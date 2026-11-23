@@ -165,11 +165,12 @@ mago-lint: ## Gate: curated lint findings must be zero
 kernel-size: ## Measure the kernel shape (bytes, files, layers, interface/concrete split)
 	@bin/build/kernel-size.sh
 
-##@ Publishing the kernel
-# `nativa-core` is generated from a commit of this tree: the kernel, the module
-# catalogue and the Frontend sources, without the measurement log, the article
-# corpus, the Lekalo model or the plans. The source of truth stays here, so a
-# hand edit in the published repository is a defect rather than a fork.
+##@ Publishing generated trees
+# `nativa-core` (public) and `nativa-resp` (private) are generated from a
+# commit of this tree: the kernel, the module catalogue and the Frontend
+# sources, without the measurement log, the article corpus, the Lekalo model
+# or the plans. The source of truth stays here, so a hand edit in a published
+# repository is a defect rather than a fork.
 #
 # `core-export` writes a tree (default ../nativa-core); `core-export-check`
 # exports into a temporary directory and runs the exported suite, which is what
@@ -187,6 +188,19 @@ core-export-check: ## Gate: the exported tree assembles, lints and passes its ow
 
 publish-core: ## Replace the public nativa-core repository with a fresh export (PUBLISH_ARGS=--dry-run)
 	@bin/build/publish-core.sh $(PUBLISH_ARGS)
+
+RESP_TO ?=
+RESP_EXPORT_ARGS ?=
+RESP_PUBLISH_ARGS ?=
+
+resp-export: ## Write the private nativa-resp client tree from a commit (RESP_TO=<dir>, RESP_EXPORT_ARGS=--ref <commit>)
+	@bin/build/export-core.sh --profile bin/export/resp $(if $(RESP_TO),--to $(RESP_TO),) $(RESP_EXPORT_ARGS)
+
+resp-export-check: ## Gate: the exported client tree assembles, migrates and passes its own suite
+	@bin/build/export-core.sh --profile bin/export/resp --check $(RESP_EXPORT_ARGS)
+
+publish-resp: ## Replace the private nativa-resp repository with a fresh export (RESP_PUBLISH_ARGS=--dry-run)
+	@bin/build/publish-core.sh --profile bin/export/resp $(RESP_PUBLISH_ARGS)
 
 ##@ Catalogue
 # Generated, not edited: the index is the machine-readable form of `modules/`,

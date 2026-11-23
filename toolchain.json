@@ -170,6 +170,30 @@
       "answers": "replaces the public nativa-core repository with a fresh export (--dry-run prints it)"
     },
     {
+      "target": "resp-export",
+      "tier": "repo",
+      "can_fail": false,
+      "answers": "writes the private nativa-resp client tree from a commit of this one (RESP_TO, --ref)"
+    },
+    {
+      "target": "resp-export-check",
+      "tier": "repo",
+      "can_fail": true,
+      "answers": "does the exported client tree assemble, keep its own registry, migrate, lint and pass its own PHPUnit suite",
+      "ci": [
+        {
+          "job": "tests",
+          "note": "a step beside the core export check, after composer install"
+        }
+      ]
+    },
+    {
+      "target": "publish-resp",
+      "tier": "repo",
+      "can_fail": false,
+      "answers": "replaces the private nativa-resp repository with a fresh export (--dry-run prints it)"
+    },
+    {
       "target": "mago-modules",
       "tier": "catalogue",
       "can_fail": false,

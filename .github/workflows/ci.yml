@@ -517,6 +517,12 @@ jobs:
       - name: Check the nativa-core export
         run: make core-export-check
 
+      # The client port is private, but its export is still a gate here: the
+      # profile, the installed slices and the content seed are one tree only
+      # when this command is green on the commit that would be published.
+      - name: Check the nativa-resp export
+        run: make resp-export-check
+
       # No pnpm, no build: nothing the kernel-only suite renders reads a bundle
       # (the kernel theme ships no CSS — see docs/kernel-status.md). The suite
       # asserts that `/mark` answers 404 here, which is the admin-is-a-module
