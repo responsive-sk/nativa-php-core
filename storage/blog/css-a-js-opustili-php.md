@@ -295,7 +295,7 @@ cat config/page-budget.json       # jeden strop na tému a povrch
 ```
 
 Overené na hotovom strome:
-`composer test` pri **1 631 testoch a 9 926 asertoch** s dvadsiatimi skipmi
+`composer test` pri **1 631 testoch a 9 930 asertoch** s dvadsiatimi skipmi
 za neprítomné moduly, `make lint`, `composer phpstan`, `cs-fix-dry`
 a `rector-dry` čisté.
 Galéria sa vykreslila na 56 strán a `--check` hlási
