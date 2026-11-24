@@ -107,6 +107,31 @@ A dated article is a third corpus — `storage/blog/` — where it is indexed, h
 author and is linked by the feeds. `docs/clanky/` holds the drafts that never
 became one, and is never served.
 
+## One URL for one article
+
+An article answers on four shapes of request, and one of them is the URL a
+crawler keeps. Measured 2026-11-24 on a live server with the Blog slice
+installed, against `storage/blog/css-a-js-opustili-php.md`:
+
+| request | answer | canonical points to |
+|---|---|---|
+| `/blog/<slug>` | 200 | itself |
+| `/sk_SK/blog/<slug>` | 200 | `/blog/<slug>` |
+| `/en/blog/<slug>` | 200 | `/blog/<slug>` |
+| `/blog/<slug>/` | 301 | `/blog/<slug>` |
+
+The prefixed forms stay 200 on purpose. `LocaleMiddleware` strips the prefix
+before routing, and the locale switcher links to those URLs itself, so a 301
+there would turn a route into a redirect surface. The canonical tag is what
+keeps them from competing: `sitemap.xml` carries the article once, the listing
+page carries its excerpt rather than its body, and the trailing slash is the
+only shape that redirects.
+
+Making the prefix a 301 is a different decision, not a cleanup, and it would
+have to move `modules/Locales/tests/LocaleUrlPrefixTest.php` with it. Until
+someone decides that, the canonical tag is the answer and nothing else is
+needed.
+
 ## Where it sits in the tree
 
 `Pages` is an ordinary module: `bin/cms module:add Pages` copies the slice in,
