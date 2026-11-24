@@ -1,0 +1,12 @@
+/**
+ * mono-article.css — the article surface entry, built from the theme source.
+ *
+ * A CSS-only input: no script wraps it, because the manifest names a
+ * stylesheet-only entry in `file` (measured 2026-11-24). The prose scale, the
+ * contents rail and both reaction blocks (comments, questions) are the only
+ * blocks moved here; the landing and every listing keep the rest.
+ *
+ * `mono/index.css` no longer imports `article.css`, which is what makes the
+ * base entry smaller.
+ */
+@import './mono/article.css';

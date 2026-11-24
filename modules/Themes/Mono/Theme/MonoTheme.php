@@ -11,6 +11,7 @@ use Themes\ThemeSetting;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Shell\PageContext;
 use Shell\ShellContext;
+use Themes\FrontendLayout;
 use Themes\ThemeModule;
 use Themes\ThemeSettings;
 
@@ -47,9 +48,12 @@ final class MonoTheme implements ThemeModule, ThemeSettings
     /**
      * @return list<string> src/-relative, resolved by InlineCss
      */
-    public function criticalCss(): array
+    public function criticalCss(?string $surface = null): array
     {
-        return ['Modules/Mono/assets/critical/mono.css', 'Modules/Mono/assets/critical/mo-variants.css'];
+        return FrontendLayout::themeCriticalCss(
+            ['Modules/Mono/assets/critical/mono.css', 'Modules/Mono/assets/critical/mo-variants.css'],
+            $surface,
+        );
     }
 
     /**

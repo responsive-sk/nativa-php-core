@@ -36,6 +36,7 @@ use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Infrastructure\Http\Request;
 use Shell\PageContext;
 use Themes\FrontendLayout;
+use Themes\PageSurface;
 use Themes\ThemeRegistry;
 
 /**
@@ -217,6 +218,23 @@ function contextFor(string $surface, string $theme, array $data): PageContext
             results: array_slice($articles, 0, 3),
         ),
         default => fail('unknown surface: ' . $surface),
+    };
+}
+
+/**
+ * Demo surface => the page surface whose assets it carries.
+ *
+ * The gallery keys are the theme methods it renders (`blog`, `tags`, …); the
+ * layout asks for a page surface, and the mapping is here so the demo cannot
+ * claim a surface its page is not. Anything that is not the landing or an
+ * article is a listing: an index of records, not a record.
+ */
+function pageSurface(string $surface): string
+{
+    return match (SURFACES[$surface] ?? null) {
+        'homepage' => PageSurface::HOME,
+        'blogArticle' => PageSurface::ARTICLE,
+        default => PageSurface::LISTING,
     };
 }
 
@@ -524,6 +542,7 @@ foreach ($themes as $theme) {
                 $title,
                 $content,
                 theme: $theme,
+                surface: pageSurface($surface),
                 currentPath: '/',
                 localeLinks: demoLocaleLinks($locale, $surface, $depth),
                 lang: $locale,

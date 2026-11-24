@@ -14,6 +14,7 @@ use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Themes\FrontendLayout;
+use Themes\PageSurface;
 use Shell\PageContext;
 use Themes\ThemeKernel;
 use Themes\ThemeResolver;
@@ -125,6 +126,7 @@ final class AuthorProfileAction
             $profile['name'] . ' — ' . BlogServices::brandSuffix(),
             $content,
             currentPath: $request->getPathInfo(),
+            surface: PageSurface::LISTING,
             canonicalUrl: $profileUrl,
             // An author profile exists in both locales (the article grid is
             // locale-filtered, the profile itself is not). Without alternates

@@ -1,0 +1,9 @@
+/**
+ * griffe-article.css — the article surface entry, built from the theme source.
+ *
+ * A CSS-only input: no script wraps it, because the manifest names a
+ * stylesheet-only entry in `file` (measured 2026-11-24). The reading layout and
+ * the contents rail are the only blocks moved here; every listing keeps the
+ * blog list and chips in the base entry.
+ */
+@import './griffe/blog-article.css';

@@ -14,6 +14,7 @@ use Shell\PageContext;
 use Shell\ShellContext;
 use Themes\AuthPageTheme;
 use Themes\DocsPageTheme;
+use Themes\FrontendLayout;
 use Themes\ThemeModule;
 use Themes\ThemeSettings;
 
@@ -69,9 +70,9 @@ final class NativaTheme implements AuthPageTheme, DocsPageTheme, ThemeModule, Th
     }
 
     /** @return list<string> src/-relative, resolved by InlineCss */
-    public function criticalCss(): array
+    public function criticalCss(?string $surface = null): array
     {
-        return ['Modules/Nativa/assets/critical/nativa.css'];
+        return FrontendLayout::themeCriticalCss(['Modules/Nativa/assets/critical/nativa.css'], $surface);
     }
 
     /**

@@ -1,11 +1,20 @@
 {
+  "src/griffe-article.css": {
+    "file": "assets/griffe-article-eU3xDf2r.css",
+    "name": "griffe-article",
+    "names": [
+      "griffe-article.css"
+    ],
+    "src": "src/griffe-article.css",
+    "isEntry": true
+  },
   "src/griffe.ts": {
-    "file": "assets/griffe-BoA3dxak.js",
+    "file": "assets/griffe-Bp1hruxT.js",
     "name": "griffe",
     "src": "src/griffe.ts",
     "isEntry": true,
     "css": [
-      "assets/griffe-KiqZ3wI6.css"
+      "assets/griffe-CrKQ_56d.css"
     ]
   }
 }

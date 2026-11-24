@@ -14,6 +14,7 @@ use Shell\PageContext;
 use Shell\ShellContext;
 use Themes\AuthPageTheme;
 use Themes\DocsPageTheme;
+use Themes\FrontendLayout;
 use Themes\ThemeModule;
 use Themes\ThemeSettings;
 
@@ -148,9 +149,9 @@ final class BosonTheme implements ThemeModule, AuthPageTheme, DocsPageTheme, The
     /**
      * @return list<string> src/-relative, resolved by InlineCss
      */
-    public function criticalCss(): array
+    public function criticalCss(?string $surface = null): array
     {
-        return ['Modules/Boson/assets/critical/boson.css'];
+        return FrontendLayout::themeCriticalCss(['Modules/Boson/assets/critical/boson.css'], $surface);
     }
 
     /**

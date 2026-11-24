@@ -12,6 +12,7 @@ use Themes\ThemeSetting;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Shell\PageContext;
 use Shell\ShellContext;
+use Themes\FrontendLayout;
 use Themes\ThemeModule;
 use Themes\ThemeSettings;
 
@@ -49,9 +50,9 @@ final class GriffeTheme implements ThemeModule, ThemeSettings
     /**
      * @return list<string> src/-relative, resolved by InlineCss
      */
-    public function criticalCss(): array
+    public function criticalCss(?string $surface = null): array
     {
-        return ['Modules/Griffe/assets/critical/griffe.css'];
+        return FrontendLayout::themeCriticalCss(['Modules/Griffe/assets/critical/griffe.css'], $surface);
     }
 
     /**

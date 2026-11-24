@@ -12,6 +12,7 @@ use Modules\Core\Domain\MarkRoutePolicy;
 use Shell\ShellNavItem;
 use Modules\Core\Infrastructure\Http\Request;
 use Themes\FrontendLayout;
+use Themes\PageSurface;
 use Shell\PageContext;
 use Shell\ShellContext;
 use Themes\ThemeRegistry;
@@ -303,7 +304,7 @@ final class BosonThemeTest extends TestCase
         $this->assertStringContainsString('<img class="bo-orbit__mark" src="/favicon.svg"', $html);
         $this->assertStringNotContainsString('bo-orbit__mark">', $html, 'The orbit mark is an image, not a text node.');
 
-        $css = InlineCss::file('Modules/Boson/assets/critical/boson.css');
+        $css = InlineCss::files((new BosonTheme())->criticalCss(PageSurface::HOME));
 
         $this->assertStringContainsString('.bo-orbit__mark {', $css);
         $this->assertStringContainsString('.bo-header__mark-img {', $css);
@@ -1085,7 +1086,7 @@ final class BosonThemeTest extends TestCase
     #[Test]
     public function theModuleSurfacesAndTheActiveTocLinkAreStyled(): void
     {
-        $css = InlineCss::file('Modules/Boson/assets/critical/boson.css');
+        $css = InlineCss::files((new BosonTheme())->criticalCss(PageSurface::ARTICLE));
         $script = InlineJs::file('Modules/Boson/assets/scripts/boson.js');
 
         foreach ([

@@ -78,6 +78,104 @@ final class FrontendLayout
         'Themes/assets/critical/blog-members.css',
         'Themes/assets/critical/home.css',
     ];
+
+    /**
+     * The shared three every public page needs, whatever its surface.
+     *
+     * @var list<string>
+     */
+    private const array SHARED_CRITICAL_CSS = [
+        'Themes/assets/critical/base.css',
+        'Themes/assets/critical/shell.css',
+        'Themes/assets/critical/nav.css',
+    ];
+
+    /**
+     * The kernel members one surface adds to the shared three.
+     *
+     * `PAGE` is deliberately absent: it means "the theme's complete sheet",
+     * so it answers with `BASE_CRITICAL_CSS` itself and a caller that declares
+     * nothing therefore pays exactly what it paid before surfaces existed.
+     *
+     * @var array<string, list<string>>
+     */
+    private const array SURFACE_CRITICAL_CSS = [
+        PageSurface::HOME => [
+            'Themes/assets/critical/home.css',
+        ],
+        PageSurface::LISTING => [
+            'Themes/assets/critical/blog.css',
+            'Themes/assets/critical/blog-search.css',
+        ],
+        PageSurface::ARTICLE => [
+            'Themes/assets/critical/blog.css',
+            'Themes/assets/critical/blog-comments.css',
+            'Themes/assets/critical/blog-toc.css',
+            'Themes/assets/critical/blog-members.css',
+        ],
+    ];
+
+    /**
+     * The kernel critical chain for one surface, in cascade order.
+     *
+     * `null`, an empty key, an unknown key and `PageSurface::PAGE` all answer
+     * with the complete list: the fallback is the page the theme ships whole,
+     * never an unstyled one. A theme whose own sheet is one file (Boson, Mono,
+     * Griffe, Erik, Nativa) does not use this chain at all; Jednotka does, and
+     * its surface answer is the shared three plus the members that surface
+     * reads.
+     *
+     * @return list<string>
+     */
+    public static function criticalCssFiles(?string $surface): array
+    {
+        $resolved = PageSurface::orPage($surface);
+
+        if (PageSurface::PAGE === $resolved) {
+            return self::BASE_CRITICAL_CSS;
+        }
+
+        return [...self::SHARED_CRITICAL_CSS, ...self::SURFACE_CRITICAL_CSS[$resolved]];
+    }
+
+    /**
+     * A theme's own critical list, widened with the surface sheets that sit
+     * beside its base sheet.
+     *
+     * The rule is one sentence and it is the same for every theme: a surface
+     * sheet is `<base stem>-<surface>.css` in the same directory, and it is
+     * added only when the file exists. Nothing has to be registered when a
+     * theme grows one; a theme without one answers with its base list, byte for
+     * byte the page it shipped before surfaces existed.
+     *
+     * @param list<string> $files
+     *
+     * @return list<string>
+     */
+    public static function themeCriticalCss(array $files, ?string $surface): array
+    {
+        $resolved = PageSurface::orPage($surface);
+
+        if (PageSurface::PAGE === $resolved) {
+            return $files;
+        }
+
+        $widened = $files;
+
+        foreach ($files as $file) {
+            $candidate = preg_replace('/\.css$/', '-' . $resolved . '.css', $file);
+
+            if (null === $candidate || $candidate === $file) {
+                continue;
+            }
+
+            if (is_file(\View\Paths::moduleFile($candidate))) {
+                $widened[] = $candidate;
+            }
+        }
+
+        return $widened;
+    }
     /**
      * Navigation data (header + footer) — the provider that owns the menu
      * answers through the shell port, already mapped into kernel-owned
@@ -146,6 +244,7 @@ final class FrontendLayout
         ?string $searchAction = null,
         string $searchPlaceholder = 'Search',
         string $searchLabel = 'Search',
+        ?string $surface = null,
     ): string {
         // The site's own name comes first: a provider that knows it answers
         // through the port, and the caller's literal is the last resort (a
@@ -190,10 +289,10 @@ final class FrontendLayout
             self::noindexTag($noindex),
             self::structuredTag($structuredData),
             self::feedTags($feedLinks),
-            self::styleTag($bundle, $jsKey, $themeModule->criticalCss()),
+            self::styleTag($bundle, $jsKey, $themeModule->criticalCss($surface), $surface),
             self::themeInitScript($themeModule->themeInitScript()),
             self::themeToggleScript(),
-            self::jsTag($bundle, $jsKey),
+            self::jsTag($bundle, $jsKey, $surface),
             $pageChrome,
         );
     }
@@ -338,9 +437,9 @@ final class FrontendLayout
      *
      * @param list<string> $criticalCss
      */
-    private static function styleTag(string $bundle, string $jsKey, array $criticalCss): string
+    private static function styleTag(string $bundle, string $jsKey, array $criticalCss, ?string $surface): string
     {
-        $inlineCss = self::inlineCss(new AssetManager($bundle), $jsKey);
+        $inlineCss = self::inlineCss(new AssetManager($bundle), $jsKey, $surface);
 
         if ('' === $inlineCss) {
             $inlineCss = InlineCss::files($criticalCss);
@@ -391,14 +490,19 @@ final class FrontendLayout
         return $tags;
     }
 
-    /** Manifest-resolved deferred JS tag (empty when no entry resolves). */
-    private static function jsTag(string $bundle, string $jsKey): string
+    /**
+     * Manifest-resolved deferred JS tags: the page's base script, then every
+     * surface script it declares. Empty when no entry resolves.
+     */
+    private static function jsTag(string $bundle, string $jsKey, ?string $surface): string
     {
-        $jsUrl = (new AssetManager($bundle))->jsUrl($jsKey);
+        $tags = '';
 
-        return null !== $jsUrl
-            ? '<script src="' . $jsUrl . '" nonce="__CSP_NONCE_PLACEHOLDER__" defer></script>' . "\n"
-            : '';
+        foreach ((new AssetManager($bundle))->jsUrlsForSurface($jsKey, $surface) as $jsUrl) {
+            $tags .= '<script src="' . $jsUrl . '" nonce="__CSP_NONCE_PLACEHOLDER__" defer></script>' . "\n";
+        }
+
+        return $tags;
     }
 
     /** Shared theme-toggle handler — one copy referenced by every theme module. */
@@ -636,11 +740,11 @@ final class FrontendLayout
      *
      * @return string concatenated built CSS (empty when the build is missing)
      */
-    private static function inlineCss(AssetManager $assets, string $jsKey): string
+    private static function inlineCss(AssetManager $assets, string $jsKey, ?string $surface): string
     {
         $css = '';
 
-        foreach ($assets->cssUrls($jsKey) as $url) {
+        foreach ($assets->cssUrlsForSurface($jsKey, $surface) as $url) {
             $path = AppPaths::instance()->public(ltrim($url, '/'));
 
             if (is_file($path)) {

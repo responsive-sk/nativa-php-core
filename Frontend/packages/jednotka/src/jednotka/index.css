@@ -11,6 +11,8 @@
 @import "./shell.css";
 @import "./home.css";
 @import "./content.css";
-@import "./toc.css";
+
+/* The contents sidebar is a separate entry, `src/main-article.css`, so a
+   homepage pays none of it. */
 @import "./cards.css";
 @import "./parts.css";

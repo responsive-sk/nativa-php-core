@@ -185,9 +185,9 @@ final class JednotkaTheme implements ThemeModule, ThemeSettings
      *
      * @return list<string>
      */
-    public function criticalCss(): array
+    public function criticalCss(?string $surface = null): array
     {
-        return FrontendLayout::BASE_CRITICAL_CSS;
+        return FrontendLayout::criticalCssFiles($surface);
     }
 
     /**

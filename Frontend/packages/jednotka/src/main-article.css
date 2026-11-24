@@ -1,0 +1,13 @@
+/**
+ * main-article.css — the article surface entry, built from the theme source.
+ *
+ * A CSS-only input: no script wraps it, because the manifest names a
+ * stylesheet-only entry in `file` (measured 2026-11-24). The contents sidebar
+ * and both reaction blocks (comments, questions) are the only blocks moved
+ * here; the homepage and the blog index keep the rest.
+ *
+ * The base entry no longer imports them, which is what makes it smaller.
+ */
+@import './jednotka/toc.css';
+@import './comments.css';
+@import './questions.css';

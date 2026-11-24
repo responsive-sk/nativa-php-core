@@ -11,6 +11,10 @@
  * The `@/` alias mirrors the source's own convention (`tsconfig.json`
  * `paths`), so the unused opt-in components (`src/app.ts`) still resolve
  * without a rewrite.
+ *
+ * `griffe-article` is the article surface's stylesheet, a CSS-only input: the
+ * manifest names it in `file` with no `css` array (measured 2026-11-24), and
+ * `AssetManager::cssUrlsForSurface()` reads both shapes.
  */
 import { mergeConfig } from 'vite';
 import { fileURLToPath } from 'url';
@@ -22,7 +26,10 @@ const src = fileURLToPath(new URL('./src', import.meta.url));
 export default mergeConfig(
   createThemeConfig({
     theme: 'griffe',
-    inputs: { griffe: 'src/griffe.ts' },
+    inputs: {
+      griffe: 'src/griffe.ts',
+      'griffe-article': 'src/griffe-article.css',
+    },
   }),
   {
     resolve: {

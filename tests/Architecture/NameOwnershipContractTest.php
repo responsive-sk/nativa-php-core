@@ -113,6 +113,18 @@ final class NameOwnershipContractTest extends TestCase
             . ' KernelCouplingTest would then have to know about. Merging them would couple'
             . ' two files that are deliberately independent, and the name has no production'
             . ' owner to consolidate onto: nothing outside tests/ writes \'Cardboard\'.',
+        "'article'" => 'TWO VOCABULARIES, ONE WORD. `Questions` SUBJECT_ARTICLE names who a'
+            . ' question is FOR, and `Themes` ARTICLE names which page surface a stylesheet'
+            . ' belongs to. Neither is a rename of the other and neither table can import the'
+            . ' other (Questions is a module, PageSurface is kernel), so consolidating would'
+            . ' make one concept carry the other\'s meaning.',
+        "'page'" => 'The same split as \'article\': SUBJECT_PAGE is a question\'s audience and'
+            . ' PageSurface::PAGE is the whole-sheet fallback a page with no declared surface'
+            . ' gets. Two scales, no shared owner.',
+        "'home'" => 'HOME is the landing page surface; GROUP in'
+            . ' tests/Discovery/ShellContextCopyMergeTest is a label for a group of test'
+            . ' cases. A test grouping is not a page surface, and the test file reads'
+            . ' nothing from Themes on purpose - it guards the shell copy merge alone.',
         "'203.0.113.7'" => 'RateLimitMiddlewareTest::CLIENT_IP (Security) and AuthServiceTest::REMOTE'
             . ' (Users) — TWO MODULES, and the earlier text naming'
             . ' AuthMiddlewareDenialTest::REMOTE was simply wrong: that constant does not'
@@ -473,7 +485,12 @@ final class NameOwnershipContractTest extends TestCase
     // 316 with the PostgreSQL suite's fixture constants (the schema map and the
     // metric-window list), which live in tests/ and are counted like every other
     // declaration. The ratchet moves only with the file that needs it.
-    private const int MAX_DECLARATIONS = 316;
+    //
+    // 322 with per-page assets (2026-11-24): `PageSurface` owns the four surface
+    // names a page can declare, and `FrontendLayout` owns the two tables that map
+    // a surface to the kernel sheets it reads. Six declarations, and each one is
+    // a value that was previously spelled at its call sites.
+    private const int MAX_DECLARATIONS = 322;
 
     /**
      * 203 → 204 with MAX_DECLARATIONS: `ModuleTreeState::IGNORED` is a name as
@@ -537,7 +554,12 @@ final class NameOwnershipContractTest extends TestCase
     // answer from becoming an OOM) name two facts nothing else names.
     // 234 with the PostgreSQL suite's fixture names, which are new constants
     // rather than a second name for anything that already had one.
-    private const int MAX_NAMES = 234;
+    //
+    // 239 with per-page assets: the four surface names (`PAGE`, `HOME`,
+    // `LISTING`, `ARTICLE`) and the layout's surface table. `SHARED_CRITICAL_CSS`
+    // is the fifth new name; nothing else in the tree names a page surface or the
+    // kernel sheets one surface adds.
+    private const int MAX_NAMES = 239;
 
     /**
      * `name => modules/<Name>` or `modules/<Group>/<Name>`, resolved once. A

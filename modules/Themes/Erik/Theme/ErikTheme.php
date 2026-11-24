@@ -8,6 +8,7 @@ use Shell\ShellNavItem;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Shell\PageContext;
 use Shell\ShellContext;
+use Themes\FrontendLayout;
 use Themes\ThemeModule;
 
 /**
@@ -48,9 +49,9 @@ final class ErikTheme implements ThemeModule
     /**
      * @return list<string> src/-relative, resolved by InlineCss
      */
-    public function criticalCss(): array
+    public function criticalCss(?string $surface = null): array
     {
-        return ['Modules/Erik/assets/critical/erik.css'];
+        return FrontendLayout::themeCriticalCss(['Modules/Erik/assets/critical/erik.css'], $surface);
     }
 
     public function themeInitScript(): string

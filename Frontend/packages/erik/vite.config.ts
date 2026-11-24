@@ -7,10 +7,14 @@
  * which the classic deferred `<script>` cannot execute on the Chrome 70
  * baseline. The duplicated `code-highlight.ts` in `src/` keeps the two
  * bundles independent; the factory guarantees no shared chunk either way.
+ *
+ * `erik-article` is the article surface's stylesheet, a CSS-only input: the
+ * manifest names it in `file` with no `css` array (measured 2026-11-24), and
+ * `AssetManager::cssUrlsForSurface()` reads both shapes.
  */
 import { createThemeConfig } from '../build/vite-theme-factory.ts';
 
 export default createThemeConfig({
   theme: 'erik',
-  inputs: { erik: 'src/erik.ts' },
+  inputs: { erik: 'src/erik.ts', 'erik-article': 'src/erik-article.css' },
 });

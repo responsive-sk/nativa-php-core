@@ -12,15 +12,27 @@
  * the installed slice is derived from it (`src/Modules/*` is gitignored and,
  * in CI, does not exist yet when this build runs).
  *
- * Two entries: `boson` is the deferred classic script (a `<script defer>` on
- * the Chrome 70 baseline cannot execute ES module imports), and `diagram` is a
+ * Three entries: `boson` is the deferred classic script (a `<script defer>` on
+ * the Chrome 70 baseline cannot execute ES module imports), `diagram` is a
  * module chunk that only the landing imports — lazily, when the stack figure
  * nears the viewport. Mermaid is 600 kB of gzip nobody should pay for before
  * scrolling, so it lives in its own entry instead of the theme script.
+ *
+ * `boson-article` is the article surface's stylesheet, a CSS-only input: the
+ * manifest names it in `file` with no `css` array (measured 2026-11-24), and
+ * `AssetManager::cssUrlsForSurface()` reads both shapes. The homepage, a
+ * listing and a search page therefore stop paying for the reading rail, the
+ * article heading scale and the ruled comment list.
  */
 import { createThemeConfig } from '../build/vite-theme-factory.ts';
 
 export default createThemeConfig({
   theme: 'boson',
-  inputs: { boson: 'src/boson.ts', diagram: 'src/diagram.ts' },
+  inputs: {
+    boson: 'src/boson.ts',
+    diagram: 'src/diagram.ts',
+    'boson-article': 'src/boson-article.css',
+    'boson-home': 'src/boson-home.css',
+    'boson-listing': 'src/boson-listing.css',
+  },
 });

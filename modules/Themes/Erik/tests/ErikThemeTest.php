@@ -11,6 +11,7 @@ use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Shell\PageContext;
 use Themes\FrontendLayout;
+use Themes\PageSurface;
 use Modules\Core\Interfaces\HTTP\Kernel;
 use Modules\Core\Interfaces\HTTP\Router;
 use Themes\ThemeKernel;
@@ -519,7 +520,10 @@ final class ErikThemeTest extends TestCase
      * The markup above is what a tree WITHOUT a built bundle renders (the
      * critical subset is the fallback), so the fallback has to carry a rule for
      * every class the article emits — the Mono audit's assertion, applied to
-     * the one surface it could not see before.
+     * the one surface it could not see before. The fallback is the ARTICLE
+     * surface's list, base sheet plus the surface sheet: the reading rail moved
+     * out of the base, and asking for the base alone would now fail a page that
+     * renders the rail.
      */
     #[Test]
     public function theArticleVocabularyIsCoveredByTheCriticalStylesheet(): void
@@ -529,7 +533,7 @@ final class ErikThemeTest extends TestCase
             ['level' => 2, 'text' => 'Two', 'anchor' => 'two'],
         ]));
 
-        $css = InlineCss::file('Modules/Erik/assets/critical/erik.css');
+        $css = InlineCss::files((new ErikTheme())->criticalCss(PageSurface::ARTICLE));
 
         preg_match_all('/class="([^"]*)"/', $html, $matches);
 

@@ -12,6 +12,7 @@ use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Interfaces\HTTP\ErrorPageRenderer;
 use Themes\FrontendLayout;
+use Themes\PageSurface;
 use Modules\Markdown\Interfaces\HTTP\Markdown\MarkdownBlockContext;
 use Themes\ThemeKernel;
 use Themes\ThemeResolver;
@@ -117,6 +118,7 @@ final readonly class DocsPageAction
             $content,
             description: 'Repository guide: ' . $key,
             currentPath: '/docs/' . $key,
+            surface: PageSurface::ARTICLE,
             lang: DocsCatalog::LANGUAGE,
             noindex: true,
             theme: $theme,

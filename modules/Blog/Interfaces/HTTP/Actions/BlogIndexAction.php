@@ -14,6 +14,7 @@ use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Themes\FrontendLayout;
+use Themes\PageSurface;
 use Shell\PageContext;
 use Themes\ThemeKernel;
 use Themes\ThemeResolver;
@@ -74,6 +75,7 @@ final class BlogIndexAction
             '' !== $query ? 'Search — ' . BlogServices::brandSuffix() : 'Blog — ' . BlogServices::brandSuffix(),
             $content,
             currentPath: $request->getPathInfo(),
+            surface: PageSurface::LISTING,
             canonicalUrl: $canonical,
             hreflangLinks: $hreflang,
             structuredData: null !== $canonical

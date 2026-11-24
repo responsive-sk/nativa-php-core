@@ -1,0 +1,9 @@
+/**
+ * boson-home.css — the home surface entry, built from the catalogue sheet.
+ *
+ * A CSS-only input, like `boson-article.css`: the manifest names its
+ * stylesheet in `file` with no `css` array, and the renderer reads both
+ * shapes. The source is the module's tracked catalogue file because CI builds
+ * before `src/Modules` exists.
+ */
+@import '../../../../modules/Themes/Boson/assets/critical/boson-home.css';

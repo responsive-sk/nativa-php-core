@@ -13,7 +13,10 @@
 @import './brand-logo.css';
 @import './steps.css';
 @import './quotes.css';
-@import './article.css';
+
+/* The article surface's block (prose scale, contents rail, comments and
+   questions) is a separate entry, `src/mono-article.css`, so a landing page
+   pays none of it. */
 @import './phone-nav.css';
 @import './lang-switch.css';
 @import './code.css';

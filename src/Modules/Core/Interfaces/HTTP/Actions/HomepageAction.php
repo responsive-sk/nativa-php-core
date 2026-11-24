@@ -12,6 +12,7 @@ use Shell\HomepageSurfaceRegistry;
 use Shell\PageContext;
 use Shell\ShellContextProviderRegistry;
 use Themes\FrontendLayout;
+use Themes\PageSurface;
 use Themes\ThemeKernel;
 use Themes\ThemeResolver;
 
@@ -108,6 +109,7 @@ final class HomepageAction
             $content,
             description: $homepage?->description,
             currentPath: '/',
+            surface: PageSurface::HOME,
             lang: $homepage?->lang,
             hreflangLinks: $hreflang,
             canonicalUrl: $canonicalUrl,

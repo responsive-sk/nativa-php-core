@@ -10,6 +10,7 @@ use Modules\Core\Infrastructure\Http\Request;
 use Themes\FrontendLayout;
 use Shell\PageContext;
 use Shell\ShellContext;
+use Themes\PageSurface;
 use Modules\Themes\Mono\Theme\MonoTheme;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -493,7 +494,7 @@ final class MonoThemeTest extends TestCase
     {
         $this->assertStringContainsString(
             '.mo-toc__link--active',
-            InlineCss::file('Modules/Mono/assets/critical/mono.css'),
+            InlineCss::files((new MonoTheme())->criticalCss(PageSurface::ARTICLE)),
             'The active rule must ship in the stylesheet — a tracker with no style highlights invisibly.',
         );
     }

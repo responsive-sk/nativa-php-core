@@ -10,6 +10,7 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Themes\FrontendLayout;
+use Themes\PageSurface;
 use Themes\ThemeKernel;
 use Themes\ThemeResolver;
 use Themes\DocsPageTheme;
@@ -70,6 +71,7 @@ final readonly class DocsIndexAction
                 $this->searchContent($module->prefix(), $query, $this->search->search($query), $shellHasField),
                 description: 'Search the guides that ship with the repository.',
                 currentPath: $request->getPathInfo(),
+                surface: PageSurface::LISTING,
                 lang: DocsCatalog::LANGUAGE,
                 noindex: true,
                 theme: $theme,
@@ -104,6 +106,7 @@ final readonly class DocsIndexAction
                 : $this->content($module->prefix(), $shellHasField),
             description: 'The guides that ship with the repository, rendered by the site.',
             currentPath: $request->getPathInfo(),
+            surface: PageSurface::LISTING,
             lang: DocsCatalog::LANGUAGE,
             noindex: true,
             theme: $theme,

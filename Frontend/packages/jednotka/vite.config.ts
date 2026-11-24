@@ -5,10 +5,17 @@
  * (`manifest.json`) that the PHP AssetManager resolves. The old-browser
  * baseline (ES2015 / Chrome 70), the @layer stripping and the single-file
  * classic-script contract are fixed by the shared factory.
+ *
+ * `main-article` is the article surface's stylesheet, a CSS-only input:
+ * the manifest names it in `file` with no `css` array (measured 2026-11-24),
+ * and `AssetManager::cssUrlsForSurface()` reads both shapes.
  */
 import { createThemeConfig } from '../build/vite-theme-factory.ts';
 
 export default createThemeConfig({
   theme: 'jednotka',
-  inputs: { main: 'src/main.ts' },
+  inputs: {
+    main: 'src/main.ts',
+    'main-article': 'src/main-article.css',
+  },
 });

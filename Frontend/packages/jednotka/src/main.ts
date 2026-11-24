@@ -15,10 +15,8 @@
 import './jednotka/index.css';
 // The form block is per theme, not a shared base section — see form.css.
 import './form.css';
-// The comment block is per theme, not a shared base section — see comments.css.
-import './comments.css';
-// The reader-questions block is per theme too — see questions.css.
-import './questions.css';
+// The comment and reader-questions blocks are article-only: they live in
+// `src/main-article.css`, the surface entry, not in this base bundle.
 // The owner-edit affordance is per theme too — see edit-link.css.
 import './edit-link.css';
 // The inline Markdown editor is module markup with this theme's prefix.

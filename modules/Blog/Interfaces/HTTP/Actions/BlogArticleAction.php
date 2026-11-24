@@ -18,6 +18,7 @@ use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Themes\FrontendLayout;
+use Themes\PageSurface;
 use Modules\Markdown\Interfaces\HTTP\Markdown\MarkdownBlockContext;
 use Shell\PageContext;
 use Themes\ThemeKernel;
@@ -282,6 +283,7 @@ final class BlogArticleAction
             $content,
             description: $excerpt,
             currentPath: $request->getPathInfo(),
+            surface: PageSurface::ARTICLE,
             localeLinks: $links,
             lang: ContentLocaleServices::mapper()->languageCode($locale),
             hreflangLinks: $this->hreflangLinks($request, $links),

@@ -1,11 +1,20 @@
 {
+  "src/mono-article.css": {
+    "file": "assets/mono-article-CCtEmGMU.css",
+    "name": "mono-article",
+    "names": [
+      "mono-article.css"
+    ],
+    "src": "src/mono-article.css",
+    "isEntry": true
+  },
   "src/mono.ts": {
-    "file": "assets/mono-CXUjcQcX.js",
+    "file": "assets/mono-BA_Y4uXG.js",
     "name": "mono",
     "src": "src/mono.ts",
     "isEntry": true,
     "css": [
-      "assets/mono-Cm-DAmVh.css"
+      "assets/mono-BnblMdb6.css"
     ]
   }
 }
