@@ -54,6 +54,7 @@ same PR that introduces it, not a second variant in the prose.
 | **build** | m. | ten build · z buildu · dva buildy | nie „builda“ (ž.) |
 | **deploy** | m. | ten deploy · z deploya · dva deploye | v próze radšej „nasadenie“ |
 | **release** | m. | ten release · z releasu · dva releasy | v próze radšej „vydanie“ |
+| **asset** | m. | ten asset · z assetu · dva assety | |
 | **feature** | ž. | tá feature · z feature · dve feature | nesklonné; v próze „funkcia“/„vlastnosť“ |
 | **commit** | m. | ten commit · z commitu · dva commity | |
 | **session** | ž. | tá session · z tej session · dve session | nesklonné |
@@ -67,6 +68,7 @@ same PR that introduces it, not a second variant in the prose.
 | **payload** | m. | ten payload · z payloadu · dva payloady | |
 | **test** | m. | ten test · z testu · dva testy | |
 | **log** | m. | ten log · z logu · dva logy | |
+| **split** | m. | ten split · zo splitu · dva splity | |
 
 Where the prose already has a Slovak word (`fronta` for queue, `nasadenie`
 for deploy), use it; the English term belongs in code and in the sentence that
