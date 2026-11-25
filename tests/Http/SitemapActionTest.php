@@ -25,6 +25,24 @@ final class SitemapActionTest extends TestCase
     }
 
     #[Test]
+    public function aThrowingContributorStillLeavesTheKernelRows(): void
+    {
+        $broken = new class () implements SitemapContributor {
+            public function entries(): array
+            {
+                throw new \RuntimeException('fixture failure');
+            }
+        };
+
+        $body = self::render(SitemapContributorRegistry::fromContributors([$broken]));
+
+        self::assertStringContainsString('<loc>http://localhost/</loc>', $body);
+        self::assertSame(200, (new SitemapAction(SitemapContributorRegistry::fromContributors([$broken])))
+            ->handle(Request::create('GET', '/sitemap.xml'))
+            ->getStatusCode());
+    }
+
+    #[Test]
     public function aContributorAddsItsOwnPath(): void
     {
         $body = self::render(SitemapContributorRegistry::fromContributors([

@@ -10,6 +10,7 @@ use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Pages\Application\Services\PageCrudService;
 use Modules\Pages\Interfaces\HTTP\Actions\PageViewAction;
+use Seo\WebsiteStructuredData;
 use Modules\Settings\Infrastructure\Persistence\Migrations\SettingsDatabaseMigrator;
 use Modules\Settings\Infrastructure\Persistence\Repositories\SettingsRepository;
 use Modules\Settings\Interfaces\HTTP\SettingsServices;
@@ -137,11 +138,65 @@ final class PageTitleBrandTest extends TestCase
         );
     }
 
+    #[Test]
+    public function thePageSeoFieldsWinTheTitleAndTheDescription(): void
+    {
+        (new PageCrudService())->save($this->slug, [
+            'title' => 'About us',
+            'published' => true,
+            'seo_title' => 'Hľadajte nás',
+            'seo_description' => 'Krátky opis pre vyhľadávače.',
+        ], 'Body of the page.', $this->locale);
+
+        $html = $this->renderedPage();
+
+        self::assertStringContainsString(
+            '<title>Hľadajte nás — ' . FrontendLayout::brandSuffix() . '</title>',
+            $html,
+            'The page fields, not the site fallback, are what the search result shows.',
+        );
+        self::assertStringContainsString(
+            '<meta name="description" content="Krátky opis pre vyhľadávače.">',
+            $html,
+        );
+    }
+
+    #[Test]
+    public function thePageUsesTheKernelStructuredDataBuilder(): void
+    {
+        $this->storeSiteName('responsive.sk');
+
+        $html = $this->renderedPage();
+        $matched = preg_match('~<script type="application/ld\+json"[^>]*>(.*?)</script>~s', $html, $block);
+        self::assertSame(1, $matched, 'The page carries no JSON-LD block.');
+
+        $nodes = json_decode($block[1], true, 512, JSON_THROW_ON_ERROR);
+        self::assertIsArray($nodes);
+        self::assertSame(['Organization', 'WebSite'], array_column($nodes, '@type'));
+
+        $url = $nodes[1]['url'] ?? null;
+        self::assertIsString($url);
+        self::assertSame(
+            WebsiteStructuredData::website('About us', $url),
+            $block[1],
+            'The page payload must be the kernel builder output, not a second copy.',
+        );
+    }
+
     /**
      * Render the page through the real action and read back what landed in
      * `<title>` — the string a crawler sees, not the one the action intended.
      */
     private function renderedTitle(): string
+    {
+        $matched = preg_match('/<title>(.*?)<\/title>/s', $this->renderedPage(), $title);
+
+        self::assertSame(1, $matched, 'The page carries no <title> at all.');
+
+        return $title[1];
+    }
+
+    private function renderedPage(): string
     {
         ShellContextProviderRegistry::reset();
 
@@ -152,11 +207,7 @@ final class PageTitleBrandTest extends TestCase
 
         self::assertSame(200, $response->getStatusCode(), 'The fixture page must render, not 404.');
 
-        $matched = preg_match('/<title>(.*?)<\/title>/s', $response->getContent(), $title);
-
-        self::assertSame(1, $matched, 'The page carries no <title> at all.');
-
-        return $title[1];
+        return $response->getContent();
     }
 
     private function storeSiteName(string $value): void
