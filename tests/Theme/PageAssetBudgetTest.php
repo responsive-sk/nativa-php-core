@@ -29,10 +29,12 @@ use Themes\ThemeRegistry;
  * ceiling.
  *
  * Kernel-only, like the rest of `tests/`: a theme is discovered through
- * `ThemeRegistry`, and an environment with no theme installed skips rather
- * than fails. A theme whose build has not run is skipped for the same reason —
- * there is nothing to compare against — but at least one built theme must
- * narrow each surface, or a green suite would mean nobody was measured.
+ * `ThemeRegistry`, and an environment with no built theme skips rather than
+ * fails. The split tests measure only themes whose build exists, but at least
+ * one built theme must narrow each surface, or a green suite would mean nobody
+ * was measured. The fallback test needs no build: it compares two renders of a
+ * theme whose manifest carries no surface entry, and the kernel theme always
+ * supplies that subject.
  */
 final class PageAssetBudgetTest extends TestCase
 {
@@ -196,10 +198,6 @@ final class PageAssetBudgetTest extends TestCase
         $checked = [];
 
         foreach (self::themes() as $name) {
-            if (!$this->hasBuild($name)) {
-                continue;
-            }
-
             if ([] !== $this->themesWithEntry(PageSurface::ARTICLE, $name)
                 || [] !== $this->themesWithEntry(PageSurface::HOME, $name)
                 || [] !== $this->themesWithEntry(PageSurface::LISTING, $name)) {
@@ -221,9 +219,11 @@ final class PageAssetBudgetTest extends TestCase
             $checked[] = $name;
         }
 
-        if ([] === $checked) {
-            $this->markTestSkipped('Every built theme narrows at least one surface — the fallback case has nothing to compare.');
-        }
+        $this->assertNotSame(
+            [],
+            $checked,
+            'No theme without a surface entry was found, so nothing proves the fallback page stays whole.',
+        );
     }
 
     #[Test]
