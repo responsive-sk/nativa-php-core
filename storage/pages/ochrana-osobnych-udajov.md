@@ -1,6 +1,7 @@
 ---
 title: "Ochrana osobných údajov"
 published: true
+translation: "privacy"
 seo_title: "Ochrana osobných údajov"
 seo_description: "Aké údaje responsive.sk spracúva, prečo, ako dlho a čo s nimi môžete urobiť."
 ---
