@@ -35,7 +35,7 @@ catalogued; the one is `KernelTheme`.
 The content seed is 4 pages, 287 articles and 273 images.
 The exported suite discovers 1 217 tests, 5 106 assertions and 44 skips.
 The source suite is 1 643 tests, 10 914 assertions and 19 skips.
-The core export is 852 files and 1 057 tests.
+The core export is 850 files and 1 057 tests.
 
 The core profile did not move.
 Its exported file list and its suite stay the same apart from the profile
