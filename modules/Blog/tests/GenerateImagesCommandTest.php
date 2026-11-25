@@ -73,7 +73,7 @@ final class GenerateImagesCommandTest extends TestCase
         }
         file_put_contents(
             $article,
-            "---\ntitle: Test Cover\ndate: 2026-10-16\n---\n\n# Test\n\n```php\necho 'hello';\n```\n",
+            "---\ntitle: Test Cover\ndate: 2026-10-16\ntags: [\"php\", \"testing\", \"seo\", \"ignored\"]\n---\n\n# Test\n\n```php\necho 'hello';\n```\n",
         );
         $this->created[] = $article;
     }
@@ -149,6 +149,27 @@ final class GenerateImagesCommandTest extends TestCase
             (string) file_get_contents($svg),
             'The cover repeats the article title, so the page carries it twice.',
         );
+    }
+
+    /**
+     * Three tags fit the bottom bar; a fourth is noise and a place for the
+     * keyword list to grow without a design decision.
+     */
+    #[Test]
+    public function theCoverShowsAtMostThreeTopicTags(): void
+    {
+        $output = $this->collector();
+        $slug = (string) $this->slug;
+
+        (new GenerateImagesCommand())->run(['generate-images', '--slug', $slug], $output);
+
+        $svg = $this->renderedCover($slug);
+        $this->created[] = $svg;
+
+        $markup = (string) file_get_contents($svg);
+
+        $this->assertStringContainsString('php · testing · seo', $markup);
+        $this->assertStringNotContainsString('ignored', $markup);
     }
 
     #[Test]
