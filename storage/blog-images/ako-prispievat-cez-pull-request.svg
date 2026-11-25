@@ -61,6 +61,5 @@
   <text x="70" y="148" font-family="monospace" font-size="11" fill="#94a3b8">composer install</text>
   </g>
   <rect x="40" y="280" width="640" height="70" rx="8" fill="#0f172a" fill-opacity="0.82"/>
-  <text x="56" y="300" font-family="Segoe UI, Roboto, sans-serif" font-size="12" font-weight="bold" letter-spacing="2" fill="#DEA584">PROCES</text>
-  <text x="56" y="330" font-family="Segoe UI, Roboto, sans-serif" font-size="24" font-weight="bold" fill="#ffffff">Ako prispievať cez pull request: päť br…</text>
+  <text x="56" y="322" font-family="Segoe UI, Roboto, sans-serif" font-size="14" font-weight="bold" letter-spacing="2" fill="#DEA584">PROCES</text>
 </svg>

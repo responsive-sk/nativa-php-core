@@ -268,7 +268,9 @@ final class CoverGenerator
         $ghost = '' !== trim($part)
             ? '  <text x="664" y="272" text-anchor="end" font-family="' . self::FONT_SANS . '" font-size="170" font-weight="bold" fill="' . $accent . '" opacity="0.07">' . $this->esc(trim($part)) . '</text>' . "\n"
             : '';
-        $title = $this->esc($this->truncate(is_string($meta['title'] ?? null) ? $meta['title'] : ucfirst($slug), 40));
+        // The article title is the page's h1 and its metadata; repeating it
+        // inside the cover is a second copy of the same text, and a crawler
+        // reads it twice. The cover carries the category only.
         $category = $this->esc(mb_strtoupper(is_string($meta['category'] ?? null) ? $meta['category'] : ''));
 
         return <<<SVG
@@ -283,8 +285,7 @@ final class CoverGenerator
   <rect width="720" height="360" fill="url(#bg)"/>
 {$pattern}{$ghost}{$terminal}{$badge}{$versionStamp}
   <rect x="40" y="280" width="640" height="70" rx="8" fill="{$bg}" fill-opacity="0.82"/>
-  <text x="56" y="300" font-family="{$this->esc(self::FONT_SANS)}" font-size="12" font-weight="bold" letter-spacing="2" fill="{$accent}">{$category}</text>
-  <text x="56" y="330" font-family="{$this->esc(self::FONT_SANS)}" font-size="24" font-weight="bold" fill="#ffffff">{$title}</text>
+  <text x="56" y="322" font-family="{$this->esc(self::FONT_SANS)}" font-size="14" font-weight="bold" letter-spacing="2" fill="{$accent}">{$category}</text>
 </svg>
 SVG;
     }
