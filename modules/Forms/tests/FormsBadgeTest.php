@@ -75,6 +75,10 @@ final class FormsBadgeTest extends TestCase
         };
 
         (new FormsDatabaseMigrator(DatabaseConnectionManager::instance()->connection('forms')))->run($output);
+
+        // This class inserts its own `contact` definition, so the deployment
+        // seed the migrator writes would collide with it.
+        DatabaseConnectionManager::instance()->connection('forms')->exec('DELETE FROM forms');
     }
 
     private static function form(): Form

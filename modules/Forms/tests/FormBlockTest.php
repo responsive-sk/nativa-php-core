@@ -52,6 +52,10 @@ final class FormBlockTest extends TestCase
         };
 
         (new FormsDatabaseMigrator(DatabaseConnectionManager::instance()->connection('forms')))->run($output);
+
+        // The migrator seeds the deployment's contact form; this class builds
+        // its own definition with the same slug, so the seed is cleared first.
+        DatabaseConnectionManager::instance()->connection('forms')->exec('DELETE FROM forms');
     }
 
     protected function tearDown(): void

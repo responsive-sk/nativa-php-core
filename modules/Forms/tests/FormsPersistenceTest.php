@@ -52,6 +52,10 @@ final class FormsPersistenceTest extends TestCase
         };
 
         (new FormsDatabaseMigrator(DatabaseConnectionManager::instance()->connection('forms')))->run($output);
+
+        // These cases insert their own `contact` rows, so the deployment seed
+        // the migrator writes is cleared rather than reused.
+        DatabaseConnectionManager::instance()->connection('forms')->exec('DELETE FROM forms');
     }
 
     protected function tearDown(): void

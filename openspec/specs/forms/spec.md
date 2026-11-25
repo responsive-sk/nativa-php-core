@@ -33,6 +33,21 @@ refused, and the same slug in another locale SHALL be a separate definition.
 - AND no second row is written
 - PINS: modules/Forms/tests/FormsCrudTest.php::aDuplicateSlugIsRefused
 
+#### Scenario: A fresh database carries the contact form
+
+- GIVEN the forms database is created
+- WHEN the migrator has run
+- THEN `contact` exists in `sk_SK` and is published
+- AND its field list is a valid schema
+- PINS: modules/Forms/tests/FormsSeedTest.php::theDeploymentContactFormIsSeeded
+
+#### Scenario: An edited definition is not overwritten
+
+- GIVEN an editor renamed the seeded `contact` form
+- WHEN the migrator runs again
+- THEN the edited row is unchanged
+- PINS: modules/Forms/tests/FormsSeedTest.php::anEditedDefinitionIsNotOverwritten
+
 ### Requirement: The admin surface answers at `/mark/forms`
 
 `GET /mark/forms` SHALL list the definitions for the requested locale, and

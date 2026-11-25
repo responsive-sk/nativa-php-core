@@ -62,6 +62,10 @@ final class FormsCrudTest extends TestCase
 
         $manager = DatabaseConnectionManager::instance();
         (new FormsDatabaseMigrator($manager->connection('forms')))->run($output);
+
+        // The migrator seeds the deployment's `contact` form; these cases
+        // create their own, so the seed is removed first.
+        $manager->connection('forms')->exec('DELETE FROM forms');
         (new AuditDatabaseMigrator($manager->connection('audit')))->run($output);
         (new UsersDatabaseMigrator($manager->connection('users')))->run($output);
 

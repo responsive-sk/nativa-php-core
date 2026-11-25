@@ -35,6 +35,14 @@ Two SQLite tables in `storage/data/forms.db`, both created by
 | `forms` | one definition per `(slug, locale)`, its title, intro, success message, schema and publish flag |
 | `form_submissions` | one answer, the definition it belongs to, the values, the address and the state |
 
+The migrator also writes the one definition a fresh deployment cannot do
+without: `contact` in `sk_SK`, the form the contact page names in its front
+matter. It is inserted only when that pair is missing, so an operator's edit
+survives every later migration. A deleted definition comes back on the next
+migration, because a contact page with no form is the failure the seed exists to
+prevent. This is why deploying a new artifact does not need a separate import:
+`php bin/cms migrate` brings the form with it.
+
 The unique index is over `(slug, locale)`, so the same slug in `sk_SK` and in
 `en_US` are two definitions and neither overwrites the other. A submission is
 attached by `form_id`, so renaming a definition keeps its answers; deleting the

@@ -59,6 +59,10 @@ final class FormSubmitActionTest extends TestCase
         };
 
         (new FormsDatabaseMigrator(DatabaseConnectionManager::instance()->connection('forms')))->run($output);
+
+        // The migrator seeds `contact`; this class inserts its own definition
+        // with that slug for each case.
+        DatabaseConnectionManager::instance()->connection('forms')->exec('DELETE FROM forms');
         (new \Modules\Settings\Infrastructure\Persistence\Migrations\SettingsDatabaseMigrator(new \PDO('sqlite:' . $this->dir . '/config.db')))->run($output);
 
         // Questions is optional and absent from the export profile.
