@@ -10,11 +10,18 @@
  *
  * ## What is here, and why only this
  *
- * The entry registers EXACTLY what the PHP theme renders today:
+ * The entry registers the three behaviours every surface uses:
  *
- *   - `hero-layout` + `horizontal-scroll-hero` — the landing (homepage).
- *   - `gr-header` hide-on-scroll, `gr-anim` reveal, `tok-*` highlighter —
- *     the three surfaces every other page uses.
+ *   - `gr-header` hide-on-scroll, `gr-anim` reveal, `tok-*` highlighter.
+ *
+ * The landing's two custom elements are NOT here. They moved to
+ * `griffe-home.ts` (2026-11-25): a blog article, a listing and an ordinary
+ * page render neither `<hero-layout>` nor `<horizontal-scroll-hero>`, so the
+ * bytes that define them were a `<script defer>` every reader downloaded to
+ * find no element to upgrade. The homepage tags `griffe.js` and
+ * `griffe-home.js`; every other surface tags the first one only. Both files
+ * stay self-contained classic scripts, which is the constraint the Chrome 70
+ * baseline imposes on every entry.
  *
  * Everything else resp-front shipped (`boson-*`, sections, layouts, the mark
  * admin components) lives in `src/` but is deliberately NOT imported: each one
@@ -51,8 +58,6 @@ import './griffe/index.css'
 import { initGrHeader } from './gr-header'
 import { initGrReveal } from './gr-reveal'
 import { initGrCodeHighlight } from './gr-code-highlight'
-import './layout/hero-layout'
-import './components/sections/horizontal-scroll-hero'
 
 // header, reveal, highlight — the order the inline scripts used to run in.
 // The highlighter mutates code blocks (and force-adds `.gr-in` on the blocks

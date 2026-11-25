@@ -143,6 +143,16 @@ final class PageAssetBudgetTest extends TestCase
                 sprintf('`%s` homepage does not inline exactly its base sheet plus its home sheet.', $name),
             );
 
+            // The ceiling below is an upper bound, so a homepage that stopped
+            // tagging its own script would still measure under it. Compare the
+            // tags instead: the landing's behaviour is the reason the entry
+            // exists, and losing it costs no bytes a budget would notice.
+            $this->assertSame(
+                array_values(array_unique([...$this->jsUrls($name, null), ...$this->jsUrls($name, PageSurface::HOME)])),
+                $this->taggedScripts($html),
+                sprintf('`%s` homepage does not tag the base script plus its home script.', $name),
+            );
+
             $articleBytes = $this->sheetBytes($name, PageSurface::ARTICLE);
 
             if ('' !== $articleBytes) {

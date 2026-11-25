@@ -8,8 +8,14 @@
     "src": "src/griffe-article.css",
     "isEntry": true
   },
+  "src/griffe-home.ts": {
+    "file": "assets/griffe-home-Dy3-WO6T.js",
+    "name": "griffe-home",
+    "src": "src/griffe-home.ts",
+    "isEntry": true
+  },
   "src/griffe.ts": {
-    "file": "assets/griffe-Bp1hruxT.js",
+    "file": "assets/griffe-U-QwI81-.js",
     "name": "griffe",
     "src": "src/griffe.ts",
     "isEntry": true,

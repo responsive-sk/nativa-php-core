@@ -4,13 +4,18 @@
  * Single entry, like erik: one self-contained file, no shared chunks — the
  * deferred `<script>` on the Chrome 70 baseline cannot execute ES module
  * imports. The entry keeps the three griffe behaviours (header, reveal,
- * highlight) self-gating and registers the two landing custom elements
- * adopted from `Frontend/resp-front` (`hero-layout`, `horizontal-scroll-hero`),
- * which are plain `HTMLElement` subclasses with no framework runtime.
+ * highlight) self-gating; the landing's custom elements live in
+ * `src/griffe-home.ts` since 2026-11-25, because only the homepage renders
+ * them.
  *
  * The `@/` alias mirrors the source's own convention (`tsconfig.json`
  * `paths`), so the unused opt-in components (`src/app.ts`) still resolve
  * without a rewrite.
+ *
+ * `griffe-home` is the landing's JavaScript, a second TS input: the two custom
+ * elements `GriffeTheme::homepage()` renders and no other surface does. Its
+ * key matches `<jsKey>-<surface>`, so `AssetManager::jsUrlsForSurface()` tags it
+ * on the homepage and nowhere else.
  *
  * `griffe-article` is the article surface's stylesheet, a CSS-only input: the
  * manifest names it in `file` with no `css` array (measured 2026-11-24), and
@@ -28,6 +33,7 @@ export default mergeConfig(
     theme: 'griffe',
     inputs: {
       griffe: 'src/griffe.ts',
+      'griffe-home': 'src/griffe-home.ts',
       'griffe-article': 'src/griffe-article.css',
     },
   }),

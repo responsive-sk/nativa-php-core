@@ -1,5 +1,5 @@
 {
-  "measured": "2026-11-24",
+  "measured": "2026-11-25",
   "why": "One ceiling per theme and surface, in bytes of inlined CSS and tagged JS. A page at or under its ceiling is the theme as it ships; a page above it is a rule that arrived from another surface. A lower number records an improvement, a higher one is a decision that shows in the diff. Byte counts are read from the built bundle under public/dist, so a tree without a build is not measured here.",
   "ceilings": {
     "kernel": {
@@ -27,10 +27,10 @@
       "article": { "css": 42007, "js": 17875 }
     },
     "griffe": {
-      "page": { "css": 24613, "js": 28889 },
+      "page": { "css": 24613, "js": 9439 },
       "home": { "css": 24613, "js": 28889 },
-      "listing": { "css": 24613, "js": 28889 },
-      "article": { "css": 25431, "js": 28889 }
+      "listing": { "css": 24613, "js": 9439 },
+      "article": { "css": 25431, "js": 9439 }
     },
     "erik": {
       "page": { "css": 31118, "js": 22322 },
