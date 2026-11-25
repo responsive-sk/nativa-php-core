@@ -1,5 +1,5 @@
 ---
-title: "JSON-LD Structured Data for Blog — Article, BreadcrumbList, Person"
+title: "JSON-LD Structured Data for Blog: Article, BreadcrumbList, Person"
 date: "2026-09-01"
 version: "1.0.0"
 tags: ["seo", "json-ld", "structured-data", "schema.org"]
@@ -11,15 +11,15 @@ translation: "jsonld-structured-data-pre-blog"
 published: true
 ---
 
-# JSON-LD Structured Data for Blog — Article, BreadcrumbList, Person
+# JSON-LD Structured Data for Blog: Article, BreadcrumbList, Person
 
-A blog article publishes. Google indexes it. No stars, no breadcrumb, no rich result. The page has a problem — it looks naked in search results without structured data.
+A blog article publishes. Google indexes it. No stars, no breadcrumb, no rich result. The page has a problem, it looks naked in search results without structured data.
 
 ## What We Generate
 
-Structured data helps Google understand page content. Thanks to them, rich results appear in SERPs — stars, images, breadcrumb navigation.
+Structured data helps Google understand page content. Thanks to them, rich results appear in SERPs, stars, images, breadcrumb navigation.
 
-### Homepage — Organization + WebSite + SearchAction
+### Homepage: Organization + WebSite + SearchAction
 
 ```json
 [
@@ -45,7 +45,7 @@ Structured data helps Google understand page content. Thanks to them, rich resul
 
 Google can display a search box directly in SERPs.
 
-### Article — Article + BreadcrumbList
+### Article: Article + BreadcrumbList
 
 ```json
 [
@@ -69,7 +69,7 @@ Google can display a search box directly in SERPs.
 
 Google displays breadcrumbs below the article title in SERPs.
 
-### Author Profile — Person
+### Author Profile: Person
 
 ```json
 {
@@ -117,13 +117,13 @@ final class StructuredDataService
 }
 ```
 
-## Security — JSON_HEX_TAG
+## Security: JSON_HEX_TAG
 
 ```php
 json_encode($data, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
 ```
 
-`JSON_HEX_TAG` ensures that `</script>` in user values never breaks the JSON block — XSS-safe by design.
+`JSON_HEX_TAG` ensures that `</script>` in user values never breaks the JSON block, XSS-safe by design.
 
 ## Integration with FrontendLayout
 
@@ -152,16 +152,16 @@ public function testArticlePageIncludesJsonLd(): void
 
 The solution was three JSON-LD blocks built by `StructuredDataService`. We replaced manual schema markup with a service that reads article metadata. One test per block.
 
-JSON-LD remains the simplest rich result contract — just not one you should skip. When you know what Google needs to understand, the schema writes itself. The next person who adds an article should not have to guess which structured data is required.
+JSON-LD remains the simplest rich result contract, just not one you should skip. When you know what Google needs to understand, the schema writes itself. The next person who adds an article should not have to guess which structured data is required.
 
-→ [How we built the sitemap](/blog/how-we-built-sitemap) — dynamic XML sitemap with hreflang
-→ [Robots.txt what we hide](/blog/robots-txt-what-we-hide) — the allow-list behind Disallow
-→ [CSP & htmx interaction](/blog/csp-htmx-interaction) — when security meets the frontend
+→ [How we built the sitemap](/blog/how-we-built-sitemap): dynamic XML sitemap with hreflang
+→ [Robots.txt what we hide](/blog/robots-txt-what-we-hide): the allow-list behind Disallow
+→ [CSP & htmx interaction](/blog/csp-htmx-interaction): when security meets the frontend
 
 ## Sources
 
-- [Google — Structured data](https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data)
-- [schema.org — Article](https://schema.org/Article)
-- [schema.org — BreadcrumbList](https://schema.org/BreadcrumbList)
-- [schema.org — SearchAction](https://schema.org/SearchAction)
-- [Google — Rich results test](https://search.google.com/test/rich-results)
+- [Google, Structured data](https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data)
+- [schema.org, Article](https://schema.org/Article)
+- [schema.org, BreadcrumbList](https://schema.org/BreadcrumbList)
+- [schema.org, SearchAction](https://schema.org/SearchAction)
+- [Google, Rich results test](https://search.google.com/test/rich-results)

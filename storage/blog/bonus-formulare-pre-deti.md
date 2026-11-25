@@ -3,7 +3,7 @@ title: "Bonus pre členov ... formuláre: cudzí píšu, ty si to len čítaš"
 date: "2026-10-03"
 version: "1.0.0"
 tags: ["forms", "csv", "security", "php", "architecture"]
-excerpt: "Deviaty bonus len pre registrovaných. Formulár nie je komentár s inou nálepkou: schému píšeš ty, odpovede píšu cudzí a ty ich dostaneš do schránky a do CSV. Prečo je past na robota prázdna, prečo sa slug nikdy nerozšíri do cudzieho jazyka, prečo Excel z úvodzoviek nič nevyrobí — a čo sa stane, keď si trieda zostaví meno za behu. Na reálnom kóde z tohto repa."
+excerpt: "Deviaty bonus len pre registrovaných. Formulár nie je komentár s inou nálepkou: schému píšeš ty, odpovede píšu cudzí a ty ich dostaneš do schránky a do CSV. Prečo je past na robota prázdna, prečo sa slug nikdy nerozšíri do cudzieho jazyka, prečo Excel z úvodzoviek nič nevyrobí, a čo sa stane, keď si trieda zostaví meno za behu. Na reálnom kóde z tohto repa."
 author: "Nativa Dev"
 author_email: "nativa.dev@example.test"
 category: "Bonus"
@@ -118,7 +118,7 @@ published: true
 ---
 ```
 
-Obe cesty sa stretávajú v jednom mechanizme — v registri blokov
+Obe cesty sa stretávajú v jednom mechanizme, v registri blokov
 markdownu v Core (`#[AsMarkdownBlock]`, `MarkdownBlockRegistry`).
 
 A tu je dôvod, prečo je to v Core a nie vo forme: `PageViewAction` a
@@ -145,7 +145,7 @@ v sebe nosiť viacero ohraničených blokov. Kto by spároval tagy
 len podľa poradia, vystrel by po druhom fence a odtiaľ by spustil
 formulár vnútri príkladu.
 
-A slug sa nehľadá ako reťazec v ľubovoľnej podobe — pred každým
+A slug sa nehľadá ako reťazec v ľubovoľnej podobe, pred každým
 hľadaním prejde vzorom `#(?:<p>)?\{\{form:([a-z0-9][a-z0-9_-]*)\}\}#`.
 Zástupný znak sa do vzoru ani raz nedostane.
 
@@ -166,7 +166,7 @@ rovnaký slug. Kto sa na to spýta, dostane 404, nie „tichú“ odpoveď
 v cudzom jazyku.
 
 Je to iné, než keď máš jeden obsah a dve jeho podoby. Formulár nie je
-preklad — je to **samostatná vec v každom jazyku**, ktorá má vlastný
+preklad, je to **samostatná vec v každom jazyku**, ktorá má vlastný
 text poľa, vlastné možnosti a vlastné odpovede. V prekladoch sa to
 vybavuje prekladovým front matter. Tu to vybavuje stĺpec.
 
@@ -238,7 +238,7 @@ public function cell(string $value): string
 ```
 
 Uvodzovky nestačia. Excel ich pri importe odhadzuje a vzorec
-vyhodnotí aj tak. Apostrof ostane v bunke ako text — to je jediná
+vyhodnotí aj tak. Apostrof ostane v bunke ako text, to je jediná
 forma, ktorú tabuľka rešpektuje.
 
 Prvá verzia tejto metódy bola napísaná správne podľa štandardu CSV
@@ -247,7 +247,7 @@ nimi.
 
 ## Štyri témy, jeden blok
 
-Blok sa kreslí pod **prefixom aktívnej témy** — `st-form`, `er-form`,
+Blok sa kreslí pod **prefixom aktívnej témy**: `st-form`, `er-form`,
 `ms-form`, `mag-form`. Je to tá istá zmluva, akú má
 [`CommentSection`](/blog/bonus-komentare-pre-deti) v erikovi.
 
@@ -302,13 +302,13 @@ pole, stránka je kratší a edituje sa bez schémy.
 
 ## Prakticky
 
-1. `php bin/cms forms:seed` — štyri ukážkové formuláre a stránky
+1. `php bin/cms forms:seed`: štyri ukážkové formuláre a stránky
    `/anketa` a `/test`, v ktorých uvidíš anketu aj kvíz vyzrkadľované
    z markdownu.
 2. Vlož `{{form:kontakt}}` do stránky alebo `form: kontakt` do front
    matteru článku a otvor ju v inej téme. Ak to funguje iba v
    starteri, hľadaj prefix.
-3. `node bin/forms-check.mjs http://127.0.0.1:8000` — a čítaj výstup
+3. `node bin/forms-check.mjs http://127.0.0.1:8000`: a čítaj výstup
    ako výpoveď. Toto je jediný test, ktorý vidí celý reťaz
    naraz: middleware → akcia → session → markdown blok pri
    vykresľovaní nasledujúcej stránky.
@@ -320,11 +320,11 @@ zjistíš, že si zabudol na stĺpec.
 
 ## Zdroje
 
-- [OWASP — CSV Injection](https://owasp.org/www-community/attacks/CSV_Injection)
-  — prečo úvodzovky nestačia a čo s tým robi tabuľka
-- [SQLite — SELECT](https://www.sqlite.org/lang_select.html) — `GROUP BY`
+- [OWASP, CSV Injection](https://owasp.org/www-community/attacks/CSV_Injection),
+  prečo úvodzovky nestačia a čo s tým robi tabuľka
+- [SQLite, SELECT](https://www.sqlite.org/lang_select.html): `GROUP BY`
   ako dôvod, prečo anketu neukladáme do jedného stĺpca
-- [docs/forms.md](https://github.com/evan70/nativa-minimal/blob/master/docs/forms.md)
-  — celý modul na jednej strane
-- [Štvrtý bonus — komentáre](/blog/bonus-komentare-pre-deti) — odkiaľ
+- [docs/forms.md](https://github.com/evan70/nativa-minimal/blob/master/docs/forms.md),
+  celý modul na jednej strane
+- [Štvrtý bonus, komentáre](/blog/bonus-komentare-pre-deti): odkiaľ
   tento cyklus vyrástal

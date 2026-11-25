@@ -194,7 +194,7 @@ Keď cache pomáha (rate-limit fallback, externé systémy, drahý rendering) ..
 
 A pamätajte: **cache wrappers nie sú chyby ... sú evolučné štádiá.** Každé vás naučilo niečo o prístupe k dátam, čo vás pripravilo na ďalšie. Progresia cache → outbox → P2P je v skutočnosti o pochopení, že „odpoveď nemusí byť vždy nová, len blízka.“
 
-Cache zostáva dobrým sluhom. Chyba je nechať ho stať sa pánom. Rate-limit fallback, drahý rendering, externé systémy — cache si tam miesto zaslúži. User data, real-time, write-heavy cesty — cache tam nemá čo robiť.
+Cache zostáva dobrým sluhom. Chyba je nechať ho stať sa pánom. Rate-limit fallback, drahý rendering, externé systémy, cache si tam miesto zaslúži. User data, real-time, write-heavy cesty, cache tam nemá čo robiť.
 
 ---
 
@@ -202,14 +202,14 @@ Odpoveď nemusí byť vždy nová. Len blízka.
 
 ---
 
-→ [ACID pre deti](/blog/acid-pre-deti) — prečo transakcie nie sú nudné
-→ [Outbox pattern](/blog/outbox-pattern) — cache pre write path
-→ [Ako argon2id zrazil shared hosting](/blog/ako-sha-hash-algorytm-zrazil-shared-hosting) — infraštruktúra obmedzuje voľby
+→ [ACID pre deti](/blog/acid-pre-deti): prečo transakcie nie sú nudné
+→ [Outbox pattern](/blog/outbox-pattern): cache pre write path
+→ [Ako argon2id zrazil shared hosting](/blog/ako-sha-hash-algorytm-zrazil-shared-hosting): infraštruktúra obmedzuje voľby
 
 ## Zdroje
 
-- [MDN — Cache-Control](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control) — HTTP caching headers špecifikácia
-- [PHP Manual — APCu](https://www.php.net/manual/en/book.apcu.php) — in-memory cache pre PHP
-- [Cloudflare — What is Caching?](https://www.cloudflare.com/learning/performance/what-is-caching/) — caching základy
-- [OWASP — Caching Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Caching_Cheat_Sheet.html) — bezpečnostné aspekty cache
-- [HTTP/1.1 Caching (RFC 9111)](https://httpwg.org/specs/rfc9111.html) — oficiálna RFC špecifikácia
+- [MDN, Cache-Control](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control): HTTP caching headers špecifikácia
+- [PHP Manual, APCu](https://www.php.net/manual/en/book.apcu.php): in-memory cache pre PHP
+- [Cloudflare, What is Caching?](https://www.cloudflare.com/learning/performance/what-is-caching/): caching základy
+- [OWASP, Caching Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Caching_Cheat_Sheet.html): bezpečnostné aspekty cache
+- [HTTP/1.1 Caching (RFC 9111)](https://httpwg.org/specs/rfc9111.html): oficiálna RFC špecifikácia

@@ -21,7 +21,7 @@ Vyhľadajte „how to implement X in PHP“. Nájdete tisíce článkov. Väčš
 
 „In this article, we will explore the implementation of X in PHP. We will cover the basics, advanced topics, and best practices.“
 
-Už ste odišli. Nie preto, že ste netrpezliví — pretože článok vám nepovedal nič. Opísal, čo bude opisovať. Obsah, ktorý sa hrá na úvod.
+Už ste odišli. Nie preto, že ste netrpezliví, ale pretože článok vám nepovedal nič. Opísal, čo bude opisovať. Obsah, ktorý sa hrá na úvod.
 
 Technický obsah v týchto článkoch je často výborný. Kód je správny. Vysvetlenia sú presné. Ale čitateľ je preč predtým, než sa dostane k prvej ukážke kódu.
 
@@ -29,9 +29,9 @@ Technický obsah v týchto článkoch je často výborný. Kód je správny. Vys
 
 Dobre napísaný článok so zlým kódom je čitateľný. Zle napísaný článok s výborným kódom sa opustí.
 
-Rytmus je pulz príbehu — striedanie napätia a uvoľnenia, zmätoku a jasnosti, otázky a odpovede. Bez neho sa technický obsah stane stenou textu.
+Rytmus je pulz príbehu, striedanie napätia a uvoľnenia, zmätoku a jasnosti, otázky a odpovede. Bez neho sa technický obsah stane stenou textu.
 
-Premýšľajte takto: recept, ktorý hovorí „zmiešajte ingrediencie, pečte 30 minút“ je technicky správny. Recept, ktorý hovorí „cesto by malo vyzerať ako ucho bábätka — mäkké, teplé, mierne lepkavé“ je ten, ktorý si zapamätáte.
+Premýšľajte takto: recept, ktorý hovorí „zmiešajte ingrediencie, pečte 30 minút“ je technicky správny. Recept, ktorý hovorí „cesto by malo vyzerať ako ucho bábätka, mäkké, teplé, mierne lepkavé“ je ten, ktorý si zapamätáte.
 
 ## Sedem fáz
 
@@ -49,7 +49,7 @@ Každý článok nasleduje prirodzený oblúk:
 
 Väčšina článkov má fázy 2 a 3. To je všetko. Problém, riešenie, hotovo. Čitateľ sa niečo naučí, ale zajtra si to nepamätá.
 
-Chýbajúce fázy — INTRO, NOC, OBJEKT, TÉMA, OUTRO — sú to, čo robí články zapamätateľné. Sú tiež najťažšie na napísanie.
+Chýbajúce fázy, INTRO, NOC, OBJEKT, TÉMA, OUTRO, sú to, čo robí články zapamätateľné. Sú tiež najťažšie na napísanie.
 
 ## Hák, ktorý funguje
 
@@ -72,14 +72,14 @@ Príklad vám hovorí, o čom článok je. Druhý vám chce vedieť, čo sa stal
 
 Toto je 6-dielna séria o písaní technických článkov, ktoré ľudia naozaj dočítajú:
 
-1. **Tento článok** — problém a sedem-fázová štruktúra
-2. **Fog a Sun** — ako písať problémy, ktoré udržia pozornosť
-3. **Night, Object, Theme** — časti, ktoré robia články zapamätateľnými
-4. **Tempo** — prečo dĺžka vety je dizajnové rozhodnutie
-5. **Two Tones** — písanie v EN a SK bez straty duše
-6. **Rhythm Profiles** — výber rytmu pre bug story, tutorial a filozofiu
+1. **Tento článok**: problém a sedem-fázová štruktúra
+2. **Fog a Sun**: ako písať problémy, ktoré udržia pozornosť
+3. **Night, Object, Theme**: časti, ktoré robia články zapamätateľnými
+4. **Tempo**: prečo dĺžka vety je dizajnové rozhodnutie
+5. **Two Tones**: písanie v EN a SK bez straty duše
+6. **Rhythm Profiles**: výber rytmu pre bug story, tutorial a filozofiu
 
-Každý diel nasleduje rytmus, ktorý učí. Nie je to náhoda — je to požiadavka.
+Každý diel nasleduje rytmus, ktorý učí. Nie je to náhoda, je to požiadavka.
 
 ---
 
@@ -87,13 +87,13 @@ Technický článok nie je dokumentácia. Je to príbeh o probléme, ktorý niek
 
 ---
 
-→ [Part 2 — Fog a Sun](/blog/rhythm-part-2-fog-and-sun) — ako písať problémy, ktoré udržia pozornosť
-→ [Part 3 — Night, Object, Theme](/blog/rhythm-part-3-night-object-theme) — časti, ktoré robia články zapamätateľnými
+→ [Part 2, Fog a Sun](/blog/rhythm-part-2-fog-and-sun): ako písať problémy, ktoré udržia pozornosť
+→ [Part 3, Night, Object, Theme](/blog/rhythm-part-3-night-object-theme): časti, ktoré robia články zapamätateľnými
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

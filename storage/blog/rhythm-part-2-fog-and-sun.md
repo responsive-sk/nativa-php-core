@@ -3,7 +3,7 @@ title: "Fog a Sun ... ako písať problémy, ktoré udržia pozornosť"
 date: "2026-08-29"
 version: "1.0.2"
 tags: ["writing", "narrative-rhythm", "technical-writing", "blog"]
-excerpt: "Problém musí byť osobný — nie 'problém X existuje', ale 'stalo sa Y a bolo to zlé.' Ako fázy fog a sun vytvárajú napätie, ktoré udrží čitateľa."
+excerpt: "Problém musí byť osobný, nie 'problém X existuje', ale 'stalo sa Y a bolo to zlé.' Ako fázy fog a sun vytvárajú napätie, ktoré udrží čitateľa."
 author: "Evan McDan"
 author_email: "evan.mcdan@example.test"
 category: "Writing"
@@ -19,7 +19,7 @@ Oba popisujú rovnaký problém. Jedna je poznámka k dokumentácii. Druhý je p
 
 ## Fáza hmly
 
-Hmla je zmätok, záhada, problém, ktorý ešte nebol vyriešený. Je to časť článku, kde čitateľ nepozná odpoveď — ale chce ju.
+Hmla je zmätok, záhada, problém, ktorý ešte nebol vyriešený. Je to časť článku, kde čitateľ nepozná odpoveď, ale chce ju.
 
 Fáza hmly musí byť **osobná**. Nie „problém X existuje“ ale „stalo sa Y a bolo to zlé.“
 
@@ -42,7 +42,7 @@ Prvý príklad popisuje podmienku. Druhý popisuje udalosť. Udalosti sú zapam�
 
 ## Prečo krátke vety vytvárajú napätie
 
-Fáza hmly používa staccato rytmus — krátke vety, každá pridáva tlak:
+Fáza hmly používa staccato rytmus, krátke vety, každá pridáva tlak:
 
 ```markdown
 Kliknite na stránku 3. Pager sa zdvojnásobil.
@@ -51,13 +51,13 @@ Kliknite znova. Ztrojnásobil.
 niektoré s Prev, niektoré s Next, ani jeden s oboma.
 ```
 
-Každá veta je úder. Čitateľ cíti, ako problém narastá. To je napätie — a napätie udrží ľudí pri čítaní.
+Každá veta je úder. Čitateľ cíti, ako problém narastá. To je napätie, a napätie udrží ľudí pri čítaní.
 
 Ak napíšete fázu hmly v dlhých, plynúcich vetách, napätie sa rozplynie. Čitateľ preskakuje. Hmla sa vyjasní priskoro.
 
 ## Fáza slnka
 
-Slnko je jasnosť — moment, keď čitateľ pochopí problém a vidí riešenie. Ale riešenie musí byť **zaslúžené**. Ak preskočíte z hmly do slnka, čitateľ sa cíti podvedený.
+Slnko je jasnosť, moment, keď čitateľ pochopí problém a vidí riešenie. Ale riešenie musí byť **zaslúžené**. Ak preskočíte z hmly do slnka, čitateľ sa cíti podvedený.
 
 ```markdown
 # Zle: uponáhľané riešenie
@@ -72,7 +72,7 @@ Prepísal som PASSWORD_ARGON2ID na PASSWORD_BCRYPT.
 Bcrypt potrebuje ≈4 MB RAM ... 16-krát menej.
 ```
 
-Druhý príklad dáva čitateľovi pocítiť „aha!“ moment. Riešenie je jednoduché — ale je prezentované ako objav, nie ako príkaz.
+Druhý príklad dáva čitateľovi pocítiť „aha!“ moment. Riešenie je jednoduché, ale je prezentované ako objav, nie ako príkaz.
 
 ## Code bloky sú dôkaz, nie dekorácia
 
@@ -113,17 +113,17 @@ Tá medzera je miesto, kde žije zvedavosť čitateľa. Nepreskakujte ju.
 
 ---
 
-Fáza hmly získava pozornosť čitateľa. Fáza slnka ju odmeňuje. Preskočte ktorúkoľvek a článok sa stane dokumentáciou — technicky správnou, emocionálne mŕtvou.
+Fáza hmly získava pozornosť čitateľa. Fáza slnka ju odmeňuje. Preskočte ktorúkoľvek a článok sa stane dokumentáciou, technicky správnou, emocionálne mŕtvou.
 
 ---
 
-→ [Part 3 — Night, Object, Theme](/blog/rhythm-part-3-night-object-theme) — časti, ktoré robia články zapamätateľnými
-→ [Part 1 — Článok, ktorý nikto nedočítal](/blog/rhythm-part-1-nobody-finished) — prečo rytmus znamená viac
+→ [Part 3, Night, Object, Theme](/blog/rhythm-part-3-night-object-theme): časti, ktoré robia články zapamätateľnými
+→ [Part 1, Článok, ktorý nikto nedočítal](/blog/rhythm-part-1-nobody-finished): prečo rytmus znamená viac
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

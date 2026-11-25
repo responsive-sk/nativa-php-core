@@ -13,7 +13,7 @@ published: true
 
 > Toto je diel 5 série **PHP typy pre deti**. Predošlé diely: [diel 1 ... čo sa skrýva za premennou](/blog/php-typy-pre-deti), [diel 2 ... scalar casts](/blog/scalar-casty-pre-deti), [diel 3 ... prísne typuj pred iteráciou](/blog/typuj-pred-iteraciou) a [diel 4 ... array vs list, DTO a mixed](/blog/array-list-dto-pre-deti). Dnes si povieme, čo sa stane, keď jedna hodnota **môže byť viac vecí naraz** ... a ako z toho urobiť poriadok. V [dieli 6](/blog/chunky-rule-pre-deti) sériu uzavrieme chunky rule.
 
-Premenná môže byť string alebo null. Alebo int. Alebo vlastný typ. PHP 8.0+ vie, že jedna hodnota nie je len jedna vec — a dá vám nástroje, ako to vyjadriť.
+Premenná môže byť string alebo null. Alebo int. Alebo vlastný typ. PHP 8.0+ vie, že jedna hodnota nie je len jedna vec, a dá vám nástroje, ako to vyjadriť.
 
 ## Minule sme si povedali…
 
@@ -188,14 +188,14 @@ function findUser(int $id): User
 A tým je séria kompletná ... od „premenná nemá typ“ ([diel 1](/blog/php-typy-pre-deti)) cez casts ([diel 2](/blog/scalar-casty-pre-deti)), typovanie pred iteráciou ([diel 3](/blog/typuj-pred-iteraciou)), polia a DTO ([diel 4](/blog/array-list-dto-pre-deti)) až po union typy, nullsafe a enumy. Séria pokračuje v [dieli 6](/blog/chunky-rule-pre-deti) ... prečo 60 riadkov. Čisté hlavy, čisté dáta ... a čisté typy.
 
 
-→ [PHP typy ... diel 1](/blog/php-typy-pre-deti) — čo sa skrýva za premennou
-→ [Scalar casts](/blog/scalar-casty-pre-deti) — povedz PHP presne, čo chceš
-→ [Chunky rule](/blog/chunky-rule-pre-deti) — prečo 60 riadkov?
+→ [PHP typy ... diel 1](/blog/php-typy-pre-deti): čo sa skrýva za premennou
+→ [Scalar casts](/blog/scalar-casty-pre-deti): povedz PHP presne, čo chceš
+→ [Chunky rule](/blog/chunky-rule-pre-deti): prečo 60 riadkov?
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

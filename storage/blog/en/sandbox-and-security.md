@@ -25,7 +25,7 @@ DSH solves this through a **capability seam** ... a contract (`sandbox/seam`) an
 
 ## Three backends
 
-### 1. Bubblewrap (bwrap) — Linux
+### 1. Bubblewrap (bwrap): Linux
 
 First it tries `bwrap` ... filesystem isolation:
 
@@ -45,7 +45,7 @@ bwrap \
 - **Private-PID /proc** ... agent can't see host processes (no magic links like `root` or `fd`)
 - **Workspace-write** ... only workspace and `/tmp` are writable
 
-### 2. Landlock — Linux kernel
+### 2. Landlock: Linux kernel
 
 If `bwrap` isn't available, Landlock provides kernel-level sandboxing:
 
@@ -60,7 +60,7 @@ If `bwrap` isn't available, Landlock provides kernel-level sandboxing:
 - Available since Linux 5.13
 - May be **partial** on older kernels (confines only exposed access classes)
 
-### 3. Seatbelt — macOS
+### 3. Seatbelt: macOS
 
 On macOS, Apple's Seatbelt (sandbox-exec) is used:
 
@@ -176,7 +176,7 @@ sandbox:
 
 The solution was three backends with a shared contract. We replaced the monolithic sandbox with a seam pattern: `sandbox/seam` defines the interface, `sandbox-local/` implements it. Fail-closed by default.
 
-Sandbox remains the simplest security boundary — just not one you should skip. When you know what the agent can access, the policy writes itself. The next person who runs a command should not have to guess whether it's confined.
+Sandbox remains the simplest security boundary, just not one you should skip. When you know what the agent can access, the policy writes itself. The next person who runs a command should not have to guess whether it's confined.
 
 ## Summary
 
@@ -189,13 +189,13 @@ Sandbox remains the simplest security boundary — just not one you should skip.
 | Integration | Cross-family with filesystem seams |
 | Custom | runnerCommand + runnerFailureSignatures |
 
-→ [Capability seams](/en/blog/capability-seams) — how DSH abstracts abilities
-→ [DeepSeek Harness ... 50 packages](/en/blog/deepseek-harness-architecture-overview) — architecture overview
-→ [Cordis ... a deep dive](/en/blog/cordis-deep-dive) — plugin framework
+→ [Capability seams](/en/blog/capability-seams): how DSH abstracts abilities
+→ [DeepSeek Harness ... 50 packages](/en/blog/deepseek-harness-architecture-overview): architecture overview
+→ [Cordis ... a deep dive](/en/blog/cordis-deep-dive): plugin framework
 
 ## Sources
 
-- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) — open-source agent framework
-- [Sandbox subsystem](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/sandbox.md) — sandbox subsystem reference
-- [Sandbox decision](https://github.com/deepseek-ai/deepseek-harness/blob/master/.agents/notes/implemented/feature/2026-07-06-sandbox.md) — architecture document
-- [Cross-family fs sandbox](https://github.com/deepseek-ai/deepseek-harness/blob/master/.agents/notes/implemented/feature/2026-07-14-cross-family-fs-sandbox.md) — filesystem integration
+- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): open-source agent framework
+- [Sandbox subsystem](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/sandbox.md): sandbox subsystem reference
+- [Sandbox decision](https://github.com/deepseek-ai/deepseek-harness/blob/master/.agents/notes/implemented/feature/2026-07-06-sandbox.md): architecture document
+- [Cross-family fs sandbox](https://github.com/deepseek-ai/deepseek-harness/blob/master/.agents/notes/implemented/feature/2026-07-14-cross-family-fs-sandbox.md): filesystem integration

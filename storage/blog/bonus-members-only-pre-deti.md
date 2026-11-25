@@ -215,14 +215,14 @@ omylom obísť. Kým test hovorí „feed nesmie obsahovať telo bonusového
 A ak si sa sem dostal bez prihlásenia ... teraz už vieš, čo ťa čaká.
 Prihlás sa a dočítaj si zvyšok. 
 
-→ [Performance diel 5](/blog/performance-pre-deti-diel-5-members-only-biznis) — members-only biznis logika
-→ [Blog article action](/blog/blog-article-action) — ako sa článok renderuje
-→ [Comments](/blog/comments) — komentáre a rate limiting
+→ [Performance diel 5](/blog/performance-pre-deti-diel-5-members-only-biznis): members-only biznis logika
+→ [Blog article action](/blog/blog-article-action): ako sa článok renderuje
+→ [Comments](/blog/comments): komentáre a rate limiting
 
 ## Zdroje
 
-- [W3C — ACID Properties](https://www.w3.org/TR/xml-core/#sec-conformance) — ACID definícia
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [SQLite Documentation](https://www.sqlite.org/docs.html) — SQLite referenčná príručka
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
+- [W3C, ACID Properties](https://www.w3.org/TR/xml-core/#sec-conformance): ACID definícia
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [SQLite Documentation](https://www.sqlite.org/docs.html): SQLite referenčná príručka
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod

@@ -11,7 +11,7 @@ translation: "htmx-pager-duplication"
 published: true
 ---
 
-Kliknite na stránku 3. Pager sa zdvojnásobil. Kliknite znova. Ztrojnásobil sa. Štyri pagery na sebe, každý trochu iný — niektoré s Prev, niektoré s Next, ani jeden s oboma.
+Kliknite na stránku 3. Pager sa zdvojnásobil. Kliknite znova. Ztrojnásobil sa. Štyri pagery na sebe, každý trochu iný, niektoré s Prev, niektoré s Next, ani jeden s oboma.
 
 Admin panel vyzeral rozbitý. Kód bol správny. Alebo sa tak zdalo.
 
@@ -39,7 +39,7 @@ Vyhľadávací input sedel nad tabuľkou. Cielil na rovnaký `#pages-content`:
     hx-swap="outerHTML">
 ```
 
-Vyhľadávanie a paginácia zdieľali rovnaký cieľ. Obe vracali rovnaký `$grid` blob — search input, count info, tabuľka, paginácia — v jednom HTML reťazci.
+Vyhľadávanie a paginácia zdieľali rovnaký cieľ. Obe vracali rovnaký `$grid` blob, search input, count info, tabuľka, paginácia, v jednom HTML reťazci.
 
 ## Kaskáda
 
@@ -51,7 +51,7 @@ Vyhľadávanie a paginácia zdieľali rovnaký cieľ. Obe vracali rovnaký `$gri
 4. HTMX nájde `#pages-content`, nahradí cez `outerHTML`
 5. Starý pager je preč. Nový sa objaví. Zatiaľ čisté.
 
-Ale odpoveď obsahovala aj search input — s vlastným `hx-trigger="search"`. Po swape prehliadač prehodnotil stav formulára. `search` event sa spustil na pôvodnom inpute (ktorý zostal v DOM, mimo `#pages-content`). To spustilo druhý HTMX request. Druhá odpoveď obsahovala ďalšiu pagináciu. `outerHTML` nahradil `#pages-content` znova — ale prvé nahradenie už bolo dokončené. Dva pagery teraz existovali v DOM.
+Ale odpoveď obsahovala aj search input, s vlastným `hx-trigger="search"`. Po swape prehliadač prehodnotil stav formulára. `search` event sa spustil na pôvodnom inpute (ktorý zostal v DOM, mimo `#pages-content`). To spustilo druhý HTMX request. Druhá odpoveď obsahovala ďalšiu pagináciu. `outerHTML` nahradil `#pages-content` znova, ale prvé nahradenie už bolo dokončené. Dva pagery teraz existovali v DOM.
 
 Každé ďalšie kliknutie zopakovalo cyklus.
 
@@ -59,7 +59,7 @@ Každé ďalšie kliknutie zopakovalo cyklus.
 
 Oddelte, čo plná stránka potrebuje, od toho, čo HTMX potrebuje.
 
-`renderGrid()` vracia kompletné HTML pre prvé načítanie stránky — search input, count info, tabuľka, paginácia. `renderContent()` vracia iba element `<div id="pages-content">` — count info, tabuľka, paginácia. Žiadny search input.
+`renderGrid()` vracia kompletné HTML pre prvé načítanie stránky, search input, count info, tabuľka, paginácia. `renderContent()` vracia iba element `<div id="pages-content">`: count info, tabuľka, paginácia. Žiadny search input.
 
 ```php
 // Plné načítanie stránky
@@ -77,11 +77,11 @@ Search input sa nikdy neobjaví v HTMX odpovediach. Žiadna kaskáda. Žiadna du
 
 HTMX s `outerHTML` swapom nájde target element v odpovedi a nahradí pôvodný. Elementy mimo targetu v odpovedi sa zahodia.
 
-Ale „zahodia“ znamená, že prehliadač ich nikdy nevloží do DOM — neznamená, že nikdy neexistovali v odpovedi. Ak odpoveď obsahuje elementy s vlastnými HTMX triggermi, a tieto elementy zodpovedajú DOM selektorom, prehliadač môže spustiť eventy na pôvodných (nezamenených) elementoch.
+Ale „zahodia“ znamená, že prehliadač ich nikdy nevloží do DOM, neznamená, že nikdy neexistovali v odpovedi. Ak odpoveď obsahuje elementy s vlastnými HTMX triggermi, a tieto elementy zodpovedajú DOM selektorom, prehliadač môže spustiť eventy na pôvodných (nezamenených) elementoch.
 
 Pravidlo: HTMX partial odpoveď by mala obsahovať **iba** element, ktorý sa mení. Nič pred ním. Nič po ňom. Ak server vracia `$searchInput . $targetDiv`, a `$searchInput` má `hx-trigger`, pôvodný search input zostáva v DOM a môže sa znova spustiť.
 
-`renderGrid()` zostáva rendererom pre plnú stránku — search input, count info, tabuľka, paginácia. `renderContent()` spracúva HTMX cestu. Keď staviate pagináciu s HTMX, volajte `renderContent()`. Keď potrebujete plnú stránku, volajte `renderGrid()`. Dve metódy, jedna pravda.
+`renderGrid()` zostáva rendererom pre plnú stránku, search input, count info, tabuľka, paginácia. `renderContent()` spracúva HTMX cestu. Keď staviate pagináciu s HTMX, volajte `renderContent()`. Keď potrebujete plnú stránku, volajte `renderGrid()`. Dve metódy, jedna pravda.
 
 ---
 
@@ -89,13 +89,13 @@ Magia frameworku je taká dobrá, aké dobré HTML mu naservírujete. HTMX vás 
 
 ---
 
-→ [MoonShine Features + HTMX](/blog/moonshine-htmx-features) — toast notifikácie, live search, form submit
-→ [CSP a onclick](/blog/csp-onclick-spravodliva-chyba) — tichá bezpečná diera, ktorá zabila inline handlery
+→ [MoonShine Features + HTMX](/blog/moonshine-htmx-features): toast notifikácie, live search, form submit
+→ [CSP a onclick](/blog/csp-onclick-spravodliva-chyba): tichá bezpečná diera, ktorá zabila inline handlery
 
 ## Zdroje
 
-- [htmx.org — Documentation](https://htmx.org/docs/) — oficiálna HTMX dokumentácia
-- [htmx.org — hx-swap](https://htmx.org/attributes/hx-swap/) — swap atribút a jeho možnosti
-- [htmx.org — hx-target](https://htmx.org/attributes/hx-target/) — target selektor špecifikácia
-- [MDN — DOM Manipulation](https://developer.mozilla.org/en-US/docs/Web/API/Document_object_model) — DOM API základy
-- [HTMX Patterns — Pagination](https://htmx.org/examples/pagination/) — oficiálny pagination pattern
+- [htmx.org, Documentation](https://htmx.org/docs/): oficiálna HTMX dokumentácia
+- [htmx.org, hx-swap](https://htmx.org/attributes/hx-swap/): swap atribút a jeho možnosti
+- [htmx.org, hx-target](https://htmx.org/attributes/hx-target/): target selektor špecifikácia
+- [MDN, DOM Manipulation](https://developer.mozilla.org/en-US/docs/Web/API/Document_object_model): DOM API základy
+- [HTMX Patterns, Pagination](https://htmx.org/examples/pagination/): oficiálny pagination pattern

@@ -147,16 +147,16 @@ In the next part we'll show how to read a Lighthouse report like a
 detective ... which audits are "scored" and which are just
 recommendations, and why it's sometimes worth ignoring "Est savings".
 
-Cover image LCP remains the fastest way to tank your Lighthouse score — just not the only one. When you know the contract, the fix is one attribute.
+Cover image LCP remains the fastest way to tank your Lighthouse score, just not the only one. When you know the contract, the fix is one attribute.
 
-→ [LCP srcset basics](/blog/lcp-srcset-basics) — responsive images done right
-→ [Reading Lighthouse report](/blog/reading-lighthouse-report) — detective work on audits
-→ [Text LCP](/blog/text-lcp) — when the LCP element isn't an image
+→ [LCP srcset basics](/blog/lcp-srcset-basics): responsive images done right
+→ [Reading Lighthouse report](/blog/reading-lighthouse-report): detective work on audits
+→ [Text LCP](/blog/text-lcp): when the LCP element isn't an image
 
 ## Sources
 
-- [W3C — ACID Properties](https://www.w3.org/TR/xml-core/#sec-conformance) — ACID definition
-- [PHP Manual](https://www.php.net/manual/) — official PHP documentation
-- [SQLite Documentation](https://www.sqlite.org/docs.html) — SQLite reference manual
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — security best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — official getting started guide
+- [W3C, ACID Properties](https://www.w3.org/TR/xml-core/#sec-conformance): ACID definition
+- [PHP Manual](https://www.php.net/manual/): official PHP documentation
+- [SQLite Documentation](https://www.sqlite.org/docs.html): SQLite reference manual
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): security best practices
+- [Nativa Minimal Documentation](/docs/getting-started): official getting started guide

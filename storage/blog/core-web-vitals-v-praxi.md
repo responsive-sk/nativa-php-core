@@ -1,5 +1,5 @@
 ---
-title: "Core Web Vitals v praxi — LCP, srcset, lazy loading"
+title: "Core Web Vitals v praxi: LCP, srcset, lazy loading"
 date: "2026-09-01"
 version: "1.0.1"
 tags: ["seo", "performance", "core-web-vitals", "images"]
@@ -11,18 +11,18 @@ translation: "core-web-vitals-in-practice"
 published: true
 ---
 
-# Core Web Vitals v praxi — LCP, srcset, lazy loading
+# Core Web Vitals v praxi: LCP, srcset, lazy loading
 
 Core Web Vitals sú tri metriky, ktoré Google používa na hodnotenie používateľskej skúsenosti. V Nativa Minimal sme optimalizovali každú z nich.
 
 ## LCP (Largest Contentful Paint)
 
-LCP meria ako rýchlo sa načíta hlavný obsah — typicky cover image na blog článku.
+LCP meria ako rýchlo sa načíta hlavný obsah, typicky cover image na blog článku.
 
 ### Problém
 Predstavte si cover image s 720x360px. Na mobile stačí 360px šírka. Načítavame 2x viac pixelov než potrebujeme.
 
-### Riešenie — srcset
+### Riešenie: srcset
 
 ```php
 private function coverSrcset(string $image): string
@@ -49,23 +49,23 @@ Prehliadač si sám vyberie optimálnu veľkosť:
 
 ### Eager vs Lazy
 
-Prvé 3 obrázky (first row) sú `eager` + `fetchpriority="high"` — LCP kandidáti:
+Prvé 3 obrázky (first row) sú `eager` + `fetchpriority="high"`: LCP kandidáti:
 
 ```php
 $loading = $inFirstRow ? 'eager' : 'lazy';
 $priority = $inFirstRow ? ' fetchpriority="high"' : '';
 ```
 
-Ostatné sú `lazy` — načítajú sa až po scroll.
+Ostatné sú `lazy`: načítajú sa až po scroll.
 
 ## CLS (Cumulative Layout Shift)
 
-CLS meria vizuálnu stabilitu — ako veľa sa obsah posúva pri načítavaní.
+CLS meria vizuálnu stabilitu, ako veľa sa obsah posúva pri načítavaní.
 
 ### Problém
-Obrázok bez `width`/`height` spôsobí layout shift — text sa posunie keď sa obrázok načíta.
+Obrázok bez `width`/`height` spôsobí layout shift, text sa posunie keď sa obrázok načíta.
 
-### Riešenie — explicitné rozmery
+### Riešenie: explicitné rozmery
 
 ```php
 $cover = '<img class="st-blog-index__card-image" src="..."'
@@ -74,18 +74,18 @@ $cover = '<img class="st-blog-index__card-image" src="..."'
     . ' decoding="async">';
 ```
 
-Prehliadač vie vopred, koľko miesta obrázok zaberie — žiadny shift.
+Prehliadač vie vopred, koľko miesta obrázok zaberie, žiadny shift.
 
 ## FID/INP (First Input Delay / Interaction to Next Paint)
 
 FID meria ako rýchlo reaguje stránka na prvú interakciu. INP je jeho nástupca.
 
-### Riešenie — minimum JavaScript
+### Riešenie: minimum JavaScript
 
 Nativa Minimal používa:
-- **HTMX** — dynamický obsah bez frameworku
-- **Inline scripty** — len pre CSS switcher a select-all
-- **Žiadne externé CDN** — všetko self-hosted
+- **HTMX**: dynamický obsah bez frameworku
+- **Inline scripty**: len pre CSS switcher a select-all
+- **Žiadne externé CDN**: všetko self-hosted
 
 ```html
 <script nonce="__CSP_NONCE_PLACEHOLDER__">
@@ -123,8 +123,8 @@ public function testFirstCardImageIsEagerLcp(): void
 
 ## Zdroje
 
-- [web.dev — Core Web Vitals](https://web.dev/vitals/)
-- [web.dev — LCP](https://web.dev/lcp/)
-- [web.dev — CLS](https://web.dev/cls/)
-- [web.dev — INP](https://web.dev/inp/)
-- [Google — Image optimization](https://developers.google.com/web/fundamentals/performance/optimizing-content-efficiency/image-optimization)
+- [web.dev, Core Web Vitals](https://web.dev/vitals/)
+- [web.dev, LCP](https://web.dev/lcp/)
+- [web.dev, CLS](https://web.dev/cls/)
+- [web.dev, INP](https://web.dev/inp/)
+- [Google, Image optimization](https://developers.google.com/web/fundamentals/performance/optimizing-content-efficiency/image-optimization)

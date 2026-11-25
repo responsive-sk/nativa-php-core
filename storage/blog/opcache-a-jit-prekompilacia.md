@@ -18,7 +18,7 @@ dve veci, ktoré z PHP robia „prekompilovaný“ jazyk: **OPcache**
 a **JIT**. A hneď na úvod jedna dôležitá vec: toto je cache, ktorá nám
 nevadí. Nie je to vrstva navyše ... je to kompilátor.
 
-Keď PHP skompiluje skript do opcodov, môže ich držať v pamäti. Nabudúce sa nemusí opäť kompilovať. Toto je OPcache — medzipamäť, ktorá mení PHP z interpretu na takmer kompilovaný jazyk.
+Keď PHP skompiluje skript do opcodov, môže ich držať v pamäti. Nabudúce sa nemusí opäť kompilovať. Toto je OPcache, medzipamäť, ktorá mení PHP z interpretu na takmer kompilovaný jazyk.
 
 Bez OPcache PHP interpretuje každý request odznova. Načíta súbor, parsuje ho, skompiluje do opcodov, vykoná. Desať requestov = desaťkrát rovnaká práca. Na shared hostingu s 128 MB RAM je to smrť.
 
@@ -101,14 +101,14 @@ V štvrtej časti série sa pozrieme na C rozšírenia ... ako sa k Zend
 enginu pripája C kód a prečo je SQLite v C najrýchlejšia cesta k dátam.
 
 
-→ [Zend engine a opcody](/blog/zend-engine-a-opcody) — ako PHP naozaj beží
-→ [C rozšírenia](/blog/c-rozsirenia-php-api) — ako sa k Zend enginu pripája C kód
-→ [História PHP](/blog/historia-php-od-fi-po-8) — od nástroja jedného človeka po Zend Engine 4
+→ [Zend engine a opcody](/blog/zend-engine-a-opcody): ako PHP naozaj beží
+→ [C rozšírenia](/blog/c-rozsirenia-php-api): ako sa k Zend enginu pripája C kód
+→ [História PHP](/blog/historia-php-od-fi-po-8): od nástroja jedného človeka po Zend Engine 4
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [Web.dev — Performance](https://web.dev/performance) — Core Web Vitals
-- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/) — Lighthouse nástroj
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [Web.dev, Performance](https://web.dev/performance): Core Web Vitals
+- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/): Lighthouse nástroj

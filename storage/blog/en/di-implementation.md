@@ -360,7 +360,7 @@ We need **patterns** that work without a container.
 | 5 | `#[As*]` attributes (commands, events) | Proposed |
 | 6 | `RequestScope` ... explicit scoping | Proposed |
 
-The patterns remain lightweight — not because we're against containers, but because the starter kit doesn't need one.
+The patterns remain lightweight, not because we're against containers, but because the starter kit doesn't need one.
 
 ---
 
@@ -368,13 +368,13 @@ A container that controls everything controls nothing. Patterns that work withou
 
 ---
 
-→ [DI Evolution](/blog/di-evolution) — the philosophy behind the patterns
-→ [Theme Architecture](/blog/theme-architecture) — auto-discovery in practice
+→ [DI Evolution](/blog/di-evolution): the philosophy behind the patterns
+→ [Theme Architecture](/blog/theme-architecture): auto-discovery in practice
 
 ## Sources
 
-- [PHP-FIG — PSR-15 HTTP Server Request Handlers](https://www.php-fig.org/psr/psr-15/) — standardized middleware interface
-- [PHP Manual — SPLAutoLoader](https://www.php.net/manual/en/function.spl-autoload-register.php) — PSR-4 autoloading
-- [PHPUnit — Test Isolation](https://phpunit.de/documentation.html) — disposal and test cleanup patterns
-- [PHPStan — Rule Customization](https://phpstan.org/developing-extensions/rule-customization) — static analysis for module boundaries
-- [Nativa Minimal — Adding Modules](/docs/adding-modules) — official guide for adding modules
+- [PHP-FIG, PSR-15 HTTP Server Request Handlers](https://www.php-fig.org/psr/psr-15/): standardized middleware interface
+- [PHP Manual, SPLAutoLoader](https://www.php.net/manual/en/function.spl-autoload-register.php): PSR-4 autoloading
+- [PHPUnit, Test Isolation](https://phpunit.de/documentation.html): disposal and test cleanup patterns
+- [PHPStan, Rule Customization](https://phpstan.org/developing-extensions/rule-customization): static analysis for module boundaries
+- [Nativa Minimal, Adding Modules](/docs/adding-modules): official guide for adding modules

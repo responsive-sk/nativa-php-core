@@ -202,11 +202,11 @@ Config is merged from ancestor entries ... the closer to root, the earlier it ap
 | Named services | Service class (auto-registration) |
 | Config management | Intercept config (ancestor merge) |
 
-→ [DeepSeek Harness and Cordis](/en/blog/deepseek-harness-and-cordis) — the plugin framework for tomorrow
-→ [DeepSeek Harness ... 50 packages](/en/blog/deepseek-harness-architecture-overview) — architecture overview
-→ [ACID for beginners](/en/blog/acid-for-beginners) — why transactions aren't boring
+→ [DeepSeek Harness and Cordis](/en/blog/deepseek-harness-and-cordis): the plugin framework for tomorrow
+→ [DeepSeek Harness ... 50 packages](/en/blog/deepseek-harness-architecture-overview): architecture overview
+→ [ACID for beginners](/en/blog/acid-for-beginners): why transactions aren't boring
 
 ## Sources
 
-- [Cordis](https://github.com/deepseek-ai/deepseek-harness/tree/master/vendor/cordis) — TypeScript plugin framework
-- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) — agent framework built on Cordis
+- [Cordis](https://github.com/deepseek-ai/deepseek-harness/tree/master/vendor/cordis): TypeScript plugin framework
+- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): agent framework built on Cordis

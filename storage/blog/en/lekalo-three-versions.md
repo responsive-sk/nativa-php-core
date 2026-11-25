@@ -185,9 +185,9 @@ on.
 
 ## Sources
 
-- [Lekalo](https://github.com/ichinya/lekalo) — the product repository (release v0.6.4 from 1 October 2026, `lekalo compatibility` is the contract registry)
-- [Release v0.6.4](https://github.com/ichinya/lekalo/releases/tag/v0.6.4) — what landed: Node/TypeScript bindings, local run history, a brownfield pilot, findings F1 to F7
-- [docs/lekalo-model.md](https://github.com/evan70/nativa-minimal/blob/master/docs/lekalo-model.md) — our upgrade record, including the trap where `lekalo lock` refuses the lock it is meant to replace
-- [lekalo/modules](https://github.com/evan70/nativa-minimal/tree/master/lekalo/modules) — the eight modules the model knows, and the list of the ones it does not
-- [Part 10.2 — an upgrade through three gates](/blog/upgrading-lekalo) — the previous upgrade, where something really did change
-- [Part 16 — comments as the last chain](/blog/comments-the-last-chain) — where this row is headed
+- [Lekalo](https://github.com/ichinya/lekalo): the product repository (release v0.6.4 from 1 October 2026, `lekalo compatibility` is the contract registry)
+- [Release v0.6.4](https://github.com/ichinya/lekalo/releases/tag/v0.6.4): what landed: Node/TypeScript bindings, local run history, a brownfield pilot, findings F1 to F7
+- [docs/lekalo-model.md](https://github.com/evan70/nativa-minimal/blob/master/docs/lekalo-model.md): our upgrade record, including the trap where `lekalo lock` refuses the lock it is meant to replace
+- [lekalo/modules](https://github.com/evan70/nativa-minimal/tree/master/lekalo/modules): the eight modules the model knows, and the list of the ones it does not
+- [Part 10.2, an upgrade through three gates](/blog/upgrading-lekalo): the previous upgrade, where something really did change
+- [Part 16, comments as the last chain](/blog/comments-the-last-chain): where this row is headed

@@ -3,7 +3,7 @@ title: "GitHub Actions pre deti ... osem jobov a jeden príkaz doma"
 date: "2026-10-08"
 version: "1.0.3"
 tags: ["ci", "github-actions", "test", "browser", "architektura"]
-excerpt: "Osem jobov v GitHube a jeden príkaz doma. Dva gate v CI — prvý rýchly, druhý dlhý — a jeden príkaz doma, ktorý robí to isté, len bez čakania. Čo robia, prečo bežia paralelne a kde ešte duplikujú."
+excerpt: "Osem jobov v GitHube a jeden príkaz doma. Dva gate v CI, prvý rýchly, druhý dlhý, a jeden príkaz doma, ktorý robí to isté, len bez čakania. Čo robia, prečo bežia paralelne a kde ešte duplikujú."
 author: "nativa.dev@example.test"
 author_email: "nativa.dev@example.test"
 category: "Architecture"
@@ -42,7 +42,7 @@ Prečo sú to tie isté príkazy a nie dva podobné zoznamy?
 
 Lebo zoznam, ktorý existuje dvakrát, sa raz rozíde.
 
-Keby sme mali `composer test` inde než v CI, prvý človek, ktorý pridá test do jedného a zabudne na druhý, zistí pravdu až o týždeň — a pravda bude červený `master`.
+Keby sme mali `composer test` inde než v CI, prvý človek, ktorý pridá test do jedného a zabudne na druhý, zistí pravdu až o týždeň, a pravda bude červený `master`.
 
 ## Gate, ktorý existuje len doma, zhnije
 
@@ -50,7 +50,7 @@ Acceptance suite u nás dlho žila v Makefile ale nebežala v CI.
 
 Nebola zlá.
 
-Bola to sada Codeception testov, ktorá sa dala spustiť proti živému serveru — a spúšťal ju málokto, takže hnila celé týždne, keď sa témy menili.
+Bola to sada Codeception testov, ktorá sa dala spustiť proti živému serveru, a spúšťal ju málokto, takže hnila celé týždne, keď sa témy menili.
 
 Keď sme ju pustili, zlyhala na troch zo štyroch tém: test špeciálne ošetroval jednu tému a pre ostatné kontroloval markup, ktorý v nich nikdy ani nebol.
 
@@ -58,11 +58,11 @@ Nikto si to nevšimol, pretože súbor, ktorý sa nespúšťa, nič nehlási.
 
 Dnes je acceptance vlastný job v CI.
 
-Je to ale drahý job — štartuje server, migruje databázy a seeduje fixtúry — a práve preto do CI patrí: keď je gate drahý, musí sa spúšťať bez toho, aby si naň niekto musel spomenúť.
+Je to ale drahý job, štartuje server, migruje databázy a seeduje fixtúry, a práve preto do CI patrí: keď je gate drahý, musí sa spúšťať bez toho, aby si naň niekto musel spomenúť.
 
 ## Tri štarty aplikácie ... a jedna duplikácia
 
-Dva z našich jobov — `acceptance` a `browser` — potrebujú bežiacu aplikáciu.
+Dva z našich jobov,`acceptance` a `browser`: potrebujú bežiacu aplikáciu.
 
 Sekvencia je vždy rovnaká: vytvor `storage` adresáre, spusti `php bin/cms migrate`, nasaď `php bin/cms seed`, do toho ešte `php bin/cms forms:seed`, potom štart servera a čakanie, kým odpovie.
 
@@ -79,7 +79,7 @@ Táto sekvencia je ale v súbore trikrát: pre `acceptance`, pre `browser` a raz
 
 A buďme úprimní: toto je mínus.
 
-Tri kópie jednej pravdy sú tri miesta, kde sa zabudne na `forms:seed` — a prejaví sa to ako chyba v téme ale nie ako chýbajúci seed.
+Tri kópie jednej pravdy sú tri miesta, kde sa zabudne na `forms:seed`: a prejaví sa to ako chyba v téme ale nie ako chýbajúci seed.
 
 Plán je jeden skript, ktorý celú sekvenciu vlastní, a CI ho len zavolá s portom a logom.
 
@@ -110,7 +110,7 @@ Téma sa nastavuje 16-krát v rámci jobu, pretože check bez deterministickej t
 - burger v téme `magazine`, ktorý sedel 78px od pravého okraja,
 - menu, ktoré ignorovalo Escape a nevrátilo fokus,
 - odkaz na karte, ktorý bol vnorený do iného odkazu,
-- web font, ktorý po výmene posunul hero o 50px — 0.336 CLS,
+- web font, ktorý po výmene posunul hero o 50px, 0.336 CLS,
 - editor, ktorý sa otvoril ako sheet až na druhý klik.
 
 Každá z týchto chýb prešla všetkými PHP testami, pretože PHPUnit vie o CSS a o fokuse presne toľko, čo o počasí.
@@ -125,15 +125,15 @@ Prešli sme si kampaňou, v ktorej viac ako sto súborov spomínalo skripty v ad
 
 Skripty sme presunuli do podadresárov podľa roly a nástroje na to máme: `BinLayoutTest` aj `CheckScriptsWiredTest`.
 
-A napriek tomu bolo štrnásť check skriptov rozbitých — importovali `'./lib/cdp.mjs'`, čo po presune znamená `bin/checks/lib/cdp.mjs`.
+A napriek tomu bolo štrnásť check skriptov rozbitých, importovali `'./lib/cdp.mjs'`, čo po presune znamená `bin/checks/lib/cdp.mjs`.
 
 Node by pri behu vyhodil `ERR_MODULE_NOT_FOUND`.
 
 Ale `composer test` nespúšťa ani jeden check.
 
-`CheckScriptsWiredTest` kontroluje, že skript je uvedený v CI — teda reťazec v súbore, nie to, či sa dá spustiť.
+`CheckScriptsWiredTest` kontroluje, že skript je uvedený v CI, teda reťazec v súbore, nie to, či sa dá spustiť.
 
-`CheckScriptsShareCdpTest` kontroluje, že check používa zdieľanú knižnicu — nie to, či ju vie načítať.
+`CheckScriptsShareCdpTest` kontroluje, že check používa zdieľanú knižnicu, nie to, či ju vie načítať.
 
 Všetky brány boli zelené a štrnásť skriptov bolo mŕtvych.
 
@@ -149,7 +149,7 @@ Skript, ktorý z nej **píše**, si vedľa seba vytvorí druhý strom a skončí
 
 A tak `bin/build/build-dist.sh` namieril `DIST_DIR` do `bin/dist`, `mkdir -p` ho vytvoril a build hlásil úspech.
 
-Dnes cestu k repozitáru nehľadá nikto počítaním — hľadá ju marker `src/init.php` cez `bin/lib/repo-root.mjs`, `repo-root.php` a `repo-root.sh`.
+Dnes cestu k repozitáru nehľadá nikto počítaním, hľadá ju marker `src/init.php` cez `bin/lib/repo-root.mjs`, `repo-root.php` a `repo-root.sh`.
 
 A `BinLayoutTest` okrem mapy adresárov rozresolvuje každú statickú relatívnu referenciu pod `bin/`.
 
@@ -165,7 +165,7 @@ Browser job nie je v `make pre-commit` a je to zámer.
 
 `make pre-commit` beží dve minúty.
 
-Browser job potrebuje reálny Chrome, bežiaci server a seedované databázy — a trvá rádovo dlhšie.
+Browser job potrebuje reálny Chrome, bežiaci server a seedované databázy, a trvá rádovo dlhšie.
 
 Za tú cenu dostaneš meranie. Pri zmene jedného odseku v článku je to vyhodený čas.
 
@@ -187,13 +187,13 @@ Keby sme ho pustili na všetkých šiestich, narazili by sme na limiter a hlási
 
 2. Keď meníš chrome, vstupný bod alebo markup témy, štartuj server a spusti príslušný check ručne. `php bin/dev/set-theme.php <téma>` dá deterministickú tému a `node bin/checks/<check>.mjs` povie, čo videl prehliadač.
 
-3. Keď pridáš check, pridaj aj bránu, ktorá zlyhá, keď je zapojený zle — a over ju mutáciou. Slučka, ktorú nevieš rozbiť, je slučka, ktorej nemôžeš veriť.
+3. Keď pridáš check, pridaj aj bránu, ktorá zlyhá, keď je zapojený zle, a over ju mutáciou. Slučka, ktorú nevieš rozbiť, je slučka, ktorej nemôžeš veriť.
 
 ## Zdroje
 
-- [GitHub Actions — Workflow syntax](https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions) — joby, kroky a `timeout-minutes`
-- [GitHub Actions — Running jobs in parallel](https://docs.github.com/en/actions/how-tos/writing-workflows/choosing-what-your-workflow-does/using-jobs-in-a-workflow) — prečo máme osem jobov namiesto jedného
-- [shivammathur/setup-php](https://github.com/shivammathur/setup-php) — PHP 8.5 a rozšírenia v každom jobe
-- [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) — ako `bin/checks/*-check.mjs` hovoria s prehliadačom
-- [PHPUnit — Test doubles a assertions](https://docs.phpunit.de/) — čo `composer test` naozaj overí
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
+- [GitHub Actions, Workflow syntax](https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions): joby, kroky a `timeout-minutes`
+- [GitHub Actions, Running jobs in parallel](https://docs.github.com/en/actions/how-tos/writing-workflows/choosing-what-your-workflow-does/using-jobs-in-a-workflow): prečo máme osem jobov namiesto jedného
+- [shivammathur/setup-php](https://github.com/shivammathur/setup-php): PHP 8.5 a rozšírenia v každom jobe
+- [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/): ako `bin/checks/*-check.mjs` hovoria s prehliadačom
+- [PHPUnit, Test doubles a assertions](https://docs.phpunit.de/): čo `composer test` naozaj overí
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod

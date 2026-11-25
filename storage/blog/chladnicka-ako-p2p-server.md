@@ -209,6 +209,6 @@ Chladnička nie je sci-fi. Je to server, ktorý už máte doma. Stačí ho zapn�
 - [IPFS / Kubo](https://github.com/ipfs/kubo) ... content-addressed storage
 - [Raspberry Pi](https://www.raspberrypi.com/) ... $80 hardvér pre P2P uzly
 
-→ [DSH a P2P](/blog/dsh-a-p2p) — distribuovaní agenti v sieti
-→ [Capability seams](/blog/capability-seams) — kontrakt, implementácia, spotrebiteľ
-→ [Filozofia menej vrstiev](/blog/filozofia-menej-vrstiev) — prečo je PHP rýchle
+→ [DSH a P2P](/blog/dsh-a-p2p): distribuovaní agenti v sieti
+→ [Capability seams](/blog/capability-seams): kontrakt, implementácia, spotrebiteľ
+→ [Filozofia menej vrstiev](/blog/filozofia-menej-vrstiev): prečo je PHP rýchle

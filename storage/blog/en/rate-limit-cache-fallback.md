@@ -215,7 +215,7 @@ everything in `storage/cache/pages/`. Useful when you publish a new
 article and want to make sure blocked clients get fresh content.
 
 **Update (2026-09):** `CacheInvalidator::flush()` now handles this
-automatically — admin write operations (pages, articles, settings, media,
+automatically, admin write operations (pages, articles, settings, media,
 users...) flush the page cache, bulk actions once after the loop. The
 manual button remains as a safety net.
 
@@ -231,16 +231,16 @@ brings value**.
 
 The solution was five lines of code in RateLimitMiddleware. We checked the page cache when blocking, served the cached HTML with a 429 status, and added a Retry-After header. No new dependencies, no new infrastructure.
 
-Rate limiting remains a necessary guardrail — just not one that has to punish legitimate users. When you know the cache is already there, the fallback writes itself. The next person who gets blocked should see a page, not a dead end.
+Rate limiting remains a necessary guardrail, just not one that has to punish legitimate users. When you know the cache is already there, the fallback writes itself. The next person who gets blocked should see a page, not a dead end.
 
-→ [CSP & htmx interaction](/blog/csp-htmx-interaction) — when security meets the frontend
-→ [Module isolation](/blog/module-isolation) — why middleware lives where it lives
-→ [Middleware pipeline](/blog/middleware-pipeline) — seven layers that guard your routes
+→ [CSP & htmx interaction](/blog/csp-htmx-interaction): when security meets the frontend
+→ [Module isolation](/blog/module-isolation): why middleware lives where it lives
+→ [Middleware pipeline](/blog/middleware-pipeline): seven layers that guard your routes
 
 ## Sources
 
-- [MDN — HTTP 429 Too Many Requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429) — HTTP rate limit status code
-- [IETF — Rate Limit Header Fields (RFC 6585)](https://httpwg.org/specs/rfc6585.html) — RateLimit-Limiter specification
-- [PHP Manual — session_set_save_handler](https://www.php.net/manual/en/function.session-set-save-handler.php) — session storage for rate limiting
-- [Cloudflare — Rate Limiting](https://developers.cloudflare.com/waf/rate-limiting-rules/) — rate limiting best practices
-- [OWASP — Brute Force Prevention](https://cheatsheetseries.owasp.org/cheatsheets/Brute_Force_Prevention_Cheat_Sheet.html) — brute force protection
+- [MDN, HTTP 429 Too Many Requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429): HTTP rate limit status code
+- [IETF, Rate Limit Header Fields (RFC 6585)](https://httpwg.org/specs/rfc6585.html): RateLimit-Limiter specification
+- [PHP Manual, session_set_save_handler](https://www.php.net/manual/en/function.session-set-save-handler.php): session storage for rate limiting
+- [Cloudflare, Rate Limiting](https://developers.cloudflare.com/waf/rate-limiting-rules/): rate limiting best practices
+- [OWASP, Brute Force Prevention](https://cheatsheetseries.owasp.org/cheatsheets/Brute_Force_Prevention_Cheat_Sheet.html): brute force protection

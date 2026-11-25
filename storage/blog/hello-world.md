@@ -20,16 +20,16 @@ Prvý deň: `public/index.php`. Žiadny framework, žiadne závislosti. Len prá
 
 Odpoveď bola prekvapivo krátka:
 
-- **Router** — aby request našiel svoju akciu
-- **Middleware** — aby sme mohli pridať bezpečnosť bez zásahu do logiky
-- **Databáza** — aby sme mohli niečo uložiť
-- **Auth** — aby sme vedeli, kto je prihlásený
+- **Router**: aby request našiel svoju akciu
+- **Middleware**: aby sme mohli pridať bezpečnosť bez zásahu do logiky
+- **Databáza**: aby sme mohli niečo uložiť
+- **Auth**: aby sme vedeli, kto je prihlásený
 
 Žiadne ORM. Žiadny container. Žiadne magic methods. Len PHP triedy, ktoré si navzájom volajú metódy.
 
 ## Ako funguje zero-dependency
 
-Keď odstránite Composer z produkcie, zostane vám len to, čo máte v `src/`. Autoloader? Vlastný, 15 riadkov v `init.php`. Routing? Atribúty `#[Route]` na akciách — žiadna generovaná mapa. Databáza? SQLite, jedna súborová databáza na modul.
+Keď odstránite Composer z produkcie, zostane vám len to, čo máte v `src/`. Autoloader? Vlastný, 15 riadkov v `init.php`. Routing? Atribúty `#[Route]` na akciách, žiadna generovaná mapa. Databáza? SQLite, jedna súborová databáza na modul.
 
 ```php
 // Takto vyzerá route v Nativa
@@ -60,7 +60,7 @@ category: Architecture
 ---
 ```
 
-Telo článku je bežný markdown. Články sa indexujú dynamicky z adresára — žiadna ručná registrácia. Napíšete súbor, je na svete.
+Telo článku je bežný markdown. Články sa indexujú dynamicky z adresára, žiadna ručná registrácia. Napíšete súbor, je na svete.
 
 Voliteľné `author_email` prepojí autora s reálnym users účtom: ak email sedí na aktívneho používateľa (case-insensitive), index aj článok zobrazia jeho `name` z users databázy (rename v `/mark/users` sa prejaví automaticky) ... s avatarom a odkazom na `/authors/{id}`.
 
@@ -72,16 +72,16 @@ Pretože každá závislosť je zmluva. Zmluva s niekým, kto môže zmeniť pra
 
 Zero-dependency nie je o tom, že nič nepoužívate. Je o tom, že viete presne, prečo používate to, čo používate.
 
-Backward compatibility nie je len technický koncept — je to rešpekt k ľuďom, ktorí ešte neprišli. K starým zariadeniam, k starým prehliadačom, k ľuďom, ktorí čítajú prvýkrát.
+Backward compatibility nie je len technický koncept, je to rešpekt k ľuďom, ktorí ešte neprišli. K starým zariadeniam, k starým prehliadačom, k ľuďom, ktorí čítajú prvýkrát.
 
-→ [Clean code pre deti](/blog/co-je-cisty-kod-pre-deti) — ako písať kód, ktorý sa číta sám
-→ [OpenSpec pre deti](/blog/co-je-openspec-pre-deti) — prečo sa zmeny nepíšu priamo do spec
-→ [Performance pre deti](/blog/performance-pre-deti) — prečo sa obrázky nesťahujú zbytočne veľké
+→ [Clean code pre deti](/blog/co-je-cisty-kod-pre-deti): ako písať kód, ktorý sa číta sám
+→ [OpenSpec pre deti](/blog/co-je-openspec-pre-deti): prečo sa zmeny nepíšu priamo do spec
+→ [Performance pre deti](/blog/performance-pre-deti): prečo sa obrázky nesťahujú zbytočne veľké
 
 ## Zdroje
 
-- [PHP.net — PHP: Hypertext Preprocessor](https://www.php.net/) — oficiálna PHP stránka
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP Framework Interop Group štandardy
-- [SQLite.org — About](https://www.sqlite.org/about.html) — SQLite embedded database
-- [Vite — Why Vite](https://vitejs.dev/guide/why.html) — prečo Vite namiesto Webpack
-- [Nativa Minimal — Getting Started](/docs/getting-started) — oficiálny návod na spustenie
+- [PHP.net, PHP: Hypertext Preprocessor](https://www.php.net/): oficiálna PHP stránka
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP Framework Interop Group štandardy
+- [SQLite.org, About](https://www.sqlite.org/about.html): SQLite embedded database
+- [Vite, Why Vite](https://vitejs.dev/guide/why.html): prečo Vite namiesto Webpack
+- [Nativa Minimal, Getting Started](/docs/getting-started): oficiálny návod na spustenie

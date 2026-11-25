@@ -13,9 +13,9 @@ published: true
 
 Píšete článok o bugu, ktorý ste opravili. Má nasledovať rovnaký rytmus ako tutorial o nastavení Dockeru?
 
-Nie. Bug story potrebuje dlhú fázu hmly — čitateľ potrebuje cítiť problém. Tutorial potrebuje dlhú fázu slnka — čitateľ potrebuje vidieť riešenie krok za krokom. Účel článku si vyberá rytmus.
+Nie. Bug story potrebuje dlhú fázu hmly, čitateľ potrebuje cítiť problém. Tutorial potrebuje dlhú fázu slnka, čitateľ potrebuje vidieť riešenie krok za krokom. Účel článku si vyberá rytmus.
 
-## Bug Story — hmla dominantná
+## Bug Story: hmla dominantná
 
 Bug story je o probléme, ktorý sa stal a ako ste ho opravili. Čitateľ chce cítiť zmätok, potom úľavu.
 
@@ -33,9 +33,9 @@ Fáza hmly dominuje, pretože príbeh je o probléme. Fáza slnka je krátka, pr
 
 **Príklad:** „Kliknite stránku 3 ... a pager sa zdvojnásobil“
 
-Článok trávi 44% dĺžky popisom problému. Oprava sú tri riadky kódu. To je správne — príbeh je o bugu, nie o oprave.
+Článok trávi 44% dĺžky popisom problému. Oprava sú tri riadky kódu. To je správne, príbeh je o bugu, nie o oprave.
 
-## Tutorial — slnko dominantná
+## Tutorial: slnko dominantná
 
 Tutorial je o učení sa niečoho nového. Čitateľ chce vidieť riešenie, krok za krokom, s kódom.
 
@@ -49,13 +49,13 @@ TÉMA   [5%]   Jedna veta
 OUTRO  [10%]  Odkazy na ďalšie kroky
 ```
 
-Fáza slnka dominuje, pretože príbeh je o riešení. Fáza hmly je krátka — čitateľ vie, že nevie ako to urobiť. Cesta čitateľa je: medzera → vyplnenie → dokončenie.
+Fáza slnka dominuje, pretože príbeh je o riešení. Fáza hmly je krátka, čitateľ vie, že nevie ako to urobiť. Cesta čitateľa je: medzera → vyplnenie → dokončenie.
 
 **Príklad:** „MoonShine Features + HTMX“
 
 Článok trávi väčšinu dĺžky ukázaním, ako stavať toast notifikácie, live search a form submit. Problém („admin panely potrebujú JavaScript framework“) je vyslovený raz a opustený.
 
-## Filozofia — noc dominantná
+## Filozofia: noc dominantná
 
 Filozofický článok je o chápaní, prečo niečo je také, aké je. Čitateľ chce premýšľať, nie učiť sa.
 
@@ -69,13 +69,13 @@ TÉMA   [10%]  Možno 2-3 vety (výnimka)
 OUTRO  [5%]   Odkazy
 ```
 
-Fáza noci dominuje, pretože príbeh je o chápaní. Fáza slnka je krátka — fakty sa dajú rýchlo. Cesta čitateľa je: otázka → reflexia → pochopenie.
+Fáza noci dominuje, pretože príbeh je o chápaní. Fáza slnka je krátka, fakty sa dajú rýchlo. Cesta čitateľa je: otázka → reflexia → pochopenie.
 
 **Príklad:** „Filozofia menej vrstiev“
 
 Článok trávi väčšinu dĺžky vysvetľovaním, prečo závislosti záležia. Code ukážky sú minimálne. Cesta čitateľa je: „prečo nula závislostí?“ → pochopenie → súhlas.
 
-## Review / Comparison — vyvážený
+## Review / Comparison: vyvážený
 
 Review článok porovnáva možnosti. Čitateľ chce fakty, tabuľky a jasné odporúčanie.
 
@@ -126,13 +126,13 @@ Ak profil nezodpovedá vášmu úmyslu, prestavte článok.
 
 ---
 
-→ [Part 1 — Článok, ktorý nikto nedočítal](/blog/rhythm-part-1-nobody-finished) — prečo rytmus znamená viac
-→ [Part 2 — Fog a Sun](/blog/rhythm-part-2-fog-and-sun) — ako písať problémy, ktoré udržia pozornosť
+→ [Part 1, Článok, ktorý nikto nedočítal](/blog/rhythm-part-1-nobody-finished): prečo rytmus znamená viac
+→ [Part 2, Fog a Sun](/blog/rhythm-part-2-fog-and-sun): ako písať problémy, ktoré udržia pozornosť
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

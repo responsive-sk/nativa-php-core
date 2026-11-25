@@ -118,7 +118,7 @@ Záznam nie je ospravedlnenie. Je to **dokumentované rozhodnutie** ... cesta
 `path.php::method` a krátke dôvod, prečo kód leží práve tam. Padne
 nasledovne ... nová 52-riadková metóda bez záznamu vypíše:
 
-> `PagesIndexAction.php::handle (52 lines, headroom 8) — declare it in
+> `PagesIndexAction.php::handle (52 lines, headroom 8), declare it in
 > NEAR_CAP_ALLOWLIST with a reason, or shrink it`
 
 Tri vlastnosti, ktoré z toho vyplývajú:
@@ -162,8 +162,8 @@ Stav po celej sérii (séria štyroch commitov, pushnutá ako `8b302fc..23ff3b6`
 |---|---|---|
 | Najväčšie telo | 60 riadkov (headroom 0) | 54 riadkov (headroom 6) |
 | Metódy v zóne 51–60 | 7 neviditeľných | 13 vedených v allowliste |
-| Allowlist | — | 13 záznamov s dôvodom |
-| Gáty | — | phpstan, test (3239), cs-fix, rector, lekalo ... zelené |
+| Allowlist |, | 13 záznamov s dôvodom |
+| Gáty |, | phpstan, test (3239), cs-fix, rector, lekalo ... zelené |
 
 Čísla nezne ... zóna má 13 členov, nie nulu. To je pointa. Nula by
 znamenala, že sme kód rozdelili tam, kde to nerobí zmysel, len aby čísla
@@ -206,8 +206,8 @@ Pravidlo potom odpovedá na otázku ... nie „kolko riadkov je moc“, ale
 
 ## Zdroje
 
-- [PHP Manual — Tokenizér](https://www.php.net/manual/en/book.tokenizer.php) — `token_get_all()` a rodina
-- [PHPStan — Rule levels](https://phpstan.org/user-guide/rule-levels) — ako funguje level 9
-- [PHPUnit — XML Configuration](https://docs.phpunit.de/en/12.0/configuration.html) — `failOnWarning`, `failOnRisky`
-- [The Zen of Python](https://peps.python.org/pep-0020/) — „Explicit is better than implicit“
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
+- [PHP Manual, Tokenizér](https://www.php.net/manual/en/book.tokenizer.php): `token_get_all()` a rodina
+- [PHPStan, Rule levels](https://phpstan.org/user-guide/rule-levels): ako funguje level 9
+- [PHPUnit, XML Configuration](https://docs.phpunit.de/en/12.0/configuration.html): `failOnWarning`, `failOnRisky`
+- [The Zen of Python](https://peps.python.org/pep-0020/): „Explicit is better than implicit“
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod

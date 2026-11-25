@@ -221,14 +221,14 @@ kópií máš.
 5. **Rozhodovací strom** ... tá istá vec? Zjednoť. Podobná, ale iný dôvod zmeny? Nechaj. Druhá implementácia? Až teraz rozhranie.
 6. **Odkaz na ďalší diel** ... všetky tieto pravidlá sú vynútené testami, a o tom, ako testy fungujú ako výstražné dymové signály ... a ako sa píšu tak, aby sa nedali obísť ... bude [diel 5](/blog/smoke-test-pre-deti).
 
-→ [Jedna vec (SRP)](/blog/jedna-vec-srp-pre-deti) — metóda robí jednu vec
-→ [Modulová izolácia](/blog/modulova-izolacia-pre-deti) — kto s kým môže rozprávať
-→ [Smoke test](/blog/smoke-test-pre-deti) — testy ako dymové hlásiče
+→ [Jedna vec (SRP)](/blog/jedna-vec-srp-pre-deti): metóda robí jednu vec
+→ [Modulová izolácia](/blog/modulova-izolacia-pre-deti): kto s kým môže rozprávať
+→ [Smoke test](/blog/smoke-test-pre-deti): testy ako dymové hlásiče
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

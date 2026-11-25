@@ -14,11 +14,11 @@ translation: "php-history-from-fi-to-8"
 published: true
 ---
 
-Rasmus Lerdorf neplánoval napísať jazyk. V roku 1994 chcel len jednu vec — počítať, koľko ľudí číta jeho osobnú stránku.
+Rasmus Lerdorf neplánoval napísať jazyk. V roku 1994 chcel len jednu vec, počítať, koľko ľudí číta jeho osobnú stránku.
 
-O tri roky neskôr sa dvaja študenti — Zeev Suraski a Andi Gutmans — pokúsili použiť PHP na univerzitný projekt. Narazili na limity pôvodného parsera. Namiesto sťažovania sa ho **prepísali**. Výsledok: PHP 3 a úplne nový engine, ktorý pomenovali Zend — z prvých písmen mien **Ze**ev + **A**nd**i**.
+O tri roky neskôr sa dvaja študenti, Zeev Suraski a Andi Gutmans, pokúsili použiť PHP na univerzitný projekt. Narazili na limity pôvodného parsera. Namiesto sťažovania sa ho **prepísali**. Výsledok: PHP 3 a úplne nový engine, ktorý pomenovali Zend, z prvých písmen mien **Ze**ev + **A**nd**i**.
 
-PHP bolo pomalé. Nie preto, že by bolo zlé — ale preto, že medzi kódom a dátami stálo priveľa vrstiev. Každá verzia to riešila rovnako: prepísať engine v C.
+PHP bolo pomalé. Nie preto, že by bolo zlé, ale preto, že medzi kódom a dátami stálo priveľa vrstiev. Každá verzia to riešila rovnako: prepísať engine v C.
 
 ## Časová os
 
@@ -36,9 +36,9 @@ PHP bolo pomalé. Nie preto, že by bolo zlé — ale preto, že medzi kódom a 
 
 Pozrite sa na vzorec v tabuľke:
 
-- **PHP 5** — nový object model v C, lebo starý nemohol uniesť objekty, ktoré jazyk potreboval.
-- **PHP 7** — projekt PHPNG prepísal datové štruktúry a exekučnú slučku. Dvojnásobná rýchlosť, polovičná pamäť. Žiadna zmena syntaxe, žiadna nová vrstva — nový C kód pod kapotou.
-- **PHP 8.0** — pribudol JIT, ktorý horúce cesty kompiluje až do natívneho strojového kódu. Zase: C.
+- **PHP 5**: nový object model v C, lebo starý nemohol uniesť objekty, ktoré jazyk potreboval.
+- **PHP 7**: projekt PHPNG prepísal datové štruktúry a exekučnú slučku. Dvojnásobná rýchlosť, polovičná pamäť. Žiadna zmena syntaxe, žiadna nová vrstva, nový C kód pod kapotou.
+- **PHP 8.0**: pribudol JIT, ktorý horúce cesty kompiluje až do natívneho strojového kódu. Zase: C.
 
 PHP sa nikdy nezrýchlilo pridaním abstrakcie. Zrýchlilo tým, že sa viac práce presunulo do C.
 
@@ -54,14 +54,14 @@ História PHP nie je len časová os verzií. Je to príbeh o jednom opakujúcom
 
 Vzorec histórie: rýchlosť pochádza z C a z odstránenia vrstiev. Presne tá filozofia, na ktorej stojí náš stack.
 
-→ [Zend engine a opcody](/blog/zend-engine-a-opcody) — ako PHP naozaj beží
-→ [OPcache a JIT](/blog/opcache-a-jit-prekompilacia) — prekompilácia na úrovni jazyka
-→ [C rozšírenia](/blog/c-rozsirenia-php-api) — ako sa k Zend enginu pripája C kód
+→ [Zend engine a opcody](/blog/zend-engine-a-opcody): ako PHP naozaj beží
+→ [OPcache a JIT](/blog/opcache-a-jit-prekompilacia): prekompilácia na úrovni jazyka
+→ [C rozšírenia](/blog/c-rozsirenia-php-api): ako sa k Zend enginu pripája C kód
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

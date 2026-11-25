@@ -181,18 +181,18 @@ Next time you write a method and feel it growing:
 And remember: the limit isn't your enemy. It's a **detector that warns
 you before you notice yourself** that a method stopped being one thing.
 
-A short method with a good name is respect — respect for the next person who reads it, respect for your future self, respect for the idea that code is read more than it's written.
+A short method with a good name is respect, respect for the next person who reads it, respect for your future self, respect for the idea that code is read more than it's written.
 
 ---
 
-→ [Part 1 — what's behind a variable](/blog/php-types-part-1) — the foundation
-→ [Part 5 — union types, nullsafe and enums](/blog/union-nullsafe-enums) — precision types
-→ [Chunky rule SK](/blog/chunky-rule-pre-deti) — slovenská verzia
+→ [Part 1, what's behind a variable](/blog/php-types-part-1): the foundation
+→ [Part 5, union types, nullsafe and enums](/blog/union-nullsafe-enums): precision types
+→ [Chunky rule SK](/blog/chunky-rule-pre-deti): slovenská verzia
 
 ## Sources
 
-- [W3C — ACID Properties](https://www.w3.org/TR/xml-core/#sec-conformance) — ACID definition
-- [PHP Manual](https://www.php.net/manual/) — official PHP documentation
-- [SQLite Documentation](https://www.sqlite.org/docs.html) — SQLite reference manual
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — security best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — official getting started guide
+- [W3C, ACID Properties](https://www.w3.org/TR/xml-core/#sec-conformance): ACID definition
+- [PHP Manual](https://www.php.net/manual/): official PHP documentation
+- [SQLite Documentation](https://www.sqlite.org/docs.html): SQLite reference manual
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): security best practices
+- [Nativa Minimal Documentation](/docs/getting-started): official getting started guide

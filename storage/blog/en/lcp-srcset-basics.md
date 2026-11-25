@@ -179,16 +179,16 @@ everywhere.
 In the next part we'll look at how LCP works on an article page and
 what to do when the LCP element isn't an image but text.
 
-Srcset remains the simplest responsive image tool — just not one you should skip. When you know the contract, the fix is one attribute.
+Srcset remains the simplest responsive image tool, just not one you should skip. When you know the contract, the fix is one attribute.
 
-→ [Article cover LCP](/blog/article-cover-lcp) — the first image that matters
-→ [Reading Lighthouse report](/blog/reading-lighthouse-report) — detective work on audits
-→ [Text LCP](/blog/text-lcp) — when the LCP element isn't an image
+→ [Article cover LCP](/blog/article-cover-lcp): the first image that matters
+→ [Reading Lighthouse report](/blog/reading-lighthouse-report): detective work on audits
+→ [Text LCP](/blog/text-lcp): when the LCP element isn't an image
 
 ## Sources
 
-- [PHP Manual](https://www.php.net/manual/) — official PHP documentation
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP standards
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — security best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — official getting started guide
-- [W3C — Web Standards](https://www.w3.org/standards/) — web standards
+- [PHP Manual](https://www.php.net/manual/): official PHP documentation
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP standards
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): security best practices
+- [Nativa Minimal Documentation](/docs/getting-started): official getting started guide
+- [W3C, Web Standards](https://www.w3.org/standards/): web standards

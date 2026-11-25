@@ -3,7 +3,7 @@ title: "Ako sme urobili sitemap.xml bez frameworku"
 date: "2026-09-01"
 version: "1.0.2"
 tags: ["seo", "sitemap", "xml", "php"]
-excerpt: "Dynamický XML sitemap generovaný čistým PHP — hreflang alternates, author profily, feed endpoints. Žiadny framework, žiadne generovanie."
+excerpt: "Dynamický XML sitemap generovaný čistým PHP, hreflang alternates, author profily, feed endpoints. Žiadny framework, žiadne generovanie."
 author: "Nativa Dev"
 author_email: "nativa.dev@example.test"
 category: "Architecture"
@@ -13,11 +13,11 @@ published: true
 
 # Ako sme urobili sitemap.xml bez frameworku
 
-Sitemap.xml je prvá vec, ktorú Googlebot hľadá. V Nativa Minimal generujeme dynamický XML sitemap priamo v PHP — žiadny framework, žiadne CLI generovanie, žiadne cache.
+Sitemap.xml je prvá vec, ktorú Googlebot hľadá. V Nativa Minimal generujeme dynamický XML sitemap priamo v PHP, žiadny framework, žiadne CLI generovanie, žiadne cache.
 
 ## Prečo dynamický?
 
-Statický sitemap vyžaduje build krok. Keď pridáte článok, musíte spustiť `generate-sitemap`. Pri dynamickom sitemap sa obsah aktualizuje automaticky — každý request generuje aktuálny XML.
+Statický sitemap vyžaduje build krok. Keď pridáte článok, musíte spustiť `generate-sitemap`. Pri dynamickom sitemap sa obsah aktualizuje automaticky, každý request generuje aktuálny XML.
 
 ## Štruktúra sitemapu
 
@@ -43,7 +43,7 @@ Statický sitemap vyžaduje build krok. Keď pridáte článok, musíte spustiť
 
 ## Implementácia
 
-Sitemap sa generuje v jednej akcii — `SitemapAction`:
+Sitemap sa generuje v jednej akcii,`SitemapAction`:
 
 ```php
 #[Route(path: '/sitemap.xml', method: 'GET', name: 'sitemap')]
@@ -67,7 +67,7 @@ final class SitemapAction
 }
 ```
 
-Kľúčové: `$request->absoluteUrl('')` — generuje absolútnu URL z aktuálneho requestu. Funguje na localhost, na produkcii, cez proxy.
+Kľúčové: `$request->absoluteUrl('')`: generuje absolútnu URL z aktuálneho requestu. Funguje na localhost, na produkcii, cez proxy.
 
 ## Čo zahŕňame
 
@@ -92,7 +92,7 @@ Google tak vie, že `example.com/blog/hello-world` a `example.com/en/blog/hello-
 Statické stránky (iba published) s hreflang.
 
 ### Autori
-Author profily dosiahnuteľné z článkov — deduplikované.
+Author profily dosiahnuteľné z článkov, deduplikované.
 
 ## Priority a changefreq
 
@@ -105,7 +105,7 @@ Author profily dosiahnuteľné z článkov — deduplikované.
 | Autori | 0.6 | weekly |
 | Feedy | 0.3 | daily |
 
-Priorita nie je záväzná — Google ju ignoruje. Ale `changefreq` a `lastmod` pomáhajú s crawl budgetom.
+Priorita nie je záväzná, Google ju ignoruje. Ale `changefreq` a `lastmod` pomáhajú s crawl budgetom.
 
 ## Bezpečnosť
 
@@ -138,8 +138,8 @@ public function testSitemapListsArticles(): void
 
 ## Zdroje
 
-- [Google — Sitemaps XML format](https://developers.google.com/search/docs/crawling-indexing/sitemaps/overview)
-- [Sitemaps.org — Protocol 0.9](https://www.sitemaps.org/protocol.html)
-- [Google — hreflang](https://developers.google.com/search/docs/specialized/international/localized-versions)
-- [MDN — XML escape characters](https://developer.mozilla.org/en-US/docs/Web/XML/XML_reference#special_characters_in_XML)
-- [Google — Ping sitemap](https://developers.google.com/search/docs/crawling-indexing/sitemaps/ask-google-to-re-crawl)
+- [Google, Sitemaps XML format](https://developers.google.com/search/docs/crawling-indexing/sitemaps/overview)
+- [Sitemaps.org, Protocol 0.9](https://www.sitemaps.org/protocol.html)
+- [Google, hreflang](https://developers.google.com/search/docs/specialized/international/localized-versions)
+- [MDN, XML escape characters](https://developer.mozilla.org/en-US/docs/Web/XML/XML_reference#special_characters_in_XML)
+- [Google, Ping sitemap](https://developers.google.com/search/docs/crawling-indexing/sitemaps/ask-google-to-re-crawl)

@@ -27,7 +27,7 @@ Nie.
 
 ## Plán, ktorý sa nepodarilo
 
-Diel 1 postavil `ThemeModule` — kontrakt s jednou metódou na každú verejnú
+Diel 1 postavil `ThemeModule`: kontrakt s jednou metódou na každú verejnú
 plochu. Písal som tam aj jednu vetu o tom, čo urobíme s tým starým.
 
 ```php
@@ -39,18 +39,18 @@ plochu. Písal som tam aj jednu vetu o tom, čo urobíme s tým starým.
 Ten neskorší krok neprišiel.
 
 A to, čo namiesto neho ostalo, neboli jednoriadkové delegáty. Boli to **plné
-tele** — dvesto riadkov kódu, ktorý niekto napísal, niekto prečítal a nikto
+tele**, dvesto riadkov kódu, ktorý niekto napísal, niekto prečítal a nikto
 nikdy nespustil.
 
 ## Audit namiesto predpokladu
 
 Najprv som si povedal, že „to je určite niekde použité, len to hľadám zle".
 
-Tak som to overil. Neodhadom — grepom.
+Tak som to overil. Neodhadom, grepom.
 
 | Čo som hľadal | Čo som našiel |
 |---|---|
-| `implements ThemeRenderer` | 2 — `StarterRenderer`, `erik\Renderer` |
+| `implements ThemeRenderer` | 2,`StarterRenderer`, `erik\Renderer` |
 | Miesta s typovou anotáciou (`: ThemeRenderer`, `ThemeRenderer::`) | **0** |
 | `$obj->blogIndex(`, `$obj->homepage(`, `$obj->blogArticle(` … | **0** |
 | Referencie mimo `src/Themes/` | 0 (jedna vetva v docbloku) |
@@ -81,12 +81,12 @@ $articles[] = new Article(
 );
 ```
 
-Ten `toArticles()` mapoval `array $articles` — pole kariet — na `Article` VO.
+Ten `toArticles()` mapoval `array $articles`: pole kariet, na `Article` VO.
 Súčasne existovali **dva tvary jedného konceptu**: `Article` a „pole, ktoré
 sa práve tak volá“.
 
 A jadro malo vlastný tvár: `PageContext` nesúce články, mená, počty, kontext
-paginácie — všetko typované.
+paginácie, všetko typované.
 
 Takže mŕtvy kontrakt nebol zbytok po refaktore. Bol **zámernou poznámkou
 k štýlu**, ktorý kontrakt popierol. Mŕtvy kód zvyčajne hovorí niečo o tom, čo
@@ -96,13 +96,13 @@ Z výsledku:
 
 | Súbor | Pred | Po | Čo zostalo |
 |---|---|---|---|
-| `ThemeRenderer.php` | 92 | zmazané | — |
+| `ThemeRenderer.php` | 92 | zmazané |, |
 | `StarterRenderer.php` | 443 | 120 | článok + TOC |
 | `erik\Renderer.php` | 266 | 135 | 10 statických metód |
 
 Celkovo **−573 riadkov kódu**, ktorý sa nikdy nevykonal.
 
-## Testy si to všimli — zlým spôsobom
+## Testy si to všimli: zlým spôsobom
 
 Najzábavnejší okamih refaktoru: PHPStan level 9 bol zelený **okamžite** po
 tom, ako som zmazal metódy.
@@ -124,7 +124,7 @@ Interface, ktorý nikto nevolá. Ako by mal vedieť? Žiadny test neoveruje
 
 ## Pravidlo, ktoré chýbalo
 
-Projekt mal guard na špekulatívne rozhrania. Bol správny — len bol úzky.
+Projekt mal guard na špekulatívne rozhrania. Bol správny, len bol úzky.
 
 `CorePatternTest` hlási rozhranie, keď má **presne jednu** implementáciu a
 žiadneho spotrebiteľa mimo vlastného modulu.
@@ -155,7 +155,7 @@ Interfaces with no implementation: CliOutput
 
 Takmer som to zmazal.
 
-`CliOutput` **je** implementovaný — v `Bootstrapper` takto:
+`CliOutput` **je** implementovaný, v `Bootstrapper` takto:
 
 ```php
 // src/Modules/Core/Infrastructure/Bootstrap/Bootstrapper.php:65
@@ -165,12 +165,12 @@ $output = new class () implements CliOutput {
 Anonymná trieda nemá meno. Meno nemá, kým ju nenazveme. Regex som opravil na
 `class` s voliteľným menom.
 
-Pravidlo, ktoré zabilo živý kontrakt, bolo zle. Nie preto, že bolo prísne —
+Pravidlo, ktoré zabilo živý kontrakt, bolo zle. Nie preto, že bolo prísne,
 preto, že bolo neúplné.
 
 ### Jadro je imúne, ale nie slepé
 
-`Modules\Core` a `Modules\Database` sú zdieľané jadro — jeho rozhrania sú
+`Modules\Core` a `Modules\Database` sú zdieľané jadro, jeho rozhrania sú
 hlavičky („libc headers"). Nemusia mať spotrebiteľa vo vnútornej projekte.
 
 Ale **nemusia mať ani jednu implementáciu**. Hlavička, ktorú nikto neinkluduje,
@@ -178,7 +178,7 @@ nie je hlavička. Je to poznámka.
 
 ## Druhá mŕtva vec, nájdená tým istým guardom
 
-Nový test padol pri **prvom behu**. Nie kvôli `ThemeRenderer` — ten bol
+Nový test padol pri **prvom behu**. Nie kvôli `ThemeRenderer`: ten bol
 zmazaný. Kvôli niečomu inému:
 
 ```
@@ -211,22 +211,22 @@ To je merateľný výsledok refaktoru: pravidlo, ktoré odstráni chybu, našlo
 
 ## Kedy to neplatí
 
-Buďme úprimní — tri veci.
+Buďme úprimní, tri veci.
 
 **Guard má false positives a to je v poriadku.** Prvá verzia skenu
 implementáciov označila `CliOutput` za mŕtvy kontrakt. Šlo o chybu v skene, nie
-v kóde — a opraviť ju znamenalo opraviť pravidlo, nie obísť pravidlo. Keby som
+v kóde, a opraviť ju znamenalo opraviť pravidlo, nie obísť pravidlo. Keby som
 dal `CliOutput` do zoznamu výnimiek, guard by stratil schopnosť nájsť ten
 skutočný problém.
 
 **Guard nevie, či je rozhranie „zámerné“.** Niektoré rozhrania majú nula
-implementácií zámerne — aby sa zapísal kontrakt, ktorý príde neskôr. Guard ich
+implementácií zámerne, aby sa zapísal kontrakt, ktorý príde neskôr. Guard ich
 označí. V tomto projekte žiadne také nie sú a `ModuleInterface` medzi ne
 nepatril (opisoval niečo, čo už fungovalo inak), takže sa výnimka nepridávala.
 
 **460 riadkov mŕtveho kódu nie je najproblematickejší prípad.** Problem je
 mŕtvy kód, ktorý vyzerá ako živý. `ThemeRenderer` mal dve implementácie, ktoré
-sa navzájom volali cez vlastné statické metódy — volanie existovalo, len
+sa navzájom volali cez vlastné statické metódy, volanie existovalo, len
 nebolo to volanie, ktoré hľadáme. Bol čitateľný a úplne zbytočný. Človek, ktorý
 by ho otvoril, by z vypisovaných metód nepoznal, že je mŕtvy.
 
@@ -239,13 +239,13 @@ keď **guard príliš zúži**.
 prechádzajú. Ukázal som, že ten prípad je mŕtvy. Ale čo rozhranie, ktoré
 implementuje niekto **zvonka**?
 
-O tom, prečo „žiadny externý spotrebiteľa" nie je vždy chyba — a prečo je
+O tom, prečo „žiadny externý spotrebiteľa" nie je vždy chyba, a prečo je
 odpoveď na to iná než zoznam výnimiek.
 
 ## Zdroje
 
-- [PHP Manual — rozhrania](https://www.php.net/manual/en/language.oop5.interfaces.php) — oficiálna dokumentácia k `interface`
-- [PHPStan](https://phpstan.org/) — statická analýza na úrovni 9
-- [PHPUnit](https://phpunit.de/) — dokumentácia testovacieho frameworku
-- [Refactoring Guru — Extract Interface](https://refactoring.guru/design-patterns/extract-interface) — kedy rozhranie vytvoriť a kedy nie
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod kitu
+- [PHP Manual, rozhrania](https://www.php.net/manual/en/language.oop5.interfaces.php): oficiálna dokumentácia k `interface`
+- [PHPStan](https://phpstan.org/): statická analýza na úrovni 9
+- [PHPUnit](https://phpunit.de/): dokumentácia testovacieho frameworku
+- [Refactoring Guru, Extract Interface](https://refactoring.guru/design-patterns/extract-interface): kedy rozhranie vytvoriť a kedy nie
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod kitu

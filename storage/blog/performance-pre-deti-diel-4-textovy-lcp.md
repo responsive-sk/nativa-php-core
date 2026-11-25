@@ -170,14 +170,14 @@ ukážeme, čo s návštevnosťou, ktorú prinesie. [Diel 5](/blog/performance-p
 je o members-only bonusových článkoch ako biznis vzore.
 
 
-→ [Performance diel 1](/blog/performance-pre-deti) — LCP, srcset a prečo sa obrázky nesťahujú zbytočne veľké
-→ [Performance diel 3](/blog/performance-pre-deti-diel-3-lighthouse-detektiv) — čítaj Lighthouse report ako detektív
-→ [Clean code pre deti](/blog/co-je-cisty-kod-pre-deti) — ako písať kód, ktorý sa číta sám
+→ [Performance diel 1](/blog/performance-pre-deti): LCP, srcset a prečo sa obrázky nesťahujú zbytočne veľké
+→ [Performance diel 3](/blog/performance-pre-deti-diel-3-lighthouse-detektiv): čítaj Lighthouse report ako detektív
+→ [Clean code pre deti](/blog/co-je-cisty-kod-pre-deti): ako písať kód, ktorý sa číta sám
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [Web.dev — Performance](https://web.dev/performance) — Core Web Vitals
-- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/) — Lighthouse nástroj
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [Web.dev, Performance](https://web.dev/performance): Core Web Vitals
+- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/): Lighthouse nástroj

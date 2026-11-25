@@ -11,7 +11,7 @@ translation: "deepseek-harness-and-cordis"
 published: true
 ---
 
-DeepSeek Harness nie je ďalší LLM API wrapper. Je to agentný operačný systém — prostredie, v ktorom bežia agenti, a každá schopnosť je samostatný balík.
+DeepSeek Harness nie je ďalší LLM API wrapper. Je to agentný operačný systém, prostredie, v ktorom bežia agenti, a každá schopnosť je samostatný balík.
 
 ## Čo je DeepSeek Harness
 
@@ -221,6 +221,6 @@ A keď to spojíte s OpenSpec (orchestrátor), Outbox (async distribúcia) a ACI
 - [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) ... open-source agentný framework
 - [Cordis](https://github.com/deepseek-ai/deepseek-harness/tree/master/vendor/cordis) ... TypeScript plugin framework (súčasť Harness)
 
-→ [Capability seams](/blog/capability-seams) — Service Definition / Provider / Consumer
-→ [Cordis ... hlboký ponor](/blog/cordis-hlboky-ponor) — plugin framework
-→ [DSH a P2P](/blog/dsh-a-p2p) — distribuovaní agenti v sieti
+→ [Capability seams](/blog/capability-seams): Service Definition / Provider / Consumer
+→ [Cordis ... hlboký ponor](/blog/cordis-hlboky-ponor): plugin framework
+→ [DSH a P2P](/blog/dsh-a-p2p): distribuovaní agenti v sieti

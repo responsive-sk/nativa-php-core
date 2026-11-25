@@ -94,7 +94,7 @@ A record is not an excuse. It is a **documented decision** ... the path
 `path.php::method` and a short reason why that code sits there. A failure
 reads like this ... a new 52-line method without a record prints:
 
-> `PagesIndexAction.php::handle (52 lines, headroom 8) — declare it in
+> `PagesIndexAction.php::handle (52 lines, headroom 8), declare it in
 > NEAR_CAP_ALLOWLIST with a reason, or shrink it`
 
 Three properties follow:
@@ -141,8 +141,8 @@ The state after the whole series (four commits, pushed as
 |---|---|---|
 | Largest body | 60 lines (headroom 0) | 54 lines (headroom 6) |
 | Methods in the 51–60 zone | 7 invisible | 13 tracked in the allowlist |
-| Allowlist | — | 13 records with a reason |
-| Gates | — | phpstan, test (3239), cs-fix, rector, lekalo ... green |
+| Allowlist |, | 13 records with a reason |
+| Gates |, | phpstan, test (3239), cs-fix, rector, lekalo ... green |
 
 The numbers are honest ... the zone has 13 members, not zero. That is
 the point. Zero would mean we split code where splitting makes no sense,
@@ -187,8 +187,8 @@ too many", but "which long functions did we consciously keep, and why".
 
 ## Sources
 
-- [PHP Manual — Tokenizer](https://www.php.net/manual/en/book.tokenizer.php) — `token_get_all()` and friends
-- [PHPStan — Rule levels](https://phpstan.org/user-guide/rule-levels) — how level 9 works
-- [PHPUnit — XML Configuration](https://docs.phpunit.de/en/12.0/configuration.html) — `failOnWarning`, `failOnRisky`
-- [The Zen of Python](https://peps.python.org/pep-0020/) — "Explicit is better than implicit"
-- [Nativa Minimal Documentation](/docs/getting-started) — the official guide
+- [PHP Manual, Tokenizer](https://www.php.net/manual/en/book.tokenizer.php): `token_get_all()` and friends
+- [PHPStan, Rule levels](https://phpstan.org/user-guide/rule-levels): how level 9 works
+- [PHPUnit, XML Configuration](https://docs.phpunit.de/en/12.0/configuration.html): `failOnWarning`, `failOnRisky`
+- [The Zen of Python](https://peps.python.org/pep-0020/): "Explicit is better than implicit"
+- [Nativa Minimal Documentation](/docs/getting-started): the official guide

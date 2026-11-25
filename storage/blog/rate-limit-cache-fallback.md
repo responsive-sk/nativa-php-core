@@ -17,7 +17,7 @@ obsah, žiadna navigácia. Pre scrapery a botov je to v poriadku ... ale
 pre legitímnych návštevníkov, ktorí náhodou prekročili limit, je to
 mŕtvy koniec.
 
-Dnes si ukážeme, ako sme pridali **cache fallback** stav — keď je klient
+Dnes si ukážeme, ako sme pridali **cache fallback** stav, keď je klient
 rate-limit-ovaný a cache existuje, dostane cached verziu stránky s HTTP
 429 namiesto holého textu. A kľúčové: cache sa **napĺňa pasívne** ...
 normálne requesty majú nulový caching overhead. 
@@ -213,7 +213,7 @@ v `storage/cache/pages/`. Užitočné keď publikuješ nový článok a chceš
 istiť, že bloknutí klienti dostanú fresh content.
 
 **Update (2026-09):** o toto sa teraz stará `CacheInvalidator::flush()`
-automaticky — admin write operácie (pages, articles, settings, media,
+automaticky, admin write operácie (pages, articles, settings, media,
 users...) flushujú page cache, bulk akcie raz po spracovaní. Manuálne
 tlačidlo ostáva len ako istota.
 
@@ -227,8 +227,8 @@ prináša hodnotu**.
 
 ## Zdroje
 
-- [MDN — HTTP 429 Too Many Requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429) — HTTP rate limit status code
-- [IETF — Rate Limit Header Fields (RFC 6585)](https://httpwg.org/specs/rfc6585.html) — RateLimit-Limiter špecifikácia
-- [PHP Manual — session_set_save_handler](https://www.php.net/manual/en/function.session-set-save-handler.php) — session storage pre rate limiting
-- [Cloudflare — Rate Limiting](https://developers.cloudflare.com/waf/rate-limiting-rules/) — rate limiting best practices
-- [OWASP — Brute Force Prevention](https://cheatsheetseries.owasp.org/cheatsheets/Brute_Force_Prevention_Cheat_Sheet.html) — brute force ochrana
+- [MDN, HTTP 429 Too Many Requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429): HTTP rate limit status code
+- [IETF, Rate Limit Header Fields (RFC 6585)](https://httpwg.org/specs/rfc6585.html): RateLimit-Limiter špecifikácia
+- [PHP Manual, session_set_save_handler](https://www.php.net/manual/en/function.session-set-save-handler.php): session storage pre rate limiting
+- [Cloudflare, Rate Limiting](https://developers.cloudflare.com/waf/rate-limiting-rules/): rate limiting best practices
+- [OWASP, Brute Force Prevention](https://cheatsheetseries.owasp.org/cheatsheets/Brute_Force_Prevention_Cheat_Sheet.html): brute force ochrana

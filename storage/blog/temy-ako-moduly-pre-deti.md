@@ -18,7 +18,7 @@ translation: "themes-as-modules"
 > tam, kde obe skončili ... téma ako modul. Diel 1: kontrakt, konektor
 > a hranica, ktorú stráži test.
 
-Si PHP vývojár. Pridáš do blogu novú plochu — povedzme stránku s archívom
+Si PHP vývojár. Pridáš do blogu novú plochu, povedzme stránku s archívom
 mesiacov. Otvoríš akciu, dopíšeš renderovanie, siahneš po chrome v layoute...
 a o chvíľu meníš desiaty súbor.
 
@@ -30,16 +30,16 @@ Téma nebola vec. Bola rozliata zmes.
 
 Koľko miest musel pochopiť človek, ktorý chcel upraviť jednu tému? Tri:
 
-1. `FrontendLayout` vetvil na mená tém — päťkrát `'erik' === $bundle` vyberalo
+1. `FrontendLayout` vetvil na mená tém, päťkrát `'erik' === $bundle` vyberalo
    chrome, BEM prefixy a critical CSS fallback priamo v jadre.
-2. Akcie skladali stránky tém samy — `erikIndexPage()`, `erikHome()` a ich
+2. Akcie skladali stránky tém samy,`erikIndexPage()`, `erikHome()` a ich
    sesterské pomocníky importovali `Themes\*` sekcie a lepili hero + sekcie
    + widgety v tele akcie.
-3. `Themes\ThemeRenderer` bol dedičný interface — polia namiesto kontextov,
+3. `Themes\ThemeRenderer` bol dedičný interface, polia namiesto kontextov,
    `callable $t` namiesto prekladov, žiadne vlastníctvo shellu.
 
 Modul je jednotka, ktorú skopíruješ, otestuješ a vymažeš. Rozliatá zmes
-nie je jednotka — je to pátranie.
+nie je jednotka, je to pátranie.
 
 ## Kontrakt ... 66 riadkov
 
@@ -67,7 +67,7 @@ interface ThemeModule
 Explicitné metódy, žiadne `__call`. Téma vypĺňa výmenu: meno, asset bundle,
 BEM prefix, chrome a jednu metódu na každú verejnú plochu.
 
-Výmena je celá. Nič v kontrakte nehovorí „ako vyzeraj" — kontrakt hovorí
+Výmena je celá. Nič v kontrakte nehovorí „ako vyzeraj", kontrakt hovorí
 „čo musíš dať".
 
 ## Konektor ... 36 riadkov
@@ -95,7 +95,7 @@ final class ThemeKernel
 ```
 
 `ThemeKernel` je jediný súbor pod `src/Modules`, ktorý smie importovať
-`Themes\`. Nie dohoda — test.
+`Themes\`. Nie dohoda, test.
 
 `ThemeOwnershipTest` prejde celý `src/Modules` a pri každom inom `use Themes\`
 importe zlyhá. Hranica, ktorú stráži stroj, je hranica.
@@ -121,69 +121,69 @@ if ('' !== $query) {
 ```
 
 Každá plocha je jedno volanie. `PageContext` nesie články, počty zobrazení,
-stránkovanie — to, čo akcia vypočítala. `ShellContext` nesie menu, locale dáta
-a prihlásenie — to, čo chrome potrebuje.
+stránkovanie, to, čo akcia vypočítala. `ShellContext` nesie menu, locale dáta
+a prihlásenie, to, čo chrome potrebuje.
 
 | | Vlastní kernel | Vlastní téma |
 |---|---|---|
-| Dáta | články, menu DTO, preklady, auth stav | — |
-| HTML | — | chrome, locale switcher, user link, telá stránok |
-| SEO head | canonical, hreflang, OG, JSON-LD | — |
+| Dáta | články, menu DTO, preklady, auth stav |, |
+| HTML |, | chrome, locale switcher, user link, telá stránok |
+| SEO head | canonical, hreflang, OG, JSON-LD |, |
 | CSS/JS wiring | nonce placeholder, `<body class>` z mena modulu | critical CSS zoznam, theme-init skript |
 
 `FrontendLayout` dnes nemá ani jednu vetvu na meno témy. Je to hlavičkový
-konektor — a to je celá jeho práca.
+konektor, a to je celá jeho práca.
 
 ## Pred a po
 
 | | Pred | Po |
 |---|---|---|
-| Pridať verejnú plochu do tém | akcia + layout + téma — až ~10 súborov | kontrakt + 3 moduly, každý jednou metódou |
+| Pridať verejnú plochu do tém | akcia + layout + téma, až ~10 súborov | kontrakt + 3 moduly, každý jednou metódou |
 | Pridať celú tému | priečinok + whitelist + select + 6 akcií | priečinok + 1 riadok v `ThemeKernel::MODULES` |
-| `use Themes\` pod `src/Modules` | šesť akcií + layout | **1** — `ThemeKernel` |
+| `use Themes\` pod `src/Modules` | šesť akcií + layout | **1**: `ThemeKernel` |
 | Vetvy na meno témy vo `FrontendLayout` | 5 | **0** |
 | Ako zistíš porušenie hranice | čítanie | zlyhanie `ThemeOwnershipTest` |
 
 Čísla z repa: kontrakt má 66 riadkov, konektor 36, `src/Themes/` nesie
-57 PHP súborov a celý súbor `FrontendLayout` má 461 riadkov — z toho nula
+57 PHP súborov a celý súbor `FrontendLayout` má 461 riadkov, z toho nula
 porovnaní mien tém.
 
 ## Kedy to neplatí
 
-Buďme úprimní — tri veci tento model nerieši.
+Buďme úprimní, tri veci tento model nerieši.
 
 Téma **nie je modul v zmysle DDD**. Nemá routes, migrácie ani databázu;
 prezentácia nedostáva `ModuleInterface::register()`. Priečinok pod
-`src/Themes/` nie je vertical slice — je to prezenter. Kto tu čakal DDD
+`src/Themes/` nie je vertical slice, je to prezenter. Kto tu čakal DDD
 slices, dostal zámerné „nie".
 
 Kontrakt **má cenu**. Nová verejná plocha znamená metódu vo všetkých troch
-moduloch. To nie je omyl — ak si nedovíš zapísať plochu trikrát, možno
+moduloch. To nie je omyl, ak si nedovíš zapísať plochu trikrát, možno
 nepatrí do spoločného kontraktu, ale do jednej témy.
 
 A dedičný `Themes\ThemeRenderer` **ešte žije**. Renderer facády ponechávajú
 jeho šesť metód ako jednoriadkové delegáty. Zjednotenie s `ThemeModule`
-je naplánované neskôr — teraz by to bola dvojitá zmena v jednom commite.
+je naplánované neskôr, teraz by to bola dvojitá zmena v jednom commite.
 
 ## Vízia ... priečinok, ktorý môžeš vymazať
 
-Čo z toho rastie? Tri smery — všetky grounded v tom, čo už v repu stojí.
+Čo z toho rastie? Tri smery, všetky grounded v tom, čo už v repu stojí.
 
-Téma je **priečinok**. `starter`, `erik`, `moonshine` — každý nesie svoje
+Téma je **priečinok**. `starter`, `erik`, `moonshine`: každý nesie svoje
 `Chrome/`, `Sections/`, `assets/critical/` a žiadnu stopu v jadre. Pridať
 štvrtú tému znamená napísať priečinok a pridať riadok. Ubrať tému znamená
-`rm -r` a riadok. Vôbec nepotrebujeme desať tém — potrebujeme témy,
+`rm -r` a riadok. Vôbec nepotrebujeme desať tém, potrebujeme témy,
 ktoré sa dajú niesť.
 
-Slovná zásobu blokov **drží matica**. Deväť štrukturálnych druhov — nav,
-footer, grid, section, form, widget, hero, card, toc — je zapísaných
+Slovná zásobu blokov **drží matica**. Deväť štrukturálnych druhov, nav,
+footer, grid, section, form, widget, hero, card, toc, je zapísaných
 v `docs/design-blocks.md` a `DesignBlockVocabularyTest` kontroluje, že
 varianty z matice naozaj existujú v kóde. Dokument a runtime sa nemôžu
 rozísť.
 
 A model **rozpráva to isté ako kód**. Lekalo modeluje témové moduly
 a dizajnové tokeny; `ThemesModelParityTest` kontroluje, že varianty v modeli
-sú tie isté ako varianty v resolveri. Dizajn tu nie je len farba — je to
+sú tie isté ako varianty v resolveri. Dizajn tu nie je len farba, je to
 zmluva s WCAG kontrastami, ktorú stráži stroj.
 
 To je vízia: téma ako produkt, ktorý má kontrakt, testy a model. Nie téma
@@ -191,13 +191,13 @@ ako kúzlo vo verzovacom riadku.
 
 ## Čo bude ďalej
 
-V druhom diele pridáme štvrtú tému krok za krokom — priečinok, kontrakt,
+V druhom diele pridáme štvrtú tému krok za krokom, priečinok, kontrakt,
 jeden riadok v konektore a vlastný Vite entry. Uvidíme, čo kontrakt chce
 a čo nie ... a kde sa zastavíme skôr, než vznikne špekulatívna abstrakcia.
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [Vite](https://vite.dev/) — oficiálna dokumentácia build nástroja
-- [PHPUnit](https://phpunit.de/) — dokumentácia testovacieho frameworku
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod kitu
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [Vite](https://vite.dev/): oficiálna dokumentácia build nástroja
+- [PHPUnit](https://phpunit.de/): dokumentácia testovacieho frameworku
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod kitu

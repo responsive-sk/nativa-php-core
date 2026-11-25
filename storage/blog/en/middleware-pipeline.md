@@ -90,19 +90,19 @@ Each middleware receives the request and a `$next` callback. It can process the 
 
 A POST request to `/mark/users/123/edit` passes through all seven layers:
 
-**Layer 1 — SecurityHeaders.** Generates a random nonce (`bin2hex(random_bytes(16))`). Sets CSP, HSTS, nosniff, DENY frame. Passes the request down.
+**Layer 1, SecurityHeaders.** Generates a random nonce (`bin2hex(random_bytes(16))`). Sets CSP, HSTS, nosniff, DENY frame. Passes the request down.
 
-**Layer 2 — Locale.** Sees `/sk/mark/users/123/edit`. Strips the `/sk` prefix. The rest of the pipeline sees `/mark/users/123/edit`.
+**Layer 2, Locale.** Sees `/sk/mark/users/123/edit`. Strips the `/sk` prefix. The rest of the pipeline sees `/mark/users/123/edit`.
 
-**Layer 3 — CSRF.** Checks for a `_token` field or `x-csrf-token` header. Validates with `hash_equals()` against the session token. If missing, returns 403 immediately. The request never reaches auth.
+**Layer 3, CSRF.** Checks for a `_token` field or `x-csrf-token` header. Validates with `hash_equals()` against the session token. If missing, returns 403 immediately. The request never reaches auth.
 
-**Layer 4 — RateLimit.** Checks the IP against `rate_limits` table. Atomic `INSERT ... ON CONFLICT DO UPDATE` — no race conditions. If blocked, returns 429 with a cached page if available.
+**Layer 4, RateLimit.** Checks the IP against `rate_limits` table. Atomic `INSERT ... ON CONFLICT DO UPDATE`: no race conditions. If blocked, returns 429 with a cached page if available.
 
-**Layer 5 — PageCache.** Passive — only writes to cache after the response comes back. Does not read from cache. That job belongs to RateLimitMiddleware.
+**Layer 5, PageCache.** Passive, only writes to cache after the response comes back. Does not read from cache. That job belongs to RateLimitMiddleware.
 
-**Layer 6 — Auth.** Checks session. If not authenticated, tries remember-me cookie. If the session is still not valid, it redirects to `/login`. If authenticated but no `admin` role, returns 403.
+**Layer 6, Auth.** Checks session. If not authenticated, tries remember-me cookie. If the session is still not valid, it redirects to `/login`. If authenticated but no `admin` role, returns 403.
 
-**Layer 7 — Debugbar.** Only active when `APP_DEBUG=true`. Injects a floating toolbar into HTML responses. In production, this is a no-op.
+**Layer 7, Debugbar.** Only active when `APP_DEBUG=true`. Injects a floating toolbar into HTML responses. In production, this is a no-op.
 
 **Dispatch.** The router matches the route. The action class handles the request. The response flows back through all seven layers in reverse order.
 
@@ -110,7 +110,7 @@ A POST request to `/mark/users/123/edit` passes through all seven layers:
 
 Middleware in Nativa Minimal is discovered two ways:
 
-**Auto-discovery.** Classes annotated with `#[AsMiddleware(priority: N)]` are found by `MiddlewareRegistry`. It scans `src/Modules/*/Interfaces/HTTP/Middleware/` for PHP files containing the attribute. Priority controls order — lower numbers run first.
+**Auto-discovery.** Classes annotated with `#[AsMiddleware(priority: N)]` are found by `MiddlewareRegistry`. It scans `src/Modules/*/Interfaces/HTTP/Middleware/` for PHP files containing the attribute. Priority controls order, lower numbers run first.
 
 ```php
 #[AsMiddleware(priority: 0)]
@@ -122,7 +122,7 @@ final class SecurityHeadersMiddleware implements MiddlewareInterface
 
 Auto-discovery only works for middleware with no required constructor parameters. The registry instantiates each class with `new $className()`.
 
-**Manual registration.** Middleware with dependencies — `LocaleMiddleware`, `RateLimitMiddleware`, `AuthMiddleware` — is added via `$kernel->addMiddleware()`. These wrap closer to the dispatch because they are added after auto-discovered middleware.
+**Manual registration.** Middleware with dependencies,`LocaleMiddleware`, `RateLimitMiddleware`, `AuthMiddleware`: is added via `$kernel->addMiddleware()`. These wrap closer to the dispatch because they are added after auto-discovered middleware.
 
 This is a deliberate split. Stateless middleware (headers, CSRF, debug toolbar) is auto-discovered. Stateful middleware (locale, rate limiting, auth) needs explicit wiring.
 
@@ -169,24 +169,24 @@ Each layer protects a different attack surface:
 
 No single layer is sufficient. SecurityHeaders alone does not prevent CSRF. Auth alone does not prevent brute force. The layers are complementary, not redundant.
 
-When a comment is submitted (`POST /blog/{slug}/comments`), it hits CSRF first (token check), then RateLimit (10/minute per IP+slug), then Auth (optional — guests can comment), then the action validates and stores the comment as pending. Five checks before the database write.
+When a comment is submitted (`POST /blog/{slug}/comments`), it hits CSRF first (token check), then RateLimit (10/minute per IP+slug), then Auth (optional, guests can comment), then the action validates and stores the comment as pending. Five checks before the database write.
 
 ---
 
 Middleware is not a framework feature. It is a pattern. The Kernel does not know what SecurityHeadersMiddleware does. It only knows that every middleware implements `handle(Request, callable): Response`. This is the contract. Everything else is composition.
 
-The pipeline remains the simplest pattern in PHP — just not a substitute for reading the code. No magic. No auto-wiring. Just closures nested inside closures, each one doing one thing.
+The pipeline remains the simplest pattern in PHP, just not a substitute for reading the code. No magic. No auto-wiring. Just closures nested inside closures, each one doing one thing.
 
 ---
 
-→ [CSP & htmx interaction](/blog/csp-htmx-interaction) — when nonces meet dynamic content
-→ [Rate-limit cache fallback](/blog/rate-limit-cache-fallback) — what happens when the pipeline blocks you
-→ [Module isolation](/blog/module-isolation) — why middleware lives where it lives
+→ [CSP & htmx interaction](/blog/csp-htmx-interaction): when nonces meet dynamic content
+→ [Rate-limit cache fallback](/blog/rate-limit-cache-fallback): what happens when the pipeline blocks you
+→ [Module isolation](/blog/module-isolation): why middleware lives where it lives
 
 ## Sources
 
-- [PHP Manual](https://www.php.net/manual/) — official PHP documentation
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP standards
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — security best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — official getting started guide
-- [W3C — Web Standards](https://www.w3.org/standards/) — web standards
+- [PHP Manual](https://www.php.net/manual/): official PHP documentation
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP standards
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): security best practices
+- [Nativa Minimal Documentation](/docs/getting-started): official getting started guide
+- [W3C, Web Standards](https://www.w3.org/standards/): web standards

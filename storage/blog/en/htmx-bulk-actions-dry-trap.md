@@ -3,7 +3,7 @@ title: "The Bulk Delete That Rendered Twice"
 date: "2026-08-30"
 version: "1.0.0"
 tags: ["htmx", "dry", "bulk-actions", "refactoring", "clean-code"]
-excerpt: "We built bulk delete for four admin tables. Then we duplicated every table renderer. The fix was one shared class per entity — but getting there taught us something about HTMX and code ownership."
+excerpt: "We built bulk delete for four admin tables. Then we duplicated every table renderer. The fix was one shared class per entity, but getting there taught us something about HTMX and code ownership."
 author: "Evan McDan"
 author_email: "evan.mcdan@example.test"
 category: "Clean Code"
@@ -13,7 +13,7 @@ published: true
 
 Select all. Delete selected. Watch the table update without a page reload.
 
-That was the promise. And it worked — on the first table. Then we copied the rendering code to the second table. And the third. And the fourth. By the time we had four identical table renderers, we had a DRY violation that would bite us the moment someone changed a column header.
+That was the promise. And it worked, on the first table. Then we copied the rendering code to the second table. And the third. And the fourth. By the time we had four identical table renderers, we had a DRY violation that would bite us the moment someone changed a column header.
 
 ## The Setup
 
@@ -52,7 +52,7 @@ Then we added it to four tables.
 
 ## The Cascade
 
-UsersAction got bulk checkboxes. So did RolesAction. And PagesIndexAction. And ArticlesIndexAction. Each action built its own table — thead, tbody, rows, bulk bar. Each action had its own `renderRow()` method with slightly different columns.
+UsersAction got bulk checkboxes. So did RolesAction. And PagesIndexAction. And ArticlesIndexAction. Each action built its own table, thead, tbody, rows, bulk bar. Each action had its own `renderRow()` method with slightly different columns.
 
 When BulkDeleteAction needed to re-render the table after deletion, it had two choices: call the original action's render method, or duplicate the rendering code. We chose duplication. Faster to ship. No cross-module imports. No refactoring risk.
 
@@ -68,7 +68,7 @@ They wouldn't. Nobody does.
 
 ## The Fix
 
-The solution was one shared renderer per entity. Not a shared interface — a concrete class in each module that owns the table.
+The solution was one shared renderer per entity. Not a shared interface, a concrete class in each module that owns the table.
 
 ```
 UsersTableRenderer   →  Users module  (used by UsersAction + BulkDeleteAction)
@@ -95,7 +95,7 @@ BulkDeleteAction went from 290 lines to 154. The table rendering code went from 
 
 ## What HTMX Expects
 
-HTMX with `outerHTML` swap replaces the target element with the matching element from the response. If the response contains elements outside the target, they are discarded — but only if the server returns them.
+HTMX with `outerHTML` swap replaces the target element with the matching element from the response. If the response contains elements outside the target, they are discarded, but only if the server returns them.
 
 The bulk form targets `#users-content`. The bulk bar lives outside that target. After the form submits, HTMX swaps only `#users-content` with the new table. The bulk bar stays in the DOM with stale state.
 
@@ -131,7 +131,7 @@ $uow->transaction(function (PDO $pdo) use ($entity, $ids, &$deleted): void {
 
 All deletes succeed, or all roll back. No partial state.
 
-For filesystem entities (pages, articles), there is no database transaction. A failed delete mid-loop leaves some files deleted and others intact. This is an inherent limitation of filesystem operations — you cannot roll back a `unlink()`.
+For filesystem entities (pages, articles), there is no database transaction. A failed delete mid-loop leaves some files deleted and others intact. This is an inherent limitation of filesystem operations, you cannot roll back a `unlink()`.
 
 The decision was explicit: DB entities get atomicity. Filesystem entities get best-effort. The code documents which is which.
 
@@ -143,18 +143,18 @@ Shared renderers solve this, but they require thinking about ownership. The rend
 
 The factory pattern matters too. `new BlogCrudService()` scattered across action files creates invisible coupling. `CardboardServices::blogCrud()` makes the dependency explicit and cacheable.
 
-HTMX makes bulk actions feel effortless on the frontend. The complexity lives in the server response — returning exactly the right HTML, handling the transaction, and keeping the rendering code in one place.
+HTMX makes bulk actions feel effortless on the frontend. The complexity lives in the server response, returning exactly the right HTML, handling the transaction, and keeping the rendering code in one place.
 
 A table renderer is not a framework. It is a function that returns a string. But when that string is the single source of truth for how a table looks, it earns its place.
 
-→ [Click Page 3 ... and the Pager Doubled](/blog/htmx-pager-duplication) — the first HTMX pagination bug
-→ [MoonShine Features + HTMX](/blog/moonshine-htmx-features) — toast notifications, live search, form submit
-→ [DRY vs Abstraction](/blog/dry-vs-abstraction) — one source of truth, no interfaces for the sake of it
+→ [Click Page 3 ... and the Pager Doubled](/blog/htmx-pager-duplication): the first HTMX pagination bug
+→ [MoonShine Features + HTMX](/blog/moonshine-htmx-features): toast notifications, live search, form submit
+→ [DRY vs Abstraction](/blog/dry-vs-abstraction): one source of truth, no interfaces for the sake of it
 
 ## Sources
 
-- [PHP Manual](https://www.php.net/manual/) — official PHP documentation
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP standards
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — security best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — official getting started guide
-- [W3C — Web Standards](https://www.w3.org/standards/) — web standards
+- [PHP Manual](https://www.php.net/manual/): official PHP documentation
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP standards
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): security best practices
+- [Nativa Minimal Documentation](/docs/getting-started): official getting started guide
+- [W3C, Web Standards](https://www.w3.org/standards/): web standards

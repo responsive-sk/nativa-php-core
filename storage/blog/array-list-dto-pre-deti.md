@@ -228,7 +228,7 @@ Týmto sme prešli od „premenná nemá typ“ ([diel 1](/blog/php-typy-pre-det
 
 ## Zdroje
 
-- [PHP Manual — Arrays](https://www.php.net/manual/en/language.types.array.php) — `array` typ a sémantika kľúčov
-- [PHPStan — Writing PHPDoc Types](https://phpstan.org/writing-phpdoc-types) — `list<T>` a shape arrays v PHPDoc
-- [PHP Manual — Enums](https://www.php.net/manual/en/language.enumerations.php) — príprava na diel 5
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
+- [PHP Manual, Arrays](https://www.php.net/manual/en/language.types.array.php): `array` typ a sémantika kľúčov
+- [PHPStan, Writing PHPDoc Types](https://phpstan.org/writing-phpdoc-types): `list<T>` a shape arrays v PHPDoc
+- [PHP Manual, Enums](https://www.php.net/manual/en/language.enumerations.php): príprava na diel 5
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod

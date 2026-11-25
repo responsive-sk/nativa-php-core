@@ -3,7 +3,7 @@ title: "Merať to, čo čitateľ vidí ... tri chyby, ktoré nevidela žiadna br
 date: "2026-10-05"
 version: "1.0.0"
 tags: ["css", "testing", "themes", "accessibility"]
-excerpt: "Obsahový pás, linka cez text a komentáre o 176px vpravo — tri chyby na jednej stránke jednotka, ktoré prešli všetkými testami. O tom, prečo obdĺžnik DOM nesvedčí o tom, či je vec vidieť, a prečo zelený beh dokaz môže klamnúť."
+excerpt: "Obsahový pás, linka cez text a komentáre o 176px vpravo, tri chyby na jednej stránke jednotka, ktoré prešli všetkými testami. O tom, prečo obdĺžnik DOM nesvedčí o tom, či je vec vidieť, a prečo zelený beh dokaz môže klamnúť."
 author: "Nativa Dev"
 author_email: "nativa.dev@example.test"
 category: "Architecture"
@@ -105,7 +105,7 @@ A ono neplatilo.
 
 Zavretý `<details>` v Chrome **nezbalí geometriu svojich detí**. Obsah sa
 preskočí pri kreslení, nie pri meraní, takže odkaz si stojne drží obdĺžnik
-25px vysoký, čitateľný, s nenulovou šírkou — a na obrazovke nie je. Meranie
+25px vysoký, čitateľný, s nenulovou šírkou, a na obrazovke nie je. Meranie
 obdĺžnikom teda neodpovedá na otázku „je to vidieť?", a to isté meranie
 neodpovedá ani na opačnú stránku.
 
@@ -115,7 +115,7 @@ Rozdiel vidno na jednej stránke:
 |---|---|---|
 | Je to na obrazovke? | `Element.checkVisibility()` | `false` pre zavretý pás |
 | Kde to leží? | `getBoundingClientRect()` | obdĺžnik, ktorý je úplne pravdivý a úplne zavádzajúci |
-| Ušetrilo to miesto? | poloha prvého nadpisu pred a po | 382,6px — flow sa naozaj zavrie |
+| Ušetrilo to miesto? | poloha prvého nadpisu pred a po | 382,6px, flow sa naozaj zavrie |
 
 Tretí riadok je dôležitý. Pás sa zavrie, ale keby si nechal v ňom 380px prázdnej
 papiera, atribútové tvrdenie by zostalo zelené ... a čitateľ by dostal horšiu
@@ -189,8 +189,8 @@ posielame otvorený a zlepšujeme ho až skriptom.
 
 ## Zdroje
 
-- [MDN — `<details>` a `::details-content`](https://developer.mozilla.org/docs/Web/HTML/Reference/Elements/details) — prečo CSS slot zatvoreného disclosure neotvorí
-- [MDN — `Element.checkVisibility()`](https://developer.mozilla.org/docs/Web/API/Element/checkVisibility) — meranie maľovania namiesto geometrie
-- [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) — ako `bin/*-check.mjs` hovoria s prehliadačom
-- [PHP Manual — OPcache](https://www.php.net/manual/en/book.opcache.php) — `opcache.revalidate_freq` a prečo bežíš proti starej verzii kódu
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
+- [MDN,`<details>` a `::details-content`](https://developer.mozilla.org/docs/Web/HTML/Reference/Elements/details): prečo CSS slot zatvoreného disclosure neotvorí
+- [MDN,`Element.checkVisibility()`](https://developer.mozilla.org/docs/Web/API/Element/checkVisibility): meranie maľovania namiesto geometrie
+- [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/): ako `bin/*-check.mjs` hovoria s prehliadačom
+- [PHP Manual, OPcache](https://www.php.net/manual/en/book.opcache.php): `opcache.revalidate_freq` a prečo bežíš proti starej verzii kódu
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod

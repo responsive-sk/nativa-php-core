@@ -188,13 +188,13 @@ komentárov denne je to správna výmena. Pre portál s miliónmi ... nie.
 5. **PRG + starý vstup** ... žiadne duplicitné odoslania, žiadne straty
    textu pri chybe.
 
-→ [Zámok members-only](/blog/bonus-members-only-pre-deti) — jeden flag vo front matter
-→ [Immutable audit log](/blog/bonus-audit-log-pre-deti) — každé admin rozhodnutie sa zapisuje
-→ [Fulltext search cez FTS5](/blog/bonus-fts-search-pre-deti) — index v pamäti, žiadna infraštruktúra
+→ [Zámok members-only](/blog/bonus-members-only-pre-deti): jeden flag vo front matter
+→ [Immutable audit log](/blog/bonus-audit-log-pre-deti): každé admin rozhodnutie sa zapisuje
+→ [Fulltext search cez FTS5](/blog/bonus-fts-search-pre-deti): index v pamäti, žiadna infraštruktúra
 
 ## Zdroje
 
-- [OWASP — Automated Threats to Web Applications](https://owasp.org/www-project-automated-threats-to-web-applications/) ... hrozby, ktorým rate limit stojí v ceste
-- [MDN — Post/Redirect/Get](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location) ... vzor, na ktorom stojí odoslanie formulára
+- [OWASP, Automated Threats to Web Applications](https://owasp.org/www-project-automated-threats-to-web-applications/) ... hrozby, ktorým rate limit stojí v ceste
+- [MDN, Post/Redirect/Get](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location) ... vzor, na ktorom stojí odoslanie formulára
 - [PHP Manual](https://www.php.net/manual/) ... oficiálna PHP dokumentácia
 - [Nativa Minimal Documentation](/docs/getting-started) ... oficiálny návod tohto kitu

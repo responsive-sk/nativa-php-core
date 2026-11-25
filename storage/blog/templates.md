@@ -92,14 +92,14 @@ rsync dist/   # 2. nasadenie hotového produktu
 
 Suroviny sa menia v kuchyni, na server ide hotové jedlo.
 
-→ [Theme Architecture](/blog/theme-architecture) — auto-discovery, registry a interface
-→ [Build Your Theme](/blog/build-your-theme) — návod krok za krokom
-→ [Clean code pre deti](/blog/co-je-cisty-kod-pre-deti) — ako písať kód, ktorý sa číta sám
+→ [Theme Architecture](/blog/theme-architecture): auto-discovery, registry a interface
+→ [Build Your Theme](/blog/build-your-theme): návod krok za krokom
+→ [Clean code pre deti](/blog/co-je-cisty-kod-pre-deti): ako písať kód, ktorý sa číta sám
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

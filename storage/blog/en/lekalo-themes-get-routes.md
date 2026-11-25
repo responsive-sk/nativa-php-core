@@ -5,7 +5,7 @@ series-part: "9.2"
 date: "2026-09-14"
 version: "1.0.0"
 tags: ["rust", "lekalo", "semantic-model", "themes", "architecture"]
-excerpt: "The model grows to 135 definitions: themes receive endpoint bindings and scenarios. Two representative bindings instead of six surfaces, a route-parity test extending the \"gate cannot read PHP, the test can\" pattern — and a grammar that does not know the root path."
+excerpt: "The model grows to 135 definitions: themes receive endpoint bindings and scenarios. Two representative bindings instead of six surfaces, a route-parity test extending the \"gate cannot read PHP, the test can\" pattern, and a grammar that does not know the root path."
 author: "Nativa Dev"
 author_email: "nativa.dev@example.test"
 category: "Architecture"
@@ -14,7 +14,7 @@ published: true
 ---
 
 In [part 9.1](/blog/lekalo-themes-enter-the-model) themes became the model's
-fourth module — enum, entity, query, command. Today they receive the other
+fourth module, enum, entity, query, command. Today they receive the other
 half of the deal: **bindings and scenarios**. The model grows from 130 to
 **135 definitions**.
 
@@ -33,29 +33,29 @@ half of the deal: **bindings and scenarios**. The model grows from 130 to
 Themes are now the first module after blog with the full vocabulary:
 endpoints, a target-binding and scenarios.
 
-## Two bindings instead of six — and why
+## Two bindings instead of six: and why
 
 A theme is a *dimension* of existing endpoints: `/blog`, `/blog/{slug}`,
-`/authors/{slug}`, tags, categories, the homepage — everything renders
+`/authors/{slug}`, tags, categories, the homepage, everything renders
 through the active theme. Binding all six would mean every future route
-change becomes a mandatory model edit — for zero added contract value.
+change becomes a mandatory model edit, for zero added contract value.
 
 Hence the **representative pair**: `GET /blog` (the read path that goes
-through the resolver) and `POST /mark/settings/site` (the write path —
+through the resolver) and `POST /mark/settings/site` (the write path,
 `SettingsAction::saveSite` persists the validated `theme` key). Those two
 carry the whole fact: "a theme is a dimension, not a new route."
 
 ## Route parity: the pattern grows again
 
-Part 9.1's pattern was: *the gate cannot read PHP, the test can* — applied
+Part 9.1's pattern was: *the gate cannot read PHP, the test can*, applied
 to the enum. Today the same pattern applies to **routes**:
 
 `tests/Integration/ThemesBindingParityTest.php` (4 tests, 46 assertions):
 
-- it parses `bindings.yaml` (`json_decode` — canonical JSON, zero
+- it parses `bindings.yaml` (`json_decode`: canonical JSON, zero
   dependencies),
 - for every `kind: endpoint` it finds the runtime `#[Route]` declarations
-  (regex over the action classes — the same discovery technique
+  (regex over the action classes, the same discovery technique
   `Themes\ThemeRegistry` uses),
 - it asserts **method+path equality** for every binding.
 
@@ -67,7 +67,7 @@ must invoke `themes.set_site_theme`.
 ## Grammar: the root path does not exist
 
 An honest find from the implementation: the Model 1.0.0 endpoint-path
-grammar is `^(/[a-z0-9:_{}-]+)+$` — segments must be **non-empty**. The
+grammar is `^(/[a-z0-9:_{}-]+)+$`: segments must be **non-empty**. The
 root path `/` (the homepage, equally theme-aware) cannot be expressed.
 The validator said it precisely:
 
@@ -77,7 +77,7 @@ lekalo/modules/themes/bindings.yaml:11:15:
 A value violates its grammar or rule.
 ```
 
-The first thing I wrote was `path: "/"` — and the CLI refused it. The
+The first thing I wrote was `path: "/"`: and the CLI refused it. The
 fix: the homepage is represented by the `GET /blog` binding (valid
 grammar, same fact), and the grammar limit is documented in
 `docs/lekalo-model.md` for the day upstream widens it.
@@ -86,9 +86,9 @@ grammar, same fact), and the grammar limit is documented in
 
 Adding bindings changed the IR → `LEK-AUTH-010` again. The part 9.1 recipe
 works exactly as documented: first verify against the known-good pin on
-HEAD (`e9df0e…` — an exact match), then apply the fresh `23bdb373…`.
+HEAD (`e9df0e…`: an exact match), then apply the fresh `23bdb373…`.
 A twice-verified recipe is no longer luck; it is a procedure. And
-`lekalo.lock` stood still again — it freezes resolution identities, not
+`lekalo.lock` stood still again, it freezes resolution identities, not
 content.
 
 ## Live output
@@ -100,13 +100,13 @@ lock checked sha256:bc4dbad9… resolver 1.0.0
 composer test: OK (919 tests, 3048 assertions)
 ```
 
-135 definitions (17 endpoint, 8 scenario, 3 target-binding — of which
+135 definitions (17 endpoint, 8 scenario, 3 target-binding, of which
 themes: 11 definitions, 2 endpoints, 2 scenarios, 1 target-binding)
 across four modules.
 
 ## Wake up
 
-- A representative subset is legitimate modeling — binding everything is
+- A representative subset is legitimate modeling, binding everything is
   blind obedience, not a contract.
 - The parity pattern grows with the model: enum → routes. Every place
   where the model and the runtime meet by hand gets a test.
@@ -118,8 +118,8 @@ variants), the model will be waiting.
 
 ## Sources
 
-- [Lekalo](https://github.com/ichinya/lekalo) — the project repository (product 0.1.31, endpoint grammar in `ir/grammar.rs`)
-- [docs/lekalo-model.md](https://github.com/evan70/nativa-minimal/blob/master/docs/lekalo-model.md) — model documentation including the bindings section and the grammar limit
-- `lekalo/modules/themes/bindings.yaml` + `scenarios.yaml` — 2 endpoints, a target-binding, 2 scenarios
-- `tests/Integration/ThemesBindingParityTest.php` — the route-parity guard (4 tests, 46 assertions)
-- [Part 9.1 — themes enter the model](/blog/lekalo-themes-enter-the-model) — enum, entity, query, command and the digest lesson
+- [Lekalo](https://github.com/ichinya/lekalo): the project repository (product 0.1.31, endpoint grammar in `ir/grammar.rs`)
+- [docs/lekalo-model.md](https://github.com/evan70/nativa-minimal/blob/master/docs/lekalo-model.md): model documentation including the bindings section and the grammar limit
+- `lekalo/modules/themes/bindings.yaml` + `scenarios.yaml`: 2 endpoints, a target-binding, 2 scenarios
+- `tests/Integration/ThemesBindingParityTest.php`: the route-parity guard (4 tests, 46 assertions)
+- [Part 9.1, themes enter the model](/blog/lekalo-themes-enter-the-model): enum, entity, query, command and the digest lesson

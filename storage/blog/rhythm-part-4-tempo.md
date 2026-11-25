@@ -29,7 +29,7 @@ Rovnaká informácia. Verzia A má 42 slov. Verzia B má 22 slov. Verzia B je t�
 
 ## Prečo záleží na dĺžke vety
 
-Dĺžka vety nie je štýlová voľba — je to nástroj rytmu. Krátke vety vytvárajú napätie. Dlhé ho uvoľňujú. Striedanie medzi nimi vytvára pulz, ktorý udrží čitateľa.
+Dĺžka vety nie je štýlová voľba, je to nástroj rytmu. Krátke vety vytvárajú napätie. Dlhé ho uvoľňujú. Striedanie medzi nimi vytvára pulz, ktorý udrží čitateľa.
 
 Steinbeck to vedel. Jeho vety sa striedajú medzi údernými a plynúcimi:
 
@@ -46,7 +46,7 @@ Vetrol bol studený.
 
 Každá fáza má svoje tempo:
 
-### INTRO — úderné (5-15 slov)
+### INTRO: úderné (5-15 slov)
 ```markdown
 Kliknite stránku 3. Pager sa zdvojnásobil.
 Kliknite znova. Ztrojnásobil.
@@ -54,7 +54,7 @@ Kliknite znova. Ztrojnásobil.
 
 Tri vety. Každá je úder. Čitateľ je chytený skôr, než stihne odísť.
 
-### HMLA — staccato (8-15 slov)
+### HMLA: staccato (8-15 slov)
 ```markdown
 Mali sme hotový, otestovaný, bezpečný systém.
 Všetko fungovalo na vývoji, v Dockeri, na VPS.
@@ -64,7 +64,7 @@ Prvý prihlasovací pokus: server spadol.
 
 Krátke vety budujú tlak. Každá pridá problém. Čitateľ cíti, ako sa hmla zahusťuje.
 
-### SLNKO — plynutie (15-25 slov)
+### SLNKO: plynutie (15-25 slov)
 ```markdown
 Server vracia celý HTML blob: search input,
 count info, tabuľka, paginácia — v jednom reťazci.
@@ -73,7 +73,7 @@ HTMX nájde target element a nahradí ho.
 
 Dlhšie vety teraz. Napätie sa uvoľňuje. Čitateľ chápe riešenie.
 
-### NOC — reflektívne (12-20 slov)
+### NOC: reflektívne (12-20 slov)
 ```markdown
 Cache nie je ani automatická odpoveď, ani nepriateľ.
 Je to nástroj — a každý nástroj má svoje miesto.
@@ -81,7 +81,7 @@ Je to nástroj — a každý nástroj má svoje miesto.
 
 Stredné vety. Tiché. Čitateľ premýšľa, neučí sa.
 
-### TÉMA — jedna veta (10-20 slov)
+### TÉMA: jedna veta (10-20 slov)
 ```markdown
 Magia frameworku je taká dobrá,
 aké dobré HTML mu naservírujete.
@@ -125,21 +125,21 @@ Krátke, krátke, dlhé, stredné, krátke, jedna, hotovo. To je pulz.
 
 ---
 
-Tempo zostáva nástrojom, nie pravidlom. Niektoré články potrebujú dlhšie fázy HMLA. Niektoré kratšie SLNKO. Ciele sú usmernenia — rytmus je cieľ.
+Tempo zostáva nástrojom, nie pravidlom. Niektoré články potrebujú dlhšie fázy HMLA. Niektoré kratšie SLNKO. Ciele sú usmernenia, rytmus je cieľ.
 
 ---
 
-Každé slovo musí pracovať. Ak slovo nepridáva význam, vyhoďte ho. Ak veta nepridáva rytmus, rozdeľte ju. Tempo nie je dekorácia — je to štruktúra.
+Každé slovo musí pracovať. Ak slovo nepridáva význam, vyhoďte ho. Ak veta nepridáva rytmus, rozdeľte ju. Tempo nie je dekorácia, je to štruktúra.
 
 ---
 
-→ [Part 5 — Two Tones](/blog/rhythm-part-5-bilingual) — písanie v EN a SK bez straty duše
-→ [Part 3 — Night, Object, Theme](/blog/rhythm-part-3-night-object-theme) — časti, ktoré robia články zapamätateľnými
+→ [Part 5, Two Tones](/blog/rhythm-part-5-bilingual): písanie v EN a SK bez straty duše
+→ [Part 3, Night, Object, Theme](/blog/rhythm-part-3-night-object-theme): časti, ktoré robia články zapamätateľnými
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

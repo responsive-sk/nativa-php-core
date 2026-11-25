@@ -186,11 +186,11 @@ Just like ACID is insurance for data, Outbox is insurance for things that should
 
 And when you combine it with a plugin architecture (Cordis/DeepSeek Harness), every side effect becomes a plugin ... replaceable, testable, monitorable.
 
-→ [ACID for beginners](/en/blog/acid-for-beginners) — why transactions aren't boring
-→ [Cache wrappers ... good servant, bad master](/en/blog/cache-wrappers-good-servant-bad-master) — when cache helps and when it hurts
-→ [The fridge as a P2P server](/en/blog/the-fridge-as-a-p2p-server) — how Outbox works in a decentralized network
+→ [ACID for beginners](/en/blog/acid-for-beginners): why transactions aren't boring
+→ [Cache wrappers ... good servant, bad master](/en/blog/cache-wrappers-good-servant-bad-master): when cache helps and when it hurts
+→ [The fridge as a P2P server](/en/blog/the-fridge-as-a-p2p-server): how Outbox works in a decentralized network
 
 ## Sources
 
-- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) — agent framework with plugin architecture
-- [Cordis](https://github.com/deepseek-ai/deepseek-harness/tree/master/vendor/cordis) — TypeScript plugin framework (Outbox as plugin)
+- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): agent framework with plugin architecture
+- [Cordis](https://github.com/deepseek-ai/deepseek-harness/tree/master/vendor/cordis): TypeScript plugin framework (Outbox as plugin)

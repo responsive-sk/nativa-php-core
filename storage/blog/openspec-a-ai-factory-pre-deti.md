@@ -159,14 +159,14 @@ s každým change posúva o krok ďalej. Ďakujeme, že si to dočítal až sem.
 v praxi ... otvor si `openspec/changes/archive/` a prečítaj si pár zmien.
 Každá je príbeh.
 
-→ [OpenSpec pre deti ... diel 1](/blog/co-je-openspec-pre-deti) — čo je OpenSpec
-→ [Anatómia change](/blog/anatomia-change-pre-deti) — päť súborov, päť otázok
-→ [Flow a ADR](/blog/flow-a-adr-starter-kitu) — mindset za starter kitom
+→ [OpenSpec pre deti ... diel 1](/blog/co-je-openspec-pre-deti): čo je OpenSpec
+→ [Anatómia change](/blog/anatomia-change-pre-deti): päť súborov, päť otázok
+→ [Flow a ADR](/blog/flow-a-adr-starter-kitu): mindset za starter kitom
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [Web.dev — Performance](https://web.dev/performance) — Core Web Vitals
-- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/) — Lighthouse nástroj
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [Web.dev, Performance](https://web.dev/performance): Core Web Vitals
+- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/): Lighthouse nástroj

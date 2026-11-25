@@ -126,14 +126,14 @@ Clean code isn't about making code look pretty. It's about **surviving your abse
 
 Clean code is respect for the person who hasn't arrived yet. For the old colleague reading for the first time. For the child who's learning. For the device that doesn't have room for mistakes.
 
-→ [Names are documentation](/en/blog/names-are-documentation) — how to spot a bad name before it starts giving you a headache
-→ [One thing (SRP)](/en/blog/one-thing-srp) — a method and a class do only one thing
-→ [DRY vs abstraction](/en/blog/dry-vs-abstraction) — one source of truth, no interfaces for the sake of it
+→ [Names are documentation](/en/blog/names-are-documentation): how to spot a bad name before it starts giving you a headache
+→ [One thing (SRP)](/en/blog/one-thing-srp): a method and a class do only one thing
+→ [DRY vs abstraction](/en/blog/dry-vs-abstraction): one source of truth, no interfaces for the sake of it
 
 ## Sources
 
-- [W3C — ACID Properties](https://www.w3.org/TR/xml-core/#sec-conformance) — ACID definition
-- [PHP Manual](https://www.php.net/manual/) — official PHP documentation
-- [SQLite Documentation](https://www.sqlite.org/docs.html) — SQLite reference manual
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — security best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — official getting started guide
+- [W3C, ACID Properties](https://www.w3.org/TR/xml-core/#sec-conformance): ACID definition
+- [PHP Manual](https://www.php.net/manual/): official PHP documentation
+- [SQLite Documentation](https://www.sqlite.org/docs.html): SQLite reference manual
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): security best practices
+- [Nativa Minimal Documentation](/docs/getting-started): official getting started guide

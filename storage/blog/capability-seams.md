@@ -11,13 +11,13 @@ translation: "capability-seams"
 published: true
 ---
 
-Keď agent beží v DSH a potrebuje čítať súbory, nepýta sa „aký filesystem mám?“. Pýta sa „daj mi obsah súboru“. A DSH sa postará o to, aby ten obsah prišiel — z lokálneho disku, zo S3, z E2B sandboxu, alebo z mocku v teste.
+Keď agent beží v DSH a potrebuje čítať súbory, nepýta sa „aký filesystem mám?“. Pýta sa „daj mi obsah súboru“. A DSH sa postará o to, aby ten obsah prišiel, z lokálneho disku, zo S3, z E2B sandboxu, alebo z mocku v teste.
 
 Toto je capability seam: **kontrakt, implementácia a spotrebiteľ sú oddelené.**
 
 ## Prečo je to problém
 
-Tradične je filesystem priamo napojený na disk. Zmeníš prostredie — musíš meniť kód. Testuješ — potrebuješ reálny disk. Nasadzuješ — dúfaš, že sa nič nezmenilo. Jeden concrete implementation viazaný na jedno prostredie.
+Tradične je filesystem priamo napojený na disk. Zmeníš prostredie, musíš meniť kód. Testuješ, potrebuješ reálny disk. Nasadzuješ, dúfaš, že sa nič nezmenilo. Jeden concrete implementation viazaný na jedno prostredie.
 
 ## Tri roly každej brány
 
@@ -30,7 +30,7 @@ DSH:       [App] → [FS Seam] → [Local FS]  ← vymeniteľné
 
 ### 1. Service Definition (kontrakt)
 
-Definuje API — čo sa dá robiť, nie ako sa to robí.
+Definuje API, čo sa dá robiť, nie ako sa to robí.
 
 ```typescript
 interface FileSystem {
@@ -109,16 +109,16 @@ Agent nevie, či beží lokálne alebo v cloude. A ani nemusí.
 | Životný cyklus | Container manages | Fiber manages |
 | Scoping | Request scope | Plugin scope |
 
-DI vám povie „aká trieda sa použije“. Capability seams vám povedia „aká schopnosť je dostupná“ — a nechávajú na vás, ako ju implementujete.
+DI vám povie „aká trieda sa použije“. Capability seams vám povedia „aká schopnosť je dostupná“, a nechávajú na vás, ako ju implementujete.
 
-→ [DeepSeek Harness ... 50 balíkov](/blog/deepseek-harness-architektura) — architektonický prehľad
-→ [Cordis ... hlboký ponor](/blog/cordis-hlboky-ponor) — plugin framework
-→ [Chladnička ako P2P server](/blog/chladnicka-ako-p2p-server) — hardvér pre P2P uzly
+→ [DeepSeek Harness ... 50 balíkov](/blog/deepseek-harness-architektura): architektonický prehľad
+→ [Cordis ... hlboký ponor](/blog/cordis-hlboky-ponor): plugin framework
+→ [Chladnička ako P2P server](/blog/chladnicka-ako-p2p-server): hardvér pre P2P uzly
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

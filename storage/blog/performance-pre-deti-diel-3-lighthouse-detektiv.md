@@ -118,14 +118,14 @@ o úsporách ... testy nie.
 5. **Ver, ale over** ... oprava musí dávať zmysel aj bez auditu. A keď dáva, podpíš ju testom. V ďalšom dieli si ukážeme, ako vyzerá LCP na stránkach bez obrázkov ...
 a čo sa stane, keď LCP element je text.
 
-→ [Performance diel 1](/blog/performance-pre-deti) — LCP, srcset a prečo sa obrázky nesťahujú zbytočne veľké
-→ [Performance diel 2](/blog/performance-pre-deti-diel-2-cover-lcp) — LCP na článkovej stránke
-→ [Performance diel 4](/blog/performance-pre-deti-diel-4-textovy-lcp) — keď LCP nie je obrázok
+→ [Performance diel 1](/blog/performance-pre-deti): LCP, srcset a prečo sa obrázky nesťahujú zbytočne veľké
+→ [Performance diel 2](/blog/performance-pre-deti-diel-2-cover-lcp): LCP na článkovej stránke
+→ [Performance diel 4](/blog/performance-pre-deti-diel-4-textovy-lcp): keď LCP nie je obrázok
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [Web.dev — Performance](https://web.dev/performance) — Core Web Vitals
-- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/) — Lighthouse nástroj
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [Web.dev, Performance](https://web.dev/performance): Core Web Vitals
+- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/): Lighthouse nástroj

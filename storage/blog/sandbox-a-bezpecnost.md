@@ -25,7 +25,7 @@ DSH rieši toto cez **capability seam** ... kontrakt (`sandbox/seam`) a implemen
 
 ## Tri backends
 
-### 1. Bubblewrap (bwrap) — Linux
+### 1. Bubblewrap (bwrap): Linux
 
 Najprv skúsi `bwrap` ... filesystem isolation:
 
@@ -45,7 +45,7 @@ bwrap \
 - **Private-PID /proc** ... agent nevidí procesy hosta (žiadne magic links ako `root` alebo `fd`)
 - **Workspace-write** ... len workspace a `/tmp` sú zapisovateľné
 
-### 2. Landlock — Linux kernel
+### 2. Landlock: Linux kernel
 
 Ak `bwrap` nie je k dispozícii, Landlock je kernel-level sandboxing:
 
@@ -60,7 +60,7 @@ Ak `bwrap` nie je k dispozícii, Landlock je kernel-level sandboxing:
 - Od Linux 5.13
 - Môže byť **partial** na starších kerneloch (obmedzuje len expose access classes)
 
-### 3. Seatbelt — macOS
+### 3. Seatbelt: macOS
 
 Na macOS sa používa Apple's Seatbelt (sandbox-exec):
 
@@ -190,6 +190,6 @@ sandbox:
 - [Sandbox decision](https://github.com/deepseek-ai/deepseek-harness/blob/master/.agents/notes/implemented/feature/2026-07-06-sandbox.md) ... architektonický dokument
 - [Cross-family fs sandbox](https://github.com/deepseek-ai/deepseek-harness/blob/master/.agents/notes/implemented/feature/2026-07-14-cross-family-fs-sandbox.md) ... filesystem integration
 
-→ [Capability seams](/blog/capability-seams) — Service Definition / Provider / Consumer
-→ [DeepSeek Harness ... 50 balíkov](/blog/deepseek-harness-architektura) — architektonický prehľad
-→ [DSH a P2P](/blog/dsh-a-p2p) — distribuovaní agenti v sieti
+→ [Capability seams](/blog/capability-seams): Service Definition / Provider / Consumer
+→ [DeepSeek Harness ... 50 balíkov](/blog/deepseek-harness-architektura): architektonický prehľad
+→ [DSH a P2P](/blog/dsh-a-p2p): distribuovaní agenti v sieti

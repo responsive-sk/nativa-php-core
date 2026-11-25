@@ -12,7 +12,7 @@ translation: "moonshine-htmx-features"
 published: true
 ---
 
-V predchádzajúcom článku sme písali, ako MoonShine UI inšpiroval Cardboard — immutable karty, SVG grafy, design tokeny. Ale to bol len začiatok.
+V predchádzajúcom článku sme písali, ako MoonShine UI inšpiroval Cardboard, immutable karty, SVG grafy, design tokeny. Ale to bol len začiatok.
 
 MoonShine má desiatky komponentov, ktoré robia admin panel príjemným. Toast notifikácie, progress bar, tooltips, breadcrumbs. A HTMX pridáva live search, pagination a form submit bez reloadov.
 
@@ -24,7 +24,7 @@ Odpoveď: takmer všetko.
 
 MoonShine UI je Laravel balík. Má Blade komponenty, Alpine.js interakcie, Livewire state. My nemáme ani jedno.
 
-Ale jazyk — CSS triedy, naming konvencie, layout patterny — ten funguje aj bez Laravel.
+Ale jazyk, CSS triedy, naming konvencie, layout patterny, ten funguje aj bez Laravel.
 
 ### 1. Toast notifikácie
 
@@ -121,7 +121,7 @@ MoonShine používa Alpine.js pre tooltips. My sme urobili CSS-only:
 [data-tooltip]:hover::after { opacity: 1; }
 ```
 
-Použitie — žiadne JavaScript API:
+Použitie, žiadne JavaScript API:
 
 ```html
 <button data-tooltip="Edit page">Upraviť</button>
@@ -175,11 +175,11 @@ MoonShine má badge systém. My sme pridali badges na Articles index:
 [Members] [admin] [moonshine]
 ```
 
-Každý badge je CSS trieda — `.m-badge-success`, `.m-badge-purple`, `.m-badge-info`, `.m-badge-gray`.
+Každý badge je CSS trieda,`.m-badge-success`, `.m-badge-purple`, `.m-badge-info`, `.m-badge-gray`.
 
 ## Čo sme pridali z HTMX
 
-MoonShine používa Alpine.js pre interakcie. My sme si vybrali HTMX — server-driven, žiadny client-side state.
+MoonShine používa Alpine.js pre interakcie. My sme si vybrali HTMX, server-driven, žiadny client-side state.
 
 ### Prečo HTMX a nie Alpine.js
 
@@ -189,7 +189,7 @@ MoonShine používa Alpine.js pre interakcie. My sme si vybrali HTMX — server-
 | **PHP roluje** | Áno (partial HTML) | Nie (len JSON) |
 | **Fallback** | Full page reload | Žiadny |
 | **Veľkosť** | ~14KB | ~15KB |
-| **Zero-dep** | áno — self-hosted | áno — self-hosted |
+| **Zero-dep** | áno, self-hosted | áno, self-hosted |
 
 HTMX je server-driven. PHP renderuje HTML fragmenty. HTMX ich len swapne do DOM. Žiadny client-side state, žiadne reaktivné premenné.
 
@@ -269,7 +269,7 @@ Server vrací prázdny response. HTMX odstráni riadok z tabuľky s 500ms animá
 
 ### CSRF s HTMX
 
-HTMX potrebuje CSRF token v každom requeste. Riešenie — inline config script:
+HTMX potrebuje CSRF token v každom requeste. Riešenie, inline config script:
 
 ```javascript
 document.body.addEventListener("htmx:configRequest", function(e) {
@@ -300,10 +300,10 @@ Ak HTMX nie je, všetko funguje cez full page reload. Žiadny breaking change.
 
 MoonShine má komponenty, ktoré vyžadujú Alpine.js:
 
-- **Dropdown** — vyžaduje `x-data`, `x-show`
-- **Modal** — vyžaduje `x-on:click`
-- **Tabs** — vyžaduje `x-data`
-- **Off-canvas** — vyžaduje `x-show`
+- **Dropdown**: vyžaduje `x-data`, `x-show`
+- **Modal**: vyžaduje `x-on:click`
+- **Tabs**: vyžaduje `x-data`
+- **Off-canvas**: vyžaduje `x-show`
 
 My sme ich nahradili CSS-only riešeniami:
 
@@ -321,30 +321,30 @@ Všetko funguje bez jediného riadku client-side frameworku.
 
 Admin panel na `/mark` s:
 
-- **Toast notifikácie** — CSS + inline JS, 3 typy (ok/err/info)
-- **Progress bar** — XHR upload s trackingom
-- **Skeleton loading** — CSS shimmer animation
-- **Tooltips** — CSS `data-tooltip` atribút
-- **Breadcrumbs** — `AdminLayout::breadcrumb()` helper
-- **Empty states** — SVG ilustrácie s CTA
-- **Rich badges** — status, kategória, tagy
-- **HTMX live search** — instant results bez reloadu
-- **HTMX pagination** — partial updates s browser history
-- **HTMX form submit** — HX-Redirect bez reloadu
-- **HTMX delete** — row fade-out animácia
+- **Toast notifikácie**: CSS + inline JS, 3 typy (ok/err/info)
+- **Progress bar**: XHR upload s trackingom
+- **Skeleton loading**: CSS shimmer animation
+- **Tooltips**: CSS `data-tooltip` atribút
+- **Breadcrumbs**: `AdminLayout::breadcrumb()` helper
+- **Empty states**: SVG ilustrácie s CTA
+- **Rich badges**: status, kategória, tagy
+- **HTMX live search**: instant results bez reloadu
+- **HTMX pagination**: partial updates s browser history
+- **HTMX form submit**: HX-Redirect bez reloadu
+- **HTMX delete**: row fade-out animácia
 
 Všetko v čistom PHP 8.5. Žiadne Composer balíky v produkcii. Žiadne JavaScript frameworky.
 
 639 testov. PHPStan level 9. 0 CS-Fixer violations.
 
-→ [MoonShine Cardboard](/blog/moonshine-cardboard) — ako MoonShine inšpiroval Cardboard
-→ [Clean code pre deti](/blog/co-je-cisty-kod-pre-deti) — ako písať kód, ktorý sa číta sám
-→ [Filozofia menej vrstiev](/blog/filozofia-menej-vrstiev) — prečo menej abstrakcií = menej chýb
+→ [MoonShine Cardboard](/blog/moonshine-cardboard): ako MoonShine inšpiroval Cardboard
+→ [Clean code pre deti](/blog/co-je-cisty-kod-pre-deti): ako písať kód, ktorý sa číta sám
+→ [Filozofia menej vrstiev](/blog/filozofia-menej-vrstiev): prečo menej abstrakcií = menej chýb
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

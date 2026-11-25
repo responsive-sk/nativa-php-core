@@ -3,7 +3,7 @@ title: "Bonus pre členov ... média: cudzie súbory v tvojom dome"
 date: "2026-09-17"
 version: "1.0.2"
 tags: ["media", "uploads", "php", "security", "architecture"]
-excerpt: "Piaty bonus len pre registrovaných. Upload je druhá brána, ktorou do appky vstupuje cudzie ... tentoraz nie text, ale súbory. Prečo meno súboru je tvrdenie a nie fakt, prečo každý asset pamätá svojho poskytovateľa a prečo aj mazanie má svoje poradie — na reálnom kóde z tohto repa."
+excerpt: "Piaty bonus len pre registrovaných. Upload je druhá brána, ktorou do appky vstupuje cudzie ... tentoraz nie text, ale súbory. Prečo meno súboru je tvrdenie a nie fakt, prečo každý asset pamätá svojho poskytovateľa a prečo aj mazanie má svoje poradie, na reálnom kóde z tohto repa."
 author: "Nativa Dev"
 author_email: "nativa.dev@example.test"
 category: "Bonus"
@@ -21,11 +21,11 @@ published: true
 > vpúšťa do filesystemu, kde appka žije. A to je úplne iný druh hosťa.
 
 Si vývojár. Minule tu bol formulár, ktorý vpúšťal cudzí text do tvojej
-databázy — a verilo mu nula.
+databázy, a verilo mu nula.
 
 Komentáre boli brána číslo jedna.
 
-Upload je brána číslo dva. Nepíše riadky. Vpúšťa súbory do filesystemu —
+Upload je brána číslo dva. Nepíše riadky. Vpúšťa súbory do filesystemu,
 do miesta, kde leží appka, ktorú si písal celý týždeň.
 
 Pravidlo oboch brán je to isté: cudzie vstúpi, ale len pod tvojimi
@@ -38,7 +38,7 @@ Návštevník nahraje súbor. Prehliadač hlási meno, veľkosť aj typ.
 Nič z toho nie je fakt. Všetko sú to tvrdenia jednej strany.
 
 Preto `LocalStorageProvider` zaobchádza s hlásením ako s výpoveďou, ktorú
-treba overiť — a normalizuje raz, na boundary:
+treba overiť, a normalizuje raz, na boundary:
 
 ```php
 // src/Modules/Core/Infrastructure/Storage/LocalStorageProvider.php — boundary
@@ -46,7 +46,7 @@ $size = is_numeric($file['size'] ?? null) ? (int) $file['size'] : 0;
 $this->validateFile($tmpName, $originalName, $size);
 ```
 
-Veľkosť sa pretypuje raz. Cesty sa kontrolujú — `../` v mene súboru je
+Veľkosť sa pretypuje raz. Cesty sa kontrolujú,`../` v mene súboru je
 pokus o prechod mimo vyhradeného adresára a končí odmietnutím.
 
 A typ? Prehliadač hovorí `image/png`. Provider sa nepýta prehliadača.
@@ -58,7 +58,7 @@ $finfo = new \finfo(FILEINFO_MIME_TYPE);
 $mime = $finfo->file($filePath);
 ```
 
-`finfo` číta obsah. Rovnako ako meno hosťa v komentári — tvrdenie
+`finfo` číta obsah. Rovnako ako meno hosťa v komentári, tvrdenie
 prišlo od cudzinca, fakt sa zistil sám.
 
 ## Typ rozhoduje, koncovka sa prispôsobí
@@ -71,11 +71,11 @@ legálne:
 return in_array($extension, self::ALLOWED[$mime] ?? [], true);
 ```
 
-`ALLOWED` je mapa — pre `image/png` pár legálnych koncovok, pre
+`ALLOWED` je mapa, pre `image/png` pár legálnych koncovok, pre
 `application/pdf` iné. Neznámy typ nemá žiadnu vstupnú koncovku.
 
 Súbor premenovaný na `fotka.png` teda neprejde ako obrázok, ak bajty
-hovoria niečo iné. Whitelist nie je zoznam povolených mien — je to
+hovoria niečo iné. Whitelist nie je zoznam povolených mien, je to
 zoznam povolených pravd.
 
 ## Dva pravdy o jednom súbore
@@ -92,7 +92,7 @@ $asset = MediaAsset::create(/* ... z výsledku */);
 $this->repository->insert($asset);
 ```
 
-Mazanie ide opačne — a poradie nie je ľahostajné:
+Mazanie ide opačne, a poradie nie je ľahostajné:
 
 ```php
 // MediaService.php — delete: najprv súbor, potom riadok
@@ -108,13 +108,13 @@ Transakcia cez dva svety neexistuje.
 
 Poradie preto vybralo stranu, na ktorej je chyba viditeľná. Riadok bez
 súboru sa dá dohľadať a domazať. Súbor bez riadku je sirota, ktorú
-nikto neuloží — appka o ňom nevie, že existuje.
+nikto neuloží, appka o ňom nevie, že existuje.
 
 ## Každý asset pamätá, odkiaľ prišiel
 
 Dnes konfiguruješ jeden storage provider. O rok ho vymeníš.
 
-Súbory ostali. Preto každý riadok v `media.db` nesie stĺpec `provider` —
+Súbory ostali. Preto každý riadok v `media.db` nesie stĺpec `provider`,
 a mazanie si hostiteľa vyhľadá po jednom:
 
 ```php
@@ -143,7 +143,7 @@ if ('cloudinary' === $provider && !$this->isImageMimeType($mimeType)) {
 
 Kategória je stĺpec. Tagy sú spojovacia tabuľka `media_tags`.
 
-`setTagsForAsset` najprv zmaže staré a potom vloží nové — zoznam tagov
+`setTagsForAsset` najprv zmaže staré a potom vloží nové, zoznam tagov
 je vždy celá pravda, nie prírastok:
 
 ```php
@@ -156,8 +156,8 @@ foreach ($tags as $tag) {
 }
 ```
 
-Aj tag sa normalizuje na boundary — trim a malé písmená. Bez toho by
-`PHP` a `php` boli dva svety. Filtrovanie podľa typu beží cez prefix MIME — `LIKE 'image/%'`.
+Aj tag sa normalizuje na boundary, trim a malé písmená. Bez toho by
+`PHP` a `php` boli dva svety. Filtrovanie podľa typu beží cez prefix MIME,`LIKE 'image/%'`.
 Poradie v prehľade zvládne aj `view_count` ... čo si pozeral, to sa počíta.
 
 ## Dve brány na jednom mieste
@@ -180,7 +180,7 @@ aby rate-limit fallback nikdy neservoval pred-zápisový obsah.
 
 Whitelist je obrana pri vchode, nie pri vydávaní.
 
-Súbor, ktorý prešiel, sa servuje pod hlavičkou, ktorú určuje server —
+Súbor, ktorý prešiel, sa servuje pod hlavičkou, ktorú určuje server,
 a CSP rozhoduje, čo smie obsah spustiť. Nahraný súbor preto nie je
 „bezpečný“ ... je to len nepriateľ, ktorého pustili vnútro s pásom
 na rukách.
@@ -189,7 +189,7 @@ Druhá úprimnosť: `batchDelete` vracia zoznam ID, ktoré sa podarilo
 zmazať. Čiastočný úspech je tu úprimný výsledok, nie chyba API.
 
 A tretia: tu nie je resizovacia pipeline. Súbor má takú veľkosť,
-akú prišiel — kto chce náhľady, musí ich nahrať alebo doplniť
+akú prišiel, kto chce náhľady, musí ich nahrať alebo doplniť
 generátor.
 
 ## Prakticky
@@ -205,8 +205,8 @@ Picker potom odpovedá na otázku „ktorý súbor“ ... nie „kde sa nachádz
 
 ## Zdroje
 
-- [OWASP — File Upload Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html) ... rámec, do ktorého whitelist a servovanie patria
-- [PHP — finfo](https://www.php.net/manual/en/book.fileinfo.php) ... zisťovanie typu z obsahu, nie z mena
-- [PHP — move_uploaded_file](https://www.php.net/manual/en/function.move-uploaded-file.php) ... jediný legitímny presun nahraného súboru
+- [OWASP, File Upload Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html) ... rámec, do ktorého whitelist a servovanie patria
+- [PHP, finfo](https://www.php.net/manual/en/book.fileinfo.php) ... zisťovanie typu z obsahu, nie z mena
+- [PHP, move_uploaded_file](https://www.php.net/manual/en/function.move-uploaded-file.php) ... jediný legitímny presun nahraného súboru
 - [Nativa Minimal Documentation](/docs/getting-started) ... getting started guide tohto kitu
 - [docs/blog-voice.md](/docs/blog-voice) ... príručka, v ktorej série bonusov žije

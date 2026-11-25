@@ -142,18 +142,18 @@ Keď nabudúce píšeš metódu a cítiš, že rastie:
 
 A pamätaj: limit nie je tvoj nepriateľ. Je to **detektor, ktorý ťa upozorní skôr, než si sám všimneš**, že metóda prestala byť jednou vecou.
 
-Krátka metóda s dobrým menom je rešpekt — rešpekt k ďalšiemu človeku, ktorý bude čítať kód, rešpekt k tvojmu budúcemu ja, rešpekt k myšlienke, že kód sa číta viac, než píše.
+Krátka metóda s dobrým menom je rešpekt, rešpekt k ďalšiemu človeku, ktorý bude čítať kód, rešpekt k tvojmu budúcemu ja, rešpekt k myšlienke, že kód sa číta viac, než píše.
 
 ---
 
-→ [Diel 1 — čo je za premennou](/blog/php-typy-pre-deti) — základ
-→ [Diel 5 — union typy, nullsafe a enumy](/blog/union-nullsafe-enumy-pre-deti) — presné typy
-→ [Chunky rule EN](/blog/chunky-rule) — English version 
+→ [Diel 1, čo je za premennou](/blog/php-typy-pre-deti): základ
+→ [Diel 5, union typy, nullsafe a enumy](/blog/union-nullsafe-enumy-pre-deti): presné typy
+→ [Chunky rule EN](/blog/chunky-rule): English version 
 
 ## Zdroje
 
-- [W3C — ACID Properties](https://www.w3.org/TR/xml-core/#sec-conformance) — ACID definícia
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [SQLite Documentation](https://www.sqlite.org/docs.html) — SQLite referenčná príručka
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
+- [W3C, ACID Properties](https://www.w3.org/TR/xml-core/#sec-conformance): ACID definícia
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [SQLite Documentation](https://www.sqlite.org/docs.html): SQLite referenčná príručka
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod

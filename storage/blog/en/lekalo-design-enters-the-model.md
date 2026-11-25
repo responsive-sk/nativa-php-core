@@ -28,7 +28,7 @@ property name.
 | Definition | Kind | What it says |
 |---|---|---|
 | `design.role` | enum | the 7 roles the CSS audit actually contracts on |
-| `design.mode` | enum | `dark \| light` — the two audited blocks |
+| `design.mode` | enum | `dark \| light`: the two audited blocks |
 | `design.variant` | enum | 6 surfaces: 4 themes + admin + auth |
 | `design.token_name` | scalar | a CSS custom property name, e.g. `--st-accent-strong` |
 | `design.identity` | entity | identity `[variant, mode, token]` + a role |
@@ -135,9 +135,9 @@ only once the vocabulary crystallizes.
 
 ## Sources
 
-- [Lekalo](https://github.com/ichinya/lekalo) — the project repository (product 0.1.31, authorization #25)
-- [docs/lekalo-model.md](https://github.com/evan70/nativa-minimal/blob/master/docs/lekalo-model.md) — model documentation, including the design section and the `model_ref.ir_digest` refresh recipe
-- `lekalo/modules/design/*.yaml` — the Design module semantic model (7 definitions)
-- `tests/Integration/DesignModelParityTest.php` — the parity guard (5 tests)
-- [Part 9.1 — themes enter the model](/blog/lekalo-themes-enter-the-model) — the first time the pinned-digest recipe appeared
-- [Part 9.2 — themes get routes](/blog/lekalo-themes-get-routes) — endpoint bindings for themes
+- [Lekalo](https://github.com/ichinya/lekalo): the project repository (product 0.1.31, authorization #25)
+- [docs/lekalo-model.md](https://github.com/evan70/nativa-minimal/blob/master/docs/lekalo-model.md): model documentation, including the design section and the `model_ref.ir_digest` refresh recipe
+- `lekalo/modules/design/*.yaml`: the Design module semantic model (7 definitions)
+- `tests/Integration/DesignModelParityTest.php`: the parity guard (5 tests)
+- [Part 9.1, themes enter the model](/blog/lekalo-themes-enter-the-model): the first time the pinned-digest recipe appeared
+- [Part 9.2, themes get routes](/blog/lekalo-themes-get-routes): endpoint bindings for themes

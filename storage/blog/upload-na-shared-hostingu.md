@@ -32,11 +32,11 @@ Toto nie je jeden problém. Sú to tri vrstvy nad tvojou aplikáciou a každá t
 
 ## Hláška 1 ... firewall
 
-Technický blog o Linuxe píše o shell príkazoch. Telo článku o pacmane obsahuje `sudo pacman -S` a `curl … | bash` — firewall hostingu číta POST ešte predtým, než sa dostane k PHP. Vidí shell príkazy v požiadavke a rozhodne: útok.
+Technický blog o Linuxe píše o shell príkazoch. Telo článku o pacmane obsahuje `sudo pacman -S` a `curl … | bash`: firewall hostingu číta POST ešte predtým, než sa dostane k PHP. Vidí shell príkazy v požiadavke a rozhodne: útok.
 
 Nie je. Je to článok pre deti o rebríku dôvery.
 
-Riešenie nerieši firewall — obchádza obsah. Skript formulára kóduje telo do base64 ešte pred submitom:
+Riešenie nerieši firewall, obchádza obsah. Skript formulára kóduje telo do base64 ešte pred submitom:
 
 ```js
 // src/Modules/Blog/Interfaces/HTTP/assets/scripts/article-form-guard.js
@@ -57,9 +57,9 @@ Firewall uvidí písmená. Článok si `sudo pacman -S` nechá presne tak, ako h
 
 ## Hláška 2 ... bar bez slov
 
-Upload formulár má vlastnú vrstvu ticha. Prvá patrí JS: pri chybe zahodil `responseText` — server správu poslal, ale bar sa len zafarbí.
+Upload formulár má vlastnú vrstvu ticha. Prvá patrí JS: pri chybe zahodil `responseText`: server správu poslal, ale bar sa len zafarbí.
 
-Druhá je hlbšie. Keď telo POSTu presiahne `post_max_size`, PHP ho zahodí celé — `$_FILES` aj `$_POST` prídu prázdne a kontrola limitu v aplikácii sa ani nespustí.
+Druhá je hlbšie. Keď telo POSTu presiahne `post_max_size`, PHP ho zahodí celé,`$_FILES` aj `$_POST` prídu prázdne a kontrola limitu v aplikácii sa ani nespustí.
 
 Oprava má dva kroky. Server rozozná zahodené telo a odpovie 413 so správou ... a formulár dostane limit, ktorý server má nastavený:
 
@@ -68,48 +68,48 @@ Oprava má dva kroky. Server rozozná zahodené telo a odpovie 413 so správou .
 $base64Max = min((int) ($post * 3 / 4), self::APP_LIMIT_BYTES);
 ```
 
-Browser potom odmietne 12 MB súbor vetou, nie farbou — ešte pred prvým bajtom.
+Browser potom odmietne 12 MB súbor vetou, nie farbou, ešte pred prvým bajtom.
 
 ## Hláška 3 ... tmp adresár
 
 Keď chybové hlášky fungujú, pravda vyjde navrch: Invalid file upload → po namapovaní PHP kódov → Server misconfiguration: the PHP temporary directory is missing.
 
-`upload_tmp_dir` je `PHP_INI_SYSTEM` — `.htaccess` aj `.user.ini` sú mimo hry. A vlastný pokus o dočasný súbor padol tiež:
+`upload_tmp_dir` je `PHP_INI_SYSTEM`: `.htaccess` aj `.user.ini` sú mimo hry. A vlastný pokus o dočasný súbor padol tiež:
 
 ```text
 [KERNEL] ErrorException: tempnam(): open_basedir restriction in effect.
 File(/home/resp/.inetadmin-php-tmp) is not within the allowed path(s) ...
 ```
 
-Bajty preto idú v poli ako base64 a `MediaUploadPayload` z nich poskladá syntetickú `$_FILES` entry — tmp súbor sa staguje v strome appky, pod allowlistom:
+Bajty preto idú v poli ako base64 a `MediaUploadPayload` z nich poskladá syntetickú `$_FILES` entry, tmp súbor sa staguje v strome appky, pod allowlistom:
 
 ```php
 // src/Modules/Media/Interfaces/HTTP/MediaUploadPayload.php
 $dir = AppPaths::instance()->storage('cache' . DIRECTORY_SEPARATOR . 'media-uploads');
 ```
 
-Validácia, MIME detekcia aj audit log bežia nezmenene — syntetická entry vyzerá ako pravá `$_FILES`. Bonus: `upload_max_filesize` medzitým prestal platiť ... ten viaže len multipart staging.
+Validácia, MIME detekcia aj audit log bežia nezmenene, syntetická entry vyzerá ako pravá `$_FILES`. Bonus: `upload_max_filesize` medzitým prestal platiť ... ten viaže len multipart staging.
 
 ## Čo tento trik nie je
 
-Nie je to oprava hostingu. Multipart staging zostáva rozbitý — base64 cesta je obejdenie, nie náprava. Hosting, ktorý nízko capne aj `post_max_size`, ti ňou nepomôže ... vtedy ostáva tiket.
+Nie je to oprava hostingu. Multipart staging zostáva rozbitý, base64 cesta je obejdenie, nie náprava. Hosting, ktorý nízko capne aj `post_max_size`, ti ňou nepomôže ... vtedy ostáva tiket.
 
-Bajty napučia zhruba o tretinu — 8 MB súbor cestuje ako ~10,7 MB textu a `post_max_size` sa počíta z napučanej verzie.
+Bajty napučia zhruba o tretinu, 8 MB súbor cestuje ako ~10,7 MB textu a `post_max_size` sa počíta z napučanej verzie.
 
 Nie je to rýchlejšie. Kódovanie a dekódovanie je práca navyše na oboch stranách; pri obrázkoch do pár MB ju nepostrehneš.
 
-Bez JavaScriptu nefunguje — fallback ostáva multipart. Kde staging funguje, funguje aj stará cesta.
+Bez JavaScriptu nefunguje, fallback ostáva multipart. Kde staging funguje, funguje aj stará cesta.
 
 ## Prakticky
 
-1. Prečítaj log skôr, než skúšaš druhýkrát — riadky `[KERNEL]` v `storage/logs` povedia súbor aj riadok; browser videl len 500.
-2. Daj klientovi limit, ktorý server reálne má — odmietnutie vetou stojí menej než odmietnutie farbou.
-3. Keď staging nefunguje, pošli bajty v poli — *„Diagnostika potom odpovedá na otázku, ktorá vrstva mlčí ... nie na otázku, čo je rozbité.“*
+1. Prečítaj log skôr, než skúšaš druhýkrát, riadky `[KERNEL]` v `storage/logs` povedia súbor aj riadok; browser videl len 500.
+2. Daj klientovi limit, ktorý server reálne má, odmietnutie vetou stojí menej než odmietnutie farbou.
+3. Keď staging nefunguje, pošli bajty v poli, *„Diagnostika potom odpovedá na otázku, ktorá vrstva mlčí ... nie na otázku, čo je rozbité.“*
 
 ## Zdroje
 
-- [PHP: Error Messages Explained](https://www.php.net/manual/en/features.file-upload.errors.php) — zoznam `UPLOAD_ERR_*` kódov
-- [PHP: open_basedir](https://www.php.net/manual/en/ini.core.php#ini.open-basedir) — čo allowlist obmedzuje
-- [PHP: List of php.ini directives](https://www.php.net/manual/en/ini.list.php) — ktoré nastavenie je `PHP_INI_SYSTEM`
-- [PHP: .user.ini](https://www.php.net/manual/en/configuration.file.per-user.php) — limity zmien per adresár
-- [Nativa Minimal — docs](https://github.com/evan70/nativa-minimal/tree/main/docs) — repozitár, z ktorého tento príbeh pochádza
+- [PHP: Error Messages Explained](https://www.php.net/manual/en/features.file-upload.errors.php): zoznam `UPLOAD_ERR_*` kódov
+- [PHP: open_basedir](https://www.php.net/manual/en/ini.core.php#ini.open-basedir): čo allowlist obmedzuje
+- [PHP: List of php.ini directives](https://www.php.net/manual/en/ini.list.php): ktoré nastavenie je `PHP_INI_SYSTEM`
+- [PHP: .user.ini](https://www.php.net/manual/en/configuration.file.per-user.php): limity zmien per adresár
+- [Nativa Minimal, docs](https://github.com/evan70/nativa-minimal/tree/main/docs): repozitár, z ktorého tento príbeh pochádza

@@ -268,14 +268,14 @@ Testy: 443 testov, 1343 asercií
 
 ---
 
-→ [UnitOfWork filozofia](/blog/uow-philosophy) — prečo transakcie nie sú nudné
-→ [Outbox pattern](/blog/outbox-pattern) — Domain Events bez porušenia ACID
-→ [ACID pre deti](/blog/acid-pre-deti) — prečo transakcie nie sú nudné
+→ [UnitOfWork filozofia](/blog/uow-philosophy): prečo transakcie nie sú nudné
+→ [Outbox pattern](/blog/outbox-pattern): Domain Events bez porušenia ACID
+→ [ACID pre deti](/blog/acid-pre-deti): prečo transakcie nie sú nudné
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

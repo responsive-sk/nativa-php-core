@@ -201,14 +201,14 @@ A keď to spojíte s Cordis (agent mení prostredie), Outbox (async spracovanie)
 
 Ticket neumrel. Evolvoval do intentu.
 
-→ [Čo je OpenSpec](/blog/co-je-openspec-pre-deti) — spec ako zdroj pravdy
-→ [Anatómia change](/blog/anatomia-change-pre-deti) — päť súborov, päť otázok
-→ [Životný cyklus change](/blog/zivotny-cyklus-change-pre-deti) — od nápadu po archív
+→ [Čo je OpenSpec](/blog/co-je-openspec-pre-deti): spec ako zdroj pravdy
+→ [Anatómia change](/blog/anatomia-change-pre-deti): päť súborov, päť otázok
+→ [Životný cyklus change](/blog/zivotny-cyklus-change-pre-deti): od nápadu po archív
 
 ## Zdroje
 
-- [Manifesto for Agile Software Development](https://agilemanifesto.org/) — pôvodný agile manifest
-- [Martin Fowler — Design Stagnation](https://martinfowler.com/articles/is-agile-dead.html) — diskusia o budúcnosti agility
-- [OpenSpec — Specification as Code](https://openspec.dev/) — oficiálna dokumentácia OpenSpec
-- [GitHub Copilot — How AI Assists Development](https://github.com/features/copilot) — AI nástroje pre vývoj
-- [Google — BARD vs Developers](https://ai.google/discover/bard) — AI impact na softvérové inžinierstvo
+- [Manifesto for Agile Software Development](https://agilemanifesto.org/): pôvodný agile manifest
+- [Martin Fowler, Design Stagnation](https://martinfowler.com/articles/is-agile-dead.html): diskusia o budúcnosti agility
+- [OpenSpec, Specification as Code](https://openspec.dev/): oficiálna dokumentácia OpenSpec
+- [GitHub Copilot, How AI Assists Development](https://github.com/features/copilot): AI nástroje pre vývoj
+- [Google, BARD vs Developers](https://ai.google/discover/bard): AI impact na softvérové inžinierstvo

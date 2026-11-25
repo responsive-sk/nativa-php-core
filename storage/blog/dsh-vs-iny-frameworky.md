@@ -212,14 +212,14 @@ Neexistuje "univerzálny" framework. Každý rieši iný problém:
 - **Swarm** = ľahkosť, jednoduchosť Ak staviate **produktívny, bezpečný, distribuovaný systém** → DSH.
 Ak staviate **prototyp s množstvom integrácií** → LangChain.
 
-→ [DeepSeek Harness ... 50 balíkov](/blog/deepseek-harness-architektura) — architektonický prehľad
-→ [Capability seams](/blog/capability-seams) — Service Definition / Provider / Consumer
-→ [Chladnička ako P2P server](/blog/chladnicka-ako-p2p-server) — hardvér pre P2P uzly
+→ [DeepSeek Harness ... 50 balíkov](/blog/deepseek-harness-architektura): architektonický prehľad
+→ [Capability seams](/blog/capability-seams): Service Definition / Provider / Consumer
+→ [Chladnička ako P2P server](/blog/chladnicka-ako-p2p-server): hardvér pre P2P uzly
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

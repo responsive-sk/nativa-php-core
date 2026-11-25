@@ -169,16 +169,16 @@ Lighthouse can lie about savings ... tests don't.
 In the next part we'll show what LCP looks like on pages without
 images ... and what happens when the LCP element is text.
 
-Lighthouse remains the best starting point — just not the final word. When you know which audits are scored and which are hints, the fix writes itself.
+Lighthouse remains the best starting point, just not the final word. When you know which audits are scored and which are hints, the fix writes itself.
 
-→ [Article cover LCP](/blog/article-cover-lcp) — the first image that matters
-→ [LCP srcset basics](/blog/lcp-srcset-basics) — responsive images done right
-→ [Text LCP](/blog/text-lcp) — when the LCP element isn't an image
+→ [Article cover LCP](/blog/article-cover-lcp): the first image that matters
+→ [LCP srcset basics](/blog/lcp-srcset-basics): responsive images done right
+→ [Text LCP](/blog/text-lcp): when the LCP element isn't an image
 
 ## Sources
 
-- [PHP Manual](https://www.php.net/manual/) — official PHP documentation
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP standards
-- [Nativa Minimal Documentation](/docs/getting-started) — official getting started guide
-- [Web.dev — Performance](https://web.dev/performance) — Core Web Vitals
-- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/) — Lighthouse tool
+- [PHP Manual](https://www.php.net/manual/): official PHP documentation
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP standards
+- [Nativa Minimal Documentation](/docs/getting-started): official getting started guide
+- [Web.dev, Performance](https://web.dev/performance): Core Web Vitals
+- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/): Lighthouse tool

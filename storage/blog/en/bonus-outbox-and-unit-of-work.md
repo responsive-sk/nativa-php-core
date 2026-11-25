@@ -404,14 +404,14 @@ test. It was found by a `grep` over `src/`. And it was fixed with two guards
 that answer different questions ... one looks for an emitter nobody calls,
 the other runs the action and reads the queue.
 
-→ [ACID for beginners](/en/blog/acid-for-beginners) — why transactions are not boring
-→ [The audit log](/en/blog/bonus-audit-log) — an unbreakable record
-→ [Members-only](/en/blog/bonus-members-only) — who owns an article
+→ [ACID for beginners](/en/blog/acid-for-beginners): why transactions are not boring
+→ [The audit log](/en/blog/bonus-audit-log): an unbreakable record
+→ [Members-only](/en/blog/bonus-members-only): who owns an article
 
 ## Sources
 
-- [SQLite — Transactions](https://www.sqlite.org/lang_transaction.html) — `BEGIN`, `SAVEPOINT`, `RELEASE`, and why it is all in one file
-- [SQLite — Atomic Commit](https://www.sqlite.org/atomiccommit.html) — how SQLite makes a written row durable
-- [PHP Manual — PDO::beginTransaction](https://www.php.net/manual/en/pdo.begintransaction.php) — the exception the old code left mid-work
-- [microservices.io — Transactional Outbox](https://microservices.io/patterns/data/transactional-outbox.html) — the canonical write-up of the pattern and its limits
-- [Nativa Minimal Documentation](/docs/getting-started) — the official guide
+- [SQLite, Transactions](https://www.sqlite.org/lang_transaction.html): `BEGIN`, `SAVEPOINT`, `RELEASE`, and why it is all in one file
+- [SQLite, Atomic Commit](https://www.sqlite.org/atomiccommit.html): how SQLite makes a written row durable
+- [PHP Manual, PDO::beginTransaction](https://www.php.net/manual/en/pdo.begintransaction.php): the exception the old code left mid-work
+- [microservices.io, Transactional Outbox](https://microservices.io/patterns/data/transactional-outbox.html): the canonical write-up of the pattern and its limits
+- [Nativa Minimal Documentation](/docs/getting-started): the official guide

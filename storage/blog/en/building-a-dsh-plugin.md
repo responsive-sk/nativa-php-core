@@ -307,5 +307,5 @@ A plugin should be read, not just registered.
 
 ---
 
-→ [Cordis deep dive](/blog/cordis-deep-dive) — plugin framework internals
-→ [Capability seams](/blog/capability-seams) — Service Definition / Provider / Consumer
+→ [Cordis deep dive](/blog/cordis-deep-dive): plugin framework internals
+→ [Capability seams](/blog/capability-seams): Service Definition / Provider / Consumer

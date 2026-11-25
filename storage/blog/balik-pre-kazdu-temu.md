@@ -248,7 +248,7 @@ self::assertSame(
 
 Zdroj pravdy je jeden. Kopíruje sa. Zhodu drží stroj.
 
-A `code-highlight.ts` je zdrojovaný dvakrát — v `starter` aj v `erik` —
+A `code-highlight.ts` je zdrojovaný dvakrát, v `starter` aj v `erik`,
 kvôli tej istej vecnej príčine: spoločný chunk by znamenal `import`.
 
 Parity test má dve tváre. Okrem zhody bajtov hľadá aj **cross-package
@@ -262,7 +262,7 @@ Preto je to chybové hlásenie, nie poznámka.
 
 ## O čom sme nehovorili
 
-Buďme úprimní — štyri veci stoja za poznámkou.
+Buďme úprimní, štyri veci stoja za poznámkou.
 
 **Zmenili sme plán.** Diel 1 sľúbil štvrtú tému krok za krokom. Namiesto toho
 sa ukázalo, že frontend je jedna rozliata zmes, a kým sa povedala „nová
@@ -300,8 +300,8 @@ inline blok.
 
 ## Zdroje
 
-- [pnpm workspaces](https://pnpm.io/workspaces) — oficiálna dokumentácia worksov
-- [Vite — Building Libraries / multi-page](https://vite.dev/guide/build) — viac vstupov a manifest
-- [MDN — script defer](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script) — prečo klasický skript nesplní `import`
-- [PHPUnit](https://phpunit.de/) — dokumentácia testovacieho frameworku
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod kitu
+- [pnpm workspaces](https://pnpm.io/workspaces): oficiálna dokumentácia worksov
+- [Vite, Building Libraries / multi-page](https://vite.dev/guide/build): viac vstupov a manifest
+- [MDN, script defer](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script): prečo klasický skript nesplní `import`
+- [PHPUnit](https://phpunit.de/): dokumentácia testovacieho frameworku
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod kitu

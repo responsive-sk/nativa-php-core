@@ -11,7 +11,7 @@ translation: "cache-wrappers-dobry-slucha-zly-pan"
 published: true
 ---
 
-Developers fall into two camps: cache everything or cache nothing. Both are wrong. Cache is a tool — and every tool has its place.
+Developers fall into two camps: cache everything or cache nothing. Both are wrong. Cache is a tool, and every tool has its place.
 
 ## Cache has a bad reputation
 
@@ -196,7 +196,7 @@ When cache helps (rate-limit fallback, external systems, expensive rendering) ..
 
 And remember: **cache wrappers aren't mistakes ... they're evolution stages.** Each one taught you something about data access that prepared you for the next. The progression cache → outbox → P2P is really about understanding that "the answer doesn't always need to be new, just close."
 
-Cache remains a good servant. The mistake is letting it become the master. Rate-limit fallback, expensive rendering, external systems — cache earns its place there. User data, real-time, write-heavy paths — cache has no business there.
+Cache remains a good servant. The mistake is letting it become the master. Rate-limit fallback, expensive rendering, external systems, cache earns its place there. User data, real-time, write-heavy paths, cache has no business there.
 
 ---
 
@@ -204,14 +204,14 @@ The answer doesn't always need to be new. Just close.
 
 ---
 
-→ [ACID for beginners](/blog/acid-for-beginners) — why transactions aren't boring
-→ [Outbox pattern](/blog/outbox-pattern-when-cache-isnt-enough) — cache for the write path
-→ [How argon2id crashed shared hosting](/blog/how-sha-hash-algorithm-crashed-shared-hosting) — infrastructure limits choices
+→ [ACID for beginners](/blog/acid-for-beginners): why transactions aren't boring
+→ [Outbox pattern](/blog/outbox-pattern-when-cache-isnt-enough): cache for the write path
+→ [How argon2id crashed shared hosting](/blog/how-sha-hash-algorithm-crashed-shared-hosting): infrastructure limits choices
 
 ## Sources
 
-- [MDN — Cache-Control](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control) — HTTP caching headers specification
-- [PHP Manual — APCu](https://www.php.net/manual/en/book.apcu.php) — in-memory cache for PHP
-- [Cloudflare — What is Caching?](https://www.cloudflare.com/learning/performance/what-is-caching/) — caching basics
-- [OWASP — Caching Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Caching_Cheat_Sheet.html) — security aspects of caching
-- [HTTP/1.1 Caching (RFC 9111)](https://httpwg.org/specs/rfc9111.html) — official RFC specification
+- [MDN, Cache-Control](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control): HTTP caching headers specification
+- [PHP Manual, APCu](https://www.php.net/manual/en/book.apcu.php): in-memory cache for PHP
+- [Cloudflare, What is Caching?](https://www.cloudflare.com/learning/performance/what-is-caching/): caching basics
+- [OWASP, Caching Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Caching_Cheat_Sheet.html): security aspects of caching
+- [HTTP/1.1 Caching (RFC 9111)](https://httpwg.org/specs/rfc9111.html): official RFC specification

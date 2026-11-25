@@ -216,11 +216,11 @@ For P2P freeNet, it's exactly what you need: a node that can update, fix, and ex
 
 And when you combine it with OpenSpec (orchestrator), Outbox (async distribution), and ACID (consistency), you have the complete stack for a decentralized cognitive network.
 
-→ [The fridge as a P2P server](/en/blog/the-fridge-as-a-p2p-server) — hardware for P2P nodes
-→ [Outbox pattern ... when cache isn't enough](/en/blog/outbox-pattern-when-cache-isnt-enough) — async distribution
-→ [OpenSpec vs tickets ... agility in the AI era](/en/blog/openspec-vs-tickets-agility-in-the-ai-era) — orchestrator for Cordis
+→ [The fridge as a P2P server](/en/blog/the-fridge-as-a-p2p-server): hardware for P2P nodes
+→ [Outbox pattern ... when cache isn't enough](/en/blog/outbox-pattern-when-cache-isnt-enough): async distribution
+→ [OpenSpec vs tickets ... agility in the AI era](/en/blog/openspec-vs-tickets-agility-in-the-ai-era): orchestrator for Cordis
 
 ## Sources
 
-- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) — open-source agent framework
-- [Cordis](https://github.com/deepseek-ai/deepseek-harness/tree/master/vendor/cordis) — TypeScript plugin framework (part of Harness)
+- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): open-source agent framework
+- [Cordis](https://github.com/deepseek-ai/deepseek-harness/tree/master/vendor/cordis): TypeScript plugin framework (part of Harness)

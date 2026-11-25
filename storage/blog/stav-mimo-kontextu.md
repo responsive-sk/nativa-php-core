@@ -13,7 +13,7 @@ published: true
 
 Si vývojár, ktorý pracuje s AI asistentom. Ráno mu napíšeš „pokračuj“.
 
-A on nič nevie. Včerajšok je preč — kontextové okno sa zavrelo a s ním
+A on nič nevie. Včerajšok je preč, kontextové okno sa zavrelo a s ním
 každá myšlienka, ktorá v ňom žila.
 
 Alebo horšie: nezavrelo sa úplne. Asistent si nesie polovicu včerajška,
@@ -37,7 +37,7 @@ myšlienka ... a naraz je plný. Úprimná porovnávacia tabuľka:
 | vieš ho zdieľať | nie | `git push` |
 | vieš ho hashovať | nie | `sha256` |
 
-Preto v tomto repe žijú dva nástroje, ktoré stav píšu von —
+Preto v tomto repe žijú dva nástroje, ktoré stav píšu von,
 `bin/revision-report.php` a `bin/gate-run.php`. Oba vznikli z jednej
 vety v `AGENTS.md`: *never re-scan the tree to re-derive what changed*.
 
@@ -45,14 +45,14 @@ vety v `AGENTS.md`: *never re-scan the tree to re-derive what changed*.
 
 Prvá otázka po prerušenej práci: čo sa zmenilo?
 
-Lákavá odpoveď je čas súboru. `mtime` — keď sa to posledné dotklo.
+Lákavá odpoveď je čas súboru. `mtime`: keď sa to posledné dotklo.
 
-A to je pasca. `mtime` hovorí, kedy sa niekto súboru dotkol — checkout,
+A to je pasca. `mtime` hovorí, kedy sa niekto súboru dotkol, checkout,
 `touch`, synchronizácia stromu, všetko ho prepíše. Nerieši, **čo**
 v súbore je. Falošná random stopa, presne ako boolean bez kontraktu:
 `true` ... ale odkiaľ, kedy, či to ešte platí?
 
-`revision-report` číta iný zdroj — **git content model**. Zoznam zmien
+`revision-report` číta iný zdroj, **git content model**. Zoznam zmien
 (`git status --porcelain`) zoradí, zoskupí do modulových vedier a nad
 výsledkom spočíta hash:
 
@@ -65,7 +65,7 @@ $digest = hash('sha256', $digestInput);
 Kontrakt stojí v docblocke: *identical working tree + identical agent
 state → byte-identical output. Never mtimes.*
 
-Digest je token pravdy s typom — viaže sa na bajty, nie na čas. Dve
+Digest je token pravdy s typom, viaže sa na bajty, nie na čas. Dve
 rovnaké zmeny vydajú rovnaký hash ... rovnako ako zamrazená pravda
 z [dielu 1 série](/blog/preco-rust-pre-deti).
 
@@ -73,7 +73,7 @@ z [dielu 1 série](/blog/preco-rust-pre-deti).
 
 Druhý nástroj rieši pokračovanie po zlyhaní.
 
-Brány bežia cez `bin/gate-run.php` — a keď jedna padne, záznam sa
+Brány bežia cez `bin/gate-run.php`: a keď jedna padne, záznam sa
 nepíše do kontextu rozhovoru. Píše sa na disk:
 
 ```text
@@ -90,10 +90,10 @@ hovorí *čo*, `digest` viaže obidve na konkrétne bajty výstupu.
 php bin/gate-run.php --output test
 ```
 
-A dostane presne ten kus sveta, ktorý ju zabil — chvost výstupu,
+A dostane presne ten kus sveta, ktorý ju zabil, chvost výstupu,
 bez opakovania celej sady.
 
-Nech sa to aj napíše. Včera padol test gate s 190 chybami — a v chvoste
+Nech sa to aj napíše. Včera padol test gate s 190 chybami, a v chvoste
 záznamu bola jedna veta: provider dáva slug s príponou, porovnáva sa
 bez nej. 190 falošných chýb, jeden skutočný koreň.
 
@@ -111,27 +111,27 @@ Sort pred hashom garantuje, že poradie riadkov v `git status` nikdy
 nezmení identitu stavu. Ten istý strom vydá ten istý digest, či git
 vypísal súbory v ktoromko poradí.
 
-JSON formát záznamu je zase zmluva medzi pisateľom a čitateľom —
+JSON formát záznamu je zase zmluva medzi pisateľom a čitateľom,
 `RevisionState` je jediný modul, ktorý formát pozná, takže sa nemôže
 rozbiehať medzi nástrojmi. Jeden spisovateľ, dvaja čitatelia
-(`revision-report`, agenti, ľudia) — nula driftu.
+(`revision-report`, agenti, ľudia), nula driftu.
 
 ## Kedy to neplatí (a povinná úprimnosť)
 
 Správa a záznamy sú **informácia, nie substitúcia**.
 
 Nahrádzajú re-scanning stromu a slepé re-behanie. Nenahrádzajú brány.
-`make pre-commit` v tomto repe beží vždy celý — lint, analyze, test,
-lekalo — nezávisle od toho, čo hovorí cache. Záznam bez behu nie je
+`make pre-commit` v tomto repe beží vždy celý, lint, analyze, test,
+lekalo, nezávisle od toho, čo hovorí cache. Záznam bez behu nie je
 zelený, je len neuvedený.
 
 Druhá úprimnosť: digest identifikuje **stav, nie pravdu**. Ak sa strom
 zmení po tom, čo sa záznam napísal, chvost v ňom popisuje svet, ktorý
-už neexistuje. Token nesie svoj čas — preto zelený beh záznam maže,
+už neexistuje. Token nesie svoj čas, preto zelený beh záznam maže,
 namiesto aby ho nechal starnúť.
 
-A tretia: spätná archeológia — kopanie histórie až do koreňov kontraktu
-cez `git log -S` — je tu jednorazová akcia s cache, nie živý proces.
+A tretia: spätná archeológia, kopanie histórie až do koreňov kontraktu
+cez `git log -S`: je tu jednorazová akcia s cache, nie živý proces.
 Stojí tokeny a spusti sa, keď ju treba. Tým, že ju treba stále, nie je.
 
 ## Prakticky
@@ -148,8 +148,8 @@ zomrel.
 
 ## Zdroje
 
-- [Git — pickaxe, -S](https://git-scm.com/docs/git-log) ... hľadanie zmien počtu výskytov v histórii
-- [SHA-256 — NIST FIPS 180-4](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf) ... hash, ktorý nesie identitu bajtov
-- [Unix — mtime](https://en.wikipedia.org/wiki/Stat_(system_call)) ... časová stopa súboru a jej pasce
+- [Git, pickaxe, -S](https://git-scm.com/docs/git-log) ... hľadanie zmien počtu výskytov v histórii
+- [SHA-256, NIST FIPS 180-4](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf) ... hash, ktorý nesie identitu bajtov
+- [Unix, mtime](https://en.wikipedia.org/wiki/Stat_(system_call)) ... časová stopa súboru a jej pasce
 - [Nativa Minimal Documentation](/docs/getting-started) ... getting started guide tohto kitu
 - [docs/blog-voice.md](/docs/blog-voice) ... príručka hlasu, ktorej mechanickú polovicu stráži test

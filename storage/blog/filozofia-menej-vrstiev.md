@@ -87,14 +87,14 @@ v roku 1997 až po náš stack dnes.
   a návštevníkom
 - Menej vrstiev = viac C = rýchlejšie. To je celá filozofia.
 
-→ [Super rýchle PHP](/blog/filozofia-super-rychleho-php) — PHP C chunks filozofia
-→ [Performance pre deti](/blog/performance-pre-deti) — LCP a rýchlosť
-→ [Cache wrappers](/blog/cache-wrappers-dobry-slucha-zly-pan) — kedy cache pomáha
+→ [Super rýchle PHP](/blog/filozofia-super-rychleho-php): PHP C chunks filozofia
+→ [Performance pre deti](/blog/performance-pre-deti): LCP a rýchlosť
+→ [Cache wrappers](/blog/cache-wrappers-dobry-slucha-zly-pan): kedy cache pomáha
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

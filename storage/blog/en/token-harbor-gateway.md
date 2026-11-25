@@ -1,5 +1,5 @@
 ---
-title: "Token Harbor — An OpenAI-Compatible AI Gateway for Developers"
+title: "Token Harbor: An OpenAI-Compatible AI Gateway for Developers"
 date: "2026-09-13"
 version: "1.0.0"
 tags: ["ai-gateway", "openai-compatible", "token-harbor", "llm", "api"]
@@ -11,7 +11,7 @@ translation: "token-harbor-gateway"
 published: true
 ---
 
-# Token Harbor — An OpenAI-Compatible AI Gateway for Developers
+# Token Harbor: An OpenAI-Compatible AI Gateway for Developers
 
 **Token Harbor** is a gateway service that provides a single OpenAI-compatible endpoint for accessing multiple LLM models: Anthropic Claude, OpenAI GPT, Google Gemini, DeepSeek, Qwen, and more. A developer uses one API key, one base URL, and a standard OpenAI SDK / HTTP client.
 
@@ -53,7 +53,7 @@ Claude  GPT  Gemini  DeepSeek  Qwen ...
 
 ---
 
-## Integration Example — OMP (Oh My Pi)
+## Integration Example: OMP (Oh My Pi)
 
 OMP is a coding harness with AI assistance. Token Harbor is configured as an **OpenAI provider**:
 
@@ -116,7 +116,7 @@ OPENAI_BASE_URL=https://api.tokenharbor.ai/v1
 
 ## Production Best Practices
 
-1. **Timeouts**: set reasonable timeouts (30–60s) — some models (Claude, GPT-4) take longer.
+1. **Timeouts**: set reasonable timeouts (30–60s), some models (Claude, GPT-4) take longer.
 2. **Retry + backoff**: exponential backoff for 429/5xx, max 3 retries.
 3. **Streaming**: for long outputs, use `stream: true` and process chunks.
 4. **Model pinning**: specify exact model names in code (not `auto`) to control cost/latency.
@@ -130,7 +130,7 @@ OPENAI_BASE_URL=https://api.tokenharbor.ai/v1
 |---------|--------------|------------|---------------|-------------|
 | OpenAI-compat | yes | yes | yes | manual |
 | Free tier | yes (DeepSeek V4 Flash) | yes | no | no |
-| Failover | yes — automatic | yes | yes | manual |
+| Failover | yes, automatic | yes | yes | manual |
 | Per-token billing | yes | yes | no | manual |
 | Self-hosted | no | no | yes | yes |
 | SDK required | no (standard OpenAI) | no | no | manual |
@@ -139,7 +139,7 @@ OPENAI_BASE_URL=https://api.tokenharbor.ai/v1
 
 ## Conclusion
 
-Token Harbor eliminates integration complexity when using multiple LLM providers. For developers using OMP, Python, TypeScript, or plain HTTP, it is a **drop-in replacement** for the OpenAI API — you only change `base_url` and `api_key`, and the rest of your code remains unchanged.
+Token Harbor eliminates integration complexity when using multiple LLM providers. For developers using OMP, Python, TypeScript, or plain HTTP, it is a **drop-in replacement** for the OpenAI API, you only change `base_url` and `api_key`, and the rest of your code remains unchanged.
 
 For production: rotate keys, monitor usage, set cost alerts, and always test failover scenarios in staging.
 
@@ -147,7 +147,7 @@ For production: rotate keys, monitor usage, set cost alerts, and always test fai
 
 ## Sources
 
-- [Token Harbor — Official website](https://tokenharbor.ai)
+- [Token Harbor, Official website](https://tokenharbor.ai)
 - [Token Harbor FAQ](https://tokenharbor.ai/faq)
 - [OpenAI API Reference](https://platform.openai.com/docs/api-reference)
-- [OMP — provider configuration](https://github.com/can1357/oh-my-pi/tree/main/docs/adding-a-provider.md)
+- [OMP, provider configuration](https://github.com/can1357/oh-my-pi/tree/main/docs/adding-a-provider.md)

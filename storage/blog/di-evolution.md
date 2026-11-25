@@ -185,14 +185,14 @@ Potrebujeme **patterny** ktoré fungujú bez containeru.
 - Disposal a scoping zlepšujú test isolation
 - **Všetko bez pridania jedinej závislosti** To je Nativa filozofia: učiť sa z vhodných, implementovať. --- 
 
-→ [DI implementation](/blog/di-implementation) — Module interface, MiddlewareRegistry
-→ [Capability seams](/blog/capability-seams) — ako DSH oddeľuje schopnosti
-→ [Flow a ADR](/blog/flow-a-adr-starter-kitu) — mindset za starter kitom
+→ [DI implementation](/blog/di-implementation): Module interface, MiddlewareRegistry
+→ [Capability seams](/blog/capability-seams): ako DSH oddeľuje schopnosti
+→ [Flow a ADR](/blog/flow-a-adr-starter-kitu): mindset za starter kitom
 
 ## Zdroje
 
-- [Thesis DIC Documentation](https://thesis.coding.lang/) — oficiálna dokumentácia Thesis dependency injection container
-- [PHP-FIG — PSR-11 Container Interface](https://www.php-fig.org/psr/psr-11/) — štandardizovaný container interface
-- [PHP Manual — Attributes](https://www.php.net/manual/en/language.attributes.php) — PHP 8 natívne atribúty
-- [Martin Fowler — Inversion of Control](https://martinfowler.com/articles/injection.html) — klasický článok o IoC a DI patternoch
-- [PHPStan — Extension Points](https://phpstan.org/developing-extensions/phpstan-basics) — static analysis pre DI patterny
+- [Thesis DIC Documentation](https://thesis.coding.lang/): oficiálna dokumentácia Thesis dependency injection container
+- [PHP-FIG, PSR-11 Container Interface](https://www.php-fig.org/psr/psr-11/): štandardizovaný container interface
+- [PHP Manual, Attributes](https://www.php.net/manual/en/language.attributes.php): PHP 8 natívne atribúty
+- [Martin Fowler, Inversion of Control](https://martinfowler.com/articles/injection.html): klasický článok o IoC a DI patternoch
+- [PHPStan, Extension Points](https://phpstan.org/developing-extensions/phpstan-basics): static analysis pre DI patterny

@@ -3,7 +3,7 @@ title: "Fog and Sun ... how to write problems that keep people reading"
 date: "2026-08-29"
 version: "1.0.0"
 tags: ["writing", "narrative-rhythm", "technical-writing", "blog"]
-excerpt: "The problem must be personal — not 'problem X exists' but 'Y happened and it was bad.' How fog and sun phases create the tension that keeps readers engaged."
+excerpt: "The problem must be personal, not 'problem X exists' but 'Y happened and it was bad.' How fog and sun phases create the tension that keeps readers engaged."
 author: "Evan McDan"
 author_email: "evan.mcdan@example.test"
 category: "Writing"
@@ -19,7 +19,7 @@ Both describe the same problem. One is a documentation note. The other is a stor
 
 ## The fog phase
 
-Fog is confusion, mystery, a problem that hasn't been solved yet. It's the part of the article where the reader doesn't know the answer — but wants to.
+Fog is confusion, mystery, a problem that hasn't been solved yet. It's the part of the article where the reader doesn't know the answer, but wants to.
 
 The fog phase must be **personal**. Not "problem X exists" but "this happened to us and it was bad."
 
@@ -42,7 +42,7 @@ The first example describes a condition. The second describes an event. Events a
 
 ## Why short sentences create tension
 
-The fog phase uses staccato rhythm — short sentences, each one adding pressure:
+The fog phase uses staccato rhythm, short sentences, each one adding pressure:
 
 ```markdown
 Click page 3. The pager doubled.
@@ -52,13 +52,13 @@ each slightly different — some with Prev,
 some with Next, none with both.
 ```
 
-Each sentence is a beat. The reader feels the problem growing. That's tension — and tension keeps people reading.
+Each sentence is a beat. The reader feels the problem growing. That's tension, and tension keeps people reading.
 
 If you write the fog phase in long, flowing sentences, the tension dissolves. The reader skims. The fog clears before it should.
 
 ## The sun phase
 
-Sun is clarity — the moment the reader understands the problem and sees the solution. But the solution must be **earned**. If you rush from fog to sun, the reader feels cheated.
+Sun is clarity, the moment the reader understands the problem and sees the solution. But the solution must be **earned**. If you rush from fog to sun, the reader feels cheated.
 
 ```markdown
 # Bad: rushed solution
@@ -73,7 +73,7 @@ I switched PASSWORD_ARGON2ID to PASSWORD_BCRYPT.
 Bcrypt needs ≈4 MB RAM ... 16 times less.
 ```
 
-The second example makes the reader feel the "aha!" moment. The fix is simple — but it's presented as a discovery, not a directive.
+The second example makes the reader feel the "aha!" moment. The fix is simple, but it's presented as a discovery, not a directive.
 
 ## Code blocks are proof, not decoration
 
@@ -114,9 +114,9 @@ That gap is where the reader's curiosity lives. Don't skip it.
 
 ---
 
-The fog phase earns the reader's attention. The sun phase rewards it. Skip either one, and the article becomes documentation — technically correct, emotionally dead.
+The fog phase earns the reader's attention. The sun phase rewards it. Skip either one, and the article becomes documentation, technically correct, emotionally dead.
 
-Fog and sun are the foundation. Every article has them. The phases that follow — night, object, theme — are what turn a technical note into a story you keep.
+Fog and sun are the foundation. Every article has them. The phases that follow, night, object, theme, are what turn a technical note into a story you keep.
 
 Fog remains the hardest phase to write. Sun remains the most satisfying. The gap between them is where curiosity lives.
 
@@ -126,13 +126,13 @@ The problem must be personal. The solution must be earned. Everything else is co
 
 ---
 
-→ [Part 3 — Night, Object, Theme](/blog/rhythm-part-3-night-object-theme) — the parts that make articles memorable
-→ [Part 1 — The Article Nobody Finished](/blog/rhythm-part-1-nobody-finished) — why rhythm matters
+→ [Part 3, Night, Object, Theme](/blog/rhythm-part-3-night-object-theme): the parts that make articles memorable
+→ [Part 1, The Article Nobody Finished](/blog/rhythm-part-1-nobody-finished): why rhythm matters
 
 ## Sources
 
-- [PHP Manual](https://www.php.net/manual/) — official PHP documentation
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP standards
-- [Nativa Minimal Documentation](/docs/getting-started) — official getting started guide
-- [Web.dev — Performance](https://web.dev/performance) — Core Web Vitals
-- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/) — Lighthouse tool
+- [PHP Manual](https://www.php.net/manual/): official PHP documentation
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP standards
+- [Nativa Minimal Documentation](/docs/getting-started): official getting started guide
+- [Web.dev, Performance](https://web.dev/performance): Core Web Vitals
+- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/): Lighthouse tool

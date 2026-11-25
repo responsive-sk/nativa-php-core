@@ -15,7 +15,7 @@ published: true
 
 V [dieli 10.2](/blog/lekalo-upgrade-pre-deti) stál model na 142 definíciách
 a nástroj prešiel z 0.1.31 na 0.3.2. Odvtedy pribudlo 104 definícií a
-všetky sú naše — pribudli s modmi, ktoré sme do modelu vpustili my. Dnes
+všetky sú naše, pribudli s modmi, ktoré sme do modelu vpustili my. Dnes
 nástroj prešiel z 0.3.2 na 0.6.4 a z tých 246 definícií sa nepohlo ani
 jedno.
 
@@ -155,7 +155,7 @@ Dve roadmappy, obe malé, obe poctivé.
 
 Upstream v0.6.4 rieši to, čo sme my neriešili: drbtil z reálnych
 projektov, čo sa dá automaticky a čo nie, a zapísal si to ako nálezy
-F1 až F7. Jeden z nich nás zaujíma aj tak — Hono extrakcia sa zhoršuje,
+F1 až F7. Jeden z nich nás zaujíma aj tak, Hono extrakcia sa zhoršuje,
 keď v projekte chýba `node_modules`, a nástroj to prizná
 poctivými znakmi namiesto tichých preskočení. My sme v tej situácii
 píšali test, ktorý to vyhadzuje.
@@ -180,9 +180,9 @@ vedomosti. Prvá sa píše rýchlo a číta ťažko. Druhá sa píše pomaly a
 
 ## Zdroje
 
-- [Lekalo](https://github.com/ichinya/lekalo) — repozitár produktu (release v0.6.4 z 1. októbra 2026, `lekalo compatibility` je register kontraktov)
-- [Release v0.6.4](https://github.com/ichinya/lekalo/releases/tag/v0.6.4) — čo pribudlo: Node/TypeScript bindingy, lokálna história behov, brownfield pilotáž, nálezy F1 až F7
-- [docs/lekalo-model.md](https://github.com/evan70/nativa-minimal/blob/master/docs/lekalo-model.md) — náš upgrade record, vrátane pasce, keď `lekalo lock` odmietne lock, ktorý má nahradiť
-- [lekalo/modules](https://github.com/evan70/nativa-minimal/tree/master/lekalo/modules) — osem modulov, ktoré model dnes pozná, a zoznam tých, ktoré v ňom ešte nie sú
-- [Diel 10.2 — upgrade cez tri brány](/blog/lekalo-upgrade-pre-deti) — predchádzajúci upgrade, pri ktorom sa naozaj niečo zmenilo
-- [Diel 16 — komentáre ako posledná reťaz](/blog/lekalo-comments-pre-deti) — kam táto rada smeruje
+- [Lekalo](https://github.com/ichinya/lekalo): repozitár produktu (release v0.6.4 z 1. októbra 2026, `lekalo compatibility` je register kontraktov)
+- [Release v0.6.4](https://github.com/ichinya/lekalo/releases/tag/v0.6.4): čo pribudlo: Node/TypeScript bindingy, lokálna história behov, brownfield pilotáž, nálezy F1 až F7
+- [docs/lekalo-model.md](https://github.com/evan70/nativa-minimal/blob/master/docs/lekalo-model.md): náš upgrade record, vrátane pasce, keď `lekalo lock` odmietne lock, ktorý má nahradiť
+- [lekalo/modules](https://github.com/evan70/nativa-minimal/tree/master/lekalo/modules): osem modulov, ktoré model dnes pozná, a zoznam tých, ktoré v ňom ešte nie sú
+- [Diel 10.2, upgrade cez tri brány](/blog/lekalo-upgrade-pre-deti): predchádzajúci upgrade, pri ktorom sa naozaj niečo zmenilo
+- [Diel 16, komentáre ako posledná reťaz](/blog/lekalo-comments-pre-deti): kam táto rada smeruje

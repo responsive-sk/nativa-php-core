@@ -11,7 +11,7 @@ translation: "htmx-pager-duplication"
 published: true
 ---
 
-Click page 3. The pager doubled. Click again. Tripled. Four pagers stacked on top of each other, each slightly different — some with Prev, some with Next, none with both.
+Click page 3. The pager doubled. Click again. Tripled. Four pagers stacked on top of each other, each slightly different, some with Prev, some with Next, none with both.
 
 The admin panel looked broken. But the code was correct. Or so it seemed.
 
@@ -39,7 +39,7 @@ The search input sat above the table. It also targeted `#pages-content`:
     hx-swap="outerHTML">
 ```
 
-Search and pagination shared the same target. Both returned the same `$grid` blob — search input, count info, table, pagination — all in one HTML string.
+Search and pagination shared the same target. Both returned the same `$grid` blob, search input, count info, table, pagination, all in one HTML string.
 
 ## The Cascade
 
@@ -51,7 +51,7 @@ Here is what happened on a pagination click:
 4. HTMX finds `#pages-content`, replaces it via `outerHTML`
 5. The old pager is gone. New pager appears. Clean so far.
 
-But the response also contained the search input — with its own `hx-trigger="search"`. After the swap, the browser re-evaluated form state. The `search` event fired on the original input (which was still in the DOM, outside `#pages-content`). That triggered a second HTMX request. The second response included another pagination. `outerHTML` replaced `#pages-content` again — but the first replacement had already completed. Two pagers now existed in the DOM.
+But the response also contained the search input, with its own `hx-trigger="search"`. After the swap, the browser re-evaluated form state. The `search` event fired on the original input (which was still in the DOM, outside `#pages-content`). That triggered a second HTMX request. The second response included another pagination. `outerHTML` replaced `#pages-content` again, but the first replacement had already completed. Two pagers now existed in the DOM.
 
 Each subsequent click repeated the cycle.
 
@@ -59,7 +59,7 @@ Each subsequent click repeated the cycle.
 
 Separate what the full page needs from what HTMX needs.
 
-`renderGrid()` returns the complete HTML for the first page load — search input, count info, table, pagination. `renderContent()` returns only the `<div id="pages-content">` element — count info, table, pagination. No search input.
+`renderGrid()` returns the complete HTML for the first page load, search input, count info, table, pagination. `renderContent()` returns only the `<div id="pages-content">` element, count info, table, pagination. No search input.
 
 ```php
 // Full page load
@@ -77,11 +77,11 @@ The search input never appears in HTMX responses. No cascade. No duplication.
 
 HTMX with `outerHTML` swap finds the target element in the response and replaces the original. Elements outside the target in the response are discarded.
 
-But "discarded" means the browser never inserts them — it does not mean they never existed in the response string. If the response contains elements with their own HTMX triggers, and those elements happen to match DOM selectors, the browser can fire events on the original (non-swapped) elements.
+But "discarded" means the browser never inserts them, it does not mean they never existed in the response string. If the response contains elements with their own HTMX triggers, and those elements happen to match DOM selectors, the browser can fire events on the original (non-swapped) elements.
 
 The rule: an HTMX partial response should contain **only** the element being swapped. Nothing before it. Nothing after it. If the server returns `$searchInput . $targetDiv`, and `$searchInput` has `hx-trigger`, the original search input stays in the DOM and may re-fire.
 
-`renderGrid()` remains the full-page renderer — search input, count info, table, pagination. `renderContent()` handles the HTMX path. When you build pagination with HTMX, call `renderContent()`. When you need the full page, call `renderGrid()`. Two methods, one truth.
+`renderGrid()` remains the full-page renderer, search input, count info, table, pagination. `renderContent()` handles the HTMX path. When you build pagination with HTMX, call `renderContent()`. When you need the full page, call `renderGrid()`. Two methods, one truth.
 
 ---
 
@@ -89,13 +89,13 @@ A framework's magic is only as good as the HTML you feed it. HTMX does not prote
 
 ---
 
-→ [MoonShine Features + HTMX](/blog/moonshine-htmx-features) — toast notifications, live search, form submit
-→ [CSP and onclick](/blog/csp-onclick-silent-security-bug) — the silent security hole that killed inline handlers
+→ [MoonShine Features + HTMX](/blog/moonshine-htmx-features): toast notifications, live search, form submit
+→ [CSP and onclick](/blog/csp-onclick-silent-security-bug): the silent security hole that killed inline handlers
 
 ## Sources
 
-- [htmx.org — Documentation](https://htmx.org/docs/) — official HTMX documentation
-- [htmx.org — hx-swap](https://htmx.org/attributes/hx-swap/) — swap attribute and its options
-- [htmx.org — hx-target](https://htmx.org/attributes/hx-target/) — target selector specification
-- [MDN — DOM Manipulation](https://developer.mozilla.org/en-US/docs/Web/API/Document_object_model) — DOM API basics
-- [HTMX Patterns — Pagination](https://htmx.org/examples/pagination/) — official pagination pattern
+- [htmx.org, Documentation](https://htmx.org/docs/): official HTMX documentation
+- [htmx.org, hx-swap](https://htmx.org/attributes/hx-swap/): swap attribute and its options
+- [htmx.org, hx-target](https://htmx.org/attributes/hx-target/): target selector specification
+- [MDN, DOM Manipulation](https://developer.mozilla.org/en-US/docs/Web/API/Document_object_model): DOM API basics
+- [HTMX Patterns, Pagination](https://htmx.org/examples/pagination/): official pagination pattern

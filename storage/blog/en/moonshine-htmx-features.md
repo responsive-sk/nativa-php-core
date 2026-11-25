@@ -12,7 +12,7 @@ translation: "moonshine-htmx-features"
 published: true
 ---
 
-In the previous article we wrote about how MoonShine UI inspired Cardboard — immutable cards, SVG charts, design tokens. But that was just the beginning.
+In the previous article we wrote about how MoonShine UI inspired Cardboard, immutable cards, SVG charts, design tokens. But that was just the beginning.
 
 MoonShine has dozens of components that make admin panels pleasant. Toast notifications, progress bar, tooltips, breadcrumbs. And HTMX adds live search, pagination, and form submit without reloads.
 
@@ -24,7 +24,7 @@ The answer: almost all of it.
 
 MoonShine UI is a Laravel package. It has Blade components, Alpine.js interactions, Livewire state. We have none of those.
 
-But the language — CSS classes, naming conventions, layout patterns — that works without Laravel.
+But the language, CSS classes, naming conventions, layout patterns, that works without Laravel.
 
 ### 1. Toast Notifications
 
@@ -121,7 +121,7 @@ MoonShine uses Alpine.js for tooltips. We made CSS-only:
 [data-tooltip]:hover::after { opacity: 1; }
 ```
 
-Usage — no JavaScript API needed:
+Usage, no JavaScript API needed:
 
 ```html
 <button data-tooltip="Edit page">Edit</button>
@@ -175,11 +175,11 @@ MoonShine has a badge system. We added badges to the Articles index:
 [Members] [admin] [moonshine]
 ```
 
-Each badge is a CSS class — `.m-badge-success`, `.m-badge-purple`, `.m-badge-info`, `.m-badge-gray`.
+Each badge is a CSS class,`.m-badge-success`, `.m-badge-purple`, `.m-badge-info`, `.m-badge-gray`.
 
 ## What We Added From HTMX
 
-MoonShine uses Alpine.js for interactions. We chose HTMX — server-driven, no client-side state.
+MoonShine uses Alpine.js for interactions. We chose HTMX, server-driven, no client-side state.
 
 ### Why HTMX and Not Alpine.js
 
@@ -189,7 +189,7 @@ MoonShine uses Alpine.js for interactions. We chose HTMX — server-driven, no c
 | **PHP renders** | Yes (HTML fragments) | No (JSON only) |
 | **Fallback** | Full page reload | None |
 | **Size** | ~14KB | ~15KB |
-| **Zero-dep** | yes — self-hosted | yes — self-hosted |
+| **Zero-dep** | yes, self-hosted | yes, self-hosted |
 
 HTMX is server-driven. PHP renders HTML fragments. HTMX swaps them into the DOM. No client-side state, no reactive variables.
 
@@ -269,7 +269,7 @@ Server returns empty response. HTMX removes the row with a 500ms animation.
 
 ### CSRF with HTMX
 
-HTMX needs a CSRF token in every request. Solution — inline config script:
+HTMX needs a CSRF token in every request. Solution, inline config script:
 
 ```javascript
 document.body.addEventListener("htmx:configRequest", function(e) {
@@ -300,10 +300,10 @@ If HTMX isn't there, everything works via full page reloads. No breaking changes
 
 MoonShine has components that require Alpine.js:
 
-- **Dropdown** — needs `x-data`, `x-show`
-- **Modal** — needs `x-on:click`
-- **Tabs** — needs `x-data`
-- **Off-canvas** — needs `x-show`
+- **Dropdown**: needs `x-data`, `x-show`
+- **Modal**: needs `x-on:click`
+- **Tabs**: needs `x-data`
+- **Off-canvas**: needs `x-show`
 
 We replaced them with CSS-only solutions:
 
@@ -321,30 +321,30 @@ Everything works without a single line of client-side framework.
 
 An admin panel at `/mark` with:
 
-- **Toast notifications** — CSS + inline JS, 3 types (ok/err/info)
-- **Progress bar** — XHR upload with tracking
-- **Skeleton loading** — CSS shimmer animation
-- **Tooltips** — CSS `data-tooltip` attribute
-- **Breadcrumbs** — `AdminLayout::breadcrumb()` helper
-- **Empty states** — SVG illustrations with CTA
-- **Rich badges** — status, category, tags
-- **HTMX live search** — instant results without reload
-- **HTMX pagination** — partial updates with browser history
-- **HTMX form submit** — HX-Redirect without reload
-- **HTMX delete** — row fade-out animation
+- **Toast notifications**: CSS + inline JS, 3 types (ok/err/info)
+- **Progress bar**: XHR upload with tracking
+- **Skeleton loading**: CSS shimmer animation
+- **Tooltips**: CSS `data-tooltip` attribute
+- **Breadcrumbs**: `AdminLayout::breadcrumb()` helper
+- **Empty states**: SVG illustrations with CTA
+- **Rich badges**: status, category, tags
+- **HTMX live search**: instant results without reload
+- **HTMX pagination**: partial updates with browser history
+- **HTMX form submit**: HX-Redirect without reload
+- **HTMX delete**: row fade-out animation
 
 All in pure PHP 8.5. No Composer packages in production. No JavaScript frameworks.
 
 639 tests. PHPStan level 9. 0 CS-Fixer violations.
 
-→ [MoonShine Cardboard](/blog/moonshine-cardboard) — how MoonShine inspired Cardboard
-→ [Clean Code for Kids](/blog/co-je-cisty-kod-pre-deti) — how to write code that reads itself
-→ [Philosophy of Fewer Layers](/blog/filozofia-menej-vrstiev) — why fewer abstractions = fewer bugs
+→ [MoonShine Cardboard](/blog/moonshine-cardboard): how MoonShine inspired Cardboard
+→ [Clean Code for Kids](/blog/co-je-cisty-kod-pre-deti): how to write code that reads itself
+→ [Philosophy of Fewer Layers](/blog/filozofia-menej-vrstiev): why fewer abstractions = fewer bugs
 
 ## Sources
 
-- [PHP Manual](https://www.php.net/manual/) — official PHP documentation
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP standards
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — security best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — official getting started guide
-- [W3C — Web Standards](https://www.w3.org/standards/) — web standards
+- [PHP Manual](https://www.php.net/manual/): official PHP documentation
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP standards
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): security best practices
+- [Nativa Minimal Documentation](/docs/getting-started): official getting started guide
+- [W3C, Web Standards](https://www.w3.org/standards/): web standards

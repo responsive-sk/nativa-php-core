@@ -1,11 +1,11 @@
 ---
-title: "Rust a Lekalo pre deti ... diel 9: nezmeniteľné deklarácie — 0.1.31, komentáre a #63 invarianty"
+title: "Rust a Lekalo pre deti ... diel 9: nezmeniteľné deklarácie, 0.1.31, komentáre a #63 invarianty"
 series: "Rust & Lekalo"
 series-part: "9"
 date: "2026-09-11"
 version: "1.0.1"
 tags: ["rust", "lekalo", "invarianty", "architektura"]
-excerpt: "Diel 8 pripol autorizačný kontrakt. Tento týždeň prišlo niečo nové: prvý modul, ktorý sa priznal k importom (komentáre potrebuje blog aj users), admin edit používateľa ako command, a issue #63 — tri stavové stroje a štyri invarianty deklarované ako príloha, vrátane dvoch poctivých dier, ktoré model sám pomenoval."
+excerpt: "Diel 8 pripol autorizačný kontrakt. Tento týždeň prišlo niečo nové: prvý modul, ktorý sa priznal k importom (komentáre potrebuje blog aj users), admin edit používateľa ako command, a issue #63, tri stavové stroje a štyri invarianty deklarované ako príloha, vrátane dvoch poctivých dier, ktoré model sám pomenoval."
 author: "Evan McDan"
 author_email: "evan.mcdan@example.test"
 category: "Architecture"
@@ -17,11 +17,11 @@ published: true
 > uzlov a stal sa gate-om ([diel 7](/blog/lekalo-model-rastie-pre-deti)).
 > Diel 8 rozoberal autorizačný kontrakt a strict review
 > ([diel 8](/blog/lekalo-autorizacia-pre-deti)). Dnes: verzia 0.1.31,
-> tretí modul v grafe — komentáre — a nový druh dokumentu, ktorý 0.1.31
+> tretí modul v grafe, komentáre, a nový druh dokumentu, ktorý 0.1.31
 > priniesla: invarianty a prechody stavov ako príloha k modelu (#63).
 
 Séria sa doteraz točila okolo jednej myšlienky: **deklarovať, nie
-vynucovať**. Tento diel je o prvom dokumente, ktorý ide krok ďalej —
+vynucovať**. Tento diel je o prvom dokumente, ktorý ide krok ďalej,
 nedeklaruje len *čo existuje* a *kto smie čo*, ale *čo sa môže a čo sa
 nemôže nikdy stať*. Všetky čísla nižšie sú živý výstup z tohto
 repozitára (verzia 0.1.31).
@@ -37,7 +37,7 @@ status: valid
 nodes: 128 edges: 226
 ```
 
-Tretí modul je **comments** — čítateľské komentáre k článkom,
+Tretí modul je **comments**: čítateľské komentáre k článkom,
 `comments.db`, guest/identity autori, CSRF + per-IP throttle na submit
 a admin moderácia. K nemu pribudol v Users module admin edit povrch
 (`users.update_user`) so svojím efektom a novým `users.flag` skalárom.
@@ -67,7 +67,7 @@ module:comments --requires--> module:users
 Je to malý, ale významný posun. Kit už dávno vie, že komentár sa viaže
 na článok (`article_slug: blog.slug`) a že autor môže byť prihlásený
 používateľ (`user_id: users.user?`). Model to doteraz vedel len
-implicítne — cez typové referencie. Od 0.1.31 to je deklarovaná
+implicítne, cez typové referencie. Od 0.1.31 to je deklarovaná
 závislosť modulov, ktorú validátor kontroluje: importuješ modul, ktorý
 neexistuje? Chyba. Referencuješ typ z neimportovaného modulu? Chyba.
 Prvýkrát model dokumentuje nielen *čo je*, ale aj *čo závisí na čom*.
@@ -90,7 +90,7 @@ Nový command v Users module:
 }
 ```
 
-Žiadna veda — formulár v `/mark/users`. Ale kontrakt je kontrakt:
+Žiadna veda, formulár v `/mark/users`. Ale kontrakt je kontrakt:
 dva nové uzly (`users.update_user`, `users.effect_user_updated`),
 nový skalár `users.flag` (boolean pre checkboxy) a povinná allow
 policy v autorizácii:
@@ -104,7 +104,7 @@ policy v autorizácii:
   roles: ["users.role.admin"]
 ```
 
-Strict review to pohltil bez jediného nového zlyhania — lekciami
+Strict review to pohltil bez jediného nového zlyhania, lekciami
 z dielu 8 už vieme, že každý mutujúci efekt potrebuje allow policy,
 takže sme ju napísali skôr, než strict stihol zaškrtnúť
 `LEK-AUTH-009`.
@@ -135,7 +135,7 @@ policies: state=available
 
 Verejný povrch s podmienkami: článok musí existovať, komentár musí
 mať identitu (prihlásený používateľ alebo guest meno/email) a IP
-musí prejsť throttle-om. Každá podmienka je samostatná deny policy —
+musí prejsť throttle-om. Každá podmienka je samostatná deny policy,
 čitateľný zoznam pravidiel, ktoré môžu platiť súčasne. Autorizácia
 (na rozdiel od týchto doménových pravidiel) zostáva v
 `lekalo/authorization.yaml`: `comments.policy.public_submit` pre
@@ -144,7 +144,7 @@ pre tri admin operácie pod `users.role.admin`.
 
 ## 5. #63: invarianty a prechody ako príloha
 
-To hlavné, čo 0.1.31 priniesla: issue #63 — invariant-transition —
+To hlavné, čo 0.1.31 priniesla: issue #63, invariant-transition,
 ako core library modul. Žiadny CLI subcommand ešte nečíta projektové
 prílohy, ale kontrakt (`lekalo/invariant-transition/v1.0.0`) je
 verejný a verifikovaný, takže sme mohli náš stavový model deklarovať
@@ -159,7 +159,7 @@ Tri stavové priestory:
 | `nativa.comments.moderation` | `pending`, `approved`, `rejected` | `pending` | allow |
 | `nativa.users.account` | `active` ⇄ `inactive` | `active` | allow |
 
-Štyri invarianty — tri `member_of_set` (stav je vždy presne jeden z
+Štyri invarianty, tri `member_of_set` (stav je vždy presne jeden z
 deklarovaných) a jeden `field_value` (čerstvo submitnutý komentár je
 vždy `pending`). Šesť prechodov. Napríklad moderácia:
 
@@ -175,20 +175,20 @@ vždy `pending`). Šesť prechodov. Napríklad moderácia:
 ```
 
 Prečo `fromStates` obsahuje aj `rejected`? Pretože v tomto runtime
-neexistujú terminálne stavy — admin môže schváliť zamietnutý komentár
+neexistujú terminálne stavy, admin môže schváliť zamietnutý komentár
 a naopak. Preto `cyclePolicy: allow`: stroj je otvorene cyklický,
 žiadne falošné „final“ štítky.
 
 A tu je dizajnové rozhodnutie, ktoré stojí za slová: **cmdref je
 command, nie endpoint**. Prechod nespúšťa HTTP cesta, ale sémantická
-operácia — `comments.approve` — na ktorú sa viaže policyRef a
+operácia,`comments.approve`: na ktorú sa viaže policyRef a
 errorRefs. Endpoint `/mark/comments/{id}/approve` je len jedným
 z možných volajúcich.
 
 ## 6. Overenie: dve plné, dve poctivé diery
 
 Overenie prechodu medzi deklaráciou a runtime riadi `verificationMappings`.
-Naše štyri mapovania sú rozdelené presne na polovicu — a to je ten
+Naše štyri mapovania sú rozdelené presne na polovicu, a to je ten
 najdôležitejší riadok v tomto článku:
 
 ```json
@@ -202,12 +202,12 @@ najdôležitejší riadok v tomto článku:
 ```
 
 `nativa.mapping.comment_lifecycle_tested` a
-`nativa.mapping.gate_state_tested` sú `full` — skutočné integračné
+`nativa.mapping.gate_state_tested` sú `full`: skutočné integračné
 testy v tomto repozitári (`CommentsTest`, `BlogMembersTest`) pokrývajú
 tieto prechody, s evidence digest-om.
 
 `nativa.mapping.comment_status_runtime` a
-`nativa.mapping.account_state_runtime` sú `gap` — invarianty
+`nativa.mapping.account_state_runtime` sú `gap`: invarianty
 `comment_status_member` a `account_state_member` deklarujeme, ale
 runtime ich **nevynucuje**; riadky v SQLite by teoreticky mohli
 niesť cudzí status, keby niečo obišlo služby. Mapovanie to hovorí
@@ -226,14 +226,14 @@ na rovinu:
 
 Mohli sme obidve mapovania ohnúť na `full`. Nesmeli sme. Audit log
 tohto kitu je immutable, pretože BEFORE UPDATE/DELETE triggre
-SQLite nedovolia nič prepísať — ale status komentára a `is_active`
+SQLite nedovolia nič prepísať, ale status komentára a `is_active`
 sú bežné stĺpce, ktoré služby menia. Deklarovať `full`, keď runtime
 nič nevynucuje, by bola lož do kontraktu. Model, ktorý hovorí
 nepravdu o svojich hraniciach, je horší ako žiadny model.
 
 ## 7. Ako príloha vznikla: wire kontrakt na vlastnej koži
 
-Príloha žije v `docs/lekalo/`, nie v `lekalo/` — loader vynucuje
+Príloha žije v `docs/lekalo/`, nie v `lekalo/`: loader vynucuje
 uzavretý koreň `lekalo/` (`project.yaml`, `modules`, `targets`,
 `authorization.yaml`), takže prílohy nemajú kanonický domov. Keď
 upstream vyberie miesto, presunieme. (Celý postup je zdokumentovaný
@@ -243,20 +243,20 @@ Samotný zápis bol učenie:
 
 - **ASCII-strict.** Em-dash v description? Odmietnuté. Apostrof?
   Odmietnuté. Kontrakt je wire formát, nie prosa.
-- **camelCase.** `stateSpaceId`, nie `state_space_id` — odlišné od
+- **camelCase.** `stateSpaceId`, nie `state_space_id`: odlišné od
   YAML dokumentov v `lekalo/`.
 - **Každý prechod potrebuje errorRefs.** Prechod bez chybovej
-  referencie je nekompletný — vždy existuje spôsob, ako zlyhať, a
+  referencie je nekompletný, vždy existuje spôsob, ako zlyhať, a
   kontrakt si to vyžaduje vypísať.
 - **Self-loopy sa odmietajú.** Prechod zo stavu do toho istého
   stavu interaguje s `deadPolicy`/`cyclePolicy` a reachability
-  kontrolami — deklarovať ho nemôžete, aj keby ste chceli.
+  kontrolami, deklarovať ho nemôžete, aj keby ste chceli.
 - **policyRef má namespaced gramatiku** (`ns.name/name`), nie
-  semantické id — preto `authorization.nativa/blog-admin-editing`.
+  semantické id, preto `authorization.nativa/blog-admin-editing`.
 
 Digesty v prílohe: `modelRef.digest` je kontraktový digest Modelu
 1.0.0 z locku; `irRef.digest` je SHA-256 **kanonického IR JSON
-bez trailing newline** — overené proti reálnej `model_ref` pin
+bez trailing newline**, overené proti reálnej `model_ref` pin
 recenzii. Po každej zmene modelu treba oba refreshnúť.
 
 ## Poctivé limity (stav k 0.1.31)
@@ -265,33 +265,33 @@ recenzii. Po každej zmene modelu treba oba refreshnúť.
   library modul; žiadny subcommand nečíta projektové prílohy. Naša
   príloha je verifikovaná scratch harness-om nad `lekalo-core`,
   nie gate-om.
-- **Error kontrakty (#62)** — stále žiadny per-project deklaračný
+- **Error kontrakty (#62)**: stále žiadny per-project deklaračný
   povrch; `errorRefs` v prechodoch a `error_ref` v policy sú
   pripnuté stabilné id bez payloadov.
-- **Extended effects (#26)** — event/job/cache sémantika stále
+- **Extended effects (#26)**: event/job/cache sémantika stále
   nedeklarovateľná.
 - **Autorizačné policy stále nie sú inspectovateľné** (z dielu 8)
   a v #13 grafe sa stále neobjavujú.
 
 ---
 
-Hlbšia pointa tohto dielu: doteraz model hovoril, čo systém *robí* —
+Hlbšia pointa tohto dielu: doteraz model hovoril, čo systém *robí*,
 commandy, query, endpointy, policy. Invarianty hovoria, čo systém
 *znamená*: komentár je vždy v jednom z troch stavov, čerstvý komentár
 je vždy pending, účet je vždy active alebo inactive. A keď deklarácia
-zlyhá — keď runtime niečo z toho nedokáže zaručiť — model to pozná
+zlyhá, keď runtime niečo z toho nedokáže zaručiť, model to pozná
 ako `gap`, nie ako ticho. Počítaču nezáleží na tom, čo si zamýšľal;
 mapovanie s `status: gap` je spôsob, ako sa priznať, že zámer a
 realita sú stále dve rôzne veci.
 
-→ [Diel 8 — autorizačný kontrakt](/blog/lekalo-autorizacia-pre-deti) — kto smie čo a čo strict review kontroluje
-→ [Diel 7 — model rastie](/blog/lekalo-model-rastie-pre-deti) — 106 uzlov, gate na každom pushi
-→ [Dokumentácia modelu na GitHub-e](https://github.com/evan70/nativa-minimal/blob/master/docs/lekalo-model.md) — vrátane sekcie o #63 a wire pravidlách prílohy
+→ [Diel 8, autorizačný kontrakt](/blog/lekalo-autorizacia-pre-deti): kto smie čo a čo strict review kontroluje
+→ [Diel 7, model rastie](/blog/lekalo-model-rastie-pre-deti): 106 uzlov, gate na každom pushi
+→ [Dokumentácia modelu na GitHub-e](https://github.com/evan70/nativa-minimal/blob/master/docs/lekalo-model.md): vrátane sekcie o #63 a wire pravidlách prílohy
 
 ## Zdroje
 
-- [Lekalo](https://github.com/ichinya/lekalo) — repozitár projektu (product 0.1.31)
-- [Lekalo issue #63](https://github.com/ichinya/lekalo) — invariant-transition core modul (kontrakt `lekalo/invariant-transition/v1.0.0`)
-- `docs/lekalo/invariant-transition.nativa.json` — príloha tohto repozitára (tri stavové priestory, štyri invarianty, šesť prechodov)
-- `docs/lekalo-model.md` — dokumentácia sémantického modelu (sekcie o komentároch, 0.1.31 a #63)
-- `lekalo/modules/comments/` — comments modul: entity, commandy, deny policy
+- [Lekalo](https://github.com/ichinya/lekalo): repozitár projektu (product 0.1.31)
+- [Lekalo issue #63](https://github.com/ichinya/lekalo): invariant-transition core modul (kontrakt `lekalo/invariant-transition/v1.0.0`)
+- `docs/lekalo/invariant-transition.nativa.json`: príloha tohto repozitára (tri stavové priestory, štyri invarianty, šesť prechodov)
+- `docs/lekalo-model.md`: dokumentácia sémantického modelu (sekcie o komentároch, 0.1.31 a #63)
+- `lekalo/modules/comments/`: comments modul: entity, commandy, deny policy

@@ -48,7 +48,7 @@ Why the same commands rather than two similar lists?
 
 Because a list that exists twice will drift once.
 
-When `composer test` and CI each had their own idea of the suite, the first person to add a test to one and forget the other learned the truth a week later — and the truth was a red `master`.
+When `composer test` and CI each had their own idea of the suite, the first person to add a test to one and forget the other learned the truth a week later, and the truth was a red `master`.
 
 ## A gate that exists only at home rots
 
@@ -64,11 +64,11 @@ Nobody noticed, because a file that never runs never reports anything.
 
 Today acceptance is a job of its own in CI.
 
-It is an expensive job — it boots a server, migrates the databases and seeds fixtures — and that is exactly why it belongs in CI: an expensive gate has to run without you remembering it.
+It is an expensive job, it boots a server, migrates the databases and seeds fixtures, and that is exactly why it belongs in CI: an expensive gate has to run without you remembering it.
 
 ## Three boots of the app ... and one duplication
 
-Two of our jobs — `acceptance` and `browser` — need a running application.
+Two of our jobs,`acceptance` and `browser`: need a running application.
 
 The sequence is always the same: create the `storage` directories, run `php bin/cms migrate`, seed with `php bin/cms seed`, add `php bin/cms forms:seed`, then start the server and wait for it to answer.
 
@@ -85,7 +85,7 @@ That sequence appears three times in the file: for `acceptance`, for `browser`, 
 
 Let us be honest: this is a minus.
 
-Three copies of one truth are three places where `forms:seed` gets forgotten — and it shows up as a theme bug, not as a missing seed.
+Three copies of one truth are three places where `forms:seed` gets forgotten, and it shows up as a theme bug, not as a missing seed.
 
 The plan is one script that owns the whole sequence, with CI only calling it with a port and a log path.
 
@@ -116,7 +116,7 @@ What did the browser find that the tests could not see? The list is uncomfortabl
 - a burger in the `magazine` theme sitting 78px from the right edge,
 - a menu that ignored Escape and never returned focus,
 - a card link nested inside another link,
-- a web font that moved the hero 50px after the swap — 0.336 CLS,
+- a web font that moved the hero 50px after the swap, 0.336 CLS,
 - an editor that opened as a sheet only on the second click.
 
 Every one of those passed all the PHP tests, because PHPUnit knows about CSS and focus exactly as much as it knows about the weather.
@@ -131,15 +131,15 @@ We went through a change that touched more than a hundred files mentioning scrip
 
 We moved the scripts into role directories, and we have tools for it: `BinLayoutTest` and `CheckScriptsWiredTest`.
 
-And still, fourteen check scripts were broken — they imported `'./lib/cdp.mjs'`, which after the move means `bin/checks/lib/cdp.mjs`.
+And still, fourteen check scripts were broken, they imported `'./lib/cdp.mjs'`, which after the move means `bin/checks/lib/cdp.mjs`.
 
 At runtime Node would throw `ERR_MODULE_NOT_FOUND`.
 
 But `composer test` does not run a single check.
 
-`CheckScriptsWiredTest` asserts a script is listed in CI — a string in a file, not whether it can run.
+`CheckScriptsWiredTest` asserts a script is listed in CI, a string in a file, not whether it can run.
 
-`CheckScriptsShareCdpTest` asserts a check uses the shared library — not whether it can load it.
+`CheckScriptsShareCdpTest` asserts a check uses the shared library, not whether it can load it.
 
 Every gate was green and fourteen scripts were dead.
 
@@ -155,7 +155,7 @@ A script that **writes** to it builds a second tree beside itself and exits with
 
 So `bin/build/build-dist.sh` pointed `DIST_DIR` at `bin/dist`, `mkdir -p` created it, and the build reported success.
 
-Today nothing computes its way to the repository root — the marker `src/init.php` does, through `bin/lib/repo-root.mjs`, `repo-root.php` and `repo-root.sh`.
+Today nothing computes its way to the repository root, the marker `src/init.php` does, through `bin/lib/repo-root.mjs`, `repo-root.php` and `repo-root.sh`.
 
 And `BinLayoutTest`, besides the directory map, resolves every static relative reference under `bin/`.
 
@@ -171,7 +171,7 @@ The browser job is not part of `make pre-commit`, and that is deliberate.
 
 `make pre-commit` runs in two minutes.
 
-The browser job needs a real Chrome, a running server and seeded databases — and takes far longer.
+The browser job needs a real Chrome, a running server and seeded databases, and takes far longer.
 
 You buy a measurement with that cost. For one edited paragraph in an article, it is wasted time.
 
@@ -193,13 +193,13 @@ Had we run it on all six, we would have tripped the limiter and reported a UI bu
 
 2. When you change a theme's chrome, entry point or markup, boot the server and run the matching check by hand. `php bin/dev/set-theme.php <theme>` gives you a deterministic theme and `node bin/checks/<check>.mjs` tells you what the browser saw.
 
-3. When you add a check, add the gate that fails when it is wired wrong — and prove it with a mutation. A loop you cannot break is a loop you cannot trust.
+3. When you add a check, add the gate that fails when it is wired wrong, and prove it with a mutation. A loop you cannot break is a loop you cannot trust.
 
 ## Sources
 
-- [GitHub Actions — Workflow syntax](https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions) — jobs, steps and `timeout-minutes`
-- [GitHub Actions — Running jobs in parallel](https://docs.github.com/en/actions/how-tos/writing-workflows/choosing-what-your-workflow-does/using-jobs-in-a-workflow) — why we have eight jobs instead of one
-- [shivammathur/setup-php](https://github.com/shivammathur/setup-php) — PHP 8.5 and extensions in every job
-- [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) — how `bin/checks/*-check.mjs` talk to the browser
-- [PHPUnit — Assertions](https://docs.phpunit.de/) — what `composer test` actually proves
-- [Nativa Minimal Documentation](/docs/getting-started) — the official guide
+- [GitHub Actions, Workflow syntax](https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions): jobs, steps and `timeout-minutes`
+- [GitHub Actions, Running jobs in parallel](https://docs.github.com/en/actions/how-tos/writing-workflows/choosing-what-your-workflow-does/using-jobs-in-a-workflow): why we have eight jobs instead of one
+- [shivammathur/setup-php](https://github.com/shivammathur/setup-php): PHP 8.5 and extensions in every job
+- [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/): how `bin/checks/*-check.mjs` talk to the browser
+- [PHPUnit, Assertions](https://docs.phpunit.de/): what `composer test` actually proves
+- [Nativa Minimal Documentation](/docs/getting-started): the official guide

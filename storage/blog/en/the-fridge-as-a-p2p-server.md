@@ -219,5 +219,5 @@ Knowledge doesn't need to be centralized. Just distributed.
 
 ---
 
-→ [Cache wrappers](/blog/cache-wrappers-good-servant-bad-master) — the evolution stage before P2P
-→ [Outbox pattern](/blog/outbox-pattern-when-cache-isnt-enough) — async distribution
+→ [Cache wrappers](/blog/cache-wrappers-good-servant-bad-master): the evolution stage before P2P
+→ [Outbox pattern](/blog/outbox-pattern-when-cache-isnt-enough): async distribution

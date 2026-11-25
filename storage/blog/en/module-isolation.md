@@ -271,14 +271,14 @@ in this repo exists for one person ... for the one who comes after you in
 six months and tries to understand what you meant. Clean heads, clean
 data, clean boundaries.
 
-→ [Smoke tests](/en/blog/smoke-tests) — rules enforced by a test = warning smoke signals
-→ [DRY vs abstraction](/en/blog/dry-vs-abstraction) — one source of truth
-→ [Clean code for kids](/en/blog/clean-code-part-1) — respect for the reader
+→ [Smoke tests](/en/blog/smoke-tests): rules enforced by a test = warning smoke signals
+→ [DRY vs abstraction](/en/blog/dry-vs-abstraction): one source of truth
+→ [Clean code for kids](/en/blog/clean-code-part-1): respect for the reader
 
 ## Sources
 
-- [PHP Manual](https://www.php.net/manual/) — official PHP documentation
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP standards
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — security best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — official getting started guide
-- [W3C — Web Standards](https://www.w3.org/standards/) — web standards
+- [PHP Manual](https://www.php.net/manual/): official PHP documentation
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP standards
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): security best practices
+- [Nativa Minimal Documentation](/docs/getting-started): official getting started guide
+- [W3C, Web Standards](https://www.w3.org/standards/): web standards

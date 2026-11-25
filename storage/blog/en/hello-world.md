@@ -51,7 +51,7 @@ placeholder with the initial is rendered. Avatars are self-hosted in
 `storage/uploads/` and served via `/storage/uploads/{path}` (whitelisted
 types only, no traversal).
 
-The starter kit remains a foundation — not a framework. It gives you the minimum viable structure: routing, middleware, auth, admin panel. You build the rest.
+The starter kit remains a foundation, not a framework. It gives you the minimum viable structure: routing, middleware, auth, admin panel. You build the rest.
 
 ---
 
@@ -63,13 +63,13 @@ A starter kit should be read, not just used.
 
 ---
 
-→ [Getting Started](/docs/getting-started) — install, migrate, seed, build
-→ [Adding Modules](/docs/adding-modules) — how to port feature modules
+→ [Getting Started](/docs/getting-started): install, migrate, seed, build
+→ [Adding Modules](/docs/adding-modules): how to port feature modules
 
 ## Sources
 
-- [PHP.net — PHP: Hypertext Preprocessor](https://www.php.net/) — official PHP website
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP Framework Interop Group standards
-- [SQLite.org — About](https://www.sqlite.org/about.html) — SQLite embedded database
-- [Vite — Why Vite](https://vitejs.dev/guide/why.html) — why Vite instead of Webpack
-- [Nativa Minimal — Getting Started](/docs/getting-started) — official getting started guide
+- [PHP.net, PHP: Hypertext Preprocessor](https://www.php.net/): official PHP website
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP Framework Interop Group standards
+- [SQLite.org, About](https://www.sqlite.org/about.html): SQLite embedded database
+- [Vite, Why Vite](https://vitejs.dev/guide/why.html): why Vite instead of Webpack
+- [Nativa Minimal, Getting Started](/docs/getting-started): official getting started guide

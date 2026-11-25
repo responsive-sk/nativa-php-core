@@ -198,14 +198,14 @@ $uow->transaction(function (PDO $pdo) {
 
 Less code, same safety. And that's exactly what you want on a project where every extra line is a place for a bug.
 
-→ [How argon2id crashed our shared hosting](/en/blog/how-sha-hash-algorithm-crashed-shared-hosting) — another reason infrastructure limits choices
-→ [Cache wrappers ... good servant, bad master](/en/blog/cache-wrappers-good-servant-bad-master) — when cache helps and when it hurts
-→ [Outbox pattern ... when cache isn't enough](/en/blog/outbox-pattern-when-cache-isnt-enough) — ACID for async processing
+→ [How argon2id crashed our shared hosting](/en/blog/how-sha-hash-algorithm-crashed-shared-hosting): another reason infrastructure limits choices
+→ [Cache wrappers ... good servant, bad master](/en/blog/cache-wrappers-good-servant-bad-master): when cache helps and when it hurts
+→ [Outbox pattern ... when cache isn't enough](/en/blog/outbox-pattern-when-cache-isnt-enough): ACID for async processing
 
 ## Sources
 
-- [W3C — ACID Properties](https://www.w3.org/TR/xml-core/#sec-conformance) — ACID definition
-- [PHP Manual](https://www.php.net/manual/) — official PHP documentation
-- [SQLite Documentation](https://www.sqlite.org/docs.html) — SQLite reference manual
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — security best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — official getting started guide
+- [W3C, ACID Properties](https://www.w3.org/TR/xml-core/#sec-conformance): ACID definition
+- [PHP Manual](https://www.php.net/manual/): official PHP documentation
+- [SQLite Documentation](https://www.sqlite.org/docs.html): SQLite reference manual
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): security best practices
+- [Nativa Minimal Documentation](/docs/getting-started): official getting started guide

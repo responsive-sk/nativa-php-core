@@ -1,5 +1,5 @@
 ---
-title: "Token Harbor — OpenAI-kompatibilná AI brána pre vývojárov"
+title: "Token Harbor: OpenAI-kompatibilná AI brána pre vývojárov"
 date: "2026-09-13"
 version: "0.1.0"
 tags: ["ai-gateway", "openai-compatible", "token-harbor", "llm", "api"]
@@ -11,7 +11,7 @@ translation: "token-harbor-gateway"
 published: false
 ---
 
-# Token Harbor — OpenAI-kompatibilná AI brána pre vývojárov
+# Token Harbor: OpenAI-kompatibilná AI brána pre vývojárov
 
 **Token Harbor** je gateway služba, ktorá poskytuje jeden OpenAI-kompatibilný endpoint pre prístup k/modelom: Anthropic Claude, OpenAI GPT, Google Gemini, DeepSeek, Qwen a ďalším. Vývojár používa jeden API kľúč, jednu base URL a standardný OpenAI SDK / HTTP klient.
 
@@ -53,7 +53,7 @@ Claude  GPT  Gemini  DeepSeek  Qwen ...
 
 ---
 
-## Integračný príklad — OMP (Oh My Pi)
+## Integračný príklad: OMP (Oh My Pi)
 
 OMP je coding harness s AI asistenciou. Token Harbor sa nastaví ako **OpenAI provider**:
 
@@ -116,7 +116,7 @@ OPENAI_BASE_URL=https://api.tokenharbor.ai/v1
 
 ## Produkčné osvedčené postupy
 
-1. **Timeouts**: nastavte rozumné timeouty (30–60 s) — niektoré modely (Claude, GPT-4) trvajú dlhšie.
+1. **Timeouts**: nastavte rozumné timeouty (30–60 s), niektoré modely (Claude, GPT-4) trvajú dlhšie.
 2. **Retry + backoff**: exponenciálne backoff pre 429/5xx, max 3 pokusy.
 3. **Streaming**: pre dlhé odpovede použite `stream: true` a spracúvajte chunky.
 4. **Model pinning**: v kóde uvádzajte presný model (nie `auto`), aby ste mali kontrolu nad cenou/latencou.
@@ -130,7 +130,7 @@ OPENAI_BASE_URL=https://api.tokenharbor.ai/v1
 |-----------|--------------|------------|---------------|---------------|
 | OpenAI-compat | áno | áno | áno | manuálne |
 | Free tier | áno (DeepSeek V4 Flash) | áno | nie | nie |
-| Failover | áno — automatický | áno | áno | manuálne |
+| Failover | áno, automatický | áno | áno | manuálne |
 | Per-token billing | áno | áno | nie | manuálne |
 | Self-hosted | nie | nie | áno | áno |
 | SDK required | nie (standard OpenAI) | nie | nie | manuálne |
@@ -139,7 +139,7 @@ OPENAI_BASE_URL=https://api.tokenharbor.ai/v1
 
 ## Záver
 
-Token Harbor eliminuje integráčnú zložitosť pri viacerých LLM poskytovateľoch. Pre vývojárov používajúcich OMP, Python, TypeScript alebo čistý HTTP je to **drop-in replacement** za OpenAI API — zmeníte len `base_url` a `api_key`, zvyšok kódu zostane nezmenený.
+Token Harbor eliminuje integráčnú zložitosť pri viacerých LLM poskytovateľoch. Pre vývojárov používajúcich OMP, Python, TypeScript alebo čistý HTTP je to **drop-in replacement** za OpenAI API, zmeníte len `base_url` a `api_key`, zvyšok kódu zostane nezmenený.
 
 Pre produkciu: rotujte kľúče, monitorujte usage, nastavte cost alerts, a vždy testujte failover scenáre v stagingu.
 
@@ -147,7 +147,7 @@ Pre produkciu: rotujte kľúče, monitorujte usage, nastavte cost alerts, a vžd
 
 ## Zdroje
 
-- [Token Harbor — oficiálna stránka](https://tokenharbor.ai)
+- [Token Harbor, oficiálna stránka](https://tokenharbor.ai)
 - [Token Harbor FAQ](https://tokenharbor.ai/faq)
 - [OpenAI API Reference](https://platform.openai.com/docs/api-reference)
-- [OMP — provider konfigurácia](https://github.com/can1357/oh-my-pi/tree/main/docs/adding-a-provider.md)
+- [OMP, provider konfigurácia](https://github.com/can1357/oh-my-pi/tree/main/docs/adding-a-provider.md)

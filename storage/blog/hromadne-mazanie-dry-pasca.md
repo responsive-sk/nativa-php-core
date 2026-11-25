@@ -3,7 +3,7 @@ title: "Hromadné mazanie, ktoré renderovalo dvakrát"
 date: "2026-08-30"
 version: "1.0.2"
 tags: ["htmx", "dry", "bulk-actions", "refactoring", "clean-code"]
-excerpt: "Postavili sme hromadné mazanie pre štyri admin tabuľky. Potom sme duplikovali každý renderer. Oprava bola jedna zdieľaná trieda na entitu — ale cesta k nej nás naučila niečo o HTMX a vlastníctve kódu."
+excerpt: "Postavili sme hromadné mazanie pre štyri admin tabuľky. Potom sme duplikovali každý renderer. Oprava bola jedna zdieľaná trieda na entitu, ale cesta k nej nás naučila niečo o HTMX a vlastníctve kódu."
 author: "Evan McDan"
 author_email: "evan.mcdan@example.test"
 category: "Clean Code"
@@ -15,7 +15,7 @@ published: true
 
 Označiť všetko. Vymazať vybrané. Sledovať ako sa tabuľka aktualizuje bez reloadu.
 
-To bol sľub. A fungovalo — na prvej tabuľke. Potom sme skopírovali renderovací kód na druhú. A tretiu. A štvrtú. Keď sme mali štyri identické table rendery, mali sme DRY porušenie, ktoré nás uhryzne zakaždým, keď niekto zmení hlavičku stĺpca.
+To bol sľub. A fungovalo, na prvej tabuľke. Potom sme skopírovali renderovací kód na druhú. A tretiu. A štvrtú. Keď sme mali štyri identické table rendery, mali sme DRY porušenie, ktoré nás uhryzne zakaždým, keď niekto zmení hlavičku stĺpca.
 
 ## Nastavenie
 
@@ -54,7 +54,7 @@ Potom sme to pridali na štyri tabuľky.
 
 ## Kaskáda
 
-UsersAction dostal bulk checkboxes. RolesAction tiež. A PagesIndexAction. A ArticlesIndexAction. Každá akcia budovala vlastnú tabuľku — thead, tbody, riadky, bulk bar. Každá akcia mala vlastnú metódu `renderRow()` s trochu odlišnými stĺpcami.
+UsersAction dostal bulk checkboxes. RolesAction tiež. A PagesIndexAction. A ArticlesIndexAction. Každá akcia budovala vlastnú tabuľku, thead, tbody, riadky, bulk bar. Každá akcia mala vlastnú metódu `renderRow()` s trochu odlišnými stĺpcami.
 
 Keď BulkDeleteAction potreboval prerenderovať tabuľku po vymazaní, mal dve možnosti: zavolať render metódu pôvodnej akcie, alebo duplikovať renderovací kód. Zvolili sme duplikáciu. Rýchlejší release. Žiadne cross-module importy. Žiadne refactoring riziko.
 
@@ -70,7 +70,7 @@ Nebude. Nikto to nerobí.
 
 ## Oprava
 
-Riešenie bola jedna zdieľaná trieda na entitu. Nie zdieľané rozhranie — konkrétna trieda v module, ktorý vlastní tabuľku.
+Riešenie bola jedna zdieľaná trieda na entitu. Nie zdieľané rozhranie, konkrétna trieda v module, ktorý vlastní tabuľku.
 
 ```
 UsersTableRenderer   →  Users modul  (používa UsersAction + BulkDeleteAction)
@@ -97,7 +97,7 @@ BulkDeleteAction klesol z 290 na 154 riadkov. Renderovanie tabuľky kleslo zo š
 
 ## Čo HTMX očakáva
 
-HTMX s `outerHTML` swapom nahradí target element zodpovedajúcim elementom z odpovede. Ak odpoveď obsahuje elementy mimo targetu, zahodia sa — ale len ak ich server vráti.
+HTMX s `outerHTML` swapom nahradí target element zodpovedajúcim elementom z odpovede. Ak odpoveď obsahuje elementy mimo targetu, zahodia sa, ale len ak ich server vráti.
 
 Bulk formulár cieli na `#users-content`. Bulk bar žije mimo tento target. Po submite HTMX swapne len `#users-content` s novou tabuľkou. Bulk bar zostáva v DOM so stale stavom.
 
@@ -133,7 +133,7 @@ $uow->transaction(function (PDO $pdo) use ($entity, $ids, &$deleted): void {
 
 Všetky vymazania úspešné, alebo všetky rollback. Žiadny čiastočný stav.
 
-Pre filesystem entity (pages, articles) nie je DB transakcia. Zlyhanie vymazania uprostred loopu zanechá niektoré súbory vymazané a iné nie. To je inherentné obmedzenie filesystem operácií — nemôžete rollbacknúť `unlink()`.
+Pre filesystem entity (pages, articles) nie je DB transakcia. Zlyhanie vymazania uprostred loopu zanechá niektoré súbory vymazané a iné nie. To je inherentné obmedzenie filesystem operácií, nemôžete rollbacknúť `unlink()`.
 
 Rozhodnutie bolo explicitné: DB entity dostávajú atomicitu. Filesystem entity dostávajú best-effort. Kód dokumentuje, ktoré je ktoré.
 
@@ -145,18 +145,18 @@ Zdieľané rendery to riešia, ale vyžadujú premýšľanie o vlastníctve. Ren
 
 Factory pattern tiež funguje. `new BlogCrudService()` rozosiate po akciách vytvára neviditeľné väzby. `CardboardServices::blogCrud()` robí závislosť explicitnou a cacheovateľnou.
 
-HTMX hromadné akcie na frontende pôsobia bez námahy. Zložitosť žije v serverovej odpovedi — vrátiť presne ten správny HTML, spracovať transakciu a udržať renderovací kód na jednom mieste.
+HTMX hromadné akcie na frontende pôsobia bez námahy. Zložitosť žije v serverovej odpovedi, vrátiť presne ten správny HTML, spracovať transakciu a udržať renderovací kód na jednom mieste.
 
 Table renderer nie je framework. Je to funkcia, ktorá vracia string. Ale keď ten string je jediný zdroj pravdy o tom, ako tabuľka vyzerá, zaslúži si svoje miesto.
 
-→ [Kliknite stránku 3 ... a pager sa zdvojnásobil](/blog/htmx-pager-duplication) — prvý HTMX pagination bug
-→ [MoonShine Features + HTMX](/blog/moonshine-htmx-features) — toast notifikácie, live search, form submit
-→ [DRY vs Abstraction](/blog/dry-vs-abstraction) — jeden zdroj pravdy, žiadne rozhrania pre rozhrania
+→ [Kliknite stránku 3 ... a pager sa zdvojnásobil](/blog/htmx-pager-duplication): prvý HTMX pagination bug
+→ [MoonShine Features + HTMX](/blog/moonshine-htmx-features): toast notifikácie, live search, form submit
+→ [DRY vs Abstraction](/blog/dry-vs-abstraction): jeden zdroj pravdy, žiadne rozhrania pre rozhrania
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

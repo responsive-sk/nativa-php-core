@@ -194,14 +194,14 @@ kód, testy a QA navzájom kontrolujú ... a prečo je spec zdrojom pravdy, nie
 len ďalším dokumentom. Dočítame sa!
 
 
-→ [OpenSpec pre deti ... diel 1](/blog/co-je-openspec-pre-deti) — čo je OpenSpec
-→ [Anatómia change](/blog/anatomia-change-pre-deti) — päť súborov, päť otázok
-→ [Spec ako zdroj pravdy](/blog/spec-ako-zdroj-pravdy-pre-deti) — štyri vrstvy, jeden príbeh
+→ [OpenSpec pre deti ... diel 1](/blog/co-je-openspec-pre-deti): čo je OpenSpec
+→ [Anatómia change](/blog/anatomia-change-pre-deti): päť súborov, päť otázok
+→ [Spec ako zdroj pravdy](/blog/spec-ako-zdroj-pravdy-pre-deti): štyri vrstvy, jeden príbeh
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

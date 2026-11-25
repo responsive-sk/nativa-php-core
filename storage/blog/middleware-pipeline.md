@@ -90,19 +90,19 @@ Každý middleware dostane request a `$next` callback. Môže spracovať request
 
 POST request na `/mark/users/123/edit` prejde cez všetkých sedem vrstiev:
 
-**Vrstva 1 — SecurityHeaders.** Generuje náhodný nonce (`bin2hex(random_bytes(16))`). Nastaví CSP, HSTS, nosniff, DENY frame. Posunie request nižšie.
+**Vrstva 1, SecurityHeaders.** Generuje náhodný nonce (`bin2hex(random_bytes(16))`). Nastaví CSP, HSTS, nosniff, DENY frame. Posunie request nižšie.
 
-**Vrstva 2 — Locale.** Vidí `/sk/mark/users/123/edit`. Odstráni `/sk` prefix. Zvyšok pipeline vidí `/mark/users/123/edit`.
+**Vrstva 2, Locale.** Vidí `/sk/mark/users/123/edit`. Odstráni `/sk` prefix. Zvyšok pipeline vidí `/mark/users/123/edit`.
 
-**Vrstva 3 — CSRF.** Hľadá `_token` pole alebo `x-csrf-token` hlavičku. Overí pomocou `hash_equals()` voči session tokenu. Ak chýba, vráti 403 ihneď. Request sa nikdy nedostane k auth.
+**Vrstva 3, CSRF.** Hľadá `_token` pole alebo `x-csrf-token` hlavičku. Overí pomocou `hash_equals()` voči session tokenu. Ak chýba, vráti 403 ihneď. Request sa nikdy nedostane k auth.
 
-**Vrstva 4 — RateLimit.** Kontroluje IP voči tabuľke `rate_limits`. Atomický `INSERT ... ON CONFLICT DO UPDATE` — žiadne race conditions. Ak je blokovaný, vráti 429 s cacheovanou stránkou (ak existuje).
+**Vrstva 4, RateLimit.** Kontroluje IP voči tabuľke `rate_limits`. Atomický `INSERT ... ON CONFLICT DO UPDATE`: žiadne race conditions. Ak je blokovaný, vráti 429 s cacheovanou stránkou (ak existuje).
 
-**Vrstva 5 — PageCache.** Pasívna — len zapisuje do cache po príchode odpovede. Necacheuje. To je úloha RateLimitMiddleware.
+**Vrstva 5, PageCache.** Pasívna, len zapisuje do cache po príchode odpovede. Necacheuje. To je úloha RateLimitMiddleware.
 
-**Vrstva 6 — Auth.** Kontroluje session. Ak nie je autentifikovaný, skúsi remember-me cookie. Ak stále nie, presmeruje na `/login`. Ak je autentifikovaný, ale nemá `admin` rolu, vráti 403.
+**Vrstva 6, Auth.** Kontroluje session. Ak nie je autentifikovaný, skúsi remember-me cookie. Ak stále nie, presmeruje na `/login`. Ak je autentifikovaný, ale nemá `admin` rolu, vráti 403.
 
-**Vrstva 7 — Debugbar.** Aktívna len keď `APP_DEBUG=true`. Vstrekuje plovúci panel do HTML odpovedí. V produkcii je to no-op.
+**Vrstva 7, Debugbar.** Aktívna len keď `APP_DEBUG=true`. Vstrekuje plovúci panel do HTML odpovedí. V produkcii je to no-op.
 
 **Dispatch.** Router matchne routu. Action class spracuje request. Odpoveď sa vracia späť cez všetkých sedem vrstiev v opačnom poradí.
 
@@ -110,7 +110,7 @@ POST request na `/mark/users/123/edit` prejde cez všetkých sedem vrstiev:
 
 Middleware v Nativa Minimal sa objavuje dvoma spôsobmi:
 
-**Auto-discovery.** Triedy anotované s `#[AsMiddleware(priority: N)]` nájde `MiddlewareRegistry`.  Skenuje `src/Modules/*/Interfaces/HTTP/Middleware/` pre PHP súbory obsahujúce atribút. Priority určuje poradie — nižšie čísla bežia skôr.
+**Auto-discovery.** Triedy anotované s `#[AsMiddleware(priority: N)]` nájde `MiddlewareRegistry`.  Skenuje `src/Modules/*/Interfaces/HTTP/Middleware/` pre PHP súbory obsahujúce atribút. Priority určuje poradie, nižšie čísla bežia skôr.
 
 ```php
 #[AsMiddleware(priority: 0)]
@@ -122,7 +122,7 @@ final class SecurityHeadersMiddleware implements MiddlewareInterface
 
 Auto-discovery funguje len pre middleware bez povinných constructor parametrov. Registry instanciuje každú triedu pomocou `new $className()`.
 
-**Manuálna registrácia.** Middleware závislostiami — `LocaleMiddleware`, `RateLimitMiddleware`, `AuthMiddleware` — sa pridáva cez `$kernel->addMiddleware()`. Tieto obaľujú bližšie k dispatch, pretože sa pridávajú po auto-discovered middleware.
+**Manuálna registrácia.** Middleware závislostiami,`LocaleMiddleware`, `RateLimitMiddleware`, `AuthMiddleware`: sa pridáva cez `$kernel->addMiddleware()`. Tieto obaľujú bližšie k dispatch, pretože sa pridávajú po auto-discovered middleware.
 
 Toto je zámerne rozdelenie. Bezstavové middleware (hlavičky, CSRF, debug toolbar) sú auto-discovered. Stavové middleware (locale, rate limiting, auth) potrebujú explicitné napojenie.
 
@@ -169,7 +169,7 @@ Každá vrstva chráni iný útočný povrch:
 
 Žiadna vrstva sama o sebe nestačí. SecurityHeaders sám nezabraňuje CSRF. Auth sám nezabraňuje brute force. Vrstvy sa dopĺňajú, nekopírujú.
 
-Keď sa odosiela komentár (`POST /blog/{slug}/comments`), trafí ho CSRF (kontrola tokenu), potom RateLimit (10/min na IP+slug), potom Auth (voliteľné — hostia môžu komentovať) a nakoniec akcia validuje a uloží komentár ako pending. Päť kontrol pred zápisom do databázy.
+Keď sa odosiela komentár (`POST /blog/{slug}/comments`), trafí ho CSRF (kontrola tokenu), potom RateLimit (10/min na IP+slug), potom Auth (voliteľné, hostia môžu komentovať) a nakoniec akcia validuje a uloží komentár ako pending. Päť kontrol pred zápisom do databázy.
 
 ---
 
@@ -179,14 +179,14 @@ Pipeline beží v rovnakom poradí vždy. Žiadna magia. Žiadne auto-wiring. Le
 
 ---
 
-→ [CSP a htmx interakcia](/blog/csp-htmx-interaie) — keď nonces stretnú dynamický obsah
-→ [Rate-limit cache fallback](/blog/rate-limit-cache-fallback) — čo sa stane, keď vás pipeline zablokuje
-→ [Modulová izolácia](/blog/modulova-izolacia-pre-deti) — prečo middleware žije tam, kde žije
+→ [CSP a htmx interakcia](/blog/csp-htmx-interaie): keď nonces stretnú dynamický obsah
+→ [Rate-limit cache fallback](/blog/rate-limit-cache-fallback): čo sa stane, keď vás pipeline zablokuje
+→ [Modulová izolácia](/blog/modulova-izolacia-pre-deti): prečo middleware žije tam, kde žije
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny getting started sprievodca
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny getting started sprievodca
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

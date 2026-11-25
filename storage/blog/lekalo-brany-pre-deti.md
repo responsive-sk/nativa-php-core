@@ -96,7 +96,7 @@ Predikát, ktorý prejde naprázdno, je zelená tabuľka ... a zelená tabuľka 
 
 Tretiu podmienku drží `tests/Architecture/MakeTargetsWiredTest.php`.
 
-Ten test nerobí nič múdrejšie než to, že sa na každý cieľ `Makefile` opýta, či je zapojený do `pre-commit` alebo do CI — a keď nie, či má v zozname `NOT_WIRED` zapísaný dôvod.
+Ten test nerobí nič múdrejšie než to, že sa na každý cieľ `Makefile` opýta, či je zapojený do `pre-commit` alebo do CI, a keď nie, či má v zozname `NOT_WIRED` zapísaný dôvod.
 
 Zoznam výnimiek je kniha rozhodnutí, nie zoznam prehliadnutí: kľúč, ktorý ukazuje na cieľ, čo neexistuje, test zhodí. Zapojený cieľ v zozname výnimiek tiež.
 
@@ -254,15 +254,15 @@ Nástroj, ktorý vie zakázať, a rozhodnutie, že sa to bude diať, sú dve roz
 
 Vzdialenosť medzi nimi je jeden riadok v `Makefile` a niekto, kto si prečíta jeho telo.
 
-→ [Diel 17 ... tri verzie a ani jedna zmena](/blog/lekalo-tri-verzie-pre-deti) — upgrade, pri ktorom sa nepohlo nič
-→ [Diel 15 ... reťaz s hashmi na oboch koncoch](/blog/lekalo-trace-manifest-pre-deti) — odkiaľ berie manifest svoj dôkaz
-→ [Čo príkazy povedia o projekte](/blog/lekalo-nove-prikazy) — sedem plôch 0.6.5 a čo naozaj vrátili
+→ [Diel 17 ... tri verzie a ani jedna zmena](/blog/lekalo-tri-verzie-pre-deti): upgrade, pri ktorom sa nepohlo nič
+→ [Diel 15 ... reťaz s hashmi na oboch koncoch](/blog/lekalo-trace-manifest-pre-deti): odkiaľ berie manifest svoj dôkaz
+→ [Čo príkazy povedia o projekte](/blog/lekalo-nove-prikazy): sedem plôch 0.6.5 a čo naozaj vrátili
 
 ## Zdroje
 
 - [Lekalo](https://github.com/ichinya/lekalo) ... semantický model, CLI a neutrálne trace manifesty
 - [Release v0.6.5](https://github.com/ichinya/lekalo/releases/tag/v0.6.5) ... checksumované archívy a sedem nových plôch
 - [jq manual](https://jqlang.github.io/jq/manual/) ... čo presne robí `-e` a prečo je bez neho predikát dekorácia
-- [actions/runner-images — Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md) ... odkiaľ je `jq` na runneri, kde ho brána potrebuje
+- [actions/runner-images, Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md) ... odkiaľ je `jq` na runneri, kde ho brána potrebuje
 - [docs/lekalo-model.md](https://github.com/evan70/nativa-minimal/blob/master/docs/lekalo-model.md) ... tabuľka plôch s verdiktom a pravidlo adopcie
 - [Nativa Minimal ... getting started](/docs/getting-started) ... ako si to celé spustíš lokálne

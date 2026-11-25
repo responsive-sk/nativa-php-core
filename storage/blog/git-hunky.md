@@ -123,14 +123,14 @@ GitHub a GitLab to robia za teba. Rozumieť im znamená rozumieť tomu, čo kont
 vedieť prečítať: „v starom súbore blok na riadku 1324 (3 riadky), v novom
 na 1324 (104 riadkov) ... a git to považuje za jednu zmenu."
 
-→ [OpenSpec pre deti](/blog/co-je-openspec-pre-deti) — prečo sa zmeny nepíšu priamo do spec
-→ [Anatómia change](/blog/anatomia-change-pre-deti) — päť súborov, päť otázok
-→ [Flow a ADR](/blog/flow-a-adr-starter-kitu) — mindset za starter kitom
+→ [OpenSpec pre deti](/blog/co-je-openspec-pre-deti): prečo sa zmeny nepíšu priamo do spec
+→ [Anatómia change](/blog/anatomia-change-pre-deti): päť súborov, päť otázok
+→ [Flow a ADR](/blog/flow-a-adr-starter-kitu): mindset za starter kitom
 
 ## Zdroje
 
-- [Git — git-diff Documentation](https://git-scm.com/docs/git-diff) — oficiálna diff dokumentácia
-- [Git — git-add Documentation](https://git-scm.com/docs/git-add) — `git add -p` interaktívne stagovanie
-- [Pro Git Book — Distributed Git](https://git-scm.com/book/en/v2/Distributed-Git-Distributed-Workflows) — distribuované workflowy
-- [GitHub — Interactive Staging](https://docs.github.com/en/get-started/using-git/about-git#interactive-staging) — interaktívne staging tutorial
-- [Atlassian — Git Diff Tool](https://www.atlassian.com/git/tutorials/difftool) — diff nástroje a vizualizácia
+- [Git, git-diff Documentation](https://git-scm.com/docs/git-diff): oficiálna diff dokumentácia
+- [Git, git-add Documentation](https://git-scm.com/docs/git-add): `git add -p` interaktívne stagovanie
+- [Pro Git Book, Distributed Git](https://git-scm.com/book/en/v2/Distributed-Git-Distributed-Workflows): distribuované workflowy
+- [GitHub, Interactive Staging](https://docs.github.com/en/get-started/using-git/about-git#interactive-staging): interaktívne staging tutorial
+- [Atlassian, Git Diff Tool](https://www.atlassian.com/git/tutorials/difftool): diff nástroje a vizualizácia

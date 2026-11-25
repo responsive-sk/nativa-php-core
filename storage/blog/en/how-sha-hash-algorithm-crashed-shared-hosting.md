@@ -107,17 +107,17 @@ Argon2id remains a superior algorithm. On a VPS with 2 GB RAM, it's the right ch
 
 ---
 
-Security and operability must go together. An algorithm that crashes the server isn't secure — it's dangerous.
+Security and operability must go together. An algorithm that crashes the server isn't secure, it's dangerous.
 
 ---
 
-→ [CSP and onclick](/blog/csp-onclick-silent-security-bug) — the silent security hole that killed inline handlers
-→ [Cache wrappers](/blog/cache-wrappers-good-servant-bad-master) — good servant, bad master
+→ [CSP and onclick](/blog/csp-onclick-silent-security-bug): the silent security hole that killed inline handlers
+→ [Cache wrappers](/blog/cache-wrappers-good-servant-bad-master): good servant, bad master
 
 ## Sources
 
-- [PHP Manual](https://www.php.net/manual/) — official PHP documentation
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP standards
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — security best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — official getting started guide
-- [W3C — Web Standards](https://www.w3.org/standards/) — web standards
+- [PHP Manual](https://www.php.net/manual/): official PHP documentation
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP standards
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): security best practices
+- [Nativa Minimal Documentation](/docs/getting-started): official getting started guide
+- [W3C, Web Standards](https://www.w3.org/standards/): web standards

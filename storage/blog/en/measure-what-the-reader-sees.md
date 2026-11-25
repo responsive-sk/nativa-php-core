@@ -3,7 +3,7 @@ title: "Measure what the reader sees ... three bugs no gate could see"
 date: "2026-10-05"
 version: "1.0.0"
 tags: ["css", "testing", "themes", "accessibility"]
-excerpt: "A contents strip, a rule through the text and comments 176px to the right — three bugs on one jednotka page that passed every test. Why a DOM rect says nothing about being visible, and how a green run can be a lie."
+excerpt: "A contents strip, a rule through the text and comments 176px to the right, three bugs on one jednotka page that passed every test. Why a DOM rect says nothing about being visible, and how a green run can be a lie."
 author: "Nativa Dev"
 author_email: "nativa.dev@example.test"
 category: "Architecture"
@@ -53,8 +53,8 @@ every language where `<details>` exists. The contents strip was wrapped in a
 skips its content when painting through `::details-content`, so `display: flex`
 on the list never applies.
 
-And as if that were not enough, the `<summary>` — the handle that would open
-the strip — was hidden on wide screens by the very media query:
+And as if that were not enough, the `<summary>`: the handle that would open
+the strip, was hidden on wide screens by the very media query:
 
 ```css
 /* src/Themes/jednotka/Frontend/... — jednotka's toc.css */
@@ -107,7 +107,7 @@ And it was not true.
 
 A closed `<details>` in Chrome does **not** collapse its children's geometry.
 The content is skipped when painting, not when measuring, so a link keeps a
-rectangle 25px tall, readable, with a non-zero width — and is not on screen. So a
+rectangle 25px tall, readable, with a non-zero width, and is not on screen. So a
 rectangle does not answer "is it visible?", and the same measurement does not
 answer the opposite question either.
 
@@ -117,7 +117,7 @@ The difference is visible on one page:
 |---|---|---|
 | Is it on screen? | `Element.checkVisibility()` | `false` for the closed strip |
 | Where does it sit? | `getBoundingClientRect()` | a rectangle that is completely true and completely misleading |
-| Did it give space back? | the first heading's position before and after | 382.6px — the flow really closes |
+| Did it give space back? | the first heading's position before and after | 382.6px, the flow really closes |
 
 The third row matters. The strip does close, but if it had kept 380px of blank
 paper, the attribute assertion would have stayed green ... and the reader would
@@ -194,8 +194,8 @@ collapsed by script.
 
 ## Sources
 
-- [MDN — `<details>` and `::details-content`](https://developer.mozilla.org/docs/Web/HTML/Reference/Elements/details) — why CSS cannot open a closed disclosure's slot
-- [MDN — `Element.checkVisibility()`](https://developer.mozilla.org/docs/Web/API/Element/checkVisibility) — measuring painting instead of geometry
-- [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) — how the `bin/*-check.mjs` scripts talk to the browser
-- [PHP Manual — OPcache](https://www.php.net/manual/en/book.opcache.php) — `opcache.revalidate_freq` and why you are running against old code
-- [Nativa Minimal Documentation](/docs/getting-started) — the official guide
+- [MDN,`<details>` and `::details-content`](https://developer.mozilla.org/docs/Web/HTML/Reference/Elements/details): why CSS cannot open a closed disclosure's slot
+- [MDN,`Element.checkVisibility()`](https://developer.mozilla.org/docs/Web/API/Element/checkVisibility): measuring painting instead of geometry
+- [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/): how the `bin/*-check.mjs` scripts talk to the browser
+- [PHP Manual, OPcache](https://www.php.net/manual/en/book.opcache.php): `opcache.revalidate_freq` and why you are running against old code
+- [Nativa Minimal Documentation](/docs/getting-started): the official guide

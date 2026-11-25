@@ -218,15 +218,15 @@ If you're building a **production-grade, secure, distributed system** → DSH.
 If you're building a **prototype with many integrations** → LangChain.
 If you're building a **multi-agent discussion** → AutoGen.
 
-→ [DeepSeek Harness ... 50 packages](/en/blog/deepseek-harness-architecture-overview) — architecture overview
-→ [Capability seams](/en/blog/capability-seams) — the key differentiator
-→ [Cordis ... a deep dive](/en/blog/cordis-deep-dive) — plugin framework
-→ [DSH and P2P](/en/blog/dsh-and-p2p) — distributed agents
+→ [DeepSeek Harness ... 50 packages](/en/blog/deepseek-harness-architecture-overview): architecture overview
+→ [Capability seams](/en/blog/capability-seams): the key differentiator
+→ [Cordis ... a deep dive](/en/blog/cordis-deep-dive): plugin framework
+→ [DSH and P2P](/en/blog/dsh-and-p2p): distributed agents
 
 ## Sources
 
-- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) — open-source agent framework
-- [LangChain](https://github.com/langchain-ai/langchain) — Python framework
-- [AutoGen](https://github.com/microsoft/autogen) — Microsoft multi-agent
-- [CrewAI](https://github.com/crewAIInc/crewAI) — role-based agents
-- [OpenAI Swarm](https://github.com/openai/swarm) — lightweight orchestrator
+- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): open-source agent framework
+- [LangChain](https://github.com/langchain-ai/langchain): Python framework
+- [AutoGen](https://github.com/microsoft/autogen): Microsoft multi-agent
+- [CrewAI](https://github.com/crewAIInc/crewAI): role-based agents
+- [OpenAI Swarm](https://github.com/openai/swarm): lightweight orchestrator

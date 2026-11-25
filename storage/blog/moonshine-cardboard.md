@@ -1,9 +1,9 @@
 ---
-title: "Ako MoonShine inšpiroval Cardboard — admin panel bez frameworku"
+title: "Ako MoonShine inšpiroval Cardboard: admin panel bez frameworku"
 date: "2026-08-28"
 version: "1.0.1"
 tags: ["php", "moonshine", "cardboard", "admin-panel", "design-system"]
-excerpt: "MoonShine UI je Laravel balík pre admin panely. My sme z neho vzali len jazyk — tokeny, komponenty, layout — a postavili sme Cardboard v čistom PHP 8.5."
+excerpt: "MoonShine UI je Laravel balík pre admin panely. My sme z neho vzali len jazyk, tokeny, komponenty, layout, a postavili sme Cardboard v čistom PHP 8.5."
 author: "Nativa Dev"
 author_email: "nativa.dev@example.test"
 category: "Architecture"
@@ -14,7 +14,7 @@ published: true
 
 MoonShine UI je populárny Laravel balík pre admin panely. Má krásny design system, tmavý režim, BEM komponenty. Ale my nepoužívame Laravel. A v produkcii nemáme Composer.
 
-Otázka znela: vieme zobrať len jazyk — nie kód — a postaviť niečo rovnako čisté?
+Otázka znela: vieme zobrať len jazyk, nie kód, a postaviť niečo rovnako čisté?
 
 Odpoveď je Cardboard.
 
@@ -22,11 +22,11 @@ Odpoveď je Cardboard.
 
 MoonShine (`moonshine-software/ui`) je admin panel pre Laravel. Ponúka:
 
-- **Design tokeny** — CSS premenné pre farby, typografiu, medzery
-- **BEM komponenty** — `.m-card`, `.m-btn`, `.m-table`, `.m-badge`
-- **Sidebar layout** — fixný sidebar s navigáciou
-- **Tmavý režim** — cez `data-theme` atribút
-- **Formuláre** — inputy, selecty, switche, uploady
+- **Design tokeny**: CSS premenné pre farby, typografiu, medzery
+- **BEM komponenty**: `.m-card`, `.m-btn`, `.m-table`, `.m-badge`
+- **Sidebar layout**: fixný sidebar s navigáciou
+- **Tmavý režim**: cez `data-theme` atribút
+- **Formuláre**: inputy, selecty, switche, uploady
 
 Všetko je pekné. Všetko je robustné. A všetko závisí od Laravel.
 
@@ -50,11 +50,11 @@ MoonShine nám dal:
 }
 ```
 
-**BEM konvencie.** `.m-card`, `.m-btn-primary`, `.m-stat-value` — každý názov povie, čo je a kam patrí.
+**BEM konvencie.** `.m-card`, `.m-btn-primary`, `.m-stat-value`: každý názov povie, čo je a kam patrí.
 
 **Layout pattern.** Fixný sidebar s collapsible toggle, overlay na mobile, hlavný obsah v `margin-left`.
 
-**Tmavý režim.** Jednoduchý inline script v `<head>` — synchronný, CSP-safe, žiadny FOUC:
+**Tmavý režim.** Jednoduchý inline script v `<head>`: synchronný, CSP-safe, žiadny FOUC:
 
 ```html
 <script nonce="__CSP_NONCE_PLACEHOLDER__">
@@ -72,7 +72,7 @@ Nepoužili sme MoonShine kód. Žiadne Blade komponenty, žiadne Laravel service
 
 Prečo? Lebo Nativa Minimal má pravidlo: **zero-dependency runtime**. Žiadny Composer balík v produkcii. Ani MoonShine.
 
-V `ui/` adresári máme MoonShine-inšpirované Blade šablóny ako referenciu — dizajnový systém, ktorý ukazuje, ako by komponenty mohli vyzerať. Ale admin panel v `/mark` funguje na čistom PHP:
+V `ui/` adresári máme MoonShine-inšpirované Blade šablóny ako referenciu, dizajnový systém, ktorý ukazuje, ako by komponenty mohli vyzerať. Ale admin panel v `/mark` funguje na čistom PHP:
 
 ```php
 // AdminLayout — žiadne Blade, žiadne šablóny
@@ -88,7 +88,7 @@ Každý HTML string je PHP string. Žiadna abstrakcia navyše.
 
 Keď sme mali admin panel, prišla otázka: ako zobrazíme štatistiky na dashboarde?
 
-Tradičná cesta: hardcoded HTML bloky v `DashboardAction`. Každá karta je `<div class="m-stat">` s copy-paste štruktúrou. Pridáte novú kartu — skopírujete blok, zmeníte číslo a label.
+Tradičná cesta: hardcoded HTML bloky v `DashboardAction`. Každá karta je `<div class="m-stat">` s copy-paste štruktúrou. Pridáte novú kartu, skopírujete blok, zmeníte číslo a label.
 
 Cardboard to robí inak. **Každý dashboard prvok je immutable Card objekt.**
 
@@ -106,13 +106,13 @@ Card::make('users', 'Users', 42)
     ->withPriority(100);
 ```
 
-Každý `with*()` vráti **novú inštanciu** — žiadna mutácia. Karta je pointer, nie stav.
+Každý `with*()` vráti **novú inštanciu**: žiadna mutácia. Karta je pointer, nie stav.
 
 ## Prečo immutabilita
 
-MoonShine používa mutabilné komponenty — `->column()`, `->badge()`, `->action()` reťazia zmeny na rovnakej inštancii. V Laravel to funguje, lebo komponent žije jeden request.
+MoonShine používa mutabilné komponenty,`->column()`, `->badge()`, `->action()` reťazia zmeny na rovnakej inštancii. V Laravel to funguje, lebo komponent žije jeden request.
 
-V Nativa Cardboard sme chceli niečo iné: **karty ako hodnoty**. Rovnako ako `Money` alebo `DateInterval` — keď chcete zmeniť, vytvoríte novú. Testujete porovnaním. Nedá sa pokaziť stav.
+V Nativa Cardboard sme chceli niečo iné: **karty ako hodnoty**. Rovnako ako `Money` alebo `DateInterval`: keď chcete zmeniť, vytvoríte novú. Testujete porovnaním. Nedá sa pokaziť stav.
 
 ```php
 $original = Card::make('media', 'Media', 15);
@@ -121,7 +121,7 @@ $withChart = $original->withChart(new Sparkline([5, 8, 12, 15]));
 // $original je stále bez chartu. Bez prekvapení.
 ```
 
-## SVG Charts — žiadne JavaScript
+## SVG Charts: žiadne JavaScript
 
 Dashboard karty môžu mať mini grafy. Sparkline pre trend, donut pre distribúciu, bar pre porovnanie.
 
@@ -137,10 +137,10 @@ $chart = new Donut([
 
 Prečo SVG a nie JavaScript? Lebo:
 
-1. **CSP-safe** — žiadne inline skripty navyše
-2. **Okamžité** — žiadne čakanie na načítanie knižnice
-3. **Tiny** — jeden donut je ~200 bajtov. Šesť kariet = 1.2KB
-4. **Zero-dependency** — presne ako celý projekt
+1. **CSP-safe**: žiadne inline skripty navyše
+2. **Okamžité**: žiadne čakanie na načítanie knižnice
+3. **Tiny**: jeden donut je ~200 bajtov. Šesť kariet = 1.2KB
+4. **Zero-dependency**: presne ako celý projekt
 
 ## CardboardRegistry
 
@@ -154,7 +154,7 @@ CardboardRegistry::register(
 );
 ```
 
-`DashboardAction` len iteruje `CardboardRegistry::all()` a renderuje. Pridáte novú kartu — zaregistrujete ju, žiadna zmena v Dashboarde.
+`DashboardAction` len iteruje `CardboardRegistry::all()` a renderuje. Pridáte novú kartu, zaregistrujete ju, žiadna zmena v Dashboarde.
 
 Registry je statický array. Žiadne DI, žiadne magic methods. Jednoduchý ako `getenv()`.
 
@@ -162,11 +162,11 @@ Registry je statický array. Žiadne DI, žiadne magic methods. Jednoduchý ako 
 
 Cardboard dodržiava C-pattern pravidlá Nativa Minimal:
 
-- **Žiadne magic methods** — žiadne `__call`, `__get`
+- **Žiadne magic methods**: žiadne `__call`, `__get`
 - **Žiadna Reflexia** mimo `Modules\Core`
 - **Žiadne eval()**
-- **Metódy do 60 riadkov** — `registerStatCards()` sa delí na `registerAccessCards()` a `registerContentCards()`
-- **Žiadne speculative interfaces** — `ChartContract` má 3 implementácie (Sparkline, Donut, Bar), `Card` sa používa priamo (jedna implementácia = žiadny interface)
+- **Metódy do 60 riadkov**: `registerStatCards()` sa delí na `registerAccessCards()` a `registerContentCards()`
+- **Žiadne speculative interfaces**: `ChartContract` má 3 implementácie (Sparkline, Donut, Bar), `Card` sa používa priamo (jedna implementácia = žiadny interface)
 
 Každé pravidlo má svoj test v `CorePatternTest`. Ak ho porušíte, CI padne.
 
@@ -183,14 +183,14 @@ Admin panel na `/mark` s dashboardom, ktorý:
 
 A celý Cardboard modul je 8 nových súborov.
 
-→ [Clean code pre deti](/blog/co-je-cisty-kod-pre-deti) — ako písať kód, ktorý sa číta sám
-→ [Filozofia menej vrstiev](/blog/filozofia-menej-vrstiev) — prečo menej abstrakcií = menej chýb
-→ [Theme comparison](/blog/theme-comparison) — porovnanie starter, magazine a minimal tém
+→ [Clean code pre deti](/blog/co-je-cisty-kod-pre-deti): ako písať kód, ktorý sa číta sám
+→ [Filozofia menej vrstiev](/blog/filozofia-menej-vrstiev): prečo menej abstrakcií = menej chýb
+→ [Theme comparison](/blog/theme-comparison): porovnanie starter, magazine a minimal tém
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

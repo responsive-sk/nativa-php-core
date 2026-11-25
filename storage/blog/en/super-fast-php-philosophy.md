@@ -229,14 +229,14 @@ performance.
   "No PHP" world (EmDash); our core runs anywhere, and PHP on Workers only
   works via WASM
 
-→ [Fewer layers philosophy](/blog/philosophy-fewer-layers) — why fewer abstractions = fewer bugs
-→ [PHP history](/blog/php-history-from-fi-to-8) — from FI to PHP 8.5
-→ [OPcache and JIT](/blog/opcache-and-jit-precompilation) — precompilation and native machine code
+→ [Fewer layers philosophy](/blog/philosophy-fewer-layers): why fewer abstractions = fewer bugs
+→ [PHP history](/blog/php-history-from-fi-to-8): from FI to PHP 8.5
+→ [OPcache and JIT](/blog/opcache-and-jit-precompilation): precompilation and native machine code
 
 ## Sources
 
-- [PHP Manual](https://www.php.net/manual/) — official PHP documentation
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP standards
-- [Nativa Minimal Documentation](/docs/getting-started) — official getting started guide
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — security best practices
-- [W3C — Web Standards](https://www.w3.org/standards/) — web standards
+- [PHP Manual](https://www.php.net/manual/): official PHP documentation
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP standards
+- [Nativa Minimal Documentation](/docs/getting-started): official getting started guide
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): security best practices
+- [W3C, Web Standards](https://www.w3.org/standards/): web standards

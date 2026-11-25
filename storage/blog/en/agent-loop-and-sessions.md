@@ -185,12 +185,12 @@ agent/pre-step        → guard (can reject)
 | Parallel | No | maxParallelToolCalls |
 | History | Lost | Append-only log |
 
-→ [DeepSeek Harness ... 50 packages](/en/blog/deepseek-harness-architecture-overview) — architecture overview
-→ [Cordis ... a deep dive](/en/blog/cordis-deep-dive) — plugin framework
-→ [Capability seams](/en/blog/capability-seams) — how DSH abstracts abilities
+→ [DeepSeek Harness ... 50 packages](/en/blog/deepseek-harness-architecture-overview): architecture overview
+→ [Cordis ... a deep dive](/en/blog/cordis-deep-dive): plugin framework
+→ [Capability seams](/en/blog/capability-seams): how DSH abstracts abilities
 
 ## Sources
 
-- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) — open-source agent framework
-- [Agent Loop README](https://github.com/deepseek-ai/deepseek-harness/tree/master/packages/core/agent-loop) — detailed description
-- [Session persistence](https://github.com/deepseek-ai/deepseek-harness/blob/master/.agents/notes/implemented/architecture/2026-06-14-session-persistence.md) — session architecture
+- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): open-source agent framework
+- [Agent Loop README](https://github.com/deepseek-ai/deepseek-harness/tree/master/packages/core/agent-loop): detailed description
+- [Session persistence](https://github.com/deepseek-ai/deepseek-harness/blob/master/.agents/notes/implemented/architecture/2026-06-14-session-persistence.md): session architecture

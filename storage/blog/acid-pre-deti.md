@@ -11,7 +11,7 @@ translation: "acid-for-beginners"
 published: true
 ---
 
-Keď niekto vraví „dáta sú v bezpečí“, myslí tým štyri veci. ACID — Atomicita, Konzistencia, Izolácia, Trvanlivosť. Ale čo tie písmená znamenajú v praxi?
+Keď niekto vraví „dáta sú v bezpečí“, myslí tým štyri veci. ACID, Atomicita, Konzistencia, Izolácia, Trvanlivosť. Ale čo tie písmená znamenajú v praxi?
 
 ## Čo je ACID
 
@@ -200,14 +200,14 @@ $uow->transaction(function (PDO $pdo) {
 
 Menej kódu, rovnaká bezpečnosť. A to je presne to, čo chcete na projekte, kde každý riadok navyše je miesto pre bug.
 
-→ [Ako argon2id zrazil shared hosting](/blog/ako-sha-hash-algorytm-zrazil-shared-hosting) — bezpečnosť vs infraštruktúra
-→ [Cache wrappers](/blog/cache-wrappers-dobry-slucha-zly-pan) — kedy cache pomáha a kedy škodí
-→ [Outbox pattern](/blog/outbox-pattern) — keď cache nestihne všetko
+→ [Ako argon2id zrazil shared hosting](/blog/ako-sha-hash-algorytm-zrazil-shared-hosting): bezpečnosť vs infraštruktúra
+→ [Cache wrappers](/blog/cache-wrappers-dobry-slucha-zly-pan): kedy cache pomáha a kedy škodí
+→ [Outbox pattern](/blog/outbox-pattern): keď cache nestihne všetko
 
 ## Zdroje
 
-- [W3C — ACID Properties](https://www.w3.org/TR/xml-core/#sec-conformance) — ACID definícia
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [SQLite Documentation](https://www.sqlite.org/docs.html) — SQLite referenčná príručka
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
+- [W3C, ACID Properties](https://www.w3.org/TR/xml-core/#sec-conformance): ACID definícia
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [SQLite Documentation](https://www.sqlite.org/docs.html): SQLite referenčná príručka
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod

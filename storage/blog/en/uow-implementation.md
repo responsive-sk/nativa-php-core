@@ -272,13 +272,13 @@ A transaction is not a feature. It's a guarantee. UnitOfWork makes that guarante
 
 ---
 
-→ [UnitOfWork philosophy](/blog/uow-philosophy) — why transactions matter
-→ [Outbox pattern](/blog/uow-outbox) — domain events without breaking ACID
+→ [UnitOfWork philosophy](/blog/uow-philosophy): why transactions matter
+→ [Outbox pattern](/blog/uow-outbox): domain events without breaking ACID
 
 ## Sources
 
-- [PHP Manual](https://www.php.net/manual/) — official PHP documentation
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP standards
-- [Nativa Minimal Documentation](/docs/getting-started) — official getting started guide
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — security best practices
-- [W3C — Web Standards](https://www.w3.org/standards/) — web standards
+- [PHP Manual](https://www.php.net/manual/): official PHP documentation
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP standards
+- [Nativa Minimal Documentation](/docs/getting-started): official getting started guide
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): security best practices
+- [W3C, Web Standards](https://www.w3.org/standards/): web standards

@@ -406,14 +406,14 @@ testom. Bol odhalený prehľadom `grep` po `src/`. A opravený bol dvoma
 strážmi, ktoré odpovedajú na rôzne otázky ... jeden hľadá emiter, ktorý
 nikto nevolá, druhý beží akciu a číta frontu.
 
-→ [ACID pre deti](/blog/acid-pre-deti) — prečo transakcie nie sú nudné
-→ [Audit log pre deti](/blog/bonus-audit-log-pre-deti) — nezničiteľný záznam
-→ [Members-only pre deti](/blog/bonus-members-only-pre-deti) — kto vlastní článok
+→ [ACID pre deti](/blog/acid-pre-deti): prečo transakcie nie sú nudné
+→ [Audit log pre deti](/blog/bonus-audit-log-pre-deti): nezničiteľný záznam
+→ [Members-only pre deti](/blog/bonus-members-only-pre-deti): kto vlastní článok
 
 ## Zdroje
 
-- [SQLite — Transactions](https://www.sqlite.org/lang_transaction.html) — `BEGIN`, `SAVEPOINT`, `RELEASE`, a prečo je to všetko v jednom súbore
-- [SQLite — Atomic Commit](https://www.sqlite.org/atomiccommit.html) — ako SQLite rieši trvanlivosť zápisu
-- [PHP Manual — PDO::beginTransaction](https://www.php.net/manual/en/pdo.begintransaction.php) — výnimka, ktorú starý kód nechával v polovici práce
-- [microservices.io — Transactional Outbox](https://microservices.io/patterns/data/transactional-outbox.html) — kanonický zápis vzoru a jeho hraníc
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
+- [SQLite, Transactions](https://www.sqlite.org/lang_transaction.html): `BEGIN`, `SAVEPOINT`, `RELEASE`, a prečo je to všetko v jednom súbore
+- [SQLite, Atomic Commit](https://www.sqlite.org/atomiccommit.html): ako SQLite rieši trvanlivosť zápisu
+- [PHP Manual, PDO::beginTransaction](https://www.php.net/manual/en/pdo.begintransaction.php): výnimka, ktorú starý kód nechával v polovici práce
+- [microservices.io, Transactional Outbox](https://microservices.io/patterns/data/transactional-outbox.html): kanonický zápis vzoru a jeho hraníc
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod

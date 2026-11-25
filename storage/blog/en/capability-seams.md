@@ -152,12 +152,12 @@ await root.plugin(LocalFS)
 
 DI tells you "which class is used." Capability seams tell you "which capability is available" ... and leave it to you to implement it.
 
-→ [DeepSeek Harness ... 50 packages](/en/blog/deepseek-harness-architecture-overview) — architecture overview
-→ [Cordis ... a deep dive](/en/blog/cordis-deep-dive) — plugin framework
-→ [The fridge as a P2P server](/en/blog/the-fridge-as-a-p2p-server) — hardware for P2P nodes
+→ [DeepSeek Harness ... 50 packages](/en/blog/deepseek-harness-architecture-overview): architecture overview
+→ [Cordis ... a deep dive](/en/blog/cordis-deep-dive): plugin framework
+→ [The fridge as a P2P server](/en/blog/the-fridge-as-a-p2p-server): hardware for P2P nodes
 
 ## Sources
 
-- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) — open-source agent framework
-- [Capability Seams design](https://github.com/deepseek-ai/deepseek-harness/blob/master/.agents/notes/implemented/architecture/2026-06-13-capability-seams.md) — architecture document
-- [FS subsystem](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/filesystem.md) — filesystem subsystem reference
+- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): open-source agent framework
+- [Capability Seams design](https://github.com/deepseek-ai/deepseek-harness/blob/master/.agents/notes/implemented/architecture/2026-06-13-capability-seams.md): architecture document
+- [FS subsystem](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/filesystem.md): filesystem subsystem reference

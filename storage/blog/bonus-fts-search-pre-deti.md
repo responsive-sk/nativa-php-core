@@ -210,7 +210,7 @@ tabuľka v pamäti.
 
 ## Zdroje
 
-- [SQLite — FTS5](https://www.sqlite.org/fts5.html) — virtuálne tabuľky, bm25, unicode61 tokenizer
-- [OWASP — Injection Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html) — prečo MATCH sanitizujeme ako SQL
-- [PHP Manual — PDO](https://www.php.net/manual/en/book.pdo.php) — prepared statements, cez ktoré beží MATCH
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
+- [SQLite, FTS5](https://www.sqlite.org/fts5.html): virtuálne tabuľky, bm25, unicode61 tokenizer
+- [OWASP, Injection Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html): prečo MATCH sanitizujeme ako SQL
+- [PHP Manual, PDO](https://www.php.net/manual/en/book.pdo.php): prepared statements, cez ktoré beží MATCH
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod

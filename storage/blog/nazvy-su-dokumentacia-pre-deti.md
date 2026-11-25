@@ -101,14 +101,14 @@ Komentár vysvetľuje, **prečo** admin obchádza kontroly ... to z názvu nevy�
 Test, ktorý funguje vždy: **prečítaj volanie nahlas.**
 
 „`$this->tagChips($meta)` ... jasné."
-„`$this->getDataBits($m)` ... čože?“ Ak vás to pri čítaní zastaví, meno zlyhalo ... bez ohľadu na to, ako správne je napísané telo. Dobré meno nie je o tom, aby kód vyzeral pekne. Je o tom, aby **prežil vašu neprítomnosť**. Keď odídete z projektu, keď sa pridá nový člen, keď sa o pol roka vrátite k vlastnému kódu. Meno je rešpekt k človeku, ktorý ešte neprišiel. → [Jedna vec (SRP)](/blog/jedna-vec-srp-pre-deti) — metóda aj trieda robia len jednu vec
-→ [DRY vs abstrakcia](/blog/dry-vs-abstrakcia-pre-deti) — jedno miesto pravdy, žiadne rozhrania do zásoby
-→ [Smoke testy](/blog/smoke-test-pre-deti) — pravidlá vynútené testom = výstražné dymové signály
+„`$this->getDataBits($m)` ... čože?“ Ak vás to pri čítaní zastaví, meno zlyhalo ... bez ohľadu na to, ako správne je napísané telo. Dobré meno nie je o tom, aby kód vyzeral pekne. Je o tom, aby **prežil vašu neprítomnosť**. Keď odídete z projektu, keď sa pridá nový člen, keď sa o pol roka vrátite k vlastnému kódu. Meno je rešpekt k človeku, ktorý ešte neprišiel. → [Jedna vec (SRP)](/blog/jedna-vec-srp-pre-deti): metóda aj trieda robia len jednu vec
+→ [DRY vs abstrakcia](/blog/dry-vs-abstrakcia-pre-deti): jedno miesto pravdy, žiadne rozhrania do zásoby
+→ [Smoke testy](/blog/smoke-test-pre-deti): pravidlá vynútené testom = výstražné dymové signály
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [Web.dev — Performance](https://web.dev/performance) — Core Web Vitals
-- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/) — Lighthouse nástroj
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [Web.dev, Performance](https://web.dev/performance): Core Web Vitals
+- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/): Lighthouse nástroj

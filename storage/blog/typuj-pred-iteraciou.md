@@ -109,14 +109,14 @@ Keď nabudúce píšeš `foreach` nad dátami, ktoré neprišli z tvojho vlastn�
 Cyklus potom odpovedá na otázku „čo s tým spraviť“ ... nie „čo to je“.
 
 
-→ [PHP typy ... diel 1](/blog/php-typy-pre-deti) — čo sa skrýva za premennou
-→ [Scalar casts](/blog/scalar-casty-pre-deti) — povedz PHP presne, čo chceš
-→ [Chunky rule](/blog/chunky-rule-pre-deti) — prečo 60 riadkov?
+→ [PHP typy ... diel 1](/blog/php-typy-pre-deti): čo sa skrýva za premennou
+→ [Scalar casts](/blog/scalar-casty-pre-deti): povedz PHP presne, čo chceš
+→ [Chunky rule](/blog/chunky-rule-pre-deti): prečo 60 riadkov?
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

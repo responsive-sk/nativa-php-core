@@ -142,8 +142,8 @@ the new one at 1324 (104 lines) ... and git treats it as one change."
 
 ## Sources
 
-- [Git — git-diff Documentation](https://git-scm.com/docs/git-diff) — official diff documentation
-- [Git — git-add Documentation](https://git-scm.com/docs/git-add) — `git add -p` interactive staging
-- [Pro Git Book — Distributed Git](https://git-scm.com/book/en/v2/Distributed-Git-Distributed-Workflows) — distributed workflows
-- [GitHub — Interactive Staging](https://docs.github.com/en/get-started/using-git/about-git#interactive-staging) — interactive staging tutorial
-- [Atlassian — Git Diff Tool](https://www.atlassian.com/git/tutorials/difftool) — diff tools and visualization
+- [Git, git-diff Documentation](https://git-scm.com/docs/git-diff): official diff documentation
+- [Git, git-add Documentation](https://git-scm.com/docs/git-add): `git add -p` interactive staging
+- [Pro Git Book, Distributed Git](https://git-scm.com/book/en/v2/Distributed-Git-Distributed-Workflows): distributed workflows
+- [GitHub, Interactive Staging](https://docs.github.com/en/get-started/using-git/about-git#interactive-staging): interactive staging tutorial
+- [Atlassian, Git Diff Tool](https://www.atlassian.com/git/tutorials/difftool): diff tools and visualization

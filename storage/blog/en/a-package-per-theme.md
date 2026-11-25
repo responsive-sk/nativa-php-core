@@ -248,7 +248,7 @@ self::assertSame(
 
 There is one source. It gets copied. A machine holds the equality.
 
-And `code-highlight.ts` is duplicated — in `starter` and `erik` — for the same
+And `code-highlight.ts` is duplicated, in `starter` and `erik`: for the same
 physical reason: a shared chunk would be an `import`.
 
 The parity test has two faces. Besides byte equality it also hunts **cross-package
@@ -262,7 +262,7 @@ That is why it is an error message, not a remark.
 
 ## What we did not talk about
 
-Let us be honest — four things deserve a note.
+Let us be honest, four things deserve a note.
 
 **We changed the plan.** Part 1 promised a fourth theme step by step. What
 turned out is that the frontend is one spread smear, and before we could say
@@ -302,8 +302,8 @@ as an inline block.
 
 ## Sources
 
-- [pnpm workspaces](https://pnpm.io/workspaces) — the official workspace documentation
-- [Vite — build options and multi-page builds](https://vite.dev/guide/build) — inputs and the manifest
-- [MDN — script defer](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script) — why a classic script cannot execute `import`
-- [PHPUnit](https://phpunit.de/) — the testing framework documentation
-- [Nativa Minimal Documentation](/docs/getting-started) — the kit's official guide
+- [pnpm workspaces](https://pnpm.io/workspaces): the official workspace documentation
+- [Vite, build options and multi-page builds](https://vite.dev/guide/build): inputs and the manifest
+- [MDN, script defer](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script): why a classic script cannot execute `import`
+- [PHPUnit](https://phpunit.de/): the testing framework documentation
+- [Nativa Minimal Documentation](/docs/getting-started): the kit's official guide

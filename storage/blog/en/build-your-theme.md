@@ -387,7 +387,7 @@ rm -rf src/Themes/corporate
 
 No other changes needed. No remaining references.
 
-The theme system remains a foundation — not a constraint. Three files give you full control. Auto-discovery means zero configuration.
+The theme system remains a foundation, not a constraint. Three files give you full control. Auto-discovery means zero configuration.
 
 ---
 
@@ -399,13 +399,13 @@ A theme should be read, not just configured.
 
 ---
 
-→ [Theme Architecture](/blog/theme-architecture) — how themes work
-→ [Theme Comparison](/blog/theme-comparison) — starter vs magazine vs minimal
+→ [Theme Architecture](/blog/theme-architecture): how themes work
+→ [Theme Comparison](/blog/theme-comparison): starter vs magazine vs minimal
 
 ## Sources
 
-- [W3C — ACID Properties](https://www.w3.org/TR/xml-core/#sec-conformance) — ACID definition
-- [PHP Manual](https://www.php.net/manual/) — official PHP documentation
-- [SQLite Documentation](https://www.sqlite.org/docs.html) — SQLite reference manual
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — security best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — official getting started guide
+- [W3C, ACID Properties](https://www.w3.org/TR/xml-core/#sec-conformance): ACID definition
+- [PHP Manual](https://www.php.net/manual/): official PHP documentation
+- [SQLite Documentation](https://www.sqlite.org/docs.html): SQLite reference manual
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): security best practices
+- [Nativa Minimal Documentation](/docs/getting-started): official getting started guide

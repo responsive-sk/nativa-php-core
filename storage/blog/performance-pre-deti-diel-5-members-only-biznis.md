@@ -143,14 +143,14 @@ rýchly web (diely 1–4) a dali sme mu dôvod, prečo sa k nemu vracať
 [bonusový článok](/blog/bonus-members-only-pre-deti). Je to prvý
 článok, ktorý túto sériu dopĺňa o skúsenosť, o ktorej sme tu hovorili.
 
-→ [Performance diel 4](/blog/performance-pre-deti-diel-4-textovy-lcp) — textový LCP
-→ [Bonus members only](/blog/bonus-members-only-pre-deti) — články pre členov
-→ [Blog article action](/blog/blog-article-action) — renderovanie článku
+→ [Performance diel 4](/blog/performance-pre-deti-diel-4-textovy-lcp): textový LCP
+→ [Bonus members only](/blog/bonus-members-only-pre-deti): články pre členov
+→ [Blog article action](/blog/blog-article-action): renderovanie článku
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [Web.dev — Performance](https://web.dev/performance) — Core Web Vitals
-- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/) — Lighthouse nástroj
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [Web.dev, Performance](https://web.dev/performance): Core Web Vitals
+- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/): Lighthouse nástroj

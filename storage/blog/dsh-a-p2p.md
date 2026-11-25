@@ -11,7 +11,7 @@ translation: "dsh-and-p2p"
 published: true
 ---
 
-Agent A potrebuje poslať správu agentovi B. V tradičnom svete ide cez cloud — Google, AWS, nejaký server uprostred. Ale čo keď cloud spadne? Čo keď firma zmení API? Čo keď agent B je v inej krajine s inými pravidlami?
+Agent A potrebuje poslať správu agentovi B. V tradičnom svete ide cez cloud, Google, AWS, nejaký server uprostred. Ale čo keď cloud spadne? Čo keď firma zmení API? Čo keď agent B je v inej krajine s inými pravidlami?
 
 Cloud je centrálny. Jeden server, jedna politika, jedno miesto, kde všetko zlyhá.
 
@@ -21,7 +21,7 @@ Tradične:  [Agent A] ←→ [Cloud API] ←→ [Agent B]
 
 ## P2P ako capability seam
 
-DSH rieši P2P rovnako ako filesystem, shell, alebo sandbox — cez **capability seam**. Kontrakt, implementácia a spotrebiteľ sú oddelené.
+DSH rieši P2P rovnako ako filesystem, shell, alebo sandbox, cez **capability seam**. Kontrakt, implementácia a spotrebiteľ sú oddelené.
 
 ```
 DSH:       [Agent A] ←→ [P2P Seam] ←→ [Agent B]
@@ -93,7 +93,7 @@ Node A: [1] user: "Analyzuj súbor" → [2] agent: tool_call → [3] result
 Node B: [1] user: "Analyzuj súbor" → [2] agent: tool_call → [3] result
 ```
 
-Session sync prebieha cez P2P — každý nový entry sa rozosiela sa všetkým peerom. Žiadny centrálny server. Žiadny single point of failure.
+Session sync prebieha cez P2P, každý nový entry sa rozosiela sa všetkým peerom. Žiadny centrálny server. Žiadny single point of failure.
 
 ## Čo bráni realite
 
@@ -106,18 +106,18 @@ Session sync prebieha cez P2P — každý nový entry sa rozosiela sa všetkým 
 
 ## Prečo to záleží
 
-P2P nie je len technológia — je to filozofia. Keď odstránite cloud, odstránite aj závislosť. Agent nemusí dôverovať firme, serveru, ani protokolu. Dôveruje len susedom v sieti.
+P2P nie je len technológia, je to filozofia. Keď odstránite cloud, odstránite aj závislosť. Agent nemusí dôverovať firme, serveru, ani protokolu. Dôveruje len susedom v sieti.
 
 A to je presne tá istá myšlienka, ako keď sme odstránili Composer z produkcie. Zero-dependency. Plná kontrola.
 
-→ [Chladnička ako P2P server](/blog/chladnicka-ako-p2p-server) — hardvér pre P2P uzly
-→ [Capability seams](/blog/capability-seams) — Service Definition / Provider / Consumer
-→ [DeepSeek Harness ... 50 balíkov](/blog/deepseek-harness-architektura) — architektonický prehľad
+→ [Chladnička ako P2P server](/blog/chladnicka-ako-p2p-server): hardvér pre P2P uzly
+→ [Capability seams](/blog/capability-seams): Service Definition / Provider / Consumer
+→ [DeepSeek Harness ... 50 balíkov](/blog/deepseek-harness-architektura): architektonický prehľad
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

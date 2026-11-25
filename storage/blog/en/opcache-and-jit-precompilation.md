@@ -105,13 +105,13 @@ A cache that compiles is not a cache. It's a compiler that remembers.
 
 ---
 
-→ [C extensions API](/blog/php-c-extensions-api) — how C code plugs into the Zend engine
-→ [Fewer layers philosophy](/blog/philosophy-fewer-layers) — the final part of the series
+→ [C extensions API](/blog/php-c-extensions-api): how C code plugs into the Zend engine
+→ [Fewer layers philosophy](/blog/philosophy-fewer-layers): the final part of the series
 
 ## Sources
 
-- [PHP Manual](https://www.php.net/manual/) — official PHP documentation
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP standards
-- [Nativa Minimal Documentation](/docs/getting-started) — official getting started guide
-- [Web.dev — Performance](https://web.dev/performance) — Core Web Vitals
-- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/) — Lighthouse tool
+- [PHP Manual](https://www.php.net/manual/): official PHP documentation
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP standards
+- [Nativa Minimal Documentation](/docs/getting-started): official getting started guide
+- [Web.dev, Performance](https://web.dev/performance): Core Web Vitals
+- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/): Lighthouse tool

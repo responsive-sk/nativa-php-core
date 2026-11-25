@@ -1,5 +1,5 @@
 ---
-title: "JSON-LD structured data pre blog — Article, BreadcrumbList, Person"
+title: "JSON-LD structured data pre blog: Article, BreadcrumbList, Person"
 date: "2026-09-01"
 version: "1.0.0"
 tags: ["seo", "json-ld", "structured-data", "schema.org"]
@@ -11,13 +11,13 @@ translation: "jsonld-structured-data-for-blog"
 published: true
 ---
 
-# JSON-LD structured data pre blog — Article, BreadcrumbList, Person
+# JSON-LD structured data pre blog: Article, BreadcrumbList, Person
 
-Structured data pomáhajú Google pochopiť obsah stránky. Vďaka nim sa v SERP zobrazujú rich results — hviezdičky, obrázky, breadcrumb navigácia.
+Structured data pomáhajú Google pochopiť obsah stránky. Vďaka nim sa v SERP zobrazujú rich results, hviezdičky, obrázky, breadcrumb navigácia.
 
 ## Čo generujeme
 
-### Homepage — Organization + WebSite + SearchAction
+### Homepage: Organization + WebSite + SearchAction
 
 ```json
 [
@@ -43,7 +43,7 @@ Structured data pomáhajú Google pochopiť obsah stránky. Vďaka nim sa v SERP
 
 Google môže zobraziť search box priamo v SERP.
 
-### Článok — Article + BreadcrumbList
+### Článok: Article + BreadcrumbList
 
 ```json
 [
@@ -67,7 +67,7 @@ Google môže zobraziť search box priamo v SERP.
 
 Google zobrazí breadcrumbs pod názvom článku v SERP.
 
-### Author profil — Person
+### Author profil: Person
 
 ```json
 {
@@ -115,13 +115,13 @@ final class StructuredDataService
 }
 ```
 
-## Bezpečnosť — JSON_HEX_TAG
+## Bezpečnosť: JSON_HEX_TAG
 
 ```php
 json_encode($data, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
 ```
 
-`JSON_HEX_TAG` zabezpečuje, že `</script>` užívateľská hodnota nikdy nepreruší JSON blok — XSS-safe by design.
+`JSON_HEX_TAG` zabezpečuje, že `</script>` užívateľská hodnota nikdy nepreruší JSON blok, XSS-safe by design.
 
 ## Integrácia s FrontendLayout
 
@@ -152,8 +152,8 @@ public function testArticlePageIncludesJsonLd(): void
 
 ## Zdroje
 
-- [Google — Structured data](https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data)
-- [schema.org — Article](https://schema.org/Article)
-- [schema.org — BreadcrumbList](https://schema.org/BreadcrumbList)
-- [schema.org — SearchAction](https://schema.org/SearchAction)
-- [Google — Rich results test](https://search.google.com/test/rich-results)
+- [Google, Structured data](https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data)
+- [schema.org, Article](https://schema.org/Article)
+- [schema.org, BreadcrumbList](https://schema.org/BreadcrumbList)
+- [schema.org, SearchAction](https://schema.org/SearchAction)
+- [Google, Rich results test](https://search.google.com/test/rich-results)

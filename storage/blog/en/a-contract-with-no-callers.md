@@ -27,7 +27,7 @@ It is not.
 
 ## The plan that did not happen
 
-Part 1 built `ThemeModule` — a contract with one method per public surface.
+Part 1 built `ThemeModule`: a contract with one method per public surface.
 I wrote a sentence in it about what would happen to the old one.
 
 ```php
@@ -39,7 +39,7 @@ I wrote a sentence in it about what would happen to the old one.
 That later change never came.
 
 And what stayed in its place were not one-line delegates. They were **full
-bodies** — two hundred lines of code someone wrote, someone read, and nobody
+bodies**, two hundred lines of code someone wrote, someone read, and nobody
 ever ran.
 
 ## Measuring instead of assuming
@@ -47,11 +47,11 @@ ever ran.
 First I told myself "it is definitely used somewhere, I am just looking in the
 wrong place".
 
-So I checked. Not by estimating — by grepping.
+So I checked. Not by estimating, by grepping.
 
 | What I looked for | What I found |
 |---|---|
-| `implements ThemeRenderer` | 2 — `StarterRenderer`, `erik\Renderer` |
+| `implements ThemeRenderer` | 2,`StarterRenderer`, `erik\Renderer` |
 | Type-hinted sites (`: ThemeRenderer`, `ThemeRenderer::`) | **0** |
 | `$obj->blogIndex(`, `$obj->homepage(`, `$obj->blogArticle(` … | **0** |
 | References outside `src/Themes/` | 0 (one stale docblock sentence) |
@@ -84,12 +84,12 @@ $articles[] = new Article(
 );
 ```
 
-That `toArticles()` mapped `array $articles` — an array of cards — onto the
+That `toArticles()` mapped `array $articles`: an array of cards, onto the
 `Article` VO. So there were **two shapes for one concept** at once: `Article`,
 and "an array that happens to be called that".
 
 And the kernel had its own shape: `PageContext` carries articles, names, counts,
-pagination context — all typed.
+pagination context, all typed.
 
 So the dead contract was not a leftover from the refactor. It was a **deliberate
 note about a style the contract contradicted**. Dead code usually says something
@@ -99,13 +99,13 @@ From the result:
 
 | File | Before | After | What stayed |
 |---|---|---|---|
-| `ThemeRenderer.php` | 92 | deleted | — |
+| `ThemeRenderer.php` | 92 | deleted |, |
 | `StarterRenderer.php` | 443 | 120 | article page + TOC |
 | `erik\Renderer.php` | 266 | 135 | 10 static methods |
 
 **−573 lines of code** in total, none of which ever executed.
 
-## The tests noticed — the wrong way
+## The tests noticed: the wrong way
 
 The best moment of the refactor: PHPStan level 9 was green **immediately** after
 I deleted the methods.
@@ -126,7 +126,7 @@ uses this".
 
 ## The rule that was missing
 
-The project had a guard against speculative interfaces. It was correct — just
+The project had a guard against speculative interfaces. It was correct, just
 narrow.
 
 `CorePatternTest` flags an interface when it has **exactly one** implementation
@@ -158,7 +158,7 @@ Interfaces with no implementation: CliOutput
 
 I nearly deleted it.
 
-`CliOutput` **is** implemented — in `Bootstrapper`, like this:
+`CliOutput` **is** implemented, in `Bootstrapper`, like this:
 
 ```php
 // src/Modules/Core/Infrastructure/Bootstrap/Bootstrapper.php:65
@@ -168,12 +168,12 @@ $output = new class () implements CliOutput {
 An anonymous class has no name. It has no name until you give it one. I fixed
 the regex to match `class` with an optional name.
 
-A rule that killed a live contract was wrong. Not because it was strict —
+A rule that killed a live contract was wrong. Not because it was strict,
 because it was incomplete.
 
 ### The kernel is exempt, but not blind
 
-`Modules\Core` and `Modules\Database` are the shared kernel — its interfaces are
+`Modules\Core` and `Modules\Database` are the shared kernel, its interfaces are
 headers ("libc headers"). They do not need a consumer inside the project.
 
 But they **do** need an implementation. A header nobody includes is not a
@@ -181,7 +181,7 @@ header. It is a note.
 
 ## The second dead thing, found by the same guard
 
-The new test failed on its **first run**. Not because of `ThemeRenderer` — that
+The new test failed on its **first run**. Not because of `ThemeRenderer`: that
 one was deleted. Because of something else:
 
 ```
@@ -215,23 +215,23 @@ the second while being written, not while being looked for.
 
 ## When this does not hold
 
-Let us be honest — three things.
+Let us be honest, three things.
 
 **The guard produces false positives, and that is fine.** The first version of
 the implementor scan flagged `CliOutput` as a dead contract. That was a bug in
-the scan, not in the code — and fixing it meant fixing the rule, not routing
+the scan, not in the code, and fixing it meant fixing the rule, not routing
 around it. Had I added `CliOutput` to an exemption list, the guard would have
 lost the ability to find the real problem.
 
 **The guard cannot tell whether an interface is "deliberate".** Some interfaces
-have zero implementations on purpose — to record a contract that arrives later.
+have zero implementations on purpose, to record a contract that arrives later.
 The guard flags them. This project has none, and `ModuleInterface` was not one
 (it described something that already worked a different way), so no exemption
 was added.
 
 **460 lines of dead code is not the harder case.** The harder case is dead
 code that looks alive. `ThemeRenderer` had two implementations that called each
-other through their own static methods — the call existed, it just was not the
+other through their own static methods, the call existed, it just was not the
 call we were looking for. It was readable and entirely pointless. Someone
 opening it would not learn from the method list that it was dead.
 
@@ -244,13 +244,13 @@ In part 4 we look at the other side of the same coin: what happens when a
 I showed that case is dead. But what about an interface nobody **outside**
 implements?
 
-On why "no external consumer" is not always a mistake — and why the answer to
+On why "no external consumer" is not always a mistake, and why the answer to
 that is not an exemption list.
 
 ## Sources
 
-- [PHP Manual — interfaces](https://www.php.net/manual/en/language.oop5.interfaces.php) — the official `interface` documentation
-- [PHPStan](https://phpstan.org/) — static analysis at level 9
-- [PHPUnit](https://phpunit.de/) — the testing framework documentation
-- [Refactoring Guru — Extract Interface](https://refactoring.guru/design-patterns/extract-interface) — when to create an interface, and when not to
-- [Nativa Minimal Documentation](/docs/getting-started) — the kit's official guide
+- [PHP Manual, interfaces](https://www.php.net/manual/en/language.oop5.interfaces.php): the official `interface` documentation
+- [PHPStan](https://phpstan.org/): static analysis at level 9
+- [PHPUnit](https://phpunit.de/): the testing framework documentation
+- [Refactoring Guru, Extract Interface](https://refactoring.guru/design-patterns/extract-interface): when to create an interface, and when not to
+- [Nativa Minimal Documentation](/docs/getting-started): the kit's official guide

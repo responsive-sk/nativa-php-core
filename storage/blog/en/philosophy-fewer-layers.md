@@ -100,13 +100,13 @@ Fewer layers is not minimalism. It's an engineering rule that PHP has been provi
 
 ---
 
-→ [Super-fast PHP philosophy](/blog/super-fast-php-philosophy) — why PHP is fast
-→ [C extensions API](/blog/php-c-extensions-api) — how extensions work at the C level
+→ [Super-fast PHP philosophy](/blog/super-fast-php-philosophy): why PHP is fast
+→ [C extensions API](/blog/php-c-extensions-api): how extensions work at the C level
 
 ## Sources
 
-- [PHP Manual](https://www.php.net/manual/) — official PHP documentation
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP standards
-- [Nativa Minimal Documentation](/docs/getting-started) — official getting started guide
-- [Web.dev — Performance](https://web.dev/performance) — Core Web Vitals
-- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/) — Lighthouse tool
+- [PHP Manual](https://www.php.net/manual/): official PHP documentation
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP standards
+- [Nativa Minimal Documentation](/docs/getting-started): official getting started guide
+- [Web.dev, Performance](https://web.dev/performance): Core Web Vitals
+- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/): Lighthouse tool

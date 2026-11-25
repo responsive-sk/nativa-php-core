@@ -210,14 +210,14 @@ skladačky: ako celý tento workflow riadia AI Factory skills ... `aif-plan`,
 a AI v tomto systéme. Dočítame sa!
 
 
-→ [OpenSpec pre deti ... diel 1](/blog/co-je-openspec-pre-deti) — čo je OpenSpec
-→ [Anatómia change](/blog/anatomia-change-pre-deti) — päť súborov, päť otázok
-→ [Flow a ADR](/blog/flow-a-adr-starter-kitu) — mindset za starter kitom
+→ [OpenSpec pre deti ... diel 1](/blog/co-je-openspec-pre-deti): čo je OpenSpec
+→ [Anatómia change](/blog/anatomia-change-pre-deti): päť súborov, päť otázok
+→ [Flow a ADR](/blog/flow-a-adr-starter-kitu): mindset za starter kitom
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

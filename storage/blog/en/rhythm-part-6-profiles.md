@@ -13,9 +13,9 @@ published: true
 
 You're writing an article about a bug you fixed. Should it follow the same rhythm as a tutorial about setting up Docker?
 
-No. The bug story needs a long fog phase — the reader needs to feel the problem. The tutorial needs a long sun phase — the reader needs to see the solution step by step. The article's purpose chooses its rhythm.
+No. The bug story needs a long fog phase, the reader needs to feel the problem. The tutorial needs a long sun phase, the reader needs to see the solution step by step. The article's purpose chooses its rhythm.
 
-## Bug Story — fog dominant
+## Bug Story: fog dominant
 
 A bug story is about a problem that happened and how you fixed it. The reader wants to feel the confusion, then the relief.
 
@@ -33,9 +33,9 @@ The fog phase dominates because the story is about the problem. The sun phase is
 
 **Example:** "Click Page 3 ... and the Pager Doubled"
 
-The article spends 44% of its length describing the problem. The fix is three lines of code. That's correct — the story is about the bug, not the fix.
+The article spends 44% of its length describing the problem. The fix is three lines of code. That's correct, the story is about the bug, not the fix.
 
-## Tutorial — sun dominant
+## Tutorial: sun dominant
 
 A tutorial is about learning something new. The reader wants to see the solution, step by step, with code.
 
@@ -49,13 +49,13 @@ TÉMA   [5%]   One sentence
 OUTRO  [10%]  Links to next steps
 ```
 
-The sun phase dominates because the story is about the solution. The fog phase is short — the reader knows they don't know how to do this. The reader's journey is: gap → filling → completion.
+The sun phase dominates because the story is about the solution. The fog phase is short, the reader knows they don't know how to do this. The reader's journey is: gap → filling → completion.
 
 **Example:** "MoonShine Features + HTMX"
 
 The article spends most of its length showing how to build toast notifications, live search, and form submit. The problem ("admin panels need JavaScript frameworks") is stated once and left behind.
 
-## Philosophy — night dominant
+## Philosophy: night dominant
 
 A philosophy article is about understanding why something is the way it is. The reader wants to think, not learn.
 
@@ -69,13 +69,13 @@ TÉMA   [10%]  Maybe 2-3 sentences (exception)
 OUTRO  [5%]   Links
 ```
 
-The night phase dominates because the story is about understanding. The sun phase is short — the facts are given quickly. The reader's journey is: question → reflection → insight.
+The night phase dominates because the story is about understanding. The sun phase is short, the facts are given quickly. The reader's journey is: question → reflection → insight.
 
 **Example:** "Philosophy of Fewer Layers"
 
 The article spends most of its length explaining why fewer dependencies matter. The code examples are minimal. The reader's journey is: "why zero dependencies?" → understanding → agreement.
 
-## Review / Comparison — balanced
+## Review / Comparison: balanced
 
 A review article compares options. The reader wants facts, tables, and a clear recommendation.
 
@@ -126,13 +126,13 @@ The article's purpose chooses its rhythm. Not the other way around. A bug story 
 
 ---
 
-→ [Part 1 — The Article Nobody Finished](/blog/rhythm-part-1-nobody-finished) — why rhythm matters
-→ [Part 2 — Fog and Sun](/blog/rhythm-part-2-fog-and-sun) — how to write problems that keep people reading
+→ [Part 1, The Article Nobody Finished](/blog/rhythm-part-1-nobody-finished): why rhythm matters
+→ [Part 2, Fog and Sun](/blog/rhythm-part-2-fog-and-sun): how to write problems that keep people reading
 
 ## Sources
 
-- [PHP Manual](https://www.php.net/manual/) — official PHP documentation
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP standards
-- [Nativa Minimal Documentation](/docs/getting-started) — official getting started guide
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — security best practices
-- [W3C — Web Standards](https://www.w3.org/standards/) — web standards
+- [PHP Manual](https://www.php.net/manual/): official PHP documentation
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP standards
+- [Nativa Minimal Documentation](/docs/getting-started): official getting started guide
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): security best practices
+- [W3C, Web Standards](https://www.w3.org/standards/): web standards

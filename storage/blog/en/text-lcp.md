@@ -171,16 +171,16 @@ built a fast website ... and now let's see what to do with the traffic it
 brings. [Part 5](/en/blog/members-only-business-pattern)
 is about members-only bonus articles as a business pattern.
 
-Text LCP remains the trickiest performance metric — just not one you should ignore. When you know the font contract, the fix is one CSS line.
+Text LCP remains the trickiest performance metric, just not one you should ignore. When you know the font contract, the fix is one CSS line.
 
-→ [Article cover LCP](/blog/article-cover-lcp) — the first image that matters
-→ [LCP srcset basics](/blog/lcp-srcset-basics) — responsive images done right
-→ [Reading Lighthouse report](/blog/reading-lighthouse-report) — detective work on audits
+→ [Article cover LCP](/blog/article-cover-lcp): the first image that matters
+→ [LCP srcset basics](/blog/lcp-srcset-basics): responsive images done right
+→ [Reading Lighthouse report](/blog/reading-lighthouse-report): detective work on audits
 
 ## Sources
 
-- [PHP Manual](https://www.php.net/manual/) — official PHP documentation
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP standards
-- [Nativa Minimal Documentation](/docs/getting-started) — official getting started guide
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — security best practices
-- [W3C — Web Standards](https://www.w3.org/standards/) — web standards
+- [PHP Manual](https://www.php.net/manual/): official PHP documentation
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP standards
+- [Nativa Minimal Documentation](/docs/getting-started): official getting started guide
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): security best practices
+- [W3C, Web Standards](https://www.w3.org/standards/): web standards

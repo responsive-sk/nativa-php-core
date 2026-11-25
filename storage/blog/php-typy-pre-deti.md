@@ -103,14 +103,14 @@ PHP pri každom prechode cyklom **znova skúma typ** ... pre každý riadok, pre
 
 V [dieli 2](/blog/scalar-casty-pre-deti) si ukážeme, ako povedať PHP presne, čo chceš ... explicitné casty a `declare(strict_types = 1)`. V [dieli 3](/blog/typuj-pred-iteraciou) to celé spojíme do pravidla, ktoré šetrí procesorové cykly. V [dieli 4](/blog/array-list-dto-pre-deti) sa pozrieme na polia, `mixed` a DTO. V [dieli 5](/blog/union-nullsafe-enumy-pre-deti) na union typy, nullsafe a enumy ... a v [dieli 6](/blog/chunky-rule-pre-deti) na to, prečo sa metódy nesmú pretiahnuť cez 60 riadkov.
 
-→ [Scalar casty](/blog/scalar-casty-pre-deti) — explicitné typové konverzie
-→ [Typuj pred iteráciou](/blog/typuj-pred-iteraciou) — typovanie na hranici
-→ [Array vs list vs DTO](/blog/array-list-dto-pre-deti) — polia a mixed
+→ [Scalar casty](/blog/scalar-casty-pre-deti): explicitné typové konverzie
+→ [Typuj pred iteráciou](/blog/typuj-pred-iteraciou): typovanie na hranici
+→ [Array vs list vs DTO](/blog/array-list-dto-pre-deti): polia a mixed
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [Web.dev — Performance](https://web.dev/performance) — Core Web Vitals
-- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/) — Lighthouse nástroj
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [Web.dev, Performance](https://web.dev/performance): Core Web Vitals
+- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/): Lighthouse nástroj

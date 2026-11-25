@@ -3,7 +3,7 @@ title: "Member bonus ... forms: strangers fill it in, you only read it"
 date: "2026-10-03"
 version: "1.0.0"
 tags: ["forms", "csv", "security", "php", "architecture"]
-excerpt: "The ninth bonus for registered readers. A form is not a comment with a different label: you author the schema, strangers author the answers, and you get an inbox plus a CSV. Why the bot trap stays empty, why a slug never leaks into another language, why quoting an Excel formula changes nothing — and what happens when a class name is assembled at runtime. All on real code from this repo."
+excerpt: "The ninth bonus for registered readers. A form is not a comment with a different label: you author the schema, strangers author the answers, and you get an inbox plus a CSV. Why the bot trap stays empty, why a slug never leaks into another language, why quoting an Excel formula changes nothing, and what happens when a class name is assembled at runtime. All on real code from this repo."
 author: "Nativa Dev"
 author_email: "nativa.dev@example.test"
 category: "Bonus"
@@ -122,7 +122,7 @@ published: true
 ---
 ```
 
-Both meet in one mechanism — the markdown block registry in Core
+Both meet in one mechanism, the markdown block registry in Core
 (`#[AsMarkdownBlock]`, `MarkdownBlockRegistry`).
 
 And that is why it lives in Core rather than in the form: `PageViewAction`
@@ -149,7 +149,7 @@ may carry several fenced blocks. Pair the tags by order alone and you
 fire after the second fence, from where you would run a form inside
 an example.
 
-And the slug is not looked up as an arbitrary string — it passes
+And the slug is not looked up as an arbitrary string, it passes
 `#(?:<p>)?\{\{form:([a-z0-9][a-z0-9_-]*)\}\}#` before any lookup. A
 wildcard character never reaches the pattern.
 
@@ -170,7 +170,7 @@ with the same slug. Ask and you get a 404, not a quiet answer in the
 wrong language.
 
 That is different from having one piece of content in two versions. A
-form is not a translation — it is a **separate thing in every language**,
+form is not a translation, it is a **separate thing in every language**,
 with its own field labels, its own options and its own answers.
 Translations get translation front matter. This gets a column.
 
@@ -244,7 +244,7 @@ public function cell(string $value): string
 ```
 
 Quotes are not enough. Excel strips them on import and evaluates the
-formula anyway. The apostrophe stays in the cell as text — it is the
+formula anyway. The apostrophe stays in the cell as text, it is the
 only form a spreadsheet respects.
 
 The first version of that method was written correctly by the CSV
@@ -253,7 +253,7 @@ problem was between them.
 
 ## Four themes, one block
 
-The block renders under the **active theme's prefix** — `st-form`,
+The block renders under the **active theme's prefix**: `st-form`,
 `er-form`, `ms-form`, `mag-form`. It is the same contract
 [`CommentSection`](/en/blog/bonus-comments) has in erik.
 
@@ -308,12 +308,12 @@ on a page, the page is shorter and editable without a schema.
 
 ## Practically
 
-1. `php bin/cms forms:seed` — four demo forms and the pages `/anketa`
+1. `php bin/cms forms:seed`: four demo forms and the pages `/anketa`
    and `/test`, where you see a poll and a quiz mirrored from markdown.
 2. Drop `{{form:contact}}` into a page or `form: contact` into an
    article's front matter and open it in another theme. If it works
    only on starter, look at the prefix.
-3. `node bin/forms-check.mjs http://127.0.0.1:8000` — and read the
+3. `node bin/forms-check.mjs http://127.0.0.1:8000`: and read the
    output as a statement. It is the one test that sees the whole chain
    at once: middleware → action → session → markdown block on the
    next render.
@@ -325,11 +325,11 @@ export, where you suddenly notice the column you forgot.
 
 ## Sources
 
-- [OWASP — CSV Injection](https://owasp.org/www-community/attacks/CSV_Injection)
-  — why quotes are not enough and what a spreadsheet does about it
-- [SQLite — SELECT](https://www.sqlite.org/lang_select.html) — `GROUP BY`
+- [OWASP, CSV Injection](https://owasp.org/www-community/attacks/CSV_Injection),
+  why quotes are not enough and what a spreadsheet does about it
+- [SQLite, SELECT](https://www.sqlite.org/lang_select.html): `GROUP BY`
   as the reason a poll is not one column
-- [docs/forms.md](https://github.com/evan70/nativa-minimal/blob/master/docs/forms.md)
-  — the whole module on one page
-- [The fourth bonus — comments](/en/blog/bonus-comments) — where this
+- [docs/forms.md](https://github.com/evan70/nativa-minimal/blob/master/docs/forms.md),
+  the whole module on one page
+- [The fourth bonus, comments](/en/blog/bonus-comments): where this
   cycle grew from

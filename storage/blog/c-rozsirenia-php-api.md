@@ -18,7 +18,7 @@ Práve tu sa fráza „PHP C chunks“ stáva doslova pravdivou ... keď zavolá
 `json_encode` alebo otvoríš SQLite databázu, vykoná sa C kód, ktorý je do
 PHP zapojený ako knižnica.
 
-Keď zavoláte `json_encode` alebo otvoríte SQLite databázu, vykoná sa C kód. Nie PHP. C. A tento C kód je do PHP zapojený ako knižnica — cez rozšírenie.
+Keď zavoláte `json_encode` alebo otvoríte SQLite databázu, vykoná sa C kód. Nie PHP. C. A tento C kód je do PHP zapojený ako knižnica, cez rozšírenie.
 
 PHP samo o sebe je pomalý interpret. Ale keď potrebujete pracovať s JSON, obrázkami, kryptografiou alebo databázou, nemôžete čakať, kým PHP interpretuje každý riadok. Potrebujete C.
 
@@ -127,14 +127,14 @@ len preferencia, ale prirodzený záver celej histórie PHP ... a čo to
 znamená pre náš stack.
 
 
-→ [Zend engine a opcody](/blog/zend-engine-a-opcody) — ako PHP naozaj beží
-→ [OPcache a JIT](/blog/opcache-a-jit-prekompilacia) — prekompilácia na úrovni jazyka
-→ [História PHP](/blog/historia-php-od-fi-po-8) — od nástroja jedného človeka po Zend Engine 4
+→ [Zend engine a opcody](/blog/zend-engine-a-opcody): ako PHP naozaj beží
+→ [OPcache a JIT](/blog/opcache-a-jit-prekompilacia): prekompilácia na úrovni jazyka
+→ [História PHP](/blog/historia-php-od-fi-po-8): od nástroja jedného človeka po Zend Engine 4
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

@@ -11,7 +11,7 @@ translation: "what-is-openspec"
 published: true
 ---
 
-Zmeny v projekte sa nepíšu priamo do spec. Majú svoju cestu — od nápadu cez proposal, design, tasks, až po archív. Táto cesta sa volá OpenSpec.
+Zmeny v projekte sa nepíšu priamo do spec. Majú svoju cestu, od nápadu cez proposal, design, tasks, až po archív. Táto cesta sa volá OpenSpec.
 
 > Toto je diel 1 novej série **OpenSpec pre deti**. V sérii si ukážeme, ako sa
 > v tomto projekte riadia zmeny: čo je OpenSpec, z čoho sa skladá jeden change
@@ -93,14 +93,14 @@ A najkrajšia meta-vrstva? **Tento článok o tom, ako sa robí change správne,
 vzniká presne tým spôsobom, o ktorom rozpráva.** Čisté návody, čisté
 rozhodnutia, čistý archív. 
 
-→ [Spec ako zdroj pravdy](/blog/spec-ako-zdroj-pravdy-pre-deti) — prečo spec žije
-→ [Životný cyklus change](/blog/zivotny-cyklus-change-pre-deti) — od nápadu po archív
-→ [Anatómia change](/blog/anatomia-change-pre-deti) — čo sa deje vnútri
+→ [Spec ako zdroj pravdy](/blog/spec-ako-zdroj-pravdy-pre-deti): prečo spec žije
+→ [Životný cyklus change](/blog/zivotny-cyklus-change-pre-deti): od nápadu po archív
+→ [Anatómia change](/blog/anatomia-change-pre-deti): čo sa deje vnútri
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

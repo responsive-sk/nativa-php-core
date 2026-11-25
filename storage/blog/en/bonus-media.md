@@ -3,7 +3,7 @@ title: "Member bonus ... media: foreign files in your house"
 date: "2026-09-17"
 version: "1.0.0"
 tags: ["media", "uploads", "php", "security", "architecture"]
-excerpt: "The fifth bonus for registered readers. Uploads are the second gate through which the foreign enters the app ... this time not text but files. Why a filename is a claim and not a fact, why every asset remembers its provider, and why even deletion has an order — all on real code from this repo."
+excerpt: "The fifth bonus for registered readers. Uploads are the second gate through which the foreign enters the app ... this time not text but files. Why a filename is a claim and not a fact, why every asset remembers its provider, and why even deletion has an order, all on real code from this repo."
 author: "Nativa Dev"
 author_email: "nativa.dev@example.test"
 category: "Bonus"
@@ -22,12 +22,12 @@ published: true
 > entirely different kind of party.
 
 You're a developer. Last time it was a form that let foreign text into
-your database — and it was trusted with zero.
+your database, and it was trusted with zero.
 
 Comments were gate number one.
 
 Uploads are gate number two. They don't write rows. They let files into
-the filesystem — into the place where the app you spent all week writing
+the filesystem, into the place where the app you spent all week writing
 lives.
 
 The rule of both gates is the same: the foreign may enter, but only on
@@ -40,7 +40,7 @@ A visitor uploads a file. The browser reports a name, a size, a type.
 None of that is a fact. All of it is one side's claim.
 
 That's why `LocalStorageProvider` treats the report like a statement
-that must be verified — and normalizes once, at the boundary:
+that must be verified, and normalizes once, at the boundary:
 
 ```php
 // src/Modules/Core/Infrastructure/Storage/LocalStorageProvider.php — boundary
@@ -48,7 +48,7 @@ $size = is_numeric($file['size'] ?? null) ? (int) $file['size'] : 0;
 $this->validateFile($tmpName, $originalName, $size);
 ```
 
-The size is cast once. Paths are checked — `../` in a filename is an
+The size is cast once. Paths are checked,`../` in a filename is an
 attempt to walk out of the designated directory, and it ends in refusal.
 
 And the type? The browser says `image/png`. The provider doesn't ask the
@@ -60,7 +60,7 @@ $finfo = new \finfo(FILEINFO_MIME_TYPE);
 $mime = $finfo->file($filePath);
 ```
 
-`finfo` reads content. Just like a guest's name in the comments — the
+`finfo` reads content. Just like a guest's name in the comments, the
 claim arrived from a stranger, the fact was established at home.
 
 ## The type decides, the extension obeys
@@ -73,12 +73,12 @@ extensions are still legal:
 return in_array($extension, self::ALLOWED[$mime] ?? [], true);
 ```
 
-`ALLOWED` is a map — a few legal extensions for `image/png`, different
+`ALLOWED` is a map, a few legal extensions for `image/png`, different
 ones for `application/pdf`. An unknown type has no extension that could
 get in.
 
 A file renamed to `photo.png` therefore doesn't pass as an image when
-its bytes say otherwise. The whitelist isn't a list of allowed names —
+its bytes say otherwise. The whitelist isn't a list of allowed names,
 it's a list of allowed truths.
 
 ## Two truths about one file
@@ -96,7 +96,7 @@ $asset = MediaAsset::create(/* ... from the result */);
 $this->repository->insert($asset);
 ```
 
-Deletion runs the other way — and the order is not indifferent:
+Deletion runs the other way, and the order is not indifferent:
 
 ```php
 // MediaService.php — delete: file first, row second
@@ -112,14 +112,14 @@ A transaction across two worlds doesn't exist.
 
 So the order picked the side where the mistake is visible. A row without
 a file can be found and cleaned up. A file without a row is an orphan
-nobody will ever save — the app doesn't know it exists.
+nobody will ever save, the app doesn't know it exists.
 
 ## Every asset remembers where it came from
 
 Today you configure one storage provider. A year from now you swap it.
 
 The files stayed. That's why every row in `media.db` carries a
-`provider` column — and deletion looks up the host one asset at a time:
+`provider` column, and deletion looks up the host one asset at a time:
 
 ```php
 // MediaService.php — resolveProvider on every touch
@@ -147,7 +147,7 @@ if ('cloudinary' === $provider && !$this->isImageMimeType($mimeType)) {
 
 Category is a column. Tags are a junction table, `media_tags`.
 
-`setTagsForAsset` deletes the old ones first, then inserts the new — a
+`setTagsForAsset` deletes the old ones first, then inserts the new, a
 tag list is always the whole truth, never an increment:
 
 ```php
@@ -160,10 +160,10 @@ foreach ($tags as $tag) {
 }
 ```
 
-Tags are normalized at the boundary too — trimmed and lowercased.
+Tags are normalized at the boundary too, trimmed and lowercased.
 Without it, `PHP` and `php` would be two worlds.
 
-Type filtering runs on a MIME prefix — `LIKE 'image/%'`. The overview
+Type filtering runs on a MIME prefix,`LIKE 'image/%'`. The overview
 can also order by `view_count` ... what you actually looked at gets
 counted.
 
@@ -189,7 +189,7 @@ pre-write content.
 
 The whitelist is a defense at the entrance, not at the exit.
 
-A file that passed is served under a header the server chooses — and
+A file that passed is served under a header the server chooses, and
 CSP decides what its content may launch. An uploaded file is therefore
 not "safe" ... it's an enemy let inside with its hands tied.
 
@@ -198,7 +198,7 @@ actually deleted. Partial success here is an honest result, not an API
 error.
 
 And the third: there is no resize pipeline here. A file keeps the size
-it arrived with — if you want thumbnails, upload them or add a
+it arrived with, if you want thumbnails, upload them or add a
 generator.
 
 ## Practically
@@ -214,8 +214,8 @@ The picker then answers the question "which file" ... not "where is it".
 
 ## Sources
 
-- [OWASP — File Upload Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html) ... the frame where whitelisting and serving belong
-- [PHP — finfo](https://www.php.net/manual/en/book.fileinfo.php) ... detecting the type from content, not from the name
-- [PHP — move_uploaded_file](https://www.php.net/manual/en/function.move-uploaded-file.php) ... the only legitimate move of an uploaded file
+- [OWASP, File Upload Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html) ... the frame where whitelisting and serving belong
+- [PHP, finfo](https://www.php.net/manual/en/book.fileinfo.php) ... detecting the type from content, not from the name
+- [PHP, move_uploaded_file](https://www.php.net/manual/en/function.move-uploaded-file.php) ... the only legitimate move of an uploaded file
 - [Nativa Minimal Documentation](/docs/getting-started) ... this kit's official getting started guide
 - [docs/blog-voice.md](/docs/blog-voice) ... the guide where the bonus series lives

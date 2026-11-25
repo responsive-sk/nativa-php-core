@@ -204,5 +204,5 @@ monitorovateľným.
 ## Zdroje
 
 - [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) ... agentný framework s pluginovou architektúrou
-- [Outbox pattern — Microservices.io](https://microservices.io/patterns/data/outbox-pattern.html) ... pôvodný popis patternu
+- [Outbox pattern, Microservices.io](https://microservices.io/patterns/data/outbox-pattern.html) ... pôvodný popis patternu
 - [Nativa Minimal Documentation](/docs/getting-started) ... getting started guide tohto kitu

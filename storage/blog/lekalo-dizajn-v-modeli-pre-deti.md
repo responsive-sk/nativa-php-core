@@ -27,7 +27,7 @@ Sedem definícií v `lekalo/modules/design/`. Jadrom nie je farba, ale
 | Definícia | Druh | Čo hovorí |
 |---|---|---|
 | `design.role` | enum | 7 rolí, ktoré reálne kontraktuje CSS audit |
-| `design.mode` | enum | `dark \| light` — dva audited bloky |
+| `design.mode` | enum | `dark \| light`: dva audited bloky |
 | `design.variant` | enum | 6 povrchov: 4 témy + admin + auth |
 | `design.token_name` | scalar | meno CSS premennej, napr. `--st-accent-strong` |
 | `design.identity` | entita | identita `[variant, mode, token]` + rola |
@@ -130,9 +130,9 @@ slovník skristalizuje.
 
 ## Zdroje
 
-- [Lekalo](https://github.com/ichinya/lekalo) — repozitár projektu (product 0.1.31, autorizácia #25)
-- [docs/lekalo-model.md](https://github.com/evan70/nativa-minimal/blob/master/docs/lekalo-model.md) — dokumentácia modelu, vrátane design sekcie a receptu na refresh `model_ref.ir_digest`
-- `lekalo/modules/design/*.yaml` — sémantický model Design modulu (7 definícií)
-- `tests/Integration/DesignModelParityTest.php` — paritný strážca (5 testov)
-- [Diel 9.1 — témy v modeli](/blog/lekalo-temy-v-modele-pre-deti) — prvýkrát recept na pripnutý digest
-- [Diel 9.2 — témy dostali routy](/blog/lekalo-bindings-pre-deti) — endpoint bindings pre témy
+- [Lekalo](https://github.com/ichinya/lekalo): repozitár projektu (product 0.1.31, autorizácia #25)
+- [docs/lekalo-model.md](https://github.com/evan70/nativa-minimal/blob/master/docs/lekalo-model.md): dokumentácia modelu, vrátane design sekcie a receptu na refresh `model_ref.ir_digest`
+- `lekalo/modules/design/*.yaml`: sémantický model Design modulu (7 definícií)
+- `tests/Integration/DesignModelParityTest.php`: paritný strážca (5 testov)
+- [Diel 9.1, témy v modeli](/blog/lekalo-temy-v-modele-pre-deti): prvýkrát recept na pripnutý digest
+- [Diel 9.2, témy dostali routy](/blog/lekalo-bindings-pre-deti): endpoint bindings pre témy

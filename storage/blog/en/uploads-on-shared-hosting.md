@@ -32,11 +32,11 @@ Read top to bottom ... exactly the order they arrive in.
 
 ## Message 1 ... the firewall
 
-A technical blog about Linux writes about shell commands. The body of the pacman article contains `sudo pacman -S` and `curl … | bash` — the hosting firewall reads the POST before it ever reaches PHP. It sees shell commands in a request and decides: attack.
+A technical blog about Linux writes about shell commands. The body of the pacman article contains `sudo pacman -S` and `curl … | bash`: the hosting firewall reads the POST before it ever reaches PHP. It sees shell commands in a request and decides: attack.
 
 It is not. It is an article for kids about a trust ladder.
 
-The fix does not fix the firewall — it bypasses the content. The form script encodes the body into base64 right before submit:
+The fix does not fix the firewall, it bypasses the content. The form script encodes the body into base64 right before submit:
 
 ```js
 // src/Modules/Blog/Interfaces/HTTP/assets/scripts/article-form-guard.js
@@ -57,9 +57,9 @@ The firewall sees letters. The article keeps `sudo pacman -S` exactly as you wro
 
 ## Message 2 ... the wordless bar
 
-The upload form has its own layers of silence. The first belongs to JS: on failure it threw away `responseText` — the server did send a message, but the bar just turned red.
+The upload form has its own layers of silence. The first belongs to JS: on failure it threw away `responseText`: the server did send a message, but the bar just turned red.
 
-The second runs deeper. When a POST body exceeds `post_max_size`, PHP discards it whole — `$_FILES` and `$_POST` both arrive empty and the app-level limit check never runs.
+The second runs deeper. When a POST body exceeds `post_max_size`, PHP discards it whole,`$_FILES` and `$_POST` both arrive empty and the app-level limit check never runs.
 
 The fix has two steps. The server recognizes a dropped body and answers 413 with a message ... and the form receives the limit the server actually has:
 
@@ -68,48 +68,48 @@ The fix has two steps. The server recognizes a dropped body and answers 413 with
 $base64Max = min((int) ($post * 3 / 4), self::APP_LIMIT_BYTES);
 ```
 
-The browser then rejects a 12 MB file with a sentence, not a color — before the first byte travels.
+The browser then rejects a 12 MB file with a sentence, not a color, before the first byte travels.
 
 ## Message 3 ... the tmp dir
 
 Once error messages work, the truth surfaces: Invalid file upload → after mapping the PHP codes → Server misconfiguration: the PHP temporary directory is missing.
 
-`upload_tmp_dir` is `PHP_INI_SYSTEM` — both `.htaccess` and `.user.ini` are out of the game. And our own attempt at a temp file fell too:
+`upload_tmp_dir` is `PHP_INI_SYSTEM`: both `.htaccess` and `.user.ini` are out of the game. And our own attempt at a temp file fell too:
 
 ```text
 [KERNEL] ErrorException: tempnam(): open_basedir restriction in effect.
 File(/home/resp/.inetadmin-php-tmp) is not within the allowed path(s) ...
 ```
 
-So the bytes travel in a field as base64, and `MediaUploadPayload` builds a synthetic `$_FILES` entry from them — the temp file is staged inside the app's own tree, under the allowlist:
+So the bytes travel in a field as base64, and `MediaUploadPayload` builds a synthetic `$_FILES` entry from them, the temp file is staged inside the app's own tree, under the allowlist:
 
 ```php
 // src/Modules/Media/Interfaces/HTTP/MediaUploadPayload.php
 $dir = AppPaths::instance()->storage('cache' . DIRECTORY_SEPARATOR . 'media-uploads');
 ```
 
-Validation, MIME detection and the audit log run unchanged — the synthetic entry looks like a real `$_FILES`. A bonus: `upload_max_filesize` stopped applying along the way ... it only binds multipart staging.
+Validation, MIME detection and the audit log run unchanged, the synthetic entry looks like a real `$_FILES`. A bonus: `upload_max_filesize` stopped applying along the way ... it only binds multipart staging.
 
 ## What this trick is not
 
-It is not a hosting repair. Multipart staging stays broken — the base64 path is a workaround, not a fix. A hosting that caps `post_max_size` low too will not be helped by it ... a ticket remains the way.
+It is not a hosting repair. Multipart staging stays broken, the base64 path is a workaround, not a fix. A hosting that caps `post_max_size` low too will not be helped by it ... a ticket remains the way.
 
-Bytes swell by roughly a third — an 8 MB file travels as ~10.7 MB of text, and `post_max_size` counts the swollen version.
+Bytes swell by roughly a third, an 8 MB file travels as ~10.7 MB of text, and `post_max_size` counts the swollen version.
 
 It is not faster. Encoding and decoding are extra work on both sides; for images of a few MB you will not notice.
 
-Without JavaScript it does not work — the fallback stays multipart. Where staging works, the old path works too.
+Without JavaScript it does not work, the fallback stays multipart. Where staging works, the old path works too.
 
 ## Praktically
 
-1. Read the log before you try a second time — the `[KERNEL]` lines in `storage/logs` name the file and the line; the browser only saw a 500.
-2. Give the client the limit the server really has — rejecting with a sentence costs less than rejecting with a color.
-3. When staging fails, send the bytes in a field — *"Diagnostics then answer the question of which layer stays silent ... not the question of what is actually broken."*
+1. Read the log before you try a second time, the `[KERNEL]` lines in `storage/logs` name the file and the line; the browser only saw a 500.
+2. Give the client the limit the server really has, rejecting with a sentence costs less than rejecting with a color.
+3. When staging fails, send the bytes in a field, *"Diagnostics then answer the question of which layer stays silent ... not the question of what is actually broken."*
 
 ## Sources
 
-- [PHP: Error Messages Explained](https://www.php.net/manual/en/features.file-upload.errors.php) — the list of `UPLOAD_ERR_*` codes
-- [PHP: open_basedir](https://www.php.net/manual/en/ini.core.php#ini.open-basedir) — what the allowlist really restricts
-- [PHP: List of php.ini directives](https://www.php.net/manual/en/ini.list.php) — which setting is `PHP_INI_SYSTEM`
-- [PHP: .user.ini](https://www.php.net/manual/en/configuration.file.per-user.php) — per-directory limits on changes
-- [Nativa Minimal — docs](https://github.com/evan70/nativa-minimal/tree/main/docs) — the repository this story comes from
+- [PHP: Error Messages Explained](https://www.php.net/manual/en/features.file-upload.errors.php): the list of `UPLOAD_ERR_*` codes
+- [PHP: open_basedir](https://www.php.net/manual/en/ini.core.php#ini.open-basedir): what the allowlist really restricts
+- [PHP: List of php.ini directives](https://www.php.net/manual/en/ini.list.php): which setting is `PHP_INI_SYSTEM`
+- [PHP: .user.ini](https://www.php.net/manual/en/configuration.file.per-user.php): per-directory limits on changes
+- [Nativa Minimal, docs](https://github.com/evan70/nativa-minimal/tree/main/docs): the repository this story comes from

@@ -38,7 +38,7 @@ quality is checked continuously ... not at the end.
 - CSRF on all state-changing POSTs
 - Admin role gate on `/mark/*`
 
-The starter kit remains a collection of decisions, not a framework. Each ADR is a door you can open or close. The architecture is transparent — you see every choice because you made it.
+The starter kit remains a collection of decisions, not a framework. Each ADR is a door you can open or close. The architecture is transparent, you see every choice because you made it.
 
 ---
 
@@ -46,13 +46,13 @@ A decision recorded is a decision remembered. A decision undocumented is a decis
 
 ---
 
-→ [OpenSpec workflow](/blog/what-is-openspec) — how changes are structured
-→ [Anatomy of a change](/blog/anatomy-of-a-change) — from proposal to implementation
+→ [OpenSpec workflow](/blog/what-is-openspec): how changes are structured
+→ [Anatomy of a change](/blog/anatomy-of-a-change): from proposal to implementation
 
 ## Sources
 
-- [PHP Manual](https://www.php.net/manual/) — official PHP documentation
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP standards
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — security best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — official getting started guide
-- [W3C — Web Standards](https://www.w3.org/standards/) — web standards
+- [PHP Manual](https://www.php.net/manual/): official PHP documentation
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP standards
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): security best practices
+- [Nativa Minimal Documentation](/docs/getting-started): official getting started guide
+- [W3C, Web Standards](https://www.w3.org/standards/): web standards

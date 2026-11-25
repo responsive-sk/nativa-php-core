@@ -109,14 +109,14 @@ If it stops you while reading, the name failed ... no matter how correctly the b
 
 A good name isn't about making code look pretty. It's about **surviving your absence**. When you leave the project, when a new member joins, when you come back to your own code six months later. A name is respect for the person who hasn't arrived yet.
 
-→ [One thing (SRP)](/en/blog/one-thing-srp) — a method and a class do only one thing
-→ [DRY vs abstraction](/en/blog/dry-vs-abstraction) — one source of truth, no interfaces for the sake of it
-→ [Smoke tests](/en/blog/smoke-tests) — rules enforced by a test = warning smoke signals
+→ [One thing (SRP)](/en/blog/one-thing-srp): a method and a class do only one thing
+→ [DRY vs abstraction](/en/blog/dry-vs-abstraction): one source of truth, no interfaces for the sake of it
+→ [Smoke tests](/en/blog/smoke-tests): rules enforced by a test = warning smoke signals
 
 ## Sources
 
-- [PHP Manual](https://www.php.net/manual/) — official PHP documentation
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP standards
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — security best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — official getting started guide
-- [W3C — Web Standards](https://www.w3.org/standards/) — web standards
+- [PHP Manual](https://www.php.net/manual/): official PHP documentation
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP standards
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): security best practices
+- [Nativa Minimal Documentation](/docs/getting-started): official getting started guide
+- [W3C, Web Standards](https://www.w3.org/standards/): web standards

@@ -270,13 +270,13 @@ ctx.on('p2p/gossip', async (data) => {
 └─────────────────────────────────────┘
 ```
 
-→ [The fridge as a P2P server](/en/blog/the-fridge-as-a-p2p-server) — hardware for P2P nodes
-→ [DeepSeek Harness ... 50 packages](/en/blog/deepseek-harness-architecture-overview) — architecture overview
-→ [Capability seams](/en/blog/capability-seams) — how DSH abstracts abilities
-→ [Outbox pattern ... when cache isn't enough](/en/blog/outbox-pattern-when-cache-isnt-enough) — async distribution
+→ [The fridge as a P2P server](/en/blog/the-fridge-as-a-p2p-server): hardware for P2P nodes
+→ [DeepSeek Harness ... 50 packages](/en/blog/deepseek-harness-architecture-overview): architecture overview
+→ [Capability seams](/en/blog/capability-seams): how DSH abstracts abilities
+→ [Outbox pattern ... when cache isn't enough](/en/blog/outbox-pattern-when-cache-isnt-enough): async distribution
 
 ## Sources
 
-- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) — open-source agent framework
-- [libp2p](https://github.com/libp2p/go-libp2p) — modular P2P framework
-- [IPFS / Kubo](https://github.com/ipfs/kubo) — content-addressed storage
+- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): open-source agent framework
+- [libp2p](https://github.com/libp2p/go-libp2p): modular P2P framework
+- [IPFS / Kubo](https://github.com/ipfs/kubo): content-addressed storage

@@ -211,6 +211,6 @@ Config sa merguje z ancestor entries ... čím bližšie k root, tým skôr sa a
 - [Cordis](https://github.com/deepseek-ai/deepseek-harness/tree/master/vendor/cordis) ... TypeScript plugin framework
 - [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) ... agent framework postavený na Cordis
 
-→ [Capability seams](/blog/capability-seams) — Service Definition / Provider / Consumer
-→ [Ako postaviť DSH plugin](/blog/ako-postavit-dsh-plugin) — praktický tutoriál
-→ [DeepSeek Harness ... 50 balíkov](/blog/deepseek-harness-architektura) — architektonický prehľad
+→ [Capability seams](/blog/capability-seams): Service Definition / Provider / Consumer
+→ [Ako postaviť DSH plugin](/blog/ako-postavit-dsh-plugin): praktický tutoriál
+→ [DeepSeek Harness ... 50 balíkov](/blog/deepseek-harness-architektura): architektonický prehľad

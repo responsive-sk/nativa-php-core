@@ -29,7 +29,7 @@ Same information. Version A is 42 words. Version B is 22 words. Version B is the
 
 ## Why sentence length matters
 
-Sentence length is not a style preference — it's a rhythm tool. Short sentences create tension. Long sentences release it. Alternating between them creates the pulse that keeps readers engaged.
+Sentence length is not a style preference, it's a rhythm tool. Short sentences create tension. Long sentences release it. Alternating between them creates the pulse that keeps readers engaged.
 
 Steinbeck knew this. His sentences alternate between punchy and flowing:
 
@@ -46,7 +46,7 @@ Four short sentences. Then a longer one would break the pattern. The rhythm itse
 
 Each phase has its own tempo:
 
-### INTRO — punchy (5-15 words)
+### INTRO: punchy (5-15 words)
 ```markdown
 Click page 3. The pager doubled.
 Click again. Tripled.
@@ -54,7 +54,7 @@ Click again. Tripled.
 
 Three sentences. Each one a beat. The reader is hooked before they can look away.
 
-### HMLA — staccato (8-15 words)
+### HMLA: staccato (8-15 words)
 ```markdown
 We had a finished, tested, secure system.
 Everything worked on development, in Docker, on VPS.
@@ -64,7 +64,7 @@ First login attempt: server crashed.
 
 Short sentences building pressure. Each one adds a problem. The reader feels the fog thickening.
 
-### SLNKO — flowing (15-25 words)
+### SLNKO: flowing (15-25 words)
 ```markdown
 The server returns the full HTML blob: search input,
 count info, table, pagination — all in one string.
@@ -73,7 +73,7 @@ HTMX finds the target element and replaces it.
 
 Longer sentences now. The tension releases. The reader understands the solution.
 
-### NOC — reflective (12-20 words)
+### NOC: reflective (12-20 words)
 ```markdown
 Cache isn't an automatic answer or an enemy.
 It's a tool — and every tool has its place.
@@ -81,7 +81,7 @@ It's a tool — and every tool has its place.
 
 Medium sentences. Quiet. The reader is thinking, not learning.
 
-### TÉMA — one sentence (10-20 words)
+### TÉMA: one sentence (10-20 words)
 ```markdown
 A framework's magic is only as good
 as the HTML you feed it.
@@ -123,21 +123,21 @@ OUTRO:   ▓░░░░░░░░░  1-2 sentences + links
 
 Short, short, long, medium, short, one, done. That's the pulse.
 
-Tempo remains a tool, not a rule. Some articles need longer HMLA phases. Some need shorter SLNKO phases. The targets are guidelines — the rhythm is the goal.
+Tempo remains a tool, not a rule. Some articles need longer HMLA phases. Some need shorter SLNKO phases. The targets are guidelines, the rhythm is the goal.
 
 ---
 
-Every word must work. If a word doesn't add meaning, cut it. If a sentence doesn't add rhythm, split it. Tempo is not decoration — it's structure.
+Every word must work. If a word doesn't add meaning, cut it. If a sentence doesn't add rhythm, split it. Tempo is not decoration, it's structure.
 
 ---
 
-→ [Part 5 — Two Tones](/blog/rhythm-part-5-bilingual) — writing in EN and SK without losing soul
-→ [Part 3 — Night, Object, Theme](/blog/rhythm-part-3-night-object-theme) — the parts that make articles memorable
+→ [Part 5, Two Tones](/blog/rhythm-part-5-bilingual): writing in EN and SK without losing soul
+→ [Part 3, Night, Object, Theme](/blog/rhythm-part-3-night-object-theme): the parts that make articles memorable
 
 ## Sources
 
-- [PHP Manual](https://www.php.net/manual/) — official PHP documentation
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP standards
-- [Nativa Minimal Documentation](/docs/getting-started) — official getting started guide
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — security best practices
-- [W3C — Web Standards](https://www.w3.org/standards/) — web standards
+- [PHP Manual](https://www.php.net/manual/): official PHP documentation
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP standards
+- [Nativa Minimal Documentation](/docs/getting-started): official getting started guide
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): security best practices
+- [W3C, Web Standards](https://www.w3.org/standards/): web standards

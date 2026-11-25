@@ -11,7 +11,7 @@ translation: "anatomy-of-a-change"
 published: true
 ---
 
-Keď niekto vraví „zmena v projekte“, myslí tým commit. Ale commit je len posledný krok — pred ním je návrh, rozhodnutia, testy a overenie. Ako vyzerá celá cesta?
+Keď niekto vraví „zmena v projekte“, myslí tým commit. Ale commit je len posledný krok, pred ním je návrh, rozhodnutia, testy a overenie. Ako vyzerá celá cesta?
 
 > Toto je diel 2 série **OpenSpec pre deti**. V [dieli 1](/blog/co-je-openspec-pre-deti)
 > sme si povedali, čo je OpenSpec a prečo sa zmeny nepíšu priamo do spec. Dnes
@@ -189,8 +189,8 @@ quality gates, až po presun do archívu.
 
 ## Zdroje
 
-- [OpenSpec](https://openspec.dev/) — oficiálna dokumentácia OpenSpec workflow
-- [Conventional Commits](https://www.conventionalcommits.org/) — konvencia commit správ spomínaná v `tasks.md`
-- [Diel 1 — čo je OpenSpec](/blog/co-je-openspec-pre-deti) — začiatok série
-- [Diel 3 — životný cyklus change](/blog/zivotny-cyklus-change-pre-deti) — pokračovanie série
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
+- [OpenSpec](https://openspec.dev/): oficiálna dokumentácia OpenSpec workflow
+- [Conventional Commits](https://www.conventionalcommits.org/): konvencia commit správ spomínaná v `tasks.md`
+- [Diel 1, čo je OpenSpec](/blog/co-je-openspec-pre-deti): začiatok série
+- [Diel 3, životný cyklus change](/blog/zivotny-cyklus-change-pre-deti): pokračovanie série
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod

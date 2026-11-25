@@ -126,14 +126,14 @@ Všimnite si ešte jednu vec v tabuľke: „tokenový skener“ a „skenuje len
 
 Čistý kód je rešpekt k človeku, ktorý ešte neprišiel. K starému kolegovi, ktorý číta prvýkrát. K dieťaťu, ktoré sa učí. K zariadeniu, ktoré nemá dosť miesta na chyby.
 
-→ [Názvy sú dokumentácia](/blog/nazvy-su-dokumentacia-pre-deti) — ako spoznať problematické meno skôr, než začne bolieť hlava
-→ [Jedna vec (SRP)](/blog/jedna-vec-srp-pre-deti) — metóda aj trieda robia len jednu vec
-→ [DRY vs abstrakcia](/blog/dry-vs-abstrakcia-pre-deti) — jedno miesto pravdy, žiadne rozhrania do zásoby
+→ [Názvy sú dokumentácia](/blog/nazvy-su-dokumentacia-pre-deti): ako spoznať problematické meno skôr, než začne bolieť hlava
+→ [Jedna vec (SRP)](/blog/jedna-vec-srp-pre-deti): metóda aj trieda robia len jednu vec
+→ [DRY vs abstrakcia](/blog/dry-vs-abstrakcia-pre-deti): jedno miesto pravdy, žiadne rozhrania do zásoby
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

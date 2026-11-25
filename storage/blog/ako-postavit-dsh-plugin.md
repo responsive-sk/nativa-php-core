@@ -11,15 +11,15 @@ translation: "building-a-dsh-plugin"
 published: true
 ---
 
-Agent potrebuje vedieť, aké je počasie v Bratislave. Nemá na to nástroj. V DSH sa to dá vyriešiť za hodinu — jedným pluginom, ktorý sa skladá z troch súborov.
+Agent potrebuje vedieť, aké je počasie v Bratislave. Nemá na to nástroj. V DSH sa to dá vyriešiť za hodinu, jedným pluginom, ktorý sa skladá z troch súborov.
 
 ## Čo postavíme
 
-Weather plugin — predpoveď počasia pre agenta. Tri roly:
+Weather plugin, predpoveď počasia pre agenta. Tri roly:
 
-1. **Service Definition** — kontrakt: čo sa dá robiť
-2. **Service Provider** — implementácia: open-meteo API
-3. **Consumer** — model-facing tool: agent ho môže zavolať
+1. **Service Definition**: kontrakt: čo sa dá robiť
+2. **Service Provider**: implementácia: open-meteo API
+3. **Consumer**: model-facing tool: agent ho môže zavolať
 
 ```
 packages/weather/
@@ -95,7 +95,7 @@ export class LocalWeatherProvider extends WeatherService {
 }
 ```
 
-Cache je scoped na provider — zmizne, keď sa provider odinštaluje. Žiadny memory leak.
+Cache je scoped na provider, zmizne, keď sa provider odinštaluje. Žiadny memory leak.
 
 ## Krok 3: Consumer (Tool)
 
@@ -124,7 +124,7 @@ export class WeatherTool extends Service {
 }
 ```
 
-Consumer používa `ctx.weather` — nevie, ktorý provider beží. A ani nemusí.
+Consumer používa `ctx.weather`: nevie, ktorý provider beží. A ani nemusí.
 
 ## Krok 4: Effects (Cleanup)
 
@@ -219,13 +219,13 @@ const result = await ctx.tools.execute('weather', { city: 'Bratislava' })
 
 Za hodinu máte funkčný plugin. Agent nevie, či dáta prichádzajú z API, z cache, alebo z mocku. A to je presne pointa.
 
-→ [Cordis ... hlboký ponor](/blog/cordis-hlboky-ponor) — plugin framework
-→ [Capability seams](/blog/capability-seams) — Service Definition / Provider / Consumer
-→ [DeepSeek Harness ... 50 balíkov](/blog/deepseek-harness-architektura) — architektonický prehľad
+→ [Cordis ... hlboký ponor](/blog/cordis-hlboky-ponor): plugin framework
+→ [Capability seams](/blog/capability-seams): Service Definition / Provider / Consumer
+→ [DeepSeek Harness ... 50 balíkov](/blog/deepseek-harness-architektura): architektonický prehľad
 
 ## Zdroje
 
-- [Cordis — @deepseek-ai/cordis](https://github.com/deepseek-ai/cordis) — Service/Context jadro plugin frameworku
-- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) — repozitár DSH, štruktúra `packages/weather`
-- [TypeScript Handbook — Modules](https://www.typescriptlang.org/docs/handbook/2/modules.html) — `export`/`import` konvencie
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
+- [Cordis, @deepseek-ai/cordis](https://github.com/deepseek-ai/cordis): Service/Context jadro plugin frameworku
+- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): repozitár DSH, štruktúra `packages/weather`
+- [TypeScript Handbook, Modules](https://www.typescriptlang.org/docs/handbook/2/modules.html): `export`/`import` konvencie
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod

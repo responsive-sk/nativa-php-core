@@ -1,9 +1,9 @@
 ---
-title: "Auto-Discovery Metrík — Keď Každý Modul Vlastní Svoj Dashboard"
+title: "Auto-Discovery Metrík: Keď Každý Modul Vlastní Svoj Dashboard"
 date: "2026-09-03"
 version: "1.0.2"
 tags: ["php", "architecture", "cardboard", "metrics", "auto-discovery"]
-excerpt: "Každý modul si registruje vlastné agregované stats cards do dashboardu. Žiadna centrálna služba neťahá dáta zo všetkého. Rovnaký auto-discovery pattern ako middleware — len atribút a glob."
+excerpt: "Každý modul si registruje vlastné agregované stats cards do dashboardu. Žiadna centrálna služba neťahá dáta zo všetkého. Rovnaký auto-discovery pattern ako middleware, len atribút a glob."
 author: "Nativa Dev"
 author_email: "nativa.dev@example.test"
 category: "Architektúra"
@@ -12,7 +12,7 @@ translation: "auto-discovery-metrics"
 published: true
 ---
 
-Dashboard ukazoval sedem stat kariet. Users, roles, permissions, media, articles, pages, runtime. Každá karta bola hardcoded v `DashboardAction` — šesť private metód, každá sa pýtala iného servisu, každá budovala `Card` objekt.
+Dashboard ukazoval sedem stat kariet. Users, roles, permissions, media, articles, pages, runtime. Každá karta bola hardcoded v `DashboardAction`: šesť private metód, každá sa pýtala iného servisu, každá budovala `Card` objekt.
 
 Fungovalo to. Ale každý nový modul znamenal editovať `DashboardAction`. Každý výpočet metriky žil na zlom mieste. Admin panel vedel o blog views, commentoch a media uploadoch. Moduly samé nevedeli o svojej dashboard prítomnosti.
 
@@ -45,9 +45,9 @@ private function registerContentCards(): void
 
 Tri problémy.
 
-**Prvý**, `DashboardAction` importuje `MediaServices`, `BlogCrudService`, `PageCrudService`. Admin panel pozná interné detaily každého modulu. To je dependency inversion violation — orchestrátor závisí na detailoch.
+**Prvý**, `DashboardAction` importuje `MediaServices`, `BlogCrudService`, `PageCrudService`. Admin panel pozná interné detaily každého modulu. To je dependency inversion violation, orchestrátor závisí na detailoch.
 
-**Druhý**, pridanie metriky nového modulu znamená editovať `DashboardAction`. Pridáš `CommentsMetric` — edituješ súbor. Pridáš `AuditMetric` — edituješ znova. Modul nemôže byť self-contained, ak jeho dashboard prítomnosť vyžaduje externú wiring.
+**Druhý**, pridanie metriky nového modulu znamená editovať `DashboardAction`. Pridáš `CommentsMetric`: edituješ súbor. Pridáš `AuditMetric`: edituješ znova. Modul nemôže byť self-contained, ak jeho dashboard prítomnosť vyžaduje externú wiring.
 
 **Tretí**, nie je časový výber. Karty ukazujú totálne počty. Žiadne trend šípky, žiadne porovnanie s minulým týždňom, žiadne „rastieme alebo klesáme?“
 
@@ -65,7 +65,7 @@ final class SecurityHeadersMiddleware implements MiddlewareInterface
 }
 ```
 
-**Migratory.** Triedy s atribútom `#[AsMigrator(module: 'users', table: 'sessions')]` nájde `DatabaseMigrator`. Rovnaký pattern — scan, reflect, instantiate.
+**Migratory.** Triedy s atribútom `#[AsMigrator(module: 'users', table: 'sessions')]` nájde `DatabaseMigrator`. Rovnaký pattern, scan, reflect, instantiate.
 
 Oba dodržiavajú rovnaké pravidlo: **modul je self-contained**. Pridanie middleware znamená vytvoriť súbor s atribútom. Odobranie znamená vymazať súbor. Žiadne editácie v `public/index.php`.
 
@@ -241,7 +241,7 @@ Metóda `render()` produkuje BEM-styled HTML:
 <span class="m-trend m-trend--flat">— 0%</span>
 ```
 
-Toto je presentation-layer value object. Žije v `Cardboard\Domain\Model`, pretože je to card concern — každý metric provider ho používa, ale len na formátovanie výstupu pre dashboard.
+Toto je presentation-layer value object. Žije v `Cardboard\Domain\Model`, pretože je to card concern, každý metric provider ho používa, ale len na formátovanie výstupu pre dashboard.
 
 ## MetricRegistry: auto-discovery engine
 
@@ -283,7 +283,7 @@ final class MetricRegistry
 }
 ```
 
-Glob pattern `src/Modules/*/Application/Services/*Metric.php` nájde všetky metric triedy naprieč modulmi. Registry cacheuje výsledok — prvé volanie discoveruje, ďalšie vracia cache.
+Glob pattern `src/Modules/*/Application/Services/*Metric.php` nájde všetky metric triedy naprieč modulmi. Registry cacheuje výsledok, prvé volanie discoveruje, ďalšie vracia cache.
 
 **Kľúčové pravidlo:** metric triedy nesmú mať povinné constructor parametre. Závislosti sa riešia interne cez lazy factories (`DatabaseConnectionManager::instance()->connection('users')`). Toto je rovnaké obmedzenie ako pre middleware.
 
@@ -335,13 +335,13 @@ Odobranie modulu: vymaž súbor. Registry ho už nenájde.
 
 Metric systém dodržiava všetky Nativa Minimal architecture pravidlá:
 
-- **Žiadne magic methods** — `Trend` a `Period` sú obyčajné value objects
-- **Žiadna Reflection mimo `Modules\Core`** — `MetricRegistry` žije v `Cardboard\Infrastructure\Registry`
-- **Žiadne `eval()`** — všetok kód je explicitný
-- **Žiadne service locators** — metric triedy riešia vlastné závislosti cez `DatabaseConnectionManager::instance()`
-- **Metódy pod 60 riadkov** — každá `registerCards()` metóda je zameraná a krátka
-- **Žiadne spekulatívne interfaces** — `MetricContract` má 5 implementácií
-- **Domain izolácia** — `MetricContract` žije v `Cardboard\Domain\Contracts`; modulové metric triedy v `Application/Services` vrstve každého modulu
+- **Žiadne magic methods**: `Trend` a `Period` sú obyčajné value objects
+- **Žiadna Reflection mimo `Modules\Core`**: `MetricRegistry` žije v `Cardboard\Infrastructure\Registry`
+- **Žiadne `eval()`**: všetok kód je explicitný
+- **Žiadne service locators**: metric triedy riešia vlastné závislosti cez `DatabaseConnectionManager::instance()`
+- **Metódy pod 60 riadkov**: každá `registerCards()` metóda je zameraná a krátka
+- **Žiadne spekulatívne interfaces**: `MetricContract` má 5 implementácií
+- **Domain izolácia**: `MetricContract` žije v `Cardboard\Domain\Contracts`; modulové metric triedy v `Application/Services` vrstve každého modulu
 
 ## Výsledok
 
@@ -359,13 +359,13 @@ Celý metric systém je 5 nových súborov (Trend, Period, MetricContract, AsMet
 
 ---
 
-→ [MoonShine Cardboard](/blog/moonshine-cardboard) — ako MoonShine UI inšpiroval design admin panelu
-→ [Middleware Pipeline](/blog/middleware-pipeline) — auto-discovery pattern pre middleware
-→ [Module Isolation](/blog/module-isolation) — prečo moduly nemajú poznať jeden druhého
+→ [MoonShine Cardboard](/blog/moonshine-cardboard): ako MoonShine UI inšpiroval design admin panelu
+→ [Middleware Pipeline](/blog/middleware-pipeline): auto-discovery pattern pre middleware
+→ [Module Isolation](/blog/module-isolation): prečo moduly nemajú poznať jeden druhého
 
 ## Zdroje
 
-- [PHP — Attributes](https://www.php.net/manual/en/language.attributes.php) — #[AsMetricProvider] a reflexia
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny getting started sprievodca
+- [PHP, Attributes](https://www.php.net/manual/en/language.attributes.php): #[AsMetricProvider] a reflexia
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny getting started sprievodca

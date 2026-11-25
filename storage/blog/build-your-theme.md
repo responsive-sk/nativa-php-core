@@ -385,14 +385,14 @@ rm -rf src/Themes/corporate
 porovnanie starter, magazine a minimal tém.
 
 
-→ [Theme Architecture](/blog/theme-architecture) — auto-discovery, registry a interface
-→ [Theme Comparison](/blog/theme-comparison) — Starter vs Magazine vs Minimal
-→ [Clean code pre deti](/blog/co-je-cisty-kod-pre-deti) — ako písať kód, ktorý sa číta sám
+→ [Theme Architecture](/blog/theme-architecture): auto-discovery, registry a interface
+→ [Theme Comparison](/blog/theme-comparison): Starter vs Magazine vs Minimal
+→ [Clean code pre deti](/blog/co-je-cisty-kod-pre-deti): ako písať kód, ktorý sa číta sám
 
 ## Zdroje
 
-- [W3C — ACID Properties](https://www.w3.org/TR/xml-core/#sec-conformance) — ACID definícia
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [SQLite Documentation](https://www.sqlite.org/docs.html) — SQLite referenčná príručka
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
+- [W3C, ACID Properties](https://www.w3.org/TR/xml-core/#sec-conformance): ACID definícia
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [SQLite Documentation](https://www.sqlite.org/docs.html): SQLite referenčná príručka
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod

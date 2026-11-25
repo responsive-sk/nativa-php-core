@@ -19,7 +19,7 @@ začína odpoveď na otázku, prečo je PHP rýchle, keď ho používaš správn
 Toto je prvá časť série o tom, ako PHP naozaj funguje a prečo je v jadre
 sadou prekompilovaných C chunkov.
 
-PHP nie je interpretovaný jazyk v tradičnom zmysle. Zdroják sa neposúva riadok po riadku. Najprv sa skompiluje do opcodov — a až tie sa vykonávajú. Kto to nevie, nerozumie, prečo OPcache funguje.
+PHP nie je interpretovaný jazyk v tradičnom zmysle. Zdroják sa neposúva riadok po riadku. Najprv sa skompiluje do opcodov, a až tie sa vykonávajú. Kto to nevie, nerozumie, prečo OPcache funguje.
 
 ## Čo je Zend engine
 
@@ -133,8 +133,8 @@ dostali od nástroja jedného človeka až po dnešné PHP 8.5.
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

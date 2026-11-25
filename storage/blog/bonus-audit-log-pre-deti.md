@@ -21,7 +21,7 @@ published: true
 
 Administrátor zmenil rolu používateľa. O mesiac neskôr niekto sa spýta: kto to urobil? Kedy? Prečo? Ak nemáte audit log, odpoveď je: stopa neexistuje.
 
-Admin panel má právo meniť veci: používateľov, rolí, nastavení, komentárov. Každá zmena je dôležitá. Ale keď niekto zmení rolu z admin na user, a vy sa o tom dozviete o týždeň — kde hľadať stopy?
+Admin panel má právo meniť veci: používateľov, rolí, nastavení, komentárov. Každá zmena je dôležitá. Ale keď niekto zmení rolu z admin na user, a vy sa o tom dozviete o týždeň, kde hľadať stopy?
 
 ## Prečo vôbec audit log
 
@@ -218,13 +218,13 @@ A to je celý bonusový článok ... nezničiteľný, ako záznam, o ktorom
 hovorí. Ak máš otázky, čakám ťa v komentároch.
 
 
-→ [ACID pre deti](/blog/acid-pre-deti) — prečo transakcie nie sú nudné
-→ [Cache wrappers](/blog/cache-wrappers-dobry-slucha-zly-pan) — dobrý sluha, zlý pán
-→ [CSP a onclick](/blog/csp-onclick-spravodliva-chyba) — tichá bezpečnostná diera
+→ [ACID pre deti](/blog/acid-pre-deti): prečo transakcie nie sú nudné
+→ [Cache wrappers](/blog/cache-wrappers-dobry-slucha-zly-pan): dobrý sluha, zlý pán
+→ [CSP a onclick](/blog/csp-onclick-spravodliva-chyba): tichá bezpečnostná diera
 
 ## Zdroje
 
-- [SQLite Documentation](https://www.sqlite.org/docs.html) — CREATE TRIGGER a RAISE(ABORT), mechanika druhej vrstvy
-- [OWASP — Logging Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html) — čo a prečo logovať v admin vrstve
-- [PHP Manual — PDO](https://www.php.net/manual/en/book.pdo.php) — `PDOException`, ktorú test očakáva
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
+- [SQLite Documentation](https://www.sqlite.org/docs.html): CREATE TRIGGER a RAISE(ABORT), mechanika druhej vrstvy
+- [OWASP, Logging Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html): čo a prečo logovať v admin vrstve
+- [PHP Manual, PDO](https://www.php.net/manual/en/book.pdo.php): `PDOException`, ktorú test očakáva
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod

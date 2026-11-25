@@ -13,7 +13,7 @@ published: true
 
 Agent beží v slučke. Načíta dáta, spracuje ich, vráti odpoveď. Ale čo sa stane, keď agent potrebuje urobiť desať vecí za sebou? Keď potrebuje pamätať si, čo urobil minule?
 
-V tradičných frameworkoch je agent loop pevný. Nedá sa vymeniť. Nedá sa rozšíriť. Je to čierna skrinka — vstúpi request, výjde odpoveď. Ale agenti nie sú HTTP requesty. Agenti sú dlhodobé procesy, ktoré žijú, dýchajú a učia sa.
+V tradičných frameworkoch je agent loop pevný. Nedá sa vymeniť. Nedá sa rozšíriť. Je to čierna skrinka, vstúpi request, výjde odpoveď. Ale agenti nie sú HTTP requesty. Agenti sú dlhodobé procesy, ktoré žijú, dýchajú a učia sa.
 
 ## Agent loop ... vymeniteľný driver
 
@@ -194,6 +194,6 @@ agent/pre-step        → guard (môže zamietnuť)
 - [Agent Loop README](https://github.com/deepseek-ai/deepseek-harness/tree/master/packages/core/agent-loop) ... detailný popis
 - [Session persistence](https://github.com/deepseek-ai/deepseek-harness/blob/master/.agents/notes/implemented/architecture/2026-06-14-session-persistence.md) ... session architecture
 
-→ [Capability seams](/blog/capability-seams) — Service Definition / Provider / Consumer
-→ [DeepSeek Harness ... 50 balíkov](/blog/deepseek-harness-architektura) — architektonický prehľad
-→ [Cordis ... hlboký ponor](/blog/cordis-hlboky-ponor) — plugin framework
+→ [Capability seams](/blog/capability-seams): Service Definition / Provider / Consumer
+→ [DeepSeek Harness ... 50 balíkov](/blog/deepseek-harness-architektura): architektonický prehľad
+→ [Cordis ... hlboký ponor](/blog/cordis-hlboky-ponor): plugin framework

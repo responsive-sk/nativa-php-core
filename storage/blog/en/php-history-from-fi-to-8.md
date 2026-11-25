@@ -103,13 +103,13 @@ A language's history is its architecture decisions.
 
 ---
 
-→ [PHP C extensions API](/blog/php-c-extensions-api) — how extensions work at the C level
-→ [OPcache and JIT](/blog/opcache-and-jit-precompilation) — precompilation and native machine code
+→ [PHP C extensions API](/blog/php-c-extensions-api): how extensions work at the C level
+→ [OPcache and JIT](/blog/opcache-and-jit-precompilation): precompilation and native machine code
 
 ## Sources
 
-- [PHP Manual](https://www.php.net/manual/) — official PHP documentation
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP standards
-- [Nativa Minimal Documentation](/docs/getting-started) — official getting started guide
-- [Web.dev — Performance](https://web.dev/performance) — Core Web Vitals
-- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/) — Lighthouse tool
+- [PHP Manual](https://www.php.net/manual/): official PHP documentation
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP standards
+- [Nativa Minimal Documentation](/docs/getting-started): official getting started guide
+- [Web.dev, Performance](https://web.dev/performance): Core Web Vitals
+- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/): Lighthouse tool

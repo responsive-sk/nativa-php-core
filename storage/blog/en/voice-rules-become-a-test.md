@@ -19,7 +19,7 @@ hold: an **architecture test**.
 
 ## A guide nobody enforces is a wish
 
-This blog has a voice guide — [`docs/blog-voice.md`](/docs/blog-voice).
+This blog has a voice guide, [`docs/blog-voice.md`](/docs/blog-voice).
 Three rules: the friend who doesn't flatter. Truth with a declared type.
 And a cast to real code from this repository.
 
@@ -45,25 +45,25 @@ not pedantry ...
 
 Just this week grep told us all 191 articles have Sources. It was a half
 truth: the old test looked for a substring, not a section. Two articles
-had the heading swallowed into a wall of text — `... the performance of
+had the heading swallowed into a wall of text, `... the performance of
 our PHP code. ## Sources - [DeepSeek]...` in a single line. The substring
 test saw `## Sources` and stayed silent.
 
 **Second: zero emoji.** The green check, the red cross and the gear don't
-belong in comparison tables — words carry status better and survive the
+belong in comparison tables, words carry status better and survive the
 terminal, the feed and the search index.
 
 Watch one detail: **the arrow → is allowed.** It belongs to the voice's
 handwriting (`→ [Part 2]` before links). What's banned is pictographs and
 symbols (U+1F000+, U+2600–27BF), not U+2192. A contract that bans its own
-handwriting isn't a contract — it's a mistake.
+handwriting isn't a contract, it's a mistake.
 
 **Third: locale pairs point both ways.** `translation:` must resolve to an
 existing file in the other language, and the sibling must link back. Only
 then are per-language slugs (`preco-rust-pre-deti` ↔ `why-rust`) honest.
 
 And one exception the test respects: **drafts.** `published: false` means
-"work in progress" — the test leaves them alone until the decision is
+"work in progress", the test leaves them alone until the decision is
 made.
 
 ## Who tests the test that writes about itself?
@@ -73,7 +73,7 @@ And here comes the moment that deserves its own paragraph.
 This article just passed the very test it describes. Otherwise you
 wouldn't be reading it.
 
-I'm not mad at it. The test knows no guide — it knows lines. It didn't
+I'm not mad at it. The test knows no guide, it knows lines. It didn't
 know I was writing them. And still it's not a circle: the guide is prose,
 the test is a contract. A text about a contract that breaks the contract
 would be a worse joke than any emoji.
@@ -85,7 +85,7 @@ a rule without a test is a wish
 a test without a rule is a censor
 ```
 
-The test doesn't judge taste — not jokes, not metaphors, not whether a
+The test doesn't judge taste, not jokes, not metaphors, not whether a
 sentence could be said more simply. It judges only what can be checked
 line by line. Taste stays with the reader. The contract stays with CI.
 
@@ -111,14 +111,14 @@ Be honest: a mechanical test can't tell whether an article is good.
 It can surface a text wall, flag emoji, catch a broken locale pair. It
 can't tell whether the rhythm works, whether the honesty section is
 actually honest, or whether a sentence says something deep ... or just
-sounds like it. Line rhythm stays a hand craft — the test at best checks
+sounds like it. Line rhythm stays a hand craft, the test at best checks
 that the source isn't a wall.
 
 The test also can't tell when an exception is justified. That's why
-drafts are exempt and the arrow → is allowed — a contract scoped to
+drafts are exempt and the arrow → is allowed, a contract scoped to
 defend against the wrong, not against everything.
 
-The rest — the friend who doesn't flatter — no test checks. That one
+The rest, the friend who doesn't flatter, no test checks. That one
 stays with you.
 
 ## Practically
@@ -137,7 +137,7 @@ holds from both ends.
 
 ## Sources
 
-- [PHPUnit — Data Providers](https://docs.phpunit.de/en/12/data-provider.html) ... the pattern this test stands on
-- [Markdown — Daring Fireball](https://daringfireball.net/projects/markdown/) ... the format the whole corpus lives in
+- [PHPUnit, Data Providers](https://docs.phpunit.de/en/12/data-provider.html) ... the pattern this test stands on
+- [Markdown, Daring Fireball](https://daringfireball.net/projects/markdown/) ... the format the whole corpus lives in
 - [Nativa Minimal Documentation](/docs/getting-started) ... this kit's official getting started guide
 - [docs/blog-voice.md](/docs/blog-voice) ... the guide whose mechanical half is now a contract

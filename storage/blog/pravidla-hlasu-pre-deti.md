@@ -19,7 +19,7 @@ Ten šuplík poznáme. Preto sme z príručky urobili niečo, čo šuplík nepre
 
 ## Príručka, ktorú nikto nevynucuje, je želanie
 
-Tento blog má príručku hlasu — [`docs/blog-voice.md`](/docs/blog-voice).
+Tento blog má príručku hlasu, [`docs/blog-voice.md`](/docs/blog-voice).
 Tri pravidlá: kámoš, ktorý nelichotí. Pravda s deklarovaným typom. A cast
 na reálny kód z repozitára.
 
@@ -43,11 +43,11 @@ riadku a sekcia musí obsahovať aspoň jeden odkaz. To nie je šikanizmus ...
 
 Ešte tento týždeň nám grep tvrdil, že 191 článkov má Zdroje. Bola to
 polopravda: test hľadal reťazec, nie sekciu. Dva články mali nadpis zahryznutý
-do steny textu — `... výkon nášho PHP kódu. ## Zdroje - [DeepSeek]...`
+do steny textu,`... výkon nášho PHP kódu. ## Zdroje - [DeepSeek]...`
 v jedinom riadku. Substring test videl `## Zdroje` a spokojne mlčal.
 
 **Druhý: nula emoji.** Zelený check, červený krížik aj ozubené koliesko
-nepatria do porovnávacích tabuliek — slová nesú status lepšie a vydržia
+nepatria do porovnávacích tabuliek, slová nesú status lepšie a vydržia
 v termináli, vo feede aj vo vyhľadávaní.
 
 Pozor na jeden detail: **šípka → je dovolená.** Patrí k rukopisu hlasu
@@ -60,15 +60,15 @@ na existujúci súbor v druhom jazyku a ten späť. Per-jazyk slugy
 (`preco-rust-pre-deti` ↔ `why-rust`) sú len potom úprimné.
 
 A jedna výnimka, ktorú test rešpektuje: **drafty.** `published: false`
-znamená „rozpracované“ — test ich nechá pokoj, kým sa nerozhodne.
+znamená „rozpracované“, test ich nechá pokoj, kým sa nerozhodne.
 
 ## Kto testuje test, ktorý píše o sebe?
 
 A tu prichádza okamih, ktorý si zaslúži vlastný odstavec.
 
-Tento článok prešiel testom, o ktorom píše — inak by ste ho nečítali.
+Tento článok prešiel testom, o ktorom píše, inak by ste ho nečítali.
 
-Nehnevám sa na neho. Test nepozná žiadnu príručku — pozná iba riadky.
+Nehnevám sa na neho. Test nepozná žiadnu príručku, pozná iba riadky.
 Nevedel, že mu ich píšem. A predsa to nie je bludný kruh: príručka je text,
 test je zmluva. Text o zmluve, ktorý zmluvu poruší, by bol vtip horší
 než akýkoľvek obrázkový znak.
@@ -80,7 +80,7 @@ pravidlo bez testu je želanie
 test bez pravidla je cenzor
 ```
 
-Test nesúdi vkus — nesúdi vtipy, metafory ani to, či sa veta dá povedať
+Test nesúdi vkus, nesúdi vtipy, metafory ani to, či sa veta dá povedať
 ľahšie. Posudzuje len to, čo sa dá skontrolovať riadok po riadku.
 Vkus zostáva čitateľovi. Dohoda zostáva CI.
 
@@ -108,13 +108,13 @@ Buďme úprimní: mechanický test nevie, či je článok dobrý.
 Môže odhaliť stenu textu, hlásiť emoji, rozbitú dvojicu jazykov. Nevie,
 či je rytmus správny, či úprimná sekcia úprimne úprimná, alebo či veta
 niečo hlboké povie ... alebo len dobre znie. Rytmus riadkov ostáva
-ručným remeslom — test vám nanajvýš skontroluje, že zdroják nie je stena.
+ručným remeslom, test vám nanajvýš skontroluje, že zdroják nie je stena.
 
 A test tiež nevie, kedy je výnimka odôvodnená. Preto má drafty výnimku
-a šípku → dovolenú — kontrakt vymedzený tak, aby bránil nesprávnemu,
+a šípku → dovolenú, kontrakt vymedzený tak, aby bránil nesprávnemu,
 nie všetkému.
 
-Zvyšok — kámoš, ktorý nelichotí — test neskontroluje. To ostáva na vás.
+Zvyšok, kámoš, ktorý nelichotí, test neskontroluje. To ostáva na vás.
 
 ## Prakticky
 
@@ -131,7 +131,7 @@ rovnaký hlas. Ak ste dočítali sem, kontrakt drží z oboch strán.
 
 ## Zdroje
 
-- [PHPUnit — Data Providers](https://docs.phpunit.de/en/12/data-provider.html) ... vzor, na ktorom test stojí
-- [Markdown — Daring Fireball](https://daringfireball.net/projects/markdown/) ... formát, v ktorom žije celý korpus
+- [PHPUnit, Data Providers](https://docs.phpunit.de/en/12/data-provider.html) ... vzor, na ktorom test stojí
+- [Markdown, Daring Fireball](https://daringfireball.net/projects/markdown/) ... formát, v ktorom žije celý korpus
 - [Nativa Minimal Documentation](/docs/getting-started) ... getting started guide tohto kitu
 - [docs/blog-voice.md](/docs/blog-voice) ... príručka, ktorej mechanická polovica je teraz zmluva

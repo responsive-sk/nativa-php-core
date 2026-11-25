@@ -3,7 +3,7 @@ title: "Dva tóny ... písanie v EN a SK bez straty duše"
 date: "2026-08-29"
 version: "1.0.1"
 tags: ["writing", "narrative-rhythm", "technical-writing", "blog", "bilingual"]
-excerpt: "EN je Steinbeck — priame, aktívne, každé slovo pracuje. SK je Dostoevskij — hlbšie, reflektívne, širší kontext. Rovnaký rytmus, iná duša."
+excerpt: "EN je Steinbeck, priame, aktívne, každé slovo pracuje. SK je Dostoevskij, hlbšie, reflektívne, širší kontext. Rovnaký rytmus, iná duša."
 author: "Evan McDan"
 author_email: "evan.mcdan@example.test"
 category: "Writing"
@@ -23,7 +23,7 @@ Kliknite stránku 3. Pager sa zdvojnásobil.
 Kód bol správny. Alebo sa tak zdalo.
 ```
 
-Rovnaká štruktúra. Rovnaký rytmus. Iná duša. EN verzia je priama. SK verzia má mierne širšiu pauzu — „alebo sa tak zdalo“ nesie väčšiu váhu než „or so it seemed.“ To je rozdiel medzi Steinbeckom a Dostoevským.
+Rovnaká štruktúra. Rovnaký rytmus. Iná duša. EN verzia je priama. SK verzia má mierne širšiu pauzu, „alebo sa tak zdalo“ nesie väčšiu váhu než „or so it seemed.“ To je rozdiel medzi Steinbeckom a Dostoevským.
 
 ## EN: Steinbeck direct
 
@@ -42,7 +42,7 @@ Dobrá verzia má 7 slov. Zlá má 15. Obe hovoria to isté. Dobrá hovorí s re
 
 Pravidlá pre EN:
 - Aktívny rod všade: „Server returns“ nie „The server is returning“
-- Žiadne „it is important“ — povedz „Important:“
+- Žiadne „it is important“, povedz „Important:“
 - Krátke vety, minimum prídavných mien
 - Code komentáre v EN
 - Téma: ľudská, nie akademická
@@ -62,7 +62,7 @@ Cache zostáva dobrým sluhom.
 Chyba je nechať ho stať sa pánom.
 ```
 
-SK verzia pridáva metaforu — „sluha/pán“ — ktorú EN nepotrebuje. SK čitatelia očakávajú tú extra vrstvu. Nie je to objemnosť — je to hĺbka.
+SK verzia pridáva metaforu, „sluha/pán“, ktorú EN nepotrebuje. SK čitatelia očakávajú tú extra vrstvu. Nie je to objemnosť, je to hĺbka.
 
 Pravidlá pre SK:
 - Širší kontext, viac reflektívna fáza noci
@@ -109,7 +109,7 @@ Potom prišiel shared hosting.
 Prvý prihlasovací pokus: server spadol.
 ```
 
-Identická štruktúra. Identický rytmus. Iný jazyk. SK verzia má mierne dlhšie slová — to je normálne. Rytmus (krátke, krátke, krátke, pauza, krátke) zostáva.
+Identická štruktúra. Identický rytmus. Iný jazyk. SK verzia má mierne dlhšie slová, to je normálne. Rytmus (krátke, krátke, krátke, pauza, krátke) zostáva.
 
 ## Kedy písať čo
 
@@ -134,13 +134,13 @@ Jazyk mení tón, nie pravdu. Rytmus zostáva. Duša sa prispôsobí.
 
 ---
 
-→ [Part 6 — Rhythm Profiles](/blog/rhythm-part-6-profiles) — výber rytmu pre bug story, tutorial a filozofiu
-→ [Part 4 — Tempo](/blog/rhythm-part-4-tempo) — prečo dĺžka vety je dizajnové rozhodnutie
+→ [Part 6, Rhythm Profiles](/blog/rhythm-part-6-profiles): výber rytmu pre bug story, tutorial a filozofiu
+→ [Part 4, Tempo](/blog/rhythm-part-4-tempo): prečo dĺžka vety je dizajnové rozhodnutie
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

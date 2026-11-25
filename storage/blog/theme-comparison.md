@@ -12,7 +12,7 @@ translation: "theme-comparison"
 published: true
 ---
 
-Tri témy, tri štýly, jedno jadro. Starter, Magazine, Minimal — každá pre iného človeka.
+Tri témy, tri štýly, jedno jadro. Starter, Magazine, Minimal, každá pre iného človeka.
 
 V Nativa Minimal máme tri témy. Každá je navrhnutá pre iný účel.
 V tomto článku porovnáme kedy použiť akú, aké CSS tokeny používajú,
@@ -199,14 +199,14 @@ do 1/3 šírky ... automaticky sa prispôsobia.
 
 ---
 
-→ [Theme Architecture](/blog/theme-architecture) — auto-discovery, registry a interface
-→ [Build Your Theme](/blog/build-your-theme) — návod krok za krokom
-→ [Clean code pre deti](/blog/co-je-cisty-kod-pre-deti) — ako písať kód, ktorý sa číta sám
+→ [Theme Architecture](/blog/theme-architecture): auto-discovery, registry a interface
+→ [Build Your Theme](/blog/build-your-theme): návod krok za krokom
+→ [Clean code pre deti](/blog/co-je-cisty-kod-pre-deti): ako písať kód, ktorý sa číta sám
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

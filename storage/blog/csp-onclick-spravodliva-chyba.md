@@ -14,7 +14,7 @@ lang: "sk"
 
 # CSP a onclick: Spravodlivá chyba, ktorá vás naučí pravidlá
 
-Tlačidlo s `onclick` funguje roky. Potom nasadíte CSP a zrazu — padne. Nie je to bug. Je to spravodlivé pravidlo.
+Tlačidlo s `onclick` funguje roky. Potom nasadíte CSP a zrazu, padne. Nie je to bug. Je to spravodlivé pravidlo.
 
 ## Prečo onclick = eval()
 
@@ -32,7 +32,7 @@ button.addEventListener('click', function(event) {
 })
 ```
 
-`Function()` constructor = `eval()`. CSP s `script-src 'self' 'nonce-...'` blokuje `eval()` — vaše tlačidlo padne.
+`Function()` constructor = `eval()`. CSP s `script-src 'self' 'nonce-...'` blokuje `eval()`: vaše tlačidlo padne.
 
 ## Ako to chytíme automaticky
 
@@ -54,13 +54,13 @@ public function testNoOndefaultHandlersInPhp(): void
 }
 ```
 
-Test beží v CI — ak niekto pridá `onclick` do PHP šablóny, build padne. Automaticky, bez code review.
+Test beží v CI, ak niekto pridá `onclick` do PHP šablóny, build padne. Automaticky, bez code review.
 
 ## Čo namiesto onclick
 
 ### HTMX hx-confirm
 
-Najčastejší prípad — delete s potvrdením:
+Najčastejší prípad, delete s potvrdením:
 
 ```html
 <!-- Zlé: onclick → eval() → CSP violation -->
@@ -73,7 +73,7 @@ Najčastejší prípad — delete s potvrdením:
 </button>
 ```
 
-`hx-confirm` volá `window.confirm()` — natívne API, žiadne eval.
+`hx-confirm` volá `window.confirm()`: natívne API, žiadne eval.
 
 ### data-* + addEventListener
 
@@ -96,11 +96,11 @@ document.addEventListener('click', function(e) {
 </script>
 ```
 
-Nonce script — CSP ho pustí pretože má správny nonce.
+Nonce script, CSP ho pustí pretože má správny nonce.
 
 ### HTMX hx-on:smth
 
-HTMX má `hx-on:click` atribút — ale interné používa `Function()` constructor. Teda tiež `eval()`. Tiež padne.
+HTMX má `hx-on:click` atribút, ale interné používa `Function()` constructor. Teda tiež `eval()`. Tiež padne.
 
 Namiesto toho: `hx-get` + `hx-trigger="click"` + `hx-target`.
 
@@ -108,28 +108,28 @@ Namiesto toho: `hx-get` + `hx-trigger="click"` + `hx-target`.
 
 CSP neblokuje onclick pretože je zlý. Blokuje ho pretože:
 
-1. **XSS ochrana** — ak útočník vloží `onclick` do vášho obsahu, má prístup k `Function()`
-2. **Non-reflected inline** — inline handlery nie sú nonce-ované (nemajú `nonce` atribút)
-3. **Princíp najmenších oprávnení** — menej inline JS = menej attack surface
+1. **XSS ochrana**: ak útočník vloží `onclick` do vášho obsahu, má prístup k `Function()`
+2. **Non-reflected inline**: inline handlery nie sú nonce-ované (nemajú `nonce` atribút)
+3. **Princíp najmenších oprávnení**: menej inline JS = menej attack surface
 
 ## Zhrnutie
 
 | Pattern | CSP | Alternatíva |
 |---------|-----|-------------|
-| `onclick="..."` | **NO** — eval() | `data-*` + `addEventListener` |
-| `hx-on:click` | **NO** — Function() | `hx-trigger` + `hx-get/post` |
-| `hx-confirm="..."` | **YES** — window.confirm() | — |
-| `<script nonce="...">` | **YES** — nonce | — |
-| `addEventListener` | **YES** — addEventListener | — |
+| `onclick="..."` | **NO**: eval() | `data-*` + `addEventListener` |
+| `hx-on:click` | **NO**: Function() | `hx-trigger` + `hx-get/post` |
+| `hx-confirm="..."` | **YES**: window.confirm() |, |
+| `<script nonce="...">` | **YES**: nonce |, |
+| `addEventListener` | **YES**: addEventListener |, |
 
-Architecture test chytí `onclick` automaticky v CI. Nemusíte na to myslieť — test na to myslí za vás.
+Architecture test chytí `onclick` automaticky v CI. Nemusíte na to myslieť, test na to myslí za vás.
 
 ---
 
 ## Zdroje
 
-- [MDN — Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) — CSP špecifikácia
-- [W3C — CSP Level 3](https://www.w3.org/TR/CSP3/) — oficiálna špecifikácia
-- [OWASP — DOM Based XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html) — inline handler riziká
-- [CSP Spec — Inline Event Handlers](https://www.w3.org/TR/CSP3/#directive-script-src) — prečo inline handlery potrebujú unsafe-inline
-- [htmx.org — Web Security Basics](https://htmx.org/essays/web-security-basics-with-htmx/) — HTMX a CSP
+- [MDN, Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP): CSP špecifikácia
+- [W3C, CSP Level 3](https://www.w3.org/TR/CSP3/): oficiálna špecifikácia
+- [OWASP, DOM Based XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html): inline handler riziká
+- [CSP Spec, Inline Event Handlers](https://www.w3.org/TR/CSP3/#directive-script-src): prečo inline handlery potrebujú unsafe-inline
+- [htmx.org, Web Security Basics](https://htmx.org/essays/web-security-basics-with-htmx/): HTMX a CSP

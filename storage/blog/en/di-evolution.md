@@ -299,13 +299,13 @@ That's the Nativa philosophy: learn from the best, implement simply.
 
 ---
 
-→ [Theme Architecture](/blog/theme-architecture) — auto-discovery in practice
-→ [Theme Comparison](/blog/theme-comparison) — three themes, one pattern
+→ [Theme Architecture](/blog/theme-architecture): auto-discovery in practice
+→ [Theme Comparison](/blog/theme-comparison): three themes, one pattern
 
 ## Sources
 
-- [Thesis DIC Documentation](https://thesis.coding.lang/) — official Thesis dependency injection container documentation
-- [PHP-FIG — PSR-11 Container Interface](https://www.php-fig.org/psr/psr-11/) — standardized container interface
-- [PHP Manual — Attributes](https://www.php.net/manual/en/language.attributes.php) — PHP 8 native attributes
-- [Martin Fowler — Inversion of Control](https://martinfowler.com/articles/injection.html) — classic article on IoC and DI patterns
-- [PHPStan — Extension Points](https://phpstan.org/developing-extensions/phpstan-basics) — static analysis for DI patterns
+- [Thesis DIC Documentation](https://thesis.coding.lang/): official Thesis dependency injection container documentation
+- [PHP-FIG, PSR-11 Container Interface](https://www.php-fig.org/psr/psr-11/): standardized container interface
+- [PHP Manual, Attributes](https://www.php.net/manual/en/language.attributes.php): PHP 8 native attributes
+- [Martin Fowler, Inversion of Control](https://martinfowler.com/articles/injection.html): classic article on IoC and DI patterns
+- [PHPStan, Extension Points](https://phpstan.org/developing-extensions/phpstan-basics): static analysis for DI patterns

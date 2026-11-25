@@ -88,7 +88,7 @@ Why? Because they publish Cordis as **part of Harness**, not as a dependency. Ev
 
 | Package | ctx key | Role |
 |---------|---------|------|
-| `scope` | — | Scoped-context registration primitive |
+| `scope` |, | Scoped-context registration primitive |
 | `session` | `ctx.sessions` | Event-sourced session log |
 | `system-prompt` | `ctx.systemPrompt` | Prompt and tool-schema assembly |
 | `tools` | `ctx.tools` | Scoped tool registry |
@@ -128,12 +128,12 @@ The agent doesn't have access to the entire disk. Only the workspace and tempora
 | Sessions | State-based | Event-sourced |
 | Extensions | Plugin manager | Self-modification |
 
-→ [DeepSeek Harness and Cordis](/en/blog/deepseek-harness-and-cordis) — the plugin framework for tomorrow
-→ [The fridge as a P2P server](/en/blog/the-fridge-as-a-p2p-server) — hardware for P2P nodes
-→ [Outbox pattern ... when cache isn't enough](/en/blog/outbox-pattern-when-cache-isnt-enough) — async distribution
+→ [DeepSeek Harness and Cordis](/en/blog/deepseek-harness-and-cordis): the plugin framework for tomorrow
+→ [The fridge as a P2P server](/en/blog/the-fridge-as-a-p2p-server): hardware for P2P nodes
+→ [Outbox pattern ... when cache isn't enough](/en/blog/outbox-pattern-when-cache-isnt-enough): async distribution
 
 ## Sources
 
-- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) — open-source agent framework
-- [Cordis](https://github.com/deepseek-ai/deepseek-harness/tree/master/vendor/cordis) — TypeScript plugin framework
-- [Capability Seams design](https://github.com/deepseek-ai/deepseek-harness/blob/master/.agents/notes/implemented/architecture/2026-06-13-capability-seams.md) — architecture document
+- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): open-source agent framework
+- [Cordis](https://github.com/deepseek-ai/deepseek-harness/tree/master/vendor/cordis): TypeScript plugin framework
+- [Capability Seams design](https://github.com/deepseek-ai/deepseek-harness/blob/master/.agents/notes/implemented/architecture/2026-06-13-capability-seams.md): architecture document

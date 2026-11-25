@@ -213,14 +213,14 @@ ale až `CorePatternTest` zaručí, že sa to naozaj nestane.
 5. **Reálny príbeh** ... `handle()` spadol na 65 riadkoch (5 nad limit), detektor to nameral skôr než človek, split na helpery to opravil.
 6. **Odkaz na ďalší diel** ... detektory strážia pravidlá v rámci modulov; ale kto stráži hranice **medzi** modulmi? O tom, ako `ModuleIsolationTest` hliadkuje, kto s kým môže rozprávať, bude záverečný [diel 6](/blog/modulova-izolacia-pre-deti).
 
-→ [Jedna vec (SRP)](/blog/jedna-vec-srp-pre-deti) — metóda robí jednu vec
-→ [Modulová izolácia](/blog/modulova-izolacia-pre-deti) — hranice medzi modulmi
-→ [DRY vs abstrakcia](/blog/dry-vs-abstrakcia-pre-deti) — duplicita vs predčasná abstrakcia
+→ [Jedna vec (SRP)](/blog/jedna-vec-srp-pre-deti): metóda robí jednu vec
+→ [Modulová izolácia](/blog/modulova-izolacia-pre-deti): hranice medzi modulmi
+→ [DRY vs abstrakcia](/blog/dry-vs-abstrakcia-pre-deti): duplicita vs predčasná abstrakcia
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

@@ -3,7 +3,7 @@ title: "Night, Object, Theme ... časti, ktoré robia články zapamätateľným
 date: "2026-08-29"
 version: "1.0.2"
 tags: ["writing", "narrative-rhythm", "technical-writing", "blog"]
-excerpt: "Väčšina článkov končí po riešení. Tri fáze, ktoré nasledujú — night, object, theme — robia z článku príbeh, ktorý si čitateľ zajtra zapamätá."
+excerpt: "Väčšina článkov končí po riešení. Tri fáze, ktoré nasledujú, night, object, theme, robia z článku príbeh, ktorý si čitateľ zajtra zapamätá."
 author: "Evan McDan"
 author_email: "evan.mcdan@example.test"
 category: "Writing"
@@ -17,7 +17,7 @@ Pretože článok skončil po riešení. Nemal fázu night, object, theme. Tri s
 
 ## Fáza noci
 
-Noc je hĺbka — nie „ako to funguje“ ale „prečo to tak musí byť.“ Filozofia, nie mechanika.
+Noc je hĺbka, nie „ako to funguje“ ale „prečo to tak musí byť.“ Filozofia, nie mechanika.
 
 ```markdown
 # Zle: viac vysvetlenia
@@ -33,7 +33,7 @@ User data tam nemajú čo robiť.
 
 Prvý príklad vysvetľuje implementáciu. Druhý vysvetľuje zmýšľanie. Implementácia je dokumentácia. Zmýšľanie je múdrosť.
 
-Fáza noci je tichšia než fázy hmly alebo slnka. Vety sú stredne dlhé. Tón je reflektívny. Čitateľ sa neučí — chápe.
+Fáza noci je tichšia než fázy hmly alebo slnka. Vety sú stredne dlhé. Tón je reflektívny. Čitateľ sa neučí, chápe.
 
 ## Prečo noc znamená
 
@@ -48,11 +48,11 @@ Ale "lepší" znamená "lepší pre server,
 ktorý má dosť zdrojov."
 ```
 
-To je rozdiel medzi „používajte argon2id“ a „používajte argon2id keď máte dosť RAM.“ Fáza noci pridáva podmienku — múdrosť, ktorá prichádza zo skúsenosti.
+To je rozdiel medzi „používajte argon2id“ a „používajte argon2id keď máte dosť RAM.“ Fáza noci pridáva podmienku, múdrosť, ktorá prichádza zo skúsenosti.
 
 ## Fáza objektu
 
-Objekt je opustený koncept — vec, ktorú sme preskúmali a teraz ju odkladáme s rešpektom. Nie je to zhrnutie. Je to navigačná značka.
+Objekt je opustený koncept, vec, ktorú sme preskúmali a teraz ju odkladáme s rešpektom. Nie je to zhrnutie. Je to navigačná značka.
 
 ```markdown
 # Zle: zhrnutie
@@ -67,7 +67,7 @@ Na shared hostingu s 128 MB je UX katastrofa.
 Najprv spoznajte infraštruktúru, potom si vyberte kryptografiu.
 ```
 
-Zhrnutie hovorí „naučili sme sa X, Y, Z.“ Fáza objektu hovorí „X zostáva platné — v tejto konkrétnej situácii.“ Čitateľ dostane navigačnú značku: kedy sa k téme vrátiť a kedy nie.
+Zhrnutie hovorí „naučili sme sa X, Y, Z.“ Fáza objektu hovorí „X zostáva platné, v tejto konkrétnej situácii.“ Čitateľ dostane navigačnú značku: kedy sa k téme vrátiť a kedy nie.
 
 ## Téma
 
@@ -86,7 +86,7 @@ Technická téma je poznámka pod čiarou. Ľudská téma je spomienka. Čitate�
 
 ## Prečo väčšina článkov tieto fázy preskakuje
 
-Night, object a theme sú najťažšie fázy na napísanie. Vyžadujú reflexiu — nie len „čo som urobil?“ ale „čo to znamená.“
+Night, object a theme sú najťažšie fázy na napísanie. Vyžadujú reflexiu, nie len „čo som urobil?“ ale „čo to znamená.“
 
 Väčšina technických autorov končí po riešení, pretože tam kód končí. Ale kód je dôkaz, nie príbeh. Príbeh pokračuje po oprave.
 
@@ -108,13 +108,13 @@ Riešenie bez reflexie je poznámka pod čiarou. Riešenie s night, object a the
 
 ---
 
-→ [Part 4 — Tempo](/blog/rhythm-part-4-tempo) — prečo dĺžka vety je dizajnové rozhodnutie
-→ [Part 2 — Fog a Sun](/blog/rhythm-part-2-fog-and-sun) — ako písať problémy, ktoré udržia pozornosť
+→ [Part 4, Tempo](/blog/rhythm-part-4-tempo): prečo dĺžka vety je dizajnové rozhodnutie
+→ [Part 2, Fog a Sun](/blog/rhythm-part-2-fog-and-sun): ako písať problémy, ktoré udržia pozornosť
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

@@ -238,14 +238,14 @@ Potrebujeme **patterny**, ktoré fungujú bez containeru.
 | 5 | `#[As*]` atribúty (commands, events) | Navrhnuté |
 | 6 | `RequestScope` ... explicit scoping | Navrhnuté | --- 
 
-→ [DI evolúcia](/blog/di-evolution) — filozofia za patternami
-→ [Module isolation](/blog/modulova-izolacia-pre-deti) — kto s kým môže rozprávať
-→ [Flow a ADR](/blog/flow-a-adr-starter-kitu) — mindset za starter kitom
+→ [DI evolúcia](/blog/di-evolution): filozofia za patternami
+→ [Module isolation](/blog/modulova-izolacia-pre-deti): kto s kým môže rozprávať
+→ [Flow a ADR](/blog/flow-a-adr-starter-kitu): mindset za starter kitom
 
 ## Zdroje
 
-- [PHP-FIG — PSR-15 HTTP Server Request Handlers](https://www.php-fig.org/psr/psr-15/) — štandardizovaný middleware interface
-- [PHP Manual — SPLAutoLoader](https://www.php.net/manual/en/function.spl-autoload-register.php) — PSR-4 autoloading
-- [PHPUnit — Test Isolation](https://phpunit.de/documentation.html) — disposal a test cleanup patterny
-- [PHPStan — Rule Customization](https://phpstan.org/developing-extensions/rule-customization) — static analysis pre module boundaries
-- [Nativa Minimal — Adding Modules](/docs/adding-modules) — oficiálny návod na pridávanie modulov
+- [PHP-FIG, PSR-15 HTTP Server Request Handlers](https://www.php-fig.org/psr/psr-15/): štandardizovaný middleware interface
+- [PHP Manual, SPLAutoLoader](https://www.php.net/manual/en/function.spl-autoload-register.php): PSR-4 autoloading
+- [PHPUnit, Test Isolation](https://phpunit.de/documentation.html): disposal a test cleanup patterny
+- [PHPStan, Rule Customization](https://phpstan.org/developing-extensions/rule-customization): static analysis pre module boundaries
+- [Nativa Minimal, Adding Modules](/docs/adding-modules): oficiálny návod na pridávanie modulov

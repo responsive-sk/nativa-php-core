@@ -197,13 +197,13 @@ dozen comments a day that's the right trade. For a portal with millions
    payloads bypass the limit for free.
 5. **PRG + old input** ... no double submissions, no lost text on error.
 
-→ [The members-only lock](/en/blog/bonus-members-only) — one flag in the front matter
-→ [Immutable audit log](/en/blog/bonus-audit-log) — every admin decision is recorded
-→ [Full-text search via FTS5](/en/blog/bonus-full-text-search) — an index in memory, no infrastructure
+→ [The members-only lock](/en/blog/bonus-members-only): one flag in the front matter
+→ [Immutable audit log](/en/blog/bonus-audit-log): every admin decision is recorded
+→ [Full-text search via FTS5](/en/blog/bonus-full-text-search): an index in memory, no infrastructure
 
 ## Sources
 
-- [OWASP — Automated Threats to Web Applications](https://owasp.org/www-project-automated-threats-to-web-applications/) ... the threats a rate limit stands against
-- [MDN — Post/Redirect/Get](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location) ... the pattern behind the form flow
+- [OWASP, Automated Threats to Web Applications](https://owasp.org/www-project-automated-threats-to-web-applications/) ... the threats a rate limit stands against
+- [MDN, Post/Redirect/Get](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location) ... the pattern behind the form flow
 - [PHP Manual](https://www.php.net/manual/) ... official PHP documentation
 - [Nativa Minimal Documentation](/docs/getting-started) ... this kit's official getting started guide

@@ -13,7 +13,7 @@ published: true
 
 Otvorte 'packages/' v DeepSeek Harness. Nájdete 50 balíkov. Každý má svoju úlohu, svoj kontrakt a svojho providera. Žiadny nie je ten dôležitý.
 
-Tradičné frameworky majú jedno jadro a milión pluginov. DSH má plugin, ktorým je všetko — agent, nástroje, filesystem, shell, sandbox. Ak niečo nefunguje, vymeníte plugin. Nie framework.
+Tradičné frameworky majú jedno jadro a milión pluginov. DSH má plugin, ktorým je všetko, agent, nástroje, filesystem, shell, sandbox. Ak niečo nefunguje, vymeníte plugin. Nie framework.
 
 
 ## Čo je DeepSeek Harness
@@ -93,7 +93,7 @@ Prečo? Lebo publishujú Cordis ako **súčasť Harness**, nie ako závislosť. 
 
 | Balík | ctx key | Úloha |
 |-------|---------|-------|
-| `scope` | — | Scoped-context registration primitive |
+| `scope` |, | Scoped-context registration primitive |
 | `session` | `ctx.sessions` | Event-sourced session log |
 | `system-prompt` | `ctx.systemPrompt` | Prompt a tool-schema assembly |
 | `tools` | `ctx.tools` | Scoped tool registry |
@@ -139,6 +139,6 @@ Agent nemá prístup k celému disku. Len k workspace a dočasným súborom.
 - [Cordis](https://github.com/deepseek-ai/deepseek-harness/tree/master/vendor/cordis) ... TypeScript plugin framework
 - [Capability Seams design](https://github.com/deepseek-ai/deepseek-harness/blob/master/.agents/notes/implemented/architecture/2026-06-13-capability-seams.md) ... architektonický dokument
 
-→ [Capability seams](/blog/capability-seams) — Service Definition / Provider / Consumer
-→ [Cordis ... hlboký ponor](/blog/cordis-hlboky-ponor) — plugin framework
-→ [DSH a P2P](/blog/dsh-a-p2p) — distribuovaní agenti v sieti
+→ [Capability seams](/blog/capability-seams): Service Definition / Provider / Consumer
+→ [Cordis ... hlboký ponor](/blog/cordis-hlboky-ponor): plugin framework
+→ [DSH a P2P](/blog/dsh-a-p2p): distribuovaní agenti v sieti

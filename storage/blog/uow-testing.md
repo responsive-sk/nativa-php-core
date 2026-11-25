@@ -282,14 +282,14 @@ public function testCanRetryUnderMaxAttempts(): void
 
 ---
 
-→ [UnitOfWork implementácia](/blog/uow-implementation) — ako to funguje
-→ [UnitOfWork filozofia](/blog/uow-philosophy) — prečo UnitOfWork
-→ [UnitOfWork outbox](/blog/uow-outbox) — async spracovanie
+→ [UnitOfWork implementácia](/blog/uow-implementation): ako to funguje
+→ [UnitOfWork filozofia](/blog/uow-philosophy): prečo UnitOfWork
+→ [UnitOfWork outbox](/blog/uow-outbox): async spracovanie
 
 ## Zdroje
 
-- [PHP Manual](https://www.php.net/manual/) — oficiálna PHP dokumentácia
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP štandardy
-- [Nativa Minimal Documentation](/docs/getting-started) — oficiálny návod
-- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/) — bezpečnostné best practices
-- [W3C — Web Standards](https://www.w3.org/standards/) — web štandardy
+- [PHP Manual](https://www.php.net/manual/): oficiálna PHP dokumentácia
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP štandardy
+- [Nativa Minimal Documentation](/docs/getting-started): oficiálny návod
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/): bezpečnostné best practices
+- [W3C, Web Standards](https://www.w3.org/standards/): web štandardy

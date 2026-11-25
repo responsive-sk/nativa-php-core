@@ -255,15 +255,15 @@ A tool that can refuse and a decision that it will are two different things.
 
 The distance between them is one line in the `Makefile` and somebody who reads its body.
 
-→ [Part 17 ... three versions and no change](/en/blog/lekalo-three-versions) — the upgrade where nothing moved
-→ [Part 15 ... a chain with hashes on both ends](/en/blog/the-trace-manifest-a-chain-with-hashes-on-both-ends) — where a manifest gets its evidence
-→ [What the commands say about a project](/en/blog/lekalo-new-commands) — the seven 0.6.5 surfaces and what they really returned
+→ [Part 17 ... three versions and no change](/en/blog/lekalo-three-versions): the upgrade where nothing moved
+→ [Part 15 ... a chain with hashes on both ends](/en/blog/the-trace-manifest-a-chain-with-hashes-on-both-ends): where a manifest gets its evidence
+→ [What the commands say about a project](/en/blog/lekalo-new-commands): the seven 0.6.5 surfaces and what they really returned
 
 ## Sources
 
 - [Lekalo](https://github.com/ichinya/lekalo) ... the semantic model, the CLI and the neutral trace manifests
 - [Release v0.6.5](https://github.com/ichinya/lekalo/releases/tag/v0.6.5) ... checksummed archives and seven new surfaces
 - [jq manual](https://jqlang.github.io/jq/manual/) ... what `-e` does exactly, and why a predicate without it is decoration
-- [actions/runner-images — Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md) ... where the `jq` on the runner comes from, the one the gate needs
+- [actions/runner-images, Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md) ... where the `jq` on the runner comes from, the one the gate needs
 - [docs/lekalo-model.md](https://github.com/evan70/nativa-minimal/blob/master/docs/lekalo-model.md) ... the surface table with its verdict, and the adoption rule
 - [Nativa Minimal ... getting started](/docs/getting-started) ... how to run all of this locally

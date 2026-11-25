@@ -201,14 +201,14 @@ And when you combine it with Cordis (agent changes environment), Outbox (async p
 
 A ticket didn't die. It evolved into intent.
 
-→ [DeepSeek Harness and Cordis](/en/blog/deepseek-harness-and-cordis) — agent framework for intent-driven development
-→ [The fridge as a P2P server](/en/blog/the-fridge-as-a-p2p-server) — decentralized cognition
-→ [Cache wrappers ... good servant, bad master](/en/blog/cache-wrappers-good-servant-bad-master) — evolution stage
+→ [DeepSeek Harness and Cordis](/en/blog/deepseek-harness-and-cordis): agent framework for intent-driven development
+→ [The fridge as a P2P server](/en/blog/the-fridge-as-a-p2p-server): decentralized cognition
+→ [Cache wrappers ... good servant, bad master](/en/blog/cache-wrappers-good-servant-bad-master): evolution stage
 
 ## Sources
 
-- [PHP Manual](https://www.php.net/manual/) — official PHP documentation
-- [PHP-FIG — PSR Standards](https://www.php-fig.org/) — PHP standards
-- [Nativa Minimal Documentation](/docs/getting-started) — official getting started guide
-- [Web.dev — Performance](https://web.dev/performance) — Core Web Vitals
-- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/) — Lighthouse tool
+- [PHP Manual](https://www.php.net/manual/): official PHP documentation
+- [PHP-FIG, PSR Standards](https://www.php-fig.org/): PHP standards
+- [Nativa Minimal Documentation](/docs/getting-started): official getting started guide
+- [Web.dev, Performance](https://web.dev/performance): Core Web Vitals
+- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/): Lighthouse tool
