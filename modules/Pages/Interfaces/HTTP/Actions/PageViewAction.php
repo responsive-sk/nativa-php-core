@@ -180,6 +180,7 @@ final class PageViewAction
             canonicalUrl: $canonicalUrl,
             localeLinks: $links,
             hreflangLinks: $this->hreflangLinks($request, $links),
+            lang: ContentLocaleServices::mapper()->languageCode($locale),
             ogType: 'website',
             structuredData: WebsiteStructuredData::website($seoTitle, $canonicalUrl),
             theme: $theme,

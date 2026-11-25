@@ -184,6 +184,59 @@ final class PageTitleBrandTest extends TestCase
     }
 
     /**
+     * A page in the other locale names that language in the head. Without it
+     * an English page under `<html lang="sk">` and `og:locale sk_SK` reads to
+     * a crawler as Slovak, whatever its body says, and the social preview
+     * picks the wrong language too.
+     */
+    #[Test]
+    public function anEnglishPageDeclaresItsOwnLanguage(): void
+    {
+        $mapper = ContentLocaleServices::mapper();
+        $locale = null;
+
+        foreach ($mapper->locales() as $code) {
+            if ($code !== $this->locale) {
+                $locale = $code;
+                break;
+            }
+        }
+
+        self::assertIsString($locale, 'The locale mapper names no second locale.');
+
+        $slug = 'title-brand-lang-' . bin2hex(random_bytes(4));
+        $lang = $mapper->languageCode($locale);
+
+        (new PageCrudService())->save($slug, [
+            'title' => 'About us',
+            'published' => true,
+        ], 'Body of the page.', $locale);
+
+        try {
+            $request = Request::create('GET', '/' . $slug);
+            $request->setAttribute('locale', $locale);
+            $request->setRouteParams(['slug' => $slug]);
+
+            $response = (new PageViewAction())->handle($request);
+            self::assertSame(200, $response->getStatusCode(), 'The translated page must render, not 404.');
+            $html = $response->getContent();
+        } finally {
+            (new PageCrudService())->delete($slug, $locale);
+        }
+
+        self::assertStringContainsString(
+            '<html lang="' . $lang . '">',
+            $html,
+            'A page renders under the language of the locale it was found in, not the site default.',
+        );
+        self::assertStringContainsString(
+            '<meta property="og:locale" content="' . ('en' === $lang ? 'en_US' : 'sk_SK') . '">',
+            $html,
+            'The social preview must name the same language the document declares.',
+        );
+    }
+
+    /**
      * Render the page through the real action and read back what landed in
      * `<title>` — the string a crawler sees, not the one the action intended.
      */
