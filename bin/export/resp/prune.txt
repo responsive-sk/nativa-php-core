@@ -14,6 +14,10 @@
 # They record how THIS tree was built, and the numbers belong to it.
 docs
 
+# The retired showcase's documents and prose sources. The client port carries
+# its own guides; this archive is source-repository provenance.
+archive
+
 # The canonical specs and the local plan tree.
 openspec
 

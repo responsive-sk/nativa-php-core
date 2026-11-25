@@ -290,12 +290,6 @@
       "answers": "builds the theme bundles in-tree (pnpm workspace under Frontend/packages)"
     },
     {
-      "target": "assets-import",
-      "tier": "dist",
-      "can_fail": false,
-      "answers": "copies the showcase's built bundles when pnpm is not available"
-    },
-    {
       "target": "security-audit",
       "tier": "repo",
       "can_fail": true,

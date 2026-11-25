@@ -8,7 +8,6 @@
 
 PHP ?= php
 COMPOSER ?= composer
-MINIMAL_ROOT ?= ../nativa-minimal
 LEKALO ?= $(shell command -v lekalo 2>/dev/null || echo "$$HOME/.cargo/bin/lekalo")
 # Modules the advisory coupling / architecture-profile reports cover (two, not
 # one: a single module says nothing about whether the shape holds elsewhere).
@@ -251,21 +250,13 @@ dist-profile-test: ## Gate: the three deployment-profile branches (skip / skip /
 ##@ Assets
 assets: ## Build the theme bundles in-tree (pnpm workspace under Frontend/packages)
 	@command -v pnpm >/dev/null 2>&1 || { \
-		echo "pnpm not found — install it, or use 'make assets-import' to copy a built dist." >&2; \
+		echo "pnpm not found — install it to build the theme bundles." >&2; \
 		exit 1; \
 	}
 	cd Frontend/packages && pnpm install --frozen-lockfile && pnpm build
 	@bin/build/check-theme-bundles.sh
 	@echo "Built public/dist/<theme> from Frontend/packages (gitignored — a build artifact, not source)."
 
-assets-import: ## Fallback: copy the showcase's built bundles when pnpm is not available
-	@if [ ! -d "$(MINIMAL_ROOT)/public/dist" ]; then \
-		echo "No $(MINIMAL_ROOT)/public/dist — build it there first: cd $(MINIMAL_ROOT)/Frontend/packages && pnpm install && pnpm build", >&2; \
-		exit 1; \
-	fi
-	mkdir -p public/dist
-	cp -r "$(MINIMAL_ROOT)/public/dist/." public/dist/
-	@echo "Copied public/dist from $(MINIMAL_ROOT) (gitignored — a build artifact, not source)."
 
 ##@ Lekalo
 # Gates assert and exit 1 on drift. Reports are informational: the advisory

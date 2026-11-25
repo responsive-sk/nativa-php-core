@@ -1,0 +1,2386 @@
+{
+ "schemaVersion": "lekalo/trace-manifest/v0.2.16",
+ "identity": "dev.lekalo.trace-manifest@0.2.16",
+ "manifestId": "nativa-questions-trace",
+ "projectRef": "nativa",
+ "completeness": "partial",
+ "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+ "modelRef": {
+  "schemaVersion": "0.2.16",
+  "digest": "sha256:0bf1d8274e6bc5501d68b55944e562ac999210803e10bdaf69e4cf14ab1ccba2"
+ },
+ "irRef": {
+  "schemaVersion": "0.2.16",
+  "digest": "sha256:9333f37c2cf57b6a9f08024f4d81a8d4ee96f34527fa92c53ab7a4e3c6761b28"
+ },
+ "exportProfile": "requirement-to-gate",
+ "nodes": [
+  {
+   "nodeId": "requirement:QUESTIONS-REQ-1",
+   "nodeKind": "requirement",
+   "requirementId": "a-reader-shall-be-able-to-ask-a-question-about-an-article-or-a-page-together-with-their-own-attempted-answer",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "a-reader-shall-be-able-to-ask-a-question-about-an-article-or-a-page-together-with-their-own-attempted-answer"
+    }
+   ]
+  },
+  {
+   "nodeId": "requirement:QUESTIONS-REQ-2",
+   "nodeKind": "requirement",
+   "requirementId": "the-subject-shall-be-the-discriminated-pair-re-resolved-against-published-content",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "the-subject-shall-be-the-discriminated-pair-re-resolved-against-published-content"
+    }
+   ]
+  },
+  {
+   "nodeId": "requirement:QUESTIONS-REQ-3",
+   "nodeKind": "requirement",
+   "requirementId": "the-author-shall-moderate-questions-in-an-inbox-and-every-decision-shall-be-recorded",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "the-author-shall-moderate-questions-in-an-inbox-and-every-decision-shall-be-recorded"
+    }
+   ]
+  },
+  {
+   "nodeId": "requirement:QUESTIONS-REQ-4",
+   "nodeKind": "requirement",
+   "requirementId": "only-an-approved-question-shall-render-on-the-subject-in-the-active-theme-s-vocabulary",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "only-an-approved-question-shall-render-on-the-subject-in-the-active-theme-s-vocabulary"
+    }
+   ]
+  },
+  {
+   "nodeId": "requirement:QUESTIONS-REQ-5",
+   "nodeKind": "requirement",
+   "requirementId": "the-author-shall-see-the-depth-of-the-moderation-queue-on-the-inbox-s-navigation-item",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "the-author-shall-see-the-depth-of-the-moderation-queue-on-the-inbox-s-navigation-item"
+    }
+   ]
+  },
+  {
+   "nodeId": "symbol:questions.approve",
+   "nodeKind": "symbol",
+   "semanticId": "questions.approve"
+  },
+  {
+   "nodeId": "symbol:questions.attempted_answer",
+   "nodeKind": "symbol",
+   "semanticId": "questions.attempted_answer"
+  },
+  {
+   "nodeId": "symbol:questions.delete",
+   "nodeKind": "symbol",
+   "semanticId": "questions.delete"
+  },
+  {
+   "nodeId": "symbol:questions.deleted_question_not_persisted",
+   "nodeKind": "symbol",
+   "semanticId": "questions.deleted_question_not_persisted"
+  },
+  {
+   "nodeId": "symbol:questions.display_name",
+   "nodeKind": "symbol",
+   "semanticId": "questions.display_name"
+  },
+  {
+   "nodeId": "symbol:questions.effect_question_created",
+   "nodeKind": "symbol",
+   "semanticId": "questions.effect_question_created"
+  },
+  {
+   "nodeId": "symbol:questions.effect_question_deleted",
+   "nodeKind": "symbol",
+   "semanticId": "questions.effect_question_deleted"
+  },
+  {
+   "nodeId": "symbol:questions.effect_question_status_changed",
+   "nodeKind": "symbol",
+   "semanticId": "questions.effect_question_status_changed"
+  },
+  {
+   "nodeId": "symbol:questions.find_approved_by_subject",
+   "nodeKind": "symbol",
+   "semanticId": "questions.find_approved_by_subject"
+  },
+  {
+   "nodeId": "symbol:questions.find_by_subject",
+   "nodeKind": "symbol",
+   "semanticId": "questions.find_by_subject"
+  },
+  {
+   "nodeId": "symbol:questions.ip_address",
+   "nodeKind": "symbol",
+   "semanticId": "questions.ip_address"
+  },
+  {
+   "nodeId": "symbol:questions.moderation_inbox",
+   "nodeKind": "symbol",
+   "semanticId": "questions.moderation_inbox"
+  },
+  {
+   "nodeId": "symbol:questions.moderation_lifecycle",
+   "nodeKind": "symbol",
+   "semanticId": "questions.moderation_lifecycle"
+  },
+  {
+   "nodeId": "symbol:questions.moderation_queue_is_badged",
+   "nodeKind": "symbol",
+   "semanticId": "questions.moderation_queue_is_badged"
+  },
+  {
+   "nodeId": "symbol:questions.question",
+   "nodeKind": "symbol",
+   "semanticId": "questions.question"
+  },
+  {
+   "nodeId": "symbol:questions.question_and_attempt_required",
+   "nodeKind": "symbol",
+   "semanticId": "questions.question_and_attempt_required"
+  },
+  {
+   "nodeId": "symbol:questions.question_created",
+   "nodeKind": "symbol",
+   "semanticId": "questions.question_created"
+  },
+  {
+   "nodeId": "symbol:questions.question_deleted",
+   "nodeKind": "symbol",
+   "semanticId": "questions.question_deleted"
+  },
+  {
+   "nodeId": "symbol:questions.question_status_changed",
+   "nodeKind": "symbol",
+   "semanticId": "questions.question_status_changed"
+  },
+  {
+   "nodeId": "symbol:questions.question_submit_denied",
+   "nodeKind": "symbol",
+   "semanticId": "questions.question_submit_denied"
+  },
+  {
+   "nodeId": "symbol:questions.reject",
+   "nodeKind": "symbol",
+   "semanticId": "questions.reject"
+  },
+  {
+   "nodeId": "symbol:questions.status",
+   "nodeKind": "symbol",
+   "semanticId": "questions.status"
+  },
+  {
+   "nodeId": "symbol:questions.subject_must_be_published",
+   "nodeKind": "symbol",
+   "semanticId": "questions.subject_must_be_published"
+  },
+  {
+   "nodeId": "symbol:questions.subject_type",
+   "nodeKind": "symbol",
+   "semanticId": "questions.subject_type"
+  },
+  {
+   "nodeId": "symbol:questions.submit",
+   "nodeKind": "symbol",
+   "semanticId": "questions.submit"
+  },
+  {
+   "nodeId": "symbol:questions.text",
+   "nodeKind": "symbol",
+   "semanticId": "questions.text"
+  },
+  {
+   "nodeId": "symbol:questions.throttled_per_ip",
+   "nodeKind": "symbol",
+   "semanticId": "questions.throttled_per_ip"
+  },
+  {
+   "nodeId": "symbol:questions.throttled_submit_denied",
+   "nodeKind": "symbol",
+   "semanticId": "questions.throttled_submit_denied"
+  },
+  {
+   "nodeId": "symbol:questions.timestamp",
+   "nodeKind": "symbol",
+   "semanticId": "questions.timestamp"
+  },
+  {
+   "nodeId": "symbol:questions.unpublished_subject_denied",
+   "nodeKind": "symbol",
+   "semanticId": "questions.unpublished_subject_denied"
+  },
+  {
+   "nodeId": "artifact:questions.entity",
+   "nodeKind": "artifact",
+   "artifactId": "questions.entity",
+   "ownership": "checked",
+   "path": "src/modules/questions/domain/entities/question-php",
+   "contentDigest": "sha256:86d38b5ae893f177f84f16567408f090367c142dddb4f772aeae291ea2cd4483",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "questions.entity"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:questions.migrator",
+   "nodeKind": "artifact",
+   "artifactId": "questions.migrator",
+   "ownership": "checked",
+   "path": "src/modules/questions/infrastructure/persistence/migrations/questionsdatabasemigrator-php",
+   "contentDigest": "sha256:8ef606cefba5f1838b5dead98569606e79c4f2222a130e066ade614f23f1ec70",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "questions.migrator"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:questions.repository",
+   "nodeKind": "artifact",
+   "artifactId": "questions.repository",
+   "ownership": "checked",
+   "path": "src/modules/questions/infrastructure/persistence/repositories/questionrepository-php",
+   "contentDigest": "sha256:8f26c5984b600426d22ee7a25dbd2c808f51ab1a57610d78676f75c05cce4d7e",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "questions.repository"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:questions.services",
+   "nodeKind": "artifact",
+   "artifactId": "questions.services",
+   "ownership": "checked",
+   "path": "src/modules/questions/application/questionsservices-php",
+   "contentDigest": "sha256:4a5d22657a19a318a6577a6bb14eb568d59cf0f6576dfe51cb25922fbd2df57b",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "questions.services"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:questions.subject-resolver",
+   "nodeKind": "artifact",
+   "artifactId": "questions.subject-resolver",
+   "ownership": "checked",
+   "path": "src/modules/questions/application/services/subjectresolver-php",
+   "contentDigest": "sha256:bbec8c012a2153cc5dcaf8cb7f5409a47862d373e7d0a2bb6e995104fd33f37c",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "questions.subject-resolver"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:questions.submit-action",
+   "nodeKind": "artifact",
+   "artifactId": "questions.submit-action",
+   "ownership": "checked",
+   "path": "src/modules/questions/interfaces/http/actions/questionsubmitaction-php",
+   "contentDigest": "sha256:da0932a1843e195e4e20c8a7123ea66f302ceae6870907f6a1d425b9611dff2f",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "questions.submit-action"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:questions.admin-action",
+   "nodeKind": "artifact",
+   "artifactId": "questions.admin-action",
+   "ownership": "checked",
+   "path": "src/modules/questions/interfaces/http/actions/questionsadminaction-php",
+   "contentDigest": "sha256:a84fdf221667c18d91d09a2e9f9099ee000482b20f109c2da96587abd0905ed5",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "questions.admin-action"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:questions.block-renderer",
+   "nodeKind": "artifact",
+   "artifactId": "questions.block-renderer",
+   "ownership": "checked",
+   "path": "src/modules/questions/interfaces/http/questionblockrenderer-php",
+   "contentDigest": "sha256:9a63c985337f9bc8ce5e4cfd070f46deb465445991457d8eaafca9f2e11872b6",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "questions.block-renderer"
+    }
+   ]
+  },
+  {
+   "nodeId": "scenario:questions.moderation-lifecycle",
+   "nodeKind": "scenario",
+   "scenarioId": "questions.moderation_lifecycle",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+   "nodeId": "scenario:questions.moderation-queue-is-badged",
+   "nodeKind": "scenario",
+   "scenarioId": "questions.moderation_queue_is_badged",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+   "nodeId": "scenario:questions.throttled-submit-denied",
+   "nodeKind": "scenario",
+   "scenarioId": "questions.throttled_submit_denied",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+   "nodeId": "scenario:questions.unpublished-subject-denied",
+   "nodeKind": "scenario",
+   "scenarioId": "questions.unpublished_subject_denied",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+   "nodeId": "test:questions-integration-test",
+   "nodeKind": "native_test",
+   "testId": "nativa.QuestionsTest",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:022128047fe85623fc57bed1ceb050972307c06e72cee75f258498e512f58361",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.QuestionsTest"
+    }
+   ]
+  },
+  {
+   "nodeId": "test:nav-badge-test",
+   "nodeKind": "native_test",
+   "testId": "nativa.NavBadgeTest",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:4993797028eae3f6f2c249e0bb7e88476d894a6ffb69a0c57ec415d942f8a0b7",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.NavBadgeTest"
+    }
+   ]
+  },
+  {
+   "nodeId": "test:admin-menu-coverage-test",
+   "nodeKind": "native_test",
+   "testId": "nativa.AdminMenuCoverageTest",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:4bbbdf2a28f816351354f36f65d5b7bccb979fa433e28e6a79de5e7c93d8a037",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.AdminMenuCoverageTest"
+    }
+   ]
+  },
+  {
+   "nodeId": "gate:nativa-phpunit",
+   "nodeKind": "gate",
+   "gateId": "nativa.phpunit",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.phpunit"
+    }
+   ]
+  },
+  {
+   "nodeId": "gate:lekalo-validate-model",
+   "nodeKind": "gate",
+   "gateId": "lekalo.validate-model",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "lekalo.validate-model"
+    }
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "relationId": "sha256:6897290ea614908564aaf2c73b4b53181c8d44dacf33eb3ed9fc06b17d115198",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.moderation_queue_is_badged",
+   "toNode": "requirement:QUESTIONS-REQ-5",
+   "occurrence": "requirements.questions-moderation-queue-is-badged",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:c788a8936ef7f6d3dc895770fbc1188f22896f1ec94abf82a46971a366efcb2d",
+   "relationKind": "covers",
+   "fromNode": "scenario:questions.moderation-queue-is-badged",
+   "toNode": "symbol:questions.moderation_inbox",
+   "occurrence": "covers.questions.moderation-inbox",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:260e36b3730b4a4883dd627a09a160d219eee047b70fa6a73d1ccfa75b008dbc",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:9909b4da92730c7cdf560be11da1cd18bb1f76befc26fdcf453e5fc59c68c40d",
+   "relationKind": "covers",
+   "fromNode": "scenario:questions.moderation-queue-is-badged",
+   "toNode": "symbol:questions.approve",
+   "occurrence": "covers.questions.approve",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:260e36b3730b4a4883dd627a09a160d219eee047b70fa6a73d1ccfa75b008dbc",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:8360a0e126ffccdfc3535a2a7343dd92eb94d836fab9a0e77e981c7c4dd100e4",
+   "relationKind": "verifies",
+   "fromNode": "test:questions-integration-test",
+   "toNode": "symbol:questions.find_by_subject",
+   "occurrence": "verifies.questions.find-by-subject",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:022128047fe85623fc57bed1ceb050972307c06e72cee75f258498e512f58361",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:c1031e7826286213cc782422a71c76cb3a9d1ec0eaf1cabc59b380233abbfb68",
+   "relationKind": "verifies",
+   "fromNode": "test:questions-integration-test",
+   "toNode": "symbol:questions.find_approved_by_subject",
+   "occurrence": "verifies.questions.find-approved-by-subject",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:022128047fe85623fc57bed1ceb050972307c06e72cee75f258498e512f58361",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:5d5fdf9cf3f662985347e3e8c2454db889910c03099e00fde36b23147a89779a",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.ip_address",
+   "toNode": "requirement:QUESTIONS-REQ-2",
+   "occurrence": "requirements.questions-ip-address",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:e940a42897d4f21919aa2557c5dcbeb540b15da59b9ffef35da65802eb53fa6b",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.throttled_submit_denied",
+   "toNode": "requirement:QUESTIONS-REQ-2",
+   "occurrence": "requirements.questions-throttled-submit-denied",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:04ff3ff882c99b7a8ddc6ff58682170aa5ec3a15223eb1c9ed4d6b5a1030146a",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.question",
+   "toNode": "requirement:QUESTIONS-REQ-1",
+   "occurrence": "requirements.questions-question",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:57022e16c612fc2c886857092a9fb84638a46854f2441e3e7a6d85b1aa2d3532",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.text",
+   "toNode": "requirement:QUESTIONS-REQ-1",
+   "occurrence": "requirements.questions-text",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:20051201e3ddaf0d8df07d7875c682aa3ef0c2b034dac54c198f569aae3d37e1",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.attempted_answer",
+   "toNode": "requirement:QUESTIONS-REQ-1",
+   "occurrence": "requirements.questions-attempted-answer",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:8e13ba361ab0fb4363690b764c4197e46ab5562e01584ac0f816296fd9703ad2",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.display_name",
+   "toNode": "requirement:QUESTIONS-REQ-1",
+   "occurrence": "requirements.questions-display-name",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:f0987a421481310ef302c4c52fb3c248f3b2bd12d2816dc4ff4e4ba1cbacc960",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.timestamp",
+   "toNode": "requirement:QUESTIONS-REQ-1",
+   "occurrence": "requirements.questions-timestamp",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:1dd4c9ada47b5a6e48fed82aeabc1c7065bbbacd85ac3708e2fbaaea7acc61a5",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.submit",
+   "toNode": "requirement:QUESTIONS-REQ-1",
+   "occurrence": "requirements.questions-submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:cbd3e969360b6aaaaf578b978b443805fae3c7bff78baa0c6793ae0a99a15bc0",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.effect_question_created",
+   "toNode": "requirement:QUESTIONS-REQ-1",
+   "occurrence": "requirements.questions-effect-question-created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:6d38d99114c23df4d8820c1a646b1e74ee797e4ee2a1d8dc2d645b21038d3040",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.question_created",
+   "toNode": "requirement:QUESTIONS-REQ-1",
+   "occurrence": "requirements.questions-question-created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:71ce6c3719c731c59c9f5f00543a04ade0cb5d9ac9e0ebd1abbef8bf7b91ffdc",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.subject_type",
+   "toNode": "requirement:QUESTIONS-REQ-2",
+   "occurrence": "requirements.questions-subject-type",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:68ca756a46c2eefec2cbce6112ac9ddb4c699fe84df3ebfae6127e2647f2da82",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.submit",
+   "toNode": "requirement:QUESTIONS-REQ-2",
+   "occurrence": "requirements.questions-submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:2cc8db373b5a094a5b404068ac4665cbefc90eda96a62ae39d45ade062a5a9ff",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.throttled_per_ip",
+   "toNode": "requirement:QUESTIONS-REQ-2",
+   "occurrence": "requirements.questions-throttled-per-ip",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:ff31bd4929c5ba81ede2af3ec435b2b4c54e90e42997bf7a1db3bcd6003490c0",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.subject_must_be_published",
+   "toNode": "requirement:QUESTIONS-REQ-2",
+   "occurrence": "requirements.questions-subject-must-be-published",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:d7429c103719e0a82712fe2a2e2a3f68d0c07bce37f093964b36cb55db1f9901",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.question_and_attempt_required",
+   "toNode": "requirement:QUESTIONS-REQ-2",
+   "occurrence": "requirements.questions-question-and-attempt-required",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:8c458ef913d24434930c75b8d9cae151040b2aba4167f2167b6922d2ab11e08e",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.question_submit_denied",
+   "toNode": "requirement:QUESTIONS-REQ-2",
+   "occurrence": "requirements.questions-question-submit-denied",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:cf064c69b12bde805ff7024d89b3212111fdb909a08d65c0c609b030d5c1e29b",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.unpublished_subject_denied",
+   "toNode": "requirement:QUESTIONS-REQ-2",
+   "occurrence": "requirements.questions-unpublished-subject-denied",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:b9adc40fb525c294327a83b661a24e1696af24ffbae51bbca3b622ff18bb4d47",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.status",
+   "toNode": "requirement:QUESTIONS-REQ-3",
+   "occurrence": "requirements.questions-status",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:18947d46c3e42f7db4599b21519f3229f9c113d5ba61c76fdaa4a8924fc5c0ab",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.moderation_inbox",
+   "toNode": "requirement:QUESTIONS-REQ-3",
+   "occurrence": "requirements.questions-moderation-inbox",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:b742b2f73f187cc385d14330d845e6847337f099517032be60bfbb6ef6a482f1",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.approve",
+   "toNode": "requirement:QUESTIONS-REQ-3",
+   "occurrence": "requirements.questions-approve",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:d5730189cfc1be19714cf58744ad2fea96bc5583aa4cdc030920bb121d6b322e",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.reject",
+   "toNode": "requirement:QUESTIONS-REQ-3",
+   "occurrence": "requirements.questions-reject",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:1139378fb3c029e9eacaba9da70086d8b7207e4b236ab75859d60cf93eeef45f",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.delete",
+   "toNode": "requirement:QUESTIONS-REQ-3",
+   "occurrence": "requirements.questions-delete",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:a080a0d2534826c85d11984ad31fa19851ac552a72b0e41557c3a8c633f4ae15",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.effect_question_status_changed",
+   "toNode": "requirement:QUESTIONS-REQ-3",
+   "occurrence": "requirements.questions-effect-question-status-changed",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:2966bf19a21c9f847c564bface628140230c6c4b109538238707f78fc945fd6a",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.effect_question_deleted",
+   "toNode": "requirement:QUESTIONS-REQ-3",
+   "occurrence": "requirements.questions-effect-question-deleted",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:aca3ab172de556fa94e50adaf159e1d029eecad6a38d1d4da989ca632aa47a48",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.question_status_changed",
+   "toNode": "requirement:QUESTIONS-REQ-3",
+   "occurrence": "requirements.questions-question-status-changed",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:ab7143e21fabbb6d8650558d8af74024bb670c78a324a28a98486540fdffff0a",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.question_deleted",
+   "toNode": "requirement:QUESTIONS-REQ-3",
+   "occurrence": "requirements.questions-question-deleted",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:672de8f7138b03ba00c745ece18058a5288eae3fa59152a3165d701654f57e55",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.deleted_question_not_persisted",
+   "toNode": "requirement:QUESTIONS-REQ-3",
+   "occurrence": "requirements.questions-deleted-question-not-persisted",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:9a44dd85086030f522124feace340ac75eaa0ba21b9b0cd860f1b42291b0752b",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.find_by_subject",
+   "toNode": "requirement:QUESTIONS-REQ-4",
+   "occurrence": "requirements.questions-find-by-subject",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:415c79f0674aa2dcd69756c1c2ade4304e159a6ffe6e1027a57a44fa9fb28a83",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.find_approved_by_subject",
+   "toNode": "requirement:QUESTIONS-REQ-4",
+   "occurrence": "requirements.questions-find-approved-by-subject",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:de8ba398ac9a0d0266ec1de94d45613e5e12ac5aa837fe6f7886fe0cd008c178",
+   "relationKind": "implements",
+   "fromNode": "symbol:questions.moderation_lifecycle",
+   "toNode": "requirement:QUESTIONS-REQ-4",
+   "occurrence": "requirements.questions-moderation-lifecycle",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e924942be5a425fe4a7a875eddc05764c8d36f3800c26c9d78bc6a739f3b8a7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:36234373c2d23bbc4a55e0b39cf70ee1519b3f73f88e8bebf237604d6df13864",
+   "relationKind": "binds",
+   "fromNode": "symbol:questions.submit",
+   "toNode": "artifact:questions.submit-action",
+   "occurrence": "bindings.questions.endpoint-submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:781c43194afce1bc7ab54e5c91bb3ff1b183e18b6c5b180b98a17fa18efa7fd5",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:e4abec2b6b6deb7f0dd7c8427475576a9416300942479f35b0a4d45190233938",
+   "relationKind": "binds",
+   "fromNode": "symbol:questions.moderation_inbox",
+   "toNode": "artifact:questions.admin-action",
+   "occurrence": "bindings.questions.endpoint-inbox",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:781c43194afce1bc7ab54e5c91bb3ff1b183e18b6c5b180b98a17fa18efa7fd5",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:7a26bc2fa48c0200b814afe555801833da44bd62c827140cdfbf8c7bf624bbb0",
+   "relationKind": "binds",
+   "fromNode": "symbol:questions.approve",
+   "toNode": "artifact:questions.admin-action",
+   "occurrence": "bindings.questions.endpoint-approve",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:781c43194afce1bc7ab54e5c91bb3ff1b183e18b6c5b180b98a17fa18efa7fd5",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:216ddf9db1ab6952ec459b9849375f5fc9c36dc351cbc2397257965e1a34b015",
+   "relationKind": "binds",
+   "fromNode": "symbol:questions.reject",
+   "toNode": "artifact:questions.admin-action",
+   "occurrence": "bindings.questions.endpoint-reject",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:781c43194afce1bc7ab54e5c91bb3ff1b183e18b6c5b180b98a17fa18efa7fd5",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:c91811082c47382b3dd9a8d57b920cf520b6a29653566fe0c5406636a9efea52",
+   "relationKind": "binds",
+   "fromNode": "symbol:questions.delete",
+   "toNode": "artifact:questions.admin-action",
+   "occurrence": "bindings.questions.endpoint-delete",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:781c43194afce1bc7ab54e5c91bb3ff1b183e18b6c5b180b98a17fa18efa7fd5",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:951ff56b920d1bc898358956ed57aebce5463b145a840864afdcef5058c05d63",
+   "relationKind": "binds",
+   "fromNode": "symbol:questions.question",
+   "toNode": "artifact:questions.entity",
+   "occurrence": "bindings.questions.question",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:7be54cbca1819b9668537136b8c87f248128e8a5f413bb283820f8aa12330650",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/entities.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:a0a7219038eb4de411f17a952df540b812359fe650723cee58d42b0a5fb2cb68",
+   "relationKind": "binds",
+   "fromNode": "symbol:questions.submit",
+   "toNode": "artifact:questions.repository",
+   "occurrence": "bindings.questions.submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:29e8482799b7575ca4bfb186481593c20f5eae5b824ba7d7720f2cab4e5861ce",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:1d83d4153d348a8d60c37b6685723dc69724ad58ee3b48a5e2a853f08c7f69ed",
+   "relationKind": "binds",
+   "fromNode": "symbol:questions.approve",
+   "toNode": "artifact:questions.repository",
+   "occurrence": "bindings.questions.approve",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:29e8482799b7575ca4bfb186481593c20f5eae5b824ba7d7720f2cab4e5861ce",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:d2393571e768fd42b87648f212ec5dc67bc1b5415b0db964430d47c7ca2b6b6c",
+   "relationKind": "binds",
+   "fromNode": "symbol:questions.reject",
+   "toNode": "artifact:questions.repository",
+   "occurrence": "bindings.questions.reject",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:29e8482799b7575ca4bfb186481593c20f5eae5b824ba7d7720f2cab4e5861ce",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:d81c2f7d99e29f0464a3c8c854725d89edb508daea263c5a7a8de7977f1eea32",
+   "relationKind": "binds",
+   "fromNode": "symbol:questions.delete",
+   "toNode": "artifact:questions.repository",
+   "occurrence": "bindings.questions.delete",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:29e8482799b7575ca4bfb186481593c20f5eae5b824ba7d7720f2cab4e5861ce",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:bed77dc3df9e8939ba90defac00756d6c412a2a67678d26848e7721210976eca",
+   "relationKind": "binds",
+   "fromNode": "symbol:questions.effect_question_created",
+   "toNode": "artifact:questions.repository",
+   "occurrence": "bindings.questions.effect-question-created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:29e8482799b7575ca4bfb186481593c20f5eae5b824ba7d7720f2cab4e5861ce",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:b5d01c79db90eefb81b2293436e743b30c838f4d8f568f5a388a649b2726c667",
+   "relationKind": "binds",
+   "fromNode": "symbol:questions.effect_question_status_changed",
+   "toNode": "artifact:questions.repository",
+   "occurrence": "bindings.questions.effect-question-status-changed",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:29e8482799b7575ca4bfb186481593c20f5eae5b824ba7d7720f2cab4e5861ce",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:6786b9fa72c0a8e77f16a01f548a235784caf3fc138f5f7832e1b394a82f6a4d",
+   "relationKind": "binds",
+   "fromNode": "symbol:questions.effect_question_deleted",
+   "toNode": "artifact:questions.repository",
+   "occurrence": "bindings.questions.effect-question-deleted",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:29e8482799b7575ca4bfb186481593c20f5eae5b824ba7d7720f2cab4e5861ce",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:0e0f2abef7a0952fa0cdaf879185e627253c830744b2a4b38d1007b181b3c733",
+   "relationKind": "binds",
+   "fromNode": "symbol:questions.find_by_subject",
+   "toNode": "artifact:questions.repository",
+   "occurrence": "bindings.questions.find-by-subject",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:2d9f8b1acfee4d451286a19e4f202937e3f9970ddad8ab40988baf6a9b29ec38",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/queries.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:fec4121a6f08b2f5b39cd595eda422a5f232a8ea3c735f3d2c32e807626d5889",
+   "relationKind": "binds",
+   "fromNode": "symbol:questions.find_approved_by_subject",
+   "toNode": "artifact:questions.repository",
+   "occurrence": "bindings.questions.find-approved-by-subject",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:2d9f8b1acfee4d451286a19e4f202937e3f9970ddad8ab40988baf6a9b29ec38",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/queries.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:4100566ab0f9a4a777f082303b478b738e478a842309c688bee4d540f9e57594",
+   "relationKind": "binds",
+   "fromNode": "symbol:questions.moderation_inbox",
+   "toNode": "artifact:questions.repository",
+   "occurrence": "bindings.questions.moderation-inbox",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:2d9f8b1acfee4d451286a19e4f202937e3f9970ddad8ab40988baf6a9b29ec38",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/queries.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:25fb4d47ed772e1501311ab0250ec885145bcf64441bbc11c1edc51b3a21573f",
+   "relationKind": "binds",
+   "fromNode": "symbol:questions.subject_must_be_published",
+   "toNode": "artifact:questions.subject-resolver",
+   "occurrence": "bindings.questions.subject-must-be-published",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:8b1f974cc932ccee26f9bddaea0472e9e2c5428ccadcc61f51d98b795a13dcf3",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/policies.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:c537889eca0789eb8e325259aa4ba79d50de90de2acb8784ff346a57239eb583",
+   "relationKind": "binds",
+   "fromNode": "symbol:questions.throttled_per_ip",
+   "toNode": "artifact:questions.submit-action",
+   "occurrence": "bindings.questions.throttled-per-ip",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:8b1f974cc932ccee26f9bddaea0472e9e2c5428ccadcc61f51d98b795a13dcf3",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/policies.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:004cbf120a7b393b84fbeff109a6d4dcb8c8252e564a80ed24adebf94ec90093",
+   "relationKind": "binds",
+   "fromNode": "symbol:questions.question_and_attempt_required",
+   "toNode": "artifact:questions.submit-action",
+   "occurrence": "bindings.questions.question-and-attempt-required",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:8b1f974cc932ccee26f9bddaea0472e9e2c5428ccadcc61f51d98b795a13dcf3",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/policies.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:48424c2974b3db31bb49a6358ee80d23db834de44acf65d4ffe821fdf7ab4943",
+   "relationKind": "binds",
+   "fromNode": "symbol:questions.find_approved_by_subject",
+   "toNode": "artifact:questions.block-renderer",
+   "occurrence": "bindings.questions.find-approved-by-subject",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:2d9f8b1acfee4d451286a19e4f202937e3f9970ddad8ab40988baf6a9b29ec38",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/queries.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:b29b6f28e3d2b5d9cc3ec20eb339d5bc009b6a8cdbacd0ac1ef7e19ca486b01c",
+   "relationKind": "covers",
+   "fromNode": "scenario:questions.moderation-lifecycle",
+   "toNode": "symbol:questions.submit",
+   "occurrence": "covers.questions.submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:260e36b3730b4a4883dd627a09a160d219eee047b70fa6a73d1ccfa75b008dbc",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:13735b7d5d05efb073541b9ce41060f850df252a50a9fb118d19ed456df187be",
+   "relationKind": "covers",
+   "fromNode": "scenario:questions.moderation-lifecycle",
+   "toNode": "symbol:questions.effect_question_created",
+   "occurrence": "covers.questions.effect-question-created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:260e36b3730b4a4883dd627a09a160d219eee047b70fa6a73d1ccfa75b008dbc",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:b0b3e6fbd872865d37ad91d69f819b7df2afc1e5e6b7eeacdde8d749ea131012",
+   "relationKind": "covers",
+   "fromNode": "scenario:questions.moderation-lifecycle",
+   "toNode": "symbol:questions.question_created",
+   "occurrence": "covers.questions.question-created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:260e36b3730b4a4883dd627a09a160d219eee047b70fa6a73d1ccfa75b008dbc",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:4d6f2b916667f4925255f9c576c65123fb12d0e288e15f7e2e0db1f6883a9fd1",
+   "relationKind": "covers",
+   "fromNode": "scenario:questions.moderation-lifecycle",
+   "toNode": "symbol:questions.effect_question_status_changed",
+   "occurrence": "covers.questions.effect-question-status-changed",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:260e36b3730b4a4883dd627a09a160d219eee047b70fa6a73d1ccfa75b008dbc",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:b8d0a1483764434cc5a4e140d987b674e298c48d8e1ea090a563f85057df4586",
+   "relationKind": "covers",
+   "fromNode": "scenario:questions.moderation-lifecycle",
+   "toNode": "symbol:questions.question_status_changed",
+   "occurrence": "covers.questions.question-status-changed",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:260e36b3730b4a4883dd627a09a160d219eee047b70fa6a73d1ccfa75b008dbc",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:3ab6ae98f08fa0f3a0c99e10e1b01d0c50560cccb648a905b6c3c4ba219d1e42",
+   "relationKind": "covers",
+   "fromNode": "scenario:questions.throttled-submit-denied",
+   "toNode": "symbol:questions.submit",
+   "occurrence": "covers.questions.submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:260e36b3730b4a4883dd627a09a160d219eee047b70fa6a73d1ccfa75b008dbc",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:602f3abcb3a0a777558a4fd2f00a00cb26174040a4718590ccebd7f0d6b38046",
+   "relationKind": "covers",
+   "fromNode": "scenario:questions.throttled-submit-denied",
+   "toNode": "symbol:questions.question_submit_denied",
+   "occurrence": "covers.questions.question-submit-denied",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:260e36b3730b4a4883dd627a09a160d219eee047b70fa6a73d1ccfa75b008dbc",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:69e41b9360eae317279f6c07226d3aa2c41fd23e4f6003ed50f59bcf1b321210",
+   "relationKind": "covers",
+   "fromNode": "scenario:questions.throttled-submit-denied",
+   "toNode": "symbol:questions.throttled_per_ip",
+   "occurrence": "covers.questions.throttled-per-ip",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:260e36b3730b4a4883dd627a09a160d219eee047b70fa6a73d1ccfa75b008dbc",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:228642c5d424f1b89b2057111ebe16a46cddffd0347138da9dbb0359d59a6881",
+   "relationKind": "covers",
+   "fromNode": "scenario:questions.unpublished-subject-denied",
+   "toNode": "symbol:questions.subject_must_be_published",
+   "occurrence": "covers.questions.subject-must-be-published",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:260e36b3730b4a4883dd627a09a160d219eee047b70fa6a73d1ccfa75b008dbc",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:30b81fd9aac9a3d602bd13e874bc8695e8a4716f9649da0397f02eef95574644",
+   "relationKind": "covers",
+   "fromNode": "scenario:questions.unpublished-subject-denied",
+   "toNode": "symbol:questions.question_submit_denied",
+   "occurrence": "covers.questions.question-submit-denied",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:260e36b3730b4a4883dd627a09a160d219eee047b70fa6a73d1ccfa75b008dbc",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:d7c9d8d5999378fe5e63f25f12cdf57af30c4dbb3c04166f27a72f7907e6200a",
+   "relationKind": "verifies",
+   "fromNode": "test:questions-integration-test",
+   "toNode": "symbol:questions.submit",
+   "occurrence": "verifies.questions.submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:022128047fe85623fc57bed1ceb050972307c06e72cee75f258498e512f58361",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:761927c613ccb1bec4389d8db19578af13882c8cbbf5e03ce40bda07a4c71b3a",
+   "relationKind": "verifies",
+   "fromNode": "test:questions-integration-test",
+   "toNode": "symbol:questions.approve",
+   "occurrence": "verifies.questions.approve",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:022128047fe85623fc57bed1ceb050972307c06e72cee75f258498e512f58361",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:f1823a8623731d4b54942743205c763e3ec4e6792c008045a63d28767fbf798d",
+   "relationKind": "verifies",
+   "fromNode": "test:questions-integration-test",
+   "toNode": "symbol:questions.reject",
+   "occurrence": "verifies.questions.reject",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:022128047fe85623fc57bed1ceb050972307c06e72cee75f258498e512f58361",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:8576f0ef24ee9a3a5327e268a138c1ed943b48e562fc2e1112315ac8cf151114",
+   "relationKind": "verifies",
+   "fromNode": "test:questions-integration-test",
+   "toNode": "symbol:questions.delete",
+   "occurrence": "verifies.questions.delete",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:022128047fe85623fc57bed1ceb050972307c06e72cee75f258498e512f58361",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:f793bac302af42b9bd0c6cb8768916f96f28807109373466ff25dce36a40c397",
+   "relationKind": "verifies",
+   "fromNode": "test:questions-integration-test",
+   "toNode": "symbol:questions.effect_question_created",
+   "occurrence": "verifies.questions.effect_question_created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:022128047fe85623fc57bed1ceb050972307c06e72cee75f258498e512f58361",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:346c976106e750d752500a36689838acca8c6e4c0ef21b711e5091c73880b603",
+   "relationKind": "verifies",
+   "fromNode": "test:questions-integration-test",
+   "toNode": "symbol:questions.effect_question_status_changed",
+   "occurrence": "verifies.questions.effect_question_status_changed",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:022128047fe85623fc57bed1ceb050972307c06e72cee75f258498e512f58361",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:b9decf428c70c6eb3c468c3651e2ef70802b4c43fd28529e1726f94ee1fe5479",
+   "relationKind": "verifies",
+   "fromNode": "test:questions-integration-test",
+   "toNode": "symbol:questions.effect_question_deleted",
+   "occurrence": "verifies.questions.effect_question_deleted",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:022128047fe85623fc57bed1ceb050972307c06e72cee75f258498e512f58361",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:db1dcd81592243865069e1458eea8e4a6d7f4b7d14264c21ce1ae663254fb5ed",
+   "relationKind": "verifies",
+   "fromNode": "test:questions-integration-test",
+   "toNode": "symbol:questions.question_created",
+   "occurrence": "verifies.questions.question_created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:022128047fe85623fc57bed1ceb050972307c06e72cee75f258498e512f58361",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:0cafda740434ce6206cc3b531988b13238625d526f7d9994bc452aed302ef152",
+   "relationKind": "verifies",
+   "fromNode": "test:questions-integration-test",
+   "toNode": "symbol:questions.question_status_changed",
+   "occurrence": "verifies.questions.question_status_changed",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:022128047fe85623fc57bed1ceb050972307c06e72cee75f258498e512f58361",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:96c22f61badb2ae01bf8040bcc56e85c36af952b410e18fb1c3b5c35539288d4",
+   "relationKind": "verifies",
+   "fromNode": "test:questions-integration-test",
+   "toNode": "symbol:questions.question_deleted",
+   "occurrence": "verifies.questions.question_deleted",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:022128047fe85623fc57bed1ceb050972307c06e72cee75f258498e512f58361",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:6c0b9fafdf00cd1e4b3a7b119f80980e14de308c4f9b12a3f41707335f346bda",
+   "relationKind": "verifies",
+   "fromNode": "test:questions-integration-test",
+   "toNode": "symbol:questions.question_submit_denied",
+   "occurrence": "verifies.questions.question_submit_denied",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:022128047fe85623fc57bed1ceb050972307c06e72cee75f258498e512f58361",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:50cbd842acc9009d33c9e40bb7a884c1bace9b0f001e05a75ff757a0650d12e7",
+   "relationKind": "verifies",
+   "fromNode": "test:questions-integration-test",
+   "toNode": "symbol:questions.moderation_inbox",
+   "occurrence": "verifies.questions.moderation_inbox",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:022128047fe85623fc57bed1ceb050972307c06e72cee75f258498e512f58361",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:ccfe97331ab5baef991e626bd7067054263a0c3452124431eadfb68074eb4219",
+   "relationKind": "verifies",
+   "fromNode": "test:questions-integration-test",
+   "toNode": "symbol:questions.throttled_per_ip",
+   "occurrence": "verifies.questions.throttled_per_ip",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:022128047fe85623fc57bed1ceb050972307c06e72cee75f258498e512f58361",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:297d04342e97b4cdbc2c0d06f048a39529eefae2004c27bf028290b678ff3b79",
+   "relationKind": "verifies",
+   "fromNode": "test:questions-integration-test",
+   "toNode": "symbol:questions.subject_must_be_published",
+   "occurrence": "verifies.questions.subject_must_be_published",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:022128047fe85623fc57bed1ceb050972307c06e72cee75f258498e512f58361",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:0ac3759f7c76102aecbd8c31d68f7708fce8774c4b8400c9f9301e0f1cf21c8a",
+   "relationKind": "verifies",
+   "fromNode": "test:questions-integration-test",
+   "toNode": "symbol:questions.question_and_attempt_required",
+   "occurrence": "verifies.questions.question_and_attempt_required",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:022128047fe85623fc57bed1ceb050972307c06e72cee75f258498e512f58361",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:92231523c6970fbd792226f68648a23d1b28c5b253a27a6c5a091adadb517578",
+   "relationKind": "verifies",
+   "fromNode": "test:questions-integration-test",
+   "toNode": "symbol:questions.deleted_question_not_persisted",
+   "occurrence": "verifies.questions.deleted_question_not_persisted",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:022128047fe85623fc57bed1ceb050972307c06e72cee75f258498e512f58361",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:73cb28166ea009171a45d37ab6efd389b6e9575d02e40595d1ce294001bc48f7",
+   "relationKind": "verifies",
+   "fromNode": "test:questions-integration-test",
+   "toNode": "scenario:questions.moderation-lifecycle",
+   "occurrence": "verifies.questions.moderation-lifecycle",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:022128047fe85623fc57bed1ceb050972307c06e72cee75f258498e512f58361",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:ce8c0ba4231333d2f72ad212cc0689806d936df40c2758681f0c0bdd6102cb0a",
+   "relationKind": "verifies",
+   "fromNode": "test:questions-integration-test",
+   "toNode": "scenario:questions.throttled-submit-denied",
+   "occurrence": "verifies.questions.throttled-submit-denied",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:022128047fe85623fc57bed1ceb050972307c06e72cee75f258498e512f58361",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:25c9b915072e52f030c7b1c08174ce2025b79f2ee6ec09abf63fbbadbc7b4ea5",
+   "relationKind": "verifies",
+   "fromNode": "test:questions-integration-test",
+   "toNode": "scenario:questions.unpublished-subject-denied",
+   "occurrence": "verifies.questions.unpublished-subject-denied",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:022128047fe85623fc57bed1ceb050972307c06e72cee75f258498e512f58361",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:bcf50e5af2bf27fb2a27beeeb31cbbf417b0f2fb30864a374c7f5f869d1b9027",
+   "relationKind": "evidences",
+   "fromNode": "gate:nativa-phpunit",
+   "toNode": "test:questions-integration-test",
+   "occurrence": "evidences.phpunit-questions",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit"
+   ]
+  },
+  {
+   "relationId": "sha256:f45eeb59bbb33efea255e535c11d4f2cd14accc9660c6698acee880bd218fa62",
+   "relationKind": "evidences",
+   "fromNode": "gate:lekalo-validate-model",
+   "toNode": "test:questions-integration-test",
+   "occurrence": "evidences.lekalo-validate-questions",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "make-lekalo-check"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:7c6d72ca1d597726310c87feb9c1a83aa99ea6296911819b62524aa62acda485",
+   "relationKind": "binds",
+   "fromNode": "symbol:questions.throttled_per_ip",
+   "toNode": "artifact:questions.services",
+   "occurrence": "bindings.questions.limiter",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:8b1f974cc932ccee26f9bddaea0472e9e2c5428ccadcc61f51d98b795a13dcf3",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/policies.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:ea032e72d5d51539c7b3ecf4fddc32f719ab79b54094af45e043de167f0eb16f",
+   "relationKind": "binds",
+   "fromNode": "symbol:questions.moderation_inbox",
+   "toNode": "artifact:questions.services",
+   "occurrence": "bindings.questions.inbox",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:2d9f8b1acfee4d451286a19e4f202937e3f9970ddad8ab40988baf6a9b29ec38",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/questions/queries.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:03d4b25079cad72ef812d891da9e285e2b7aac097a64b603c989b35f06f79b71",
+   "relationKind": "verifies",
+   "fromNode": "test:nav-badge-test",
+   "toNode": "scenario:questions.moderation-queue-is-badged",
+   "occurrence": "verifies.questions.moderation-queue-is-badged",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4993797028eae3f6f2c249e0bb7e88476d894a6ffb69a0c57ec415d942f8a0b7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:47cfff4ec194ececdeb5ff99e0aaf642ec6d1fbda76d28f50f7aa2e4ef132dd1",
+   "relationKind": "verifies",
+   "fromNode": "test:admin-menu-coverage-test",
+   "toNode": "symbol:questions.moderation_inbox",
+   "occurrence": "verifies.questions.moderation-inbox-is-linked",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4bbbdf2a28f816351354f36f65d5b7bccb979fa433e28e6a79de5e7c93d8a037",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:93197fac8ade819892b39c6b157c6634921c9533af5a3cf4d3ca16694b298c8e",
+   "relationKind": "evidences",
+   "fromNode": "gate:nativa-phpunit",
+   "toNode": "test:nav-badge-test",
+   "occurrence": "evidences.phpunit-nav-badge",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit"
+   ]
+  },
+  {
+   "relationId": "sha256:11f871748326c4556d8c28ffb581b65c00bf8972308df7844718ae0812d70b91",
+   "relationKind": "evidences",
+   "fromNode": "gate:lekalo-validate-model",
+   "toNode": "test:nav-badge-test",
+   "occurrence": "evidences.lekalo-validate-nav-badge",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "make-lekalo-check"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:64a7eed4d0fdd110646d06e4fe51dadff1b128b80163f90a305594350362b52e",
+   "relationKind": "evidences",
+   "fromNode": "gate:nativa-phpunit",
+   "toNode": "test:admin-menu-coverage-test",
+   "occurrence": "evidences.phpunit-admin-menu-coverage",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit"
+   ]
+  },
+  {
+   "relationId": "sha256:ef5296c58cad2f22634447c6abc778577a0d389fe8de84d7bfe85ff8cdd81205",
+   "relationKind": "evidences",
+   "fromNode": "gate:lekalo-validate-model",
+   "toNode": "test:admin-menu-coverage-test",
+   "occurrence": "evidences.lekalo-validate-admin-menu-coverage",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "make-lekalo-check"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:06ea72e2d642d9ec4b51767c662ed191098028d24e375f5efb63a2f502141c63",
+   "relationKind": "verifies",
+   "fromNode": "test:nav-badge-test",
+   "toNode": "symbol:questions.moderation_queue_is_badged",
+   "occurrence": "verifies.questions.moderation-queue-is-badged-symbol",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4993797028eae3f6f2c249e0bb7e88476d894a6ffb69a0c57ec415d942f8a0b7",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  }
+ ],
+ "gaps": [
+  {
+   "gapKind": "missing-gate",
+   "status": "candidate",
+   "anchorNode": "symbol:questions.submit",
+   "expected": "hlv.native.gate.questions",
+   "sourcePath": "docs/lekalo/trace/questions.trace.json"
+  },
+  {
+   "gapKind": "unsupported-provider",
+   "status": "unsupported",
+   "anchorNode": "symbol:questions.submit",
+   "expected": "lekalo.native.gate.receipt",
+   "sourcePath": "docs/lekalo/trace/questions.trace.json"
+  }
+ ]
+}

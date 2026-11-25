@@ -58,7 +58,7 @@ Then only what you need:
 | tool | how it arrives |
 |---|---|
 | PHPStan, Rector, php-cs-fixer, PHPUnit | `composer install` |
-| pnpm, theme bundles | `make assets` (or `make assets-import` to copy a built `public/dist`) |
+| pnpm, theme bundles | `make assets` |
 | mago | nothing to install: `make mago-guard` / `make mago-lint` fetch the pinned binary and cache it under `storage/cache/` |
 | lekalo CLI | install the pinned release once, below |
 
@@ -212,7 +212,8 @@ deciding which number fails; do not wire it into CI and leave that implied.
 
     The rhythm itself, the pause that earns a paragraph and the tempo of
     sentence lengths, is written in `docs/prose-rhythm.md`; it is an aid for the
-    author, never a gate, and the ported numbers come from `nativa-minimal`.
+    author, never a gate, and the ported numbers come from
+`archive/nativa-minimal/`.
 
     A conjunction that joins two clauses (`a`, `aj`, `ale`, `no`, `ani`, `či`,
     `lebo`, `pretože`, `takže`, `však`, `hoci`) starts a line and never ends

@@ -1,0 +1,478 @@
+{
+ "schemaVersion": "lekalo/trace-manifest/v0.2.16",
+ "identity": "dev.lekalo.trace-manifest@0.2.16",
+ "manifestId": "nativa-themes-design-trace",
+ "projectRef": "nativa",
+ "completeness": "partial",
+ "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+ "modelRef": {
+  "schemaVersion": "0.2.16",
+  "digest": "sha256:0bf1d8274e6bc5501d68b55944e562ac999210803e10bdaf69e4cf14ab1ccba2"
+ },
+ "irRef": {
+  "schemaVersion": "0.2.16",
+  "digest": "sha256:9333f37c2cf57b6a9f08024f4d81a8d4ee96f34527fa92c53ab7a4e3c6761b28"
+ },
+ "exportProfile": "requirement-to-gate",
+ "nodes": [
+  {
+   "nodeId": "requirement:THEMES-REQ-MODEL",
+   "nodeKind": "requirement",
+   "requirementId": "themes-module-in-the-three-theme-lekalo-semantic-model",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "themes-module-in-the-three-theme-lekalo-semantic-model"
+    }
+   ]
+  },
+  {
+   "nodeId": "requirement:THEMES-REQ-DESIGN",
+   "nodeKind": "requirement",
+   "requirementId": "design-layer-in-the-lekalo-semantic-model",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "design-layer-in-the-lekalo-semantic-model"
+    }
+   ]
+  },
+  {
+   "nodeId": "symbol:themes.resolve_active",
+   "nodeKind": "symbol",
+   "semanticId": "themes.resolve_active"
+  },
+  {
+   "nodeId": "symbol:design.resolve_tokens",
+   "nodeKind": "symbol",
+   "semanticId": "design.resolve_tokens"
+  },
+  {
+   "nodeId": "artifact:themes.theme-resolver",
+   "nodeKind": "artifact",
+   "artifactId": "themes.theme-resolver",
+   "ownership": "checked",
+   "path": "src/modules/core/interfaces/http/themeresolver-php",
+   "contentDigest": "sha256:71cdfb13075eed00dba4335fbb13422199382eba3d57a07cdfc673b586ff9cf0",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "themes.theme-resolver"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:design.styles-css",
+   "nodeKind": "artifact",
+   "artifactId": "design.styles-css",
+   "ownership": "checked",
+   "path": "frontend/packages/starter/src/base/index-css",
+   "contentDigest": "sha256:f3647615ca80a0644660eb6bb57423880d1460d822a866947178fa6733e83f08",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "design.styles-css"
+    }
+   ]
+  },
+  {
+   "nodeId": "scenario:themes.read-flow",
+   "nodeKind": "scenario",
+   "scenarioId": "themes.read_flow",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+   "nodeId": "scenario:design.contrast-flow",
+   "nodeKind": "scenario",
+   "scenarioId": "design.contrast_flow",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+   "nodeId": "test:themes-model-parity-test",
+   "nodeKind": "native_test",
+   "testId": "nativa.ThemesModelParityTest",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:01abae0f8e27c09852e6ffb2309384138c38750119086f4441ef53c2a9ca6a1c",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.ThemesModelParityTest"
+    }
+   ]
+  },
+  {
+   "nodeId": "test:design-model-parity-test",
+   "nodeKind": "native_test",
+   "testId": "nativa.DesignModelParityTest",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:694dcb0c1b1512695f3a8af068fe716000e728f0fe57a5a2c24fb627088765eb",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.DesignModelParityTest"
+    }
+   ]
+  },
+  {
+   "nodeId": "test:build-css-audit-test",
+   "nodeKind": "native_test",
+   "testId": "nativa.BuildCssAuditTest",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:3fec9a4d32ad686481f3c0eca79f60779f67e03035bb2311837b3a9017b17c9c",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.BuildCssAuditTest"
+    }
+   ]
+  },
+  {
+   "nodeId": "test:erik-theme-test",
+   "nodeKind": "native_test",
+   "testId": "nativa.ErikThemeTest",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:c35917e909aca5aee6332f610da6879cd912a28eeb339bf3e9756b5935682be4",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.ErikThemeTest"
+    }
+   ]
+  },
+  {
+   "nodeId": "gate:nativa-phpunit",
+   "nodeKind": "gate",
+   "gateId": "nativa.phpunit",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.phpunit"
+    }
+   ]
+  },
+  {
+   "nodeId": "gate:lekalo-validate-model",
+   "nodeKind": "gate",
+   "gateId": "lekalo.validate-model",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "lekalo.validate-model"
+    }
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "relationId": "sha256:cb595b700ef5f82b7de438115fd035a2f092d01500d4ea136950921bfb3f6710",
+   "relationKind": "implements",
+   "fromNode": "symbol:themes.resolve_active",
+   "toNode": "requirement:THEMES-REQ-MODEL",
+   "occurrence": "requirements.themes-model-resolve",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:b557073be38a82db779078db9c7ab1b420cb6d0e885ffeaf1940247dba4c24fb",
+   "relationKind": "implements",
+   "fromNode": "symbol:design.resolve_tokens",
+   "toNode": "requirement:THEMES-REQ-DESIGN",
+   "occurrence": "requirements.design-model-resolve-tokens",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:fcb0efc6e649924a692bed50d0583f49925ba1fda17299dd6754b890ea1b3cba",
+   "relationKind": "binds",
+   "fromNode": "symbol:themes.resolve_active",
+   "toNode": "artifact:themes.theme-resolver",
+   "occurrence": "bindings.endpoint-blog-index",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:0a8b34a7a3f242c1bcd62f57e97f9961278358a3dcef131a85843731e40c5056",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/themes/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:bb74b7c3a915f523243539d2d7a8dea1df5a0cc1210c47942db4b09225f976f6",
+   "relationKind": "binds",
+   "fromNode": "symbol:design.resolve_tokens",
+   "toNode": "artifact:design.styles-css",
+   "occurrence": "bindings.design-styles-css",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:255e7b0e29ec1a0cf2e9391e4fbad9b132f62d3fc1d474e7b1d7a762d03f8aa0",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/design/queries.yaml"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:25f3d487f70ea4a9dd6e1e4933769f5ba6b7771d7b9e69b576f3f70118a5ca8c",
+   "relationKind": "covers",
+   "fromNode": "scenario:themes.read-flow",
+   "toNode": "symbol:themes.resolve_active",
+   "occurrence": "covers.themes.resolve-active",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:f2cca2c6b7007b20d12b46b84afc31e09308b75a30d55d16d1aad8888238374a",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/themes/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:6515fb2e24320b1ad7d984039c8a72f2615150e8ce4d06396b67023135d11638",
+   "relationKind": "covers",
+   "fromNode": "scenario:design.contrast-flow",
+   "toNode": "symbol:design.resolve_tokens",
+   "occurrence": "covers.design.resolve-tokens",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:36daa8cb51948827a564f4bd9e1753e47eed48e1a3fbef4d301b437628dd85a2",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/design/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:54cce139f0eaf3904a72d2e0715e5cc4e767473f9e221c2b49bd9270ab1e7182",
+   "relationKind": "verifies",
+   "fromNode": "test:themes-model-parity-test",
+   "toNode": "scenario:themes.read-flow",
+   "occurrence": "verifies.themes-read-flow",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:01abae0f8e27c09852e6ffb2309384138c38750119086f4441ef53c2a9ca6a1c",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:406e1fe9eb453e59ca1b7c8c76598a8da286f406a111bad147b486356af5f478",
+   "relationKind": "verifies",
+   "fromNode": "test:design-model-parity-test",
+   "toNode": "scenario:design.contrast-flow",
+   "occurrence": "verifies.design-contrast-flow",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:694dcb0c1b1512695f3a8af068fe716000e728f0fe57a5a2c24fb627088765eb",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:310ef652fd8a615752482c8923eb26a839910e026915237404467cc1a5571063",
+   "relationKind": "verifies",
+   "fromNode": "test:erik-theme-test",
+   "toNode": "symbol:themes.resolve_active",
+   "occurrence": "verifies.themes-resolve-active-erik",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:c35917e909aca5aee6332f610da6879cd912a28eeb339bf3e9756b5935682be4",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit"
+   ]
+  },
+  {
+   "relationId": "sha256:664e889c888cb91af62597ae5bd4a2851a11f50424d47a7e8c5daf427d6128de",
+   "relationKind": "verifies",
+   "fromNode": "test:build-css-audit-test",
+   "toNode": "symbol:design.resolve_tokens",
+   "occurrence": "verifies.design.resolve-tokens",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:3fec9a4d32ad686481f3c0eca79f60779f67e03035bb2311837b3a9017b17c9c",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:0a92a8aaf875800009791e10172899aace7408502144e627b09af7cd7f50e537",
+   "relationKind": "evidences",
+   "fromNode": "gate:nativa-phpunit",
+   "toNode": "test:themes-model-parity-test",
+   "occurrence": "evidences.phpunit-themes-parity",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit"
+   ]
+  },
+  {
+   "relationId": "sha256:d34bf74ee47ef2003be41a3979fa564ead8a06d33811d91ea162dc103dc25027",
+   "relationKind": "evidences",
+   "fromNode": "gate:nativa-phpunit",
+   "toNode": "test:design-model-parity-test",
+   "occurrence": "evidences.phpunit-design-parity",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit"
+   ]
+  },
+  {
+   "relationId": "sha256:9541e8b117ff7fa6c821a2dc8da1b47844ca08c964d1cec15aee2a1e626007f9",
+   "relationKind": "evidences",
+   "fromNode": "gate:nativa-phpunit",
+   "toNode": "test:build-css-audit-test",
+   "occurrence": "evidences.phpunit-build-css-audit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit"
+   ]
+  },
+  {
+   "relationId": "sha256:65d611f63be9b87a42a58fae2716c8b59ca95d1f23b13b77d64109e017abf99d",
+   "relationKind": "evidences",
+   "fromNode": "gate:lekalo-validate-model",
+   "toNode": "test:themes-model-parity-test",
+   "occurrence": "evidences.lekalo-validate-themes",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "make-lekalo-check"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:lekalo-validate-model"
+   ]
+  }
+ ],
+ "gaps": [
+  {
+   "gapKind": "missing-gate",
+   "status": "candidate",
+   "anchorNode": "symbol:themes.resolve_active",
+   "expected": "hlv.native.gate.themes",
+   "sourcePath": "docs/lekalo/trace/themes-design.trace.json"
+  },
+  {
+   "gapKind": "missing-gate",
+   "status": "candidate",
+   "anchorNode": "symbol:design.resolve_tokens",
+   "expected": "hlv.native.gate.design",
+   "sourcePath": "docs/lekalo/trace/themes-design.trace.json"
+  },
+  {
+   "gapKind": "unsupported-provider",
+   "status": "unsupported",
+   "anchorNode": "symbol:themes.resolve_active",
+   "expected": "lekalo.native.gate.receipt",
+   "sourcePath": "docs/lekalo/scan/starter-ts.scan.md"
+  }
+ ]
+}

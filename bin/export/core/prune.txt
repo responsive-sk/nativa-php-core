@@ -13,6 +13,10 @@
 # They record how THIS tree was built, and the numbers in them belong to it.
 docs
 
+# The retired showcase's documents, prose tool and rhythm decision. They are
+# provenance for this tree's writing rules, not part of the exported kernel.
+archive
+
 # The catalogue: the export ships the Nativa theme, Settings (the theme vote),
 # ContentLocale (the locale-to-URL-prefix rule every theme asks for), RestApi
 # (the REST panel under /mark/rest) and the admin stack RestApi's closure

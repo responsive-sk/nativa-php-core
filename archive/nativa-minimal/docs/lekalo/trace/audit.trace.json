@@ -1,0 +1,418 @@
+{
+ "schemaVersion": "lekalo/trace-manifest/v0.2.16",
+ "identity": "dev.lekalo.trace-manifest@0.2.16",
+ "manifestId": "nativa-audit-trace",
+ "projectRef": "nativa",
+ "completeness": "partial",
+ "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+ "modelRef": {
+  "schemaVersion": "0.2.16",
+  "digest": "sha256:0bf1d8274e6bc5501d68b55944e562ac999210803e10bdaf69e4cf14ab1ccba2"
+ },
+ "irRef": {
+  "schemaVersion": "0.2.16",
+  "digest": "sha256:9333f37c2cf57b6a9f08024f4d81a8d4ee96f34527fa92c53ab7a4e3c6761b28"
+ },
+ "exportProfile": "requirement-to-gate",
+ "nodes": [
+  {
+   "nodeId": "requirement:AUDIT-REQ-LOG",
+   "nodeKind": "requirement",
+   "requirementId": "immutable-admin-audit-log",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "immutable-admin-audit-log"
+    }
+   ]
+  },
+  {
+   "nodeId": "symbol:audit.append",
+   "nodeKind": "symbol",
+   "semanticId": "audit.append"
+  },
+  {
+   "nodeId": "symbol:audit.effect_append",
+   "nodeKind": "symbol",
+   "semanticId": "audit.effect_append"
+  },
+  {
+   "nodeId": "symbol:audit.entry_appended",
+   "nodeKind": "symbol",
+   "semanticId": "audit.entry_appended"
+  },
+  {
+   "nodeId": "symbol:audit.immutable_trail",
+   "nodeKind": "symbol",
+   "semanticId": "audit.immutable_trail"
+  },
+  {
+   "nodeId": "artifact:audit.service",
+   "nodeKind": "artifact",
+   "artifactId": "audit.service",
+   "ownership": "checked",
+   "path": "src/modules/audit/application/services/auditservice-php",
+   "contentDigest": "sha256:47c00917c0cb2a5573b3944ce4336b960da869b41f10baa0ca825a144890028e",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "audit.service"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:audit.entry",
+   "nodeKind": "artifact",
+   "artifactId": "audit.entry",
+   "ownership": "checked",
+   "path": "src/modules/audit/domain/entities/auditentry-php",
+   "contentDigest": "sha256:0e9560a961df18aea370cf9b4433120307b3e5d12085385751b4e799f41f5fd9",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "audit.entry"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:audit.repository",
+   "nodeKind": "artifact",
+   "artifactId": "audit.repository",
+   "ownership": "checked",
+   "path": "src/modules/audit/infrastructure/persistence/repositories/auditlogrepository-php",
+   "contentDigest": "sha256:84b81b3f181a298de691b731cdbfeb5be782592c30a78f8449c1ed05a6415136",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "audit.repository"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:audit.migrator",
+   "nodeKind": "artifact",
+   "artifactId": "audit.migrator",
+   "ownership": "checked",
+   "path": "src/modules/audit/infrastructure/persistence/migrations/auditdatabasemigrator-php",
+   "contentDigest": "sha256:c28d0d5462797fbdf4bb83741ae0eb97911ca8a05be388a10270e188e4c70c00",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "audit.migrator"
+    }
+   ]
+  },
+  {
+   "nodeId": "scenario:audit.immutable-trail",
+   "nodeKind": "scenario",
+   "scenarioId": "audit.immutable_trail",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+   "nodeId": "test:audit-log-test",
+   "nodeKind": "native_test",
+   "testId": "nativa.AuditLogTest",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:ffbfec727e6874ec743a87aa315de25f4d28fcfa41c0ae424d040dd495b302d5",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.AuditLogTest"
+    }
+   ]
+  },
+  {
+   "nodeId": "gate:nativa-phpunit",
+   "nodeKind": "gate",
+   "gateId": "nativa.phpunit",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.phpunit"
+    }
+   ]
+  },
+  {
+   "nodeId": "gate:lekalo-validate-model",
+   "nodeKind": "gate",
+   "gateId": "lekalo.validate-model",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "lekalo.validate-model"
+    }
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "relationId": "sha256:d7442482216158945bd8b34e4abe50a9d22164bd3a6f3965fec10c6d7914f2f8",
+   "relationKind": "implements",
+   "fromNode": "symbol:audit.append",
+   "toNode": "requirement:AUDIT-REQ-LOG",
+   "occurrence": "requirements.audit-append-command",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:579a5efbab3700e628527c0a70bb1aa7841a35cfc249497f677ce3f19d7d2d97",
+   "relationKind": "implements",
+   "fromNode": "symbol:audit.effect_append",
+   "toNode": "requirement:AUDIT-REQ-LOG",
+   "occurrence": "requirements.audit-append-effect",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:4feee8b5adb9e869eea5fa8bfaaf51e79e4e979f062f5d41e8e9677dc4ce1777",
+   "relationKind": "binds",
+   "fromNode": "symbol:audit.append",
+   "toNode": "artifact:audit.service",
+   "occurrence": "bindings.audit-append",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:13fe7c6018c3d6c5f2c50a5440d06b0c4f85011317050e962061ade3c724d160",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/audit/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:576240802ffbc59108a1c74b887a077b1c865ace4ac7d0b6787f848c80c6e0cf",
+   "relationKind": "binds",
+   "fromNode": "symbol:audit.effect_append",
+   "toNode": "artifact:audit.service",
+   "occurrence": "bindings.audit-append-effect",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:13fe7c6018c3d6c5f2c50a5440d06b0c4f85011317050e962061ade3c724d160",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/audit/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:2e98bc71c2c26fa05aecf5bfde27cdd0c1fcfd1df67afe74386d1a21ae1f89ee",
+   "relationKind": "covers",
+   "fromNode": "scenario:audit.immutable-trail",
+   "toNode": "symbol:audit.append",
+   "occurrence": "covers.audit.append",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:80e750800a117ef1e3a12f5c6533a188c8de9e4df2f054321ecfbc4e5dc97de8",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/audit/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:8ca487e05c2587511cfa0826ef4163f781327b4517328a875719040e0120f813",
+   "relationKind": "covers",
+   "fromNode": "scenario:audit.immutable-trail",
+   "toNode": "symbol:audit.effect_append",
+   "occurrence": "covers.audit.effect-append",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:80e750800a117ef1e3a12f5c6533a188c8de9e4df2f054321ecfbc4e5dc97de8",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/audit/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:6aa508735015c3b28d65c4aff29b6cee6a672ade7ca13acb0a380cf14ad99e09",
+   "relationKind": "covers",
+   "fromNode": "scenario:audit.immutable-trail",
+   "toNode": "symbol:audit.entry_appended",
+   "occurrence": "covers.audit.entry-appended",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:80e750800a117ef1e3a12f5c6533a188c8de9e4df2f054321ecfbc4e5dc97de8",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/audit/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:f8d4ff68fec62fd50b049570a8106713c6f864e72af34f164d371025332e16b9",
+   "relationKind": "verifies",
+   "fromNode": "test:audit-log-test",
+   "toNode": "scenario:audit.immutable-trail",
+   "occurrence": "verifies.audit-trail-flow",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:ffbfec727e6874ec743a87aa315de25f4d28fcfa41c0ae424d040dd495b302d5",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:e088dcb8f66c90ded0c7c582f0516afebf0296aecb0c56ab06bbf42b53f874e4",
+   "relationKind": "verifies",
+   "fromNode": "test:audit-log-test",
+   "toNode": "symbol:audit.append",
+   "occurrence": "verifies.audit.append",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:ffbfec727e6874ec743a87aa315de25f4d28fcfa41c0ae424d040dd495b302d5",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:a3b6fce6a072d1753da75bd5fc492718c19af46a410c3b07025c085ca37f7eb2",
+   "relationKind": "verifies",
+   "fromNode": "test:audit-log-test",
+   "toNode": "symbol:audit.immutable_trail",
+   "occurrence": "verifies.audit.immutable-trail",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:ffbfec727e6874ec743a87aa315de25f4d28fcfa41c0ae424d040dd495b302d5",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:bbeb8b6f0afff7ca7d4a38e363f94c871beba32e1a7733dd38b9a94c198cb67f",
+   "relationKind": "evidences",
+   "fromNode": "gate:nativa-phpunit",
+   "toNode": "test:audit-log-test",
+   "occurrence": "evidences.phpunit-audit-log",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit"
+   ]
+  },
+  {
+   "relationId": "sha256:e205973d626a2ce266634d2a860fcd5b47d6ba62abde8b408b21985d454f8b98",
+   "relationKind": "evidences",
+   "fromNode": "gate:lekalo-validate-model",
+   "toNode": "test:audit-log-test",
+   "occurrence": "evidences.lekalo-validate-audit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "make-lekalo-check"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:lekalo-validate-model"
+   ]
+  }
+ ],
+ "gaps": [
+  {
+   "gapKind": "missing-gate",
+   "status": "candidate",
+   "anchorNode": "symbol:audit.append",
+   "expected": "hlv.native.gate.audit",
+   "sourcePath": "docs/lekalo/trace/audit.trace.json"
+  },
+  {
+   "gapKind": "unsupported-provider",
+   "status": "unsupported",
+   "anchorNode": "symbol:audit.append",
+   "expected": "lekalo.native.gate.receipt",
+   "sourcePath": "docs/lekalo/trace/audit.trace.json"
+  }
+ ]
+}

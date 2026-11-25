@@ -1,0 +1,52 @@
+.minimal-hero { text-align:center; padding:4rem 0 3rem; position:relative; overflow:hidden; }
+.minimal-hero__content { position:relative; z-index:1; max-width:720px; margin:0 auto; }
+.minimal-hero__eyebrow { display:inline-block; font-size:.8rem; font-weight:600; text-transform:uppercase;
+                         letter-spacing:.08em; color:var(--min-accent); margin-bottom:1rem; }
+.minimal-hero__title { font-size:max(2rem,min(5vw,3.25rem)); font-weight:700; line-height:1.1;
+                       margin:0 0 1rem; color:var(--st-ink); }
+.minimal-hero__desc { color:var(--st-muted); margin:0 0 2rem; font-size:1.15rem; line-height:1.6; }
+.minimal-hero__actions { display:flex; gap:.75rem; justify-content:center; flex-wrap:wrap; }
+.minimal-section { padding:2rem 0; }
+.minimal-section__header { margin-bottom:1.5rem; text-align:center; }
+.minimal-section__title { font-size:1.75rem; font-weight:700; margin:0 0 .5rem; color:var(--st-ink); }
+.minimal-section__desc { color:var(--st-muted); margin:0; font-size:1.05rem; }
+.minimal-section-header { margin-bottom:1.5rem; text-align:center; }
+.minimal-section-header__title { font-size:1.25rem; font-weight:700; margin:0 0 .25rem; color:var(--st-ink); }
+.minimal-section-header__desc { color:var(--st-muted); margin:0; font-size:.9rem; }
+.minimal-grid { display:grid; gap:1.5rem; }
+.minimal-grid--1col { grid-template-columns:minmax(0,1fr); }
+.minimal-grid--2col { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.minimal-grid--3col { grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); }
+@media (min-width:900px) { .minimal-grid--3col { grid-template-columns:repeat(3,1fr); } }
+@media (max-width:899px) and (min-width:640px) { .minimal-grid--3col { grid-template-columns:repeat(2,1fr); } }
+@media (max-width:640px) { .minimal-grid--2col { grid-template-columns:minmax(0,1fr); } }
+.minimal-card { color:inherit; background:var(--st-surface); border:1px solid var(--st-border); border-radius:8px;
+                padding:1.5rem; text-decoration:none; display:block; }
+.minimal-card:hover { border-color:var(--min-accent); transform:translateY(-3px);
+                      box-shadow:0 10px 24px rgba(0,0,0,.12); }
+.minimal-card__badge { display:inline-block; text-transform:uppercase; letter-spacing:.05em; color:var(--min-accent);
+                       margin-bottom:.375rem; font-size:.75rem; font-weight:600; }
+.minimal-card__title { font-size:1.1rem; font-weight:600; margin:0 0 .5rem; color:var(--st-ink); min-width:0; overflow-wrap:anywhere; }
+.minimal-card__title-link { color:var(--st-ink); text-decoration:none; }
+.minimal-card__title-link:hover { color:var(--min-accent); }
+.minimal-card__text { color:var(--st-muted); margin:0; font-size:.875rem; line-height:1.5; min-width:0; overflow-wrap:anywhere; }
+.minimal-card__img { width:100%; aspect-ratio:16/9; object-fit:cover; height:auto; margin-bottom:.75rem;
+                     display:block; border-radius:6px; }
+.minimal-card__img--placeholder { aspect-ratio:16/9; border-radius:6px; background:var(--st-border);
+                                  width:100%; min-height:100px; margin-bottom:.75rem; display:block; }
+.minimal-card__meta { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; color:var(--st-muted);
+                      margin-top:.5rem; font-size:.8rem; }
+.minimal-card__meta-sep { color:var(--st-border); }
+.minimal-empty { text-align:center; color:var(--st-muted); padding:3rem 0; font-size:1rem; }
+.minimal-cta { text-align:center; background:var(--st-surface); border:1px solid var(--st-border);
+               border-radius:12px; max-width:640px; margin:0 auto; padding:3rem 2rem; }
+.minimal-cta__title { font-size:1.75rem; font-weight:700; margin:0 0 .75rem; color:var(--st-ink); }
+.minimal-cta__text { color:var(--st-muted); margin:0 0 1.5rem; font-size:1.05rem; line-height:1.6; }
+.minimal-cta__actions { display:flex; gap:.75rem; justify-content:center; flex-wrap:wrap; }
+.minimal-link { color:var(--min-accent-soft); font-size:.9rem; font-weight:600; text-decoration:none; }
+.minimal-link:hover { color:var(--min-accent); text-decoration:underline; }
+.minimal-author { display:flex; align-items:center; gap:1.25rem; margin-bottom:2.5rem; padding:1.5rem;
+                  background:var(--st-surface); border:1px solid var(--st-border); border-radius:8px; }
+.minimal-author img { border-radius:50%; flex-shrink:0; }
+.minimal-author__name { font-size:1.5rem; font-weight:700; margin:0 0 .25rem; color:var(--st-ink); }
+.minimal-author__meta { color:var(--st-muted); margin:0; font-size:.9rem; }

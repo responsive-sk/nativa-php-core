@@ -1,0 +1,46 @@
+.mag-sidebar { position:sticky; top:calc(var(--mag-header-h) + 24px); display:grid; gap:28px; }
+@supports not ((gap:1px) and (inset:0)) { .mag-sidebar { gap:0; } .mag-sidebar > * { margin-top:28px; } }
+.mag-sidebar-widget { border:1px solid var(--st-border); border-radius:12px; padding:20px; background:var(--st-surface); }
+.mag-sidebar-widget__title { font-family:var(--mag-font-serif); font-size:15px; font-weight:600; margin:0 0 14px;
+                             padding-bottom:8px; border-bottom:1px solid var(--st-border); color:var(--st-ink); }
+.mag-sidebar-popular { list-style:none; margin:0; padding:0; display:grid; gap:14px; }
+@supports not ((gap:1px) and (inset:0)) { .mag-sidebar-popular { gap:0; } .mag-sidebar-popular > * { margin-top:14px; } }
+.mag-sidebar-popular__item { display:flex; align-items:center; gap:12px; }
+@supports not ((gap:1px) and (inset:0)) { .mag-sidebar-popular__item { gap:0; } .mag-sidebar-popular__item > * { margin-right:12px; } }
+.mag-sidebar-popular__image { width:60px; height:60px; object-fit:cover; border-radius:8px; flex-shrink:0; }
+.mag-sidebar-popular__info { min-width:0; }
+.mag-sidebar-popular__title { display:block; color:var(--st-ink); text-decoration:none; font-size:14px;
+                              line-height:1.4; font-weight:500; }
+.mag-sidebar-popular__title:hover { color:var(--mag-accent-soft); }
+.mag-sidebar-popular__date { font-size:12px; color:var(--st-muted); margin-top:4px; }
+.mag-sidebar-tags { display:flex; flex-wrap:wrap; gap:8px; }
+@supports not ((gap:1px) and (inset:0)) { .mag-sidebar-tags { gap:0; } .mag-sidebar-tags > * { margin:0 8px 8px 0; } }
+.mag-sidebar-tag { display:inline-block; padding:4px 11px; font-size:12px; border-radius:999px; color:var(--mag-accent-soft);
+                   background:var(--mag-tag-bg); text-decoration:none; }
+.mag-sidebar-tag:hover { text-decoration:underline; }
+.mag-sidebar-tag--active { color:#ffffff; background:var(--mag-accent-strong); }
+.mag-sidebar-tag--active:hover { text-decoration:none; }
+.mag-home-hero { padding:calc(var(--mag-header-h) + 48px) 0 48px; text-align:center;
+                 background:linear-gradient(180deg,var(--st-bg) 0%,var(--st-surface) 100%); }
+.mag-home-hero__eyebrow { display:inline-block; font-size:.875rem; font-weight:600; text-transform:uppercase;
+                          letter-spacing:.08em; color:var(--mag-accent-soft); margin-bottom:16px; }
+.mag-home-hero__title { font-family:var(--mag-font-serif); font-size:clamp(2rem,5vw,3.5rem); line-height:1.15;
+                        max-width:800px; margin:0 auto 16px; color:var(--st-ink); }
+.mag-home-hero__description { font-size:1.2rem; color:var(--st-muted); max-width:600px; margin:0 auto 32px; line-height:1.6; }
+.mag-home-hero__actions { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+@supports not ((gap:1px) and (inset:0)) { .mag-home-hero__actions { gap:0; } .mag-home-hero__actions > * { margin:0 6px 12px; } }
+.mag-home-features { padding:48px 0; }
+.mag-home-features__grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:24px; }
+@supports not ((gap:1px) and (inset:0)) { .mag-home-features__grid { gap:0; margin:-24px 0 0 -24px; }
+        .mag-home-features__grid > * { margin:24px 0 0 24px; } }
+.mag-home-feature-card { padding:24px; background:var(--st-surface); border:1px solid var(--st-border);
+                         border-radius:12px; transition:all 150ms ease; }
+.mag-home-feature-card:hover { border-color:var(--mag-accent); }
+.mag-home-feature-card__title { font-family:var(--mag-font-serif); font-size:1.25rem; margin:0 0 4px; color:var(--st-ink); }
+.mag-home-feature-card__subtitle { font-size:.875rem; color:var(--mag-accent-soft); margin:0 0 12px; }
+.mag-home-feature-card__desc { font-size:.95rem; color:var(--st-muted); line-height:1.6; margin:0 0 12px; }
+.mag-home-cta { padding:48px 0; background:var(--st-surface); text-align:center; border-top:1px solid var(--st-border); }
+.mag-home-cta__title { font-family:var(--mag-font-serif); font-size:2rem; margin:0 0 12px; color:var(--st-ink); }
+.mag-home-cta__text { color:var(--st-muted); font-size:1.1rem; margin:0 0 24px; line-height:1.6; }
+.mag-home-cta__actions { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+@supports not ((gap:1px) and (inset:0)) { .mag-home-cta__actions { gap:0; } .mag-home-cta__actions > * { margin:0 6px 12px; } }

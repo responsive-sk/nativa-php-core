@@ -1,7 +1,8 @@
 # Prose rhythm
 
 The rhythm model here is not invented in this tree.
-It comes from `nativa-minimal`, where it was written
+It comes from `nativa-minimal`, whose prose sources are archived
+in `archive/nativa-minimal/`, where it was written
 measured against the whole article corpus
 and then demoted from a gate to an aid.
 This page is the version that fits this tree.
@@ -130,7 +131,7 @@ because the corpus that measures them is the corpus they would reject.
 
 ## Where it comes from
 
-- `nativa-minimal/docs/blog-voice.md`, the seven phases and the line rules.
-- `nativa-minimal/bin/ops/tempo-analyzer.php`, the per-phase tempo targets.
-- `nativa-minimal/openspec/changes/rhythm-is-an-aid-not-a-gate.md`, the decision
-  that rhythm is advisory.
+- `archive/nativa-minimal/docs/blog-voice.md`, the seven phases and the line rules.
+- `archive/nativa-minimal/bin/ops/tempo-analyzer.php`, the per-phase tempo targets.
+- `archive/nativa-minimal/openspec/changes/rhythm-is-an-aid-not-a-gate.md`, the
+  decision that rhythm is advisory.

@@ -1,0 +1,4292 @@
+{
+ "schemaVersion": "lekalo/trace-manifest/v0.2.16",
+ "identity": "dev.lekalo.trace-manifest@0.2.16",
+ "manifestId": "nativa-forms-trace",
+ "projectRef": "nativa",
+ "completeness": "partial",
+ "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+ "modelRef": {
+  "schemaVersion": "0.2.16",
+  "digest": "sha256:0bf1d8274e6bc5501d68b55944e562ac999210803e10bdaf69e4cf14ab1ccba2"
+ },
+ "irRef": {
+  "schemaVersion": "0.2.16",
+  "digest": "sha256:9333f37c2cf57b6a9f08024f4d81a8d4ee96f34527fa92c53ab7a4e3c6761b28"
+ },
+ "exportProfile": "requirement-to-gate",
+ "nodes": [
+  {
+   "nodeId": "requirement:FORMS-REQ-1",
+   "nodeKind": "requirement",
+   "requirementId": "form-definitions",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "form-definitions"
+    }
+   ]
+  },
+  {
+   "nodeId": "requirement:FORMS-REQ-2",
+   "nodeKind": "requirement",
+   "requirementId": "form-embedding",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "form-embedding"
+    }
+   ]
+  },
+  {
+   "nodeId": "requirement:FORMS-REQ-3",
+   "nodeKind": "requirement",
+   "requirementId": "form-submission",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "form-submission"
+    }
+   ]
+  },
+  {
+   "nodeId": "requirement:FORMS-REQ-4",
+   "nodeKind": "requirement",
+   "requirementId": "poll-and-quiz-answers",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "poll-and-quiz-answers"
+    }
+   ]
+  },
+  {
+   "nodeId": "requirement:FORMS-REQ-5",
+   "nodeKind": "requirement",
+   "requirementId": "response-delivery",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "response-delivery"
+    }
+   ]
+  },
+  {
+   "nodeId": "requirement:FORMS-REQ-6",
+   "nodeKind": "requirement",
+   "requirementId": "form-spam-posture",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "form-spam-posture"
+    }
+   ]
+  },
+  {
+   "nodeId": "symbol:forms.answer",
+   "nodeKind": "symbol",
+   "semanticId": "forms.answer"
+  },
+  {
+   "nodeId": "symbol:forms.contact_submission_loop",
+   "nodeKind": "symbol",
+   "semanticId": "forms.contact_submission_loop"
+  },
+  {
+   "nodeId": "symbol:forms.count",
+   "nodeKind": "symbol",
+   "semanticId": "forms.count"
+  },
+  {
+   "nodeId": "symbol:forms.create",
+   "nodeKind": "symbol",
+   "semanticId": "forms.create"
+  },
+  {
+   "nodeId": "symbol:forms.delete",
+   "nodeKind": "symbol",
+   "semanticId": "forms.delete"
+  },
+  {
+   "nodeId": "symbol:forms.delete_cascades",
+   "nodeKind": "symbol",
+   "semanticId": "forms.delete_cascades"
+  },
+  {
+   "nodeId": "symbol:forms.delete_submission",
+   "nodeKind": "symbol",
+   "semanticId": "forms.delete_submission"
+  },
+  {
+   "nodeId": "symbol:forms.edit",
+   "nodeKind": "symbol",
+   "semanticId": "forms.edit"
+  },
+  {
+   "nodeId": "symbol:forms.effect_form_created",
+   "nodeKind": "symbol",
+   "semanticId": "forms.effect_form_created"
+  },
+  {
+   "nodeId": "symbol:forms.effect_form_deleted",
+   "nodeKind": "symbol",
+   "semanticId": "forms.effect_form_deleted"
+  },
+  {
+   "nodeId": "symbol:forms.effect_form_replaced",
+   "nodeKind": "symbol",
+   "semanticId": "forms.effect_form_replaced"
+  },
+  {
+   "nodeId": "symbol:forms.effect_form_status_changed",
+   "nodeKind": "symbol",
+   "semanticId": "forms.effect_form_status_changed"
+  },
+  {
+   "nodeId": "symbol:forms.effect_submission_created",
+   "nodeKind": "symbol",
+   "semanticId": "forms.effect_submission_created"
+  },
+  {
+   "nodeId": "symbol:forms.effect_submission_deleted",
+   "nodeKind": "symbol",
+   "semanticId": "forms.effect_submission_deleted"
+  },
+  {
+   "nodeId": "symbol:forms.effect_submission_status_changed",
+   "nodeKind": "symbol",
+   "semanticId": "forms.effect_submission_status_changed"
+  },
+  {
+   "nodeId": "symbol:forms.endpoint_create",
+   "nodeKind": "symbol",
+   "semanticId": "forms.endpoint_create"
+  },
+  {
+   "nodeId": "symbol:forms.endpoint_delete",
+   "nodeKind": "symbol",
+   "semanticId": "forms.endpoint_delete"
+  },
+  {
+   "nodeId": "symbol:forms.endpoint_edit",
+   "nodeKind": "symbol",
+   "semanticId": "forms.endpoint_edit"
+  },
+  {
+   "nodeId": "symbol:forms.endpoint_index",
+   "nodeKind": "symbol",
+   "semanticId": "forms.endpoint_index"
+  },
+  {
+   "nodeId": "symbol:forms.endpoint_publish",
+   "nodeKind": "symbol",
+   "semanticId": "forms.endpoint_publish"
+  },
+  {
+   "nodeId": "symbol:forms.endpoint_submission_delete",
+   "nodeKind": "symbol",
+   "semanticId": "forms.endpoint_submission_delete"
+  },
+  {
+   "nodeId": "symbol:forms.endpoint_submissions",
+   "nodeKind": "symbol",
+   "semanticId": "forms.endpoint_submissions"
+  },
+  {
+   "nodeId": "symbol:forms.endpoint_submissions_csv",
+   "nodeKind": "symbol",
+   "semanticId": "forms.endpoint_submissions_csv"
+  },
+  {
+   "nodeId": "symbol:forms.endpoint_submit",
+   "nodeKind": "symbol",
+   "semanticId": "forms.endpoint_submit"
+  },
+  {
+   "nodeId": "symbol:forms.form",
+   "nodeKind": "symbol",
+   "semanticId": "forms.form"
+  },
+  {
+   "nodeId": "symbol:forms.form_created",
+   "nodeKind": "symbol",
+   "semanticId": "forms.form_created"
+  },
+  {
+   "nodeId": "symbol:forms.form_deleted",
+   "nodeKind": "symbol",
+   "semanticId": "forms.form_deleted"
+  },
+  {
+   "nodeId": "symbol:forms.form_must_be_published",
+   "nodeKind": "symbol",
+   "semanticId": "forms.form_must_be_published"
+  },
+  {
+   "nodeId": "symbol:forms.form_status_changed",
+   "nodeKind": "symbol",
+   "semanticId": "forms.form_status_changed"
+  },
+  {
+   "nodeId": "symbol:forms.form_type",
+   "nodeKind": "symbol",
+   "semanticId": "forms.form_type"
+  },
+  {
+   "nodeId": "symbol:forms.guest_email",
+   "nodeKind": "symbol",
+   "semanticId": "forms.guest_email"
+  },
+  {
+   "nodeId": "symbol:forms.honeypot_submits_nothing",
+   "nodeKind": "symbol",
+   "semanticId": "forms.honeypot_submits_nothing"
+  },
+  {
+   "nodeId": "symbol:forms.locale",
+   "nodeKind": "symbol",
+   "semanticId": "forms.locale"
+  },
+  {
+   "nodeId": "symbol:forms.locale_isolation",
+   "nodeKind": "symbol",
+   "semanticId": "forms.locale_isolation"
+  },
+  {
+   "nodeId": "symbol:forms.mark_read",
+   "nodeKind": "symbol",
+   "semanticId": "forms.mark_read"
+  },
+  {
+   "nodeId": "symbol:forms.option_must_belong_to_question",
+   "nodeKind": "symbol",
+   "semanticId": "forms.option_must_belong_to_question"
+  },
+  {
+   "nodeId": "symbol:forms.poll_result_loop",
+   "nodeKind": "symbol",
+   "semanticId": "forms.poll_result_loop"
+  },
+  {
+   "nodeId": "symbol:forms.publish_toggle",
+   "nodeKind": "symbol",
+   "semanticId": "forms.publish_toggle"
+  },
+  {
+   "nodeId": "symbol:forms.required_fields_validated",
+   "nodeKind": "symbol",
+   "semanticId": "forms.required_fields_validated"
+  },
+  {
+   "nodeId": "symbol:forms.slug",
+   "nodeKind": "symbol",
+   "semanticId": "forms.slug"
+  },
+  {
+   "nodeId": "symbol:forms.slug_unique_per_locale",
+   "nodeKind": "symbol",
+   "semanticId": "forms.slug_unique_per_locale"
+  },
+  {
+   "nodeId": "symbol:forms.spam_and_gatekeeping",
+   "nodeKind": "symbol",
+   "semanticId": "forms.spam_and_gatekeeping"
+  },
+  {
+   "nodeId": "symbol:forms.status",
+   "nodeKind": "symbol",
+   "semanticId": "forms.status"
+  },
+  {
+   "nodeId": "symbol:forms.submission",
+   "nodeKind": "symbol",
+   "semanticId": "forms.submission"
+  },
+  {
+   "nodeId": "symbol:forms.submission_created",
+   "nodeKind": "symbol",
+   "semanticId": "forms.submission_created"
+  },
+  {
+   "nodeId": "symbol:forms.submission_deleted",
+   "nodeKind": "symbol",
+   "semanticId": "forms.submission_deleted"
+  },
+  {
+   "nodeId": "symbol:forms.submission_status",
+   "nodeKind": "symbol",
+   "semanticId": "forms.submission_status"
+  },
+  {
+   "nodeId": "symbol:forms.submission_status_changed",
+   "nodeKind": "symbol",
+   "semanticId": "forms.submission_status_changed"
+  },
+  {
+   "nodeId": "symbol:forms.submit",
+   "nodeKind": "symbol",
+   "semanticId": "forms.submit"
+  },
+  {
+   "nodeId": "symbol:forms.submit_denied",
+   "nodeKind": "symbol",
+   "semanticId": "forms.submit_denied"
+  },
+  {
+   "nodeId": "symbol:forms.throttled_per_ip",
+   "nodeKind": "symbol",
+   "semanticId": "forms.throttled_per_ip"
+  },
+  {
+   "nodeId": "symbol:forms.timestamp",
+   "nodeKind": "symbol",
+   "semanticId": "forms.timestamp"
+  },
+  {
+   "nodeId": "symbol:forms.title",
+   "nodeKind": "symbol",
+   "semanticId": "forms.title"
+  },
+  {
+   "nodeId": "artifact:forms.service",
+   "nodeKind": "artifact",
+   "artifactId": "forms.service",
+   "ownership": "checked",
+   "path": "src/modules/forms/application/services/formsubmissionservice-php",
+   "contentDigest": "sha256:37e2fdd48cd82542648931509f50ae19dff9198656a4228af1d16df1d1141168",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "forms.service"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:forms.crud",
+   "nodeKind": "artifact",
+   "artifactId": "forms.crud",
+   "ownership": "checked",
+   "path": "src/modules/forms/application/services/formcrudservice-php",
+   "contentDigest": "sha256:0845cba5069e218358857bc82570e458ef1ce260336aa696a3d7aa5bba86b957",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "forms.crud"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:forms.results",
+   "nodeKind": "artifact",
+   "artifactId": "forms.results",
+   "ownership": "checked",
+   "path": "src/modules/forms/application/services/formresultsservice-php",
+   "contentDigest": "sha256:cfbeb3e0e62bbba400cc425e399030f17342b7878c25fdf83d638a541f95c1f3",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "forms.results"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:forms.metric",
+   "nodeKind": "artifact",
+   "artifactId": "forms.metric",
+   "ownership": "checked",
+   "path": "src/modules/forms/application/services/formsmetric-php",
+   "contentDigest": "sha256:846baa29b43e4d52445aacadb7f9595b923b98e82a94aea97f6e373861d8a5fb",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "forms.metric"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:forms.entry",
+   "nodeKind": "artifact",
+   "artifactId": "forms.entry",
+   "ownership": "checked",
+   "path": "src/modules/forms/domain/entities/form-php",
+   "contentDigest": "sha256:eb7f885caac82e8b47a9f7ba58b1a058a888b44aec047f8c6bfad2eb821b440d",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "forms.entry"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:forms.submission-entry",
+   "nodeKind": "artifact",
+   "artifactId": "forms.submission-entry",
+   "ownership": "checked",
+   "path": "src/modules/forms/domain/entities/formsubmission-php",
+   "contentDigest": "sha256:7a2a4e6c89a13f331e0fcb51b12108971bae452b4883bf1712129007e8c1ea03",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "forms.submission-entry"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:forms.repository",
+   "nodeKind": "artifact",
+   "artifactId": "forms.repository",
+   "ownership": "checked",
+   "path": "src/modules/forms/infrastructure/persistence/repositories/formrepository-php",
+   "contentDigest": "sha256:83e383f99e84bd3f7d529f9966c1ec05ff573bfbb477e4839f6bd1e6f2c09ce5",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "forms.repository"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:forms.submission-repository",
+   "nodeKind": "artifact",
+   "artifactId": "forms.submission-repository",
+   "ownership": "checked",
+   "path": "src/modules/forms/infrastructure/persistence/repositories/formsubmissionrepository-php",
+   "contentDigest": "sha256:f7010e751d83f40675a14e48ee2e1958fa911c87110f231e2e15021ca17772df",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "forms.submission-repository"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:forms.migrator",
+   "nodeKind": "artifact",
+   "artifactId": "forms.migrator",
+   "ownership": "checked",
+   "path": "src/modules/forms/infrastructure/persistence/migrations/formsdatabasemigrator-php",
+   "contentDigest": "sha256:6975f1df8170b20c8a97cd92d8a4f56462f5139137149e27f578ac3d89a6f1d0",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "forms.migrator"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:forms.submit-action",
+   "nodeKind": "artifact",
+   "artifactId": "forms.submit-action",
+   "ownership": "checked",
+   "path": "src/modules/forms/interfaces/http/actions/formsubmitaction-php",
+   "contentDigest": "sha256:6227ca55d30cf77984046e900a5caa07680e56b561c8bdb968e6e3ecb438df33",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "forms.submit-action"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:forms.admin-action",
+   "nodeKind": "artifact",
+   "artifactId": "forms.admin-action",
+   "ownership": "checked",
+   "path": "src/modules/forms/interfaces/http/actions/formeditoraction-php",
+   "contentDigest": "sha256:0226c0cece538cbad9b291939487af8cdca7c1a8e5be36855205ec172e526537",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "forms.admin-action"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:forms.publish-action",
+   "nodeKind": "artifact",
+   "artifactId": "forms.publish-action",
+   "ownership": "checked",
+   "path": "src/modules/forms/interfaces/http/actions/formpublishtoggleaction-php",
+   "contentDigest": "sha256:1331c4769926a53c2d080bc62462b2d10d2daf373c3231ddd088a7a99cc0174b",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "forms.publish-action"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:forms.delete-action",
+   "nodeKind": "artifact",
+   "artifactId": "forms.delete-action",
+   "ownership": "checked",
+   "path": "src/modules/forms/interfaces/http/actions/formdeleteaction-php",
+   "contentDigest": "sha256:6b917940de3d117f026b4d3d02c2eb712b686d041ef2117a4a1d8f4ae04ef65d",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "forms.delete-action"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:forms.inbox-action",
+   "nodeKind": "artifact",
+   "artifactId": "forms.inbox-action",
+   "ownership": "checked",
+   "path": "src/modules/forms/interfaces/http/actions/formsubmissionsaction-php",
+   "contentDigest": "sha256:ec4237403e27e94f13c112ef6013e15aa17ceb270c2d45850a25f24d337ef453",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "forms.inbox-action"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:forms.csv-action",
+   "nodeKind": "artifact",
+   "artifactId": "forms.csv-action",
+   "ownership": "checked",
+   "path": "src/modules/forms/interfaces/http/actions/formsubmissionscsvaction-php",
+   "contentDigest": "sha256:d690f58e5b6b5ef707f4991d33d077d57e518c496cc5dda4b595cc785e10d874",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "forms.csv-action"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:forms.submission-delete-action",
+   "nodeKind": "artifact",
+   "artifactId": "forms.submission-delete-action",
+   "ownership": "checked",
+   "path": "src/modules/forms/interfaces/http/actions/formsubmissiondeleteaction-php",
+   "contentDigest": "sha256:9887b35da9c4432c261864e6ede10c952e04276a54f4b278be8c31826aa9a6f0",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "forms.submission-delete-action"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:forms.block-renderer",
+   "nodeKind": "artifact",
+   "artifactId": "forms.block-renderer",
+   "ownership": "checked",
+   "path": "src/modules/forms/interfaces/http/formblockrenderer-php",
+   "contentDigest": "sha256:c82a90e0f94bcaf106f5dff575d00600ea5048bc3d9c7f395ed858dc939db8da",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "forms.block-renderer"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:forms.csv",
+   "nodeKind": "artifact",
+   "artifactId": "forms.csv",
+   "ownership": "checked",
+   "path": "src/modules/forms/interfaces/http/formsubmissioncsv-php",
+   "contentDigest": "sha256:9fe8f649a8473b62622440c060d786187b10fba2f3bdb9a8e0ebddf083e86312",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "forms.csv"
+    }
+   ]
+  },
+  {
+   "nodeId": "scenario:forms.contact-submission-loop",
+   "nodeKind": "scenario",
+   "scenarioId": "forms.contact_submission_loop",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+   "nodeId": "scenario:forms.poll-result-loop",
+   "nodeKind": "scenario",
+   "scenarioId": "forms.poll_result_loop",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+   "nodeId": "scenario:forms.spam-and-gatekeeping",
+   "nodeKind": "scenario",
+   "scenarioId": "forms.spam_and_gatekeeping",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+   "nodeId": "test:forms-integration-test",
+   "nodeKind": "native_test",
+   "testId": "nativa.FormsIntegrationTest",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:e29a8b15a5f79882afd6fdb967bb91830305de80c8c62947221bf5004abe0a52",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.FormsIntegrationTest"
+    }
+   ]
+  },
+  {
+   "nodeId": "test:forms-submission-service-test",
+   "nodeKind": "native_test",
+   "testId": "nativa.FormsSubmissionServiceTest",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:73a2b431156fadc66e511f9bcb273bd93e13a3d5fae2f35810030809682f1e7a",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.FormsSubmissionServiceTest"
+    }
+   ]
+  },
+  {
+   "nodeId": "test:forms-repository-test",
+   "nodeKind": "native_test",
+   "testId": "nativa.FormsRepositoryTest",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:58e89947b45891b1eaca15886a9301ef13353059c94ed30adfd470027ed2ce02",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.FormsRepositoryTest"
+    }
+   ]
+  },
+  {
+   "nodeId": "test:form-submission-csv-test",
+   "nodeKind": "native_test",
+   "testId": "nativa.FormSubmissionCsvTest",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:5e4dcf5b9a129f03813fa5b82ac5e47c6af6352f3574c4eef9242388b1c35cc5",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.FormSubmissionCsvTest"
+    }
+   ]
+  },
+  {
+   "nodeId": "test:form-shortcode-block-test",
+   "nodeKind": "native_test",
+   "testId": "nativa.FormShortcodeBlockTest",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:a8416424cc3f8758b8f48be6184ce5614be795dbb8b6ae4528e4bd53e900c184",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.FormShortcodeBlockTest"
+    }
+   ]
+  },
+  {
+   "nodeId": "test:forms-contract-test",
+   "nodeKind": "native_test",
+   "testId": "nativa.FormsContractTest",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:852488d47d0306f057353815ac29b8b534b1889fcccde7a26caa5c5926ace897",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.FormsContractTest"
+    }
+   ]
+  },
+  {
+   "nodeId": "test:frontend-form-parity-test",
+   "nodeKind": "native_test",
+   "testId": "nativa.FrontendFormParityTest",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:5d4a9245e674484fd820562333754f4e8cff69bc3244833920665037d182b08f",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.FrontendFormParityTest"
+    }
+   ]
+  },
+  {
+   "nodeId": "gate:nativa-phpunit",
+   "nodeKind": "gate",
+   "gateId": "nativa.phpunit",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.phpunit"
+    }
+   ]
+  },
+  {
+   "nodeId": "gate:lekalo-validate-model",
+   "nodeKind": "gate",
+   "gateId": "lekalo.validate-model",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "lekalo.validate-model"
+    }
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "relationId": "sha256:d7484c937fbeba70d367c410cc86896a2366fe788822ff1e6cc8902e622ca7e2",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.form",
+   "toNode": "requirement:FORMS-REQ-1",
+   "occurrence": "requirements.forms-form",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:bb6bdd2dcc45ab6d3f52f81c18d76861a6a1ddca0b453e57630fbf139be50e29",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.create",
+   "toNode": "requirement:FORMS-REQ-1",
+   "occurrence": "requirements.forms-create",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:2d32306b3fefdfe2ea15b54f61eb23959d96545b85b391858687a1febe3631b3",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.edit",
+   "toNode": "requirement:FORMS-REQ-1",
+   "occurrence": "requirements.forms-edit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:a2167e86765795dd3034b50996aaab4c3b5fa7f955e37d27967ea7c98dc23b31",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.publish_toggle",
+   "toNode": "requirement:FORMS-REQ-1",
+   "occurrence": "requirements.forms-publish-toggle",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:5fb87696942d7453be8c443dcd8c60a72b588253bf912170ddb89ecd37fed0ed",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.delete",
+   "toNode": "requirement:FORMS-REQ-1",
+   "occurrence": "requirements.forms-delete",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:ab7bb9483d8145308d002aeef9e3d6f1b81ce5f0f0f7efdfdf755f46d78f7e5a",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.slug_unique_per_locale",
+   "toNode": "requirement:FORMS-REQ-1",
+   "occurrence": "requirements.forms-slug-unique-per-locale",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:f1f74d3ad918998329b6566a78e6ef8121900a6f70644aca36e8aef1d4d28a8f",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.delete_cascades",
+   "toNode": "requirement:FORMS-REQ-1",
+   "occurrence": "requirements.forms-delete-cascades",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:a6c85c67ece06e5a59d4eb3a0f822528b3b38acfc7ba784d194e61b1a760ad64",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.effect_form_created",
+   "toNode": "requirement:FORMS-REQ-1",
+   "occurrence": "requirements.forms-effect-form-created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:f8eb92b8bb97c71de7f784f7f8852d188c157c2b33e68bb9794fec0296f052d5",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.effect_form_replaced",
+   "toNode": "requirement:FORMS-REQ-1",
+   "occurrence": "requirements.forms-effect-form-replaced",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:409dd74ac07b545885eac0393b08f7144456145352e638e721b3697cd4eeca65",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.effect_form_status_changed",
+   "toNode": "requirement:FORMS-REQ-1",
+   "occurrence": "requirements.forms-effect-form-status-changed",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:0a1dd0a6b3d4f3c2625fe03200575ae3e3fb549f72f550ea81dbcb819f573335",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.effect_form_deleted",
+   "toNode": "requirement:FORMS-REQ-1",
+   "occurrence": "requirements.forms-effect-form-deleted",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:31fb39a3e4ba676f4eceac5723d3b0459011ee3f5d26f06d73522050947c6739",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.form_created",
+   "toNode": "requirement:FORMS-REQ-1",
+   "occurrence": "requirements.forms-form-created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:48bfa8aebc5f57d26cc62605ffed141a9e32d65269a36c5d8d0040121e0ae45d",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.form_status_changed",
+   "toNode": "requirement:FORMS-REQ-1",
+   "occurrence": "requirements.forms-form-status-changed",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:56cd3414831aa1d86040ddb5b53741466afac66874a89e85c409a20b1cc0e017",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.form_deleted",
+   "toNode": "requirement:FORMS-REQ-1",
+   "occurrence": "requirements.forms-form-deleted",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:0452356fd6560f664e39d0899785ebd53bf62dfc6a94b5dfc84e4fe1edaf2ebd",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.slug",
+   "toNode": "requirement:FORMS-REQ-1",
+   "occurrence": "requirements.forms-slug",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:3084c290e721f8a676646cac8151303aeaac773d648a14706f31eb00a9f4d4be",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.locale",
+   "toNode": "requirement:FORMS-REQ-1",
+   "occurrence": "requirements.forms-locale",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:f0c44216966a39f636e3a988aa76ef974e7d2440017ad0a56b620c850c8da60c",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.form_type",
+   "toNode": "requirement:FORMS-REQ-1",
+   "occurrence": "requirements.forms-form-type",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:4f141efe03f6aeb06993d0085db8a13fb9459c3640782ec9c5016a8640f3c7a9",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.status",
+   "toNode": "requirement:FORMS-REQ-1",
+   "occurrence": "requirements.forms-status",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:6fa5f140a7abf20dfef4673df668fb8951debfc6383f1ffc8c5047b6b20d70a6",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.title",
+   "toNode": "requirement:FORMS-REQ-1",
+   "occurrence": "requirements.forms-title",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:6a03038f7a5566c0435c35ab9460979fe9ae867de84ad3f72bcf32dbc81cd674",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.count",
+   "toNode": "requirement:FORMS-REQ-1",
+   "occurrence": "requirements.forms-count",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:135e5607b0429a514fb66f1534b4fae98db365ad3e309204b48230d521db98b1",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.endpoint_submit",
+   "toNode": "requirement:FORMS-REQ-2",
+   "occurrence": "requirements.forms-endpoint-submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:a789b907b9678f96abc37f1d73bdd9560303f3bc50c14032877294f8e6571968",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.form_must_be_published",
+   "toNode": "requirement:FORMS-REQ-2",
+   "occurrence": "requirements.forms-form-must-be-published",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:26c203b86a5045defec2f85a0bf221c54ab11cb579bd8aecee773644671bceb2",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.submit",
+   "toNode": "requirement:FORMS-REQ-3",
+   "occurrence": "requirements.forms-submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:89b1fd39ac54797e2efeb438f56cedf4a4416e633471e174da16230b65678313",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.submission",
+   "toNode": "requirement:FORMS-REQ-3",
+   "occurrence": "requirements.forms-submission",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:c98b1cd0aa388f61684d398345f5f567d48d4669e97d28b0160352089e01b08b",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.throttled_per_ip",
+   "toNode": "requirement:FORMS-REQ-3",
+   "occurrence": "requirements.forms-throttled-per-ip",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:be4a16efe436b7379ff1ee39d1a2c270a3f6edf93f7f454fadd1b780d2f31b16",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.form_must_be_published",
+   "toNode": "requirement:FORMS-REQ-3",
+   "occurrence": "requirements.forms-form-must-be-published",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:a9243a28a92e49f08837ca64ede387c7002c2cfe5bc67b05c7512f505df8c292",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.locale_isolation",
+   "toNode": "requirement:FORMS-REQ-3",
+   "occurrence": "requirements.forms-locale-isolation",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:db017c93ee6063c6ac3f76ec355ff583734dd0770c741b76d2116a7b64c65e3d",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.required_fields_validated",
+   "toNode": "requirement:FORMS-REQ-3",
+   "occurrence": "requirements.forms-required-fields-validated",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:ecdf9f7e22d3fa0e65a2f47678a71540843017ba8c959dee703ad3027322ee72",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.effect_submission_created",
+   "toNode": "requirement:FORMS-REQ-3",
+   "occurrence": "requirements.forms-effect-submission-created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:0c026ce792ba2f39b7074e491908a6d525cc7de58c4a2a180d426185af71d91f",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.submission_created",
+   "toNode": "requirement:FORMS-REQ-3",
+   "occurrence": "requirements.forms-submission-created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:c8a8bdee2a7a65650f7cded6781ef49fa426e614bdfc02c847ea150b81820c52",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.submit_denied",
+   "toNode": "requirement:FORMS-REQ-3",
+   "occurrence": "requirements.forms-submit-denied",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:9ea6eb0a1c79b72e9cfbbc87f6e2bbb5a7f973cac864dec5c45920f4351e116f",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.guest_email",
+   "toNode": "requirement:FORMS-REQ-3",
+   "occurrence": "requirements.forms-guest-email",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:7deb855ce1922ef92cd06a5f476dfe597cbe0e7f24169437479374480cd3c035",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.submission_status",
+   "toNode": "requirement:FORMS-REQ-3",
+   "occurrence": "requirements.forms-submission-status",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:74d353813d1c62eab7253825564fb1b75f15172a00b0f58600f732e2697cb6cb",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.option_must_belong_to_question",
+   "toNode": "requirement:FORMS-REQ-4",
+   "occurrence": "requirements.forms-option-must-belong-to-question",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:89c0dea32805c1fac853e45309a3304308c597d91b406e5e5d88a9e6c5bbd5e4",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.answer",
+   "toNode": "requirement:FORMS-REQ-4",
+   "occurrence": "requirements.forms-answer",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:3a91e5a624642ed4022dfd99687547cb04a27f011a3ded9d9517382c04d7c088",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.timestamp",
+   "toNode": "requirement:FORMS-REQ-4",
+   "occurrence": "requirements.forms-timestamp",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:c2b013ff8140a835fc72ffc8d9b30a7ae3aae28a8bedb9e69a52297291c2e094",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.mark_read",
+   "toNode": "requirement:FORMS-REQ-5",
+   "occurrence": "requirements.forms-mark-read",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:253ba778c07c2cf71224e615b6c3e50c9d8d9a1c5513fa3a8f3b5c3430b285b1",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.delete_submission",
+   "toNode": "requirement:FORMS-REQ-5",
+   "occurrence": "requirements.forms-delete-submission",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:4e042e91a74cb95e2f9ce35eb1ea1fb7e1bb412d8f2f501adb5e189a686e0466",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.effect_submission_status_changed",
+   "toNode": "requirement:FORMS-REQ-5",
+   "occurrence": "requirements.forms-effect-submission-status-changed",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:0126c345676fe0043d6ca5b2cbb7c0c217d2fa0bed97362c4345a0aedc459f6e",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.effect_submission_deleted",
+   "toNode": "requirement:FORMS-REQ-5",
+   "occurrence": "requirements.forms-effect-submission-deleted",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:fc6ffadecd86c2968629843c4adcb923e2eafec2149f987f78d258577ad38e5b",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.submission_status_changed",
+   "toNode": "requirement:FORMS-REQ-5",
+   "occurrence": "requirements.forms-submission-status-changed",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:e6b58688d42847b2a7fb82d724454a2f0a86deadb9a7c236b96fb5f616b6769e",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.submission_deleted",
+   "toNode": "requirement:FORMS-REQ-5",
+   "occurrence": "requirements.forms-submission-deleted",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:f792ded5906434c56f84b318088af8c22496b4769869b5d4b8bf73e3ca979fdc",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.endpoint_submissions",
+   "toNode": "requirement:FORMS-REQ-5",
+   "occurrence": "requirements.forms-endpoint-submissions",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:dbd09bec8b35a94edfa2d844451205e122b7e955230b8d382a27b445ced63ec2",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.endpoint_submissions_csv",
+   "toNode": "requirement:FORMS-REQ-5",
+   "occurrence": "requirements.forms-endpoint-submissions-csv",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:e759985ac8f5897d3fc328580b0fcd467f18b5eca3c9c6fec1356366f28a40a1",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.endpoint_submission_delete",
+   "toNode": "requirement:FORMS-REQ-5",
+   "occurrence": "requirements.forms-endpoint-submission-delete",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:dad07595bf2401ac3c461a626c0b218e7e111a660f148c33a1bb285d90e89e9d",
+   "relationKind": "implements",
+   "fromNode": "symbol:forms.honeypot_submits_nothing",
+   "toNode": "requirement:FORMS-REQ-6",
+   "occurrence": "requirements.forms-honeypot-submits-nothing",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4076b6b0bf7857ad9bd2dc48d6efcc5b9251bc6c5bead4e12d933cbc03fe2763",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:e89722025ff08761329427df406fc3ab3ef4953ce331c1a285ad3eddd78e8b8e",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.endpoint_submit",
+   "toNode": "artifact:forms.submit-action",
+   "occurrence": "bindings.forms.endpoint-submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:28f49f8c20810a388586f796338e8db015a0fcfe8fc5ca20b2be0b8a067dbe74",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:5e5a1c44479fa0095255443045c4b522003d2955362fb273649d86e9245cc62a",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.endpoint_submit",
+   "toNode": "artifact:forms.block-renderer",
+   "occurrence": "bindings.forms.embed-shortcode",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:28f49f8c20810a388586f796338e8db015a0fcfe8fc5ca20b2be0b8a067dbe74",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:298130a9478466607a450191845ee03ecb64066e5ef680300835b9d712c6727c",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.endpoint_index",
+   "toNode": "artifact:forms.admin-action",
+   "occurrence": "bindings.forms.endpoint-index",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:28f49f8c20810a388586f796338e8db015a0fcfe8fc5ca20b2be0b8a067dbe74",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:805af2e27ea6796461930297c96163e209a14b12c782d3d60923cdff72db0ee7",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.endpoint_create",
+   "toNode": "artifact:forms.admin-action",
+   "occurrence": "bindings.forms.endpoint-create",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:28f49f8c20810a388586f796338e8db015a0fcfe8fc5ca20b2be0b8a067dbe74",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:907b7fcf20b05ae3af0f0d8b803aa7a87e9bd7700873e5d7efb3289bdb8d494f",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.endpoint_edit",
+   "toNode": "artifact:forms.admin-action",
+   "occurrence": "bindings.forms.endpoint-edit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:28f49f8c20810a388586f796338e8db015a0fcfe8fc5ca20b2be0b8a067dbe74",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:f1ad846c9478371918ef28461cbc02b605cf00b9feef98e70889e57f11bde4af",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.endpoint_publish",
+   "toNode": "artifact:forms.publish-action",
+   "occurrence": "bindings.forms.endpoint-publish",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:28f49f8c20810a388586f796338e8db015a0fcfe8fc5ca20b2be0b8a067dbe74",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:4c303d198b76ff9be53a391ee811143c3816f8aff11b4815c8a2e4e640df7eae",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.endpoint_delete",
+   "toNode": "artifact:forms.delete-action",
+   "occurrence": "bindings.forms.endpoint-delete",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:28f49f8c20810a388586f796338e8db015a0fcfe8fc5ca20b2be0b8a067dbe74",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:e1ec1806c1483e924164aa990ec5d3aa0c195c091886a05f68722c1e43a8a936",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.endpoint_submissions",
+   "toNode": "artifact:forms.inbox-action",
+   "occurrence": "bindings.forms.endpoint-submissions",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:28f49f8c20810a388586f796338e8db015a0fcfe8fc5ca20b2be0b8a067dbe74",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:cfe7fdd5fe214267b59cee436ec436546e10caeb3f5ff5c7afe1fd59199eaf75",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.endpoint_submissions_csv",
+   "toNode": "artifact:forms.csv-action",
+   "occurrence": "bindings.forms.endpoint-submissions-csv",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:28f49f8c20810a388586f796338e8db015a0fcfe8fc5ca20b2be0b8a067dbe74",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:c10e208bc7ad5dab2d94d55f3075abd7a4aaee8181ba9c5e79606816950fea9f",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.endpoint_submission_delete",
+   "toNode": "artifact:forms.submission-delete-action",
+   "occurrence": "bindings.forms.endpoint-submission-delete",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:28f49f8c20810a388586f796338e8db015a0fcfe8fc5ca20b2be0b8a067dbe74",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:c9b40b7d4c2051e9c21761c26f09777cec952ffa17ece1151ae8293f08eea079",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.submit",
+   "toNode": "artifact:forms.service",
+   "occurrence": "bindings.forms.submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4846f50cca0236993dfa3a88882eee596f3721ff761f3212e211d7781195dc1d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:7ebe9082ebb97887827a7f35c0e6fc236c8745dbd011e5e78fb86c8048ed4d5b",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.effect_submission_created",
+   "toNode": "artifact:forms.service",
+   "occurrence": "bindings.forms.effect-submission-created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4846f50cca0236993dfa3a88882eee596f3721ff761f3212e211d7781195dc1d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:bd8e7495e2305f01961cb701e82190773e307319e25d43b6d61fe06e71d78e2f",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.submission_created",
+   "toNode": "artifact:forms.service",
+   "occurrence": "bindings.forms.submission-created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4846f50cca0236993dfa3a88882eee596f3721ff761f3212e211d7781195dc1d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:cf46d8a45c84a4ee9ddb1ddb500735bf79ca44f4d6b617e2e11da4e5331bdcd5",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.submit_denied",
+   "toNode": "artifact:forms.service",
+   "occurrence": "bindings.forms.submit-denied",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4846f50cca0236993dfa3a88882eee596f3721ff761f3212e211d7781195dc1d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:4791ce3e28ff4ab00335f2c48d42f9c61a6aebf31ac2801b1fca8b625d22ce7d",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.throttled_per_ip",
+   "toNode": "artifact:forms.service",
+   "occurrence": "bindings.forms.throttled-per-ip",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4846f50cca0236993dfa3a88882eee596f3721ff761f3212e211d7781195dc1d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:59852dc688debc4b586372a0c2a6df1f053e238dbd6c4b4500feb5d3cf89b75f",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.required_fields_validated",
+   "toNode": "artifact:forms.service",
+   "occurrence": "bindings.forms.required-fields-validated",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4846f50cca0236993dfa3a88882eee596f3721ff761f3212e211d7781195dc1d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:6477b7dad62d98c1584532f73ce4519acf3f1c63e1dff201e5a038b766971a18",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.honeypot_submits_nothing",
+   "toNode": "artifact:forms.service",
+   "occurrence": "bindings.forms.honeypot-stores-nothing",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4846f50cca0236993dfa3a88882eee596f3721ff761f3212e211d7781195dc1d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:f011e01bd8dd5d5e371180bd01e6e0f3084c0ee9f10cc285b412e2b45b25c6c2",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.locale_isolation",
+   "toNode": "artifact:forms.service",
+   "occurrence": "bindings.forms.locale-isolation",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4846f50cca0236993dfa3a88882eee596f3721ff761f3212e211d7781195dc1d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:b3c2183f658cbff7e3f62a7acbdd698b7e3e52d7b5a96044fc345a6ca3f223e8",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.create",
+   "toNode": "artifact:forms.crud",
+   "occurrence": "bindings.forms.create",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4846f50cca0236993dfa3a88882eee596f3721ff761f3212e211d7781195dc1d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:559fc9c43242e121cab8ea16b201cd80f09c66a4845c6d1127fbec9b99c12a47",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.edit",
+   "toNode": "artifact:forms.crud",
+   "occurrence": "bindings.forms.edit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4846f50cca0236993dfa3a88882eee596f3721ff761f3212e211d7781195dc1d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:5004dd0418aa987eb22287815da3571dec1c4e3954f2395abd6bef9b97fcfd83",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.publish_toggle",
+   "toNode": "artifact:forms.crud",
+   "occurrence": "bindings.forms.publish-toggle",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4846f50cca0236993dfa3a88882eee596f3721ff761f3212e211d7781195dc1d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:2fc5587a76c165b6e240ef558f435d4ba8db5a1ffa31033403be4e55da991f97",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.delete",
+   "toNode": "artifact:forms.crud",
+   "occurrence": "bindings.forms.delete",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4846f50cca0236993dfa3a88882eee596f3721ff761f3212e211d7781195dc1d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:0138d201c5a33a3744dd7773d81f1c158202a7bd4ef29923e38a231d3e727a70",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.mark_read",
+   "toNode": "artifact:forms.crud",
+   "occurrence": "bindings.forms.mark-read",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4846f50cca0236993dfa3a88882eee596f3721ff761f3212e211d7781195dc1d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:ce68ef3340a76dae48b73a8b4c8b46163e2c6360d7e6441a7554fc331663e0ce",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.delete_submission",
+   "toNode": "artifact:forms.crud",
+   "occurrence": "bindings.forms.delete-submission",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4846f50cca0236993dfa3a88882eee596f3721ff761f3212e211d7781195dc1d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:99874eb22073fc08c7ad5424c106a9eb2f37f33dd290dd38491e856cb6cd066f",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.effect_form_created",
+   "toNode": "artifact:forms.crud",
+   "occurrence": "bindings.forms.effect-form-created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4846f50cca0236993dfa3a88882eee596f3721ff761f3212e211d7781195dc1d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:177e8bf9236189eaa0e73318194c5ede39e5a1de35b9944cd1e1873b257e9968",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.effect_form_replaced",
+   "toNode": "artifact:forms.crud",
+   "occurrence": "bindings.forms.effect-form-replaced",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4846f50cca0236993dfa3a88882eee596f3721ff761f3212e211d7781195dc1d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:180798a9fa9cbf054544a70090e5eeff09351a4c112991bbbb2aafc54e914886",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.effect_form_status_changed",
+   "toNode": "artifact:forms.crud",
+   "occurrence": "bindings.forms.effect-form-status-changed",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4846f50cca0236993dfa3a88882eee596f3721ff761f3212e211d7781195dc1d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:7d48368f2f7434bd883958a9e7b4516ad6ab2567befc2de120f873393fab7a7c",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.effect_form_deleted",
+   "toNode": "artifact:forms.crud",
+   "occurrence": "bindings.forms.effect-form-deleted",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4846f50cca0236993dfa3a88882eee596f3721ff761f3212e211d7781195dc1d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:c2fc1e3c7a72b813e10afdb4cd0478dbfdd2b85f0ad0be66bbbb919d57fe62b4",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.effect_submission_status_changed",
+   "toNode": "artifact:forms.crud",
+   "occurrence": "bindings.forms.effect-status-changed",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4846f50cca0236993dfa3a88882eee596f3721ff761f3212e211d7781195dc1d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:7f305af82908cb2f881e4113a3e64d6b63a231169f49f798be6d430a550ef09a",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.effect_submission_deleted",
+   "toNode": "artifact:forms.crud",
+   "occurrence": "bindings.forms.effect-submission-deleted",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4846f50cca0236993dfa3a88882eee596f3721ff761f3212e211d7781195dc1d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:61f486197c9ee9cb42727a72065dbfa60c39509f6680f5e6282a58d86654c6c8",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.form_created",
+   "toNode": "artifact:forms.crud",
+   "occurrence": "bindings.forms.form-created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4846f50cca0236993dfa3a88882eee596f3721ff761f3212e211d7781195dc1d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:8c22c974309b67af11ddf76f6b85e62af7a84425d91a2b05ffd87c04d03d626c",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.form_status_changed",
+   "toNode": "artifact:forms.crud",
+   "occurrence": "bindings.forms.form-status-changed",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4846f50cca0236993dfa3a88882eee596f3721ff761f3212e211d7781195dc1d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:38558dc5222ab27e5385db10e4d0569b24e1ff4a17fc9a38ebf6d71d59438bcb",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.form_deleted",
+   "toNode": "artifact:forms.crud",
+   "occurrence": "bindings.forms.form-deleted",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4846f50cca0236993dfa3a88882eee596f3721ff761f3212e211d7781195dc1d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:1eea854f8d1d4866bdbe2004ab7f596798c93ec2fdc670cad14c92e5dcede367",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.submission_status_changed",
+   "toNode": "artifact:forms.crud",
+   "occurrence": "bindings.forms.submission-status-changed",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4846f50cca0236993dfa3a88882eee596f3721ff761f3212e211d7781195dc1d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:dab21b11524b4acb2a6844de0e454541d07ffb1eacbcae7cd48342c7f63ad699",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.submission_deleted",
+   "toNode": "artifact:forms.crud",
+   "occurrence": "bindings.forms.submission-deleted",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4846f50cca0236993dfa3a88882eee596f3721ff761f3212e211d7781195dc1d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:bc7dfb4025a5d4c3675dcb10ab990d3ff47e9b9096f07740363f6a784f0f4e59",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.form",
+   "toNode": "artifact:forms.entry",
+   "occurrence": "bindings.forms.form",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:41e92ec46fe6addd0b8014f3d0cc9ebb861aeb71e8a07cfab7cb7378f4ccccf4",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/entities.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:5df49a4e4e48e711d95e5917da9c63be5dbbde135ffc2ce7db309b5c7b0cd9c7",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.slug",
+   "toNode": "artifact:forms.entry",
+   "occurrence": "bindings.forms.slug",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:41e92ec46fe6addd0b8014f3d0cc9ebb861aeb71e8a07cfab7cb7378f4ccccf4",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/entities.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:3fc0fcbe5b90b70c00d0c2f70389b894c6c0fb872cbf14211acf7f0c9e813a7a",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.locale",
+   "toNode": "artifact:forms.entry",
+   "occurrence": "bindings.forms.locale",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:41e92ec46fe6addd0b8014f3d0cc9ebb861aeb71e8a07cfab7cb7378f4ccccf4",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/entities.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:5be29443fb78a55b3e3817e5fa1572e7d2252407bfe08736d61929f76469e1eb",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.form_type",
+   "toNode": "artifact:forms.entry",
+   "occurrence": "bindings.forms.form-type",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:41e92ec46fe6addd0b8014f3d0cc9ebb861aeb71e8a07cfab7cb7378f4ccccf4",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/entities.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:66563b9f27248fd14eae5c6b103453f115a993e8b2900b3ed10ea6c3766e850d",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.status",
+   "toNode": "artifact:forms.entry",
+   "occurrence": "bindings.forms.status",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:41e92ec46fe6addd0b8014f3d0cc9ebb861aeb71e8a07cfab7cb7378f4ccccf4",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/entities.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:3ac310c657a7e7526f6db1bbdc2443b57e6fbd5434c077e776fd45fd2c9b57da",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.title",
+   "toNode": "artifact:forms.entry",
+   "occurrence": "bindings.forms.title",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:41e92ec46fe6addd0b8014f3d0cc9ebb861aeb71e8a07cfab7cb7378f4ccccf4",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/entities.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:3bc7b1d3bc98230ea84ddffb1bc63166ebd7dfa59b51f9a9f5b164eb586099b8",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.submission",
+   "toNode": "artifact:forms.submission-entry",
+   "occurrence": "bindings.forms.submission",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:41e92ec46fe6addd0b8014f3d0cc9ebb861aeb71e8a07cfab7cb7378f4ccccf4",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/entities.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:391e32f7920a61b30b0ff07a672e371fea065a5845c541e8e1ba99f46fe29121",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.answer",
+   "toNode": "artifact:forms.submission-entry",
+   "occurrence": "bindings.forms.answer",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:41e92ec46fe6addd0b8014f3d0cc9ebb861aeb71e8a07cfab7cb7378f4ccccf4",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/entities.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:f9f24bd5479479dab061cf173758e198eca1fd63b865f58ded4385ecca34d0f4",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.submission_status",
+   "toNode": "artifact:forms.submission-entry",
+   "occurrence": "bindings.forms.submission-status",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:41e92ec46fe6addd0b8014f3d0cc9ebb861aeb71e8a07cfab7cb7378f4ccccf4",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/entities.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:2f6e0d75b77ff7e3d51e36e7bb385c7bbc16faaaa48f8f07141524187b378734",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.guest_email",
+   "toNode": "artifact:forms.submission-entry",
+   "occurrence": "bindings.forms.guest-email",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:41e92ec46fe6addd0b8014f3d0cc9ebb861aeb71e8a07cfab7cb7378f4ccccf4",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/entities.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:33c354247f8356afc748100a273ca84c79ea41dc6a91239106f3c959d13ed1ff",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.timestamp",
+   "toNode": "artifact:forms.submission-entry",
+   "occurrence": "bindings.forms.timestamp",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:41e92ec46fe6addd0b8014f3d0cc9ebb861aeb71e8a07cfab7cb7378f4ccccf4",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/entities.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:5cb2d6fc89c91a448839358f08564f085e5150289a4878c161338e98b77aabc0",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.count",
+   "toNode": "artifact:forms.submission-entry",
+   "occurrence": "bindings.forms.count",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:41e92ec46fe6addd0b8014f3d0cc9ebb861aeb71e8a07cfab7cb7378f4ccccf4",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/entities.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:743684e447155f43839bd2981e2ad67f9b5f5073c48f41c61ebf6a0f807abecb",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.slug_unique_per_locale",
+   "toNode": "artifact:forms.repository",
+   "occurrence": "bindings.forms.slug-unique-per-locale",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1d86c79120ce5992227f0fcfcbfecbdb9c94b3bf15784c95ec85851fac2625aa",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/policies.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:39e8f5432452c14139f4e2140d6fb9b5520ad20caa67b71c2559b887397be9c1",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.delete_cascades",
+   "toNode": "artifact:forms.repository",
+   "occurrence": "bindings.forms.delete-cascades",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1d86c79120ce5992227f0fcfcbfecbdb9c94b3bf15784c95ec85851fac2625aa",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/policies.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:42f63f5661d3ba74f7edbe88d9f721c2f9dbd1f74abeefef2f28c81ced9558e4",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.delete_cascades",
+   "toNode": "artifact:forms.submission-repository",
+   "occurrence": "bindings.forms.delete-submission-cascades",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1d86c79120ce5992227f0fcfcbfecbdb9c94b3bf15784c95ec85851fac2625aa",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/policies.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:f4397c38ae9ac4e3b5c17281011751725600f2b1238ea16d97adc6f4b2e16f21",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.option_must_belong_to_question",
+   "toNode": "artifact:forms.service",
+   "occurrence": "bindings.forms.option-belongs-to-question",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1d86c79120ce5992227f0fcfcbfecbdb9c94b3bf15784c95ec85851fac2625aa",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/policies.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:f43389aa7cd3259a778d69978c3812d941ba04922f370f922d22114b3f5b5b71",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.count",
+   "toNode": "artifact:forms.results",
+   "occurrence": "bindings.forms.count-tally",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:41e92ec46fe6addd0b8014f3d0cc9ebb861aeb71e8a07cfab7cb7378f4ccccf4",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/entities.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:26f825b6e2bedf9eba09f736f7d40a2d1a1dadd8ae7c2a9d1dfc706300c0075b",
+   "relationKind": "binds",
+   "fromNode": "symbol:forms.endpoint_submissions_csv",
+   "toNode": "artifact:forms.csv",
+   "occurrence": "bindings.forms.csv-export",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:28f49f8c20810a388586f796338e8db015a0fcfe8fc5ca20b2be0b8a067dbe74",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:61a09869c3822a5f5449aa46ce0a4ec2d461046c69ee01359cee9a8535a30568",
+   "relationKind": "covers",
+   "fromNode": "scenario:forms.contact-submission-loop",
+   "toNode": "symbol:forms.endpoint_submit",
+   "occurrence": "covers.forms.forms-endpoint-submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:31fb7faaf33948545c923bf0cb2eb1f5d9b09da9dbf5831caf91c9e0eab33a46",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:c6a9b97d55c79fc0fe7415ef6c2845ceaccd85138c2de5d1f5546ebe10aa1ad3",
+   "relationKind": "covers",
+   "fromNode": "scenario:forms.contact-submission-loop",
+   "toNode": "symbol:forms.submit",
+   "occurrence": "covers.forms.forms-submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:31fb7faaf33948545c923bf0cb2eb1f5d9b09da9dbf5831caf91c9e0eab33a46",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:c9e519a3c95d270784587f714f7502a418f4d032911409327f5602858caad849",
+   "relationKind": "covers",
+   "fromNode": "scenario:forms.contact-submission-loop",
+   "toNode": "symbol:forms.form_must_be_published",
+   "occurrence": "covers.forms.forms-form-must-be-published",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:31fb7faaf33948545c923bf0cb2eb1f5d9b09da9dbf5831caf91c9e0eab33a46",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:a32028030ff813b10a906ab3b7f76ca7910d55569bca42f2abc201b8780f6f8e",
+   "relationKind": "covers",
+   "fromNode": "scenario:forms.contact-submission-loop",
+   "toNode": "symbol:forms.locale_isolation",
+   "occurrence": "covers.forms.forms-locale-isolation",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:31fb7faaf33948545c923bf0cb2eb1f5d9b09da9dbf5831caf91c9e0eab33a46",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:179b278ac9b057d9ae5a91653e16a57e7594dbeb9550c73af16f61bbdd5808b5",
+   "relationKind": "covers",
+   "fromNode": "scenario:forms.contact-submission-loop",
+   "toNode": "symbol:forms.required_fields_validated",
+   "occurrence": "covers.forms.forms-required-fields-validated",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:31fb7faaf33948545c923bf0cb2eb1f5d9b09da9dbf5831caf91c9e0eab33a46",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:7df58d92b8565d1c4d3ddcca2f69218288063e9e9bd8a2fbf50acfde0bc23954",
+   "relationKind": "covers",
+   "fromNode": "scenario:forms.contact-submission-loop",
+   "toNode": "symbol:forms.effect_submission_created",
+   "occurrence": "covers.forms.forms-effect-submission-created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:31fb7faaf33948545c923bf0cb2eb1f5d9b09da9dbf5831caf91c9e0eab33a46",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:ad346054cbe3136e3b535b1e17edcb489962d58bfef4c1485e68443c82a02e5f",
+   "relationKind": "covers",
+   "fromNode": "scenario:forms.contact-submission-loop",
+   "toNode": "symbol:forms.submission_created",
+   "occurrence": "covers.forms.forms-submission-created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:31fb7faaf33948545c923bf0cb2eb1f5d9b09da9dbf5831caf91c9e0eab33a46",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:5509b27027d17acc03d752e8ba7b6196ec95f9e16971de39924a6af25486178f",
+   "relationKind": "covers",
+   "fromNode": "scenario:forms.contact-submission-loop",
+   "toNode": "symbol:forms.endpoint_submissions",
+   "occurrence": "covers.forms.forms-endpoint-submissions",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:31fb7faaf33948545c923bf0cb2eb1f5d9b09da9dbf5831caf91c9e0eab33a46",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:39badc13bfc21d1233faa5b2e4ad0066ff4619f4426d1910e7a69bfe83b2529f",
+   "relationKind": "covers",
+   "fromNode": "scenario:forms.contact-submission-loop",
+   "toNode": "symbol:forms.endpoint_submissions_csv",
+   "occurrence": "covers.forms.forms-endpoint-submissions-csv",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:31fb7faaf33948545c923bf0cb2eb1f5d9b09da9dbf5831caf91c9e0eab33a46",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:c8a026212e1f3d3c7dde29573baec29503b439b700c7ce6d03085e162956b775",
+   "relationKind": "covers",
+   "fromNode": "scenario:forms.poll-result-loop",
+   "toNode": "symbol:forms.option_must_belong_to_question",
+   "occurrence": "covers.forms.forms-option-must-belong-to-question",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:31fb7faaf33948545c923bf0cb2eb1f5d9b09da9dbf5831caf91c9e0eab33a46",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:28eed6ce907185358827736f7e6ee05a454d4f9cae79f62d40a5e3f5ba099498",
+   "relationKind": "covers",
+   "fromNode": "scenario:forms.poll-result-loop",
+   "toNode": "symbol:forms.form_type",
+   "occurrence": "covers.forms.forms-form-type",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:31fb7faaf33948545c923bf0cb2eb1f5d9b09da9dbf5831caf91c9e0eab33a46",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:6b3292daff6959f0a77dbd6d0b69e82652105ba5f2fafbdcefa383f073ef1215",
+   "relationKind": "covers",
+   "fromNode": "scenario:forms.poll-result-loop",
+   "toNode": "symbol:forms.count",
+   "occurrence": "covers.forms.forms-count",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:31fb7faaf33948545c923bf0cb2eb1f5d9b09da9dbf5831caf91c9e0eab33a46",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:9c78eb22c7e3679257ed4b8b65c88e89af94c678f22846ef2a6fe48fc7030acb",
+   "relationKind": "covers",
+   "fromNode": "scenario:forms.poll-result-loop",
+   "toNode": "symbol:forms.answer",
+   "occurrence": "covers.forms.forms-answer",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:31fb7faaf33948545c923bf0cb2eb1f5d9b09da9dbf5831caf91c9e0eab33a46",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:baeee25a945ccbe5f54f22dfdea82c23fed21ba7f295d29623aa44d46af43f4c",
+   "relationKind": "covers",
+   "fromNode": "scenario:forms.spam-and-gatekeeping",
+   "toNode": "symbol:forms.throttled_per_ip",
+   "occurrence": "covers.forms.forms-throttled-per-ip",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:31fb7faaf33948545c923bf0cb2eb1f5d9b09da9dbf5831caf91c9e0eab33a46",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:b42a72b6a92e3412f50406297e6a88727b905762814d847d885801fe1b7aaeb3",
+   "relationKind": "covers",
+   "fromNode": "scenario:forms.spam-and-gatekeeping",
+   "toNode": "symbol:forms.honeypot_submits_nothing",
+   "occurrence": "covers.forms.forms-honeypot-submits-nothing",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:31fb7faaf33948545c923bf0cb2eb1f5d9b09da9dbf5831caf91c9e0eab33a46",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:cf1c27e8633d27e2053b954f93e687f2d2ea313e9076b161ee2754b89955d00c",
+   "relationKind": "covers",
+   "fromNode": "scenario:forms.spam-and-gatekeeping",
+   "toNode": "symbol:forms.submit_denied",
+   "occurrence": "covers.forms.forms-submit-denied",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:31fb7faaf33948545c923bf0cb2eb1f5d9b09da9dbf5831caf91c9e0eab33a46",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:cf0960177346b39d8d0f48ec7305ab610593e8aa490d27f9e7c09b1d88ea524a",
+   "relationKind": "covers",
+   "fromNode": "scenario:forms.spam-and-gatekeeping",
+   "toNode": "symbol:forms.form_must_be_published",
+   "occurrence": "covers.forms.forms-form-must-be-published",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:31fb7faaf33948545c923bf0cb2eb1f5d9b09da9dbf5831caf91c9e0eab33a46",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/forms/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:7b172bb85fe877e09fcc724c8b1e692416ecdc5dbf5aa47109ebc7d1bc2758ea",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-integration-test",
+   "toNode": "scenario:forms.contact-submission-loop",
+   "occurrence": "verifies.forms.forms-contact-submission-loop-flow",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:e29a8b15a5f79882afd6fdb967bb91830305de80c8c62947221bf5004abe0a52",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:8ec2d7fffbedc22c14fd7798ed7d7d07b47bb480008badc112afa20a3b4209ec",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-integration-test",
+   "toNode": "scenario:forms.poll-result-loop",
+   "occurrence": "verifies.forms.forms-poll-result-loop-flow",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:e29a8b15a5f79882afd6fdb967bb91830305de80c8c62947221bf5004abe0a52",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:34b85cca6ae7c27355735f710252449877f48737aa5ebb07db177e58cc247cae",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-integration-test",
+   "toNode": "symbol:forms.endpoint_submit",
+   "occurrence": "verifies.forms.forms-endpoint-submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:e29a8b15a5f79882afd6fdb967bb91830305de80c8c62947221bf5004abe0a52",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:299afd3513bd3306526ba0b5d2481541373882374198e45d1dd445735cb15db1",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-integration-test",
+   "toNode": "symbol:forms.submit",
+   "occurrence": "verifies.forms.forms-submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:e29a8b15a5f79882afd6fdb967bb91830305de80c8c62947221bf5004abe0a52",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:1511e03b2e13e1434c8bf3737c2b701c67c02bfe15122a503307b3927ea3a543",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-integration-test",
+   "toNode": "symbol:forms.submission",
+   "occurrence": "verifies.forms.forms-submission",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:e29a8b15a5f79882afd6fdb967bb91830305de80c8c62947221bf5004abe0a52",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:df27b438fb5740866f29be63f2aaa9d5e049621ffa7a64195ce1e10b9f3d025d",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-integration-test",
+   "toNode": "symbol:forms.form_must_be_published",
+   "occurrence": "verifies.forms.forms-form-must-be-published",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:e29a8b15a5f79882afd6fdb967bb91830305de80c8c62947221bf5004abe0a52",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:70e00f774c72dbf62d79ab36f77384a6d11bf357bf7ef62dd94edd78f77f1fda",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-integration-test",
+   "toNode": "symbol:forms.locale_isolation",
+   "occurrence": "verifies.forms.forms-locale-isolation",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:e29a8b15a5f79882afd6fdb967bb91830305de80c8c62947221bf5004abe0a52",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:0b4f2a80f55e3054ed0c17f495284ee9483f80d9846d527ff3a44a068386ba51",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-integration-test",
+   "toNode": "symbol:forms.effect_submission_created",
+   "occurrence": "verifies.forms.forms-effect-submission-created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:e29a8b15a5f79882afd6fdb967bb91830305de80c8c62947221bf5004abe0a52",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:54eca9b5ed95a718ad78f53359b9477489d2da13554cbc4d44e5be3cbf778e44",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-integration-test",
+   "toNode": "symbol:forms.submission_created",
+   "occurrence": "verifies.forms.forms-submission-created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:e29a8b15a5f79882afd6fdb967bb91830305de80c8c62947221bf5004abe0a52",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:4499eb97e81b75e677762a7bac89ada22fe45da3e5488431018798af126347d9",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-integration-test",
+   "toNode": "symbol:forms.endpoint_submissions",
+   "occurrence": "verifies.forms.forms-endpoint-submissions",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:e29a8b15a5f79882afd6fdb967bb91830305de80c8c62947221bf5004abe0a52",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:d79d364c809bea4ca5006fd3d81a14575d362db473ef10fa3e2e4459516591b6",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-integration-test",
+   "toNode": "symbol:forms.endpoint_submissions_csv",
+   "occurrence": "verifies.forms.forms-endpoint-submissions-csv",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:e29a8b15a5f79882afd6fdb967bb91830305de80c8c62947221bf5004abe0a52",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:6166fd4056a2f1fdbe6aeb359965ca10c14e43866e63eb0e2672234fc70d320c",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-integration-test",
+   "toNode": "symbol:forms.delete_submission",
+   "occurrence": "verifies.forms.forms-delete-submission",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:e29a8b15a5f79882afd6fdb967bb91830305de80c8c62947221bf5004abe0a52",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:8bf1ad3cb43bb1e56a1f01d1cc88bebca50f5ce838085da01225d1d079d2ae8a",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-submission-service-test",
+   "toNode": "scenario:forms.contact-submission-loop",
+   "occurrence": "verifies.forms.forms-contact-submission-loop-flow",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:73a2b431156fadc66e511f9bcb273bd93e13a3d5fae2f35810030809682f1e7a",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:210186e0c7dc6622969d7814587d551b63cb375b806e0813f76d24904b803cc0",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-submission-service-test",
+   "toNode": "scenario:forms.poll-result-loop",
+   "occurrence": "verifies.forms.forms-poll-result-loop-flow",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:73a2b431156fadc66e511f9bcb273bd93e13a3d5fae2f35810030809682f1e7a",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:a612933ecee34650c173aacc17d35fec316bbd8ac17164869676d97905c4ad39",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-submission-service-test",
+   "toNode": "scenario:forms.spam-and-gatekeeping",
+   "occurrence": "verifies.forms.forms-spam-and-gatekeeping-flow",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:73a2b431156fadc66e511f9bcb273bd93e13a3d5fae2f35810030809682f1e7a",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:35816e7bb7fc7358bd45da1370229943fd63d4f6e82b8c98c7fa964eac3d3b38",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-submission-service-test",
+   "toNode": "symbol:forms.submit",
+   "occurrence": "verifies.forms.forms-submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:73a2b431156fadc66e511f9bcb273bd93e13a3d5fae2f35810030809682f1e7a",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:5c867f79be07b99dadff47e524a0018d0c766b7f80a0f68eff7ae898bf7c3591",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-submission-service-test",
+   "toNode": "symbol:forms.submission",
+   "occurrence": "verifies.forms.forms-submission",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:73a2b431156fadc66e511f9bcb273bd93e13a3d5fae2f35810030809682f1e7a",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:312995239e828b0f899bbff4fc266fbd3dfdee2e5ded94d0d4b1cee9da5621fc",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-submission-service-test",
+   "toNode": "symbol:forms.required_fields_validated",
+   "occurrence": "verifies.forms.forms-required-fields-validated",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:73a2b431156fadc66e511f9bcb273bd93e13a3d5fae2f35810030809682f1e7a",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:7d79c4a34fa78e473f6915661b355dc94428a5d750ca5da535869d4f185bac75",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-submission-service-test",
+   "toNode": "symbol:forms.honeypot_submits_nothing",
+   "occurrence": "verifies.forms.forms-honeypot-submits-nothing",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:73a2b431156fadc66e511f9bcb273bd93e13a3d5fae2f35810030809682f1e7a",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:ff78125bc6976a2219f55c09b61ef8b478930d9fb90c4c7871b0b4c3eff915ee",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-submission-service-test",
+   "toNode": "symbol:forms.option_must_belong_to_question",
+   "occurrence": "verifies.forms.forms-option-must-belong-to-question",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:73a2b431156fadc66e511f9bcb273bd93e13a3d5fae2f35810030809682f1e7a",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:9bd0afdd0a9d848c6f957f4682a2d8e9277ad1de8f1ac582ce61f86c06dc0c56",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-submission-service-test",
+   "toNode": "symbol:forms.form_type",
+   "occurrence": "verifies.forms.forms-form-type",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:73a2b431156fadc66e511f9bcb273bd93e13a3d5fae2f35810030809682f1e7a",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:b49b95d435189aa4ed321c27b63b0eae30e8a8eff0525be5a3487cee82e1b317",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-submission-service-test",
+   "toNode": "symbol:forms.count",
+   "occurrence": "verifies.forms.forms-count",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:73a2b431156fadc66e511f9bcb273bd93e13a3d5fae2f35810030809682f1e7a",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:7ec304ff39ab0634814eef9ae2e5487019dbb2de6614a9d4cfee34547acd5642",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-submission-service-test",
+   "toNode": "symbol:forms.answer",
+   "occurrence": "verifies.forms.forms-answer",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:73a2b431156fadc66e511f9bcb273bd93e13a3d5fae2f35810030809682f1e7a",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:7dc740d0ae7f418b40d2592cfc6267b73080958c39429e31c44259abdf0be3f3",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-repository-test",
+   "toNode": "symbol:forms.form",
+   "occurrence": "verifies.forms.forms-form",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:58e89947b45891b1eaca15886a9301ef13353059c94ed30adfd470027ed2ce02",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:73ccb24d5744efa0043ac3b441f40a82da78a2b8589c82f32cbb99f9de90f15a",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-repository-test",
+   "toNode": "symbol:forms.submission",
+   "occurrence": "verifies.forms.forms-submission",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:58e89947b45891b1eaca15886a9301ef13353059c94ed30adfd470027ed2ce02",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:db3a9916c86ad0866edc72d2992b8f4c781dd316c1038bb6a740bc747e071ca9",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-repository-test",
+   "toNode": "symbol:forms.slug_unique_per_locale",
+   "occurrence": "verifies.forms.forms-slug-unique-per-locale",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:58e89947b45891b1eaca15886a9301ef13353059c94ed30adfd470027ed2ce02",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:e9e75e686529dc611a6df24ec4d1b0dd23a11289470ca16da837f97b345765ef",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-repository-test",
+   "toNode": "symbol:forms.delete_cascades",
+   "occurrence": "verifies.forms.forms-delete-cascades",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:58e89947b45891b1eaca15886a9301ef13353059c94ed30adfd470027ed2ce02",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:1eb80ad9da6b3b39b5ea600c7fa3c5b3fcb2732a59f3108e88d80a901082728f",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-repository-test",
+   "toNode": "symbol:forms.answer",
+   "occurrence": "verifies.forms.forms-answer",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:58e89947b45891b1eaca15886a9301ef13353059c94ed30adfd470027ed2ce02",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:3ebb662b72917083f4c7c1f64b633c01378f1215cdf088d1b92698f33c03ad66",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-repository-test",
+   "toNode": "symbol:forms.locale",
+   "occurrence": "verifies.forms.forms-locale",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:58e89947b45891b1eaca15886a9301ef13353059c94ed30adfd470027ed2ce02",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:451c4137aff6f234f33a6656f8fbb41eefcb83ea583f64221d0fdfbda3dff5fa",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-repository-test",
+   "toNode": "symbol:forms.slug",
+   "occurrence": "verifies.forms.forms-slug",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:58e89947b45891b1eaca15886a9301ef13353059c94ed30adfd470027ed2ce02",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:321fab567aae9da2c97e8a14bfb0979dcdf6285a12f6c6daea74de11026e62ca",
+   "relationKind": "verifies",
+   "fromNode": "test:form-submission-csv-test",
+   "toNode": "symbol:forms.submission",
+   "occurrence": "verifies.forms.forms-submission",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e4dcf5b9a129f03813fa5b82ac5e47c6af6352f3574c4eef9242388b1c35cc5",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:17cd595b179af697ef198a159fd9146900547d56473b688adbaf061a12575817",
+   "relationKind": "verifies",
+   "fromNode": "test:form-submission-csv-test",
+   "toNode": "symbol:forms.endpoint_submissions_csv",
+   "occurrence": "verifies.forms.forms-endpoint-submissions-csv",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e4dcf5b9a129f03813fa5b82ac5e47c6af6352f3574c4eef9242388b1c35cc5",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:eb60c693b102d0f5ee60c80cf33e7ad8a914cbca823d1966da9790a845b1d217",
+   "relationKind": "verifies",
+   "fromNode": "test:form-submission-csv-test",
+   "toNode": "symbol:forms.answer",
+   "occurrence": "verifies.forms.forms-answer",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5e4dcf5b9a129f03813fa5b82ac5e47c6af6352f3574c4eef9242388b1c35cc5",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:69bbfeaba2fe5850620dd84abf051ce5629de4395d4d935c159cbc60fbb493c5",
+   "relationKind": "verifies",
+   "fromNode": "test:form-shortcode-block-test",
+   "toNode": "scenario:forms.contact-submission-loop",
+   "occurrence": "verifies.forms.forms-contact-submission-loop-flow",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:a8416424cc3f8758b8f48be6184ce5614be795dbb8b6ae4528e4bd53e900c184",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:83ea983aa09f559003c0a5ade5754bd5a4014741942298ec3f47854c854762cb",
+   "relationKind": "verifies",
+   "fromNode": "test:form-shortcode-block-test",
+   "toNode": "symbol:forms.endpoint_submit",
+   "occurrence": "verifies.forms.forms-endpoint-submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:a8416424cc3f8758b8f48be6184ce5614be795dbb8b6ae4528e4bd53e900c184",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:dfce2c5feebafba7fa0f5693bec750d79fca3b28a64da8947ceb957e52bfaac6",
+   "relationKind": "verifies",
+   "fromNode": "test:form-shortcode-block-test",
+   "toNode": "symbol:forms.form",
+   "occurrence": "verifies.forms.forms-form",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:a8416424cc3f8758b8f48be6184ce5614be795dbb8b6ae4528e4bd53e900c184",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:ea6cff1157babd9c711d1779ab85d464c0078e2cd7b25863d3e465232ec63a4e",
+   "relationKind": "verifies",
+   "fromNode": "test:form-shortcode-block-test",
+   "toNode": "symbol:forms.form_type",
+   "occurrence": "verifies.forms.forms-form-type",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:a8416424cc3f8758b8f48be6184ce5614be795dbb8b6ae4528e4bd53e900c184",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:5f6ae5a8f949538c4bc00deae5bd49a5097fa24c1be0d3c81867f2310bc6d6e9",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-contract-test",
+   "toNode": "symbol:forms.form",
+   "occurrence": "verifies.forms.forms-form",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:852488d47d0306f057353815ac29b8b534b1889fcccde7a26caa5c5926ace897",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:c99899ea33425131e7b8d0dcd0b7e6cc51b120fc6b8c9eea95c1f5037062fee7",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-contract-test",
+   "toNode": "symbol:forms.endpoint_submit",
+   "occurrence": "verifies.forms.forms-endpoint-submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:852488d47d0306f057353815ac29b8b534b1889fcccde7a26caa5c5926ace897",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:f872c6ca920d1ac7e7213318b37bd8d2d591c36425a98aad447e954786b543af",
+   "relationKind": "verifies",
+   "fromNode": "test:forms-contract-test",
+   "toNode": "symbol:forms.endpoint_index",
+   "occurrence": "verifies.forms.forms-endpoint-index",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:852488d47d0306f057353815ac29b8b534b1889fcccde7a26caa5c5926ace897",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:a50ac2d27f7b3d27e6ecba2f90ae510e1daff239c7b54a9d03a1d6ad6960e2db",
+   "relationKind": "verifies",
+   "fromNode": "test:frontend-form-parity-test",
+   "toNode": "scenario:forms.contact-submission-loop",
+   "occurrence": "verifies.forms.forms-contact-submission-loop-flow",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5d4a9245e674484fd820562333754f4e8cff69bc3244833920665037d182b08f",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:9ca633e3d9472c25ce34aeea6484551a107c68fc17a7f5c40f2d3405f20908a9",
+   "relationKind": "verifies",
+   "fromNode": "test:frontend-form-parity-test",
+   "toNode": "symbol:forms.endpoint_submit",
+   "occurrence": "verifies.forms.forms-endpoint-submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5d4a9245e674484fd820562333754f4e8cff69bc3244833920665037d182b08f",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:ce7c58df8903bed1d523f54dcff2ecdcf7333297fa349f00745cae864cea7754",
+   "relationKind": "verifies",
+   "fromNode": "test:frontend-form-parity-test",
+   "toNode": "symbol:forms.form_type",
+   "occurrence": "verifies.forms.forms-form-type",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:5d4a9245e674484fd820562333754f4e8cff69bc3244833920665037d182b08f",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:94abcf645aaedd917abbed55668dc86b84f0574839bb757818cd6f6191f961f1",
+   "relationKind": "evidences",
+   "fromNode": "gate:nativa-phpunit",
+   "toNode": "test:forms-integration-test",
+   "occurrence": "evidences.nativa-phpunit-forms-integration-test",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit"
+   ]
+  },
+  {
+   "relationId": "sha256:10327fe8909283ecf1f20c57e40700a1ed2d7fd7861bc341c9bd7bc45fb98d68",
+   "relationKind": "evidences",
+   "fromNode": "gate:nativa-phpunit",
+   "toNode": "test:forms-submission-service-test",
+   "occurrence": "evidences.nativa-phpunit-forms-submission-service-test",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit"
+   ]
+  },
+  {
+   "relationId": "sha256:b4bc43c89bddf8a629156ad486812c018854e1c825ad4d46697dcd979a502d3a",
+   "relationKind": "evidences",
+   "fromNode": "gate:nativa-phpunit",
+   "toNode": "test:forms-repository-test",
+   "occurrence": "evidences.nativa-phpunit-forms-repository-test",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit"
+   ]
+  },
+  {
+   "relationId": "sha256:a16787fd1059142ef5af065082015223ad0140de3fd64a10852adecb3a81a609",
+   "relationKind": "evidences",
+   "fromNode": "gate:nativa-phpunit",
+   "toNode": "test:form-submission-csv-test",
+   "occurrence": "evidences.nativa-phpunit-form-submission-csv-test",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit"
+   ]
+  },
+  {
+   "relationId": "sha256:b7b5f3822a05fdf694a3a956fe4e2839abc8ac92ccaedb3763e2169da556395b",
+   "relationKind": "evidences",
+   "fromNode": "gate:nativa-phpunit",
+   "toNode": "test:form-shortcode-block-test",
+   "occurrence": "evidences.nativa-phpunit-form-shortcode-block-test",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit"
+   ]
+  },
+  {
+   "relationId": "sha256:276d458ba53b137000eb926ca18e144d9271d44a05448c68838779157bf8f829",
+   "relationKind": "evidences",
+   "fromNode": "gate:nativa-phpunit",
+   "toNode": "test:forms-contract-test",
+   "occurrence": "evidences.nativa-phpunit-forms-contract-test",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit"
+   ]
+  },
+  {
+   "relationId": "sha256:a637b4e95893bae12579849aa3bb874e4dbf0c0931b44fd3abc048f0aca99167",
+   "relationKind": "evidences",
+   "fromNode": "gate:nativa-phpunit",
+   "toNode": "test:frontend-form-parity-test",
+   "occurrence": "evidences.nativa-phpunit-frontend-form-parity-test",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit"
+   ]
+  },
+  {
+   "relationId": "sha256:7192199de170cd9b2489bf21b6643bc15eb47396a15854cb2bc768b389b13865",
+   "relationKind": "evidences",
+   "fromNode": "gate:lekalo-validate-model",
+   "toNode": "test:forms-integration-test",
+   "occurrence": "evidences.lekalo-validate-model-forms-integration-test",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:4e9b36cf5a1e1e3832e6a86da9a54baba5f0343e82a2d957417ffe4e254bef5f",
+   "relationKind": "evidences",
+   "fromNode": "gate:lekalo-validate-model",
+   "toNode": "test:forms-submission-service-test",
+   "occurrence": "evidences.lekalo-validate-model-forms-submission-service-test",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:2e82d5e3498249fa254f2aa9c61b73b10e502a0d180c2ba6786ce95dc7d26dbe",
+   "relationKind": "evidences",
+   "fromNode": "gate:lekalo-validate-model",
+   "toNode": "test:forms-repository-test",
+   "occurrence": "evidences.lekalo-validate-model-forms-repository-test",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:dd6096e234a5a318ba0dd7f7bae3bb92b7808576b697dbfa1f2f76a0e72c9451",
+   "relationKind": "evidences",
+   "fromNode": "gate:lekalo-validate-model",
+   "toNode": "test:form-submission-csv-test",
+   "occurrence": "evidences.lekalo-validate-model-form-submission-csv-test",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:b78c14787abe0071e24f037e671202062f7a09d0e3d73793ce434074db60078c",
+   "relationKind": "evidences",
+   "fromNode": "gate:lekalo-validate-model",
+   "toNode": "test:form-shortcode-block-test",
+   "occurrence": "evidences.lekalo-validate-model-form-shortcode-block-test",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:63ea7d79a51b7ebdca0d999242db65a7d4d191b046e1d44c442b3a4113bdc7da",
+   "relationKind": "evidences",
+   "fromNode": "gate:lekalo-validate-model",
+   "toNode": "test:forms-contract-test",
+   "occurrence": "evidences.lekalo-validate-model-forms-contract-test",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:9cdcddc1405ca62f6dd70a18b6ab26fa04017451e7f4fbc83af61d7fa4c13ee2",
+   "relationKind": "evidences",
+   "fromNode": "gate:lekalo-validate-model",
+   "toNode": "test:frontend-form-parity-test",
+   "occurrence": "evidences.lekalo-validate-model-frontend-form-parity-test",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:lekalo-validate-model"
+   ]
+  }
+ ],
+ "gaps": [
+  {
+   "gapKind": "missing-gate",
+   "status": "candidate",
+   "anchorNode": "symbol:forms.submit",
+   "expected": "hlv.native.gate.forms",
+   "sourcePath": "docs/lekalo/trace/forms.trace.json"
+  },
+  {
+   "gapKind": "unsupported-provider",
+   "status": "unsupported",
+   "anchorNode": "symbol:forms.submit",
+   "expected": "lekalo.native.gate.receipt",
+   "sourcePath": "docs/lekalo/trace/forms.trace.json"
+  }
+ ]
+}

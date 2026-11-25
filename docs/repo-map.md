@@ -13,7 +13,7 @@ the copy that the next build replaces.
 | `responsive-sk/nativa-core` | generated | the public starting point: an export of a commit of this tree, written by `bin/build/publish-core.sh` |
 | `responsive-sk/nativa-resp` | generated | the private client port: the site module set, Boson and the content seed, written by `bin/build/publish-core.sh --profile bin/export/resp` |
 | `evan70/nativa-themes` | **authored: the gallery** | the theme modules and the static gallery, published at `https://evan70.github.io/nativa-themes/`; its slices were imported here on 2026-11-18 and the repository was archived the same day, then unarchived on 2026-11-22 to publish the gallery again |
-| `evan70/nativa-minimal` | showcase | a full site, private; its kernel slice is the ancestor of this one, not a source |
+| `evan70/nativa-minimal` | retired | the showcase; its kernel slice is the ancestor of this one, and `archive/nativa-minimal/` keeps the documents this tree cites |
 
 One gallery has one publisher. It is `evan70/nativa-themes`, because that is
 the tree holding the gallery as source: the hand-written pages, `scripts/pages.mjs`
@@ -46,13 +46,14 @@ where it came from. Nothing in `responsive-sk/nativa-core` or
 `responsive-sk/nativa-resp` is edited by hand.
 
 The theme gallery is a consumer: it renders the class names the modules here
-already define, and its own `sync:check` compares its `src/` against
-`evan70/nativa-minimal`. It is not part of the exported tree and not part of
+already define, and its own `sync:check` compared its `src/` against
+`evan70/nativa-minimal` before that repository was retired. It is not part of
+the exported tree and not part of
 the deployable artifact; both the profile and `bin/build/build-dist.sh` leave
 it out.
 
-The showcase is where this kernel came from and remains a site that installs
-modules, not a second kernel source. The byte comparison that measured the
+The showcase is where this kernel came from, not a second kernel source, and it
+was retired on 2026-11-25. The byte comparison that measured the
 divergence was retired on 2026-11-18
 (`docs/kernel-status/28-retiring-the-extract-check.md`): this tree is the kernel
 source now, so nothing here is generated from the showcase and no file records

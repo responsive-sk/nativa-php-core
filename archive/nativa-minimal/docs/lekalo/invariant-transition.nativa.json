@@ -1,0 +1,355 @@
+{
+  "schemaVersion": "lekalo/invariant-transition/v1.0.0",
+  "identity": "dev.lekalo.invariant-transition@1.0.0",
+  "attachmentRevision": "1.0.0",
+  "projectId": "nativa",
+  "modelRef": {
+    "modelVersion": "1.0.0",
+    "digest": "sha256:a69010a7ef357b4aa1ff8b7c25e147bdf8aba4e9239a4cc065606e625e8d0968"
+  },
+  "irRef": {
+    "identity": "dev.lekalo.ir@0.1.0",
+    "digest": "sha256:6d921859d563175926c56052033faf4bc567bc93198cce51961f7abd76300be2"
+  },
+  "sourceMapRef": "dev.lekalo.invariant-transition-source/nativa-adoption",
+  "stateSpaces": [
+    {
+      "stateSpaceId": "nativa.blog.article",
+      "entity": "blog.article",
+      "cyclePolicy": "allow",
+      "deadPolicy": "allow",
+      "states": [
+        {
+          "stateId": "public",
+          "initial": true
+        },
+        {
+          "stateId": "members_only"
+        }
+      ]
+    },
+    {
+      "stateSpaceId": "nativa.comments.moderation",
+      "entity": "comments.comment",
+      "cyclePolicy": "allow",
+      "deadPolicy": "forbid",
+      "states": [
+        {
+          "stateId": "pending",
+          "initial": true
+        },
+        {
+          "stateId": "approved"
+        },
+        {
+          "stateId": "rejected"
+        }
+      ]
+    },
+    {
+      "stateSpaceId": "nativa.users.account",
+      "entity": "users.user",
+      "cyclePolicy": "allow",
+      "deadPolicy": "allow",
+      "states": [
+        {
+          "stateId": "active",
+          "initial": true
+        },
+        {
+          "stateId": "inactive"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "invariantId": "nativa.invariant.article_gate_state",
+      "stateSpaceId": "nativa.blog.article",
+      "kind": "member_of_set",
+      "allowedStates": [
+        "members_only",
+        "public"
+      ],
+      "description": "A served article gate state is exactly one of the two declared gate states."
+    },
+    {
+      "invariantId": "nativa.invariant.comment_status_member",
+      "stateSpaceId": "nativa.comments.moderation",
+      "kind": "member_of_set",
+      "allowedStates": [
+        "approved",
+        "pending",
+        "rejected"
+      ],
+      "description": "A comment row status is always one of the three declared moderation states."
+    },
+    {
+      "invariantId": "nativa.invariant.account_state_member",
+      "stateSpaceId": "nativa.users.account",
+      "kind": "member_of_set",
+      "allowedStates": [
+        "active",
+        "inactive"
+      ],
+      "description": "An is_active account lifecycle state is exactly active or inactive."
+    },
+    {
+      "invariantId": "nativa.invariant.comment_submitted_pending",
+      "stateSpaceId": "nativa.comments.moderation",
+      "kind": "field_value",
+      "fields": [
+        {
+          "field": "status"
+        }
+      ],
+      "predicate": {
+        "op": "equal",
+        "left": {
+          "kind": "field",
+          "field": "status"
+        },
+        "right": {
+          "kind": "enum_member",
+          "typeRef": "comments.status",
+          "value": "pending"
+        }
+      },
+      "description": "A freshly submitted comment row carries exactly the pending status."
+    }
+  ],
+  "transitions": [
+    {
+      "transitionId": "nativa.transition.article_gate_on",
+      "stateSpaceId": "nativa.blog.article",
+      "fromStates": [
+        "public"
+      ],
+      "toState": "members_only",
+      "command": "blog.update_article",
+      "assignments": [
+        {
+          "field": "state",
+          "value": {
+            "kind": "literal",
+            "value": {
+              "kind": "enum_member",
+              "typeRef": "blog.article_state",
+              "value": "members_only"
+            }
+          }
+        }
+      ],
+      "policyRef": "authorization.nativa/blog-admin-editing",
+      "errorRefs": [
+        "errors.blog/gate-flip-failed"
+      ]
+    },
+    {
+      "transitionId": "nativa.transition.article_gate_off",
+      "stateSpaceId": "nativa.blog.article",
+      "fromStates": [
+        "members_only"
+      ],
+      "toState": "public",
+      "command": "blog.update_article",
+      "assignments": [
+        {
+          "field": "state",
+          "value": {
+            "kind": "literal",
+            "value": {
+              "kind": "enum_member",
+              "typeRef": "blog.article_state",
+              "value": "public"
+            }
+          }
+        }
+      ],
+      "policyRef": "authorization.nativa/blog-admin-editing",
+      "errorRefs": [
+        "errors.blog/gate-flip-failed"
+      ]
+    },
+    {
+      "transitionId": "nativa.transition.comment_approve",
+      "stateSpaceId": "nativa.comments.moderation",
+      "fromStates": [
+        "pending",
+        "rejected"
+      ],
+      "toState": "approved",
+      "command": "comments.approve",
+      "assignments": [
+        {
+          "field": "status",
+          "value": {
+            "kind": "literal",
+            "value": {
+              "kind": "enum_member",
+              "typeRef": "comments.status",
+              "value": "approved"
+            }
+          }
+        }
+      ],
+      "policyRef": "authorization.nativa/blog-admin-editing",
+      "errorRefs": [
+        "errors.comments/unknown-comment"
+      ]
+    },
+    {
+      "transitionId": "nativa.transition.comment_reject",
+      "stateSpaceId": "nativa.comments.moderation",
+      "fromStates": [
+        "approved",
+        "pending"
+      ],
+      "toState": "rejected",
+      "command": "comments.reject",
+      "assignments": [
+        {
+          "field": "status",
+          "value": {
+            "kind": "literal",
+            "value": {
+              "kind": "enum_member",
+              "typeRef": "comments.status",
+              "value": "rejected"
+            }
+          }
+        }
+      ],
+      "policyRef": "authorization.nativa/blog-admin-editing",
+      "errorRefs": [
+        "errors.comments/unknown-comment"
+      ]
+    },
+    {
+      "transitionId": "nativa.transition.account_deactivate",
+      "stateSpaceId": "nativa.users.account",
+      "fromStates": [
+        "active"
+      ],
+      "toState": "inactive",
+      "command": "users.update_user",
+      "assignments": [
+        {
+          "field": "state",
+          "value": {
+            "kind": "literal",
+            "value": {
+              "kind": "enum_member",
+              "typeRef": "users.account_state",
+              "value": "inactive"
+            }
+          }
+        }
+      ],
+      "errorRefs": [
+        "errors.users/account-update-failed"
+      ]
+    },
+    {
+      "transitionId": "nativa.transition.account_reactivate",
+      "stateSpaceId": "nativa.users.account",
+      "fromStates": [
+        "inactive"
+      ],
+      "toState": "active",
+      "command": "users.update_user",
+      "assignments": [
+        {
+          "field": "state",
+          "value": {
+            "kind": "literal",
+            "value": {
+              "kind": "enum_member",
+              "typeRef": "users.account_state",
+              "value": "active"
+            }
+          }
+        }
+      ],
+      "errorRefs": [
+        "errors.users/account-update-failed"
+      ]
+    }
+  ],
+  "verificationMappings": [
+    {
+      "mappingId": "nativa.mapping.comment_lifecycle_tested",
+      "subject": {
+        "kind": "transition",
+        "id": "nativa.transition.comment_approve"
+      },
+      "relation": "tested_by",
+      "targetRef": {
+        "targetKind": "native_test",
+        "targetId": "tests.nativa/comments-moderation"
+      },
+      "enforcementLayer": "native_test",
+      "evidence": {
+        "testRef": "tests.nativa/comments-moderation",
+        "executableDigest": "sha256:81309a4c10053a36e200a2cb87ee76499b5e43be7452a99a36f51003529bc1c3",
+        "sourceRevision": "1.0.0",
+        "resultStatus": "pass",
+        "evidenceDigest": "sha256:17044fa85a8366dc1405607eeccccbc7f97d1c83659ecbfb3bfb1e10150afbda"
+      },
+      "status": "full",
+      "confidence": "medium"
+    },
+    {
+      "mappingId": "nativa.mapping.gate_state_tested",
+      "subject": {
+        "kind": "transition",
+        "id": "nativa.transition.article_gate_on"
+      },
+      "relation": "tested_by",
+      "targetRef": {
+        "targetKind": "native_test",
+        "targetId": "tests.nativa/members-gate"
+      },
+      "enforcementLayer": "native_test",
+      "evidence": {
+        "testRef": "tests.nativa/members-gate",
+        "executableDigest": "sha256:cdc458d59dd54a199e24546af49826458a04be4bb42229e604854b7a63c3d29b",
+        "sourceRevision": "1.0.0",
+        "resultStatus": "pass",
+        "evidenceDigest": "sha256:a82f7496edfc6d8057490f80c28d50228387dc7e0581cfb9fc440e734bfff14c"
+      },
+      "status": "full",
+      "confidence": "medium"
+    },
+    {
+      "mappingId": "nativa.mapping.comment_status_runtime",
+      "subject": {
+        "kind": "invariant",
+        "id": "nativa.invariant.comment_status_member"
+      },
+      "relation": "enforced_by",
+      "targetRef": {
+        "targetKind": "runtime_method",
+        "targetId": "runtime.nativa/comments-approve"
+      },
+      "enforcementLayer": "runtime_method",
+      "status": "gap",
+      "confidence": "low"
+    },
+    {
+      "mappingId": "nativa.mapping.account_state_runtime",
+      "subject": {
+        "kind": "invariant",
+        "id": "nativa.invariant.account_state_member"
+      },
+      "relation": "verified_by",
+      "targetRef": {
+        "targetKind": "runtime_method",
+        "targetId": "runtime.nativa/users-admin-toggle"
+      },
+      "enforcementLayer": "runtime_method",
+      "status": "gap",
+      "confidence": "low"
+    }
+  ]
+}

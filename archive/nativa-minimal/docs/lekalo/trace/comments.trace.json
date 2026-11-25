@@ -1,0 +1,1450 @@
+{
+ "schemaVersion": "lekalo/trace-manifest/v0.2.16",
+ "identity": "dev.lekalo.trace-manifest@0.2.16",
+ "manifestId": "nativa-comments-trace",
+ "projectRef": "nativa",
+ "completeness": "partial",
+ "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+ "modelRef": {
+  "schemaVersion": "0.2.16",
+  "digest": "sha256:0bf1d8274e6bc5501d68b55944e562ac999210803e10bdaf69e4cf14ab1ccba2"
+ },
+ "irRef": {
+  "schemaVersion": "0.2.16",
+  "digest": "sha256:9333f37c2cf57b6a9f08024f4d81a8d4ee96f34527fa92c53ab7a4e3c6761b28"
+ },
+ "exportProfile": "requirement-to-gate",
+ "nodes": [
+  {
+   "nodeId": "requirement:COMMENTS-REQ-1",
+   "nodeKind": "requirement",
+   "requirementId": "blog-comments-module",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "blog-comments-module"
+    }
+   ]
+  },
+  {
+   "nodeId": "requirement:COMMENTS-REQ-2",
+   "nodeKind": "requirement",
+   "requirementId": "admin-comments-moderation-ui",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "admin-comments-moderation-ui"
+    }
+   ]
+  },
+  {
+   "nodeId": "symbol:comments.submit",
+   "nodeKind": "symbol",
+   "semanticId": "comments.submit"
+  },
+  {
+   "nodeId": "symbol:comments.approve",
+   "nodeKind": "symbol",
+   "semanticId": "comments.approve"
+  },
+  {
+   "nodeId": "symbol:comments.reject",
+   "nodeKind": "symbol",
+   "semanticId": "comments.reject"
+  },
+  {
+   "nodeId": "symbol:comments.delete",
+   "nodeKind": "symbol",
+   "semanticId": "comments.delete"
+  },
+  {
+   "nodeId": "symbol:comments.effect_comment_created",
+   "nodeKind": "symbol",
+   "semanticId": "comments.effect_comment_created"
+  },
+  {
+   "nodeId": "symbol:comments.effect_comment_status_changed",
+   "nodeKind": "symbol",
+   "semanticId": "comments.effect_comment_status_changed"
+  },
+  {
+   "nodeId": "symbol:comments.effect_comment_deleted",
+   "nodeKind": "symbol",
+   "semanticId": "comments.effect_comment_deleted"
+  },
+  {
+   "nodeId": "symbol:comments.comment_created",
+   "nodeKind": "symbol",
+   "semanticId": "comments.comment_created"
+  },
+  {
+   "nodeId": "symbol:comments.comment_status_changed",
+   "nodeKind": "symbol",
+   "semanticId": "comments.comment_status_changed"
+  },
+  {
+   "nodeId": "symbol:comments.comment_deleted",
+   "nodeKind": "symbol",
+   "semanticId": "comments.comment_deleted"
+  },
+  {
+   "nodeId": "symbol:comments.comment_submit_denied",
+   "nodeKind": "symbol",
+   "semanticId": "comments.comment_submit_denied"
+  },
+  {
+   "nodeId": "symbol:comments.throttled_per_ip",
+   "nodeKind": "symbol",
+   "semanticId": "comments.throttled_per_ip"
+  },
+  {
+   "nodeId": "symbol:comments.identity_or_guest_required",
+   "nodeKind": "symbol",
+   "semanticId": "comments.identity_or_guest_required"
+  },
+  {
+   "nodeId": "symbol:comments.article_must_exist",
+   "nodeKind": "symbol",
+   "semanticId": "comments.article_must_exist"
+  },
+  {
+   "nodeId": "symbol:comments.deleted_comment_not_persisted",
+   "nodeKind": "symbol",
+   "semanticId": "comments.deleted_comment_not_persisted"
+  },
+  {
+   "nodeId": "symbol:comments.moderation_lifecycle",
+   "nodeKind": "symbol",
+   "semanticId": "comments.moderation_lifecycle"
+  },
+  {
+   "nodeId": "symbol:comments.throttled_submit_denied",
+   "nodeKind": "symbol",
+   "semanticId": "comments.throttled_submit_denied"
+  },
+  {
+   "nodeId": "artifact:comments.service",
+   "nodeKind": "artifact",
+   "artifactId": "comments.service",
+   "ownership": "checked",
+   "path": "src/modules/comments/application/services/commentsservice-php",
+   "contentDigest": "sha256:7cd760d53816c1eb4dc75e4cc7cd27be0532e75920bdac12f45cc17221026ccb",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "comments.service"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:comments.metric",
+   "nodeKind": "artifact",
+   "artifactId": "comments.metric",
+   "ownership": "checked",
+   "path": "src/modules/comments/application/services/commentsmetric-php",
+   "contentDigest": "sha256:0de54535fb7a60a14a8cba755edaba80ba9cf21ca10503e995f99402c8ab8b1f",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "comments.metric"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:comments.entry",
+   "nodeKind": "artifact",
+   "artifactId": "comments.entry",
+   "ownership": "checked",
+   "path": "src/modules/comments/domain/entities/comment-php",
+   "contentDigest": "sha256:188fcec787fd8519eeb67a43653642dcdba2107ca512573e7fd9b6ba47e54d20",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "comments.entry"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:comments.repository",
+   "nodeKind": "artifact",
+   "artifactId": "comments.repository",
+   "ownership": "checked",
+   "path": "src/modules/comments/infrastructure/persistence/repositories/commentrepository-php",
+   "contentDigest": "sha256:dd857d3ffb2faf8cb17e1241036718a5059cabfeabbf408649ad75c58e7e7236",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "comments.repository"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:comments.migrator",
+   "nodeKind": "artifact",
+   "artifactId": "comments.migrator",
+   "ownership": "checked",
+   "path": "src/modules/comments/infrastructure/persistence/migrations/commentsdatabasemigrator-php",
+   "contentDigest": "sha256:594a5a51145400e430df4e58c8f0c244115b64f622d57bbc1300a6f58f8030e3",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "comments.migrator"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:comments.submit-action",
+   "nodeKind": "artifact",
+   "artifactId": "comments.submit-action",
+   "ownership": "checked",
+   "path": "src/modules/comments/interfaces/http/actions/commentsubmitaction-php",
+   "contentDigest": "sha256:804231e83d2f546960953878b8528cf41182bba569ebcc15370cbae935e0f171",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "comments.submit-action"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:comments.admin-action",
+   "nodeKind": "artifact",
+   "artifactId": "comments.admin-action",
+   "ownership": "checked",
+   "path": "src/modules/comments/interfaces/http/actions/commentsadminaction-php",
+   "contentDigest": "sha256:103174139914dc02c1eca46cab766c0a572c51bee3444e9a85a2bb9813d9e8ec",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "comments.admin-action"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:comments.section",
+   "nodeKind": "artifact",
+   "artifactId": "comments.section",
+   "ownership": "checked",
+   "path": "src/modules/comments/interfaces/http/commentsection-php",
+   "contentDigest": "sha256:c6689ab40ebe97ad7c9ce2392dbd43a3dba7af0c0b2ebadcfdb20b005899b556",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "comments.section"
+    }
+   ]
+  },
+  {
+   "nodeId": "scenario:comments.moderation-lifecycle",
+   "nodeKind": "scenario",
+   "scenarioId": "comments.moderation_lifecycle",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+   "nodeId": "scenario:comments.throttled-submit-denied",
+   "nodeKind": "scenario",
+   "scenarioId": "comments.throttled_submit_denied",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+   "nodeId": "test:comments-test",
+   "nodeKind": "native_test",
+   "testId": "nativa.CommentsTest",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:d9cafd515b11821cbb76432ad52b0a879a10d42b875be562f523ce97356f8860",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.CommentsTest"
+    }
+   ]
+  },
+  {
+   "nodeId": "test:comments-metric-test",
+   "nodeKind": "native_test",
+   "testId": "nativa.CommentsMetricTest",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:f54f8a6365fdb2d21f4174603c0b411fca12310c5b32bda81c4fbde7241e2d24",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.CommentsMetricTest"
+    }
+   ]
+  },
+  {
+   "nodeId": "gate:nativa-phpunit",
+   "nodeKind": "gate",
+   "gateId": "nativa.phpunit",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.phpunit"
+    }
+   ]
+  },
+  {
+   "nodeId": "gate:lekalo-validate-model",
+   "nodeKind": "gate",
+   "gateId": "lekalo.validate-model",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "lekalo.validate-model"
+    }
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "relationId": "sha256:e5e70d8bf6bfdf7ccb02b334922d30700d858b1261d3fd51b304a1048c814566",
+   "relationKind": "implements",
+   "fromNode": "symbol:comments.submit",
+   "toNode": "requirement:COMMENTS-REQ-1",
+   "occurrence": "requirements.comments-submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:26f9632dfdbb0930345c08fad28008b57e4f17d46f4f0c45e8cb2c040bfbba39",
+   "relationKind": "implements",
+   "fromNode": "symbol:comments.effect_comment_created",
+   "toNode": "requirement:COMMENTS-REQ-1",
+   "occurrence": "requirements.comments-effect_comment_created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:5f16034acd1aec419aaa17b4ddb4294a8fccc45d85004a508ed58f78e247f56c",
+   "relationKind": "implements",
+   "fromNode": "symbol:comments.comment_created",
+   "toNode": "requirement:COMMENTS-REQ-1",
+   "occurrence": "requirements.comments-comment_created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:4493d7eb65d2362e642a09938b916fc681fd266be1d70e10edfe4a5d4366b470",
+   "relationKind": "implements",
+   "fromNode": "symbol:comments.throttled_per_ip",
+   "toNode": "requirement:COMMENTS-REQ-1",
+   "occurrence": "requirements.comments-throttled_per_ip",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:38820deda8369bf912f3a1c15461712cdbf15750b67f76a7adedc419cec87f5f",
+   "relationKind": "implements",
+   "fromNode": "symbol:comments.identity_or_guest_required",
+   "toNode": "requirement:COMMENTS-REQ-1",
+   "occurrence": "requirements.comments-identity_or_guest_required",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:cf486373a7d8a1bb54fe5ecbf9b1c42e2e646a2dc9667ad2f81901f5a97396b6",
+   "relationKind": "implements",
+   "fromNode": "symbol:comments.article_must_exist",
+   "toNode": "requirement:COMMENTS-REQ-1",
+   "occurrence": "requirements.comments-article_must_exist",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:b04f4a1610535e0eadb115513c662c3e0a34c08451b0698b275a1e5f635b85dd",
+   "relationKind": "implements",
+   "fromNode": "symbol:comments.moderation_lifecycle",
+   "toNode": "requirement:COMMENTS-REQ-1",
+   "occurrence": "requirements.comments-moderation_lifecycle",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:eb6c05e002470aa8ac3cf25f670fc252db5fdfacc4148b3a7584043e07705753",
+   "relationKind": "implements",
+   "fromNode": "symbol:comments.throttled_submit_denied",
+   "toNode": "requirement:COMMENTS-REQ-1",
+   "occurrence": "requirements.comments-throttled_submit_denied",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:ba404b8df71e7b91cfbb8cffa832bb78737aaf4bd1aaec123558be93cf88b2e7",
+   "relationKind": "implements",
+   "fromNode": "symbol:comments.approve",
+   "toNode": "requirement:COMMENTS-REQ-2",
+   "occurrence": "requirements.comments-approve",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:1b716511230fd6818415290630993aee7ab9b990f5d668bd466f769212e41ac1",
+   "relationKind": "implements",
+   "fromNode": "symbol:comments.reject",
+   "toNode": "requirement:COMMENTS-REQ-2",
+   "occurrence": "requirements.comments-reject",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:1ecf3d3b24b65610d31ba29f1941f2de9ddbde93ff83292e9908ea4177c94b0f",
+   "relationKind": "implements",
+   "fromNode": "symbol:comments.delete",
+   "toNode": "requirement:COMMENTS-REQ-2",
+   "occurrence": "requirements.comments-delete",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:69815f52e4470a625c2493ee0489e4fa6d3e92cd6ac47d4ec5463600997faf3a",
+   "relationKind": "implements",
+   "fromNode": "symbol:comments.effect_comment_status_changed",
+   "toNode": "requirement:COMMENTS-REQ-2",
+   "occurrence": "requirements.comments-effect_comment_status_changed",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:79443a0d95d06c22ca2ee1b1f72085725c562247a0e6fc4b18d56a9c13ca8ef8",
+   "relationKind": "implements",
+   "fromNode": "symbol:comments.effect_comment_deleted",
+   "toNode": "requirement:COMMENTS-REQ-2",
+   "occurrence": "requirements.comments-effect_comment_deleted",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:e878b5ffdadd3f25bd2d0bcaf421770b3648c93460bd70d147b6fc929ce5816f",
+   "relationKind": "implements",
+   "fromNode": "symbol:comments.comment_status_changed",
+   "toNode": "requirement:COMMENTS-REQ-2",
+   "occurrence": "requirements.comments-comment_status_changed",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:95712fd77bfb9f2c8487d1f5964bfd188af3e83ac3f7f3b00573fee209fd7f33",
+   "relationKind": "implements",
+   "fromNode": "symbol:comments.comment_deleted",
+   "toNode": "requirement:COMMENTS-REQ-2",
+   "occurrence": "requirements.comments-comment_deleted",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:4db57b0b59c2c3fe20d9ebaadd2b8f45a28d22e04dd71a90feff48c66602f054",
+   "relationKind": "implements",
+   "fromNode": "symbol:comments.deleted_comment_not_persisted",
+   "toNode": "requirement:COMMENTS-REQ-2",
+   "occurrence": "requirements.comments-deleted_comment_not_persisted",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:c93f5f76ea6db6f6e81b21b426ee7167910afe8b5399c054ecb9366101d6040c",
+   "relationKind": "binds",
+   "fromNode": "symbol:comments.submit",
+   "toNode": "artifact:comments.submit-action",
+   "occurrence": "bindings.comments.endpoint-submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:347683d8bf67ac1311ce1bfc26edee97ec40fb8c94a6d8a2bb8f5283ec9a5b9a",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:0077a41113b8c4d6c92333df7219ac7ad0e76fa0317ef2126afaaef9b6970e0e",
+   "relationKind": "binds",
+   "fromNode": "symbol:comments.approve",
+   "toNode": "artifact:comments.admin-action",
+   "occurrence": "bindings.comments.endpoint-approve",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:347683d8bf67ac1311ce1bfc26edee97ec40fb8c94a6d8a2bb8f5283ec9a5b9a",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:9ee9f0a1b8137b18188d7a2266684d674b90d16975f9636658fdc579f3ee7b4b",
+   "relationKind": "binds",
+   "fromNode": "symbol:comments.reject",
+   "toNode": "artifact:comments.admin-action",
+   "occurrence": "bindings.comments.endpoint-reject",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:347683d8bf67ac1311ce1bfc26edee97ec40fb8c94a6d8a2bb8f5283ec9a5b9a",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:516d43745b47ca84fe26c771b9517fa5f5b62da9206eb93ab4bb47e06e4330b4",
+   "relationKind": "binds",
+   "fromNode": "symbol:comments.delete",
+   "toNode": "artifact:comments.admin-action",
+   "occurrence": "bindings.comments.endpoint-delete",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:347683d8bf67ac1311ce1bfc26edee97ec40fb8c94a6d8a2bb8f5283ec9a5b9a",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:b81de076fa321df6082965e7186b9d94ffdc72dcbd417d6aeebe8f6e4a9c90f6",
+   "relationKind": "binds",
+   "fromNode": "symbol:comments.submit",
+   "toNode": "artifact:comments.service",
+   "occurrence": "bindings.comments.submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:6dac6aad33da5a21750b85b539bc3691bc77c7c364c0da42d21070e1cac927a9",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:eb0b1c42790100d7ac6cf61e70a85aad4c397c192054514fbc01581d82664749",
+   "relationKind": "binds",
+   "fromNode": "symbol:comments.effect_comment_created",
+   "toNode": "artifact:comments.service",
+   "occurrence": "bindings.comments.effect-comment-created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:6dac6aad33da5a21750b85b539bc3691bc77c7c364c0da42d21070e1cac927a9",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:e3034d7ca516e1237f6e9a1244a1aa613b8eb102c9e6602f9a5d1a136b351163",
+   "relationKind": "binds",
+   "fromNode": "symbol:comments.comment_created",
+   "toNode": "artifact:comments.service",
+   "occurrence": "bindings.comments.comment-created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:6dac6aad33da5a21750b85b539bc3691bc77c7c364c0da42d21070e1cac927a9",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:b007024b5ccf2b665f4ad5e33b35ee4b92aa721707248c0ee4c931b034c6ce81",
+   "relationKind": "binds",
+   "fromNode": "symbol:comments.approve",
+   "toNode": "artifact:comments.service",
+   "occurrence": "bindings.comments.approve",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:6dac6aad33da5a21750b85b539bc3691bc77c7c364c0da42d21070e1cac927a9",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:c70ae362060958294eda43840d075873cee23c9cecfabf5f8fb5e24f7083949d",
+   "relationKind": "binds",
+   "fromNode": "symbol:comments.reject",
+   "toNode": "artifact:comments.service",
+   "occurrence": "bindings.comments.reject",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:6dac6aad33da5a21750b85b539bc3691bc77c7c364c0da42d21070e1cac927a9",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:5f178add7c3f2479eca6e6fbf4e60d4a9b8de7fbc82a1e832469040ad999c293",
+   "relationKind": "binds",
+   "fromNode": "symbol:comments.delete",
+   "toNode": "artifact:comments.service",
+   "occurrence": "bindings.comments.delete",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:6dac6aad33da5a21750b85b539bc3691bc77c7c364c0da42d21070e1cac927a9",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:cd61ee0262424a89a42612b5a78011895507b91bea676a71a2b0e71c8d8bbc41",
+   "relationKind": "binds",
+   "fromNode": "symbol:comments.effect_comment_status_changed",
+   "toNode": "artifact:comments.service",
+   "occurrence": "bindings.comments.effect-comment-status-changed",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:6dac6aad33da5a21750b85b539bc3691bc77c7c364c0da42d21070e1cac927a9",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:e1f27ed0a7237feaf4bc1fb663ab28601a90dbaf78be4f9fa9d81f4aea2494e2",
+   "relationKind": "binds",
+   "fromNode": "symbol:comments.effect_comment_deleted",
+   "toNode": "artifact:comments.service",
+   "occurrence": "bindings.comments.effect-comment-deleted",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:6dac6aad33da5a21750b85b539bc3691bc77c7c364c0da42d21070e1cac927a9",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:8b4460b4f4c0fe9508bb80bbdf26cd39c81a4ec3839a3bad509d26242ae15713",
+   "relationKind": "binds",
+   "fromNode": "symbol:comments.comment_status_changed",
+   "toNode": "artifact:comments.service",
+   "occurrence": "bindings.comments.comment-status-changed",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:6dac6aad33da5a21750b85b539bc3691bc77c7c364c0da42d21070e1cac927a9",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:1f4008b3dd614a1d404e9c00e0abe32d56654f35996d439e08a240b7d6be55e6",
+   "relationKind": "binds",
+   "fromNode": "symbol:comments.comment_deleted",
+   "toNode": "artifact:comments.service",
+   "occurrence": "bindings.comments.comment-deleted",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:6dac6aad33da5a21750b85b539bc3691bc77c7c364c0da42d21070e1cac927a9",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:13581839ef2617d63e1b61fdefc9cbcb0d93e00083d19d963730315c5ad843a0",
+   "relationKind": "covers",
+   "fromNode": "scenario:comments.moderation-lifecycle",
+   "toNode": "symbol:comments.submit",
+   "occurrence": "covers.comments.submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:6b7110f29a078449e01d09c3ad02a57d38bd8095341a10f6845f8a05fb28072f",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:b9e83e09b695a57ecd84041d540ae491d3fd97d620c8e73f8c9d6cd8655ca1d0",
+   "relationKind": "covers",
+   "fromNode": "scenario:comments.moderation-lifecycle",
+   "toNode": "symbol:comments.effect_comment_created",
+   "occurrence": "covers.comments.effect-comment-created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:6b7110f29a078449e01d09c3ad02a57d38bd8095341a10f6845f8a05fb28072f",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:ac7dfba86ab29692a85842f7dd1276c31d72830c123d0e411da1034d68c44edf",
+   "relationKind": "covers",
+   "fromNode": "scenario:comments.moderation-lifecycle",
+   "toNode": "symbol:comments.comment_created",
+   "occurrence": "covers.comments.comment-created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:6b7110f29a078449e01d09c3ad02a57d38bd8095341a10f6845f8a05fb28072f",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:64e164eed4eb04c88f7eec77beb22d1bc70bb9d43d07e133f5adbe189fd6627d",
+   "relationKind": "covers",
+   "fromNode": "scenario:comments.moderation-lifecycle",
+   "toNode": "symbol:comments.comment_status_changed",
+   "occurrence": "covers.comments.comment-status-changed",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:6b7110f29a078449e01d09c3ad02a57d38bd8095341a10f6845f8a05fb28072f",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:6fd6b041d0d026ea6266b0cd7e4e053952fb0122ce979b011f1682f21ec0b1c7",
+   "relationKind": "covers",
+   "fromNode": "scenario:comments.moderation-lifecycle",
+   "toNode": "symbol:comments.throttled_per_ip",
+   "occurrence": "covers.comments.throttled-per-ip",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:6b7110f29a078449e01d09c3ad02a57d38bd8095341a10f6845f8a05fb28072f",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:c0e7bd7ae7d9ed82e080cbcf6b9f4155023349b8a88d81cc08973295af892ca5",
+   "relationKind": "covers",
+   "fromNode": "scenario:comments.throttled-submit-denied",
+   "toNode": "symbol:comments.submit",
+   "occurrence": "covers.comments.submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:6b7110f29a078449e01d09c3ad02a57d38bd8095341a10f6845f8a05fb28072f",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:e2d42b71b39b7fbddec924a74b0f9eb4e995656dadd6ab92428bc6a0ab556a2c",
+   "relationKind": "covers",
+   "fromNode": "scenario:comments.throttled-submit-denied",
+   "toNode": "symbol:comments.comment_submit_denied",
+   "occurrence": "covers.comments.comment-submit-denied",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:6b7110f29a078449e01d09c3ad02a57d38bd8095341a10f6845f8a05fb28072f",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:64fc503b58818359464109e05aa68e8b394f38b426686262b581c67e875d7097",
+   "relationKind": "covers",
+   "fromNode": "scenario:comments.throttled-submit-denied",
+   "toNode": "symbol:comments.throttled_per_ip",
+   "occurrence": "covers.comments.throttled-per-ip",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:6b7110f29a078449e01d09c3ad02a57d38bd8095341a10f6845f8a05fb28072f",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:ff6155afaafb8001f974008bffc8ac70faabaffa03265481d20ad3f2ef7c4fe6",
+   "relationKind": "verifies",
+   "fromNode": "test:comments-test",
+   "toNode": "scenario:comments.moderation-lifecycle",
+   "occurrence": "verifies.comments-moderation-flow",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:d9cafd515b11821cbb76432ad52b0a879a10d42b875be562f523ce97356f8860",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:395659923e6486e542bbc00fdb06dce77cf5cb597c6c173fdbb0ee78d9864fd8",
+   "relationKind": "verifies",
+   "fromNode": "test:comments-metric-test",
+   "toNode": "scenario:comments.throttled-submit-denied",
+   "occurrence": "verifies.comments-throttle-flow",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:f54f8a6365fdb2d21f4174603c0b411fca12310c5b32bda81c4fbde7241e2d24",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:8aaf26f740c4f4f8dfb920cf91f3c75f9213d59bccd4e2318876337888fe6c8a",
+   "relationKind": "verifies",
+   "fromNode": "test:comments-test",
+   "toNode": "symbol:comments.submit",
+   "occurrence": "verifies.comments.submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:d9cafd515b11821cbb76432ad52b0a879a10d42b875be562f523ce97356f8860",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:ae9b42dbd27e2ccc8c4ae2925f1dace0cf193c7332e31b292a281641a2c8bbc5",
+   "relationKind": "verifies",
+   "fromNode": "test:comments-test",
+   "toNode": "symbol:comments.approve",
+   "occurrence": "verifies.comments.approve",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:d9cafd515b11821cbb76432ad52b0a879a10d42b875be562f523ce97356f8860",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:24191fd97abce26551972ac060dd6f07f7eba51611f03980fde1ae993c09ba99",
+   "relationKind": "verifies",
+   "fromNode": "test:comments-test",
+   "toNode": "symbol:comments.reject",
+   "occurrence": "verifies.comments.reject",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:d9cafd515b11821cbb76432ad52b0a879a10d42b875be562f523ce97356f8860",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:c3fbdbe78d11b56f6e5a0bc37af29815458673bf34bf2cfddfcc01a0a8e1348f",
+   "relationKind": "verifies",
+   "fromNode": "test:comments-test",
+   "toNode": "symbol:comments.delete",
+   "occurrence": "verifies.comments.delete",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:d9cafd515b11821cbb76432ad52b0a879a10d42b875be562f523ce97356f8860",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:9903446f929fd05952eb7c72b457ee154a890e2bbb0f2717c4ae3fccd5dff71a",
+   "relationKind": "verifies",
+   "fromNode": "test:comments-test",
+   "toNode": "symbol:comments.effect_comment_created",
+   "occurrence": "verifies.comments.effect-comment-created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:d9cafd515b11821cbb76432ad52b0a879a10d42b875be562f523ce97356f8860",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:241acf99c296ae14629b7e63b0fc667fc961a7ba4f401c05e752e97fa2e78864",
+   "relationKind": "verifies",
+   "fromNode": "test:comments-test",
+   "toNode": "symbol:comments.effect_comment_status_changed",
+   "occurrence": "verifies.comments.effect-comment-status-changed",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:d9cafd515b11821cbb76432ad52b0a879a10d42b875be562f523ce97356f8860",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:c92937274f0f51afa3b2911b553bafe2af817a8cfe1a1df316554757fa6802b1",
+   "relationKind": "verifies",
+   "fromNode": "test:comments-test",
+   "toNode": "symbol:comments.effect_comment_deleted",
+   "occurrence": "verifies.comments.effect-comment-deleted",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:d9cafd515b11821cbb76432ad52b0a879a10d42b875be562f523ce97356f8860",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:0886c3581fb6a220486da3fa9c156bc6f7aa4dc4936214111cc16dd2843063e8",
+   "relationKind": "verifies",
+   "fromNode": "test:comments-metric-test",
+   "toNode": "symbol:comments.comment_created",
+   "occurrence": "verifies.comments.comment-created",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:f54f8a6365fdb2d21f4174603c0b411fca12310c5b32bda81c4fbde7241e2d24",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:af587783e0850fc3133bd560919251a5267930fcded29eb012c2471fa1e84e3f",
+   "relationKind": "verifies",
+   "fromNode": "test:comments-metric-test",
+   "toNode": "symbol:comments.comment_status_changed",
+   "occurrence": "verifies.comments.comment-status-changed",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:f54f8a6365fdb2d21f4174603c0b411fca12310c5b32bda81c4fbde7241e2d24",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:59b55f16143f22720defac7d64e5dfd4967b25615cd69ad02e9029692f921d28",
+   "relationKind": "verifies",
+   "fromNode": "test:comments-metric-test",
+   "toNode": "symbol:comments.comment_deleted",
+   "occurrence": "verifies.comments.comment-deleted",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:f54f8a6365fdb2d21f4174603c0b411fca12310c5b32bda81c4fbde7241e2d24",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:e7d69890a8fcf52a21328366b7beacffe3165da30f61c71dc580d3957afbb8b2",
+   "relationKind": "verifies",
+   "fromNode": "test:comments-metric-test",
+   "toNode": "symbol:comments.comment_submit_denied",
+   "occurrence": "verifies.comments.comment-submit-denied",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:f54f8a6365fdb2d21f4174603c0b411fca12310c5b32bda81c4fbde7241e2d24",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:bb167c8e50d4355fa04fb41730c2a809d9619670a3b54a8023c9b7cf84febf19",
+   "relationKind": "evidences",
+   "fromNode": "gate:nativa-phpunit",
+   "toNode": "test:comments-test",
+   "occurrence": "evidences.phpunit-comments",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit"
+   ]
+  },
+  {
+   "relationId": "sha256:9c279e2dd1890cc225397d513dbaccb7f4c06599fe9a976a26042a2df1b2ef39",
+   "relationKind": "evidences",
+   "fromNode": "gate:nativa-phpunit",
+   "toNode": "test:comments-metric-test",
+   "occurrence": "evidences.phpunit-comments-metric",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit"
+   ]
+  },
+  {
+   "relationId": "sha256:1f6a6f406bb89a907943cc33bdccb0a918b344f6c3c3b2044bedfaf5832a73c9",
+   "relationKind": "evidences",
+   "fromNode": "gate:lekalo-validate-model",
+   "toNode": "test:comments-test",
+   "occurrence": "evidences.lekalo-validate-comments",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "make-lekalo-check"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:83b8bf7df508d48d003afbba3d29a1a722570f9d5be4a6100122b5bcc93bae9c",
+   "relationKind": "evidences",
+   "fromNode": "gate:lekalo-validate-model",
+   "toNode": "test:comments-metric-test",
+   "occurrence": "evidences.lekalo-validate-comments-metric",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "make-lekalo-check"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:lekalo-validate-model"
+   ]
+  }
+ ],
+ "gaps": [
+  {
+   "gapKind": "missing-gate",
+   "status": "candidate",
+   "anchorNode": "symbol:comments.submit",
+   "expected": "hlv.native.gate.comments",
+   "sourcePath": "docs/lekalo/trace/comments.trace.json"
+  },
+  {
+   "gapKind": "unsupported-provider",
+   "status": "unsupported",
+   "anchorNode": "symbol:comments.submit",
+   "expected": "lekalo.native.gate.receipt",
+   "sourcePath": "docs/lekalo/trace/comments.trace.json"
+  }
+ ]
+}

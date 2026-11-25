@@ -1,0 +1,1873 @@
+{
+ "schemaVersion": "lekalo/trace-manifest/v0.2.16",
+ "identity": "dev.lekalo.trace-manifest@0.2.16",
+ "manifestId": "nativa-blog-trace",
+ "projectRef": "nativa",
+ "completeness": "partial",
+ "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+ "modelRef": {
+  "schemaVersion": "0.2.16",
+  "digest": "sha256:0bf1d8274e6bc5501d68b55944e562ac999210803e10bdaf69e4cf14ab1ccba2"
+ },
+ "irRef": {
+  "schemaVersion": "0.2.16",
+  "digest": "sha256:9333f37c2cf57b6a9f08024f4d81a8d4ee96f34527fa92c53ab7a4e3c6761b28"
+ },
+ "exportProfile": "requirement-to-gate",
+ "nodes": [
+  {
+   "nodeId": "requirement:BLOG-REQ-FTS",
+   "nodeKind": "requirement",
+   "requirementId": "blog-full-text-search-via-q",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "blog-full-text-search-via-q"
+    }
+   ]
+  },
+  {
+   "nodeId": "requirement:BLOG-REQ-FTS-SAFE",
+   "nodeKind": "requirement",
+   "requirementId": "fts-query-safety",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "fts-query-safety"
+    }
+   ]
+  },
+  {
+   "nodeId": "requirement:BLOG-REQ-FEEDS",
+   "nodeKind": "requirement",
+   "requirementId": "blog-rss-atom-feeds",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "blog-rss-atom-feeds"
+    }
+   ]
+  },
+  {
+   "nodeId": "requirement:BLOG-REQ-COVERS",
+   "nodeKind": "requirement",
+   "requirementId": "deterministic-series-aware-cover-generation",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "deterministic-series-aware-cover-generation"
+    }
+   ]
+  },
+  {
+   "nodeId": "requirement:BLOG-REQ-COMMENTS",
+   "nodeKind": "requirement",
+   "requirementId": "blog-comments-module",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "blog-comments-module"
+    }
+   ]
+  },
+  {
+   "nodeId": "requirement:BLOG-REQ-MOD",
+   "nodeKind": "requirement",
+   "requirementId": "admin-comments-moderation-ui",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "admin-comments-moderation-ui"
+    }
+   ]
+  },
+  {
+   "nodeId": "requirement:BLOG-REQ-PUBLISH",
+   "nodeKind": "requirement",
+   "requirementId": "publish-draft-switch-on-admin-articles-and-pages-tables",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "publish-draft-switch-on-admin-articles-and-pages-tables"
+    }
+   ]
+  },
+  {
+   "nodeId": "symbol:blog.search",
+   "nodeKind": "symbol",
+   "semanticId": "blog.search"
+  },
+  {
+   "nodeId": "symbol:blog.article_index",
+   "nodeKind": "symbol",
+   "semanticId": "blog.article_index"
+  },
+  {
+   "nodeId": "symbol:blog.article_by_slug",
+   "nodeKind": "symbol",
+   "semanticId": "blog.article_by_slug"
+  },
+  {
+   "nodeId": "symbol:blog.create_article",
+   "nodeKind": "symbol",
+   "semanticId": "blog.create_article"
+  },
+  {
+   "nodeId": "symbol:blog.update_article",
+   "nodeKind": "symbol",
+   "semanticId": "blog.update_article"
+  },
+  {
+   "nodeId": "symbol:blog.delete_article",
+   "nodeKind": "symbol",
+   "semanticId": "blog.delete_article"
+  },
+  {
+   "nodeId": "symbol:blog.record_view",
+   "nodeKind": "symbol",
+   "semanticId": "blog.record_view"
+  },
+  {
+   "nodeId": "symbol:blog.cover_owned_by_article",
+   "nodeKind": "symbol",
+   "semanticId": "blog.cover_owned_by_article"
+  },
+  {
+   "nodeId": "symbol:blog.publish_article",
+   "nodeKind": "symbol",
+   "semanticId": "blog.publish_article"
+  },
+  {
+   "nodeId": "symbol:blog.publish_bulk",
+   "nodeKind": "symbol",
+   "semanticId": "blog.publish_bulk"
+  },
+  {
+   "nodeId": "symbol:blog.effect_article_published",
+   "nodeKind": "symbol",
+   "semanticId": "blog.effect_article_published"
+  },
+  {
+   "nodeId": "symbol:blog.effect_article_bulk_published",
+   "nodeKind": "symbol",
+   "semanticId": "blog.effect_article_bulk_published"
+  },
+  {
+   "nodeId": "symbol:comments.submit",
+   "nodeKind": "symbol",
+   "semanticId": "comments.submit"
+  },
+  {
+   "nodeId": "symbol:comments.approve",
+   "nodeKind": "symbol",
+   "semanticId": "comments.approve"
+  },
+  {
+   "nodeId": "symbol:comments.reject",
+   "nodeKind": "symbol",
+   "semanticId": "comments.reject"
+  },
+  {
+   "nodeId": "symbol:comments.delete",
+   "nodeKind": "symbol",
+   "semanticId": "comments.delete"
+  },
+  {
+   "nodeId": "symbol:comments.throttled_per_ip",
+   "nodeKind": "symbol",
+   "semanticId": "comments.throttled_per_ip"
+  },
+  {
+   "nodeId": "artifact:blog.search-service",
+   "nodeKind": "artifact",
+   "artifactId": "blog.search-service",
+   "ownership": "checked",
+   "path": "src/modules/blog/application/services/blogsearchservice-php",
+   "contentDigest": "sha256:bf62cf6b6b26666e6f2a4733fa4224fead96effee7196f0340dfcdcfa27e4f61",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "blog.search-service"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:blog.articles-service",
+   "nodeKind": "artifact",
+   "artifactId": "blog.articles-service",
+   "ownership": "checked",
+   "path": "src/modules/blog/application/services/blogarticlesservice-php",
+   "contentDigest": "sha256:5d2cd4d1150517dee129945332bea1bb6dc2d0aefa071b41e2ffae8f4478c049",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "blog.articles-service"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:blog.feed-service",
+   "nodeKind": "artifact",
+   "artifactId": "blog.feed-service",
+   "ownership": "checked",
+   "path": "src/modules/blog/application/services/blogfeedservice-php",
+   "contentDigest": "sha256:8c2bfb4aa951fa0449c8f62657fb6805aa8becb63c318548e1f6c71fd7887371",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "blog.feed-service"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:blog.feed-action",
+   "nodeKind": "artifact",
+   "artifactId": "blog.feed-action",
+   "ownership": "checked",
+   "path": "src/modules/blog/interfaces/http/actions/blogfeedaction-php",
+   "contentDigest": "sha256:5e6a1c170b9a811778c4911211174617c4c9b757570fcd365b9b89a60ab56619",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "blog.feed-action"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:blog.crud-service",
+   "nodeKind": "artifact",
+   "artifactId": "blog.crud-service",
+   "ownership": "checked",
+   "path": "src/modules/blog/application/services/blogcrudservice-php",
+   "contentDigest": "sha256:d7b7a670773ad2753f7c231a3a6e49d6d3bd2e42962923f95006554410510608",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "blog.crud-service"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:blog.cover-generator",
+   "nodeKind": "artifact",
+   "artifactId": "blog.cover-generator",
+   "ownership": "checked",
+   "path": "src/modules/blog/application/services/covergenerator-php",
+   "contentDigest": "sha256:2ba947b1db55aa54a0625b9dd2cca58e5e80a944e72a070574087aa2b5611766",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "blog.cover-generator"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:blog.view-counter",
+   "nodeKind": "artifact",
+   "artifactId": "blog.view-counter",
+   "ownership": "checked",
+   "path": "src/modules/blog/application/services/viewcounter-php",
+   "contentDigest": "sha256:93a75fbe863108d7f0b679ff7621dba6491580c7c278effdce29b0432d2b7cf3",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "blog.view-counter"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:blog.publish-toggle-action",
+   "nodeKind": "artifact",
+   "artifactId": "blog.publish-toggle-action",
+   "ownership": "checked",
+   "path": "src/modules/blog/interfaces/http/actions/articlepublishtoggleaction-php",
+   "contentDigest": "sha256:ab38d3f28e70247bf3a8dc3b310ea554859c494ddce12fb4ad576f0059992ecb",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "blog.publish-toggle-action"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:cardboard.bulk-publish-action",
+   "nodeKind": "artifact",
+   "artifactId": "cardboard.bulk-publish-action",
+   "ownership": "checked",
+   "path": "src/modules/cardboard/interfaces/http/actions/bulkpublishaction-php",
+   "contentDigest": "sha256:44d90c86b3abbb478b9645d4fe611de115061731129f30333784f7bd6944025e",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "cardboard.bulk-publish-action"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:comments.service",
+   "nodeKind": "artifact",
+   "artifactId": "comments.service",
+   "ownership": "checked",
+   "path": "src/modules/comments/application/services/commentsservice-php",
+   "contentDigest": "sha256:7cd760d53816c1eb4dc75e4cc7cd27be0532e75920bdac12f45cc17221026ccb",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "comments.service"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:comments.submit-action",
+   "nodeKind": "artifact",
+   "artifactId": "comments.submit-action",
+   "ownership": "checked",
+   "path": "src/modules/comments/interfaces/http/actions/commentsubmitaction-php",
+   "contentDigest": "sha256:804231e83d2f546960953878b8528cf41182bba569ebcc15370cbae935e0f171",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "comments.submit-action"
+    }
+   ]
+  },
+  {
+   "nodeId": "scenario:blog.search-flow",
+   "nodeKind": "scenario",
+   "scenarioId": "blog.search_flow",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+   "nodeId": "scenario:blog.read-flow",
+   "nodeKind": "scenario",
+   "scenarioId": "blog.read_flow",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+   "nodeId": "scenario:blog.admin-editing-flow",
+   "nodeKind": "scenario",
+   "scenarioId": "blog.admin_editing_flow",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+   "nodeId": "scenario:blog.members-gate-flow",
+   "nodeKind": "scenario",
+   "scenarioId": "blog.members_gate_flow",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+   "nodeId": "test:blog-search-test",
+   "nodeKind": "native_test",
+   "testId": "nativa.BlogSearchTest",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:879e3bae5009be26363b427149b9aa7256b1dbc02d99ca060b519a0576387019",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.BlogSearchTest"
+    }
+   ]
+  },
+  {
+   "nodeId": "test:blog-feed-test",
+   "nodeKind": "native_test",
+   "testId": "nativa.BlogFeedTest",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:e001b0a82e4105a4b1701f37f82f0db247b788a555fc431029c746cfc8ee710e",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.BlogFeedTest"
+    }
+   ]
+  },
+  {
+   "nodeId": "test:blog-cover-test",
+   "nodeKind": "native_test",
+   "testId": "nativa.BlogCoverTest",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:9641fb7c22bc913c52928446f5023329c60b2c1da8729d9c8f13d46e7e9dade3",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.BlogCoverTest"
+    }
+   ]
+  },
+  {
+   "nodeId": "test:cover-determinism-test",
+   "nodeKind": "native_test",
+   "testId": "nativa.CoverDeterminismTest",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:fd1fec5560cf383055eeae9c3ab0baa871ec2c77b806e80140e0d56f9848c804",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.CoverDeterminismTest"
+    }
+   ]
+  },
+  {
+   "nodeId": "test:comments-test",
+   "nodeKind": "native_test",
+   "testId": "nativa.CommentsTest",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:d9cafd515b11821cbb76432ad52b0a879a10d42b875be562f523ce97356f8860",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.CommentsTest"
+    }
+   ]
+  },
+  {
+   "nodeId": "test:bulk-actions-test",
+   "nodeKind": "native_test",
+   "testId": "nativa.BulkActionsTest",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:182c9d851789a7ce4139f4175786f86d5c666677d883f6d311bd47dcf57b880e",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.BulkActionsTest"
+    }
+   ]
+  },
+  {
+   "nodeId": "gate:nativa-phpunit",
+   "nodeKind": "gate",
+   "gateId": "nativa.phpunit",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.phpunit"
+    }
+   ]
+  },
+  {
+   "nodeId": "gate:lekalo-validate-model",
+   "nodeKind": "gate",
+   "gateId": "lekalo.validate-model",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "lekalo.validate-model"
+    }
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "relationId": "sha256:bbcc5e425855373f52fc073e190edf3feb878d8545937abc60f01566ed1f49e9",
+   "relationKind": "implements",
+   "fromNode": "symbol:blog.search",
+   "toNode": "requirement:BLOG-REQ-FTS",
+   "occurrence": "requirements.blog-full-text-search",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:870ee96cc1675e60462ba3a30c438c005aea20da114a62ea803082f534d3e1b7",
+   "relationKind": "implements",
+   "fromNode": "symbol:blog.search",
+   "toNode": "requirement:BLOG-REQ-FTS-SAFE",
+   "occurrence": "requirements.fts-query-safety",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:59189cada3e0cd1bb034da9f07e181e495d71b99d1f61cae633ea82c372c9a28",
+   "relationKind": "implements",
+   "fromNode": "symbol:blog.article_index",
+   "toNode": "requirement:BLOG-REQ-FEEDS",
+   "occurrence": "requirements.feeds-source-query",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:ea5200ac2819f7bff53403c0c0f2cff1a378606469e512f5becf65301112543e",
+   "relationKind": "implements",
+   "fromNode": "symbol:blog.article_by_slug",
+   "toNode": "requirement:BLOG-REQ-COMMENTS",
+   "occurrence": "requirements.comments-anchor-query",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:ec2c2fdbc9011835c4912cee4c2c6208b48507505782743f30a7ce511b581b96",
+   "relationKind": "implements",
+   "fromNode": "symbol:blog.create_article",
+   "toNode": "requirement:BLOG-REQ-COVERS",
+   "occurrence": "requirements.covers-owner-command",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:ad982fc2d74f5db3ed558eedec2141dfe8f2ba7bfa5e88724cf0bf6c1bd1daec",
+   "relationKind": "implements",
+   "fromNode": "symbol:blog.update_article",
+   "toNode": "requirement:BLOG-REQ-COVERS",
+   "occurrence": "requirements.covers-owner-update",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:fec0a8ab12238462d7ce607543a0a8d8cb50acf1579aa55eb327840b70a51b60",
+   "relationKind": "implements",
+   "fromNode": "symbol:blog.delete_article",
+   "toNode": "requirement:BLOG-REQ-COVERS",
+   "occurrence": "requirements.covers-owner-delete",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:9f027abdd9d058167a85408b243873d73152fdec9629042bcbbc20828b98928f",
+   "relationKind": "implements",
+   "fromNode": "symbol:blog.record_view",
+   "toNode": "requirement:BLOG-REQ-FTS",
+   "occurrence": "requirements.read-flow-view-counter",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:dd3865e23d70adaeb4072b26c1d59ac07d4e6dfa9213ef5d4ea6227cfcd93a4c",
+   "relationKind": "implements",
+   "fromNode": "symbol:blog.cover_owned_by_article",
+   "toNode": "requirement:BLOG-REQ-COVERS",
+   "occurrence": "requirements.cover-ownership-policy",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:dc612da6425698ff5774f30fc81a37e14673bf845b84191f0b0eee8bcdf327b0",
+   "relationKind": "implements",
+   "fromNode": "symbol:comments.submit",
+   "toNode": "requirement:BLOG-REQ-COMMENTS",
+   "occurrence": "requirements.blog-comments-module",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:92ce257820a8718838b304ed481c39ad5d959156416ac1f0c1cf958958963390",
+   "relationKind": "implements",
+   "fromNode": "symbol:comments.approve",
+   "toNode": "requirement:BLOG-REQ-MOD",
+   "occurrence": "requirements.admin-comments-moderation-ui",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:c99fa2588d0030a2367e68f5f0d6fe5f62a077229efcb406e34f28ab0369ed11",
+   "relationKind": "implements",
+   "fromNode": "symbol:comments.reject",
+   "toNode": "requirement:BLOG-REQ-MOD",
+   "occurrence": "requirements.admin-comments-moderation-ui.reject",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:626de621f83aeac431960bbf87cdca0a3a4706c9c22806f742a8a59c05bfd3ca",
+   "relationKind": "implements",
+   "fromNode": "symbol:comments.delete",
+   "toNode": "requirement:BLOG-REQ-MOD",
+   "occurrence": "requirements.admin-comments-moderation-ui.delete",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:851e0915fdef093cff841e5e015d33ed883dad32bb003a3bbef524cff91520d3",
+   "relationKind": "implements",
+   "fromNode": "symbol:comments.throttled_per_ip",
+   "toNode": "requirement:BLOG-REQ-COMMENTS",
+   "occurrence": "requirements.comments-throttle-policy",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:15c1c8f6b8ed0d538b752ffc6e414ee218abf46ee992ade02b8f1dea9ca24355",
+   "relationKind": "implements",
+   "fromNode": "symbol:blog.publish_article",
+   "toNode": "requirement:BLOG-REQ-PUBLISH",
+   "occurrence": "requirements.publish-toggle-command",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:651fa3d790e6487cb9ecedff99b23749c0a50d23a30884a27b9c1bdb84885a4f",
+   "relationKind": "implements",
+   "fromNode": "symbol:blog.publish_bulk",
+   "toNode": "requirement:BLOG-REQ-PUBLISH",
+   "occurrence": "requirements.publish-bulk-command",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:6449acef2a43f1329a8f15939b5df18b03919d203c2a2ca3c829c477ce093c2d",
+   "relationKind": "implements",
+   "fromNode": "symbol:blog.effect_article_published",
+   "toNode": "requirement:BLOG-REQ-PUBLISH",
+   "occurrence": "requirements.publish-toggle-effect",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:9e9e2e5ec8df8755956259395fe2619f3798e8acea717642e13126d1da59ffa8",
+   "relationKind": "implements",
+   "fromNode": "symbol:blog.effect_article_bulk_published",
+   "toNode": "requirement:BLOG-REQ-PUBLISH",
+   "occurrence": "requirements.publish-bulk-effect",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:4d27ee16a266494a3377052526670317f1d11f942bd5029627e9a453d15baef2",
+   "relationKind": "binds",
+   "fromNode": "symbol:blog.search",
+   "toNode": "artifact:blog.search-service",
+   "occurrence": "bindings.endpoint-search",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:947e58fa724d37be3c3f5ec505b592cfc97a2155ffefbcee9e79bf61dbb12b3d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/blog/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:712d6a1a0877c5100876ae09e7c4d93a334fd36ade161a3eb347043266c4f12d",
+   "relationKind": "binds",
+   "fromNode": "symbol:blog.article_index",
+   "toNode": "artifact:blog.articles-service",
+   "occurrence": "bindings.endpoint-index",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:947e58fa724d37be3c3f5ec505b592cfc97a2155ffefbcee9e79bf61dbb12b3d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/blog/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:497f69c01f3fd69214effaf73bf89137853c27ace33afa9d8c73cf921233d901",
+   "relationKind": "binds",
+   "fromNode": "symbol:blog.article_by_slug",
+   "toNode": "artifact:blog.articles-service",
+   "occurrence": "bindings.endpoint-article",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:947e58fa724d37be3c3f5ec505b592cfc97a2155ffefbcee9e79bf61dbb12b3d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/blog/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:72ecbe075a8fdf9282adf8c926de205d1633a17d5d217551ee37c9584a990dce",
+   "relationKind": "binds",
+   "fromNode": "symbol:blog.article_index",
+   "toNode": "artifact:blog.feed-service",
+   "occurrence": "bindings.feed-atom-source",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:947e58fa724d37be3c3f5ec505b592cfc97a2155ffefbcee9e79bf61dbb12b3d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/blog/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:f3287f34b5f1c320e4bf6b0ce995eba42ab0ca13d80cd12e1e947716cf14a9ff",
+   "relationKind": "binds",
+   "fromNode": "symbol:blog.article_index",
+   "toNode": "artifact:blog.feed-action",
+   "occurrence": "bindings.feed-atom-action",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:947e58fa724d37be3c3f5ec505b592cfc97a2155ffefbcee9e79bf61dbb12b3d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/blog/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:143e33caa8d4388184eff3733a8a9897c4dbeacdf68c4815d17c39cd7732b965",
+   "relationKind": "binds",
+   "fromNode": "symbol:blog.create_article",
+   "toNode": "artifact:blog.crud-service",
+   "occurrence": "bindings.admin-articles-create",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:947e58fa724d37be3c3f5ec505b592cfc97a2155ffefbcee9e79bf61dbb12b3d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/blog/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:c753b71b7126c0fa88d50c9ddcbebdd13b6e854ba02df2497c7ff547aaf6311f",
+   "relationKind": "binds",
+   "fromNode": "symbol:blog.update_article",
+   "toNode": "artifact:blog.crud-service",
+   "occurrence": "bindings.admin-articles-update",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:947e58fa724d37be3c3f5ec505b592cfc97a2155ffefbcee9e79bf61dbb12b3d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/blog/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:22b8c3e8464e3204d191290101c6053b19bf4fc16738a98f2b3b2866d950ada5",
+   "relationKind": "binds",
+   "fromNode": "symbol:blog.delete_article",
+   "toNode": "artifact:blog.crud-service",
+   "occurrence": "bindings.admin-articles-delete",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:947e58fa724d37be3c3f5ec505b592cfc97a2155ffefbcee9e79bf61dbb12b3d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/blog/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:be494f24f47670178bcaeab4262a250cc3a553b5783524fbb7c0d2ee32ea4f6c",
+   "relationKind": "binds",
+   "fromNode": "symbol:blog.record_view",
+   "toNode": "artifact:blog.view-counter",
+   "occurrence": "bindings.view-counter",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:947e58fa724d37be3c3f5ec505b592cfc97a2155ffefbcee9e79bf61dbb12b3d",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/blog/bindings.yaml"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:88a9bdfb2ea54356f1690144da9f079f6cea9c32876301a5fa8887f807c16528",
+   "relationKind": "binds",
+   "fromNode": "symbol:comments.submit",
+   "toNode": "artifact:comments.submit-action",
+   "occurrence": "bindings.comments-submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:6dac6aad33da5a21750b85b539bc3691bc77c7c364c0da42d21070e1cac927a9",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/commands.yaml"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:d563e2dba6359b6b758e2ae5a02017a1461f9d20b079cf4461e3f1661487dda4",
+   "relationKind": "binds",
+   "fromNode": "symbol:comments.approve",
+   "toNode": "artifact:comments.service",
+   "occurrence": "bindings.comments-approve",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:6dac6aad33da5a21750b85b539bc3691bc77c7c364c0da42d21070e1cac927a9",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/commands.yaml"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:65b425589322b745f39a8144502f634cc237319f8fbf56c9dc1e996b03ca0490",
+   "relationKind": "binds",
+   "fromNode": "symbol:comments.reject",
+   "toNode": "artifact:comments.service",
+   "occurrence": "bindings.comments-reject",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:6dac6aad33da5a21750b85b539bc3691bc77c7c364c0da42d21070e1cac927a9",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/commands.yaml"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:a0c1c0ec1ce07b0ad8dd653d880e42f2ada062993fca0921ec0e9d1752960c36",
+   "relationKind": "binds",
+   "fromNode": "symbol:comments.delete",
+   "toNode": "artifact:comments.service",
+   "occurrence": "bindings.comments-delete",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:6dac6aad33da5a21750b85b539bc3691bc77c7c364c0da42d21070e1cac927a9",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/comments/commands.yaml"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:eb12a770a75ed4d1d078a4d1cdfb8080dfb7ba8f07e2d53e94bc51423e1ec05a",
+   "relationKind": "binds",
+   "fromNode": "symbol:blog.publish_article",
+   "toNode": "artifact:blog.publish-toggle-action",
+   "occurrence": "bindings.admin-articles-publish",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:2dae64c9f7915e2a94283e3480dc417a57194deb7f8030cac1f54a006a6710e3",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/blog/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:baf7762a14de0524b1ae27211897db4bdbb9e40138b85f75801f6e4af2c4b8d9",
+   "relationKind": "binds",
+   "fromNode": "symbol:blog.publish_bulk",
+   "toNode": "artifact:cardboard.bulk-publish-action",
+   "occurrence": "bindings.bulk-publish",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:2dae64c9f7915e2a94283e3480dc417a57194deb7f8030cac1f54a006a6710e3",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/blog/commands.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:86d67821c30ca0b712c882d32e7a21b597d9768a4ac82e8f7f8a08f933e0135e",
+   "relationKind": "covers",
+   "fromNode": "scenario:blog.search-flow",
+   "toNode": "symbol:blog.search",
+   "occurrence": "covers.blog.search",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4cca5954b8320381a6a5479691383776ceaa65c63a28b296131a42fa47765688",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/blog/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:2e527c4b8cba4ca8b4de9d8edeb134672ae8b0c61155bab611b655866a924ce3",
+   "relationKind": "covers",
+   "fromNode": "scenario:blog.read-flow",
+   "toNode": "symbol:blog.article_index",
+   "occurrence": "covers.blog.article-index",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4cca5954b8320381a6a5479691383776ceaa65c63a28b296131a42fa47765688",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/blog/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:7546f6a3650a3952c7641e37658ed6ff521c4ddf85bccf15541ae3f569ceab2f",
+   "relationKind": "covers",
+   "fromNode": "scenario:blog.read-flow",
+   "toNode": "symbol:blog.article_by_slug",
+   "occurrence": "covers.blog.article-by-slug",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4cca5954b8320381a6a5479691383776ceaa65c63a28b296131a42fa47765688",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/blog/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:70dbecde953bc791767e7041806f2e6996aed63d6af5d417b920f0cff0b9fb69",
+   "relationKind": "covers",
+   "fromNode": "scenario:blog.read-flow",
+   "toNode": "symbol:blog.record_view",
+   "occurrence": "covers.blog.record-view",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4cca5954b8320381a6a5479691383776ceaa65c63a28b296131a42fa47765688",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/blog/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:5174ae401d1ee0b131b017f1d85f38d40f4fa9efdd9c6dec2917898b16f5389a",
+   "relationKind": "covers",
+   "fromNode": "scenario:blog.admin-editing-flow",
+   "toNode": "symbol:blog.create_article",
+   "occurrence": "covers.blog.create-article",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4cca5954b8320381a6a5479691383776ceaa65c63a28b296131a42fa47765688",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/blog/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:f6c09dba6245b8ad613401ddbca5150db2191de8e00167f31e7f72eea0f4fede",
+   "relationKind": "covers",
+   "fromNode": "scenario:blog.admin-editing-flow",
+   "toNode": "symbol:blog.update_article",
+   "occurrence": "covers.blog.update-article",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4cca5954b8320381a6a5479691383776ceaa65c63a28b296131a42fa47765688",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/blog/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:8e7d7e4f1b7ff69e0d52120ea40960e8eb3ea2dd5a6c8bf982a43900556aecb5",
+   "relationKind": "covers",
+   "fromNode": "scenario:blog.admin-editing-flow",
+   "toNode": "symbol:blog.delete_article",
+   "occurrence": "covers.blog.delete-article",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4cca5954b8320381a6a5479691383776ceaa65c63a28b296131a42fa47765688",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/blog/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:8778f28beb5eeaba6242c0662e505e3aaf2eaecef2f3c37ca995bca90c3c9935",
+   "relationKind": "covers",
+   "fromNode": "scenario:blog.admin-editing-flow",
+   "toNode": "symbol:blog.cover_owned_by_article",
+   "occurrence": "covers.blog.cover-owned-by-article",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4cca5954b8320381a6a5479691383776ceaa65c63a28b296131a42fa47765688",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/blog/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:e6b5528bb5ff487272820b8b2a005205556a77819a8e4fc899dc88009ec5e346",
+   "relationKind": "covers",
+   "fromNode": "scenario:blog.members-gate-flow",
+   "toNode": "symbol:blog.article_by_slug",
+   "occurrence": "covers.blog.members-gate",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4cca5954b8320381a6a5479691383776ceaa65c63a28b296131a42fa47765688",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/blog/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:318e3aa61f445b85781942902765f1d292a84544b3a8d06df03cb260db8c5746",
+   "relationKind": "covers",
+   "fromNode": "scenario:blog.admin-editing-flow",
+   "toNode": "symbol:blog.publish_article",
+   "occurrence": "covers.blog.publish-article",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4cca5954b8320381a6a5479691383776ceaa65c63a28b296131a42fa47765688",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/blog/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:4417f50cc6e20006c3b31fa4047d33a74a74db30f0e3339280dc4ddd8b9cce91",
+   "relationKind": "covers",
+   "fromNode": "scenario:blog.admin-editing-flow",
+   "toNode": "symbol:blog.publish_bulk",
+   "occurrence": "covers.blog.publish-bulk",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4cca5954b8320381a6a5479691383776ceaa65c63a28b296131a42fa47765688",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/blog/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:4097364f426fca255669e389f46d1138d3e4d427dd6a094b19142ae8eb5c226d",
+   "relationKind": "covers",
+   "fromNode": "scenario:blog.admin-editing-flow",
+   "toNode": "symbol:blog.effect_article_published",
+   "occurrence": "covers.blog.effect-article-published",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4cca5954b8320381a6a5479691383776ceaa65c63a28b296131a42fa47765688",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/blog/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:0c48fc7749e7ebb55668f72567e112e8119f441f658ac64abfce493b7ecb2578",
+   "relationKind": "covers",
+   "fromNode": "scenario:blog.admin-editing-flow",
+   "toNode": "symbol:blog.effect_article_bulk_published",
+   "occurrence": "covers.blog.effect-article-bulk-published",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:4cca5954b8320381a6a5479691383776ceaa65c63a28b296131a42fa47765688",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/blog/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:085834b959aca65f22402588b0fb118d496f642ad580b53aeb1ffb6325ca0844",
+   "relationKind": "verifies",
+   "fromNode": "test:blog-search-test",
+   "toNode": "scenario:blog.search-flow",
+   "occurrence": "verifies.search-flow",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:879e3bae5009be26363b427149b9aa7256b1dbc02d99ca060b519a0576387019",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:192d9a3a5de68ce36151dc4fbf7c2b521c0f3b00b8c745ecd5646a23a5e965d4",
+   "relationKind": "verifies",
+   "fromNode": "test:blog-search-test",
+   "toNode": "symbol:blog.search",
+   "occurrence": "verifies.blog.search",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:879e3bae5009be26363b427149b9aa7256b1dbc02d99ca060b519a0576387019",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:410bc4ac421120b42c18a86ec79ea634379d1da11f27db738e34caa31a9f3f76",
+   "relationKind": "verifies",
+   "fromNode": "test:blog-feed-test",
+   "toNode": "symbol:blog.article_index",
+   "occurrence": "verifies.blog.article-index",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:e001b0a82e4105a4b1701f37f82f0db247b788a555fc431029c746cfc8ee710e",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:8e4eb818514dcae68dbb329c56c4448e641c8db1289f8b6e7edf0cca9663c218",
+   "relationKind": "verifies",
+   "fromNode": "test:blog-cover-test",
+   "toNode": "symbol:blog.cover_owned_by_article",
+   "occurrence": "verifies.blog.cover-owned-by-article",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:9641fb7c22bc913c52928446f5023329c60b2c1da8729d9c8f13d46e7e9dade3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:e02d50a29937a39a3e554ecb0f72abc2b0cf4e8ae28ea0fe4055d22da9a9335a",
+   "relationKind": "verifies",
+   "fromNode": "test:cover-determinism-test",
+   "toNode": "scenario:blog.admin-editing-flow",
+   "occurrence": "verifies.cover-determinism",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:fd1fec5560cf383055eeae9c3ab0baa871ec2c77b806e80140e0d56f9848c804",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:8aaf26f740c4f4f8dfb920cf91f3c75f9213d59bccd4e2318876337888fe6c8a",
+   "relationKind": "verifies",
+   "fromNode": "test:comments-test",
+   "toNode": "symbol:comments.submit",
+   "occurrence": "verifies.comments.submit",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:d9cafd515b11821cbb76432ad52b0a879a10d42b875be562f523ce97356f8860",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:ae9b42dbd27e2ccc8c4ae2925f1dace0cf193c7332e31b292a281641a2c8bbc5",
+   "relationKind": "verifies",
+   "fromNode": "test:comments-test",
+   "toNode": "symbol:comments.approve",
+   "occurrence": "verifies.comments.approve",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:d9cafd515b11821cbb76432ad52b0a879a10d42b875be562f523ce97356f8860",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:1d6dafb5c9324dcf99ed9554859e29c9732cedba5105904415893a198c09238d",
+   "relationKind": "verifies",
+   "fromNode": "test:bulk-actions-test",
+   "toNode": "scenario:blog.admin-editing-flow",
+   "occurrence": "verifies.bulk-actions-flow",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:182c9d851789a7ce4139f4175786f86d5c666677d883f6d311bd47dcf57b880e",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:8ca9121a2a56729a8becc0e3d59d6e4d547feff097719ee048b3e8819b149f46",
+   "relationKind": "verifies",
+   "fromNode": "test:bulk-actions-test",
+   "toNode": "symbol:blog.publish_article",
+   "occurrence": "verifies.blog.publish-article",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:182c9d851789a7ce4139f4175786f86d5c666677d883f6d311bd47dcf57b880e",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:1bff85d05efabbcfa3a65f3a1c34e3ddb7389dc78fe38a5fa8efa17b5dc243ce",
+   "relationKind": "verifies",
+   "fromNode": "test:bulk-actions-test",
+   "toNode": "symbol:blog.publish_bulk",
+   "occurrence": "verifies.blog.publish-bulk",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:182c9d851789a7ce4139f4175786f86d5c666677d883f6d311bd47dcf57b880e",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:15440d93363677c2f17b37ad96e5c464e4e203714458c6aad94dcec4041b05c7",
+   "relationKind": "verifies",
+   "fromNode": "test:bulk-actions-test",
+   "toNode": "symbol:blog.effect_article_published",
+   "occurrence": "verifies.blog.effect-article-published",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:182c9d851789a7ce4139f4175786f86d5c666677d883f6d311bd47dcf57b880e",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:59631e040966b78448a9895adc50fb6f971a0e5fdf1ca44cd536d492656bc6ca",
+   "relationKind": "verifies",
+   "fromNode": "test:bulk-actions-test",
+   "toNode": "symbol:blog.effect_article_bulk_published",
+   "occurrence": "verifies.blog.effect-article-bulk-published",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:182c9d851789a7ce4139f4175786f86d5c666677d883f6d311bd47dcf57b880e",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:284f0e754bc5b9f22ee08692db99ecc61b0c0fc915361171c2cca82b3a932fc5",
+   "relationKind": "evidences",
+   "fromNode": "gate:nativa-phpunit",
+   "toNode": "test:blog-search-test",
+   "occurrence": "evidences.phpunit-blog-search",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit"
+   ]
+  },
+  {
+   "relationId": "sha256:5b332ca6a6201e5b510cf0d068cea94abf5ade5048f72c812c67132a822d2fa6",
+   "relationKind": "evidences",
+   "fromNode": "gate:nativa-phpunit",
+   "toNode": "test:blog-feed-test",
+   "occurrence": "evidences.phpunit-blog-feed",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit"
+   ]
+  },
+  {
+   "relationId": "sha256:21858d56128fe583c949e95673b3f1ece5dee5262d28b74a12d4a8dca6aca19b",
+   "relationKind": "evidences",
+   "fromNode": "gate:nativa-phpunit",
+   "toNode": "test:blog-cover-test",
+   "occurrence": "evidences.phpunit-blog-cover",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit"
+   ]
+  },
+  {
+   "relationId": "sha256:9f0ebd249df7b1f34f8c5c3b8105cd528e58493baf386f9a5231f6c9ce1b0fba",
+   "relationKind": "evidences",
+   "fromNode": "gate:nativa-phpunit",
+   "toNode": "test:cover-determinism-test",
+   "occurrence": "evidences.phpunit-cover-determinism",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit"
+   ]
+  },
+  {
+   "relationId": "sha256:bb167c8e50d4355fa04fb41730c2a809d9619670a3b54a8023c9b7cf84febf19",
+   "relationKind": "evidences",
+   "fromNode": "gate:nativa-phpunit",
+   "toNode": "test:comments-test",
+   "occurrence": "evidences.phpunit-comments",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit"
+   ]
+  },
+  {
+   "relationId": "sha256:bdde126902607de9e1d6cad933e9a6bcf3c49b690a1cc9871fb1b6d67137febf",
+   "relationKind": "evidences",
+   "fromNode": "gate:nativa-phpunit",
+   "toNode": "test:bulk-actions-test",
+   "occurrence": "evidences.phpunit-bulk-actions",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit"
+   ]
+  },
+  {
+   "relationId": "sha256:2ab5f660451815babbbe06f1d2ab01116f4905837edb2d451ffd6672dfda4536",
+   "relationKind": "evidences",
+   "fromNode": "gate:lekalo-validate-model",
+   "toNode": "test:bulk-actions-test",
+   "occurrence": "evidences.lekalo-validate-bulk",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "make-lekalo-check"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:32b6e70e1de7b16e7e731ee5135ebabdaa23435a2507276eeff7b045b7e353f9",
+   "relationKind": "evidences",
+   "fromNode": "gate:lekalo-validate-model",
+   "toNode": "test:blog-search-test",
+   "occurrence": "evidences.lekalo-validate-blog",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "make-lekalo-check"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:lekalo-validate-model"
+   ]
+  }
+ ],
+ "gaps": [
+  {
+   "gapKind": "missing-gate",
+   "status": "candidate",
+   "anchorNode": "symbol:blog.search",
+   "expected": "hlv.native.gate.search",
+   "sourcePath": "docs/lekalo/trace/blog.trace.json"
+  },
+  {
+   "gapKind": "missing-gate",
+   "status": "candidate",
+   "anchorNode": "symbol:comments.submit",
+   "expected": "hlv.native.gate.comments",
+   "sourcePath": "docs/lekalo/trace/blog.trace.json"
+  },
+  {
+   "gapKind": "missing-gate",
+   "status": "candidate",
+   "anchorNode": "symbol:blog.create_article",
+   "expected": "hlv.native.gate.articles",
+   "sourcePath": "docs/lekalo/trace/blog.trace.json"
+  },
+  {
+   "gapKind": "missing-gate",
+   "status": "candidate",
+   "anchorNode": "symbol:blog.publish_article",
+   "expected": "hlv.native.gate.articles",
+   "sourcePath": "docs/lekalo/trace/blog.trace.json"
+  },
+  {
+   "gapKind": "missing-gate",
+   "status": "candidate",
+   "anchorNode": "symbol:blog.publish_bulk",
+   "expected": "hlv.native.gate.articles",
+   "sourcePath": "docs/lekalo/trace/blog.trace.json"
+  },
+  {
+   "gapKind": "missing-native-test",
+   "status": "candidate",
+   "anchorNode": "scenario:blog.members-gate-flow",
+   "expected": "nativa.members-gate-native-test",
+   "sourcePath": "docs/lekalo/trace/blog.trace.json"
+  },
+  {
+   "gapKind": "unsupported-provider",
+   "status": "unsupported",
+   "anchorNode": "symbol:blog.search",
+   "expected": "lekalo.native.gate.receipt",
+   "sourcePath": "docs/lekalo/scan/starter-ts.scan.md"
+  }
+ ]
+}

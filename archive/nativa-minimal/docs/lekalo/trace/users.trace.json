@@ -1,0 +1,1022 @@
+{
+ "schemaVersion": "lekalo/trace-manifest/v0.2.16",
+ "identity": "dev.lekalo.trace-manifest@0.2.16",
+ "manifestId": "nativa-users-trace",
+ "projectRef": "nativa",
+ "completeness": "partial",
+ "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+ "modelRef": {
+  "schemaVersion": "0.2.16",
+  "digest": "sha256:0bf1d8274e6bc5501d68b55944e562ac999210803e10bdaf69e4cf14ab1ccba2"
+ },
+ "irRef": {
+  "schemaVersion": "0.2.16",
+  "digest": "sha256:9333f37c2cf57b6a9f08024f4d81a8d4ee96f34527fa92c53ab7a4e3c6761b28"
+ },
+ "exportProfile": "requirement-to-gate",
+ "nodes": [
+  {
+   "nodeId": "requirement:USERS-REQ-REG",
+   "nodeKind": "requirement",
+   "requirementId": "user-registration-and-validation",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "user-registration-and-validation"
+    }
+   ]
+  },
+  {
+   "nodeId": "requirement:USERS-REQ-RBAC",
+   "nodeKind": "requirement",
+   "requirementId": "role-based-access-control",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "role-based-access-control"
+    }
+   ]
+  },
+  {
+   "nodeId": "requirement:USERS-REQ-RESET",
+   "nodeKind": "requirement",
+   "requirementId": "password-reset-flow",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "password-reset-flow"
+    }
+   ]
+  },
+  {
+   "nodeId": "requirement:USERS-REQ-ADMIN",
+   "nodeKind": "requirement",
+   "requirementId": "admin-area-authentication",
+   "externalRefs": [
+    {
+     "system": "openspec",
+     "originalId": "admin-area-authentication"
+    }
+   ]
+  },
+  {
+   "nodeId": "symbol:users.register",
+   "nodeKind": "symbol",
+   "semanticId": "users.register"
+  },
+  {
+   "nodeId": "symbol:users.login",
+   "nodeKind": "symbol",
+   "semanticId": "users.login"
+  },
+  {
+   "nodeId": "symbol:users.logout",
+   "nodeKind": "symbol",
+   "semanticId": "users.logout"
+  },
+  {
+   "nodeId": "symbol:users.request_password_reset",
+   "nodeKind": "symbol",
+   "semanticId": "users.request_password_reset"
+  },
+  {
+   "nodeId": "symbol:users.reset_password",
+   "nodeKind": "symbol",
+   "semanticId": "users.reset_password"
+  },
+  {
+   "nodeId": "symbol:users.create_role",
+   "nodeKind": "symbol",
+   "semanticId": "users.create_role"
+  },
+  {
+   "nodeId": "symbol:users.delete_role",
+   "nodeKind": "symbol",
+   "semanticId": "users.delete_role"
+  },
+  {
+   "nodeId": "symbol:users.sync_role_permissions",
+   "nodeKind": "symbol",
+   "semanticId": "users.sync_role_permissions"
+  },
+  {
+   "nodeId": "symbol:users.password_min_length",
+   "nodeKind": "symbol",
+   "semanticId": "users.password_min_length"
+  },
+  {
+   "nodeId": "symbol:users.unique_email",
+   "nodeKind": "symbol",
+   "semanticId": "users.unique_email"
+  },
+  {
+   "nodeId": "symbol:users.active_account_required",
+   "nodeKind": "symbol",
+   "semanticId": "users.active_account_required"
+  },
+  {
+   "nodeId": "symbol:users.admin_only_rbac",
+   "nodeKind": "symbol",
+   "semanticId": "users.admin_only_rbac"
+  },
+  {
+   "nodeId": "artifact:users.register-action",
+   "nodeKind": "artifact",
+   "artifactId": "users.register-action",
+   "ownership": "checked",
+   "path": "src/modules/users/interfaces/http/actions/auth/registeraction-php",
+   "contentDigest": "sha256:f82182810c572f1e83121a1b1d301f607de271ed116aa5e57be2f11f655858fc",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "users.register-action"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:users.login-action",
+   "nodeKind": "artifact",
+   "artifactId": "users.login-action",
+   "ownership": "checked",
+   "path": "src/modules/users/interfaces/http/actions/auth/loginaction-php",
+   "contentDigest": "sha256:86e0da5c042dd4dfcacafb678a623fcfebc9b602acb3939880a0e1d466d6ad0b",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "users.login-action"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:users.logout-action",
+   "nodeKind": "artifact",
+   "artifactId": "users.logout-action",
+   "ownership": "checked",
+   "path": "src/modules/users/interfaces/http/actions/auth/logoutaction-php",
+   "contentDigest": "sha256:9222dd70bf4ec58b1e65e63bd28e3ad06187b6dda5de00f6a7cccb5be09a69bc",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "users.logout-action"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:users.reset-request-action",
+   "nodeKind": "artifact",
+   "artifactId": "users.reset-request-action",
+   "ownership": "checked",
+   "path": "src/modules/users/interfaces/http/actions/auth/passwordresetrequestaction-php",
+   "contentDigest": "sha256:90f9d686979eeafb227d8ae8c5550e20aba52580ced5817490d8e6a2c59816a4",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "users.reset-request-action"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:users.reset-action",
+   "nodeKind": "artifact",
+   "artifactId": "users.reset-action",
+   "ownership": "checked",
+   "path": "src/modules/users/interfaces/http/actions/auth/passwordresetaction-php",
+   "contentDigest": "sha256:ed1c41c66436d4f110b3ec5a63f2364c5b036931afc281b22cc4023c546ecdf0",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "users.reset-action"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:users.roles-action",
+   "nodeKind": "artifact",
+   "artifactId": "users.roles-action",
+   "ownership": "checked",
+   "path": "src/modules/cardboard/interfaces/http/actions/rolesaction-php",
+   "contentDigest": "sha256:0e9981650e6181db4e6b1e14465da880297577d73c8f4f47d5681916e572ff8f",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "users.roles-action"
+    }
+   ]
+  },
+  {
+   "nodeId": "artifact:users.auth-services",
+   "nodeKind": "artifact",
+   "artifactId": "users.auth-services",
+   "ownership": "checked",
+   "path": "src/modules/users/interfaces/http/authservices-php",
+   "contentDigest": "sha256:dec96fd67c4151d30ee9554accfecd4c8da5f82afc8fd38e758c56944496c08b",
+   "revision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "users.auth-services"
+    }
+   ]
+  },
+  {
+   "nodeId": "scenario:users.register-login-flow",
+   "nodeKind": "scenario",
+   "scenarioId": "users.register_login_flow",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+   "nodeId": "scenario:users.password-reset-flow",
+   "nodeKind": "scenario",
+   "scenarioId": "users.password_reset_flow",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+   "nodeId": "test:users-module-test",
+   "nodeKind": "native_test",
+   "testId": "nativa.UsersModuleTest",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:806316c1255ab09bf7ac3b9c4b0a0fa94b58affbc98938c7de8eb453b25e5cbd",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.UsersModuleTest"
+    }
+   ]
+  },
+  {
+   "nodeId": "gate:nativa-phpunit",
+   "nodeKind": "gate",
+   "gateId": "nativa.phpunit",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "nativa.phpunit"
+    }
+   ]
+  },
+  {
+   "nodeId": "gate:lekalo-validate-model",
+   "nodeKind": "gate",
+   "gateId": "lekalo.validate-model",
+   "contractVersion": "0.2.16",
+   "evidenceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+   "externalRefs": [
+    {
+     "system": "source-native",
+     "originalId": "lekalo.validate-model"
+    }
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "relationId": "sha256:921172881c77109233209f6e52e106648a78a1514e115284ba685769aa03049e",
+   "relationKind": "implements",
+   "fromNode": "symbol:users.register",
+   "toNode": "requirement:USERS-REQ-REG",
+   "occurrence": "requirements.user-registration-and-validation",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:a90c3a4b58f3b27189c6327f2f1caf7191dca384ed4dc5a86c2b430a4fa8b634",
+   "relationKind": "implements",
+   "fromNode": "symbol:users.login",
+   "toNode": "requirement:USERS-REQ-ADMIN",
+   "occurrence": "requirements.admin-area-authentication",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:13a9aeb1b1ae1fa117835ea6cfad523852873119c65f90acd9f352347c5a5719",
+   "relationKind": "implements",
+   "fromNode": "symbol:users.logout",
+   "toNode": "requirement:USERS-REQ-ADMIN",
+   "occurrence": "requirements.admin-area-authentication.logout",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:e074a736c7ad446fcb286de6e87e735493c4a0fbdfaaa94b05b3d84ecf11bc0d",
+   "relationKind": "implements",
+   "fromNode": "symbol:users.request_password_reset",
+   "toNode": "requirement:USERS-REQ-RESET",
+   "occurrence": "requirements.password-reset-flow",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:9681025f4c0942cce4a0f74096bfc01bac7e59da5406e33338432d4aaae8fd80",
+   "relationKind": "implements",
+   "fromNode": "symbol:users.reset_password",
+   "toNode": "requirement:USERS-REQ-RESET",
+   "occurrence": "requirements.password-reset-flow.reset",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:945ab4de6791e838600cabf7468cd52c1b1d9c77f4d8431fa5b26c0352c3e24d",
+   "relationKind": "implements",
+   "fromNode": "symbol:users.password_min_length",
+   "toNode": "requirement:USERS-REQ-REG",
+   "occurrence": "requirements.password-min-length-policy",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:9a4af37272f8e19569891df74dbe5902d8fca2e6fe4f5107eb3a0e9d4717b323",
+   "relationKind": "implements",
+   "fromNode": "symbol:users.unique_email",
+   "toNode": "requirement:USERS-REQ-REG",
+   "occurrence": "requirements.unique-email-policy",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:1d26af041f0566de7fca18772e49214b45dc837034b5dcad3edfbd19e18d94ae",
+   "relationKind": "implements",
+   "fromNode": "symbol:users.create_role",
+   "toNode": "requirement:USERS-REQ-RBAC",
+   "occurrence": "requirements.role-based-access-control",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:ab2edca7f81d7279b95612795ec8936268a6d8cdb94d6dc0de4b0693d4794730",
+   "relationKind": "implements",
+   "fromNode": "symbol:users.delete_role",
+   "toNode": "requirement:USERS-REQ-RBAC",
+   "occurrence": "requirements.role-based-access-control.delete",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:66b731dd57608fab8d3bd50fd7483c4565579e1b9316c5edae8ff4061ca435c5",
+   "relationKind": "implements",
+   "fromNode": "symbol:users.sync_role_permissions",
+   "toNode": "requirement:USERS-REQ-RBAC",
+   "occurrence": "requirements.role-based-access-control.sync",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:7334fc6f4cb1e8f801c6ece6eda50366e66ce01b6b4220682d406c7b1651f9bd",
+   "relationKind": "implements",
+   "fromNode": "symbol:users.admin_only_rbac",
+   "toNode": "requirement:USERS-REQ-RBAC",
+   "occurrence": "requirements.admin-only-rbac-policy",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:a9a170ad020bbdd0500b4838539775a545a8b07c0beea518f753059cf55110d6",
+   "relationKind": "implements",
+   "fromNode": "symbol:users.active_account_required",
+   "toNode": "requirement:USERS-REQ-ADMIN",
+   "occurrence": "requirements.active-account-required-policy",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "openspec",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:59d447e9f5caeacac69c752f9efdebaadcefac703d1bcd63d04aff3a73bbe4d3",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:dbf785bf59b4d20aac5f36a29ec9732ca67db133931e8f4404eb7c1cb2e3ef27",
+   "relationKind": "binds",
+   "fromNode": "symbol:users.register",
+   "toNode": "artifact:users.register-action",
+   "occurrence": "bindings.endpoint-register",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:f7fc5ea0be18708a93fc7461b40ac7302f402b53470b5e96f1ac96d4ecf885f8",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/users/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:b79b82127d8b64e67820f626e557862b4de11aeff1dcae3c87fb08d3550ac177",
+   "relationKind": "binds",
+   "fromNode": "symbol:users.login",
+   "toNode": "artifact:users.login-action",
+   "occurrence": "bindings.endpoint-login",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:f7fc5ea0be18708a93fc7461b40ac7302f402b53470b5e96f1ac96d4ecf885f8",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/users/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:cee243db27c40cefe73dcce4886f8dc19bdc866a27ff67479cad69c66ed3e58f",
+   "relationKind": "binds",
+   "fromNode": "symbol:users.logout",
+   "toNode": "artifact:users.logout-action",
+   "occurrence": "bindings.endpoint-logout",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:f7fc5ea0be18708a93fc7461b40ac7302f402b53470b5e96f1ac96d4ecf885f8",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/users/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:671afb01b9fc87b8e20d8587715458735efbf6aead03d9bd2f6dbc42476a7aba",
+   "relationKind": "binds",
+   "fromNode": "symbol:users.request_password_reset",
+   "toNode": "artifact:users.reset-request-action",
+   "occurrence": "bindings.endpoint-forgot-password",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:f7fc5ea0be18708a93fc7461b40ac7302f402b53470b5e96f1ac96d4ecf885f8",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/users/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:d52a2863489d9264a26bdc0e24cbd68aff346057231f50780630f15148b7a262",
+   "relationKind": "binds",
+   "fromNode": "symbol:users.reset_password",
+   "toNode": "artifact:users.reset-action",
+   "occurrence": "bindings.endpoint-reset-password",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:f7fc5ea0be18708a93fc7461b40ac7302f402b53470b5e96f1ac96d4ecf885f8",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/users/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:7bd0f9800dbbd713db8dbb01c606ba8680a281b8fed6a0f9d5061985ce522654",
+   "relationKind": "binds",
+   "fromNode": "symbol:users.create_role",
+   "toNode": "artifact:users.roles-action",
+   "occurrence": "bindings.admin-roles",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:f7fc5ea0be18708a93fc7461b40ac7302f402b53470b5e96f1ac96d4ecf885f8",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/users/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:b52ed1278b7e1fbdedb344b562be21b2ee4817509b1cc37fecd2a88321447599",
+   "relationKind": "binds",
+   "fromNode": "symbol:users.delete_role",
+   "toNode": "artifact:users.roles-action",
+   "occurrence": "bindings.admin-roles-delete",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:f7fc5ea0be18708a93fc7461b40ac7302f402b53470b5e96f1ac96d4ecf885f8",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/users/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:dcd2dbf3703bc0b8a4b9a65394c488ddbe1d01160b339c664bcc8151b53696f8",
+   "relationKind": "binds",
+   "fromNode": "symbol:users.sync_role_permissions",
+   "toNode": "artifact:users.roles-action",
+   "occurrence": "bindings.admin-roles-sync",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:f7fc5ea0be18708a93fc7461b40ac7302f402b53470b5e96f1ac96d4ecf885f8",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/users/bindings.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:4c4ea8ee0aa47dc590b7d4798902db4bf9717564b6cce9f0c3eadbf0519b9038",
+   "relationKind": "binds",
+   "fromNode": "symbol:users.register",
+   "toNode": "artifact:users.auth-services",
+   "occurrence": "bindings.auth-services-registration",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:f7fc5ea0be18708a93fc7461b40ac7302f402b53470b5e96f1ac96d4ecf885f8",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/users/bindings.yaml"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:bf76bc8f1397be7cea55a2feb31eefd1a0c3e5b1e9a410921f9d6e48f2f2ec43",
+   "relationKind": "binds",
+   "fromNode": "symbol:users.login",
+   "toNode": "artifact:users.auth-services",
+   "occurrence": "bindings.auth-services-login",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:f7fc5ea0be18708a93fc7461b40ac7302f402b53470b5e96f1ac96d4ecf885f8",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/users/bindings.yaml"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:568ee85f47b78c519ca5e0fd77bfabc13d1dbbf86a20322bf482b945383dbcf5",
+   "relationKind": "binds",
+   "fromNode": "symbol:users.request_password_reset",
+   "toNode": "artifact:users.auth-services",
+   "occurrence": "bindings.auth-services-reset-request",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:f7fc5ea0be18708a93fc7461b40ac7302f402b53470b5e96f1ac96d4ecf885f8",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/users/bindings.yaml"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:f56b6772c0ef8d54fe9ab4d91408d68c92ec77aab6ec8bb2c1ad13373161199e",
+   "relationKind": "binds",
+   "fromNode": "symbol:users.reset_password",
+   "toNode": "artifact:users.auth-services",
+   "occurrence": "bindings.auth-services-reset",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:f7fc5ea0be18708a93fc7461b40ac7302f402b53470b5e96f1ac96d4ecf885f8",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/users/bindings.yaml"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:25b8c5db0f2d585ec351773b1876bbef5ac49af7ff911cafba62d92ad6287e0e",
+   "relationKind": "covers",
+   "fromNode": "scenario:users.register-login-flow",
+   "toNode": "symbol:users.register",
+   "occurrence": "covers.users.register",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:7e8a7210c080df1d74e27b580819a91b8156a55e390fa3d1e72bb8c6f7afe9da",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/users/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:db9edfa28d5ec312749094d46144ddb98047d3990caa1fab11d19f313fc1505a",
+   "relationKind": "covers",
+   "fromNode": "scenario:users.register-login-flow",
+   "toNode": "symbol:users.login",
+   "occurrence": "covers.users.login",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:7e8a7210c080df1d74e27b580819a91b8156a55e390fa3d1e72bb8c6f7afe9da",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/users/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:0b0893ccb3898d574fc7ee88897b986467f3b419e53aa6dd946b3b9bbd99d88c",
+   "relationKind": "covers",
+   "fromNode": "scenario:users.password-reset-flow",
+   "toNode": "symbol:users.request_password_reset",
+   "occurrence": "covers.users.request-password-reset",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:7e8a7210c080df1d74e27b580819a91b8156a55e390fa3d1e72bb8c6f7afe9da",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/users/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:eace6ba43f1ca4e1884f10ca6932b61899284f1a161dd3c0f78610f06908e4b7",
+   "relationKind": "covers",
+   "fromNode": "scenario:users.password-reset-flow",
+   "toNode": "symbol:users.reset_password",
+   "occurrence": "covers.users.reset-password",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "lekalo",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:7e8a7210c080df1d74e27b580819a91b8156a55e390fa3d1e72bb8c6f7afe9da",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "lekalo/modules/users/scenarios.yaml"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:c8de17deafd2738846ff6fd26f21ed2dc9aa8f7dc771bb72955e94ad23c6beed",
+   "relationKind": "verifies",
+   "fromNode": "test:users-module-test",
+   "toNode": "scenario:users.register-login-flow",
+   "occurrence": "verifies.register-login-flow",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:806316c1255ab09bf7ac3b9c4b0a0fa94b58affbc98938c7de8eb453b25e5cbd",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:6a6613501cb05ea7e76537d5129b7a7ebb49caf8654b6629fea7efd50f41ee3c",
+   "relationKind": "verifies",
+   "fromNode": "test:users-module-test",
+   "toNode": "scenario:users.password-reset-flow",
+   "occurrence": "verifies.password-reset-flow",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:806316c1255ab09bf7ac3b9c4b0a0fa94b58affbc98938c7de8eb453b25e5cbd",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:0ebacd1a1aebd8d9aeef8b4912b8f89f7f43e9b79618e33eb947dfec17636358",
+   "relationKind": "verifies",
+   "fromNode": "test:users-module-test",
+   "toNode": "symbol:users.create_role",
+   "occurrence": "verifies.users.create-role",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:806316c1255ab09bf7ac3b9c4b0a0fa94b58affbc98938c7de8eb453b25e5cbd",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:5c35b97f1b8ee15d80c270aece475cbe163250313db3c3d7ed99f977fc43b8bd",
+   "relationKind": "verifies",
+   "fromNode": "test:users-module-test",
+   "toNode": "symbol:users.sync_role_permissions",
+   "occurrence": "verifies.users.sync-role-permissions",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:806316c1255ab09bf7ac3b9c4b0a0fa94b58affbc98938c7de8eb453b25e5cbd",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "high",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit",
+    "gate:lekalo-validate-model"
+   ]
+  },
+  {
+   "relationId": "sha256:f29f864a54f800f68260cba0dc8da79e6bb1123ce01731a6ea30d2647ec340e8",
+   "relationKind": "evidences",
+   "fromNode": "gate:nativa-phpunit",
+   "toNode": "test:users-module-test",
+   "occurrence": "evidences.phpunit-users-module",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:nativa-phpunit"
+   ]
+  },
+  {
+   "relationId": "sha256:362469c961da305b1cb0d6dd276a64c16256352e95bdcb6f82485f56606578cf",
+   "relationKind": "evidences",
+   "fromNode": "gate:lekalo-validate-model",
+   "toNode": "test:users-module-test",
+   "occurrence": "evidences.lekalo-validate-users",
+   "provenance": {
+    "origin": "declared",
+    "sourceSystem": "source-native",
+    "sourceRevision": "cc79d4ee994dda7ba2f563c8c224a34559cf032d",
+    "sourceDigest": "sha256:1888989ca3889bde46bb73a6e3de56eaa45e859855f6204c370f3a0530036708",
+    "recordedBy": "lekalo.core",
+    "sourcePath": "make-lekalo-check"
+   },
+   "confidence": "exact",
+   "status": "confirmed",
+   "evidenceRefs": [
+    "gate:lekalo-validate-model"
+   ]
+  }
+ ],
+ "gaps": [
+  {
+   "gapKind": "missing-gate",
+   "status": "candidate",
+   "anchorNode": "symbol:users.register",
+   "expected": "hlv.native.gate.register",
+   "sourcePath": "docs/lekalo/trace/users.trace.json"
+  },
+  {
+   "gapKind": "missing-gate",
+   "status": "candidate",
+   "anchorNode": "symbol:users.login",
+   "expected": "hlv.native.gate.login",
+   "sourcePath": "docs/lekalo/trace/users.trace.json"
+  },
+  {
+   "gapKind": "missing-gate",
+   "status": "candidate",
+   "anchorNode": "symbol:users.reset_password",
+   "expected": "hlv.native.gate.password-reset",
+   "sourcePath": "docs/lekalo/trace/users.trace.json"
+  },
+  {
+   "gapKind": "missing-gate",
+   "status": "candidate",
+   "anchorNode": "symbol:users.create_role",
+   "expected": "hlv.native.gate.roles",
+   "sourcePath": "docs/lekalo/trace/users.trace.json"
+  },
+  {
+   "gapKind": "missing-scenario",
+   "status": "candidate",
+   "anchorNode": "symbol:users.create_role",
+   "expected": "users.role-management-flow",
+   "sourcePath": "docs/lekalo/trace/users.trace.json"
+  },
+  {
+   "gapKind": "unsupported-provider",
+   "status": "unsupported",
+   "anchorNode": "symbol:users.register",
+   "expected": "lekalo.native.gate.receipt",
+   "sourcePath": "docs/lekalo/scan/starter-ts.scan.md"
+  }
+ ]
+}

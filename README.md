@@ -5,9 +5,11 @@ The **kernel-only** tree. Two modules travel whole — `Modules\Core` and
 `modules/` with `bin/cms module:add`, deleted with `bin/cms module:remove`, and
 provably gone afterwards.
 
-This tree exists to test that claim. The showcase (`../nativa-minimal`) is a full
-site; a site cannot demonstrate that something is removable, because the thing it
-would demonstrate on is always installed.
+This tree exists to test that claim. The showcase
+(`evan70/nativa-minimal`, retired on 2026-11-25 and archived in
+`archive/nativa-minimal/`) is a full site; a site cannot demonstrate that
+something is removable, because the thing it would demonstrate on is always
+installed.
 
 ## Where this came from
 
@@ -19,9 +21,10 @@ The kernel slice was imported verbatim from `../nativa-minimal` on 2026-10-11:
 That import carries the showcase's coupling with it: **34 `use Modules\<X>\…`
 statements across 14 files, naming 9 modules** (Blog, Cardboard, Locales, Media,
 Outbox, Pages, Security, Settings, Users). The ledger — every edge, with the
-answer it gets (`M`ove / `C`ontract / `G`uard) — is `../nativa-minimal`'s
-`tests/Architecture/KernelCouplingTest.php` + `tests/Support/KernelCoupling.php`,
-and the measured state of THIS tree is `docs/kernel-status.md` — the index
+answer it gets (`M`ove / `C`ontract / `G`uard), is
+`tests/Architecture/KernelCouplingTest.php` +
+`tests/Support/KernelCoupling.php`, ported from the showcase, and the measured
+state of THIS tree is `docs/kernel-status.md`, the index
 over the per-round boot log kept in `docs/kernel-status/`.
 
 ## The boundary rule
