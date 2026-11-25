@@ -6,9 +6,10 @@
  * baseline (ES2015 / Chrome 70), the @layer stripping and the single-file
  * classic-script contract are fixed by the shared factory.
  *
- * `main-article` is the article surface's stylesheet, a CSS-only input:
- * the manifest names it in `file` with no `css` array (measured 2026-11-24),
- * and `AssetManager::cssUrlsForSurface()` reads both shapes.
+ * `main-article` is the article surface's entry: a classic script that also
+ * imports the surface stylesheet, so the manifest has one row for it and both
+ * `AssetManager::jsUrlsForSurface()` and `cssUrlsForSurface()` read it there.
+ * Every other surface tags `main` alone.
  */
 import { createThemeConfig } from '../build/vite-theme-factory.ts';
 
@@ -16,6 +17,6 @@ export default createThemeConfig({
   theme: 'jednotka',
   inputs: {
     main: 'src/main.ts',
-    'main-article': 'src/main-article.css',
+    'main-article': 'src/main-article.ts',
   },
 });

@@ -1,12 +1,14 @@
-# Boot 74: the landing's script stops loading on every page
+# Boot 74: a page tags only the script it renders markup for
 
 The last round gave a page only its own stylesheet and left JavaScript
 alone, because JavaScript had no split worth making: a theme shipped one
 script and every surface tagged it.
-Griffe's script carried the two landing custom elements, and those two
-elements were the reason the file was as large as it was.
-This round moves them out of the base entry and lets the homepage tag a
-second script.
+Two themes made that expensive in two different ways.
+Griffe's base entry carried the landing's two custom elements, and erik's
+and jednotka's carried the author's Markdown editor.
+Neither file had markup to act on anywhere but one surface.
+This round moves both out, and the base entry becomes what every page can
+use.
 
 ## Where the bytes were
 
@@ -64,6 +66,34 @@ Erik and jednotka carry the Markdown inline editor in the same bundle
 every public page tags, which is a larger question than a split: the
 editor belongs to an admin surface, not to a page surface.
 
+## The same defect in the editor
+
+Erik and jednotka both imported `initInlineEditor()` into their base entry.
+The editor is the author's toolbar and preview over an article's
+`<textarea name="body">`, and that textarea exists only on an article the
+reader may edit.
+So a homepage, a listing and every ordinary page downloaded a Markdown
+renderer, a toolbar and a preview panel with nothing to attach to.
+
+The editor moved to each theme's article surface entry, which now imports
+its own stylesheet instead of being a CSS-only input: one manifest row
+carries the surface's CSS and its script.
+
+| theme | surface | script bytes before | after |
+|---|---|---|---|
+| erik | page, home, listing | 22 322 | 10 176 |
+| erik | article | 22 322 | 22 412 |
+| jednotka | page, home, listing | 22 687 | 10 537 |
+| jednotka | article | 22 687 | 22 773 |
+
+Non-article surfaces drop 12 146 B on erik and 12 150 B on jednotka, 54 %
+of the script they tagged.
+An article pays 90 and 86 B more than before: the second entry repeats the
+`DOMContentLoaded` wrapper, and that is the whole cost of the split.
+
+`inline-edit.css` stays in the base sheet, which is a decision Boot 73 made
+and this round does not revisit.
+
 ## The test that could not have caught it
 
 `PageAssetBudgetTest` measures a page's CSS against the manifest byte for
@@ -90,14 +120,22 @@ shared chunk leaking into the second file fails.
 | `pnpm --filter @nativa/theme-griffe typecheck` | clean |
 | `composer phpstan`, `composer cs-fix-dry` | clean |
 | live server | `/dist/griffe/assets/griffe-U-QwI81-.js` 200 at 9 439 B, `/dist/griffe/assets/griffe-home-Dy3-WO6T.js` 200 at 19 450 B |
+| `pnpm --filter @nativa/theme-erik build`, `... theme-jednotka build` | no `imports` key in either manifest, so neither entry depends on a shared chunk |
+| `composer test modules/Themes/Erik/tests modules/Themes/Jednotka/tests` | 37 tests, 272 assertions |
 
 ## Still open
 
-- The other five themes are unsplit, and nativa's script is 1 176 B of TOC
-  scrollspy that no listing or homepage uses.
-- The inline editor in `erik` and `jednotka` is tagged on public pages and
-  has no markup to act on there. That is a surface question the module
-  contract does not answer yet.
+- Mono and nativa are unsplit. Nativa's 1 176 B is one TOC scrollspy that
+  only an article renders, which leaves non-article nativa pages tagging a
+  script with nothing in it; mono's nine behaviours would need a surface per
+  behaviour measured first, and its bundle is frozen.
+- The starter theme (`Frontend/packages/basic`) imports the same editor into
+  its base entry. It is the kernel's own bundle rather than one of the six
+  themes, and `config/page-budget.json` does not cover it, so this round
+  measured it and left it alone.
+- Naming the editor's entry in each theme rather than once is a copy of a
+  name: `inline-editor.ts` is already kept byte-identical across four
+  packages, and the surface entry is a fourth copy of that knowledge.
 - `Frontend/packages/build/vite-theme-factory.ts` cites
   `bin/build/verify-build.php` as the thing that asserts entries carry no
   shared JavaScript. No such file exists in the tree, so until this round

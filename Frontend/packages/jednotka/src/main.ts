@@ -24,8 +24,9 @@ import './inline-edit.css';
 import { containerQueryManager } from './container-query';
 import { initTocScrollspy } from './toc-scrollspy';
 import { initCodeHighlight } from './code-highlight';
-// The author's Markdown editor: toolbar + live preview over the canonical textarea.
-import { initInlineEditor } from './inline-editor';
+
+// The author's Markdown editor is NOT here: `main-article.ts` holds it,
+// beside the stylesheet of the only surface that renders its textarea.
 
 // ── PWA manifest ───────────────────────────────────────────────
 
@@ -56,7 +57,6 @@ const onDomReady = (): void => {
   collapseTocOnNarrowScreens()
   initTocScrollspy()
   initCodeHighlight()
-  initInlineEditor()
 }
 
 if (document.readyState === 'loading') {

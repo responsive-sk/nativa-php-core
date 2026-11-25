@@ -15,10 +15,10 @@
       "article": { "css": 30790, "js": 11255 }
     },
     "jednotka": {
-      "page": { "css": 36967, "js": 22687 },
-      "home": { "css": 36967, "js": 22687 },
-      "listing": { "css": 36967, "js": 22687 },
-      "article": { "css": 43912, "js": 22687 }
+      "page": { "css": 36967, "js": 10537 },
+      "home": { "css": 36967, "js": 10537 },
+      "listing": { "css": 36967, "js": 10537 },
+      "article": { "css": 43912, "js": 22773 }
     },
     "mono": {
       "page": { "css": 37158, "js": 17875 },
@@ -33,10 +33,10 @@
       "article": { "css": 25431, "js": 9439 }
     },
     "erik": {
-      "page": { "css": 31118, "js": 22322 },
-      "home": { "css": 31118, "js": 22322 },
-      "listing": { "css": 31118, "js": 22322 },
-      "article": { "css": 36502, "js": 22322 }
+      "page": { "css": 31118, "js": 10176 },
+      "home": { "css": 31118, "js": 10176 },
+      "listing": { "css": 31118, "js": 10176 },
+      "article": { "css": 36502, "js": 22412 }
     },
     "nativa": {
       "page": { "css": 9159, "js": 1176 },
