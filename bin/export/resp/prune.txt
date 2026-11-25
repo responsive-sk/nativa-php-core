@@ -82,13 +82,15 @@ phpunit.xml
 README.md
 AGENTS.md
 
-# The gallery workflows have nothing to build here.
+# The gallery workflows have nothing to build or publish here.
 .github/workflows/gallery-pages.yml
 .github/workflows/gallery-pages-check.yml
+.github/workflows/themes-publish.yml
 
 # The generator and publisher belong to the source repository.
 bin/build/export-core.sh
 bin/build/publish-core.sh
+bin/build/publish-themes.sh
 bin/ops/export-core-registry.php
 bin/ops/export-core-verify.php
 

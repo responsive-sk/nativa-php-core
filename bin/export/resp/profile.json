@@ -117,6 +117,8 @@
         "Frontend/packages/mono",
         "Frontend/packages/nativa",
         ".github/workflows/gallery-pages.yml",
-        ".github/workflows/gallery-pages-check.yml"
+        ".github/workflows/gallery-pages-check.yml",
+        ".github/workflows/themes-publish.yml",
+        "bin/build/publish-themes.sh"
     ]
 }
