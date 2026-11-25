@@ -27,9 +27,10 @@ A named module that is absent fails the export by name.
 
 ## Measured export
 
-The local export from `258559e` carries 2 178 files and 17 MB.
-The published repository is still at `9fd347e`; this commit has passed the local
-gate and a publish dry run, but it has not been pushed.
+The export from `a292d39` carries 2 176 files and 17 MB.
+The published repository is `00980d9` on `master`; its marker names `a292d39`.
+The gallery workflow and its publisher are source-only, so the client tree
+carries `ci.yml` alone.
 `module:show` reports 28 identical, 0 drifted, 0 not installed and 1 not
 catalogued; the one is `KernelTheme`.
 The content seed is 4 pages, 287 articles and 273 images.
@@ -67,6 +68,11 @@ The annotation says the job was not started because recent account payments
 failed or the spending limit needed to be increased.
 Actions is enabled for the repository, so the workflow is not the cause.
 The organisation's billing limit stopped the runner before any step.
+
+The publish from `a292d39` is `00980d9`.
+Its CI run is 45661943242.
+All eight jobs again have zero steps, so this is the same billing block, not a
+test failure in the client tree.
 No green private run is measured yet.
 
 The local gate set is green: lint, PHPStan, 1 643 source tests, the CS and
