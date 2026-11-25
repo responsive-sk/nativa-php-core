@@ -48,6 +48,27 @@ final class SitemapActionTest extends TestCase
     }
 
     #[Test]
+    public function aContributorCanAttachImagesToItsUrl(): void
+    {
+        $body = self::render(SitemapContributorRegistry::fromContributors([
+            self::contributor([new SitemapEntry(
+                '/blog/probe',
+                images: ['/storage/blog-images/probe.svg?v=abc', 'https://cdn.example.test/probe.png'],
+            )]),
+        ]));
+
+        self::assertStringContainsString('xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"', $body);
+        self::assertStringContainsString(
+            '<image:loc>http://localhost/storage/blog-images/probe.svg?v=abc</image:loc>',
+            $body,
+        );
+        self::assertStringContainsString(
+            '<image:loc>https://cdn.example.test/probe.png</image:loc>',
+            $body,
+        );
+    }
+
+    #[Test]
     public function aPathIsXmlEscaped(): void
     {
         $body = self::render(SitemapContributorRegistry::fromContributors([
