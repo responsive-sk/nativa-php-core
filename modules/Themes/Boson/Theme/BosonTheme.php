@@ -433,7 +433,7 @@ final class BosonTheme implements ThemeModule, AuthPageTheme, DocsPageTheme, The
                     . self::e($context->editUrl) . '">' . self::e($context->editLabel) . '</a></p>')
             . ('' === $cover
                 ? ''
-                : '<img class="bo-article__cover" src="' . self::e($cover) . '" alt="" loading="eager" decoding="async">')
+                : '<img class="bo-article__cover" src="' . self::e($cover) . '" alt="' . self::e($context->coverAlt) . '" loading="eager" decoding="async">')
             . '</header>'
             . $context->inlineEditHtml
             . '<div class="bo-article__body">' . $context->bodyHtml . '</div>'
@@ -1058,7 +1058,7 @@ final class BosonTheme implements ThemeModule, AuthPageTheme, DocsPageTheme, The
             $cards .= '<article class="bo-card">'
                 . (null === $pair['image']
                     ? ''
-                    : '<img class="bo-card__cover" src="' . self::e($pair['image']) . '" alt=""'
+                    : '<img class="bo-card__cover" src="' . self::e($pair['image']) . '" alt="' . self::e($pair['title']) . '"'
                         . ' loading="' . $loading . '"' . $priority . ' decoding="async"'
                         . ' width="720" height="360"' . ($pair['imageSrcset'] ?? '') . '>')
                 . ('' === $meta ? '' : '<p class="bo-card__meta">' . $meta . '</p>')

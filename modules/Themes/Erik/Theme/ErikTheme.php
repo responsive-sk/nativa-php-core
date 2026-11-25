@@ -287,7 +287,7 @@ final class ErikTheme implements ThemeModule
         }
 
         $media = null !== $fields['image']
-            ? '<img src="' . self::e($fields['image']) . '" alt="" loading="lazy">'
+            ? '<img src="' . self::e($fields['image']) . '" alt="' . self::e($fields['title']) . '" loading="lazy">'
             : '<span class="er-news-card__placeholder" aria-hidden="true"></span>';
 
         $meta = implode(' · ', array_filter([

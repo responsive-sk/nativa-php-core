@@ -139,6 +139,7 @@ final class BlogArticleAction
             $this->editUrl($slug, $locale),
             LocalesServices::t('blog.edit', 'Edit', $locale),
             $this->inlineEditHtml($request, $slug, $locale, $module->prefix()),
+            coverAlt: BlogArticleHelper::coverAlt($meta, $locale),
         ));
 
         // erik owns the comment slot inside its own article markup; every other

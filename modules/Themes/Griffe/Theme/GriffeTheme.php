@@ -624,7 +624,7 @@ final class GriffeTheme implements ThemeModule, ThemeSettings
         $cover = '' !== $context->coverUrl ? $context->coverUrl : $context->coverImage;
 
         if ('' !== $cover) {
-            $article .= '<p><img src="' . self::e($cover) . '" alt=""></p>';
+            $article .= '<p><img src="' . self::e($cover) . '" alt="' . self::e($context->coverAlt) . '"></p>';
         }
 
         $article .= '<div class="gr-article__body">' . $context->bodyHtml . '</div>';

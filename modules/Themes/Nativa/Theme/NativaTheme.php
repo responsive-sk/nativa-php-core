@@ -246,7 +246,7 @@ final class NativaTheme implements AuthPageTheme, DocsPageTheme, ThemeModule, Th
         $cover = '' !== $context->coverUrl ? $context->coverUrl : $context->coverImage;
 
         if ('' !== $cover) {
-            $article .= '<img class="na-article__cover" src="' . self::e($cover) . '" alt="">';
+            $article .= '<img class="na-article__cover" src="' . self::e($cover) . '" alt="' . self::e($context->coverAlt) . '">';
         }
 
         $article .= '<div class="na-article__body">' . $context->bodyHtml . '</div>';
@@ -497,7 +497,7 @@ final class NativaTheme implements AuthPageTheme, DocsPageTheme, ThemeModule, Th
                 . self::e($pair['title']) . '</a></h2>';
 
             if (null !== $pair['image']) {
-                $cards .= '<img class="na-card__image" loading="lazy" src="' . self::e($pair['image']) . '" alt="">';
+                $cards .= '<img class="na-card__image" loading="lazy" src="' . self::e($pair['image']) . '" alt="' . self::e($pair['title']) . '">';
             }
 
             if ('' !== $pair['excerpt']) {
