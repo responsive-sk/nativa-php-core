@@ -27,8 +27,8 @@ A named module that is absent fails the export by name.
 
 ## Measured export
 
-The export from `a292d39` carries 2 176 files and 17 MB.
-The published repository is `00980d9` on `master`; its marker names `a292d39`.
+The export from `4e22bb4` carries 2 176 files and 17 MB.
+The published repository is `decf2af` on `master`; its marker names `4e22bb4`.
 The gallery workflow and its publisher are source-only, so the client tree
 carries `ci.yml` alone.
 `module:show` reports 28 identical, 0 drifted, 0 not installed and 1 not
@@ -69,8 +69,8 @@ failed or the spending limit needed to be increased.
 Actions is enabled for the repository, so the workflow is not the cause.
 The organisation's billing limit stopped the runner before any step.
 
-The publish from `a292d39` is `00980d9`.
-Its CI run is 45661943242.
+The publish from `4e22bb4` is `decf2af`.
+Its CI run is 45664922193.
 All eight jobs again have zero steps, so this is the same billing block, not a
 test failure in the client tree.
 No green private run is measured yet.
