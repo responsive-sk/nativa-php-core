@@ -27,13 +27,15 @@ A named module that is absent fails the export by name.
 
 ## Measured export
 
-The export from `f2b700df` carries 1600 files.
+The local export from `258559e` carries 2 178 files and 17 MB.
+The published repository is still at `9fd347e`; this commit has passed the local
+gate and a publish dry run, but it has not been pushed.
 `module:show` reports 28 identical, 0 drifted, 0 not installed and 1 not
 catalogued; the one is `KernelTheme`.
-The content seed is 4 pages, 17 articles and 3 images.
-The exported suite discovers 1183 tests, 4238 assertions and 37 skips.
-The source suite is 1605 tests, 9782 assertions and 19 skips.
-The core export is 1030 tests.
+The content seed is 4 pages, 287 articles and 273 images.
+The exported suite discovers 1 217 tests, 5 106 assertions and 44 skips.
+The source suite is 1 643 tests, 10 914 assertions and 19 skips.
+The core export is 852 files and 1 057 tests.
 
 The core profile did not move.
 Its exported file list and its suite stay the same apart from the profile
@@ -67,8 +69,10 @@ Actions is enabled for the repository, so the workflow is not the cause.
 The organisation's billing limit stopped the runner before any step.
 No green private run is measured yet.
 
-The local gate set is green: lint, PHPStan, 1605 source tests, the style and
-Rector dry runs, the 1030-test core export and the 1183-test client export.
+The local gate set is green: lint, PHPStan, 1 643 source tests, the CS and
+Rector dry runs, the 1 057-test core export and the 1 217-test client export,
+including the profile contract and the toolchain registry tests. The private CI
+run still waits for the billing decision, so it is not claimed as green.
 
 ## The two copies
 
