@@ -23,7 +23,14 @@ use Modules\Settings\Infrastructure\Persistence\Statement;
 final readonly class SettingsDatabaseMigrator implements MigratorInterface
 {
     /**
-     * Default menu items seeded idempotently — label, href, location, sort[, icon].
+     * Default menu items seeded idempotently.
+     *
+     * `label` is the floor a deployment without the Locales module renders and
+     * the text the admin list shows; `key` names the `nav` translation the
+     * kernel resolves for the request's language, so one row serves `/` and
+     * `/en`. The fallback labels are Slovak because `settings.locale` seeds
+     * `sk_SK`: a fresh install should not open in English while its own
+     * default locale says otherwise.
      *
      * Every href here must be a route the kernel itself serves: measured on a
      * fresh install, the seed used to ship `Privacy -> /privacy` and
@@ -53,9 +60,9 @@ final readonly class SettingsDatabaseMigrator implements MigratorInterface
      * @var list<array{0: string, 1: string, 2: string, 3: int, 4?: string}>
      */
     private const array DEFAULT_MENU_ITEMS = [
-        ['Home', '/', 'header', 10],
-        ['Articles', '/blog', 'header', 15],
-        ['Mark', '/mark', 'header', 20],
+        ['label' => 'Domov', 'href' => '/', 'location' => 'header', 'sort' => 10, 'key' => 'nav.home'],
+        ['label' => 'Články', 'href' => '/blog', 'location' => 'header', 'sort' => 15, 'key' => 'nav.blog'],
+        ['label' => 'Mark', 'href' => '/mark', 'location' => 'header', 'sort' => 20, 'key' => 'nav.admin'],
     ];
 
     private ConnectionInterface $connection;
@@ -84,6 +91,7 @@ final readonly class SettingsDatabaseMigrator implements MigratorInterface
         $this->createDesignTokensTable();
         $this->createIndexes();
         $this->addColumnIfMissing('menu_items', 'icon', "VARCHAR(50) DEFAULT ''");
+        $this->addColumnIfMissing('menu_items', 'label_key', "VARCHAR(100) DEFAULT ''");
 
         $moved = $this->renameLegacyPanelLocation();
 
@@ -95,6 +103,12 @@ final readonly class SettingsDatabaseMigrator implements MigratorInterface
 
         if ($relabelled > 0) {
             $output->writeln(sprintf('<info>  ✓ retitled %d header link(s) from `Admin` to `Mark`</info>', $relabelled));
+        }
+
+        $translated = $this->translateSeededHeaderLabels();
+
+        if ($translated > 0) {
+            $output->writeln(sprintf('<info>  ✓ localized %d seeded header link(s)</info>', $translated));
         }
 
         // Seed default settings + menu items (both idempotent)
@@ -136,6 +150,7 @@ final readonly class SettingsDatabaseMigrator implements MigratorInterface
                 CREATE TABLE IF NOT EXISTS menu_items (
                     id VARCHAR(32) PRIMARY KEY,
                     label VARCHAR(100) NOT NULL,
+                    label_key VARCHAR(100) DEFAULT '',
                     href VARCHAR(255) NOT NULL,
                     parent_item_id VARCHAR(32) REFERENCES menu_items(id) ON DELETE CASCADE,
                     sort_order INTEGER DEFAULT 0,
@@ -208,6 +223,48 @@ final readonly class SettingsDatabaseMigrator implements MigratorInterface
         $update->execute();
 
         return $update->rowCount();
+    }
+
+    /**
+     * Move the shipped English header rows to the Slovak fallback labels and
+     * give them their translation keys.
+     *
+     * The seed is matched by label AND href AND location, so an operator who
+     * renamed `Home` to `Start` or repointed the row is never overwritten: only
+     * the rows this module itself wrote are touched. Without this step an
+     * upgraded deployment would keep the English rows and the idempotent seed
+     * would add the Slovak ones beside them, because its existence probe is
+     * label + location.
+     */
+    private function translateSeededHeaderLabels(): int
+    {
+        $rows = [
+            ['Home', '/', 'Domov', 'nav.home'],
+            ['Articles', '/blog', 'Články', 'nav.blog'],
+        ];
+        $changed = 0;
+
+        foreach ($rows as [$legacyLabel, $href, $label, $key]) {
+            $stmt = Statement::prepare($this->connection,
+                "UPDATE menu_items SET label = :label, label_key = :key, updated_at = CURRENT_TIMESTAMP
+                 WHERE location = 'header' AND href = :href AND label = :legacy",
+            );
+            $stmt->execute([':label' => $label, ':key' => $key, ':href' => $href, ':legacy' => $legacyLabel]);
+            $changed += $stmt->rowCount();
+        }
+
+        // The Mark row keeps its label; it only gains the key, so a signed-in
+        // editor reads `Mark` in every language and the row participates in
+        // the same translation contract as the rest.
+        $stmt = Statement::prepare($this->connection,
+            "UPDATE menu_items SET label_key = 'nav.admin', updated_at = CURRENT_TIMESTAMP
+             WHERE location = 'header' AND href = '/mark' AND label = 'Mark'
+               AND (label_key IS NULL OR label_key = '')",
+        );
+        $stmt->execute();
+        $changed += $stmt->rowCount();
+
+        return $changed;
     }
 
     /**
@@ -285,8 +342,8 @@ final readonly class SettingsDatabaseMigrator implements MigratorInterface
         $inserted = 0;
         $existsStmt = Statement::prepare($this->connection, 'SELECT 1 FROM menu_items WHERE label = :label AND location = :loc LIMIT 1');
         $stmt = Statement::prepare($this->connection,
-            'INSERT INTO menu_items (id, label, href, sort_order, location, icon, is_active, created_at, updated_at)
-             VALUES (:id, :label, :href, :sort, :loc, :icon, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
+            'INSERT INTO menu_items (id, label, label_key, href, sort_order, location, icon, is_active, created_at, updated_at)
+             VALUES (:id, :label, :label_key, :href, :sort, :loc, :icon, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
         );
 
         foreach (self::DEFAULT_MENU_ITEMS as $item) {
@@ -299,25 +356,26 @@ final readonly class SettingsDatabaseMigrator implements MigratorInterface
     /**
      * Insert one default menu item unless its label+location already exists.
      *
-     * @param StatementInterface                                         $existsStmt prepared existence probe (label + location)
-     * @param StatementInterface                                         $stmt       prepared INSERT for one menu item
-     * @param array{0: string, 1: string, 2: string, 3: int, 4?: string} $item       label, href, location, sort, icon
+     * @param StatementInterface                                                  $existsStmt prepared existence probe (label + location)
+     * @param StatementInterface                                                  $stmt       prepared INSERT for one menu item
+     * @param array{label: string, href: string, location: string, sort: int, key: string} $item one seeded row
      */
     private function seedMenuItem(StatementInterface $existsStmt, StatementInterface $stmt, array $item): int
     {
-        $existsStmt->execute([':label' => $item[0], ':loc' => $item[2]]);
+        $existsStmt->execute([':label' => $item['label'], ':loc' => $item['location']]);
 
         if (false !== $existsStmt->fetch()) {
             return 0;
         }
 
         $stmt->execute([
-            ':id'    => bin2hex(random_bytes(16)),
-            ':label' => $item[0],
-            ':href'  => $item[1],
-            ':sort'  => $item[3],
-            ':loc'   => $item[2],
-            ':icon'  => $item[4] ?? '',
+            ':id'        => bin2hex(random_bytes(16)),
+            ':label'     => $item['label'],
+            ':label_key' => $item['key'],
+            ':href'      => $item['href'],
+            ':sort'      => $item['sort'],
+            ':loc'       => $item['location'],
+            ':icon'      => '',
         ]);
 
         return 1;

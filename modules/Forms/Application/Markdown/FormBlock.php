@@ -81,6 +81,7 @@ final readonly class FormBlock implements MarkdownBlockInterface
             $context->locale,
             $context->stateFor('forms'),
             $context->path,
+            FormsServices::copy($context->locale),
         );
     }
 

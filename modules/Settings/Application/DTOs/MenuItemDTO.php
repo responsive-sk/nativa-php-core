@@ -13,6 +13,9 @@ final readonly class MenuItemDTO
 {
     /**
      * @param list<MenuItemDTO> $children
+     * @param string            $labelKey   optional `nav.*` template the shell renders in
+     *                                      the request's language; '' means the label is
+     *                                      literal content
      */
     public function __construct(
         private string $label,
@@ -20,6 +23,7 @@ final readonly class MenuItemDTO
         private bool $active = false,
         private array $children = [],
         private bool $external = false,
+        private string $labelKey = '',
     ) {
         $this->validate();
     }
@@ -32,6 +36,15 @@ final readonly class MenuItemDTO
     public function href(): string
     {
         return $this->href;
+    }
+
+    /**
+     * The translation key this row was seeded with, or '' when the label is
+     * plain content. The shell port passes it on as `ShellNavItem::$translationKey`.
+     */
+    public function labelKey(): string
+    {
+        return $this->labelKey;
     }
 
     public function active(): bool

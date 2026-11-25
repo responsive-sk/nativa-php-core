@@ -70,13 +70,18 @@ final readonly class FormSubmitAction
         }
 
         $ip = $request->getClientIp();
+        $copy = FormsServices::copy($locale);
 
         if (!FormsServices::limiter()->isAllowed('form:' . $slug . ':' . $ip, self::RATE_LIMIT, self::RATE_WINDOW)) {
-            return $this->refusal('Too many submissions', 'Please wait a few minutes before sending again.', 429);
+            return $this->refusal(
+                'Too many submissions',
+                $copy['forms.error.rate_limit'] ?? 'Please wait a few minutes before sending again.',
+                429,
+            );
         }
 
         $payload = $this->payload($request, $form);
-        $result = (new FormValidator())->validate($form->schema, $payload);
+        $result = (new FormValidator())->validate($form->schema, $payload, $copy);
 
         if ([] !== $result['errors']) {
             if (null === $return) {

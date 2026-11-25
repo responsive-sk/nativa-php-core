@@ -205,8 +205,11 @@ final class FormSubmitActionTest extends TestCase
         ]));
 
         self::assertSame(200, $response->getStatusCode());
-        self::assertStringContainsString('Please fill in', $response->getContent());
-        self::assertStringContainsString('listed options', $response->getContent());
+        // The wording is a locale's copy (`forms.error.*`), so the test asks
+        // what the page carries, not which language the dev database seeded:
+        // an announced summary and both offending fields marked.
+        self::assertStringContainsString('role="alert"', $response->getContent());
+        self::assertSame(2, substr_count($response->getContent(), 'aria-invalid="true"'));
         self::assertSame([], FormsServices::submissions()->listForForm($form->id));
     }
 
@@ -249,7 +252,8 @@ final class FormSubmitActionTest extends TestCase
         $response = (new FormSubmitAction())->handle(self::submit(['name' => 'Eva', 'form_return' => $path]));
 
         self::assertSame(200, $response->getStatusCode());
-        self::assertStringContainsString('confirm', $response->getContent());
+        self::assertStringContainsString('aria-invalid="true"', $response->getContent());
+        self::assertStringContainsString('form__error', $response->getContent());
     }
 
     #[Test]

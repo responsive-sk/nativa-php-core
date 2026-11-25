@@ -59,8 +59,10 @@ final class SeedData
         return [
             // Navigation
             ['key' => 'nav.home', 'sk_SK' => 'Domov', 'en_US' => 'Home', 'group' => 'nav'],
-            ['key' => 'nav.blog', 'sk_SK' => 'Blog', 'en_US' => 'Blog', 'group' => 'nav'],
+            ['key' => 'nav.blog', 'sk_SK' => 'Články', 'en_US' => 'Articles', 'group' => 'nav'],
             ['key' => 'nav.admin', 'sk_SK' => 'Mark', 'en_US' => 'Mark', 'group' => 'nav'],
+            ['key' => 'nav.search', 'sk_SK' => 'Hľadať', 'en_US' => 'Search', 'group' => 'nav'],
+            ['key' => 'nav.search_articles', 'sk_SK' => 'Hľadať v článkoch', 'en_US' => 'Search articles', 'group' => 'nav'],
 
             // Homepage
             ['key' => 'home.eyebrow', 'sk_SK' => 'Nativa Minimal', 'en_US' => 'Nativa Minimal', 'group' => 'home'],
@@ -200,8 +202,10 @@ final class SeedData
     private static function formsDefaults(): array
     {
         return [
-            ['key' => 'forms.thanks', 'sk_SK' => 'Ďakujeme — vaša odpoveď bola uložená.', 'en_US' => 'Thank you — your response has been saved.', 'group' => 'forms'],
+            ['key' => 'forms.thanks', 'sk_SK' => 'Ďakujeme, vaša odpoveď bola uložená.', 'en_US' => 'Thank you, your response has been saved.', 'group' => 'forms'],
             ['key' => 'forms.submit', 'sk_SK' => 'Odoslať', 'en_US' => 'Send', 'group' => 'forms'],
+            ['key' => 'forms.choose', 'sk_SK' => 'Vyberte jednu možnosť', 'en_US' => 'Choose one', 'group' => 'forms'],
+            ['key' => 'forms.error.consent', 'sk_SK' => 'Súhlas s „{label}“ je potrebný.', 'en_US' => 'Please confirm "{label}".', 'group' => 'forms'],
             ['key' => 'forms.error.required', 'sk_SK' => '{label} je povinné.', 'en_US' => '{label} is required.', 'group' => 'forms'],
             ['key' => 'forms.error.email', 'sk_SK' => '{label} musí byť platná e-mailová adresa.', 'en_US' => '{label} must be a valid e-mail address.', 'group' => 'forms'],
             ['key' => 'forms.error.too_long', 'sk_SK' => '{label} je príliš dlhé (maximálne {max} znakov).', 'en_US' => '{label} is too long (max {max} characters).', 'group' => 'forms'],

@@ -8,6 +8,8 @@ seo_description: "Ako sa s nami spojiť: formulár priamo na stránke, otázka p
 
 Napíšte nám cez **formulár na konci textu**: správa príde e-mailom a odpovieme na adresu, ktorú doň necháte. Ak chcete odpoveď verejne, aby sa na ňu dalo odkázať, položte ju ako **otázku pod stránkou**.
 
+Formulár sa pýta na meno, e-mail, tému a text správy. Nič z toho nepredávame ani nepoužívame na reklamu, a to, čo sa ukladá, je popísané v [zásadách ochrany osobných údajov](/ochrana-osobnych-udajov).
+
 ## Kde nás ešte zastihnete
 
 - **Kód a chyby:** [github.com/responsive-sk/nativa-php-core](https://github.com/responsive-sk/nativa-php-core) — issue je vítaný pri každom tvrdení, ktoré v kóde nesedí.

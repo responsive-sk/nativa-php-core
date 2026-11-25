@@ -34,6 +34,13 @@ use Modules\Settings\Application\DTOs\MenuItemDTO;
  * `<title>Nativa PHP Core</title>`, the kernel's literal, on every page: the
  * stored name reached the admin chrome and nowhere else.
  *
+ * ## Labels and languages
+ *
+ * A seeded row carries a `label_key` (`nav.home`), and the shell port resolves
+ * it in the request's locale; the stored `label` is the floor when the Locales
+ * module cannot answer. A row the operator typed has no key, so its wording is
+ * content and the kernel never rewrites it.
+ *
  * ## What a visitor may see
  *
  * The seeded menu puts `Admin` (→ `/mark`) in the header location, and an
@@ -281,6 +288,7 @@ final class SettingsShellContextProvider implements ShellContextProvider
             children: array_values(array_filter(
                 array_map(static fn (MenuItemDTO $child): ?ShellNavItem => self::navItem($child, $signedIn), $item->children()),
             )),
+            translationKey: '' !== $item->labelKey() ? $item->labelKey() : null,
         );
     }
 

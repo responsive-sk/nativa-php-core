@@ -25,6 +25,7 @@ final readonly class MenuRepository
      * @return list<array{
      *     id: string,
      *     label: string,
+     *     label_key: string,
      *     href: string,
      *     parent_item_id: ?string,
      *     sort_order: string,
@@ -58,6 +59,7 @@ final readonly class MenuRepository
             $normalized[] = [
                 'id'             => (string) ($row['id'] ?? ''),
                 'label'          => (string) ($row['label'] ?? ''),
+                'label_key'      => (string) ($row['label_key'] ?? ''),
                 'href'           => (string) ($row['href'] ?? ''),
                 'parent_item_id' => null === $row['parent_item_id'] ? null : (string) $row['parent_item_id'],
                 'sort_order'     => (string) ($row['sort_order'] ?? '0'),

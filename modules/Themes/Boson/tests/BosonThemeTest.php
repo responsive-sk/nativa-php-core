@@ -208,7 +208,7 @@ final class BosonThemeTest extends TestCase
     }
 
     #[Test]
-    public function theHeaderRendersTheShellNavAndTheAdminPrefix(): void
+    public function theHeaderRendersTheShellNavForAGuest(): void
     {
         $header = (new BosonTheme())->header(self::shell());
 
@@ -217,10 +217,37 @@ final class BosonThemeTest extends TestCase
         $this->assertStringContainsString('href="/blog"', $header);
         $this->assertStringContainsString('aria-current="page"', $header, 'The active nav item is announced.');
         $this->assertStringContainsString('bo-nav__sub', $header, 'Children render as a ruled submenu.');
-        $this->assertStringContainsString('href="' . MarkRoutePolicy::prefix() . '"', $header, 'The admin link comes from the policy, never a literal.');
         $this->assertStringContainsString('bo-locale__link--active', $header);
         $this->assertStringContainsString('bo-search__input', $header);
         $this->assertStringContainsString('bo-mobile__link', $header);
+    }
+
+    /**
+     * Measured on responsive.sk 2026-11-25: `/mark` was in the header, the
+     * phone menu and the footer of every anonymous page. A guest got an
+     * admin shortcut whose only answer is a 302 to the login form.
+     */
+    #[Test]
+    public function anAnonymousVisitorIsNotSentToTheAdminPanel(): void
+    {
+        $theme = new BosonTheme();
+        $shell = self::shell();
+
+        $this->assertStringNotContainsString(MarkRoutePolicy::prefix(), $theme->header($shell));
+        $this->assertStringNotContainsString(MarkRoutePolicy::prefix(), $theme->footer($shell));
+    }
+
+    #[Test]
+    public function aSignedInEditorKeepsTheAdminShortcut(): void
+    {
+        $theme = new BosonTheme();
+        $shell = self::shell('', true);
+        $href = 'href="' . MarkRoutePolicy::prefix() . '"';
+
+        $this->assertStringContainsString($href, $theme->header($shell), 'The shortcut comes from the policy, never a literal.');
+        $this->assertStringContainsString('bo-actions__mark', $theme->header($shell));
+        $this->assertStringContainsString('bo-mobile__mark', $theme->header($shell));
+        $this->assertStringContainsString('bo-footer__social" ' . $href, $theme->footer($shell));
     }
 
     /**
@@ -1253,7 +1280,7 @@ final class BosonThemeTest extends TestCase
     /**
      * @param string $icon stored `nav_toggle_icon`; '' means "nothing stored"
      */
-    private static function shell(string $icon = ''): ShellContext
+    private static function shell(string $icon = '', bool $signedIn = false): ShellContext
     {
         return ShellContext::from(
             'Boson Test',
@@ -1268,7 +1295,7 @@ final class BosonThemeTest extends TestCase
             ['sk' => '/blog', 'en' => '/en/blog'],
             'sk',
             ['sk', 'en'],
-            false,
+            $signedIn,
             '' === $icon ? [] : ['nav_toggle_icon' => $icon],
         );
     }

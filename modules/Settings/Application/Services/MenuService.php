@@ -37,11 +37,12 @@ final readonly class MenuService
             $result = [];
 
             foreach ($byParent[$parentId] ?? [] as $row) {
-                /** @var array{id: string, label: string, href: string, parent_item_id: ?string, sort_order: string, location: string, external: string, target: ?string, is_active: string, created_at: string, updated_at: string} $row */
+                /** @var array{id: string, label: string, label_key?: string, href: string, parent_item_id: ?string, sort_order: string, location: string, external: string, target: ?string, is_active: string, created_at: string, updated_at: string} $row */
                 $label = $row['label'];
                 $href = $row['href'];
                 $id = $row['id'];
                 $external = '1' === $row['external'];
+                $labelKey = is_string($row['label_key'] ?? null) ? trim($row['label_key']) : '';
 
                 $result[] = new MenuItemDTO(
                     label: $label,
@@ -49,6 +50,7 @@ final readonly class MenuService
                     active: $href === $currentPath || ('/' !== $href && str_starts_with($currentPath, $href)),
                     children: $depth < 3 ? $build($id, $depth + 1) : [],
                     external: $external,
+                    labelKey: $labelKey,
                 );
             }
 

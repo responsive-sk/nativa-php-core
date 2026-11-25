@@ -121,7 +121,7 @@ final class SettingsShellContextProviderTest extends TestCase
         $items = (new SettingsShellContextProvider())->navigation('header', '/');
 
         $this->assertSame(
-            ['Home', 'Articles'],
+            ['Domov', 'Články'],
             self::labels($items),
             'The header slot must answer the seeded menu minus what a guest may not see.',
         );
@@ -139,8 +139,8 @@ final class SettingsShellContextProviderTest extends TestCase
     {
         $byLabel = self::byLabel((new SettingsShellContextProvider())->navigation('header', '/blog/nativa-php-core'));
 
-        $this->assertTrue($byLabel['Articles']->active, 'An article is under /blog, so Articles is current.');
-        $this->assertFalse($byLabel['Home']->active, 'A prefix match must not light up the root item.');
+        $this->assertTrue($byLabel['Články']->active, 'An article is under /blog, so Články is current.');
+        $this->assertFalse($byLabel['Domov']->active, 'A prefix match must not light up the root item.');
     }
 
     #[Test]

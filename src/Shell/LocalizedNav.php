@@ -65,6 +65,7 @@ final class LocalizedNav
             active: $item->active,
             external: $item->external,
             children: self::apply($item->children, $localePrefix),
+            translationKey: $item->translationKey,
         );
     }
 

@@ -271,7 +271,49 @@ final class ShellContextProviderRegistry
         // served from. The rewrite is the kernel's because it is the same rule
         // for every provider — a menu that does not go through it sends an
         // English reader to the Slovak page (see `LocalizedNav`).
-        return LocalizedNav::apply($winner, self::localePrefix());
+        $localized = LocalizedNav::apply($winner, self::localePrefix());
+
+        // The label half of the same fact. A seeded row carries a template key
+        // (`nav.home`) and its stored label is the floor; the locale module's
+        // `nav` copy answers what that key says in THIS request's language, so
+        // a Slovak menu and an English menu are one stored row rather than
+        // two menus an operator has to keep in sync. An operator-renamed row
+        // has no key and is left exactly as stored.
+        return self::localizeLabels($localized, self::copy('nav', self::activeLocale() ?? ''));
+    }
+
+    /**
+     * Resolve every `translationKey` against one copy map, one level down.
+     *
+     * A key with no translation keeps the stored label: a site without the
+     * Locales module still renders a menu, just in the language the seed was
+     * written in.
+     *
+     * @param list<ShellNavItem>    $items
+     * @param array<string, string> $copy
+     *
+     * @return list<ShellNavItem>
+     */
+    private static function localizeLabels(array $items, array $copy): array
+    {
+        $localized = [];
+
+        foreach ($items as $item) {
+            $label = null !== $item->translationKey && '' !== ($copy[$item->translationKey] ?? '')
+                ? $copy[$item->translationKey]
+                : $item->label;
+
+            $localized[] = new ShellNavItem(
+                $label,
+                $item->href,
+                $item->active,
+                $item->external,
+                self::localizeLabels($item->children, $copy),
+                $item->translationKey,
+            );
+        }
+
+        return $localized;
     }
 
     /**

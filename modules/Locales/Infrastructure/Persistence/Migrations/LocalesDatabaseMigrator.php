@@ -147,6 +147,16 @@ final readonly class LocalesDatabaseMigrator implements MigratorInterface
             ['ms.nav_admin', 'en_US', 'Admin', 'Mark'],
             ['ms.cta_admin', 'sk_SK', 'Admin panel', 'Mark panel'],
             ['ms.cta_admin', 'en_US', 'Admin Panel', 'Mark panel'],
+            // The seed used to ship `Blog` in both languages, which is the
+            // menu row's own fallback rather than the words each language
+            // uses for the list of articles. Only the old default is moved.
+            ['nav.blog', 'sk_SK', 'Blog', 'Články'],
+            ['nav.blog', 'en_US', 'Blog', 'Articles'],
+            // The seeded thank-you sentence carried an em dash, which the
+            // house prose rule bans in reader-facing copy: a comma says the
+            // same thing without it.
+            ['forms.thanks', 'sk_SK', 'Ďakujeme — vaša odpoveď bola uložená.', 'Ďakujeme, vaša odpoveď bola uložená.'],
+            ['forms.thanks', 'en_US', 'Thank you — your response has been saved.', 'Thank you, your response has been saved.'],
         ];
 
         $stmt = Statement::prepare($this->connection,

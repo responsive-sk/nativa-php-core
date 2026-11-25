@@ -32,9 +32,16 @@ final readonly class FormBlockRenderer
 {
     /**
      * @param array{errors?: list<string>, invalid?: list<string>, old?: array<string, string>, sent?: bool} $state
+     * @param array<string, string>                                                                              $copy  `forms.*` chrome rows for `$locale`
      */
-    public static function render(Form $form, string $prefix, string $locale, array $state = [], string $returnPath = ''): string
-    {
+    public static function render(
+        Form $form,
+        string $prefix,
+        string $locale,
+        array $state = [],
+        string $returnPath = '',
+        array $copy = [],
+    ): string {
         $errors = self::strings($state['errors'] ?? []);
         $invalid = self::strings($state['invalid'] ?? []);
         $old = self::fields($state['old'] ?? []);
@@ -42,9 +49,9 @@ final readonly class FormBlockRenderer
 
         return '<section id="form-' . FrontendLayout::e($form->slug) . '" class="' . $prefix . '-form">'
             . self::header($form, $prefix)
-            . ($sent ? self::thanks($form, $prefix) : '')
+            . ($sent ? self::thanks($form, $prefix, $copy) : '')
             . self::errors($errors, $prefix)
-            . self::form($form, $prefix, $locale, $old, $invalid, $returnPath)
+            . self::form($form, $prefix, $locale, $old, $invalid, $returnPath, $copy)
             . ($sent ? self::results($form, $prefix) : '')
             . '</section>';
     }
@@ -60,9 +67,17 @@ final readonly class FormBlockRenderer
         return $html;
     }
 
-    private static function thanks(Form $form, string $prefix): string
+    /**
+     * @param array<string, string> $copy
+     */
+    private static function thanks(Form $form, string $prefix, array $copy): string
     {
-        $message = '' !== $form->successMessage ? $form->successMessage : 'Thank you, your message was sent.';
+        // The definition's own sentence wins: it is the one the editor wrote
+        // for this form. The translation is the floor a form without its own
+        // warm words shows, in the reader's language.
+        $message = '' !== $form->successMessage
+            ? $form->successMessage
+            : ($copy['forms.thanks'] ?? 'Thank you, your message was sent.');
 
         return '<p class="' . $prefix . '-form__thanks" role="status">' . FrontendLayout::e($message) . '</p>';
     }
@@ -96,8 +111,9 @@ final readonly class FormBlockRenderer
     /**
      * @param array<string, string> $old
      * @param list<string>          $invalid
+     * @param array<string, string> $copy
      */
-    private static function form(Form $form, string $prefix, string $locale, array $old, array $invalid, string $returnPath): string
+    private static function form(Form $form, string $prefix, string $locale, array $old, array $invalid, string $returnPath, array $copy): string
     {
         $action = ContentLocaleServices::mapper()->urlPrefix($locale) . '/forms/' . rawurlencode($form->slug);
         $return = self::returnPath($returnPath, $prefix);
@@ -113,11 +129,11 @@ final readonly class FormBlockRenderer
             . '</div>';
 
         foreach ($form->schema->fields() as $field) {
-            $html .= self::field($field, $prefix, $form->slug, $old[$field->key] ?? '', \in_array($field->key, $invalid, true));
+            $html .= self::field($field, $prefix, $form->slug, $old[$field->key] ?? '', \in_array($field->key, $invalid, true), $copy);
         }
 
         return $html . '<button class="' . $prefix . '-form__submit" type="submit">'
-            . FrontendLayout::e('Send') . '</button></form>';
+            . FrontendLayout::e($copy['forms.submit'] ?? 'Send') . '</button></form>';
     }
 
     /**
@@ -134,7 +150,27 @@ final readonly class FormBlockRenderer
         return '<input type="hidden" name="form_return" value="' . FrontendLayout::e($path) . '">';
     }
 
-    private static function field(FormField $field, string $prefix, string $slug, string $value, bool $invalid): string
+    /**
+     * Autofill hints for the fields whose meaning a browser can recognise.
+     *
+     * `name` and `email` are the two every contact form carries; without the
+     * hint a phone offers no saved address and the reader types their own
+     * address a second time. A key the browser does not know gets no attribute
+     * rather than a guessed one.
+     */
+    private static function autocomplete(string $key): string
+    {
+        return match ($key) {
+            'name'    => ' autocomplete="name"',
+            'email'   => ' autocomplete="email"',
+            default   => '',
+        };
+    }
+
+    /**
+     * @param array<string, string> $copy
+     */
+    private static function field(FormField $field, string $prefix, string $slug, string $value, bool $invalid, array $copy = []): string
     {
         $id = $prefix . '-form-' . $slug . '-' . $field->key;
         $invalidAttr = $invalid ? ' aria-invalid="true"' : '';
@@ -164,13 +200,13 @@ final readonly class FormBlockRenderer
         // field, which every theme then had to reset.
         if ($field->type->isChoice() && 'select' === $field->type->choiceWidget()) {
             return '<div class="' . $prefix . '-form__field">' . $label
-                . self::choices($field, $prefix, $slug, $value, $invalidAttr, $required) . '</div>';
+                . self::choices($field, $prefix, $slug, $value, $invalidAttr, $required, $copy) . '</div>';
         }
 
         if ($field->type->isChoice()) {
             return '<fieldset class="' . $prefix . '-form__field">'
                 . '<legend class="' . $prefix . '-form__label">' . FrontendLayout::e($field->label) . $requiredMark . '</legend>'
-                . self::choices($field, $prefix, $slug, $value, $invalidAttr, $required)
+                . self::choices($field, $prefix, $slug, $value, $invalidAttr, $required, $copy)
                 . '</fieldset>';
         }
 
@@ -182,13 +218,17 @@ final readonly class FormBlockRenderer
         }
 
         $type = $field->type->inputType();
+        $autocomplete = self::autocomplete($field->key);
 
         return '<div class="' . $prefix . '-form__field">' . $label
             . '<input class="' . $prefix . '-form__input" id="' . FrontendLayout::e($id) . '" type="' . $type . '"'
             . ' name="' . FrontendLayout::e($field->key) . '" value="' . FrontendLayout::e($value) . '"'
-            . ' maxlength="' . $field->max . '"' . $required . $invalidAttr . '></div>';
+            . ' maxlength="' . $field->max . '"' . $required . $invalidAttr . $autocomplete . '></div>';
     }
 
+    /**
+     * @param array<string, string> $copy
+     */
     private static function choices(
         FormField $field,
         string $prefix,
@@ -196,13 +236,14 @@ final readonly class FormBlockRenderer
         string $value,
         string $invalidAttr,
         string $required,
+        array $copy = [],
     ): string {
         $type = $field->type->choiceWidget();
 
         if ('select' === $type) {
             $html = '<select class="' . $prefix . '-form__input" id="' . FrontendLayout::e($prefix . '-form-' . $slug . '-' . $field->key) . '"'
                 . ' name="' . FrontendLayout::e($field->key) . '"' . $required . $invalidAttr . '>'
-                . '<option value="">' . FrontendLayout::e('Choose one') . '</option>';
+                . '<option value="">' . FrontendLayout::e($copy['forms.choose'] ?? 'Choose one') . '</option>';
 
             foreach ($field->options as $option) {
                 $selected = $value === $option ? ' selected' : '';
