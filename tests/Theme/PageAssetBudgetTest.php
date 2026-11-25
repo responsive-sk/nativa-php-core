@@ -11,6 +11,7 @@ use Themes\FrontendLayout;
 use Themes\PageSurface;
 use Themes\ThemeModule;
 use Themes\ThemeRegistry;
+use Themes\ThemeResolver;
 
 /**
  * PageAssetBudgetTest — a page carries its own surface's assets, and no more.
@@ -34,7 +35,7 @@ use Themes\ThemeRegistry;
  * one built theme must narrow each surface, or a green suite would mean nobody
  * was measured. The fallback test needs no build: it compares two renders of a
  * theme whose manifest carries no surface entry, and the kernel theme always
- * supplies that subject.
+ * supplies that subject without one.
  */
 final class PageAssetBudgetTest extends TestCase
 {
@@ -198,6 +199,12 @@ final class PageAssetBudgetTest extends TestCase
         $checked = [];
 
         foreach (self::themes() as $name) {
+            // An unbuilt theme other than the kernel still renders its critical
+            // sheets, so its two surfaces cannot be compared from the manifest.
+            if (ThemeResolver::KERNEL_THEME !== $name && !$this->hasBuild($name)) {
+                continue;
+            }
+
             if ([] !== $this->themesWithEntry(PageSurface::ARTICLE, $name)
                 || [] !== $this->themesWithEntry(PageSurface::HOME, $name)
                 || [] !== $this->themesWithEntry(PageSurface::LISTING, $name)) {
