@@ -150,8 +150,19 @@ final class ScenarioTestBindingContractTest extends TestCase
         self::assertSame(
             [],
             $problems,
-            "A pin must resolve to a file under tests/ or modules/*/tests/ and to a method in it.\n"
+            "A pin must resolve to a file under tests/ or a module's tests/ directory"
+            . " (modules/*/tests/ or modules/Themes/*/tests/) and to a method in it.\n"
             . implode("\n", $problems),
+        );
+
+        self::assertSame(
+            [],
+            self::pinProblems(
+                self::root(),
+                'modules/Themes/Boson/tests/BosonThemeTest.php::theOrbStopsDrawingWhenTheFieldIsAtRest',
+            ),
+            'A theme module sits under modules/Themes/<Name>, so its tests are one level deeper'
+            . ' than modules/*/tests/ and have to resolve like any other module test.',
         );
 
         self::assertNotSame(
@@ -385,8 +396,12 @@ final class ScenarioTestBindingContractTest extends TestCase
         $path = substr($pin, 0, $at);
         $method = substr($pin, $at + 2);
 
-        if (!str_starts_with($path, 'tests/') && 1 !== preg_match('#^modules/[^/]+/tests/#', $path)) {
-            return [sprintf('"%s" is outside tests/ and modules/*/tests/ — a pin names a test', $path)];
+        if (!str_starts_with($path, 'tests/') && 1 !== preg_match('#^modules/(?:Themes/)?[^/]+/tests/#', $path)) {
+            return [sprintf(
+                '"%s" is outside tests/ and a module tests/ directory (modules/*/tests/ or'
+                . ' modules/Themes/*/tests/): a pin names a test',
+                $path,
+            )];
         }
 
         if (!is_file($root . '/' . $path)) {
