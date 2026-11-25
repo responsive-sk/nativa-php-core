@@ -44,6 +44,20 @@ final class PageAssetBudgetTest extends TestCase
         if ([] === self::themes()) {
             $this->markTestSkipped('No theme module is installed — run `php bin/cms module:add Themes` and the theme slice.');
         }
+
+        // The kernel theme is always discovered (it is the fallback), but it ships
+        // no bundle. A tree whose only theme has no build has nothing to measure:
+        // the kernel-only export is exactly that tree, and its suite must skip
+        // here rather than demand a split the exported catalogue is not
+        // installed to produce. The per-surface guards below still fail when a
+        // build exists but no theme narrows that surface.
+        foreach (self::themes() as $name) {
+            if ($this->hasBuild($name)) {
+                return;
+            }
+        }
+
+        $this->markTestSkipped('No installed theme has a build under public/dist — install a theme and run `make assets` before the surface budget can be measured.');
     }
 
     protected function tearDown(): void

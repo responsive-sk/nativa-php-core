@@ -11,6 +11,7 @@
 # subject that is not there.
 #
 # Format: <repo-relative test path> [# reason]
+tests/Architecture/BundlerDecisionContractTest.php # its ADR ledger is docs/adr/, and docs are pruned
 tests/Architecture/KernelShapeTest.php # its approval record is docs/kernel-shape.md
 tests/Architecture/MagoScopeContractTest.php # its analysis is docs/mago-evaluation.md
 tests/Architecture/NameOwnershipContractTest.php # its ledger is docs/name-ownership.md
