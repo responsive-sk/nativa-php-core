@@ -94,8 +94,10 @@ not interchangeable: one is retryable, the other is not.
   and a `read_only` field instead of forwarding it. The panel form never renders
   a control for a key the spec does not name.
 - **A host outside the allowlist.** `RESTAPI_ALLOWED_HOSTS` (comma-separated)
-  is checked by `SsrfGuard`; an empty allowlist refuses every outbound request
-  rather than allowing every host.
+  is checked by `SsrfGuard`; an empty allowlist is not a deny-all. A public
+  host still passes, while a loopback, link-local, private, CGNAT, multicast,
+  reserved or documentation address is refused unless its host is named in the
+  list.
 - **A page it cannot read.** A 2xx that is not JSON, or JSON with no collection,
   is a mapping error with its own message; it is not rendered as an empty table.
 
