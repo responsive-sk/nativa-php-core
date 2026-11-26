@@ -186,6 +186,40 @@ final class PanelTest extends TestCase
     }
 
     #[Test]
+    public function theNewResourceFormOffersExamplesButTheEditFormDoesNot(): void
+    {
+        $this->seed('Blog', [[
+            'name'       => 'posts',
+            'path'       => '/posts',
+            'item_path'  => '/posts/{id}',
+            'actions'    => ['list', 'read'],
+            'pagination' => 'page',
+            'fields'     => [['name' => 'title', 'label' => 'Title', 'type' => 'text']],
+        ]]);
+
+        $createRequest = Request::create('GET', '/mark/rest/services/blog/resources');
+        $createRequest->setRouteParams(['id' => 'blog']);
+        $create = (new ResourceFormAction(PanelTestDoubles::router()))->createForm($createRequest);
+        $content = $create->getContent();
+
+        self::assertSame(200, $create->getStatusCode());
+        self::assertStringContainsString('id="resource-example"', $content);
+        self::assertStringContainsString('JSONPlaceholder posts', $content);
+        self::assertStringContainsString('JSONPlaceholder users', $content);
+        self::assertStringContainsString('Fake Store products', $content);
+        self::assertStringContainsString('/posts/{id}', $content);
+        self::assertStringContainsString('nonce="__CSP_NONCE_PLACEHOLDER__"', $content);
+        self::assertStringNotContainsString('onchange=', $content);
+
+        $editRequest = Request::create('GET', '/mark/rest/services/blog/resources/posts');
+        $editRequest->setRouteParams(['id' => 'blog', 'resource' => 'posts']);
+        $edit = (new ResourceFormAction(PanelTestDoubles::router()))->editForm($editRequest);
+
+        self::assertSame(200, $edit->getStatusCode());
+        self::assertStringNotContainsString('id="resource-example"', $edit->getContent());
+    }
+
+    #[Test]
     public function creatingAServiceStoresItAndRedirects(): void
     {
         $response = (new ServiceFormAction(PanelTestDoubles::router()))->createSubmit(Request::create('POST', '/mark/rest/services', body: [

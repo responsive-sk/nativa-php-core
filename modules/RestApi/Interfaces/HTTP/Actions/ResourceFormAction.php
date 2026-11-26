@@ -376,7 +376,8 @@ final class ResourceFormAction
             ? PanelHtml::input('name', 'Resource name', (string) $values['name'], true, 'text', 'The name the panel addresses this collection by, e.g. posts.')
             : PanelHtml::input('name', 'Resource name', $resource->name, false, 'text', 'A resource\'s name is its identity; create a new resource to rename it.');
 
-        $fields = $nameField
+        $fields = (null === $resource ? $this->examples() : '')
+            . $nameField
             . PanelHtml::input('path', 'Collection path', (string) $values['path'], true, 'text', 'Relative to the service base URL, e.g. /posts.')
             . PanelHtml::input('item_path', 'Item path', (string) $values['item_path'], true, 'text', 'Must contain {id}, e.g. /posts/{id}.')
             . PanelHtml::input('id_field', 'Id field', (string) $values['id_field'], false, 'text', 'The API key the item path fills {id} from.')
@@ -389,5 +390,98 @@ final class ResourceFormAction
             . '<p><a href="' . CardboardLayout::e($this->url('mark.rest.service', ['id' => $spec->service->id])) . '">Back to ' . CardboardLayout::e($spec->service->name) . '</a></p>'
             . PanelHtml::errors($errors)
             . PanelHtml::csrfForm($action, $fields, $submit);
+    }
+
+    private function examples(): string
+    {
+        $presets = [
+            'posts' => [
+                'label'  => 'JSONPlaceholder posts',
+                'values' => [
+                    'name'       => 'posts',
+                    'path'       => '/posts',
+                    'item_path'  => '/posts/{id}',
+                    'id_field'   => 'id',
+                    'pagination' => 'page',
+                    'fields'     => "[\n  {\"name\": \"id\", \"label\": \"ID\", \"type\": \"text\"},\n  {\"name\": \"title\", \"label\": \"Title\", \"type\": \"text\"},\n  {\"name\": \"body\", \"label\": \"Body\", \"type\": \"textarea\"}\n]",
+                ],
+            ],
+            'users' => [
+                'label'  => 'JSONPlaceholder users',
+                'values' => [
+                    'name'       => 'users',
+                    'path'       => '/users',
+                    'item_path'  => '/users/{id}',
+                    'id_field'   => 'id',
+                    'pagination' => 'page',
+                    'fields'     => "[\n  {\"name\": \"id\", \"label\": \"ID\", \"type\": \"text\"},\n  {\"name\": \"name\", \"label\": \"Name\", \"type\": \"text\"},\n  {\"name\": \"username\", \"label\": \"Username\", \"type\": \"text\"},\n  {\"name\": \"email\", \"label\": \"Email\", \"type\": \"text\"}\n]",
+                ],
+            ],
+            'comments' => [
+                'label'  => 'JSONPlaceholder comments',
+                'values' => [
+                    'name'       => 'comments',
+                    'path'       => '/comments',
+                    'item_path'  => '/comments/{id}',
+                    'id_field'   => 'id',
+                    'pagination' => 'page',
+                    'fields'     => "[\n  {\"name\": \"id\", \"label\": \"ID\", \"type\": \"text\"},\n  {\"name\": \"name\", \"label\": \"Name\", \"type\": \"text\"},\n  {\"name\": \"email\", \"label\": \"Email\", \"type\": \"text\"},\n  {\"name\": \"body\", \"label\": \"Body\", \"type\": \"textarea\"}\n]",
+                ],
+            ],
+            'products' => [
+                'label'  => 'Fake Store products',
+                'values' => [
+                    'name'       => 'products',
+                    'path'       => '/products',
+                    'item_path'  => '/products/{id}',
+                    'id_field'   => 'id',
+                    'pagination' => 'none',
+                    'fields'     => "[\n  {\"name\": \"id\", \"label\": \"ID\", \"type\": \"text\"},\n  {\"name\": \"title\", \"label\": \"Title\", \"type\": \"text\"},\n  {\"name\": \"price\", \"label\": \"Price\", \"type\": \"number\"},\n  {\"name\": \"description\", \"label\": \"Description\", \"type\": \"textarea\"}\n]",
+                ],
+            ],
+            'dummyjson-products' => [
+                'label'  => 'DummyJSON products',
+                'values' => [
+                    'name'       => 'products',
+                    'path'       => '/products',
+                    'item_path'  => '/products/{id}',
+                    'id_field'   => 'id',
+                    'pagination' => 'none',
+                    'fields'     => "[\n  {\"name\": \"id\", \"label\": \"ID\", \"type\": \"text\"},\n  {\"name\": \"title\", \"label\": \"Title\", \"type\": \"text\"},\n  {\"name\": \"price\", \"label\": \"Price\", \"type\": \"number\"},\n  {\"name\": \"description\", \"label\": \"Description\", \"type\": \"textarea\"}\n]",
+                ],
+            ],
+        ];
+
+        $options = '<option value="">Choose an example resource...</option>';
+
+        foreach ($presets as $key => $preset) {
+            $options .= '<option value="' . CardboardLayout::e($key) . '">' . CardboardLayout::e($preset['label']) . '</option>';
+        }
+
+        $json = json_encode(
+            array_map(static fn (array $preset): array => $preset['values'], $presets),
+            JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES,
+        ) ?: '{}';
+
+        $script = '(function () {'
+            . ' var select = document.getElementById("resource-example");'
+            . ' if (!select) { return; }'
+            . ' var presets = ' . $json . ';'
+            . ' select.addEventListener("change", function () {'
+            . '  var preset = presets[select.value];'
+            . '  if (!preset) { return; }'
+            . '  Object.keys(preset).forEach(function (name) {'
+            . '   var field = document.querySelector("[name=\"" + name + "\"]");'
+            . '   if (field) { field.value = preset[name]; }'
+            . '  });'
+            . ' });'
+            . '})();';
+
+        return '<div class="m-field">'
+            . '<label class="m-field-label" for="resource-example">Start from an example</label>'
+            . '<select class="m-input" id="resource-example">' . $options . '</select>'
+            . '<p class="m-hint">Fills the paths, pagination and fields below from a public test API. You can change every value afterwards.</p>'
+            . '</div>'
+            . CardboardLayout::script($script);
     }
 }
