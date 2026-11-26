@@ -69,7 +69,7 @@ use PHPUnit\Framework\TestCase;
  * decision is written on the scenario rather than faked with a test that
  * asserts the filter by reading it. The phases of that work are
  * recorded in the change (`openspec/changes/scenario-test-binding/tasks.md`,
- * local like every change) and end at 0.
+ * local like every change) and end at this one reasoned exception.
  *
  * The allowance is a method rather than a class constant for the reason
  * `SlovakProseContractTest` records: `NameOwnershipContractTest` ratchets the

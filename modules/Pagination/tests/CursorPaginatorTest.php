@@ -82,6 +82,36 @@ final class CursorPaginatorTest extends TestCase
     }
 
     /**
+     * The closure receives the cursor VALUE, not an encoded transport token.
+     * A caller that JSON-encodes or base64s it does that in its own address,
+     * not in the paginator.
+     */
+    #[Test]
+    public function aCursorReachesTheClosureUnchanged(): void
+    {
+        $requested = 'opaque/cursor+10=';
+        $seen = [];
+
+        $page = CursorPaginator::fromRows(
+            [['id' => 11], ['id' => 12], ['id' => 13], ['id' => 14]],
+            limit: 3,
+            cursor: $requested,
+            cursorOf: static fn (array $row): string => (string) $row['id'],
+        );
+
+        $array = $page->toArray(static function (string $cursor) use (&$seen): string {
+            $seen[] = $cursor;
+
+            return '/feed?cursor=' . $cursor;
+        });
+
+        self::assertSame($requested, $page->previousCursor());
+        self::assertSame([$requested, '13'], $seen, 'previous then next, with no encoding or decoding');
+        self::assertSame('/feed?cursor=' . $requested, $array['links']['previous']);
+        self::assertSame('/feed?cursor=13', $array['links']['next']);
+    }
+
+    /**
      * A caller that fetches limit rows and stops cannot page forward, and this
      * is the shape that documents why: the paginator cannot invent a cursor for
      * a row it was never given.

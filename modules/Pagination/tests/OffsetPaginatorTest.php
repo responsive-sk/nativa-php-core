@@ -69,6 +69,34 @@ final class OffsetPaginatorTest extends TestCase
     }
 
     #[Test]
+    public function theSamePageMeansTheSameThingInTwoSurfaces(): void
+    {
+        $page = new OffsetPaginator($this->rows(20), total: 137, perPage: 20, page: 1);
+        $panelTargets = [];
+        $apiTargets = [];
+
+        $panel = $page->toArray(static function (string $target) use (&$panelTargets): string {
+            $panelTargets[] = $target;
+
+            return '/mark/notifications?page=' . $target;
+        });
+        $api = $page->toArray(static function (string $target) use (&$apiTargets): string {
+            $apiTargets[] = $target;
+
+            return '/api/articles?page=' . $target;
+        });
+
+        self::assertSame(137, $panel['meta']['total']);
+        self::assertSame(1, $panel['meta']['current_page']);
+        self::assertSame(7, $panel['meta']['last_page']);
+        self::assertSame($panel['meta'], $api['meta'], 'the page arithmetic is the same in both surfaces');
+        self::assertSame(['2'], $panelTargets, 'the paginator hands the closure only the page number');
+        self::assertSame(['2'], $apiTargets);
+        self::assertSame('/mark/notifications?page=2', $panel['links']['next']);
+        self::assertSame('/api/articles?page=2', $api['links']['next'], 'the caller owns the address');
+    }
+
+    #[Test]
     public function theLastPageEndsAtTheTotalEvenWhenItIsNotFull(): void
     {
         $page = new OffsetPaginator($this->rows(17), total: 137, perPage: 20, page: 7);

@@ -162,6 +162,21 @@ final class PageTitleBrandTest extends TestCase
     }
 
     #[Test]
+    public function thePageFallsBackToTheStoredSiteDescription(): void
+    {
+        $this->settings->set('site_description', 'Stored site description', isPublic: false);
+        SettingsServices::reset();
+
+        $html = $this->renderedPage();
+
+        self::assertStringContainsString(
+            '<meta name="description" content="Stored site description">',
+            $html,
+            'A page without seo_description must fall back to the stored site description.',
+        );
+    }
+
+    #[Test]
     public function thePageUsesTheKernelStructuredDataBuilder(): void
     {
         $this->storeSiteName('responsive.sk');

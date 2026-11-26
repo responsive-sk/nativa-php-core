@@ -157,6 +157,25 @@ final class PageCacheInvalidationTest extends TestCase
     }
 
     #[Test]
+    public function theMiddlewareRecordsTheRequestPath(): void
+    {
+        $this->writeThroughMiddleware(Request::create('GET', '/blog'));
+
+        $files = glob($this->cacheDir . '/*.json') ?: [];
+
+        $this->assertCount(1, $files, 'Precondition: the middleware stored one entry.');
+
+        /** @var array{path?: string} $entry */
+        $entry = json_decode((string) file_get_contents($files[0]), true, 512, JSON_THROW_ON_ERROR);
+
+        $this->assertSame(
+            '/blog',
+            $entry['path'] ?? null,
+            'An entry without its request path cannot be invalidated by a content write.',
+        );
+    }
+
+    #[Test]
     public function anEntryWithoutARecordedPathIsInvalidatedRatherThanTrusted(): void
     {
         $service = $this->service();

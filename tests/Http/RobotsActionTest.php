@@ -58,6 +58,24 @@ final class RobotsActionTest extends TestCase
     }
 
     #[Test]
+    public function itNamesNoPrivatePathAndAllowsThePublicRoots(): void
+    {
+        $body = self::body(new RobotsAction());
+
+        foreach ([MarkRoutePolicy::prefix(), '/debug', '/storage/uploads', '/login'] as $path) {
+            self::assertStringNotContainsString(
+                $path,
+                $body,
+                'robots.txt must not advertise a private path by naming it: ' . $path,
+            );
+        }
+
+        foreach (['Allow: /$', 'Allow: /sk', 'Allow: /en'] as $line) {
+            self::assertStringContainsString($line, $body);
+        }
+    }
+
+    #[Test]
     public function itAdvertisesLlmsWhenTheRouterFallsBackOrFindsTheRoute(): void
     {
         self::assertStringContainsString("Allow: /llms.txt\n", self::body(new RobotsAction()));

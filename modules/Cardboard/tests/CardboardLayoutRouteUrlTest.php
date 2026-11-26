@@ -214,6 +214,34 @@ final class CardboardLayoutRouteUrlTest extends TestCase
     }
 
     #[Test]
+    public function thePanelLayoutDeclaresItselfNoindex(): void
+    {
+        $html = ViewRenderer::render(
+            'Modules/Cardboard/Interfaces/HTTP/templates/layout.phtml',
+            [
+                'htmlLang'       => 'sk',
+                'titleEscaped'   => 'Dashboard',
+                'markCssLinks'   => '',
+                'htmxScript'     => '',
+                'htmxConfig'     => '',
+                'recentJson'     => '[]',
+                'url'            => $this->url(),
+                'navHtml'        => '',
+                'currentUserName' => 'Admin',
+                'csrf'           => '',
+                'actionsBar'     => '',
+                'content'        => '',
+            ],
+        );
+
+        self::assertStringContainsString(
+            '<meta name="robots" content="noindex, nofollow">',
+            $html,
+            'The panel must tell a crawler not to index it even when no header is added.',
+        );
+    }
+
+    #[Test]
     public function aLayoutWithoutARouterRefusesToBuildALink(): void
     {
         $url = CardboardLayout::urlBuilder(null);

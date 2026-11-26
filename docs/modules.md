@@ -353,6 +353,13 @@ leaves the slice untouched. `--force` is the only way past a refusal.
 
 `Core` and `Database` can never be removed — they are the kernel itself.
 
+## Spec scenarios name their test
+
+A canonical openspec scenario in `openspec/specs/` carries
+`- PINS: <test>::<method>`, or says `- PINS: none` with the reason no test can
+hold it; `ScenarioTestBindingContractTest` counts both and holds the allowance
+exactly.
+
 ## module.json (optional)
 
 Only for what a scan cannot see: an npm package, a PHP package, a runtime
