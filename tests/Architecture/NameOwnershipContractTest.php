@@ -354,7 +354,15 @@ final class NameOwnershipContractTest extends TestCase
     // twice on purpose, because two identical entries are the input under test.
     // A helper that builds the request an operator sends is not renaming a
     // constant.
-    private const int MAX_LITERAL_PLACES = 518;
+    //
+    // 495, measured 2026-11-26: the extractor now claims a constant's value
+    // only when the literal ends the declaration. Twenty-four places left the
+    // count because a concatenated constant had claimed its first fragment:
+    // `REGISTRY_FILE = 'data' . DIRECTORY_SEPARATOR . 'blog-taxonomy.json'`
+    // owned `'data'` for the whole tree, and every storage-directory literal
+    // spelling it counted against a value that constant never held. The parser
+    // reads a value, not a prefix; the ceiling fell with the measurement.
+    private const int MAX_LITERAL_PLACES = 495;
 
     /**
      * Rule 3 — measured 2026-10-17 on the tracked scope.
@@ -1158,10 +1166,24 @@ final class NameOwnershipContractTest extends TestCase
             return null;
         }
 
-        return match ($token[0]) {
+        $value = match ($token[0]) {
             T_CONSTANT_ENCAPSED_STRING, T_LNUMBER, T_DNUMBER => $token[1],
             default => null,
         };
+
+        if (null === $value) {
+            return null;
+        }
+
+        // A following operator means the declaration's value is computed:
+        // `'data' . DIRECTORY_SEPARATOR . 'blog-taxonomy.json'` is one path, not
+        // a constant holding the string `'data'`. Reading only the first
+        // fragment made `TaxonomyService::REGISTRY_FILE` the owner of every
+        // `'data'` in the tree, and charged three storage-directory literals
+        // against a value it never claimed.
+        $after = $this->skipSpace($tokens, $count, $index + 1);
+
+        return in_array($tokens[$after] ?? null, [';', ','], true) ? $value : null;
     }
 
     /** Not `isString()`: that name is a final method on PHPUnit's Assert. */
