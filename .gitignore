@@ -19,6 +19,11 @@
 /storage/data/*.db-journal
 /storage/data/*.db-wal
 /storage/data/*.db-shm
+# The REST admin's portable snapshot (`SpecStore`) is written beside
+# restapi.db on every save: the rows are the runtime truth, the snapshot is
+# an export, and a running site replaces it. Ignore the contents, not the
+# directory, for the reason above.
+/storage/data/restapi/*
 # The engine the Settings panel writes into storage/config/database.json. It
 # holds a DSN with a password, so it is runtime state: never committed, and
 # never carried into the export (which is built from tracked files).
