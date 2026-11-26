@@ -15,6 +15,7 @@ use Modules\RestApi\Interfaces\HTTP\Actions\ItemDetailAction;
 use Modules\RestApi\Interfaces\HTTP\Actions\ItemFormAction;
 use Modules\RestApi\Interfaces\HTTP\Actions\ItemsIndexAction;
 use Modules\RestApi\Interfaces\HTTP\Actions\ResourceFormAction;
+use Modules\RestApi\Interfaces\HTTP\Actions\ServiceDetailAction;
 use Modules\RestApi\Interfaces\HTTP\Actions\ServiceFormAction;
 use Modules\RestApi\Interfaces\HTTP\RestApiServices;
 use PHPUnit\Framework\Attributes\Test;
@@ -118,6 +119,23 @@ final class ScenarioTest extends TestCase
         $this->createService();
         $this->createResource();
 
+        $service = (new ServiceDetailAction(ScenarioDoubles::router()))->handle(
+            $this->request('GET', '/mark/rest/services/blog', [], ['id' => 'blog']),
+        );
+
+        self::assertSame(200, $service->getStatusCode());
+        self::assertMatchesRegularExpression(
+            '/<p class="m-actions">\s*<a class="m-btn m-btn-primary"[^>]*>New resource<\/a>\s*<\/p>/s',
+            $service->getContent(),
+        );
+        self::assertMatchesRegularExpression(
+            '/class="m-btn-group"><a class="m-btn"[^>]*>Edit<\/a><form class="m-inline-form".*?<button class="m-btn m-btn-error"[^>]*>Delete<\/button><\/form><\/div>/s',
+            $service->getContent(),
+        );
+        self::assertStringContainsString('data-confirm="Remove this resource and every item in it?"', $service->getContent());
+        self::assertStringContainsString('data-confirm="Remove this service and every resource in it?"', $service->getContent());
+        self::assertStringNotContainsString('onsubmit=', $service->getContent());
+
         // The field step: the same resource with one more declared key.
         $this->addPublishedField();
 
@@ -156,6 +174,11 @@ final class ScenarioTest extends TestCase
         self::assertSame(200, $detail->getStatusCode());
         self::assertStringContainsString('&lt;img src=x onerror=alert(2)&gt;', $detail->getContent());
         self::assertStringNotContainsString('<img src=x onerror=alert(2)>', $detail->getContent());
+        self::assertStringContainsString('class="m-actions-row m-btn-group"', $detail->getContent());
+        self::assertStringContainsString('class="m-inline-form"', $detail->getContent());
+        self::assertStringContainsString('class="m-btn m-btn-error"', $detail->getContent());
+        self::assertStringContainsString('data-confirm="Delete this item?"', $detail->getContent());
+        self::assertStringNotContainsString('onsubmit=', $detail->getContent());
 
         $created = (new ItemFormAction(ScenarioDoubles::router()))->createSubmit(
             $this->request('POST', '/mark/rest/services/blog/resources/posts/items/create', [

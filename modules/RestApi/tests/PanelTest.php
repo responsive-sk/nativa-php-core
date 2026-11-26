@@ -15,6 +15,7 @@ use Modules\RestApi\Interfaces\HTTP\Actions\ItemFormAction;
 use Modules\RestApi\Interfaces\HTTP\Actions\ItemsIndexAction;
 use Modules\RestApi\Interfaces\HTTP\Actions\ResourceFormAction;
 use Modules\RestApi\Interfaces\HTTP\Actions\RestApiIndexAction;
+use Modules\RestApi\Interfaces\HTTP\Actions\ServiceDetailAction;
 use Modules\RestApi\Interfaces\HTTP\Actions\ServiceFormAction;
 use Modules\RestApi\Interfaces\HTTP\RestApiServices;
 use PHPUnit\Framework\Attributes\Test;
@@ -142,6 +143,49 @@ final class PanelTest extends TestCase
     }
 
     #[Test]
+    public function theServiceListOffersCreateAndRowActions(): void
+    {
+        $this->seed('Blog', []);
+
+        $response = (new RestApiIndexAction(PanelTestDoubles::router()))->handle(Request::create('GET', '/mark/rest'));
+        $content = $response->getContent();
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertStringContainsString('class="m-btn m-btn-primary"', $content);
+        self::assertStringContainsString('New service', $content);
+        self::assertStringContainsString('class="m-btn-group"', $content);
+        self::assertStringContainsString('>Edit</a>', $content);
+        self::assertStringContainsString('>Delete</button>', $content);
+        self::assertStringContainsString('data-confirm="Remove this service and every resource in it?"', $content);
+        self::assertStringNotContainsString('onsubmit=', $content);
+    }
+
+    #[Test]
+    public function theNewServiceFormOffersExamplesButTheEditFormDoesNot(): void
+    {
+        $create = (new ServiceFormAction(PanelTestDoubles::router()))->createForm(Request::create('GET', '/mark/rest/services'));
+        $content = $create->getContent();
+
+        self::assertSame(200, $create->getStatusCode());
+        self::assertStringContainsString('id="service-example"', $content);
+        self::assertStringContainsString('JSONPlaceholder', $content);
+        self::assertStringContainsString('DummyJSON', $content);
+        self::assertStringContainsString('GitHub API', $content);
+        self::assertStringContainsString('https://jsonplaceholder.typicode.com', $content);
+        self::assertStringContainsString('nonce="__CSP_NONCE_PLACEHOLDER__"', $content);
+        self::assertStringNotContainsString('onchange=', $content);
+
+        $this->seed('Blog', []);
+
+        $editRequest = Request::create('GET', '/mark/rest/services/blog/edit');
+        $editRequest->setRouteParams(['id' => 'blog']);
+        $edit = (new ServiceFormAction(PanelTestDoubles::router()))->editForm($editRequest);
+
+        self::assertSame(200, $edit->getStatusCode());
+        self::assertStringNotContainsString('id="service-example"', $edit->getContent());
+    }
+
+    #[Test]
     public function creatingAServiceStoresItAndRedirects(): void
     {
         $response = (new ServiceFormAction(PanelTestDoubles::router()))->createSubmit(Request::create('POST', '/mark/rest/services', body: [
@@ -215,6 +259,61 @@ final class PanelTest extends TestCase
         self::assertSame(200, $response->getStatusCode());
         self::assertStringContainsString('Hello, Nativa', $response->getContent());
         self::assertStringContainsString('/posts?page=1&per_page=25', $transport->lastRequest()->url);
+    }
+
+    #[Test]
+    public function theResourceEditFormUsesTheAdminCssVocabulary(): void
+    {
+        $this->seed('Blog', [[
+            'name'       => 'posts',
+            'path'       => '/posts',
+            'item_path'  => '/posts/{id}',
+            'actions'    => ['list', 'read'],
+            'pagination' => 'page',
+            'fields'     => [['name' => 'title', 'label' => 'Title', 'type' => 'text']],
+        ]]);
+
+        $request = Request::create('GET', '/mark/rest/services/blog/resources/posts');
+        $request->setRouteParams(['id' => 'blog', 'resource' => 'posts']);
+
+        $response = (new ResourceFormAction(PanelTestDoubles::router()))->editForm($request);
+        $content = $response->getContent();
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertStringContainsString('/dist/moonshine/assets/mark-', $content);
+        self::assertStringContainsString('class="m-form"', $content);
+        self::assertStringContainsString('class="m-field-label"', $content);
+        self::assertStringContainsString('class="m-btn m-btn-primary"', $content);
+        self::assertStringContainsString('class="m-hint"', $content);
+        self::assertStringNotContainsString('m-field__label', $content);
+        self::assertStringNotContainsString('m-btn--primary', $content);
+    }
+
+    #[Test]
+    public function theResourceRowGroupsEditAndDeleteWithoutAnInlineHandler(): void
+    {
+        $this->seed('Blog', [[
+            'name'       => 'posts',
+            'path'       => '/posts',
+            'item_path'  => '/posts/{id}',
+            'actions'    => ['list', 'read'],
+            'pagination' => 'page',
+            'fields'     => [['name' => 'title', 'label' => 'Title', 'type' => 'text']],
+        ]]);
+
+        $request = Request::create('GET', '/mark/rest/services/blog');
+        $request->setRouteParams(['id' => 'blog']);
+
+        $response = (new ServiceDetailAction(PanelTestDoubles::router()))->handle($request);
+        $content = $response->getContent();
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertMatchesRegularExpression(
+            '/class="m-btn-group"><a class="m-btn"[^>]*>Edit<\/a><form class="m-inline-form".*?<button class="m-btn m-btn-error"[^>]*>Delete<\/button><\/form><\/div>/s',
+            $content,
+        );
+        self::assertStringContainsString('data-confirm="Remove this resource and every item in it?"', $content);
+        self::assertStringNotContainsString('onsubmit=', $content);
     }
 
     #[Test]

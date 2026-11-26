@@ -75,23 +75,23 @@ final class ItemDetailAction
 
         $details .= '</dl>';
 
-        $actions = '</p>';
+        $actions = '';
 
         if ($resource->actions->allows('update') || $resource->actions->allows('delete')) {
-            $actions = '<p class="m-actions">';
+            $actions = '<div class="m-actions-row m-btn-group">';
 
             if ($resource->actions->allows('update')) {
-                $actions .= '<a class="m-btn" href="' . CardboardLayout::e($this->url('mark.rest.item.edit', ['id' => $spec->service->id, 'resource' => $resource->name, 'item' => $id])) . '">Edit</a> ';
+                $actions .= '<a class="m-btn" href="' . CardboardLayout::e($this->url('mark.rest.item.edit', ['id' => $spec->service->id, 'resource' => $resource->name, 'item' => $id])) . '">Edit</a>';
             }
 
             if ($resource->actions->allows('delete')) {
-                $actions .= '<form method="post" action="' . CardboardLayout::e($this->url('mark.rest.item.delete', ['id' => $spec->service->id, 'resource' => $resource->name, 'item' => $id])) . '" onsubmit="return confirm(\'Delete this item?\');">'
+                $actions .= '<form class="m-inline-form" method="post" action="' . CardboardLayout::e($this->url('mark.rest.item.delete', ['id' => $spec->service->id, 'resource' => $resource->name, 'item' => $id])) . '" data-confirm="Delete this item?">'
                     . CardboardLayout::csrfField()
-                    . '<button class="m-btn m-btn--danger" type="submit">Delete</button>'
+                    . '<button class="m-btn m-btn-error" type="submit">Delete</button>'
                     . '</form>';
             }
 
-            $actions .= '</p>';
+            $actions .= '</div>';
         }
 
         $content = '<h1 class="m-heading">' . CardboardLayout::e($resource->name) . ' · ' . CardboardLayout::e($id) . '</h1>'

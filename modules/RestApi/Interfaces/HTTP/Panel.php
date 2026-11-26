@@ -45,7 +45,7 @@ final class Panel
         int $status = 502,
     ): Response {
         $content = '<h1 class="m-heading">' . CardboardLayout::e($title) . '</h1>'
-            . '<div class="m-alert m-alert--err">' . CardboardLayout::e($message) . '</div>'
+            . '<div class="m-alert m-alert-error">' . CardboardLayout::e($message) . '</div>'
             . '<p><a class="m-btn" href="' . CardboardLayout::e($router->url('mark.rest')) . '">Back to services</a></p>';
 
         return Response::html(CardboardLayout::render($title, $content, 'rest', [], [], $router), $status);

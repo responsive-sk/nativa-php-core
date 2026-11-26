@@ -36,7 +36,7 @@ final class PanelHtml
             return CardboardLayout::emptyState($emptyTitle, $emptyDescription, $emptyHref, $emptyLabel);
         }
 
-        $html = '<div class="m-table-wrap"><table class="m-table"><thead><tr>';
+        $html = '<div class="m-table-scroll"><table class="m-table"><thead><tr>';
 
         foreach ($headers as $header) {
             $html .= '<th>' . CardboardLayout::e($header) . '</th>';
@@ -73,7 +73,7 @@ final class PanelHtml
             return '';
         }
 
-        $html = '<div class="m-alert m-alert--err" role="alert"><ul>';
+        $html = '<div class="m-alert m-alert-error" role="alert"><ul>';
 
         foreach ($errors as $error) {
             $html .= '<li>' . CardboardLayout::e($error) . '</li>';
@@ -120,12 +120,12 @@ final class PanelHtml
         $id = self::id($name);
 
         return '<div class="m-field">'
-            . '<label class="m-field__label" for="' . $id . '">' . CardboardLayout::e($label)
+            . '<label class="m-field-label" for="' . $id . '">' . CardboardLayout::e($label)
             . ($required ? ' <span aria-hidden="true">*</span>' : '') . '</label>'
             . '<input class="m-input" id="' . $id . '" type="' . CardboardLayout::e($type) . '" name="'
             . CardboardLayout::e($name) . '" value="' . CardboardLayout::e($value) . '"'
             . ($required ? ' required' : '') . '>'
-            . ('' === $help ? '' : '<p class="m-field__help">' . CardboardLayout::e($help) . '</p>')
+            . ('' === $help ? '' : '<p class="m-hint">' . CardboardLayout::e($help) . '</p>')
             . '</div>';
     }
 
@@ -140,12 +140,12 @@ final class PanelHtml
         $id = self::id($name);
 
         return '<div class="m-field">'
-            . '<label class="m-field__label" for="' . $id . '">' . CardboardLayout::e($label)
+            . '<label class="m-field-label" for="' . $id . '">' . CardboardLayout::e($label)
             . ($required ? ' <span aria-hidden="true">*</span>' : '') . '</label>'
-            . '<textarea class="m-textarea" id="' . $id . '" name="' . CardboardLayout::e($name)
+            . '<textarea id="' . $id . '" name="' . CardboardLayout::e($name)
             . '" rows="' . $rows . '"' . ($required ? ' required' : '') . '>'
             . CardboardLayout::e($value) . '</textarea>'
-            . ('' === $help ? '' : '<p class="m-field__help">' . CardboardLayout::e($help) . '</p>')
+            . ('' === $help ? '' : '<p class="m-hint">' . CardboardLayout::e($help) . '</p>')
             . '</div>';
     }
 
@@ -155,8 +155,8 @@ final class PanelHtml
     public static function select(string $name, string $label, array $options, string $selected): string
     {
         $id = self::id($name);
-        $html = '<div class="m-field"><label class="m-field__label" for="' . $id . '">'
-            . CardboardLayout::e($label) . '</label><select class="m-select" id="' . $id . '" name="'
+        $html = '<div class="m-field"><label class="m-field-label" for="' . $id . '">'
+            . CardboardLayout::e($label) . '</label><select id="' . $id . '" name="'
             . CardboardLayout::e($name) . '">';
 
         foreach ($options as $value => $optionLabel) {
@@ -187,10 +187,10 @@ final class PanelHtml
 
     public static function csrfForm(string $action, string $content, string $submit = 'Save'): string
     {
-        return '<form method="post" action="' . CardboardLayout::e($action) . '">'
+        return '<form class="m-form" method="post" action="' . CardboardLayout::e($action) . '">'
             . CardboardLayout::csrfField()
             . $content
-            . '<button class="m-btn m-btn--primary" type="submit">' . CardboardLayout::e($submit) . '</button>'
+            . '<button class="m-btn m-btn-primary" type="submit">' . CardboardLayout::e($submit) . '</button>'
             . '</form>';
     }
 

@@ -42,13 +42,21 @@ final class RestApiIndexAction
                 ['html' => '<a href="' . CardboardLayout::e($href) . '">' . CardboardLayout::e($service['name']) . '</a>'],
                 $service['base_url'],
                 '' === $updatedAt ? '—' : CardboardLayout::formatTime($updatedAt),
+                ['html' => '<div class="m-btn-group">'
+                    . '<a class="m-btn" href="' . CardboardLayout::e($this->url('mark.rest.service.edit', ['id' => $service['id']])) . '">Edit</a>'
+                    . '<form class="m-inline-form" method="post" action="' . CardboardLayout::e($this->url('mark.rest.service.delete', ['id' => $service['id']])) . '" data-confirm="Remove this service and every resource in it?">'
+                    . CardboardLayout::csrfField()
+                    . '<button class="m-btn m-btn-error" type="submit">Delete</button>'
+                    . '</form>'
+                    . '</div>'],
             ];
         }
 
         $content = '<h1 class="m-heading">REST services</h1>'
             . '<p class="m-muted">A service is one remote REST API. Its resources are what the panel may list, read and — when the specification says so — write.</p>'
+            . ([] === $rows ? '' : '<p class="m-actions"><a class="m-btn m-btn-primary" href="' . CardboardLayout::e($this->url('mark.rest.services.create')) . '">New service</a></p>')
             . PanelHtml::table(
-                ['Service', 'Base URL', 'Updated'],
+                ['Service', 'Base URL', 'Updated', ''],
                 $rows,
                 'No REST service is registered yet.',
                 'Add one to give the panel an API to read.',

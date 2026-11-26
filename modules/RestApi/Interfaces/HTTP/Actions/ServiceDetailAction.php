@@ -58,14 +58,19 @@ final class ServiceDetailAction
                 $resource->path,
                 implode(', ', $resource->actions->toArray()),
                 $resource->pagination->strategy,
-                ['html' => '<a class="m-btn" href="' . CardboardLayout::e($this->url('mark.rest.resource.edit', ['id' => $spec->service->id, 'resource' => $resource->name])) . '">Edit</a>'],
+                ['html' => '<div class="m-btn-group">'
+                    . '<a class="m-btn" href="' . CardboardLayout::e($this->url('mark.rest.resource.edit', ['id' => $spec->service->id, 'resource' => $resource->name])) . '">Edit</a>'
+                    . '<form class="m-inline-form" method="post" action="' . CardboardLayout::e($this->url('mark.rest.resource.delete', ['id' => $spec->service->id, 'resource' => $resource->name])) . '" data-confirm="Remove this resource and every item in it?">'
+                    . CardboardLayout::csrfField()
+                    . '<button class="m-btn m-btn-error" type="submit">Delete</button>'
+                    . '</form>'
+                    . '</div>'],
             ];
         }
 
         $content = '<h1 class="m-heading">' . CardboardLayout::e($spec->service->name) . '</h1>'
             . '<p class="m-actions">'
-            . '<a class="m-btn" href="' . CardboardLayout::e($this->url('mark.rest.service.edit', ['id' => $spec->service->id])) . '">Edit service</a> '
-            . '<a class="m-btn m-btn--primary" href="' . CardboardLayout::e($this->url('mark.rest.resource.create', ['id' => $spec->service->id])) . '">New resource</a>'
+            . '<a class="m-btn m-btn-primary" href="' . CardboardLayout::e($this->url('mark.rest.resource.create', ['id' => $spec->service->id])) . '">New resource</a>'
             . '</p>'
             . $summary
             . '<h2>Resources</h2>'
@@ -77,10 +82,14 @@ final class ServiceDetailAction
                 $this->url('mark.rest.resource.create', ['id' => $spec->service->id]),
                 'New resource',
             )
-            . '<form method="post" action="' . CardboardLayout::e($this->url('mark.rest.service.delete', ['id' => $spec->service->id])) . '" onsubmit="return confirm(\'Remove this service and every resource in it?\');">'
+            . '<h2>Service actions</h2>'
+            . '<div class="m-actions-row m-btn-group">'
+            . '<a class="m-btn" href="' . CardboardLayout::e($this->url('mark.rest.service.edit', ['id' => $spec->service->id])) . '">Edit service</a>'
+            . '<form class="m-inline-form" method="post" action="' . CardboardLayout::e($this->url('mark.rest.service.delete', ['id' => $spec->service->id])) . '" data-confirm="Remove this service and every resource in it?">'
             . CardboardLayout::csrfField()
-            . '<button class="m-btn m-btn--danger" type="submit">Delete service</button>'
-            . '</form>';
+            . '<button class="m-btn m-btn-error" type="submit">Delete service</button>'
+            . '</form>'
+            . '</div>';
 
         return Panel::render($this->router(), $spec->service->name, $content);
     }

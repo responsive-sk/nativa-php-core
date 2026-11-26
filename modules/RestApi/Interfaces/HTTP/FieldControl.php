@@ -40,12 +40,12 @@ final class FieldControl
         $editable = $field->editableIn($context);
         $id = 'f-' . preg_replace('/[^A-Za-z0-9_-]+/', '-', $field->name);
         $name = CardboardLayout::e($field->name);
-        $label = '<label class="m-field__label" for="' . $id . '">'
+        $label = '<label class="m-field-label" for="' . $id . '">'
             . CardboardLayout::e($field->label) . ($field->required ? ' <span aria-hidden="true">*</span>' : '')
             . '</label>';
 
         $control = match ($field->type) {
-            FieldType::Textarea => '<textarea class="m-textarea" id="' . $id . '" name="' . $name
+            FieldType::Textarea => '<textarea id="' . $id . '" name="' . $name
                 . '" rows="5"' . ($editable ? '' : ' readonly') . '>'
                 . CardboardLayout::e(is_string($value) ? $value : '') . '</textarea>',
             FieldType::Number => '<input class="m-input" id="' . $id . '" type="number" step="any" name="'
@@ -58,7 +58,7 @@ final class FieldControl
             FieldType::Date => '<input class="m-input" id="' . $id . '" type="date" name="' . $name
                 . '" value="' . CardboardLayout::e(is_string($value) ? $value : '')
                 . '"' . ($editable ? '' : ' readonly') . '>',
-            FieldType::Json => '<textarea class="m-textarea" id="' . $id . '" name="' . $name
+            FieldType::Json => '<textarea class="m-textarea--code" id="' . $id . '" name="' . $name
                 . '" rows="6"' . ($editable ? '' : ' readonly') . '>'
                 . CardboardLayout::e(self::json($value)) . '</textarea>',
             FieldType::Select, FieldType::Relation => '<input class="m-input" id="' . $id . '" type="text" name="'

@@ -42,7 +42,7 @@ final class ServiceFormAction
         return Panel::render(
             $this->router(),
             'New REST service',
-            $this->form('New REST service', $this->url('mark.rest.services.create.submit'), [], [], 'Create service'),
+            $this->form('New REST service', $this->url('mark.rest.services.create.submit'), [], [], 'Create service', true),
         );
     }
 
@@ -52,7 +52,7 @@ final class ServiceFormAction
         [$document, $errors] = $this->document($values, null);
 
         if ([] !== $errors) {
-            return $this->formResponse('New REST service', $values, $errors, $this->url('mark.rest.services.create.submit'), 'Create service', 422);
+            return $this->formResponse('New REST service', $values, $errors, $this->url('mark.rest.services.create.submit'), 'Create service', 422, true);
         }
 
         $id = $this->uniqueId(self::slug($values['name']));
@@ -61,7 +61,7 @@ final class ServiceFormAction
         try {
             $spec = RestApiServices::validator()->validate($document);
         } catch (SpecValidationException $exception) {
-            return $this->formResponse('New REST service', $values, [$exception->getMessage()], $this->url('mark.rest.services.create.submit'), 'Create service', 422);
+            return $this->formResponse('New REST service', $values, [$exception->getMessage()], $this->url('mark.rest.services.create.submit'), 'Create service', 422, true);
         }
 
         RestApiServices::save($spec);
@@ -233,9 +233,10 @@ final class ServiceFormAction
         string $action,
         string $submit,
         int $status,
+        bool $withExamples = false,
     ): Response {
         return Response::html(
-            CardboardLayout::render($title, $this->form($title, $action, $values, $errors, $submit), 'rest', [], [], $this->router()),
+            CardboardLayout::render($title, $this->form($title, $action, $values, $errors, $submit, $withExamples), 'rest', [], [], $this->router()),
             $status,
         );
     }
@@ -244,9 +245,10 @@ final class ServiceFormAction
      * @param array<string, string> $values
      * @param list<string>          $errors
      */
-    private function form(string $title, string $action, array $values, array $errors, string $submit): string
+    private function form(string $title, string $action, array $values, array $errors, string $submit, bool $withExamples = false): string
     {
-        $fields = PanelHtml::input('name', 'Name', $values['name'] ?? '', true)
+        $fields = ($withExamples ? $this->examples() : '')
+            . PanelHtml::input('name', 'Name', $values['name'] ?? '', true)
             . PanelHtml::input('base_url', 'Base URL', $values['base_url'] ?? '', true, 'url', 'Requests resolve resource paths against this URL. The transport refuses hosts outside RESTAPI_ALLOWED_HOSTS.')
             . PanelHtml::input('token_env', 'Token environment variable', $values['token_env'] ?? '', false, 'text', 'The NAME of the variable, never the token. Leave empty for a public API.')
             . PanelHtml::input('auth_header', 'Auth header', $values['auth_header'] ?? '', false, 'text', 'Defaults to Authorization (Bearer scheme). Set X-API-Key for an API-key header.')
@@ -257,6 +259,88 @@ final class ServiceFormAction
             . '<p><a href="' . CardboardLayout::e($this->url('mark.rest')) . '">Back to services</a></p>'
             . PanelHtml::errors($errors)
             . PanelHtml::csrfForm($action, $fields, $submit);
+    }
+
+    private function examples(): string
+    {
+        $presets = [
+            'jsonplaceholder' => [
+                'label'  => 'JSONPlaceholder',
+                'values' => [
+                    'name'            => 'Skúšobné API',
+                    'base_url'        => 'https://jsonplaceholder.typicode.com',
+                    'token_env'       => '',
+                    'auth_header'     => '',
+                    'timeout_seconds' => '10',
+                    'headers'         => '{}',
+                ],
+            ],
+            'dummyjson' => [
+                'label'  => 'DummyJSON',
+                'values' => [
+                    'name'            => 'DummyJSON',
+                    'base_url'        => 'https://dummyjson.com',
+                    'token_env'       => '',
+                    'auth_header'     => '',
+                    'timeout_seconds' => '10',
+                    'headers'         => '{}',
+                ],
+            ],
+            'fakestore' => [
+                'label'  => 'Fake Store API',
+                'values' => [
+                    'name'            => 'Fake Store',
+                    'base_url'        => 'https://fakestoreapi.com',
+                    'token_env'       => '',
+                    'auth_header'     => '',
+                    'timeout_seconds' => '10',
+                    'headers'         => '{}',
+                ],
+            ],
+            'github' => [
+                'label'  => 'GitHub API',
+                'values' => [
+                    'name'            => 'GitHub API',
+                    'base_url'        => 'https://api.github.com',
+                    'token_env'       => 'GITHUB_TOKEN',
+                    'auth_header'     => 'Authorization',
+                    'timeout_seconds' => '15',
+                    'headers'         => '{"Accept": "application/vnd.github+json", "User-Agent": "nativa-restapi"}',
+                ],
+            ],
+        ];
+
+        $options = '<option value="">Choose an example API…</option>';
+
+        foreach ($presets as $key => $preset) {
+            $options .= '<option value="' . CardboardLayout::e($key) . '">' . CardboardLayout::e($preset['label']) . '</option>';
+        }
+
+        $json = json_encode(
+            array_map(static fn (array $preset): array => $preset['values'], $presets),
+            JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES,
+        ) ?: '{}';
+
+        $script = '(function () {'
+            . ' var select = document.getElementById("service-example");'
+            . ' if (!select) { return; }'
+            . ' var presets = ' . $json . ';'
+            . ' select.addEventListener("change", function () {'
+            . '  var preset = presets[select.value];'
+            . '  if (!preset) { return; }'
+            . '  Object.keys(preset).forEach(function (name) {'
+            . '   var field = document.querySelector("[name=\"" + name + "\"]");'
+            . '   if (field) { field.value = preset[name]; }'
+            . '  });'
+            . ' });'
+            . '})();';
+
+        return '<div class="m-field">'
+            . '<label class="m-field-label" for="service-example">Start from an example</label>'
+            . '<select class="m-input" id="service-example">' . $options . '</select>'
+            . '<p class="m-hint">Fills the fields below with a public test API. You can change every value afterwards.</p>'
+            . '</div>'
+            . CardboardLayout::script($script);
     }
 
     private function uniqueId(string $base): string

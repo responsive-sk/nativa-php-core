@@ -381,8 +381,8 @@ final class ResourceFormAction
             . PanelHtml::input('item_path', 'Item path', (string) $values['item_path'], true, 'text', 'Must contain {id}, e.g. /posts/{id}.')
             . PanelHtml::input('id_field', 'Id field', (string) $values['id_field'], false, 'text', 'The API key the item path fills {id} from.')
             . PanelHtml::select('pagination', 'Pagination', ['page' => 'page (?page=, meta)', 'link' => 'link (Link header)', 'cursor' => 'cursor (next cursor)', 'none' => 'none (whole collection)'], (string) $values['pagination'])
-            . '<fieldset class="m-field"><legend class="m-field__label">Actions</legend>' . $checks
-            . '<p class="m-field__help">Read-only unless create, update or delete is checked.</p></fieldset>'
+            . '<fieldset class="m-fieldset"><legend>Actions</legend>' . $checks
+            . '<p class="m-hint">Read-only unless create, update or delete is checked.</p></fieldset>'
             . PanelHtml::textarea('fields', 'Fields (JSON)', (string) $values['fields'], false, 'name, label and type (text, textarea, number, checkbox, select, date, json, relation), plus required, read_only and in_list, and the per-context overrides hidden_in and read_only_in (list, form, detail).', 12);
 
         return '<h1 class="m-heading">' . CardboardLayout::e($resource->name ?? 'New resource') . '</h1>'
