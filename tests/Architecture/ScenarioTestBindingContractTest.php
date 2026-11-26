@@ -55,13 +55,13 @@ use PHPUnit\Framework\TestCase;
  *
  * ## The ratchet
  *
- * 10 scenarios are unpinned today and that number is held EXACTLY: more
+ * 1 scenario is unpinned today and that number is held EXACTLY: more
  * unpinned scenarios than the allowance fail, and fewer fail too, because
  * lowering it is part of the same change as the annotation that lowered it.
  * A new canonical scenario can therefore never hide under the allowance — it
  * arrives without a pin and the count goes over.
  *
- * The tenth arrived with `media-preview-fetch`: "One folder answers with an
+ * The one is `media-preview-fetch`: "One folder answers with an
  * error" is the non-200 filter inside `CloudinaryApi::getMany()`, and no CI
  * run can make Cloudinary answer anything, because the fetch builds its own
  * URLs from the account's cloud name. The glyph fallback that filter feeds is
@@ -269,7 +269,7 @@ final class ScenarioTestBindingContractTest extends TestCase
      */
     private static function exemptionAllowance(): int
     {
-        return 10;
+        return 1;
     }
 
     /**

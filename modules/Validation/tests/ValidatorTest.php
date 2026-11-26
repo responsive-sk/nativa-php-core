@@ -60,6 +60,18 @@ final class ValidatorTest extends TestCase
     }
 
     #[Test]
+    public function stringRulesReportOneError(): void
+    {
+        $errors = $this->validator->validate(
+            ['nick' => 'ed'],
+            ['nick' => 'required|min:8'],
+        );
+
+        $this->assertSame(1, $errors->count());
+        $this->assertSame(['nick'], array_keys($errors->toArray()));
+    }
+
+    #[Test]
     public function customMessagesUseFieldRuleKeys(): void
     {
         $errors = $this->validator->validate(
@@ -187,6 +199,25 @@ final class ValidatorTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->validator->passes(['a' => 'x'], ['a' => 'frobnicator']);
+    }
+
+    #[Test]
+    public function errorsFlattenInFieldThenRuleOrder(): void
+    {
+        $errors = $this->validator->validate(
+            ['name' => '', 'email' => 'nope'],
+            ['name' => 'required', 'email' => 'required|email'],
+        );
+
+        $this->assertSame(2, $errors->count());
+        $this->assertSame(['The name field is required.'], $errors->forField('name'));
+        $this->assertSame(
+            [
+                'The name field is required.',
+                'The email field must be a valid email address.',
+            ],
+            $errors->all(),
+        );
     }
 
     #[Test]

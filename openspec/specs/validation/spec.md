@@ -31,6 +31,8 @@ at parse time, never as a validation error.
 - WHEN `Validator::validate()` runs
 - THEN the result contains exactly one error for `nick`
 
+- PINS: modules/Validation/tests/ValidatorTest.php::stringRulesReportOneError
+
 ### Requirement: Rule catalog
 
 The module SHALL provide `required`, `nullable`, `email`, `string`,
@@ -47,6 +49,8 @@ value.
 - GIVEN data `['a' => '9']` and rules `['a' => 'integer|between:1,5']`
 - WHEN validated
 - THEN the result is non-empty (9 is outside 1..5)
+
+- PINS: modules/Validation/tests/ValidatorTest.php::numericModeComparesByValue
 
 ### Requirement: Skip semantics
 
@@ -71,6 +75,8 @@ reject whitespace-only values.
 - WHEN validated
 - THEN the error count is 1
 
+- PINS: modules/Validation/tests/ValidatorTest.php::emptyPasswordReportsOnce
+
 ### Requirement: Custom messages
 
 Message lookup SHALL resolve `concrete-field.rule`, then
@@ -85,6 +91,8 @@ Message lookup SHALL resolve `concrete-field.rule`, then
 - WHEN input `('', 'not-an-email', 'short', 'different')` is validated
 - THEN the messages are exactly the four legacy strings in field order
 
+- PINS: modules/Validation/tests/ValidatorTest.php::customMessagesUseFieldRuleKeys
+
 ### Requirement: Wildcards
 
 `items.*.email` SHALL expand over the data present and key errors under
@@ -98,6 +106,8 @@ reported on the declared key, never passed silently.
 - AND rules `['items.*.email' => 'required|email']`
 - WHEN validated
 - THEN one error exists under `items.0.email` and none under `items.1.email`
+
+- PINS: modules/Validation/tests/ValidatorTest.php::wildcardsErrorUnderConcretePaths
 
 ### Requirement: Error shape
 
@@ -115,12 +125,16 @@ throw `ValidationException` carrying the errors when non-empty.
 - THEN `count()` is 2 and `forField('name')` holds the required message
 - AND `all()` lists the `name` message before the `email` message
 
+- PINS: modules/Validation/tests/ValidatorTest.php::errorsFlattenInFieldThenRuleOrder
+
 #### Scenario: validateOrFail carries the errors
 
 - GIVEN data `['email' => 'nope']` and rules `['email' => 'required|email']`
 - WHEN `validateOrFail()` runs
 - THEN it throws `ValidationException`
 - AND `errors()->forField('email')` holds exactly one message
+
+- PINS: modules/Validation/tests/ValidatorTest.php::validateOrFailThrowsWithErrors
 
 ### Requirement: Strict boolean
 
@@ -135,8 +149,12 @@ is rejected — form encodings only.
 - WHEN validated
 - THEN the result is empty
 
+- PINS: modules/Validation/tests/ValidatorTest.php::scalarRules
+
 #### Scenario: Filter-style words are rejected
 
 - GIVEN data `['active' => 'yes']` and rules `['active' => 'boolean']`
 - WHEN validated
 - THEN the result contains one error for `active`
+
+- PINS: modules/Validation/tests/ValidatorTest.php::scalarRules
