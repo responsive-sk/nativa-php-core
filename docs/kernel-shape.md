@@ -153,7 +153,7 @@ exactly the movement the table exists to record.
 | `src/Modules/Core/Infrastructure/Attributes/AsMigrator.php` | 567 | Infrastructure | concrete | 10 | contract |
 | `src/Modules/Core/Infrastructure/Attributes/AsNavBadge.php` | 864 | Infrastructure | concrete | 1 | contract |
 | `src/Modules/Core/Infrastructure/Attributes/AsShellContextProvider.php` | 808 | Infrastructure | concrete | 3 | contract |
-| `src/Modules/Core/Infrastructure/Bootstrap/Bootstrapper.php` | 3833 | Infrastructure | concrete | 1 | runtime |
+| `src/Modules/Core/Infrastructure/Bootstrap/Bootstrapper.php` | 10099 | Infrastructure | concrete | 1 | runtime |
 | `src/Modules/Core/Infrastructure/Env.php` | 4560 | Infrastructure | concrete | 8 | runtime |
 | `src/Modules/Core/Infrastructure/Http/JsonResponse.php` | 625 | Infrastructure | concrete | 0 | runtime |
 | `src/Modules/Core/Infrastructure/Http/Request.php` | 10965 | Infrastructure | concrete | 71 | runtime |

@@ -7,6 +7,8 @@ namespace Modules\Core\Infrastructure\Bootstrap;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Core\Interfaces\CLI\Support\DatabaseMigrator;
+use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
+use Modules\Database\Infrastructure\Persistence\Driver;
 
 /**
  * Bootstrapper — first-request application setup.
@@ -18,6 +20,15 @@ use Modules\Core\Interfaces\CLI\Support\DatabaseMigrator;
  * module ships a migrator), no marker is written so the auto-run stays armed
  * for the first real migrator.
  *
+ * The marker is a claim about DATABASES, not about a file, so it is checked
+ * as one: `isMigrated()` reads the module names it lists and, on SQLite,
+ * requires each module's database file to be there. A marker that arrived
+ * without its databases (an artifact copied in, storage/data replaced) is
+ * ignored and the idempotent migration runs again. Measured: a fresh install
+ * of an artifact that carried the marker and no storage/data answered 500 on
+ * `GET /` with `PDOException: no such table: settings`, while the same tree
+ * without the marker answered 200 and wrote it back.
+ *
  * The marker records "the migrators of THIS module set have run", so the
  * module set changing must drop it: ModuleInstaller::add()/remove() call
  * invalidateMigrations(). Without that, a slice installed after the first
@@ -28,7 +39,15 @@ use Modules\Core\Interfaces\CLI\Support\DatabaseMigrator;
  */
 final readonly class Bootstrapper
 {
-    private const string MARKER = '.migrations-applied';
+    /**
+     * The marker file's name, and its only spelling.
+     *
+     * Public because the marker is a fact a test asserts: a marker whose
+     * databases are gone must be ignored, and
+     * `tests/Modules/BootstrapperMarkerTest` reads the name from here instead
+     * of writing a second copy of it.
+     */
+    public const string MARKER = '.migrations-applied';
 
     private AppPaths $paths;
 
@@ -88,11 +107,42 @@ final readonly class Bootstrapper
     }
 
     /**
-     * Whether the first-request migration marker is present.
+     * Whether the first-request migration marker is present AND still true.
+     *
+     * The file alone is not the answer. It records "these modules were
+     * migrated", which is a claim about databases, and this process can check
+     * it: on SQLite every named module has a database file, and a missing one
+     * means the schema was never created here. Trusting the file alone turns a
+     * marker copied in with an artifact (or left behind while storage/data was
+     * replaced) into a permanent 500 on the first query.
      */
     public function isMigrated(): bool
     {
-        return is_file($this->markerPath());
+        if (!is_file($this->markerPath())) {
+            return false;
+        }
+
+        $modules = $this->markerModules();
+
+        if ([] === $modules) {
+            return false;
+        }
+
+        // Only SQLite stores its databases as files this process can see, and
+        // only SQLite state travels inside a deployed tree. A server-backed
+        // database outlives the tree, so the marker stands there and is not
+        // second-guessed with a connection on every request.
+        if (Driver::Sqlite !== Driver::fromName(DatabaseConnectionManager::instance()->driverName())) {
+            return true;
+        }
+
+        foreach ($modules as $module) {
+            if (!is_file($this->paths->database($module))) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -167,6 +217,43 @@ final readonly class Bootstrapper
         if (is_file($path) && !@unlink($path)) {
             throw new \RuntimeException(sprintf('Cannot remove the migration marker: %s', $path));
         }
+    }
+
+    /**
+     * The module names the marker lists, or [] when it names nothing usable.
+     *
+     * Module names are lower-case identifiers. A line that is not one was not
+     * written by this class, so the whole marker is untrusted: the migration
+     * it would suppress runs again, which is idempotent, and the marker is
+     * rewritten with the truth.
+     *
+     * @return list<string>
+     */
+    private function markerModules(): array
+    {
+        $content = @file_get_contents($this->markerPath());
+
+        if (false === $content) {
+            return [];
+        }
+
+        $modules = [];
+
+        foreach (preg_split('/\R/', $content) ?: [] as $line) {
+            $module = trim($line);
+
+            if ('' === $module) {
+                continue;
+            }
+
+            if (1 !== preg_match('/^[a-z][a-z0-9_]*$/', $module)) {
+                return [];
+            }
+
+            $modules[] = $module;
+        }
+
+        return $modules;
     }
 
     private function markerPath(): string

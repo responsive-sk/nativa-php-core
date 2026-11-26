@@ -571,6 +571,11 @@ fi
 #     both ways: the artifact with DB_* on an empty directory is a 500, and the
 #     very same artifact with the marker removed is a 200 (the first request
 #     re-runs migrate and writes the marker where it belongs).
+#
+#     Since then the bootstrapper checks the claim instead of trusting the
+#     file (`Bootstrapper::isMigrated()`): a marker whose databases are
+#     absent is ignored and the idempotent run happens. The purge stays,
+#     because the claim belongs to the host that runs the artifact.
 #   storage/cache/pages/ + storage/logs/ — HTML the smoke rendered here and the
 #     build's own log lines. Runtime state a host should not inherit, and
 #     neither is a schema the host needs.
