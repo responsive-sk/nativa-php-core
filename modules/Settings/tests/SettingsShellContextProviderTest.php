@@ -158,6 +158,26 @@ final class SettingsShellContextProviderTest extends TestCase
     }
 
     /**
+     * A site that ships its own menu keeps exactly that menu. The default seed
+     * is for an empty table; the per-row probe it replaced added `Články` and
+     * `Mark` to the ohniva-show menu on the first request after its import.
+     */
+    #[Test]
+    public function anExistingMenuIsNotMixedWithTheDefaultSeed(): void
+    {
+        $this->pdo->exec('DELETE FROM menu_items');
+        $this->insertMenuItem('Info', '/info', 'header', 10);
+
+        (new SettingsDatabaseMigrator($this->pdo))->run($this->quietOutput());
+
+        self::assertSame(
+            ['/info'],
+            $this->seededPublicHrefs(),
+            'The migrator appended a default link to a menu the site owns.',
+        );
+    }
+
+    /**
      * The seed used to ship `Privacy -> /privacy` and `Cookies -> /cookies`,
      * and a fresh kernel install serves neither path: two of the footer's links
      * were 404s on a brand-new site. This pins the rule that replaced them —

@@ -335,10 +335,25 @@ final readonly class SettingsDatabaseMigrator implements MigratorInterface
     }
 
     /**
-     * Seed a minimal navigation menu (header + footer) idempotently.
+     * Seed a minimal navigation menu (header + footer) into an EMPTY table.
+     *
+     * The table is the unit, not the row. A site that ships its own menu can
+     * hold a subset of the default links on purpose: the ohniva-show export
+     * seeds `Domov`, `Info`, `Blog`, `Akcie`, `Časté otázky`, `Galéria` and
+     * `Kontakt` and deliberately omits `Články` and `Mark`. A per-row probe
+     * cannot tell that omission from a fresh install missing a default, and it
+     * appended both links on the first request after the export's import.
+     * An existing row is the operator's or the profile's answer, so the kernel
+     * does not add a second one.
      */
     private function seedDefaultMenu(): int
     {
+        $count = (int) $this->pdo->query('SELECT COUNT(*) FROM menu_items')->fetchColumn();
+
+        if ($count > 0) {
+            return 0;
+        }
+
         $inserted = 0;
         $existsStmt = Statement::prepare($this->connection, 'SELECT 1 FROM menu_items WHERE label = :label AND location = :loc LIMIT 1');
         $stmt = Statement::prepare($this->connection,
