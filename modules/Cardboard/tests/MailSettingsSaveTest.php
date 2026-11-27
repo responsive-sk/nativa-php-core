@@ -255,7 +255,24 @@ final class MailSettingsSaveTest extends TestCase
         $response = $this->sendTest('ops@example.test');
 
         self::assertSame(200, $response->getStatusCode());
-        self::assertStringContainsString('The test message was not sent.', (string) $response->getContent());
+        self::assertStringContainsString(
+            'Mail delivery is disabled in the saved settings. The test message was not sent.',
+            (string) $response->getContent(),
+        );
+        self::assertStringNotContainsString('storage/logs/app.log', (string) $response->getContent());
+        self::assertSame(0, $this->auditRows('settings.mail.test'));
+    }
+
+    #[Test]
+    public function testMailExplainsThatNoTransportIsConfigured(): void
+    {
+        $response = $this->sendTest('ops@example.test');
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertStringContainsString(
+            'No mail transport is configured. Choose Sendmail or HTTP in the Mail tab',
+            (string) $response->getContent(),
+        );
         self::assertSame(0, $this->auditRows('settings.mail.test'));
     }
 

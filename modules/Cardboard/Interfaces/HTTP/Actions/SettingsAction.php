@@ -305,6 +305,16 @@ final class SettingsAction
             ? ''
             : '<p class="m-hint m-hint--tight">' . CardboardLayout::e($configuration->problem) . '</p>';
 
+        $deliveryNote = '';
+
+        if (null === $configuration->problem && MailTransport::Disabled === $configuration->resolved) {
+            $deliveryNote = MailTransport::Disabled === $configuration->configured
+                ? 'Mail delivery is disabled; messages and the test will not be sent.'
+                : 'No transport is configured; messages and the test will be dropped.'
+                . ' Choose Sendmail or HTTP and save first.';
+            $deliveryNote = '<p class="m-hint m-hint--tight">' . CardboardLayout::e($deliveryNote) . '</p>';
+        }
+
         $form = '';
         $testForm = '';
 
@@ -366,6 +376,7 @@ final class SettingsAction
             . '<p class="m-muted m-card-intro">Where this site sends mail. The active transport is '
             . '<strong>' . $active . '</strong> (' . CardboardLayout::e($transportSource) . ').</p>'
             . $problem
+            . $deliveryNote
             . $form
             . $testForm
             . '</div>';
@@ -498,6 +509,21 @@ final class SettingsAction
         }
 
         $configuration = \Modules\Users\Infrastructure\Mail\MailerFactory::configuration();
+
+        if (MailTransport::Disabled === $configuration->resolved) {
+            $reason = $configuration->problem;
+
+            if (null === $reason) {
+                $reason = MailTransport::Disabled === $configuration->configured
+                    ? 'Mail delivery is disabled in the saved settings.'
+                    : 'No mail transport is configured. Choose Sendmail or HTTP in the Mail tab, fill its fields, and save.';
+            }
+
+            return Response::html($this->settingsPage([
+                $reason . ' The test message was not sent.',
+            ], 'mail'));
+        }
+
         $sent = \Modules\Users\Infrastructure\Mail\MailerFactory::create()->send(
             $to,
             'Test mail from the Mark panel',
@@ -509,7 +535,8 @@ final class SettingsAction
 
         if (!$sent) {
             return Response::html($this->settingsPage([
-                'The test message was not sent. Check the transport settings and storage/logs/app.log.',
+                'The test message was not sent by ' . $configuration->resolved->label()
+                . '. Check the transport settings and the server error log.',
             ], 'mail'));
         }
 

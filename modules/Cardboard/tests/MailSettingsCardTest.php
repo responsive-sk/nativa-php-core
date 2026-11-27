@@ -57,6 +57,7 @@ final class MailSettingsCardTest extends TestCase
         self::assertStringContainsString('name="mail_test_to"', $html);
         self::assertStringContainsString('value="ops@example.test"', $html);
         self::assertStringContainsString('Send test mail', $html);
+        self::assertStringNotContainsString('No transport is configured', $html);
         self::assertStringContainsString('name="mail_from"', $html);
         self::assertStringContainsString('name="mail_sendmail_path"', $html);
         self::assertStringContainsString('name="mail_api_url"', $html);
@@ -65,6 +66,21 @@ final class MailSettingsCardTest extends TestCase
         self::assertStringContainsString('csrf-token', $html);
         self::assertStringContainsString('Sendmail (local MTA)', $html);
         self::assertStringContainsString('Configured', $html);
+    }
+
+    #[Test]
+    public function anUnconfiguredTransportIsNamedBeforeTheTest(): void
+    {
+        $html = SettingsAction::renderMailCard(
+            MailConfiguration::fromStored([]),
+            [],
+            '<input type="hidden" name="_token" value="csrf-token">',
+            '/mark/settings/mail',
+            '/mark/settings/mail/test',
+        );
+
+        self::assertStringContainsString('No transport is configured', $html);
+        self::assertStringContainsString('Choose Sendmail or HTTP and save first.', $html);
     }
 
     #[Test]

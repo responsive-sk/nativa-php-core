@@ -51,7 +51,7 @@ absolute path to an executable file before it is stored.
 `HttpMailer` POSTs a JSON body with `from`, `to`, `subject` and `text` to the
 configured endpoint. The API key is optional for a same-host relay and travels
 as `Authorization: Bearer <key>`. A half configured HTTP transport is reported
-by name in `storage/logs/app.log`; it is not guessed at.
+by name in the server error log; it is not guessed at.
 
 The stored API key is write-only in the panel: the field renders empty, a blank
 field keeps the current key, and the separate checkbox removes it.
@@ -60,9 +60,11 @@ field keeps the current key, and the separate checkbox removes it.
 
 The Mail tab carries a test form with a recipient field, defaulting to the
 operator email. It sends one message through the saved transport, not through
-the unsaved values above it. A disabled or misconfigured transport answers
-with a refusal, and the page names the active transport on success. The test
-is audited as `settings.mail.test`, so a delivery check leaves a record.
+the unsaved values above it. A disabled, unconfigured or misconfigured
+transport answers with the reason, and the page names the active transport on
+success. The test is audited as `settings.mail.test`, so a delivery check
+leaves a record. An unconfigured transport is also named above the form, before
+the test is pressed.
 
 ## Password reset
 
