@@ -10,15 +10,15 @@ use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Pages\Application\Services\PageCrudService;
 use Modules\Pages\Interfaces\HTTP\Actions\PageViewAction;
-use Seo\WebsiteStructuredData;
+use Modules\Core\Application\Services\WebsiteStructuredData;
 use Modules\Settings\Infrastructure\Persistence\Migrations\SettingsDatabaseMigrator;
 use Modules\Settings\Infrastructure\Persistence\Repositories\SettingsRepository;
 use Modules\Settings\Interfaces\HTTP\SettingsServices;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Shell\ShellContextProviderRegistry;
+use Modules\Core\Application\Services\ShellContextProviderRegistry;
 use Tests\Support\SqliteDatabase;
-use Themes\FrontendLayout;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
 
 /**
  * PageTitleBrandTest — the page title names the site, not the kernel.

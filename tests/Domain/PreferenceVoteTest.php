@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Tests\Domain;
 
-use Discovery\PreferenceVote;
+use Modules\Core\Application\Services\PreferenceVote;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 

@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Media\Interfaces\HTTP;
 
-use View\ViewRenderer;
+use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Kernel\Contracts\RouterInterface;
 
 /**

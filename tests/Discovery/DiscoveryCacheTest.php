@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Tests\Discovery;
 
-use Discovery\DiscoveryCache;
+use Modules\Core\Application\Services\DiscoveryCache;
 use Modules\Core\Interfaces\HTTP\Actions\HomepageAction;
 use Modules\Core\Interfaces\HTTP\Middleware\MiddlewareRegistry;
 use Modules\Core\Interfaces\HTTP\Router;

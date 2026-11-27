@@ -30,12 +30,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Discovery\\": "src/Discovery/",
-            "Modules\\": "src/Modules/",
-            "Seo\\": "src/Seo/",
-            "Shell\\": "src/Shell/",
-            "Themes\\": "src/Themes/",
-            "View\\": "src/View/"
+            "Modules\\": "src/Modules/"
         }
     },
     "autoload-dev": {

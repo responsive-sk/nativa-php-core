@@ -10,7 +10,7 @@ overwritten by the next export. Change the source repository instead.
 The responsive.sk site, as a runnable client port:
 
 - The kernel slices `Modules\Core`, `Modules\Database`, `Modules\Tooling` and
-  `Modules\KernelTheme`, plus the kernel's own presentation in `src/Themes`.
+  `Modules\KernelTheme`, plus the kernel's own presentation in `src/Modules/Core/Interfaces/HTTP/Theme`.
 - The site module set: `Audit`, `Auth`, `Blog`, `Boson`, `Cardboard`,
   `Comments`, `ContentLocale`, `Docs`, `Forms`, `Health`, `Locales`, `Markdown`,
   `Media`, `Navigation`, `Notifications`, `Outbox`, `PageCache`, `Pages`,

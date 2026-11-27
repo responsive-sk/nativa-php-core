@@ -4,16 +4,16 @@ declare(strict_types = 1);
 
 namespace Modules\Themes\Mono\Theme;
 
-use View\InlineJs;
+use Modules\Core\Application\Services\View\InlineJs;
 
-use Shell\ShellNavItem;
-use Themes\ThemeSetting;
+use Modules\Core\Domain\ShellNavItem;
+use Modules\Core\Domain\ThemeSetting;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
-use Shell\PageContext;
-use Shell\ShellContext;
-use Themes\FrontendLayout;
-use Themes\ThemeModule;
-use Themes\ThemeSettings;
+use Modules\Core\Interfaces\HTTP\PageContext;
+use Modules\Core\Interfaces\HTTP\ShellContext;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
+use Modules\Core\Domain\Contracts\ThemeModule;
+use Modules\Core\Domain\Contracts\ThemeSettings;
 
 /**
  * MonoTheme — the evan70.github.io/mono vocabulary as a kernel theme module.
@@ -67,7 +67,7 @@ final class MonoTheme implements ThemeModule, ThemeSettings
      */
     public function themeInitScript(): string
     {
-        return self::scriptTag(InlineJs::file('Themes/assets/scripts/theme-init.js'))
+        return self::scriptTag(InlineJs::file('Modules/Core/Interfaces/HTTP/assets/scripts/theme-init.js'))
             . self::scriptTag(InlineJs::file('Modules/Themes/Mono/assets/scripts/theme-variant.js'))
             . self::scriptTag(InlineJs::file('Modules/Themes/Mono/assets/scripts/hero-staging.js'));
     }

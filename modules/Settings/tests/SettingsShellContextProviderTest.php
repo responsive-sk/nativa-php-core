@@ -4,11 +4,11 @@ declare(strict_types = 1);
 
 namespace Modules\Settings\Tests;
 
-use Shell\ShellContextProviderRegistry;
-use Shell\ShellNavItem;
-use Themes\FrontendLayout;
-use Themes\ThemeRegistry;
-use Themes\ThemeResolver;
+use Modules\Core\Application\Services\ShellContextProviderRegistry;
+use Modules\Core\Domain\ShellNavItem;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
+use Modules\Core\Interfaces\HTTP\ThemeRegistry;
+use Modules\Core\Interfaces\HTTP\ThemeResolver;
 use Modules\Database\Contracts\ConnectionInterface;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Settings\Infrastructure\Persistence\Migrations\SettingsDatabaseMigrator;

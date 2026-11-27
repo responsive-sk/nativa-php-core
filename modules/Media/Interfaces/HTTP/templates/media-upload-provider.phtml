@@ -3,7 +3,7 @@
 declare(strict_types = 1);
 
 /**
- * Rendered via View\ViewRenderer.
+ * Rendered via Modules\Core\Application\Services\View\ViewRenderer.
  * Variables are provided by the caller; $this is not available.
  */
 
@@ -20,5 +20,5 @@ if (!isset($viewRendererGuard)) {
                 <input type="radio" name="provider" value="cloudinary" id="provider-cloudinary"> Cloudinary CDN <span class="m-hint">(images only)</span>
             </label>
         </fieldset>
-        <?php $uploadAcceptScript = View\InlineJs::file('Modules/Media/Interfaces/HTTP/assets/scripts/upload-accept.js'); ?>
+        <?php $uploadAcceptScript = Modules\Core\Application\Services\View\InlineJs::file('Modules/Media/Interfaces/HTTP/assets/scripts/upload-accept.js'); ?>
         <script nonce="__CSP_NONCE_PLACEHOLDER__"><?php echo $uploadAcceptScript; ?></script>

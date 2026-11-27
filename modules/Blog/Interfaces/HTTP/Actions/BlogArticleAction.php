@@ -17,12 +17,12 @@ use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
-use Themes\FrontendLayout;
-use Themes\PageSurface;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
+use Modules\Core\Domain\PageSurface;
 use Modules\Markdown\Interfaces\HTTP\Markdown\MarkdownBlockContext;
-use Shell\PageContext;
-use Themes\ThemeKernel;
-use Themes\ThemeResolver;
+use Modules\Core\Interfaces\HTTP\PageContext;
+use Modules\Core\Interfaces\HTTP\ThemeKernel;
+use Modules\Core\Interfaces\HTTP\ThemeResolver;
 use Modules\Locales\Domain\Model\Locale;
 use Modules\Locales\Interfaces\HTTP\LocalesServices;
 use Modules\Users\Interfaces\HTTP\AuthServices;
@@ -37,7 +37,7 @@ use Modules\Users\Interfaces\HTTP\AuthServices;
  *
  * This action handles routing, article resolution, data preparation and SEO
  * response shell. Theme-specific rendering is delegated to the resolved
- * `Themes\ThemeModule` through `ThemeKernel::for($theme)`. Shared helpers
+ * `Modules\Core\Domain\Contracts\ThemeModule` through `ThemeKernel::for($theme)`. Shared helpers
  * (tagList, prevNext, related, authorHtml, metaLine, tagChips, coverImage)
  * are in BlogArticleHelper.
  */

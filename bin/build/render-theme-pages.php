@@ -33,11 +33,11 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../../src/init.php';
 
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
+use Modules\Core\Domain\PageSurface;
 use Modules\Core\Infrastructure\Http\Request;
-use Shell\PageContext;
-use Themes\FrontendLayout;
-use Themes\PageSurface;
-use Themes\ThemeRegistry;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
+use Modules\Core\Interfaces\HTTP\PageContext;
+use Modules\Core\Interfaces\HTTP\ThemeRegistry;
 
 /**
  * Demo locale => the directory it renders into under `<theme>/`, and its fixture.

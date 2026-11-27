@@ -4,12 +4,12 @@ declare(strict_types = 1);
 
 namespace Modules\KernelTheme\Theme;
 
-use Shell\ShellNavItem;
+use Modules\Core\Domain\ShellNavItem;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
-use Shell\PageContext;
-use Shell\ShellContext;
-use Themes\FrontendLayout;
-use Themes\ThemeModule;
+use Modules\Core\Interfaces\HTTP\PageContext;
+use Modules\Core\Interfaces\HTTP\ShellContext;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
+use Modules\Core\Domain\Contracts\ThemeModule;
 
 /**
  * KernelTheme — the trimmed design the kernel-only tree renders with.

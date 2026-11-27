@@ -11,8 +11,8 @@ use Modules\Site\Application\SiteCopy;
 use Modules\Site\Interfaces\HTTP\SiteHomepageSurface;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Shell\HomepageSurfaceRegistry;
-use Themes\AssetManager;
+use Modules\Core\Application\Services\HomepageSurfaceRegistry;
+use Modules\Core\Application\Services\AssetManager;
 
 /**
  * SiteHomepageTest — `/` answers the site's own page, in the visitor's language.

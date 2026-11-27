@@ -4,16 +4,16 @@ declare(strict_types = 1);
 
 namespace Modules\Users\Interfaces\HTTP;
 
-use View\InlineCss;
-use View\InlineJs;
+use Modules\Core\Application\Services\View\InlineCss;
+use Modules\Core\Application\Services\View\InlineJs;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
-use Themes\FrontendLayout;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
-use Themes\ThemeKernel;
-use Themes\ThemeResolver;
+use Modules\Core\Interfaces\HTTP\ThemeKernel;
+use Modules\Core\Interfaces\HTTP\ThemeResolver;
 use Modules\Locales\Interfaces\HTTP\LocalesServices;
-use Themes\AuthPageTheme;
+use Modules\Core\Domain\Contracts\AuthPageTheme;
 
 /**
  * AuthTemplate — the auth flow's forms, in the active theme when it has one.

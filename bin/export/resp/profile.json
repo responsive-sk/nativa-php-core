@@ -52,7 +52,7 @@
         "src/Modules/Database",
         "src/Modules/Tooling",
         "src/Modules/KernelTheme",
-        "src/Themes/kernel",
+        "src/Modules/Core/Interfaces/HTTP/Theme",
         "modules",
         "Frontend/packages",
         "Frontend/packages/boson",

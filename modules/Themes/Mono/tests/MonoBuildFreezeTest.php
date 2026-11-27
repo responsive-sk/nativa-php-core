@@ -4,9 +4,9 @@ declare(strict_types = 1);
 
 namespace Modules\Themes\Mono\Tests;
 
-use Themes\AssetManager;
-use Themes\PageSurface;
-use View\InlineCss;
+use Modules\Core\Application\Services\AssetManager;
+use Modules\Core\Domain\PageSurface;
+use Modules\Core\Application\Services\View\InlineCss;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Themes\Mono\Theme\MonoTheme;
 use PHPUnit\Framework\Attributes\Test;

@@ -5,16 +5,16 @@ declare(strict_types = 1);
 namespace Modules\Pages\Interfaces\HTTP\Actions;
 
 use Modules\Markdown\Application\Services\MarkdownRenderer;
-use Seo\WebsiteStructuredData;
+use Modules\Core\Application\Services\WebsiteStructuredData;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Interfaces\HTTP\ErrorPageRenderer;
-use Themes\FrontendLayout;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Markdown\Interfaces\HTTP\Markdown\MarkdownBlockContext;
-use Themes\ThemeKernel;
-use Themes\ThemeResolver;
+use Modules\Core\Interfaces\HTTP\ThemeKernel;
+use Modules\Core\Interfaces\HTTP\ThemeResolver;
 use Modules\Locales\Domain\Model\Locale;
 use Modules\Pages\Application\Services\PageCrudService;
 

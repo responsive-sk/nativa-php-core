@@ -4,9 +4,9 @@ declare(strict_types = 1);
 
 namespace Tests\Theme;
 
+use Modules\Core\Interfaces\HTTP\ThemeRegistry;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Themes\ThemeRegistry;
 
 /**
  * ThemeClassOwnershipTest — no CSS class belongs to two themes.
@@ -408,7 +408,7 @@ final class ThemeClassOwnershipTest extends TestCase
                 // theme's. `jednotka` resolves none of its own and reaches
                 // BASE_CRITICAL_CSS, so its nine files are 104 `st-` classes
                 // that belong to nobody-but-the-kernel and are correct here.
-                $borrowed = str_contains($file, '/Themes/assets/critical/');
+                $borrowed = str_contains($file, '/Modules/Core/Interfaces/HTTP/assets/critical/');
 
                 foreach (array_keys($this->classesIn($file)) as $class) {
                     $family = explode('-', $class)[0];

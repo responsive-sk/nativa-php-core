@@ -4,11 +4,11 @@ declare(strict_types = 1);
 
 namespace Tests\Discovery;
 
+use Modules\Core\Application\Services\HomepageSurfaceRegistry;
 use Modules\Tooling\ModuleInstaller;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
-use Shell\HomepageSurfaceRegistry;
 
 /**
  * HomepageSurfaceRegistryTest — the kernel's answer to "who owns `/`".
@@ -242,7 +242,7 @@ final class HomepageSurfaceRegistryTest extends TestCase
 
             namespace Modules\TempHome\Interfaces\HTTP;
 
-            use Shell\AsHomepageSurface;
+            use Modules\Core\Infrastructure\Attributes\AsHomepageSurface;
 
             /** Fixture: named like a surface, marked like one, and not one. */
             #[AsHomepageSurface]
@@ -274,10 +274,10 @@ final class HomepageSurfaceRegistryTest extends TestCase
 
             namespace Modules\\TempHome\\Interfaces\\HTTP;
 
-            use Shell\\AsHomepageSurface;
-            use Shell\\Homepage;
-            use Shell\\HomepageSurface;
-            use Shell\\PageContext;
+            use Modules\\Core\\Infrastructure\\Attributes\\AsHomepageSurface;
+            use Modules\\Core\\Domain\\Homepage;
+            use Modules\\Core\\Domain\\Contracts\\HomepageSurface;
+            use Modules\\Core\\Interfaces\\HTTP\\PageContext;
 
             /** Fixture: answers a marker string, so the assertion is about choice, not rendering. */
             {$attributeLine}final class {$class} implements HomepageSurface

@@ -6,7 +6,7 @@ namespace Modules\Forms\Application;
 
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Forms\Application\Services\FormResultsService;
-use Shell\ShellContextProviderRegistry;
+use Modules\Core\Application\Services\ShellContextProviderRegistry;
 use Modules\Forms\Infrastructure\Persistence\Repositories\FormRepository;
 use Modules\Forms\Infrastructure\Persistence\Repositories\SubmissionRepository;
 use Modules\Security\Application\Services\RateLimiter;

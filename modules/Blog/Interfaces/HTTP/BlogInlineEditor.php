@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Blog\Interfaces\HTTP;
 
-use Themes\FrontendLayout;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
 use Modules\Locales\Interfaces\HTTP\LocalesServices;
 

@@ -6,7 +6,7 @@ namespace Modules\Auth\Application\Services;
 
 use Modules\Auth\Domain\Contracts\AuthProvider;
 use Modules\Auth\Infrastructure\Attributes\AsAuthProvider;
-use Discovery\PreferenceVote;
+use Modules\Core\Application\Services\PreferenceVote;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 
 /**

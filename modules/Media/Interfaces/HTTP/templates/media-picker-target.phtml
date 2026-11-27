@@ -3,7 +3,7 @@
 declare(strict_types = 1);
 
 /**
- * Rendered via View\ViewRenderer.
+ * Rendered via Modules\Core\Application\Services\View\ViewRenderer.
  * Variables are provided by the caller; $this is not available.
  */
 
@@ -19,5 +19,5 @@ if (!isset($viewRendererGuard)) {
     <div id="image-preview" style="margin-top:8px;display:none;">
         <img id="image-preview-img" src="" alt="Preview" style="max-width:200px;max-height:120px;border-radius:8px;border:1px solid var(--cba-border);">
     </div>
-    <?php $mediaPickerTargetScript = View\InlineJs::file('Modules/Media/Interfaces/HTTP/assets/scripts/media-picker-target.js'); ?>
+    <?php $mediaPickerTargetScript = Modules\Core\Application\Services\View\InlineJs::file('Modules/Media/Interfaces/HTTP/assets/scripts/media-picker-target.js'); ?>
     <script nonce="__CSP_NONCE_PLACEHOLDER__" data-target="<?php echo $name; ?>"><?php echo $mediaPickerTargetScript; ?></script>

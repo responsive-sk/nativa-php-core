@@ -64,12 +64,34 @@ final class KernelShapeTest extends TestCase
      * @var list<string>
      */
     private const array ALLOW_LIST = [
+        'src/Modules/Core/Application/Services/AssetManager.php',
+        'src/Modules/Core/Application/Services/DiscoveryCache.php',
         'src/Modules/Core/Application/Services/DisposalRegistry.php',
+        'src/Modules/Core/Application/Services/HomepageSurfaceRegistry.php',
+        'src/Modules/Core/Application/Services/PreferenceVote.php',
+        'src/Modules/Core/Application/Services/ShellContextProviderRegistry.php',
+        'src/Modules/Core/Application/Services/SitemapContributorRegistry.php',
+        'src/Modules/Core/Application/Services/View/InlineCss.php',
+        'src/Modules/Core/Application/Services/View/InlineJs.php',
+        'src/Modules/Core/Application/Services/View/Paths.php',
+        'src/Modules/Core/Application/Services/View/ViewRenderer.php',
+        'src/Modules/Core/Application/Services/WebsiteStructuredData.php',
+        'src/Modules/Core/Domain/Homepage.php',
+        'src/Modules/Core/Domain/LocalizedNav.php',
         'src/Modules/Core/Domain/MarkRoutePolicy.php',
+        'src/Modules/Core/Domain/PageSurface.php',
         'src/Modules/Core/Domain/Permissions.php',
+        'src/Modules/Core/Domain/ShellNavItem.php',
+        'src/Modules/Core/Domain/SitemapEntry.php',
         'src/Modules/Core/Domain/SubmitResult.php',
+        'src/Modules/Core/Domain/ThemePreference.php',
+        'src/Modules/Core/Domain/ThemeSetting.php',
+        'src/Modules/Core/Domain/ThemeSettingValues.php',
+        'src/Modules/Core/Infrastructure/Attributes/AsHomepageSurface.php',
         'src/Modules/Core/Infrastructure/Attributes/AsMiddleware.php',
         'src/Modules/Core/Infrastructure/Attributes/AsMigrator.php',
+        'src/Modules/Core/Infrastructure/Attributes/AsShellContextProvider.php',
+        'src/Modules/Core/Infrastructure/Attributes/AsSitemapContributor.php',
         'src/Modules/Core/Infrastructure/Bootstrap/Bootstrapper.php',
         'src/Modules/Core/Infrastructure/Env.php',
         'src/Modules/Core/Infrastructure/Http/JsonResponse.php',
@@ -84,13 +106,20 @@ final class KernelShapeTest extends TestCase
         'src/Modules/Core/Interfaces/HTTP/Actions/SitemapAction.php',
         'src/Modules/Core/Interfaces/HTTP/Attributes/Route.php',
         'src/Modules/Core/Interfaces/HTTP/ErrorPageRenderer.php',
+        'src/Modules/Core/Interfaces/HTTP/FrontendLayout.php',
         'src/Modules/Core/Interfaces/HTTP/Kernel.php',
-        'src/Modules/Core/Interfaces/HTTP/Middleware/MarkUnavailableMiddleware.php',
         'src/Modules/Core/Interfaces/HTTP/Middleware/CsrfMiddleware.php',
+        'src/Modules/Core/Interfaces/HTTP/Middleware/MarkUnavailableMiddleware.php',
         'src/Modules/Core/Interfaces/HTTP/Middleware/MiddlewareRegistry.php',
         'src/Modules/Core/Interfaces/HTTP/Middleware/RateLimitMiddleware.php',
         'src/Modules/Core/Interfaces/HTTP/Middleware/SecurityHeadersMiddleware.php',
+        'src/Modules/Core/Interfaces/HTTP/PageContext.php',
         'src/Modules/Core/Interfaces/HTTP/Router.php',
+        'src/Modules/Core/Interfaces/HTTP/ShellContext.php',
+        'src/Modules/Core/Interfaces/HTTP/Theme/KernelFallbackTheme.php',
+        'src/Modules/Core/Interfaces/HTTP/ThemeKernel.php',
+        'src/Modules/Core/Interfaces/HTTP/ThemeRegistry.php',
+        'src/Modules/Core/Interfaces/HTTP/ThemeResolver.php',
     ];
 
     /**
@@ -176,8 +205,15 @@ final class KernelShapeTest extends TestCase
      * copies with three different typo rules, and it sits beside `CliOutput`
      * because a module command may import the kernel's CLI contract. It
      * parses argv and holds no state, so its bucket is `runtime`.
+     *
+     * 27 → 56 is the kernel-roots round: the five kernel-owned roots
+     * (`Discovery`, `Seo`, `Shell`, `Themes`, `View`) were folded back into
+     * `Modules\Core`, because `README.md` declares that everything outside the
+     * kernel is a module and `src/` no longer carries a second taxonomy. The 29
+     * concrete files moved in as-is; this number is the one edit the round
+     * makes here, and the movement row in `docs/kernel-shape.md` says why.
      */
-    private const int MAX_APPROVED = 28;
+    private const int MAX_APPROVED = 56;
 
     /**
      * Rule 1: every `.php` file under `src/Modules/Core` is an interface, enum

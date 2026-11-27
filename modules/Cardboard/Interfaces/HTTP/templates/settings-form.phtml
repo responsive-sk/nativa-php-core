@@ -3,7 +3,7 @@
 declare(strict_types = 1);
 
 /**
- * Rendered via View\ViewRenderer.
+ * Rendered via Modules\Core\Application\Services\View\ViewRenderer.
  * Variables are provided by the caller; $this is not available.
  */
 
@@ -115,7 +115,7 @@ if (!isset($viewRendererGuard)) {
             </div>
         </div>
     </div>
-    <?php $settingsTableScript = View\InlineJs::file('Modules/Cardboard/Interfaces/HTTP/assets/scripts/settings-table.js'); ?>
+    <?php $settingsTableScript = Modules\Core\Application\Services\View\InlineJs::file('Modules/Cardboard/Interfaces/HTTP/assets/scripts/settings-table.js'); ?>
     <script nonce="__CSP_NONCE_PLACEHOLDER__"><?php echo $settingsTableScript; ?></script>
-    <?php $settingsTabsScript = View\InlineJs::file('Modules/Cardboard/Interfaces/HTTP/assets/scripts/settings-tabs.js'); ?>
+    <?php $settingsTabsScript = Modules\Core\Application\Services\View\InlineJs::file('Modules/Cardboard/Interfaces/HTTP/assets/scripts/settings-tabs.js'); ?>
     <script nonce="__CSP_NONCE_PLACEHOLDER__"><?php echo $settingsTabsScript; ?></script>

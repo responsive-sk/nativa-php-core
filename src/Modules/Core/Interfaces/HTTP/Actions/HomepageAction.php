@@ -4,17 +4,19 @@ declare(strict_types = 1);
 
 namespace Modules\Core\Interfaces\HTTP\Actions;
 
+use Modules\Core\Application\Services\HomepageSurfaceRegistry;
+use Modules\Core\Application\Services\ShellContextProviderRegistry;
+use Modules\Core\Application\Services\WebsiteStructuredData;
+use Modules\Core\Domain\Contracts\ShellContextProvider;
+use Modules\Core\Domain\PageSurface;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
-use Seo\WebsiteStructuredData;
-use Shell\HomepageSurfaceRegistry;
-use Shell\PageContext;
-use Shell\ShellContextProviderRegistry;
-use Themes\FrontendLayout;
-use Themes\PageSurface;
-use Themes\ThemeKernel;
-use Themes\ThemeResolver;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
+use Modules\Core\Interfaces\HTTP\PageContext;
+use Modules\Core\Interfaces\HTTP\ShellContext;
+use Modules\Core\Interfaces\HTTP\ThemeKernel;
+use Modules\Core\Interfaces\HTTP\ThemeResolver;
 
 /**
  * HomepageAction — the kernel's own home surface.

@@ -6,7 +6,7 @@ namespace Modules\Blog\Application\Services;
 
 use Modules\Markdown\Application\Services\MarkdownRenderer;
 use Modules\Uploads\Infrastructure\Storage\LocalStorageProvider;
-use Themes\FrontendLayout;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
 
 /**
  * AuthorAvatar — renders the author's avatar + linked name on article lines

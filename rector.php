@@ -13,8 +13,8 @@ use Rector\Config\RectorConfig;
  * taste would. Raise them deliberately, in a commit of their own.
  *
  * The scope is the code this repo owns and may rewrite: the kernel slice
- * (`src/Modules/Core`, `src/Modules/Database`), `src/Themes`, `bin`, `public`
- * and `tests` — the same scope `phpstan.neon` analyses.
+ * (`src/Modules/Core`, `src/Modules/Database`), `bin`, `public` and `tests`
+ * — the same scope `phpstan.neon` analyses.
  *
  * Excluded, deliberately: `src/Modules/*` elsewhere (installed module slices —
  * operator state, so the verdict would depend on what is installed) and
@@ -28,7 +28,6 @@ return RectorConfig::configure()
     ->withPaths([
         __DIR__ . '/src/Modules/Core',
         __DIR__ . '/src/Modules/Database',
-        __DIR__ . '/src/Themes',
         __DIR__ . '/bin',
         __DIR__ . '/public',
         __DIR__ . '/tests',

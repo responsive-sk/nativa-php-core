@@ -5,9 +5,9 @@ declare(strict_types = 1);
 namespace Modules\Locales\Interfaces\HTTP;
 
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
-use Shell\ShellContextProvider;
-use Shell\ShellNavItem;
-use Shell\AsShellContextProvider;
+use Modules\Core\Domain\Contracts\ShellContextProvider;
+use Modules\Core\Domain\ShellNavItem;
+use Modules\Core\Infrastructure\Attributes\AsShellContextProvider;
 use Modules\Locales\Domain\Model\Locale;
 
 /**

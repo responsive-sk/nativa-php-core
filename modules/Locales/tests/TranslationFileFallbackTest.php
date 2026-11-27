@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Modules\Locales\Tests;
 
-use View\ViewRenderer;
+use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Database\Infrastructure\Persistence\PdoConnection;
 use Modules\Locales\Application\Services\TranslationService;
 use Modules\Locales\Domain\Model\Locale;

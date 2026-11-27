@@ -4,13 +4,13 @@ declare(strict_types = 1);
 
 namespace Modules\Themes\Mono\Tests;
 
-use View\InlineCss;
-use Shell\ShellNavItem;
+use Modules\Core\Application\Services\View\InlineCss;
+use Modules\Core\Domain\ShellNavItem;
 use Modules\Core\Infrastructure\Http\Request;
-use Themes\FrontendLayout;
-use Shell\PageContext;
-use Shell\ShellContext;
-use Themes\PageSurface;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
+use Modules\Core\Interfaces\HTTP\PageContext;
+use Modules\Core\Interfaces\HTTP\ShellContext;
+use Modules\Core\Domain\PageSurface;
 use Modules\Themes\Mono\Theme\MonoTheme;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;

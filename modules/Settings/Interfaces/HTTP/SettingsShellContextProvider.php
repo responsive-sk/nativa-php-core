@@ -5,13 +5,13 @@ declare(strict_types = 1);
 namespace Modules\Settings\Interfaces\HTTP;
 
 use Modules\Core\Domain\MarkRoutePolicy;
-use Shell\ShellContextProvider;
-use Shell\ShellNavItem;
-use Themes\ThemePreference;
-use Themes\ThemeSettingValues;
-use Shell\AsShellContextProvider;
-use Themes\ThemeRegistry;
-use Themes\ThemeResolver;
+use Modules\Core\Domain\Contracts\ShellContextProvider;
+use Modules\Core\Domain\ShellNavItem;
+use Modules\Core\Domain\ThemePreference;
+use Modules\Core\Domain\ThemeSettingValues;
+use Modules\Core\Infrastructure\Attributes\AsShellContextProvider;
+use Modules\Core\Interfaces\HTTP\ThemeRegistry;
+use Modules\Core\Interfaces\HTTP\ThemeResolver;
 use Modules\Settings\Application\DTOs\MenuItemDTO;
 
 /**

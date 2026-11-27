@@ -4,10 +4,10 @@ declare(strict_types = 1);
 
 namespace Tests\Shell;
 
+use Modules\Core\Domain\LocalizedNav;
+use Modules\Core\Domain\ShellNavItem;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Shell\LocalizedNav;
-use Shell\ShellNavItem;
 
 /**
  * LocalizedNavTest — one stored menu, every language.

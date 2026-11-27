@@ -15,8 +15,8 @@ it should not be.
 
 ## What is counted, and what is not
 
-Scope: `src/Modules/{Core,Database,KernelTheme,Tooling}`, `src/Seo`, `src/Themes`,
-`modules`, `tests`, `bin`, `public` (minus `public/dist`). 580 non-gate files
+Scope: `src/Modules/{Core,Database,KernelTheme,Tooling}`, `modules`, `tests`,
+`bin`, `public` (minus `public/dist`). 580 non-gate files
 plus the 18 gate files — 598 scanned: rule 1 reads all of them, while the
 two counts exclude the gates for the reason below.
 

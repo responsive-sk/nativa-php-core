@@ -4,20 +4,20 @@ declare(strict_types = 1);
 
 namespace Modules\Core\Interfaces\HTTP\Actions;
 
+use Modules\Core\Application\Services\ShellContextProviderRegistry;
+use Modules\Core\Application\Services\SitemapContributorRegistry;
+use Modules\Core\Domain\SitemapEntry;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
-use Seo\SitemapContributorRegistry;
-use Seo\SitemapEntry;
-use Shell\ShellContextProviderRegistry;
-use Themes\FrontendLayout;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
 
 /**
  * SitemapAction — XML sitemap (Google sitemap protocol 0.9) of the URLs the
  * installed tree actually serves.
  *
  * The kernel contributes home and the locale roots it knows. Modules extend it
- * through `Seo\SitemapContributor`: a module owns its published content and the
+ * through `Modules\Core\Domain\Contracts\SitemapContributor`: a module owns its published content and the
  * URL shape that serves it, so the kernel never guesses a path that might be a
  * 404. A contributor failure degrades to the kernel rows instead of a 500.
  *

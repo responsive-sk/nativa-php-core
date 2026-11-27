@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Cardboard\Application\Services;
 
 use Modules\Cardboard\Interfaces\HTTP\CardboardLayout;
-use View\ViewRenderer;
+use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
 
 /**

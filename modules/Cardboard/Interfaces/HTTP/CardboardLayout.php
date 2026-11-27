@@ -12,11 +12,11 @@ use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
 use Modules\Core\Interfaces\HTTP\Router;
 use Modules\Core\Kernel\Contracts\RouterInterface;
 use Modules\Navigation\Infrastructure\Registry\NavBadgeRegistry;
-use Shell\ShellContextProviderRegistry;
-use Themes\AssetManager;
-use Themes\ThemeResolver;
-use View\InlineJs;
-use View\ViewRenderer;
+use Modules\Core\Application\Services\ShellContextProviderRegistry;
+use Modules\Core\Application\Services\AssetManager;
+use Modules\Core\Interfaces\HTTP\ThemeResolver;
+use Modules\Core\Application\Services\View\InlineJs;
+use Modules\Core\Application\Services\View\ViewRenderer;
 
 /**
  * CardboardLayout — shared admin page shell (task 9.5).

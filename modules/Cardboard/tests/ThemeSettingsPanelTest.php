@@ -6,12 +6,12 @@ namespace Modules\Cardboard\Tests;
 
 use Modules\Cardboard\Interfaces\HTTP\Actions\SettingsAction;
 use Modules\Cardboard\Interfaces\HTTP\CardboardServices;
-use Themes\ThemeSettingValues;
+use Modules\Core\Domain\ThemeSettingValues;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Interfaces\CLI\CliOutput;
-use Themes\ThemeKernel;
-use Themes\ThemeRegistry;
-use Themes\ThemeResolver;
+use Modules\Core\Interfaces\HTTP\ThemeKernel;
+use Modules\Core\Interfaces\HTTP\ThemeRegistry;
+use Modules\Core\Interfaces\HTTP\ThemeResolver;
 use Modules\Core\Kernel\Contracts\RouterInterface;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Settings\Infrastructure\Persistence\Migrations\SettingsDatabaseMigrator;
@@ -19,8 +19,8 @@ use Modules\Settings\Infrastructure\Persistence\Repositories\SettingsRepository;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Tests\Support\SqliteDatabase;
-use Themes\ThemeSetting;
-use Themes\ThemeSettings;
+use Modules\Core\Domain\ThemeSetting;
+use Modules\Core\Domain\Contracts\ThemeSettings;
 
 /**
  * ThemeSettingsPanelTest — the admin half of the per-theme settings contract.

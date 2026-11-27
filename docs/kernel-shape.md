@@ -108,6 +108,7 @@ exactly the movement the table exists to record.
 | 2026-11-11 | 203 318 B / 50 files | -134 874 B | The retry, moved into the contract where it belongs: `ConnectionInterface::transaction($callback, $attempts, $backoff)` runs the transaction again on a `TransactionConflictException` (SQLSTATE 40001/40P01, MySQL 1213, SQLite `database is locked`), and `TransactionRetry` (5 891 B) is the policy while `UnitOfWork` hands it the outermost scope and keeps savepoints for the nested ones. Two types, no interface: Database reads 3 interface / 11 concrete. Core unchanged at 8 interface / 28 concrete, `MAX_APPROVED` 28. Source: `make kernel-size`, 2026-11-11. |
 | 2026-11-11 | 189 778 B / 48 files | -148 414 B | After the failover addendum: a comparison against Marko's `ReadWriteConnection` showed that the failover guarded only `query()`, which is 52 of the 434 read call sites on this tree (`Statement::prepare` is 382), because a prepared read had its replica chosen before `execute()` could fail. `FailoverStatement` (3 899 B) defers the choice to `execute()` and replays the bindings on the retry, and `reset()` replaced `resetSticky()` so it rolls back a transaction a queue job left open before it drops the flags. No call site moved and no type changed. Core types unchanged (8 interface / 28 concrete, `MAX_APPROVED` 28); Database 3 interface / 9 concrete. Source: `make kernel-size`, 2026-11-11. |
 | 2026-11-10 | 185 219 B / 47 files | -152 973 B | The series' last measure, taken after the `execute()` fix: `PdoStatement` grew 316 B when `execute()` without arguments stopped forwarding an empty binding list, because to PDO an argument means "bind exactly these" and `AuditLogRepository::recent()` binds its LIMIT with `bindValue()`. The suite never executed a bound-value statement through the wrapper, so the drop passed every gate and `/mark/audit` answered 500 until the admin smoke run; the bytes are the guard and the test that pins both call shapes. No type moved. Core types unchanged (8 interface / 28 concrete, `MAX_APPROVED` 28); Database 3 interface / 8 concrete. Source: `make kernel-size`, 2026-11-10. |
+| 2026-11-27 | 495 767 B / 100 files | +157 575 B | After the kernel-roots round (`kernel-roots-in-core`): the five kernel-owned roots `Discovery`, `Seo`, `Shell`, `Themes` and `View` were folded back into `Modules\Core`, 36 files in all, because `README.md` declares that everything outside the kernel is a module and `src/` is now only `Modules` plus the three entry files. The pre-round-9 paths were restored where this table records them (21 target rows already existed); 15 files created after those rounds gained rows here, and the 9 concrete ones joined `ALLOW_LIST`. `MAX_APPROVED` 27 -> **56** with the 29 concrete files: 28 original approvals plus one row the list had room for, now used. `ThemeRegistry` skips `Modules\Core` so the moved `KernelFallbackTheme` stays the fallback instead of becoming a discovered theme named `kernel`, and the ten critical sheets plus three scripts moved from `src/Themes/assets` to `Modules/Core/Interfaces/HTTP/assets`. Core types: 15 interface / **57 concrete** (the counter sees one more concrete than the allow-list approves; `KernelShapeTest` finds 56). Source: `make kernel-size`, 2026-11-27. |
 
 ## Inventory
 
@@ -122,6 +123,7 @@ exactly the movement the table exists to record.
 | `src/Modules/Core/Application/Services/DisposalRegistry.php` | 2295 | Application | concrete | 3 | runtime |
 | `src/Modules/Core/Application/Services/DocsCatalog.php` | 15865 | Application | concrete | 0 | runtime |
 | `src/Modules/Core/Application/Services/DocsSearchService.php` | 6912 | Application | concrete | 1 | runtime |
+| `src/Modules/Core/Application/Services/HomepageSurfaceRegistry.php` | 5045 | Application | concrete | 3 | runtime |
 | `src/Modules/Core/Application/Services/MarkdownRenderer.php` | 17425 | Application | concrete | 12 | runtime |
 | `src/Modules/Core/Application/Services/ModuleCatalog.php` | 13453 | Application | concrete | 1 | tooling |
 | `src/Modules/Core/Application/Services/ModuleInstaller.php` | 8494 | Application | concrete | 4 | tooling |
@@ -130,29 +132,42 @@ exactly the movement the table exists to record.
 | `src/Modules/Core/Application/Services/PreferenceVote.php` | 1885 | Application | concrete | 1 | runtime |
 | `src/Modules/Core/Application/Services/ServiceContainer.php` | 2247 | Application | concrete | 0 | dead |
 | `src/Modules/Core/Application/Services/ShellContextProviderRegistry.php` | 11429 | Application | concrete | 6 | runtime |
-| `src/Modules/Core/Application/Services/WebsiteStructuredData.php` | 2095 | Application | concrete | 2 | runtime |
+| `src/Modules/Core/Application/Services/SitemapContributorRegistry.php` | 6397 | Application | concrete | 2 | runtime |
 | `src/Modules/Core/Application/Services/View/InlineCss.php` | 4260 | Application | concrete | 6 | runtime |
 | `src/Modules/Core/Application/Services/View/InlineJs.php` | 1373 | Application | concrete | 2 | runtime |
 | `src/Modules/Core/Application/Services/View/Paths.php` | 1121 | Application | concrete | 0 | runtime |
 | `src/Modules/Core/Application/Services/View/ViewRenderer.php` | 2074 | Application | concrete | 16 | runtime |
-| `src/Modules/Core/Domain/MarkRoutePolicy.php` | 8285 | Domain | concrete | 0 | contract |
+| `src/Modules/Core/Application/Services/WebsiteStructuredData.php` | 2095 | Application | concrete | 2 | runtime |
 | `src/Modules/Core/Domain/AuthIdentity.php` | 989 | Domain | concrete | 0 | contract |
+| `src/Modules/Core/Domain/Contracts/AuthPageTheme.php` | 2880 | Domain | interface | 3 | contract |
 | `src/Modules/Core/Domain/Contracts/AuthProvider.php` | 3280 | Domain | interface | 0 | contract |
+| `src/Modules/Core/Domain/Contracts/DocsPageTheme.php` | 2705 | Domain | interface | 4 | contract |
+| `src/Modules/Core/Domain/Contracts/HomepageSurface.php` | 1345 | Domain | interface | 1 | contract |
 | `src/Modules/Core/Domain/Contracts/NavBadgeContract.php` | 2374 | Domain | interface | 1 | contract |
 | `src/Modules/Core/Domain/Contracts/RateLimiter.php` | 1042 | Domain | interface | 0 | contract |
 | `src/Modules/Core/Domain/Contracts/ShellContextProvider.php` | 2700 | Domain | interface | 3 | contract |
+| `src/Modules/Core/Domain/Contracts/SitemapContributor.php` | 569 | Domain | interface | 4 | contract |
+| `src/Modules/Core/Domain/Contracts/ThemeModule.php` | 3645 | Domain | interface | 10 | contract |
+| `src/Modules/Core/Domain/Contracts/ThemeSettings.php` | 1356 | Domain | interface | 8 | contract |
+| `src/Modules/Core/Domain/Homepage.php` | 1107 | Domain | concrete | 1 | contract |
+| `src/Modules/Core/Domain/LocalizedNav.php` | 3127 | Domain | concrete | 1 | contract |
+| `src/Modules/Core/Domain/MarkRoutePolicy.php` | 8285 | Domain | concrete | 0 | contract |
+| `src/Modules/Core/Domain/PageSurface.php` | 2377 | Domain | concrete | 14 | contract |
 | `src/Modules/Core/Domain/Permissions.php` | 2724 | Domain | concrete | 0 | contract |
 | `src/Modules/Core/Domain/ShellNavItem.php` | 1048 | Domain | concrete | 9 | contract |
+| `src/Modules/Core/Domain/SitemapEntry.php` | 3607 | Domain | concrete | 7 | contract |
 | `src/Modules/Core/Domain/SubmitResult.php` | 3515 | Domain | concrete | 4 | contract |
 | `src/Modules/Core/Domain/ThemePreference.php` | 1536 | Domain | concrete | 2 | contract |
 | `src/Modules/Core/Domain/ThemeSetting.php` | 3220 | Domain | concrete | 4 | contract |
 | `src/Modules/Core/Domain/ThemeSettingValues.php` | 5021 | Domain | concrete | 5 | contract |
 | `src/Modules/Core/Infrastructure/Attributes/AsAuthProvider.php` | 766 | Infrastructure | concrete | 0 | contract |
+| `src/Modules/Core/Infrastructure/Attributes/AsHomepageSurface.php` | 508 | Infrastructure | concrete | 2 | contract |
 | `src/Modules/Core/Infrastructure/Attributes/AsMarkdownBlock.php` | 715 | Infrastructure | concrete | 0 | contract |
 | `src/Modules/Core/Infrastructure/Attributes/AsMiddleware.php` | 602 | Infrastructure | concrete | 0 | contract |
 | `src/Modules/Core/Infrastructure/Attributes/AsMigrator.php` | 567 | Infrastructure | concrete | 10 | contract |
 | `src/Modules/Core/Infrastructure/Attributes/AsNavBadge.php` | 864 | Infrastructure | concrete | 1 | contract |
 | `src/Modules/Core/Infrastructure/Attributes/AsShellContextProvider.php` | 808 | Infrastructure | concrete | 3 | contract |
+| `src/Modules/Core/Infrastructure/Attributes/AsSitemapContributor.php` | 469 | Infrastructure | concrete | 3 | contract |
 | `src/Modules/Core/Infrastructure/Bootstrap/Bootstrapper.php` | 10099 | Infrastructure | concrete | 1 | runtime |
 | `src/Modules/Core/Infrastructure/Env.php` | 4560 | Infrastructure | concrete | 8 | runtime |
 | `src/Modules/Core/Infrastructure/Http/JsonResponse.php` | 625 | Infrastructure | concrete | 0 | runtime |
@@ -182,9 +197,9 @@ exactly the movement the table exists to record.
 | `src/Modules/Core/Interfaces/HTTP/Markdown/MarkdownBlockContext.php` | 1309 | Interfaces | concrete | 2 | runtime |
 | `src/Modules/Core/Interfaces/HTTP/Markdown/MarkdownBlockInterface.php` | 1247 | Interfaces | interface | 0 | contract |
 | `src/Modules/Core/Interfaces/HTTP/Markdown/MarkdownBlockRegistry.php` | 5779 | Interfaces | concrete | 1 | runtime |
-| `src/Modules/Core/Interfaces/HTTP/Middleware/MarkUnavailableMiddleware.php` | 1960 | Interfaces | concrete | 3 | runtime |
 | `src/Modules/Core/Interfaces/HTTP/Middleware/AuthMiddleware.php` | 4980 | Interfaces | concrete | 0 | runtime |
 | `src/Modules/Core/Interfaces/HTTP/Middleware/CsrfMiddleware.php` | 3024 | Interfaces | concrete | 8 | runtime |
+| `src/Modules/Core/Interfaces/HTTP/Middleware/MarkUnavailableMiddleware.php` | 1960 | Interfaces | concrete | 3 | runtime |
 | `src/Modules/Core/Interfaces/HTTP/Middleware/MiddlewareInterface.php` | 373 | Interfaces | interface | 1 | contract |
 | `src/Modules/Core/Interfaces/HTTP/Middleware/MiddlewareRegistry.php` | 6847 | Interfaces | concrete | 3 | runtime |
 | `src/Modules/Core/Interfaces/HTTP/Middleware/PageCacheMiddleware.php` | 1624 | Interfaces | concrete | 1 | runtime |
@@ -193,6 +208,7 @@ exactly the movement the table exists to record.
 | `src/Modules/Core/Interfaces/HTTP/PageContext.php` | 10998 | Interfaces | concrete | 12 | runtime |
 | `src/Modules/Core/Interfaces/HTTP/Router.php` | 13405 | Interfaces | concrete | 5 | runtime |
 | `src/Modules/Core/Interfaces/HTTP/ShellContext.php` | 2216 | Interfaces | concrete | 7 | runtime |
+| `src/Modules/Core/Interfaces/HTTP/Theme/KernelFallbackTheme.php` | 3908 | Interfaces | concrete | 1 | runtime |
 | `src/Modules/Core/Interfaces/HTTP/ThemeKernel.php` | 1844 | Interfaces | concrete | 9 | runtime |
 | `src/Modules/Core/Interfaces/HTTP/ThemeRegistry.php` | 7821 | Interfaces | concrete | 9 | runtime |
 | `src/Modules/Core/Interfaces/HTTP/ThemeResolver.php` | 2991 | Interfaces | concrete | 13 | runtime |

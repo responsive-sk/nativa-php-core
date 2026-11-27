@@ -15,9 +15,9 @@ use Modules\Settings\Infrastructure\Persistence\Repositories\SettingsRepository;
 use Modules\Settings\Interfaces\HTTP\SettingsServices;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Shell\ShellContextProviderRegistry;
+use Modules\Core\Application\Services\ShellContextProviderRegistry;
 use Tests\Support\SqliteDatabase;
-use Themes\FrontendLayout;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
 
 /**
  * DocsTitleBrandTest — a guide's title names the site, not the kernel.

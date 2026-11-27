@@ -4,13 +4,13 @@ declare(strict_types = 1);
 
 namespace Tests\Http;
 
+use Modules\Core\Application\Services\SitemapContributorRegistry;
+use Modules\Core\Domain\Contracts\SitemapContributor;
+use Modules\Core\Domain\SitemapEntry;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Interfaces\HTTP\Actions\SitemapAction;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Seo\SitemapContributor;
-use Seo\SitemapContributorRegistry;
-use Seo\SitemapEntry;
 
 final class SitemapActionTest extends TestCase
 {

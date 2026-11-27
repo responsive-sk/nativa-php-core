@@ -4,15 +4,15 @@ declare(strict_types = 1);
 
 namespace Modules\Site\Interfaces\HTTP;
 
-use Themes\AssetManager;
-use Shell\AsHomepageSurface;
-use Shell\Homepage;
-use Shell\HomepageSurface;
-use Shell\PageContext;
+use Modules\Core\Application\Services\AssetManager;
+use Modules\Core\Infrastructure\Attributes\AsHomepageSurface;
+use Modules\Core\Domain\Homepage;
+use Modules\Core\Domain\Contracts\HomepageSurface;
+use Modules\Core\Interfaces\HTTP\PageContext;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Site\Application\SiteCopy;
-use View\InlineCss;
-use View\InlineJs;
+use Modules\Core\Application\Services\View\InlineCss;
+use Modules\Core\Application\Services\View\InlineJs;
 
 /**
  * SiteHomepageSurface — the landing page this site owns, not the framework's.

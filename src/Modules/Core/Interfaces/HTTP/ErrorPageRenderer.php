@@ -4,11 +4,9 @@ declare(strict_types = 1);
 
 namespace Modules\Core\Interfaces\HTTP;
 
+use Modules\Core\Domain\Contracts\ThemeModule;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Kernel\Contracts\ErrorRendererInterface;
-use Themes\FrontendLayout;
-use Themes\ThemeKernel;
-use Themes\ThemeResolver;
 
 /**
  * ErrorPageRenderer — styled HTTP error pages (404/405/500).

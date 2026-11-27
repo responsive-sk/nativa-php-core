@@ -11,7 +11,7 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Uploads\Infrastructure\Storage\LocalStorageProvider;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
-use Themes\FrontendLayout;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
 
 /**
  * BlogArticlesService — discovers articles from storage/blog (plain .md files

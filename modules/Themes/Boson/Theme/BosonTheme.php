@@ -4,20 +4,20 @@ declare(strict_types = 1);
 
 namespace Modules\Themes\Boson\Theme;
 
-use Themes\AssetManager;
-use View\InlineJs;
+use Modules\Core\Application\Services\AssetManager;
+use Modules\Core\Application\Services\View\InlineJs;
 use Modules\Core\Domain\MarkRoutePolicy;
-use Shell\ShellContextProviderRegistry;
-use Shell\ShellNavItem;
-use Themes\ThemeSetting;
+use Modules\Core\Application\Services\ShellContextProviderRegistry;
+use Modules\Core\Domain\ShellNavItem;
+use Modules\Core\Domain\ThemeSetting;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
-use Shell\PageContext;
-use Shell\ShellContext;
-use Themes\AuthPageTheme;
-use Themes\DocsPageTheme;
-use Themes\FrontendLayout;
-use Themes\ThemeModule;
-use Themes\ThemeSettings;
+use Modules\Core\Interfaces\HTTP\PageContext;
+use Modules\Core\Interfaces\HTTP\ShellContext;
+use Modules\Core\Domain\Contracts\AuthPageTheme;
+use Modules\Core\Domain\Contracts\DocsPageTheme;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
+use Modules\Core\Domain\Contracts\ThemeModule;
+use Modules\Core\Domain\Contracts\ThemeSettings;
 
 /**
  * BosonTheme — the boson-php marketing site's design as a kernel theme module.

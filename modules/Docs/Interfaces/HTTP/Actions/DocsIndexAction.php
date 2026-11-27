@@ -9,11 +9,11 @@ use Modules\Docs\Application\Services\DocsSearchService;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
-use Themes\FrontendLayout;
-use Themes\PageSurface;
-use Themes\ThemeKernel;
-use Themes\ThemeResolver;
-use Themes\DocsPageTheme;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
+use Modules\Core\Domain\PageSurface;
+use Modules\Core\Interfaces\HTTP\ThemeKernel;
+use Modules\Core\Interfaces\HTTP\ThemeResolver;
+use Modules\Core\Domain\Contracts\DocsPageTheme;
 
 /**
  * DocsIndexAction — GET /docs: the published guides.

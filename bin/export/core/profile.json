@@ -18,7 +18,7 @@
         "src/Modules/Core",
         "src/Modules/Database",
         "src/Modules/Tooling",
-        "src/Themes/kernel",
+        "src/Modules/Core/Interfaces/HTTP/Theme",
         "modules",
         "Frontend/packages",
         "public/index.php",

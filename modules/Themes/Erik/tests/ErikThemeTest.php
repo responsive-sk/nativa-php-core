@@ -4,19 +4,19 @@ declare(strict_types = 1);
 
 namespace Modules\Themes\Erik\Tests;
 
-use Themes\AssetManager;
-use View\InlineCss;
+use Modules\Core\Application\Services\AssetManager;
+use Modules\Core\Application\Services\View\InlineCss;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
-use Shell\PageContext;
-use Themes\FrontendLayout;
-use Themes\PageSurface;
+use Modules\Core\Interfaces\HTTP\PageContext;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
+use Modules\Core\Domain\PageSurface;
 use Modules\Core\Interfaces\HTTP\Kernel;
 use Modules\Core\Interfaces\HTTP\Router;
-use Themes\ThemeKernel;
-use Themes\ThemeRegistry;
-use Themes\ThemeResolver;
+use Modules\Core\Interfaces\HTTP\ThemeKernel;
+use Modules\Core\Interfaces\HTTP\ThemeRegistry;
+use Modules\Core\Interfaces\HTTP\ThemeResolver;
 use Modules\Themes\Erik\Theme\ErikTheme;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;

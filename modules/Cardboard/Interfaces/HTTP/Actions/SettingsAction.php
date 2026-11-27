@@ -17,15 +17,15 @@ use Modules\Database\Infrastructure\Persistence\DatabaseTargetProbe;
 use Modules\Database\Infrastructure\Persistence\Driver;
 use Modules\PageCache\Application\Services\CacheInvalidator;
 use Modules\Settings\Application\DTOs\MenuItemDTO;
-use Themes\ThemeKernel;
-use Themes\ThemeModule;
-use Themes\ThemePreference;
-use Themes\ThemeRegistry;
-use Themes\ThemeResolver;
-use Themes\ThemeSetting;
-use Themes\ThemeSettings;
-use Themes\ThemeSettingValues;
-use View\ViewRenderer;
+use Modules\Core\Interfaces\HTTP\ThemeKernel;
+use Modules\Core\Domain\Contracts\ThemeModule;
+use Modules\Core\Domain\ThemePreference;
+use Modules\Core\Interfaces\HTTP\ThemeRegistry;
+use Modules\Core\Interfaces\HTTP\ThemeResolver;
+use Modules\Core\Domain\ThemeSetting;
+use Modules\Core\Domain\Contracts\ThemeSettings;
+use Modules\Core\Domain\ThemeSettingValues;
+use Modules\Core\Application\Services\View\ViewRenderer;
 
 /**
  * Settings forms — task 9.4.

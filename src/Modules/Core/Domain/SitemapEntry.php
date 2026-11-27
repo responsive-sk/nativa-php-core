@@ -1,0 +1,118 @@
+<?php
+
+declare(strict_types = 1);
+
+namespace Modules\Core\Domain;
+
+use InvalidArgumentException;
+
+/**
+ * SitemapEntry — one URL a contributor adds to `/sitemap.xml`.
+ *
+ * The path is relative to the site root: a contributor answers from its own
+ * content and locale mapping, not from the request or the host. `SitemapAction`
+ * joins it to the request's absolute base URL.
+ *
+ * A path that cannot be trusted is rejected rather than advertised: a crawler
+ * that follows an absolute URL, a traversal or a query is a crawler taught a
+ * defect. A bad policy value is not a reason to lose the URL, so `changefreq`
+ * and `priority` fall back to their defaults while the path is accepted.
+ */
+final readonly class SitemapEntry
+{
+    public const string DEFAULT_CHANGEFREQ = 'monthly';
+
+    public const string DEFAULT_PRIORITY = '0.5';
+
+    /** @var list<string> */
+    private const array CHANGEFREQS = [
+        'always',
+        'hourly',
+        'daily',
+        'weekly',
+        'monthly',
+        'yearly',
+        'never',
+    ];
+
+    public string $path;
+
+    public string $changefreq;
+
+    public string $priority;
+
+    /** @var list<string> */
+    public array $images;
+
+    /**
+     * @param list<string> $images root-relative paths or absolute http(s) URLs
+     *
+     * @throws InvalidArgumentException when the path is not root-relative and safe
+     */
+    public function __construct(
+        string $path,
+        string $changefreq = self::DEFAULT_CHANGEFREQ,
+        string $priority = self::DEFAULT_PRIORITY,
+        array $images = [],
+    ) {
+        $this->path = self::assertPath($path);
+        $this->changefreq = in_array($changefreq, self::CHANGEFREQS, true)
+            ? $changefreq
+            : self::DEFAULT_CHANGEFREQ;
+        $this->priority = self::normalizePriority($priority);
+        $this->images = array_map(self::assertImage(...), $images);
+    }
+
+    private static function assertPath(string $path): string
+    {
+        if ('' === $path
+            || !str_starts_with($path, '/')
+            || str_starts_with($path, '//')
+            || str_contains($path, '://')
+            || str_contains($path, '..')
+            || str_contains($path, '?')
+            || str_contains($path, '#')
+            || 1 === preg_match('/[\x00-\x20]/', $path)
+        ) {
+            throw new InvalidArgumentException(sprintf(
+                'Sitemap path must be a safe root-relative path, got "%s".',
+                $path,
+            ));
+        }
+
+        return $path;
+    }
+
+    /**
+     * An image loc is either an absolute http(s) URL or a safe root-relative
+     * path. Unlike a page path, it may carry the cover's `?v=` cache-buster.
+     */
+    private static function assertImage(string $image): string
+    {
+        if (str_starts_with($image, 'https://') || str_starts_with($image, 'http://')) {
+            return $image;
+        }
+
+        if ('' === $image
+            || !str_starts_with($image, '/')
+            || str_starts_with($image, '//')
+            || str_contains($image, '..')
+            || str_contains($image, '#')
+            || 1 === preg_match('/[\x00-\x20]/', $image)
+        ) {
+            throw new InvalidArgumentException(sprintf(
+                'Sitemap image must be a safe root-relative path or http(s) URL, got "%s".',
+                $image,
+            ));
+        }
+
+        return $image;
+    }
+
+    private static function normalizePriority(string $priority): string
+    {
+        return 1 === preg_match('/^(?:0(?:\.\d+)?|1(?:\.0+)?)$/', $priority)
+            ? $priority
+            : self::DEFAULT_PRIORITY;
+    }
+}

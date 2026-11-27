@@ -14,7 +14,7 @@ The kernel and the Nativa theme, with no site attached:
   manager, the asset resolver, markdown rendering and the error pages.
 - `src/Modules/Tooling`: the module catalogue and lifecycle that `bin/cms`
   drives.
-- `src/Modules/KernelTheme` and `src/Themes/kernel`: the default presentation
+- `src/Modules/KernelTheme` and `src/Modules/Core/Interfaces/HTTP/Theme`: the default presentation
   that needs no build.
 - `modules/`: the catalogue — `Themes/Nativa`, `Settings` (the theme vote),
   `ContentLocale` (the locale mapping every theme asks for), `RestApi` (the

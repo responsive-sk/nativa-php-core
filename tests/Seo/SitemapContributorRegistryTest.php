@@ -4,12 +4,12 @@ declare(strict_types = 1);
 
 namespace Tests\Seo;
 
+use Modules\Core\Application\Services\SitemapContributorRegistry;
+use Modules\Core\Domain\Contracts\SitemapContributor;
+use Modules\Core\Domain\SitemapEntry;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
-use Seo\SitemapContributor;
-use Seo\SitemapContributorRegistry;
-use Seo\SitemapEntry;
 
 final class SitemapContributorRegistryTest extends TestCase
 {
@@ -127,9 +127,9 @@ final class SitemapContributorRegistryTest extends TestCase
 
                 namespace Modules\TempSeo\Application\Services;
 
-                use Seo\AsSitemapContributor;
-                use Seo\SitemapContributor;
-                use Seo\SitemapEntry;
+                use Modules\Core\Infrastructure\Attributes\AsSitemapContributor;
+                use Modules\Core\Domain\Contracts\SitemapContributor;
+                use Modules\Core\Domain\SitemapEntry;
 
                 #[AsSitemapContributor(priority: %d)]
                 final class %s implements SitemapContributor

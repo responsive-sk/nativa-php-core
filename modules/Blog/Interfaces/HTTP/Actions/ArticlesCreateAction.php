@@ -10,7 +10,7 @@ use Modules\Blog\Application\Services\CoverJobs;
 use Modules\Blog\Application\Services\BlogPageCache;
 use Modules\Cardboard\Application\Services\CardboardLocale;
 use Modules\Cardboard\Interfaces\HTTP\CardboardLayout;
-use View\ViewRenderer;
+use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;

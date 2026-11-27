@@ -5,9 +5,9 @@ declare(strict_types = 1);
 namespace Modules\Pages\Application\Services;
 
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
-use Seo\AsSitemapContributor;
-use Seo\SitemapContributor;
-use Seo\SitemapEntry;
+use Modules\Core\Infrastructure\Attributes\AsSitemapContributor;
+use Modules\Core\Domain\Contracts\SitemapContributor;
+use Modules\Core\Domain\SitemapEntry;
 
 /**
  * PagesSitemapContributor — the published pages' rows for `/sitemap.xml`.

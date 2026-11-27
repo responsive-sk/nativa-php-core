@@ -4,13 +4,13 @@ declare(strict_types = 1);
 
 namespace Tests\Discovery;
 
+use Modules\Core\Application\Services\HomepageSurfaceRegistry;
+use Modules\Core\Application\Services\ShellContextProviderRegistry;
 use Modules\Core\Interfaces\HTTP\Middleware\MiddlewareRegistry;
+use Modules\Core\Interfaces\HTTP\ThemeRegistry;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Shell\HomepageSurfaceRegistry;
-use Shell\ShellContextProviderRegistry;
-use Themes\ThemeRegistry;
 
 /**
  * TextFirstFqcnTest (Boot 23 follow-up) — the discovery heuristic, and the prose

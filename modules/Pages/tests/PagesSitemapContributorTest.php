@@ -9,7 +9,7 @@ use Modules\Pages\Application\Services\PageCrudService;
 use Modules\Pages\Application\Services\PagesSitemapContributor;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Seo\SitemapEntry;
+use Modules\Core\Domain\SitemapEntry;
 
 final class PagesSitemapContributorTest extends TestCase
 {

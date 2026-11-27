@@ -15,11 +15,6 @@ parameters:
         # so level 9 must keep covering it — excluding it would silently
         # drop 26 KB of shipped code from the gate.
         - src/Modules/Tooling
-        - src/Discovery
-        - src/Seo
-        - src/Shell
-        - src/Themes
-        - src/View
         - src/composition.php
         - src/http.php
         - public/index.php

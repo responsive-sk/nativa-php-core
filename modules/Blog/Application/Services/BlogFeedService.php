@@ -7,7 +7,7 @@ namespace Modules\Blog\Application\Services;
 use Modules\Blog\Application\BlogServices;
 use Modules\Blog\Domain\Entities\Article;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
-use Themes\FrontendLayout;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
 
 /**
  * BlogFeedService — RSS/Atom feed generation from the shared article cards.

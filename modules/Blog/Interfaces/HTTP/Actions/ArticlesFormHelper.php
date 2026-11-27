@@ -8,7 +8,7 @@ use Modules\Blog\Application\BlogServices;
 use Modules\Cardboard\Interfaces\HTTP\CardboardLayout;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Users\Infrastructure\Persistence\Repositories\UserRepository;
-use View\ViewRenderer;
+use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Kernel\Contracts\RouterInterface;
 use Modules\Media\Interfaces\HTTP\MediaEditorHelper;
 

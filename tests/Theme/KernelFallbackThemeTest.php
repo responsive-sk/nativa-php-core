@@ -4,10 +4,11 @@ declare(strict_types = 1);
 
 namespace Tests\Theme;
 
+use Modules\Core\Interfaces\HTTP\Theme\KernelFallbackTheme;
+use Modules\Core\Interfaces\HTTP\ThemeKernel;
+use Modules\Core\Interfaces\HTTP\ThemeRegistry;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Themes\kernel\KernelFallbackTheme;
-use Themes\ThemeKernel;
 
 /**
  * KernelFallbackThemeTest — the kernel's built-in default theme.
@@ -21,6 +22,30 @@ final class KernelFallbackThemeTest extends TestCase
     public function fallbackShipsNoStylesheet(): void
     {
         $this->assertSame([], (new KernelFallbackTheme())->criticalCss());
+    }
+
+    #[Test]
+    public function theFallbackIsNotADiscoveredThemeModule(): void
+    {
+        ThemeRegistry::reset();
+
+        $themes = ThemeRegistry::all();
+
+        $this->assertNotContains(
+            KernelFallbackTheme::class,
+            $themes,
+            'the kernel ships the fallback, not a theme: discovery must skip the kernel slice',
+        );
+
+        // `Modules\KernelTheme` names its theme `kernel` too. When that slice is
+        // installed it stays discovered; the skip may only hide the fallback.
+        if (class_exists('Modules\\KernelTheme\\Theme\\KernelTheme')) {
+            $this->assertContains(
+                'Modules\\KernelTheme\\Theme\\KernelTheme',
+                $themes,
+                'the installed theme module must stay discovered',
+            );
+        }
     }
 
     #[Test]

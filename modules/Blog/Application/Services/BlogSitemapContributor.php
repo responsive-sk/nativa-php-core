@@ -6,9 +6,9 @@ namespace Modules\Blog\Application\Services;
 
 use Modules\Blog\Application\BlogServices;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
-use Seo\AsSitemapContributor;
-use Seo\SitemapContributor;
-use Seo\SitemapEntry;
+use Modules\Core\Infrastructure\Attributes\AsSitemapContributor;
+use Modules\Core\Domain\Contracts\SitemapContributor;
+use Modules\Core\Domain\SitemapEntry;
 
 /**
  * BlogSitemapContributor — the blog's own rows for `/sitemap.xml`.

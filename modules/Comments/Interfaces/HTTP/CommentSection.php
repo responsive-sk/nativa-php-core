@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Modules\Comments\Interfaces\HTTP;
 
 use Modules\Comments\Domain\Entities\Comment;
-use Themes\FrontendLayout;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
 use Modules\Users\Domain\Entities\User;
 

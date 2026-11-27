@@ -7,7 +7,7 @@ namespace Modules\Scratch\Interfaces\HTTP\Actions;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
-use Themes\FrontendLayout;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
 
 /**
  * ScratchAction — the module-lifecycle fixture.

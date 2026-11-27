@@ -11,12 +11,12 @@ use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Interfaces\HTTP\ErrorPageRenderer;
-use Themes\FrontendLayout;
-use Themes\PageSurface;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
+use Modules\Core\Domain\PageSurface;
 use Modules\Markdown\Interfaces\HTTP\Markdown\MarkdownBlockContext;
-use Themes\ThemeKernel;
-use Themes\ThemeResolver;
-use Themes\DocsPageTheme;
+use Modules\Core\Interfaces\HTTP\ThemeKernel;
+use Modules\Core\Interfaces\HTTP\ThemeResolver;
+use Modules\Core\Domain\Contracts\DocsPageTheme;
 
 /**
  * DocsPageAction — GET /docs/{path*}: one published guide.

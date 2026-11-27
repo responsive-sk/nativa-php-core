@@ -23,7 +23,7 @@ the site name, the active theme, the default locale
 the navigation menu.
 The kernel therefore owns the **port**
 an interface in a kernel-owned namespace
-(here `src/Shell/`)
+(here `src/Modules/Core/Domain/Contracts/`)
 and a module owns the implementation.
 
 The shape is always the same three parts:

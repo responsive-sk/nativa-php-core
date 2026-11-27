@@ -10,7 +10,7 @@ use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Seo\SitemapEntry;
+use Modules\Core\Domain\SitemapEntry;
 
 final class BlogSitemapContributorTest extends TestCase
 {

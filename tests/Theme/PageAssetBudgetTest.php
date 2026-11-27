@@ -4,14 +4,14 @@ declare(strict_types = 1);
 
 namespace Tests\Theme;
 
+use Modules\Core\Domain\Contracts\ThemeModule;
+use Modules\Core\Domain\PageSurface;
 use Modules\Core\Infrastructure\Paths\AppPaths;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
+use Modules\Core\Interfaces\HTTP\ThemeRegistry;
+use Modules\Core\Interfaces\HTTP\ThemeResolver;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Themes\FrontendLayout;
-use Themes\PageSurface;
-use Themes\ThemeModule;
-use Themes\ThemeRegistry;
-use Themes\ThemeResolver;
 
 /**
  * PageAssetBudgetTest — a page carries its own surface's assets, and no more.

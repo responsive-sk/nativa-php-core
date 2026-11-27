@@ -4,12 +4,12 @@ declare(strict_types = 1);
 
 namespace Modules\Cardboard\Interfaces\HTTP;
 
-use View\InlineJs;
+use Modules\Core\Application\Services\View\InlineJs;
 
-use View\ViewRenderer;
+use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Core\Interfaces\HTTP\Middleware\CsrfMiddleware;
-use Shell\ShellContextProviderRegistry;
+use Modules\Core\Application\Services\ShellContextProviderRegistry;
 use Modules\Core\Kernel\Contracts\RouterInterface;
 
 /**

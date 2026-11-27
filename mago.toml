@@ -31,11 +31,6 @@ paths = [
     "src/Modules/Core",
     "src/Modules/Database",
     "src/Modules/Tooling",
-    "src/Discovery",
-    "src/Seo",
-    "src/Shell",
-    "src/Themes",
-    "src/View",
     "src/composition.php",
     "src/http.php",
     "public/index.php",
@@ -191,46 +186,26 @@ mode = "default"
 # with no decision behind it. The warning is therefore the honest report of a
 # deliberate configuration, not a broken gate.
 # Kernel slice only: `tests`/`public`/`bin` are consumers of the rule, not
-# subjects of it, `src/Themes` is a tree the kernel renders for (permitted
-# above), and the two composition roots name modules on purpose. `modules/` is
-# out because the perimeter below states a constraint on the KERNEL: modules are
-# the other side of it, and the model is a whitelist, so a module namespace
-# without a rule would report every one of its edges as a violation.
-excludes = ["tests", "public", "bin", "src/Themes", "src/composition.php", "src/http.php", "modules"]
+# subjects of it, and the two composition roots name modules on purpose.
+# `modules/` is out because the perimeter below states a constraint on the
+# KERNEL: modules are the other side of it, and the model is a whitelist, so a
+# module namespace without a rule would report every one of its edges as a
+# violation.
+excludes = ["tests", "public", "bin", "src/composition.php", "src/http.php", "modules"]
 
 [guard.perimeter]
 
 [[guard.perimeter.rules]]
 namespace = 'Modules\Core'
-permit = ['Modules\Core\**', 'Modules\Database\**', 'Modules\Tooling\**', 'Discovery\**', 'Seo\**', 'Shell\**', 'Themes\**', 'View\**', '@global']
+permit = ['Modules\Core\**', 'Modules\Database\**', 'Modules\Tooling\**', '@global']
 reason = 'The contract kernel may not see a module: modules are installed on top of it.'
 
 [[guard.perimeter.rules]]
 namespace = 'Modules\Database'
-permit = ['Modules\Database\**', 'Modules\Core\**', 'Modules\Tooling\**', 'Themes\**', 'View\**', '@global']
+permit = ['Modules\Database\**', 'Modules\Core\**', 'Modules\Tooling\**', '@global']
 reason = 'The concrete runtime sits on the kernel contracts; a module is still off limits.'
 
 [[guard.perimeter.rules]]
 namespace = 'Modules\Tooling'
-permit = ['Modules\Tooling\**', 'Modules\Core\**', 'Modules\Database\**', 'Discovery\**', 'Themes\**', 'View\**', '@global']
+permit = ['Modules\Tooling\**', 'Modules\Core\**', 'Modules\Database\**', '@global']
 reason = 'The module tooling reads the kernel and the catalogue, never a module class.'
-
-[[guard.perimeter.rules]]
-namespace = 'Discovery'
-permit = ['Discovery\**', 'Modules\Core\**', '@global']
-reason = 'Discovery arbitrates providers and caches the route scan; it reads kernel paths and values, never a module.'
-
-[[guard.perimeter.rules]]
-namespace = 'Seo'
-permit = ['Seo\**', 'Modules\Core\**', '@global']
-reason = 'The SEO primitives build head markup and sitemap values from kernel paths; a module is on the contributing side of the port, never a dependency.'
-
-[[guard.perimeter.rules]]
-namespace = 'Shell'
-permit = ['Shell\**', 'Modules\Core\**', 'Discovery\**', '@global']
-reason = 'The shell port reads kernel paths and values; a module is on the answering side of it, not a dependency.'
-
-[[guard.perimeter.rules]]
-namespace = 'View'
-permit = ['View\**', 'Modules\Core\**', '@global']
-reason = 'The view helpers resolve template and asset paths through the kernel; a module is off limits.'

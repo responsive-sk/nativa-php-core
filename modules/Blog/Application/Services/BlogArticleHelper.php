@@ -8,7 +8,7 @@ use Modules\Blog\Domain\Entities\Article;
 use Modules\Blog\Domain\Entities\ArticleAuthor;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
-use Themes\FrontendLayout;
+use Modules\Core\Interfaces\HTTP\FrontendLayout;
 
 /**
  * BlogArticleHelper — shared data resolution for article pages.

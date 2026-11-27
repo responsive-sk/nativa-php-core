@@ -5,8 +5,8 @@ declare(strict_types = 1);
 namespace Modules\Media\Interfaces\HTTP\Actions;
 
 use Modules\Cardboard\Interfaces\HTTP\CardboardLayout;
-use View\InlineJs;
-use View\ViewRenderer;
+use Modules\Core\Application\Services\View\InlineJs;
+use Modules\Core\Application\Services\View\ViewRenderer;
 use Modules\Core\Infrastructure\Env;
 use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
