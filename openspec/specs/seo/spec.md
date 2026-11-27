@@ -42,7 +42,7 @@ module to answer an SEO surface.
 
 - GIVEN the source tree with Blog and Pages installed
 - WHEN the architecture import gate runs
-- THEN no file under `src/Seo` or `src/Modules/Core` imports `Modules\Blog` or
+- THEN no file under `src/Modules/Core` imports `Modules\Blog` or
   `Modules\Pages`
 
 - PINS: tests/Architecture/KernelCouplingTest.php::testEveryEdgeIsClassifiedAndEveryRowNamesARealEdge
@@ -51,8 +51,8 @@ module to answer an SEO surface.
 
 `/sitemap.xml` SHALL list every public indexable URL the installed tree serves,
 in addition to the kernel's home and locale roots. A module SHALL contribute its
-own URLs through `Seo\SitemapContributor`. A draft, an alias, a `noindex` surface
-or a URL the tree does not serve SHALL NOT appear.
+own URLs through `Modules\Core\Domain\Contracts\SitemapContributor`. A draft, an
+alias, a `noindex` surface or a URL the tree does not serve SHALL NOT appear.
 
 #### Scenario: Published content appears once
 
@@ -143,7 +143,7 @@ SHALL abstain rather than render an empty description.
 ### Requirement: Shared structured data stays kernel-owned
 
 The Organization and WebSite JSON-LD builder SHALL live in the kernel-owned
-`Seo` namespace. The homepage and a published page SHALL emit the same
+`Modules\Core` namespace. The homepage and a published page SHALL emit the same
 Organization and WebSite payload, including the Blog `SearchAction`. The move
 SHALL NOT change the payload.
 
@@ -160,7 +160,8 @@ SHALL NOT change the payload.
 
 - GIVEN a published page
 - WHEN the page renders
-- THEN its JSON-LD is built by `Seo\WebsiteStructuredData`
+- THEN its JSON-LD is built by
+  `Modules\Core\Application\Services\WebsiteStructuredData`
 - AND Pages does not import a module for it
 
 - PINS: modules/Pages/tests/PageTitleBrandTest.php::thePageUsesTheKernelStructuredDataBuilder

@@ -17,7 +17,7 @@ recorded ceiling turns a heavier page into a failing check.
 
 The shell SHALL accept a surface key from the composing action and SHALL treat
 an absent key as `page`, the key that means the theme's complete sheet. Every
-key SHALL come from `Themes\PageSurface`.
+key SHALL come from `Modules\Core\Domain\PageSurface`.
 
 #### Scenario: An article page carries only the article assets
 
