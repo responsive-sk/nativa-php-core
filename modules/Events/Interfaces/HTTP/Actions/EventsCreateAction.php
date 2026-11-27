@@ -14,7 +14,7 @@ use Modules\Events\Application\EventsServices;
 use Modules\Events\Domain\Entities\Event;
 use Modules\Events\Domain\Validation\EventValidator;
 use Modules\Events\Interfaces\HTTP\EventInput;
-use Modules\Events\Interfaces\HTTP\EventsAdminHtml;
+use Modules\Events\Interfaces\HTTP\EventsPanelHtml;
 use Modules\PageCache\Application\Services\CacheInvalidator;
 
 /**
@@ -81,7 +81,7 @@ final readonly class EventsCreateAction
     {
         return CardboardLayout::render(
             'New event',
-            EventsAdminHtml::editor(null, $data, $language, $this->urlBuilder(), $errors),
+            EventsPanelHtml::editor(null, $data, $language, $this->urlBuilder(), $errors),
             'events',
             router: $this->router(),
         );

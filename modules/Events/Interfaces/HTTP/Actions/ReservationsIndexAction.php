@@ -12,7 +12,7 @@ use Modules\Core\Interfaces\HTTP\ResolvesRouteUrls;
 use Modules\Events\Application\EventsServices;
 use Modules\Events\Domain\Model\ReservationStatus;
 use Modules\Events\Interfaces\HTTP\EventInput;
-use Modules\Events\Interfaces\HTTP\EventsAdminHtml;
+use Modules\Events\Interfaces\HTTP\EventsPanelHtml;
 
 /**
  * GET /mark/events/{slug}/reservations: one event's organizer inbox.
@@ -54,7 +54,7 @@ final readonly class ReservationsIndexAction
 
         return Response::html(CardboardLayout::render(
             'Reservations',
-            EventsAdminHtml::reservations($event, $reservations, $counts, $this->urlBuilder()),
+            EventsPanelHtml::reservations($event, $reservations, $counts, $this->urlBuilder()),
             'events',
             router: $this->router(),
         ));

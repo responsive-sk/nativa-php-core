@@ -10,13 +10,13 @@ use Modules\Events\Domain\Entities\Reservation;
 use Modules\Events\Domain\Model\ReservationStatus;
 
 /**
- * EventsAdminHtml: the Mark surface's markup, kept out of the route actions.
+ * EventsPanelHtml: the Mark surface's markup, kept out of the route actions.
  *
  * The actions own decisions and redirects; this class owns the forms and the
  * escaping. Both the create and edit pages call `editor()`, so the two forms
  * cannot drift apart.
  */
-final class EventsAdminHtml
+final class EventsPanelHtml
 {
     /**
      * @param list<Event>                          $events
