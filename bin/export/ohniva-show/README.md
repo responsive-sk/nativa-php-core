@@ -15,7 +15,8 @@ The ohniva-show.sk site, as a runnable client site:
 - The site module set: `Audit`, `Auth`, `Blog`, `Cardboard`,
   `ContentLocale`, `Forms`, `Locales`, `Markdown`, `Media`, `Navigation`,
   `Notifications`, `Ohniva`, `Outbox`, `PageCache`, `Pages`, `Pagination`,
-  `Queue`, `Security`, `Settings`, `Uploads`, `Users` and `Validation`.
+  `Queue`, `Reservations`, `Security`, `Settings`, `Uploads`, `Users` and
+  `Validation`.
 - Ohniva is the public theme. Cardboard is the `/mark` panel.
 - A content seed under `storage/pages`, `storage/blog` and
   `storage/blog-images`: 14 pages, 5 blog posts and 81 local images copied
@@ -49,6 +50,10 @@ forms and settings an operator changed in `/mark`.
 The header menu is Domov, Info, Blog, Akcie, Časté otázky, Galéria and Kontakt.
 The footer repeats Info, Akcie, Blog and Časté otázky. Service pages are linked
 from Info and the homepage; they are not a second dropdown.
+
+Order form submissions are copied to `/mark/reservations`, where an organizer
+confirms or cancels the order. The submission stays in Forms; the reservation
+is a business record and outlives the form definition.
 
 `vendor/` is not needed. The runtime has zero Composer packages: `src/init.php`
 installs a PSR-4 fallback loader, and `composer install` is development tooling

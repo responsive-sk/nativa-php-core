@@ -267,3 +267,24 @@ answer 0 when the database is absent.
 - WHEN the badge is asked for a count
 - THEN it answers 0 instead of throwing
 - PINS: modules/Forms/tests/FormsBadgeTest.php::aMissingDatabaseAnswersZero
+
+### Requirement: A stored submission is offered to installed handlers
+
+After a submission is stored, Forms SHALL offer it to every installed
+`FormSubmissionHandler`, in priority order. A handler failure SHALL be logged
+and skipped, and SHALL NOT remove the submission or change the success
+response.
+
+#### Scenario: A handler receives the stored row
+
+- GIVEN a form handler and a valid submission
+- WHEN the endpoint stores the submission
+- THEN the handler receives the same form and the stored submission
+- PINS: modules/Forms/tests/FormSubmissionHandlerTest.php::aHandlerReceivesTheStoredSubmission
+
+#### Scenario: A throwing handler does not lose the submission
+
+- GIVEN a handler that throws
+- WHEN the endpoint finishes
+- THEN the response is still the success redirect and the submission is stored
+- PINS: modules/Forms/tests/FormSubmissionHandlerTest.php::aThrowingHandlerDoesNotLoseTheSubmission

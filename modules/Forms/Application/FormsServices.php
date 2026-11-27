@@ -6,6 +6,7 @@ namespace Modules\Forms\Application;
 
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Forms\Application\Services\FormResultsService;
+use Modules\Forms\Application\Services\FormSubmissionHandlerRegistry;
 use Modules\Core\Application\Services\ShellContextProviderRegistry;
 use Modules\Forms\Infrastructure\Persistence\Repositories\FormRepository;
 use Modules\Forms\Infrastructure\Persistence\Repositories\SubmissionRepository;
@@ -29,6 +30,8 @@ final class FormsServices
 
     private static ?SubmissionRepository $submissions = null;
 
+    private static ?FormSubmissionHandlerRegistry $submissionHandlers = null;
+
     private static ?FormResultsService $results = null;
 
     private static ?RateLimiter $limiter = null;
@@ -45,6 +48,21 @@ final class FormsServices
         return self::$submissions ??= new SubmissionRepository(
             DatabaseConnectionManager::instance()->connect('forms'),
         );
+    }
+
+    public static function submissionHandlers(): FormSubmissionHandlerRegistry
+    {
+        return self::$submissionHandlers ??= FormSubmissionHandlerRegistry::fromModules();
+    }
+
+    /**
+     * Test seam: replace discovery with a fixed handler list.
+     *
+     * @internal
+     */
+    public static function setSubmissionHandlers(?FormSubmissionHandlerRegistry $handlers): void
+    {
+        self::$submissionHandlers = $handlers;
     }
 
     public static function results(): FormResultsService
@@ -92,6 +110,7 @@ final class FormsServices
     {
         self::$forms = null;
         self::$submissions = null;
+        self::$submissionHandlers = null;
         self::$results = null;
         self::$limiter = null;
 

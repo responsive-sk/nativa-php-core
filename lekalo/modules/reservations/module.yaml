@@ -1,0 +1,18 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "reservations",
+      "kind": "module",
+      "version": 1,
+      "description": "Reservations: order forms stored by Forms become business records with a new, confirmed or cancelled lifecycle, an organizer inbox and a queue-depth badge.",
+      "imports": [
+        "audit",
+        "cardboard",
+        "forms",
+        "navigation",
+        "settings"
+      ]
+    }
+  ]
+}

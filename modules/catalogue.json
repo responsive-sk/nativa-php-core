@@ -113,6 +113,7 @@
                 "PageCache",
                 "Pages",
                 "Security",
+                "Settings",
                 "Users"
             ]
         },
@@ -238,6 +239,16 @@
                 "Audit",
                 "Cardboard",
                 "PageCache"
+            ]
+        },
+        "Reservations": {
+            "source": "modules/Reservations",
+            "requires": [
+                "Audit",
+                "Cardboard",
+                "Forms",
+                "Navigation",
+                "Settings"
             ]
         },
         "RestApi": {

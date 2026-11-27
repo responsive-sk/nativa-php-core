@@ -95,13 +95,19 @@ final readonly class FormSubmitAction
             return $this->reRenderWithErrors($request, $return, $result['errors'], $result['invalid'], $payload);
         }
 
-        FormsServices::submissions()->insert(FormSubmission::create(
+        $submission = FormSubmission::create(
             $form->id,
             $form->slug,
             $form->locale,
             $payload,
             $ip,
-        ));
+        );
+
+        FormsServices::submissions()->insert($submission);
+
+        // The submission is stored before a handler runs. The registry logs a
+        // handler failure and never turns a delivered form into a 500.
+        FormsServices::submissionHandlers()->handle($form, $submission);
 
         return $this->redirectTo($return, $locale, $slug);
     }
