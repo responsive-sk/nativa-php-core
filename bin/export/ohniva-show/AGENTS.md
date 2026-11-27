@@ -19,8 +19,9 @@ until it is lost, it is a fork nobody measures.
   clone boot, the catalogue keeps `module:list`, `module:remove` and the panel's
   Modules page working. `php bin/cms module:show` must report identical.
 - A kernel file may not import a module. `make mago-guard` enforces it.
-- `storage/` is runtime state. The content here is an empty seed; the live site
-  owns its own `storage/`.
+- `storage/` carries this client's content seed: pages, blog and local images.
+  The live site owns its own database and uploads. Do not edit the seed here;
+  change the source profile in `bin/export/ohniva-show/seed/`.
 - `public/dist/moonshine` is the committed admin bundle. The public theme
   bundle is built by `make assets` and gitignored.
 

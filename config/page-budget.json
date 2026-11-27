@@ -45,10 +45,10 @@
       "article": { "css": 11390, "js": 1176 }
     },
     "ohniva": {
-      "page": { "css": 36727, "js": 0 },
-      "home": { "css": 36727, "js": 0 },
-      "listing": { "css": 36727, "js": 0 },
-      "article": { "css": 36727, "js": 0 }
+      "page": { "css": 36928, "js": 0 },
+      "home": { "css": 36928, "js": 0 },
+      "listing": { "css": 36928, "js": 0 },
+      "article": { "css": 36928, "js": 0 }
     }
   }
 }

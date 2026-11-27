@@ -12,14 +12,15 @@ The ohniva-show.sk site, as a runnable client site:
 - The kernel slices `Modules\Core`, `Modules\Database`, `Modules\Tooling` and
   `Modules\KernelTheme`, plus the kernel's own presentation in
   `src/Modules/Core/Interfaces/HTTP/Theme`. SEO lives in `Modules\Core`.
-- The site module set: `Audit`, `Auth`, `Blog`, `Boson`, `Cardboard`,
+- The site module set: `Audit`, `Auth`, `Blog`, `Cardboard`,
   `ContentLocale`, `Forms`, `Locales`, `Markdown`, `Media`, `Navigation`,
-  `Notifications`, `Outbox`, `PageCache`, `Pages`, `Pagination`, `Queue`,
-  `Security`, `Settings`, `Uploads`, `Users` and `Validation`.
-- Boson is the public theme. Cardboard is the `/mark` panel.
-- An **empty** content seed under `storage/pages`, `storage/blog` and
-  `storage/blog-images`. The seed belongs to this client; it is not the
-  responsive.sk archive.
+  `Notifications`, `Ohniva`, `Outbox`, `PageCache`, `Pages`, `Pagination`,
+  `Queue`, `Security`, `Settings`, `Uploads`, `Users` and `Validation`.
+- Ohniva is the public theme. Cardboard is the `/mark` panel.
+- A content seed under `storage/pages`, `storage/blog` and
+  `storage/blog-images`: 14 pages, 5 blog posts and 81 local images copied
+  from the live site on 2026-11-27. The seed belongs to this client; it is not
+  the responsive.sk archive.
 - Installed slices under `src/Modules/`. The catalogue under `modules/` is the
   source the slices were copied from; the two are identical when the export is
   published, and `php bin/cms module:show` reports the drift.
@@ -36,9 +37,16 @@ php -S 127.0.0.1:8000 -t public
 ```
 
 `migrate` seeds the kernel defaults. `settings:profile` applies
-`config/deploy.php` once, so a fresh clone boots as `ohniva-show.sk` with Boson
-and the `Europe/Bratislava` timezone. Do not run it on an update: it would
-overwrite the settings an operator changed in `/mark`.
+`config/deploy.php` once, so a fresh clone boots as `ohniva-show.sk` with
+Ohniva and the `Europe/Bratislava` timezone. Do not run it on an update: it
+would overwrite the settings an operator changed in `/mark`.
+
+The seed carries content, not menu rows. After the first migrate, add the
+header menu in `/mark` -> Settings -> Navigation: Domov, Info, Blog, Akcie,
+Časté otázky, Galéria and Kontakt. The service groups can point at
+`/ohnova-show`, `/vesela-ohnova-show`, `/bojova-ohnova-show`,
+`/denna-zonglerska-show`, `/svetelna-show`, `/najvyssi-remeselnici`,
+`/iny-choduliari`, `/renesancny-saso` and `/stredoveky-saso`.
 
 `vendor/` is not needed. The runtime has zero Composer packages: `src/init.php`
 installs a PSR-4 fallback loader, and `composer install` is development tooling
@@ -50,10 +58,15 @@ runtime state and are never committed.
 
 ## Content and uploads
 
-The repository carries an empty seed, not the live site. `storage/` on a server
-is where the site lives: `storage/pages/`, `storage/blog/`, `storage/blog-images/`,
-`storage/uploads/` and one database file per module under `storage/data/`.
-An update replaces the code and never `storage/`.
+The repository carries a content seed, not the live database. `storage/` on a
+server is where the site lives: `storage/pages/`, `storage/blog/`,
+`storage/blog-images/`, `storage/uploads/` and one database file per module
+under `storage/data/`. An update replaces the code and never `storage/`.
+
+Page and article images use `/storage/blog-images/...`, so they are served by
+the Blog module's read-only route and survive a deployment without a separate
+upload step. Replacing an image means replacing the file and keeping its name;
+the route answers with a long cache lifetime.
 
 Uploads are written by the running site and are not in this repository. A
 deployment snapshots them before an update and restores them after a rollback.

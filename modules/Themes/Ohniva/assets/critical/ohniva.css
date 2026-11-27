@@ -38,6 +38,14 @@ img {
     border: 0;
 }
 
+.oh-stage p img,
+.oh-article__body img {
+    display: block;
+    width: 570px;
+    height: auto;
+    margin: 0 0 18px 0;
+}
+
 h1, h2, h3, h4, h5, h6 {
     margin: 0 0 14px 0;
     font-family: Georgia, "Times New Roman", Times, serif;
@@ -675,6 +683,11 @@ button:hover, .oh-button:hover {
     .oh-stage {
         width: auto;
         margin: 0;
+    }
+
+    .oh-stage p img,
+    .oh-article__body img {
+        width: 100%;
     }
 
     .oh-brand, .oh-brand__logo {
