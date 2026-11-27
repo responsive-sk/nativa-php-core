@@ -13,8 +13,10 @@ if (!isset($viewRendererGuard)) {
 
 $activeTab = isset($activeTab) && is_string($activeTab) && '' !== $activeTab ? $activeTab : 'general';
 $mailCard = $mailCard ?? '';
+$noticeHtml = $noticeHtml ?? '';
 
 ?>    <?php echo $errorHtml . "\n"; ?>
+    <?php echo $noticeHtml . "\n"; ?>
     <div class="m-tabs" id="settings-tabs">
         <?php echo $settingsTabs . "\n"; ?>
 

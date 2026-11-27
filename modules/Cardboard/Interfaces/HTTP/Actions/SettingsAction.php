@@ -52,6 +52,7 @@ use Modules\Core\Application\Services\View\ViewRenderer;
 #[Route(path: '/mark/settings/flush-cache', method: 'POST', name: 'mark.settings.flush-cache', handlerMethod: 'flushCache')]
 #[Route(path: '/mark/settings/database', method: 'POST', name: 'mark.settings.database', handlerMethod: 'saveDatabase')]
 #[Route(path: '/mark/settings/mail', method: 'POST', name: 'mark.settings.mail', handlerMethod: 'saveMail')]
+#[Route(path: '/mark/settings/mail/test', method: 'POST', name: 'mark.settings.mail.test', handlerMethod: 'sendTestMail')]
 #[Route(path: '/mark/settings/panel-nav', method: 'POST', name: 'mark.settings.panel-nav', handlerMethod: 'savePanelNav')]
 #[Route(path: '/mark/settings/panel-nav/{id}/toggle', method: 'POST', name: 'mark.settings.panel-nav.toggle', handlerMethod: 'togglePanelNav')]
 #[Route(path: '/mark/settings/panel-nav/{id}/sort', method: 'POST', name: 'mark.settings.panel-nav.sort', handlerMethod: 'sortPanelNav')]
@@ -73,12 +74,13 @@ final class SettingsAction
      *
      * @param list<string> $errors
      */
-    private function settingsPage(array $errors = [], string $activeTab = 'general'): string
+    private function settingsPage(array $errors = [], string $activeTab = 'general', string $notice = ''): string
     {
         $settings = CardboardServices::settings();
         $all = $settings->all();
         $csrf = CardboardLayout::csrfField();
         $errorHtml = CardboardLayout::messages($errors, 'err');
+        $noticeHtml = '' === $notice ? '' : CardboardLayout::messages([$notice]);
 
         $siteName = CardboardLayout::e(is_string($all['site_name'] ?? null) ? $all['site_name'] : '');
         $siteDescription = CardboardLayout::e(is_string($all['site_description'] ?? null) ? $all['site_description'] : '');
@@ -108,7 +110,7 @@ final class SettingsAction
         );
         $mailCard = $this->mailCard($csrf, $all);
 
-        $content = ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/settings-form.phtml', ['url' => $this->urlBuilder(), 'activeTab' => $activeTab, 'settingsTabs' => CardboardLayout::settingsTabs($this->urlBuilder(), $activeTab), 'databaseCard' => $this->databaseCard($csrf), 'mailCard' => $mailCard, 'adminEmail' => $adminEmail, 'panelNavTable' => $panelNavTable, 'declaredNavTable' => $declaredNavTable, 'csrf' => $csrf, 'errorHtml' => $errorHtml, 'iconOptions' => $iconOptions, 'layoutSelect' => $layoutSelect, 'locale' => $locale, 'navTable' => $navTable, 'parentOptions' => $parentOptions, 'regChecked' => $regChecked, 'siteDescription' => $siteDescription, 'siteName' => $siteName, 'themeSelect' => $themeSelect, 'themeSettingsCard' => $themeSettingsCard, 'timezone' => $timezone, 'tokenTable' => $tokenTable]);
+        $content = ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/settings-form.phtml', ['url' => $this->urlBuilder(), 'activeTab' => $activeTab, 'settingsTabs' => CardboardLayout::settingsTabs($this->urlBuilder(), $activeTab), 'databaseCard' => $this->databaseCard($csrf), 'mailCard' => $mailCard, 'noticeHtml' => $noticeHtml, 'adminEmail' => $adminEmail, 'panelNavTable' => $panelNavTable, 'declaredNavTable' => $declaredNavTable, 'csrf' => $csrf, 'errorHtml' => $errorHtml, 'iconOptions' => $iconOptions, 'layoutSelect' => $layoutSelect, 'locale' => $locale, 'navTable' => $navTable, 'parentOptions' => $parentOptions, 'regChecked' => $regChecked, 'siteDescription' => $siteDescription, 'siteName' => $siteName, 'themeSelect' => $themeSelect, 'themeSettingsCard' => $themeSettingsCard, 'timezone' => $timezone, 'tokenTable' => $tokenTable]);
 
         return CardboardLayout::render(
             'Settings',
@@ -275,6 +277,8 @@ final class SettingsAction
         array $stored,
         string $csrf = '',
         string $actionUrl = '',
+        string $testActionUrl = '',
+        string $testRecipient = '',
     ): string {
         $from = is_string($stored[MailConfiguration::KEY_FROM] ?? null)
             ? $stored[MailConfiguration::KEY_FROM]
@@ -302,6 +306,7 @@ final class SettingsAction
             : '<p class="m-hint m-hint--tight">' . CardboardLayout::e($configuration->problem) . '</p>';
 
         $form = '';
+        $testForm = '';
 
         if ('' !== $csrf && '' !== $actionUrl) {
             $form = '<form class="m-form" method="POST" action="' . CardboardLayout::e($actionUrl) . '">'
@@ -337,6 +342,23 @@ final class SettingsAction
                 . '<label for="clear_mail_api_key">Remove the stored API key</label></div>'
                 . '<div><button class="m-btn m-btn-primary" type="submit">Save mail settings</button></div>'
                 . '</form>';
+
+            $recipient = trim($testRecipient);
+
+            if ('' === $recipient) {
+                $recipient = $configuration->from;
+            }
+
+            $testForm = '<form class="m-form m-form--after-table" method="POST" action="'
+                . CardboardLayout::e($testActionUrl) . '">'
+                . $csrf
+                . '<label for="mail_test_to">Test recipient</label>'
+                . '<input type="email" id="mail_test_to" name="mail_test_to" value="'
+                . CardboardLayout::e($recipient) . '" placeholder="you@example.com" required>'
+                . '<p class="m-muted m-hint m-hint--tight">Sends one message through the saved transport.'
+                . ' Save any change above before testing it.</p>'
+                . '<div><button class="m-btn m-btn-ghost" type="submit">Send test mail</button></div>'
+                . '</form>';
         }
 
         return '<div class="m-card" id="mail">'
@@ -345,6 +367,7 @@ final class SettingsAction
             . '<strong>' . $active . '</strong> (' . CardboardLayout::e($transportSource) . ').</p>'
             . $problem
             . $form
+            . $testForm
             . '</div>';
     }
 
@@ -355,11 +378,15 @@ final class SettingsAction
      */
     private function mailCard(string $csrf, array $stored): string
     {
+        $adminEmail = is_string($stored['admin_email'] ?? null) ? $stored['admin_email'] : '';
+
         return self::renderMailCard(
             MailConfiguration::fromStored($stored),
             $stored,
             $csrf,
             $this->url('mark.settings.mail'),
+            $this->url('mark.settings.mail.test'),
+            $adminEmail,
         );
     }
 
@@ -450,6 +477,52 @@ final class SettingsAction
         );
 
         return Response::redirect($this->url('mark.settings') . '?tab=mail');
+    }
+
+    /**
+     * Send one test message through the saved transport.
+     *
+     * The recipient is required and validated; the transport is whatever the
+     * Mail tab would use now, not the unsaved values of the form above. A
+     * disabled or misconfigured transport answers with the mailer's false
+     * instead of pretending the message left.
+     */
+    public function sendTestMail(Request $request): Response
+    {
+        $to = trim($request->bodyString('mail_test_to'));
+
+        if ('' === $to || false === filter_var($to, FILTER_VALIDATE_EMAIL)) {
+            return Response::html($this->settingsPage([
+                'Enter a valid recipient address for the test message.',
+            ], 'mail'));
+        }
+
+        $configuration = \Modules\Users\Infrastructure\Mail\MailerFactory::configuration();
+        $sent = \Modules\Users\Infrastructure\Mail\MailerFactory::create()->send(
+            $to,
+            'Test mail from the Mark panel',
+            "This is a test message from the Mark panel.\n\n"
+            . 'Transport: ' . $configuration->resolved->label() . "\n"
+            . 'Sender: ' . $configuration->from . "\n\n"
+            . 'If you received it, mail delivery works.',
+        );
+
+        if (!$sent) {
+            return Response::html($this->settingsPage([
+                'The test message was not sent. Check the transport settings and storage/logs/app.log.',
+            ], 'mail'));
+        }
+
+        \Modules\Audit\Interfaces\HTTP\AuditServices::log(
+            'settings.mail.test',
+            'settings',
+            'Sent a test mail through ' . $configuration->resolved->label(),
+            $request->getClientIp(),
+        );
+
+        return Response::html($this->settingsPage([], 'mail',
+            'Test message accepted by ' . $configuration->resolved->label() . ' for ' . $to . '.',
+        ));
     }
 
     private static function isHttpUrl(string $url): bool

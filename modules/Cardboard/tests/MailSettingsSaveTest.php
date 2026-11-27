@@ -13,6 +13,7 @@ use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Settings\Application\Mail\MailConfiguration;
 use Modules\Settings\Infrastructure\Persistence\Migrations\SettingsDatabaseMigrator;
 use Modules\Settings\Infrastructure\Persistence\Repositories\SettingsRepository;
+use Modules\Settings\Interfaces\HTTP\SettingsServices;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Tests\Support\SqliteDatabase;
@@ -24,7 +25,9 @@ use Tests\Support\SqliteDatabase;
  * accepts must be the value the runtime reads, an API key must survive a blank
  * field, and a refused save must write nothing. The success path is checked
  * through the repository; the refusal path is checked through the real HTML
- * response, so "the error landed on the Mail tab" is not a comment.
+ * response, so "the error landed on the Mail tab" is not a comment. The test
+ * message is exercised through a real executable, so the argv and the message
+ * body are the process's own record rather than a mock's opinion.
  */
 final class MailSettingsSaveTest extends TestCase
 {
@@ -53,6 +56,7 @@ final class MailSettingsSaveTest extends TestCase
         putenv('DB_USERS=' . $this->tmpDir . '/users.db');
         DatabaseConnectionManager::resetInstance();
         CardboardServices::reset();
+        SettingsServices::reset();
         \Modules\Audit\Interfaces\HTTP\AuditServices::reset();
 
         $this->pdo = new \PDO('sqlite:' . $this->tmpDir . '/config.db');
@@ -77,6 +81,7 @@ final class MailSettingsSaveTest extends TestCase
         putenv('DB_USERS');
         DatabaseConnectionManager::resetInstance();
         CardboardServices::reset();
+        SettingsServices::reset();
         \Modules\Audit\Interfaces\HTTP\AuditServices::reset();
 
         foreach (glob($this->tmpDir . '/*') ?: [] as $file) {
@@ -199,6 +204,61 @@ final class MailSettingsSaveTest extends TestCase
         self::assertStringContainsString('absolute http or https URL', (string) $response->getContent());
     }
 
+    #[Test]
+    public function testMailUsesTheSavedSendmailTransport(): void
+    {
+        $script = $this->capturingExecutable();
+
+        $this->repository()->set(MailConfiguration::KEY_TRANSPORT, 'sendmail', 'mail', false);
+        $this->repository()->set(MailConfiguration::KEY_FROM, 'no-reply@example.test', 'mail', false);
+        $this->repository()->set(MailConfiguration::KEY_SENDMAIL_PATH, $script, 'mail', false);
+        CardboardServices::reset();
+        SettingsServices::reset();
+
+        $response = $this->sendTest('ops@example.test');
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertStringContainsString(
+            'Test message accepted by Sendmail (local MTA) for ops@example.test.',
+            (string) $response->getContent(),
+        );
+        self::assertSame(1, $this->auditRows('settings.mail.test'));
+
+        $argv = (string) file_get_contents($this->tmpDir . '/argv.txt');
+        self::assertStringContainsString('-t', $argv);
+        self::assertStringContainsString('-i', $argv);
+        self::assertStringContainsString('no-reply@example.test', $argv);
+
+        $message = (string) file_get_contents($this->tmpDir . '/message.txt');
+        self::assertStringContainsString('To: ops@example.test', $message);
+        self::assertStringContainsString('Subject: Test mail from the Mark panel', $message);
+        self::assertStringContainsString('If you received it, mail delivery works.', $message);
+    }
+
+    #[Test]
+    public function testMailRefusesAnInvalidRecipient(): void
+    {
+        $response = $this->sendTest('not-an-address');
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertStringContainsString('Enter a valid recipient address', (string) $response->getContent());
+        self::assertSame(0, $this->auditRows('settings.mail.test'));
+    }
+
+    #[Test]
+    public function testMailReportsADisabledTransport(): void
+    {
+        $this->repository()->set(MailConfiguration::KEY_TRANSPORT, 'disabled', 'mail', false);
+        CardboardServices::reset();
+        SettingsServices::reset();
+
+        $response = $this->sendTest('ops@example.test');
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertStringContainsString('The test message was not sent.', (string) $response->getContent());
+        self::assertSame(0, $this->auditRows('settings.mail.test'));
+    }
+
     /**
      * @param array<string, string> $body
      */
@@ -206,6 +266,13 @@ final class MailSettingsSaveTest extends TestCase
     {
         return (new SettingsAction(self::router()))->saveMail(
             Request::create('POST', '/mark/settings/mail', [], $body),
+        );
+    }
+
+    private function sendTest(string $to): \Modules\Core\Infrastructure\Http\Response
+    {
+        return (new SettingsAction(self::router()))->sendTestMail(
+            Request::create('POST', '/mark/settings/mail/test', [], ['mail_test_to' => $to]),
         );
     }
 
@@ -231,6 +298,17 @@ final class MailSettingsSaveTest extends TestCase
     {
         $file = $this->tmpDir . '/sendmail-probe';
         file_put_contents($file, "#!/bin/sh\nexit 0\n");
+        chmod($file, 0o755);
+
+        return $file;
+    }
+
+    private function capturingExecutable(): string
+    {
+        $file = $this->tmpDir . '/sendmail-capture';
+        $argv = escapeshellarg($this->tmpDir . '/argv.txt');
+        $message = escapeshellarg($this->tmpDir . '/message.txt');
+        file_put_contents($file, "#!/bin/sh\nprintf '%s\\n' \"\$@\" > " . $argv . "\ncat > " . $message . "\nexit 0\n");
         chmod($file, 0o755);
 
         return $file;

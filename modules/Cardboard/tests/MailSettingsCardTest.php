@@ -44,6 +44,8 @@ final class MailSettingsCardTest extends TestCase
             $stored,
             '<input type="hidden" name="_token" value="csrf-token">',
             '/mark/settings/mail',
+            '/mark/settings/mail/test',
+            'ops@example.test',
         );
 
         foreach (['auto', 'sendmail', 'http', 'disabled'] as $transport) {
@@ -51,6 +53,10 @@ final class MailSettingsCardTest extends TestCase
         }
 
         self::assertStringContainsString('action="/mark/settings/mail"', $html);
+        self::assertStringContainsString('action="/mark/settings/mail/test"', $html);
+        self::assertStringContainsString('name="mail_test_to"', $html);
+        self::assertStringContainsString('value="ops@example.test"', $html);
+        self::assertStringContainsString('Send test mail', $html);
         self::assertStringContainsString('name="mail_from"', $html);
         self::assertStringContainsString('name="mail_sendmail_path"', $html);
         self::assertStringContainsString('name="mail_api_url"', $html);
@@ -76,6 +82,7 @@ final class MailSettingsCardTest extends TestCase
             $stored,
             '<input type="hidden" name="_token" value="csrf-token">',
             '/mark/settings/mail',
+            '/mark/settings/mail/test',
         );
 
         self::assertStringNotContainsString('secret-key', $html);

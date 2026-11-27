@@ -56,6 +56,14 @@ by name in `storage/logs/app.log`; it is not guessed at.
 The stored API key is write-only in the panel: the field renders empty, a blank
 field keeps the current key, and the separate checkbox removes it.
 
+## Test mail
+
+The Mail tab carries a test form with a recipient field, defaulting to the
+operator email. It sends one message through the saved transport, not through
+the unsaved values above it. A disabled or misconfigured transport answers
+with a refusal, and the page names the active transport on success. The test
+is audited as `settings.mail.test`, so a delivery check leaves a record.
+
 ## Password reset
 
 Reset links need `APP_URL`, because the link must not be built from a Host
@@ -72,3 +80,4 @@ from `PasswordResetMessage`, so the action and the mail agree on the path.
 | the factory chooses from the stored transport | `modules/Users/tests/MailerTest.php` |
 | reset mail through the shared configuration | `modules/Users/tests/PasswordResetMailerTest.php` |
 | the Mail tab renders and saves | `modules/Cardboard/tests/MailSettingsCardTest.php` and `MailSettingsSaveTest.php` |
+| the test message uses the saved transport | `modules/Cardboard/tests/MailSettingsSaveTest.php` |
