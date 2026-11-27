@@ -87,6 +87,17 @@ make assets     # pnpm workspace, public theme bundle
 does not: the theme's critical CSS and script travel in the module and
 `public/dist/moonshine` is committed for the panel.
 
+## Production build
+
+```sh
+bin/build/build-dist.sh
+```
+
+The artifact lands in `dist/`. It builds the Ohniva bundle, migrates the
+artifact's databases, applies `config/deploy.php` and imports `config/seed`, so
+the menus and the five forms are present before the smoke test runs. The
+artifact carries no `vendor/` and the runtime stays dependency-free.
+
 ## Gates
 
 ```sh

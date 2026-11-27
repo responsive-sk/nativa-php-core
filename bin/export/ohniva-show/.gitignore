@@ -28,6 +28,9 @@
 # not the source catalogue tree: a clone boots the public theme without an install step,
 # and the exporter proves catalogue and slice identical before it publishes.
 
+# Production artifacts are built, never committed.
+/dist/
+
 # Built bundles are artifacts. The admin bundle is the exception: /mark reads
 # its stylesheets from public/dist/moonshine and serves them byte-identical.
 /public/dist/*

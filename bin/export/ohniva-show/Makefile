@@ -59,11 +59,11 @@ dist-check: ## Gate: build dist from a clean clone (no vendor/) and smoke it
 	@bin/build/dist-check.sh
 
 ##@ Assets
-assets: ## Build the Boson bundle (pnpm workspace under Frontend/packages)
+assets: ## Build the Ohniva bundle (pnpm workspace under Frontend/packages)
 	@command -v pnpm >/dev/null 2>&1 || { echo "pnpm not found. Install it, or use a deployment bundle." >&2; exit 1; }
 	cd Frontend/packages && pnpm install --frozen-lockfile && pnpm build
 	@bin/build/check-theme-bundles.sh
-	@echo "Built public/dist/boson from Frontend/packages (gitignored)."
+	@echo "Built public/dist/ohniva from Frontend/packages (gitignored)."
 
 ##@ Development
 dev: ## Start the local dev server (localhost:8000)

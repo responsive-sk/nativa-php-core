@@ -15,11 +15,14 @@
 #      `make assets` is the one build path, so this script delegates to it
 #      rather than keeping a second copy of the pnpm invocation. `--skip-assets`
 #      uses whatever is already in `public/dist/` and refuses to guess.
-#   3. Databases are MIGRATED, never seeded or copied. The kernel ships no demo
-#      data — it has no seeders at all — and the developer's own `storage/data/`
+#   3. Databases are MIGRATED, never copied from the developer's `storage/`.
+#      The kernel ships no demo data, and the developer's own `storage/data/`
 #      is local state that must not leak into an artifact. `php bin/cms migrate`
 #      runs INSIDE the dist, so the artifact leaves here with a real schema and
-#      with proof that it boots without `vendor/`. What a migrated artifact does
+#      with proof that it boots without `vendor/`. A client export may carry a
+#      portable `config/seed`; that seed is applied with `db:import` after the
+#      migration, so the artifact starts with the site's menu and forms rather
+#      than the kernel defaults. What a migrated artifact does
 #      NOT have is the SITE: measured 2026-10-17, a rebuilt responsive.sk dist
 #      came up on `theme=kernel` / `site_name=Nativa PHP Core`, and its copy
 #      looked deleted. `config/deploy.php` is the missing half — a committed
@@ -347,6 +350,18 @@ else
     # working directory happens to be.
     if ! php "$DIST_DIR/bin/cms" migrate; then
         fail "migrate failed inside the dist — the artifact would ship without a schema" 1
+    fi
+
+    # A client export ships its menu and form definitions as a portable
+    # snapshot. Apply it here, after the schema exists and before the smoke
+    # test, so the artifact is the site rather than a kernel default. The
+    # snapshot is optional: the kernel and the responsive.sk profiles do not
+    # carry one, and a dist without it keeps the migrator's defaults.
+    if [ -d "$DIST_DIR/config/seed" ]; then
+        step "Applying the client database seed (config/seed)"
+        if ! php "$DIST_DIR/bin/cms" db:import "$DIST_DIR/config/seed" --force; then
+            fail "the client database seed could not be applied" 1
+        fi
     fi
 fi
 
