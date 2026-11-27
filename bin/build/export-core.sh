@@ -8,7 +8,8 @@
 # to an export is made here, committed, and exported again.
 #
 # The PROFILE owns every fact that differs between the two trees: the
-# repository, the module set, the content, the deploy identity and the marker.
+# repository, the module set, the content, the database seed, the deploy
+# identity and the marker.
 # The file is read from the archive, not from the working tree, for the same
 # reason the bytes are: an uncommitted edit to a profile must be invisible here.
 #
@@ -26,6 +27,7 @@
 #
 # Before it reports success it asserts:
 #   - every prune entry removed something (a moved path is a red run);
+#   - a database seed carries a portable manifest and files whose hashes match;
 #   - every named module exists in the catalogue, and every catalogue entry the
 #     profile does not name is gone;
 #   - the installed slices match the pruned catalogue;
@@ -211,6 +213,12 @@ CONTENT_SEED="$(printf '%s' "$PROFILE_JSON" | php -r '
     echo (string) ($profile["content_seed"] ?? "");
 ')"
 
+DATABASE_SEED="$(printf '%s' "$PROFILE_JSON" | php -r '
+    $profile = json_decode((string) stream_get_contents(STDIN), true);
+    $seed = $profile["database_seed"] ?? "";
+    echo is_string($seed) ? $seed : "";
+')"
+
 if [ -n "$CONTENT_SEED" ]; then
     case "$CONTENT_SEED" in
         /*|..|../*|*/../*|*/..) fail "content_seed must be a repo-relative directory, got: $CONTENT_SEED" 1 ;;
@@ -224,6 +232,18 @@ if [ -n "$CONTENT_SEED" ]; then
 
     mkdir -p "$STAGE/content"
     cp -a "$TARGET/$CONTENT_SEED/." "$STAGE/content/"
+fi
+
+if [ -n "$DATABASE_SEED" ]; then
+    case "$DATABASE_SEED" in
+        /*|..|../*|*/../*|*/..) fail "database_seed must be a repo-relative directory, got: $DATABASE_SEED" 1 ;;
+    esac
+
+    [ -d "$TARGET/$DATABASE_SEED" ] || fail "database_seed names no directory: $DATABASE_SEED" 1
+    [ -f "$TARGET/$DATABASE_SEED/manifest.json" ] || fail "database_seed has no manifest.json: $DATABASE_SEED" 1
+
+    mkdir -p "$STAGE/database-seed"
+    cp -a "$TARGET/$DATABASE_SEED/." "$STAGE/database-seed/"
 fi
 
 step "Pruning what belongs to the source tree"
@@ -255,6 +275,39 @@ if [ -n "$CONTENT_SEED" ]; then
     rm -rf "$TARGET/storage/pages" "$TARGET/storage/blog" "$TARGET/storage/blog-images"
     mkdir -p "$TARGET/storage"
     cp -a "$STAGE/content/." "$TARGET/storage/"
+fi
+
+if [ -n "$DATABASE_SEED" ]; then
+    step "Installing the profile's database seed"
+    mkdir -p "$TARGET/config/seed"
+    cp -a "$STAGE/database-seed/." "$TARGET/config/seed/"
+
+    php -r '
+        $directory = $argv[1];
+        $manifest = json_decode((string) file_get_contents($directory . "/manifest.json"), true);
+
+        if (!is_array($manifest) || 1 !== ($manifest["format"] ?? null) || !is_array($manifest["databases"] ?? null)) {
+            fwrite(STDERR, "export-core: the database seed manifest is malformed\n");
+            exit(1);
+        }
+
+        foreach ($manifest["databases"] as $database) {
+            $file = $database["file"] ?? null;
+            $hash = $database["sha256"] ?? null;
+
+            if (!is_string($file) || basename($file) !== $file || !is_string($hash)) {
+                fwrite(STDERR, "export-core: a database seed entry is incomplete\n");
+                exit(1);
+            }
+
+            $path = $directory . "/" . $file;
+
+            if (!is_file($path) || hash_file("sha256", $path) !== $hash) {
+                fwrite(STDERR, "export-core: the database seed file does not match its hash: " . $file . "\n");
+                exit(1);
+            }
+        }
+    ' "$TARGET/config/seed"
 fi
 
 if [ "$INSTALL_MODULES" = true ]; then

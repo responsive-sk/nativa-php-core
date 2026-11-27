@@ -20,8 +20,12 @@ until it is lost, it is a fork nobody measures.
   Modules page working. `php bin/cms module:show` must report identical.
 - A kernel file may not import a module. `make mago-guard` enforces it.
 - `storage/` carries this client's content seed: pages, blog and local images.
-  The live site owns its own database and uploads. Do not edit the seed here;
-  change it in the source repository's `bin/export/ohniva-show/seed/`.
+  `config/seed` carries the one-time menu and contact-form snapshot. The live
+  site owns its own database and uploads. Do not edit either seed here; change
+  it in the source repository's `bin/export/ohniva-show/`.
+- Run `php bin/cms db:import config/seed --force` once after the first migrate.
+  It replaces the default menu and contact form; running it on an update would
+  overwrite an operator's edits.
 - `public/dist/moonshine` is the committed admin bundle. The public theme
   bundle is built by `make assets` and gitignored.
 

@@ -26,3 +26,7 @@ Banícka 26
 ## Web
 
 [www.ohniva-show.sk](https://www.ohniva-show.sk)
+
+## Objednávka vystúpenia
+
+{{form:contact}}

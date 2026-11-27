@@ -227,6 +227,70 @@ final class ExportProfileContractTest extends TestCase
     }
 
     #[Test]
+    public function aDatabaseSeedIsAPortableSnapshot(): void
+    {
+        foreach (self::profiles() as $slug => $profile) {
+            $seed = $profile['data']['database_seed'] ?? null;
+
+            if (null === $seed) {
+                continue;
+            }
+
+            self::assertIsString($seed, sprintf('%s database_seed must be a string.', $slug));
+            self::assertNotSame('', $seed, sprintf('%s database_seed must not be empty.', $slug));
+
+            $requiredPaths = $profile['data']['required_paths'] ?? null;
+            self::assertIsArray($requiredPaths, sprintf('%s required_paths must be a list.', $slug));
+            self::assertContains(
+                'config/seed',
+                $requiredPaths,
+                sprintf('%s carries a database seed but does not require config/seed.', $slug),
+            );
+
+            $manifestPath = $seed . '/manifest.json';
+            self::assertSame(
+                0,
+                self::headStatus($manifestPath),
+                sprintf('%s database_seed names %s, but HEAD has no such path.', $slug, $manifestPath),
+            );
+
+            $manifest = json_decode(
+                (string) file_get_contents(self::root() . '/' . $manifestPath),
+                true,
+                512,
+                JSON_THROW_ON_ERROR,
+            );
+
+            self::assertIsArray($manifest, sprintf('%s database seed manifest is not an object.', $slug));
+            self::assertSame(1, $manifest['format'] ?? null, sprintf('%s database seed has an unknown format.', $slug));
+
+            $databases = $manifest['databases'] ?? null;
+            self::assertIsArray($databases, sprintf('%s database seed names no databases.', $slug));
+            self::assertNotEmpty($databases, sprintf('%s database seed names no databases.', $slug));
+
+            foreach ($databases as $database) {
+                self::assertIsArray($database, sprintf('%s database seed has an invalid entry.', $slug));
+
+                $file = $database['file'] ?? null;
+                $hash = $database['sha256'] ?? null;
+
+                self::assertIsString($file, sprintf('%s database seed has an entry without a file.', $slug));
+                self::assertIsString($hash, sprintf('%s database seed has an entry without a hash.', $slug));
+                self::assertSame(
+                    0,
+                    self::headStatus($seed . '/' . $file),
+                    sprintf('%s database seed names %s/%s, but HEAD has no such file.', $slug, $seed, $file),
+                );
+                self::assertSame(
+                    $hash,
+                    hash_file('sha256', self::root() . '/' . $seed . '/' . $file),
+                    sprintf('%s database seed file %s does not match its hash.', $slug, $file),
+                );
+            }
+        }
+    }
+
+    #[Test]
     public function noTwoProfilesShareAMarkerOrRepository(): void
     {
         $markers = [];

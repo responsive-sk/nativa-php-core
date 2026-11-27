@@ -32,21 +32,22 @@ module may import the kernel. `make mago-guard` fails on the other direction.
 
 ```sh
 php bin/cms migrate
+php bin/cms db:import config/seed --force
 php bin/cms settings:profile
 php -S 127.0.0.1:8000 -t public
 ```
 
-`migrate` seeds the kernel defaults. `settings:profile` applies
-`config/deploy.php` once, so a fresh clone boots as `ohniva-show.sk` with
-Ohniva and the `Europe/Bratislava` timezone. Do not run it on an update: it
-would overwrite the settings an operator changed in `/mark`.
+`migrate` seeds the kernel defaults. `db:import` writes the site's header and
+footer menus and the contact form from the portable snapshot in
+`config/seed`. `settings:profile` applies `config/deploy.php` once, so a fresh
+clone boots as `ohniva-show.sk` with Ohniva and the `Europe/Bratislava`
+timezone. Do not run `db:import --force` or `settings:profile` on an update:
+they would overwrite the menu, form and settings an operator changed in
+`/mark`.
 
-The seed carries content, not menu rows. After the first migrate, add the
-header menu in `/mark` -> Settings -> Navigation: Domov, Info, Blog, Akcie,
-Časté otázky, Galéria and Kontakt. The service groups can point at
-`/ohnova-show`, `/vesela-ohnova-show`, `/bojova-ohnova-show`,
-`/denna-zonglerska-show`, `/svetelna-show`, `/najvyssi-remeselnici`,
-`/iny-choduliari`, `/renesancny-saso` and `/stredoveky-saso`.
+The header menu is Domov, Info, Blog, Akcie, Časté otázky, Galéria and Kontakt.
+The footer repeats Info, Akcie, Blog and Časté otázky. Service pages are linked
+from Info and the homepage; they are not a second dropdown.
 
 `vendor/` is not needed. The runtime has zero Composer packages: `src/init.php`
 installs a PSR-4 fallback loader, and `composer install` is development tooling
@@ -58,7 +59,9 @@ runtime state and are never committed.
 
 ## Content and uploads
 
-The repository carries a content seed, not the live database. `storage/` on a
+The repository carries a content seed and a portable database seed, not the
+live database. `config/seed` is the one-time menu and form bootstrap: a small
+NDJSON snapshot with a manifest, imported by `db:import`. `storage/` on a
 server is where the site lives: `storage/pages/`, `storage/blog/`,
 `storage/blog-images/`, `storage/uploads/` and one database file per module
 under `storage/data/`. An update replaces the code and never `storage/`.
