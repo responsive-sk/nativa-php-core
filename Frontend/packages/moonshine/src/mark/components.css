@@ -82,10 +82,16 @@
 .m-form label { font-size: 13px; font-weight: 600; color: var(--m-ink); }
 .m-form .m-field { display: grid; gap: 4px; }
 .m-form input[type=text], .m-form input[type=email], .m-form input[type=password],
-.m-form select, .m-form textarea {
+.m-form input[type=datetime-local], .m-form select, .m-form textarea {
     width: 100%; padding: 9px 12px; border: 1px solid var(--m-border);
     border-radius: var(--m-r-md); font-size: 14px; font-family: inherit;
     background: var(--m-surface); color: var(--m-ink);
+}
+/* The native date/time picker follows the page theme, including its icon. */
+.m-form input[type=datetime-local] { color-scheme: dark; }
+:root[data-theme=light] .m-form input[type=datetime-local] { color-scheme: light; }
+@media (prefers-color-scheme: light) {
+    :root:not([data-theme=dark]) .m-form input[type=datetime-local] { color-scheme: light; }
 }
 .m-form input:focus, .m-form select:focus, .m-form textarea:focus {
     outline: 2px solid var(--m-primary); outline-offset: 1px; border-color: transparent;

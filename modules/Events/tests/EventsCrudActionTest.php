@@ -11,11 +11,14 @@ use Modules\Core\Interfaces\CLI\CliOutput;
 use Modules\Core\Interfaces\HTTP\Router;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Events\Application\EventsServices;
+use Modules\Events\Domain\Entities\Event;
 use Modules\Events\Domain\Entities\Reservation;
 use Modules\Events\Infrastructure\Persistence\Migrations\EventsDatabaseMigrator;
 use Modules\Events\Interfaces\HTTP\Actions\EventsCreateAction;
 use Modules\Events\Interfaces\HTTP\Actions\EventsDeleteAction;
 use Modules\Events\Interfaces\HTTP\Actions\EventsPublishToggleAction;
+use Modules\Events\Interfaces\HTTP\EventInput;
+use Modules\Events\Interfaces\HTTP\EventsPanelHtml;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Tests\Support\SqliteDatabase;
@@ -89,6 +92,29 @@ final class EventsCrudActionTest extends TestCase
     }
 
     #[Test]
+    public function theEditorUsesNativeDateTimePickers(): void
+    {
+        $event = Event::create('sk_SK', [
+            'slug' => 'letny-tabor',
+            'title' => 'Letný tábor',
+            'starts_at' => '2027-08-10 18:00',
+            'ends_at' => '2027-08-10 20:00',
+        ]);
+        $data = EventInput::fromEvent($event);
+        $html = EventsPanelHtml::editor(
+            $event,
+            $data,
+            'sk',
+            static fn (string $name, array $params = []): string => '/' . $name,
+        );
+
+        self::assertSame('2027-08-10T18:00', $data['starts_at']);
+        self::assertSame('2027-08-10T20:00', $data['ends_at']);
+        self::assertSame(2, substr_count($html, 'type="datetime-local"'));
+        self::assertStringContainsString('value="2027-08-10T18:00"', $html);
+    }
+
+    #[Test]
     public function anEventWriteInvalidatesOnlyEventPages(): void
     {
         $this->create('letny-tabor');
@@ -141,8 +167,8 @@ final class EventsCrudActionTest extends TestCase
             'title'                => 'Letný tábor',
             'summary'              => 'Týždeň pre deti.',
             'body'                 => 'Program.',
-            'starts_at'            => '2027-08-10 18:00',
-            'ends_at'              => '2027-08-10 20:00',
+            'starts_at'            => '2027-08-10T18:00',
+            'ends_at'              => '2027-08-10T20:00',
             'venue'                => 'Centrum',
             'address'              => 'Hlavná 1',
             'capacity'             => '20',
