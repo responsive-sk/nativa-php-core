@@ -1283,7 +1283,9 @@ stored="$(dbq DB_FORMS "SELECT COUNT(*) FROM form_submissions WHERE form_slug = 
 want 'the submission row is stored' 1 "$stored"
 
 check 'the page with the confirmation is served' "/$FPAGE?form-sent=1" 200
-if grep -q 'Thank you' "$TMP/last.out"; then
+# The block, not its words: the public chrome follows the page's locale, so
+# the sentence here is Slovak and an English probe would fail a working page.
+if grep -q 'form__thanks' "$TMP/last.out"; then
     ok 'the confirmation is painted after the redirect'
 else
     bad 'the confirmation is missing after the redirect'
