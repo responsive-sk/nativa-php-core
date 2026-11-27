@@ -143,6 +143,18 @@ by `MarkRouteUrlNamesTest`, which scans `href`, `action` and HTMX URLs. That is
 the only legal direction, and it moved as work rather than as an accounting
 change.
 
+The ceiling is 551, measured 2026-11-27 with the Events module. The 55 new
+places are that module's route names, reservation status words, mail-kind
+labels and the tests that exercise them. They are new surface rather than a
+rename of an existing value: no earlier module gained a second spelling.
+
+The declaration ceiling is 332 in the same measurement. The eight new
+declarations are `EventsBadge::NAV_HREF`, the four `ReservationRefused`
+reasons, `ReservationSubmitAction`'s `RATE_LIMIT` and `RATE_WINDOW`, and
+`ReservationService::WRITE_ATTEMPTS`. Five of those are distinct new names
+(the four refusal reasons and the retry bound); `NAV_HREF`, `RATE_LIMIT` and
+`RATE_WINDOW` already existed for the same kind of fact.
+
 Then 526 → 384 with the locale decision (2026-10-27): 142 places spelled a
 `xx_YY` code, 84 of them in `Locales/…/SeedData.php`, and a locale code names a
 language rather than this tree's default — rule 2 skips it (`isLocaleCode()`)

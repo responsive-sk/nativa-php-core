@@ -27,6 +27,7 @@ final class SeedData
             self::markDefaults(),
             self::blogDefaults(),
             self::formsDefaults(),
+            self::eventsDefaults(),
         );
     }
 
@@ -212,6 +213,53 @@ final class SeedData
             ['key' => 'forms.error.choice', 'sk_SK' => '{label} musí byť jedna z ponúkaných možností.', 'en_US' => '{label} must be one of the offered choices.', 'group' => 'forms'],
             ['key' => 'forms.error.answer', 'sk_SK' => 'Vyberte odpoveď.', 'en_US' => 'Choose an answer.', 'group' => 'forms'],
             ['key' => 'forms.error.rate_limit', 'sk_SK' => 'Príliš veľa odoslaní. Skúste to prosím o chvíľu.', 'en_US' => 'Too many submissions. Please try again in a minute.', 'group' => 'forms'],
+        ];
+    }
+
+    /**
+     * Public event surfaces and the four reservation messages.
+     *
+     * The module keeps English floors at every call site, so a tree without
+     * Locales still renders; these rows are what makes a Slovak site speak
+     * Slovak.
+     *
+     * @return list<array{key: string, sk_SK: string, en_US: string, group: string}>
+     */
+    private static function eventsDefaults(): array
+    {
+        return [
+            ['key' => 'events.title', 'sk_SK' => 'Podujatia', 'en_US' => 'Events', 'group' => 'events'],
+            ['key' => 'events.empty', 'sk_SK' => 'Zatiaľ nie sú naplánované žiadne podujatia.', 'en_US' => 'No events are scheduled yet.', 'group' => 'events'],
+            ['key' => 'events.date', 'sk_SK' => 'Dátum', 'en_US' => 'Date', 'group' => 'events'],
+            ['key' => 'events.time', 'sk_SK' => 'Čas', 'en_US' => 'Time', 'group' => 'events'],
+            ['key' => 'events.venue', 'sk_SK' => 'Miesto', 'en_US' => 'Venue', 'group' => 'events'],
+            ['key' => 'events.address', 'sk_SK' => 'Adresa', 'en_US' => 'Address', 'group' => 'events'],
+            ['key' => 'events.capacity', 'sk_SK' => 'Kapacita', 'en_US' => 'Capacity', 'group' => 'events'],
+            ['key' => 'events.remaining', 'sk_SK' => 'Voľných miest', 'en_US' => 'Seats left', 'group' => 'events'],
+            ['key' => 'events.reserve', 'sk_SK' => 'Rezervovať miesto', 'en_US' => 'Reserve a place', 'group' => 'events'],
+            ['key' => 'events.reservation_name', 'sk_SK' => 'Meno', 'en_US' => 'Name', 'group' => 'events'],
+            ['key' => 'events.reservation_email', 'sk_SK' => 'E-mail', 'en_US' => 'E-mail', 'group' => 'events'],
+            ['key' => 'events.reservation_phone', 'sk_SK' => 'Telefón', 'en_US' => 'Phone', 'group' => 'events'],
+            ['key' => 'events.reservation_note', 'sk_SK' => 'Poznámka', 'en_US' => 'Note', 'group' => 'events'],
+            ['key' => 'events.party_size', 'sk_SK' => 'Počet osôb', 'en_US' => 'Party size', 'group' => 'events'],
+            ['key' => 'events.consent', 'sk_SK' => 'Súhlasím, aby ste moje údaje použili na vybavenie rezervácie.', 'en_US' => 'I agree that my details may be used to handle this reservation.', 'group' => 'events'],
+            ['key' => 'events.submit', 'sk_SK' => 'Odoslať rezerváciu', 'en_US' => 'Send reservation', 'group' => 'events'],
+            ['key' => 'events.thanks', 'sk_SK' => 'Rezerváciu sme prijali. Ozveme sa e-mailom, keď ju potvrdíme.', 'en_US' => 'We received your reservation. We will confirm it by e-mail.', 'group' => 'events'],
+            ['key' => 'events.past', 'sk_SK' => 'Toto podujatie sa už uskutočnilo.', 'en_US' => 'This event has already taken place.', 'group' => 'events'],
+            ['key' => 'events.closed', 'sk_SK' => 'Rezervácie pre toto podujatie sú zatvorené.', 'en_US' => 'Reservations for this event are closed.', 'group' => 'events'],
+            ['key' => 'events.full', 'sk_SK' => 'Podujatie je plné.', 'en_US' => 'This event is full.', 'group' => 'events'],
+            ['key' => 'events.error.required', 'sk_SK' => 'Toto pole je povinné.', 'en_US' => 'This field is required.', 'group' => 'events'],
+            ['key' => 'events.error.email', 'sk_SK' => 'Zadajte platnú e-mailovú adresu.', 'en_US' => 'Enter a valid e-mail address.', 'group' => 'events'],
+            ['key' => 'events.error.party', 'sk_SK' => 'Počet osôb musí byť celé číslo od 1 do kapacity.', 'en_US' => 'Party size must be a whole number from 1 to the capacity.', 'group' => 'events'],
+            ['key' => 'events.error.consent', 'sk_SK' => 'Bez súhlasu rezerváciu nevieme vybaviť.', 'en_US' => 'We need your consent to handle the reservation.', 'group' => 'events'],
+            ['key' => 'events.error.rate_limit', 'sk_SK' => 'Príliš veľa pokusov. Skúste to o chvíľu.', 'en_US' => 'Too many attempts. Please try again shortly.', 'group' => 'events'],
+            ['key' => 'events.mail.acknowledgement_subject', 'sk_SK' => 'Prijali sme vašu rezerváciu: {event}', 'en_US' => 'We received your reservation: {event}', 'group' => 'events'],
+            ['key' => 'events.mail.confirmation_subject', 'sk_SK' => 'Vaše miesto je potvrdené: {event}', 'en_US' => 'Your place is confirmed: {event}', 'group' => 'events'],
+            ['key' => 'events.mail.cancellation_subject', 'sk_SK' => 'Vaša rezervácia bola zrušená: {event}', 'en_US' => 'Your reservation was cancelled: {event}', 'group' => 'events'],
+            ['key' => 'events.mail.acknowledgement_body', 'sk_SK' => 'Rezerváciu sme prijali a miesto držíme, kým ju organizátor potvrdí.', 'en_US' => 'We received your reservation and are holding the seats until the organizer confirms.', 'group' => 'events'],
+            ['key' => 'events.mail.confirmation_body', 'sk_SK' => 'Vaše miesto je potvrdené. Tešíme sa na vás.', 'en_US' => 'Your place is confirmed. We look forward to seeing you.', 'group' => 'events'],
+            ['key' => 'events.mail.cancellation_body', 'sk_SK' => 'Vaša rezervácia bola zrušená. Miesta sa uvoľnili.', 'en_US' => 'Your reservation was cancelled and the seats were released.', 'group' => 'events'],
+            ['key' => 'events.mail.operator_body', 'sk_SK' => 'Prišla nová rezervácia.', 'en_US' => 'A new reservation arrived.', 'group' => 'events'],
         ];
     }
 }

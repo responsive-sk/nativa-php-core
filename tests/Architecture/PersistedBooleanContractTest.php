@@ -78,6 +78,9 @@ final class PersistedBooleanContractTest extends TestCase
             'fields.is_read_only' => 'A field is rendered editable or read-only; whether a write is'
                 . ' ACCEPTED is decided by the resource\'s actions and the transport, never by this'
                 . ' flag, so the boolean is a presentation hint with no vocabulary behind it.',
+            'events.reservations_enabled' => 'An event takes reservations or it does not; the form'
+                . ' is shown or withheld and there is no third state. A cancellation and a past event'
+                . ' are separate facts, so this switch is not carrying their vocabulary.',
         ];
     }
 

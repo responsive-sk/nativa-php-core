@@ -1,0 +1,22 @@
+{
+  "schema_version": "0.2.16",
+  "definitions": [
+    {
+      "id": "events",
+      "kind": "module",
+      "version": 1,
+      "description": "Events: a client's public programme and its reservations: event records per locale, an upcoming listing and detail, a Mark lifecycle, capacity held by pending and confirmed parties, organizer decisions and best-effort guest mail.",
+      "imports": [
+        "audit",
+        "cardboard",
+        "content_locale",
+        "locales",
+        "markdown",
+        "navigation",
+        "page_cache",
+        "security",
+        "users"
+      ]
+    }
+  ]
+}

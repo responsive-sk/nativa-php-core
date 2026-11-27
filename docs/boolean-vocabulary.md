@@ -150,7 +150,7 @@ Three checks, each refusing a different way to reintroduce the problem:
 
 | Check | Refuses |
 |---|---|
-| `tests/Architecture/PersistedBooleanContractTest` | a new `BOOLEAN` column, a new settings row typed `boolean`, and a boolean in a queued job's payload or payload-builder shape. The four columns and two rows that exist today are named with reasons; adding a fifth is an edit to that ledger and the conversation that comes with it. |
+| `tests/Architecture/PersistedBooleanContractTest` | a new `BOOLEAN` column, a new settings row typed `boolean`, and a boolean in a queued job's payload or payload-builder shape. The five columns and two rows that exist today are named with reasons; adding a sixth is an edit to that ledger and the conversation that comes with it. |
 | `tests/Architecture/NameOwnershipContractTest` | a new `const` vocabulary grown without a decision — every name has one owner, and the ceilings only fall. |
 | `tests/Architecture/KernelShapeTest` | a new concrete class in the kernel that nobody approved. `SubmitResult` is a `contract` row in [the shape inventory](kernel-shape.md). |
 
@@ -164,10 +164,11 @@ gap is why the rule is written down here as well as tested there.
 
 - **It does not demand a `Result` everywhere.** Most callers of a boolean have
   nothing to do with the reason; making them acknowledge it is ceremony.
-- **It does not ask for a migration of the four boolean columns.** They are the
+- **It does not ask for a migration of the five boolean columns.** They are the
   ledger, not a debt: `users.is_active`, `menu_items.is_active`,
-  `menu_items.is_public` and `menu_items.external` are read by code that
-  already agrees on what `1` means. The gate is for the *next* one.
+  `menu_items.is_public`, `menu_items.external` and
+  `events.reservations_enabled` are read by code that already agrees on what
+  `1` means. The gate is for the *next* one.
 - **It does not make strings safe.** `Comment::STATUS_*` is a convention plus a
   contract test, not exhaustiveness. The `default` arm that logs an unknown
   value is a runtime safety net; an `enum` would be a compile-time one. This

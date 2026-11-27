@@ -361,7 +361,12 @@ final class NameOwnershipContractTest extends TestCase
     // 496, measured 2026-11-27: the Ohniva theme adds one place, its entry in
     // `ThemeAssetCompletenessTest::WITHOUT_HIGHLIGHT`. The name itself is
     // `OhnivaTheme::NAME`, so no production spelling moved the ceiling.
-    private const int MAX_LITERAL_PLACES = 496;
+    //
+    // 551 with Events (2026-11-27), measured by this gate: the new module's
+    // route names, status words, mail-kind labels and their test literals are
+    // new surface, not a rename of an existing value. The declarations below
+    // name the eight constants behind them.
+    private const int MAX_LITERAL_PLACES = 551;
 
     /**
      * Rule 3 — measured 2026-10-17 on the tracked scope.
@@ -502,7 +507,12 @@ final class NameOwnershipContractTest extends TestCase
     // name the three registry hooks used to spell, and the module test owns the
     // installed slice's name. The theme's asset paths became literals in the
     // markup they build once, so the two constants they had are gone.
-    private const int MAX_DECLARATIONS = 324;
+    //
+    // 332 with Events (2026-11-27): `EventsBadge::NAV_HREF`, the four
+    // `ReservationRefused` reasons, `ReservationSubmitAction`'s rate limit and
+    // window, and `ReservationService`'s write-attempt bound. None is a second
+    // spelling of an existing value; the six distinct names are new surface.
+    private const int MAX_DECLARATIONS = 332;
 
     /**
      * 203 → 204 with MAX_DECLARATIONS: `ModuleTreeState::IGNORED` is a name as
@@ -575,7 +585,13 @@ final class NameOwnershipContractTest extends TestCase
     // 240 with Ohniva: `NAME` is the client theme's name, and the three registry
     // hooks read it instead of spelling the string. The test's `MODULE` reuses a
     // name the file already declared.
-    private const int MAX_NAMES = 240;
+    //
+    // 245 with Events (2026-11-27): `CAPACITY`, `CLOSED`, `CANCELLED` and
+    // `INVALID` name the four refusal reasons, and `WRITE_ATTEMPTS` names the
+    // transaction retry bound. `NAV_HREF`, `RATE_LIMIT` and `RATE_WINDOW`
+    // already existed for the same kind of fact, so they move declarations but
+    // not distinct names.
+    private const int MAX_NAMES = 245;
 
     /**
      * `name => modules/<Name>` or `modules/<Group>/<Name>`, resolved once. A

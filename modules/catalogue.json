@@ -86,6 +86,21 @@
                 "ContentLocale"
             ]
         },
+        "Events": {
+            "source": "modules/Events",
+            "requires": [
+                "Audit",
+                "Cardboard",
+                "ContentLocale",
+                "Locales",
+                "Markdown",
+                "Navigation",
+                "PageCache",
+                "Security",
+                "Settings",
+                "Users"
+            ]
+        },
         "Forms": {
             "source": "modules/Forms",
             "requires": [

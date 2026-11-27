@@ -94,6 +94,7 @@ final class MarkRoutePolicy
         '/mark/questions'        => Permissions::CONTENT,
         '/mark/media'            => Permissions::CONTENT,
         '/mark/forms'            => Permissions::CONTENT,
+        '/mark/events'           => Permissions::CONTENT,
         '/mark/outbox'           => Permissions::ROLES,
 
         // Operational consoles. Running a queued job or reading the schedule

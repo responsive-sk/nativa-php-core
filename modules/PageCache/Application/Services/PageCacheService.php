@@ -89,7 +89,7 @@ final readonly class PageCacheService implements PageCacheReader
      *
      * @var list<string>
      */
-    private const array BYPASS_QUERY_PARAMS = ['form-sent', 'form-invalid', 'question-sent'];
+    private const array BYPASS_QUERY_PARAMS = ['form-sent', 'form-invalid', 'question-sent', 'reservation-sent'];
 
     public function __construct(
         private string $cacheDir,

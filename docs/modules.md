@@ -169,7 +169,9 @@ is logged as `[seo] sitemap contributor skipped` and skipped. The kernel keeps
 deduplication and the kernel rows. A module only returns `SitemapEntry` values
 whose paths it can actually serve.
 
-Blog and Pages are the two contributors today. `llms.txt` is different: it
+Blog, Pages and Events are the contributors today. Events lists `/events` for
+every locale and one detail row per published event, including a past one; a
+draft is absent. `llms.txt` is different: it
 advertises the docs route and stays with the `Docs` module that serves it.
 
 ## Catalogue vs slice: drift, measured (task 4.1, 2026-10-17)
