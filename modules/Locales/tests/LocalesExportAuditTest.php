@@ -101,16 +101,19 @@ final class LocalesExportAuditTest extends TestCase
 
     protected function tearDown(): void
     {
-        LocalesServices::reset();
-        \Modules\Audit\Interfaces\HTTP\AuditServices::reset();
-        DatabaseConnectionManager::resetInstance();
-
+        // setUp() skips without installing either module, but PHPUnit still
+        // runs tearDown(); the resets below would then load a class that is
+        // not there. The empty directory is the mark of that skipped setUp.
         if ('' === $this->directory) {
             $this->restoreDatabaseEnvironment();
             parent::tearDown();
 
             return;
         }
+
+        LocalesServices::reset();
+        \Modules\Audit\Interfaces\HTTP\AuditServices::reset();
+        DatabaseConnectionManager::resetInstance();
 
         foreach (glob($this->directory . '/locales/*') ?: [] as $file) {
             @unlink($file);
