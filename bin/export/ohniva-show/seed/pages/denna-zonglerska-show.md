@@ -26,4 +26,8 @@ rozdeliť a vyplniť tak prázdne miesta v programe.
 
 ![Žonglér počas vystúpenia](/storage/blog-images/pages/denna-zonglerska-show/04-kubo.jpg)
 
-[Zistite dostupnosť a cenovú ponuku vystúpenia ušitého priamo pre Vás.](/kontakt)
+[Objednať vystúpenie](#form-objednavka-party)
+
+## Objednávka
+
+{{form:objednavka-party}}

@@ -25,4 +25,8 @@ Bez problémov Vám odmoderuje celú akciu alebo vyplní hluché miesto v progra
 
 ![Balansovanie tanierikov](/storage/blog-images/pages/renesancny-saso/04-taniere.jpg)
 
-[Zistite dostupnosť a cenovú ponuku vystúpenia ušitého priamo pre Vás.](/kontakt)
+[Objednať vystúpenie](#form-objednavka-saso)
+
+## Objednávka
+
+{{form:objednavka-saso}}

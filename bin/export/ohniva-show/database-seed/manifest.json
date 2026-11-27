@@ -1,13 +1,13 @@
 {
     "format": 1,
     "source_driver": "sqlite",
-    "created_at": "2026-11-27T21:27:44+00:00",
+    "created_at": "2026-11-27T21:53:40+00:00",
     "databases": [
         {
             "name": "config",
             "driver": "sqlite",
             "file": "config.ndjson",
-            "sha256": "cc04e3313dff927f370e7536b545b5ce494d3de6d9e6091747818f5472c6a0ba",
+            "sha256": "4686ee02b78ed64760ac170fbd0b8d83ec9e5e4b0a508209cdc027b2b7cb97e2",
             "tables": [
                 {
                     "name": "menu_items",
@@ -50,7 +50,7 @@
             "name": "forms",
             "driver": "sqlite",
             "file": "forms.ndjson",
-            "sha256": "839e9b0d513d5715150ebd584e13604a87337adedb902393ea004b0c8709188c",
+            "sha256": "715c6442c582907edaf745407b317abfbf513a88127b6ec30d74abe3ed1a5e77",
             "tables": [
                 {
                     "name": "forms",
@@ -79,7 +79,7 @@
                         "updated_at": "DATETIME"
                     },
                     "dependencies": [],
-                    "rows": 1
+                    "rows": 5
                 }
             ]
         }

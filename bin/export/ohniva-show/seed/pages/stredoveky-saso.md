@@ -28,4 +28,8 @@ zrejme uvidíte aj márne pokusy o samovraždu.
 
 ![Vystúpenie stredovekého šaša](/storage/blog-images/pages/stredoveky-saso/04-stredovek-04.jpg)
 
-[Zistite dostupnosť a cenovú ponuku vystúpenia ušitého priamo pre Vás.](/kontakt)
+[Objednať vystúpenie](#form-objednavka-saso)
+
+## Objednávka
+
+{{form:objednavka-saso}}

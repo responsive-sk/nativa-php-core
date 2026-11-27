@@ -28,4 +28,8 @@ a najstaršieho remesla v podaní našej krásnej herečky.
 
 ![Najvyšší remeselníci](/storage/blog-images/pages/najvyssi-remeselnici/04-najvyssi-remeselnici-4.jpg)
 
-[Zistite dostupnosť a cenovú ponuku na Vašu atrakciu.](/kontakt)
+[Objednať vystúpenie](#form-objednavka-party)
+
+## Objednávka
+
+{{form:objednavka-party}}

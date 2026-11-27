@@ -21,4 +21,8 @@ Psychadelická bytosť z iného sveta? Nie je problém.
 
 ![Choduliari v pirátskych kostýmoch](/storage/blog-images/pages/iny-choduliari/03-pirati.jpg)
 
-[Zistite dostupnosť a cenovú ponuku Vašej atrakcie.](/kontakt)
+[Objednať vystúpenie](#form-objednavka-party)
+
+## Objednávka
+
+{{form:objednavka-party}}

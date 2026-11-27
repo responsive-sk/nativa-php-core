@@ -26,4 +26,8 @@ Jednou vetou: Spájame štýl a skill.
 
 ![Ohňová show s dymom](/storage/blog-images/pages/vesela-ohnova-show/04-dym.jpg)
 
-[Zistite dostupnosť a cenovú ponuku vystúpenia ušitého priamo pre Vás.](/kontakt)
+[Objednať vystúpenie](#form-objednavka-ohnova)
+
+## Objednávka
+
+{{form:objednavka-ohnova}}

@@ -27,4 +27,8 @@ spojiť s ohňovou show, žonglovaním nožov, fakírskymi kúskami alebo súboj
 
 ![Svetelná choreografia na galashow](/storage/blog-images/pages/svetelna-show/04-galashow-kyselich-krastafcov-4.jpg)
 
-[Zistite dostupnosť a cenovú ponuku vystúpenia ušitého priamo pre Vás.](/kontakt)
+[Objednať vystúpenie](#form-objednavka-ohnova)
+
+## Objednávka
+
+{{form:objednavka-ohnova}}

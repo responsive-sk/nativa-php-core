@@ -26,4 +26,8 @@ Pre množstvo ohňa a pyrotechnických efektov je možné ho hrať iba v exteri�
 
 ![Čarodej Tim](/storage/blog-images/pages/bojova-ohnova-show/04-tim.jpg)
 
-[Zistite dostupnosť a cenovú ponuku vystúpenia ušitého priamo pre Vás.](/kontakt)
+[Objednať vystúpenie](#form-objednavka-bojova)
+
+## Objednávka
+
+{{form:objednavka-bojova}}

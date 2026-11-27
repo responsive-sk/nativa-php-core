@@ -27,4 +27,8 @@ a loptičiek, a samozrejme aj pôvabné tance s ohnivými vejármi alebo fakľam
 
 ![Ohnivá palica](/storage/blog-images/pages/ohnova-show/04-ohniva-palica.jpg)
 
-[Zistite dostupnosť a cenovú ponuku vystúpenia ušitého priamo pre Vás.](/kontakt)
+[Objednať vystúpenie](#form-objednavka-ohnova)
+
+## Objednávka
+
+{{form:objednavka-ohnova}}

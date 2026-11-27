@@ -38,12 +38,13 @@ php -S 127.0.0.1:8000 -t public
 ```
 
 `migrate` seeds the kernel defaults. `db:import` writes the site's header and
-footer menus and the contact form from the portable snapshot in
-`config/seed`. `settings:profile` applies `config/deploy.php` once, so a fresh
-clone boots as `ohniva-show.sk` with Ohniva and the `Europe/Bratislava`
-timezone. Do not run `db:import --force` or `settings:profile` on an update:
-they would overwrite the menu, form and settings an operator changed in
-`/mark`.
+footer menus and five form definitions from the portable snapshot in
+`config/seed`: the contact form and four order forms for the fire show, the
+jester, the party and chodule show, and the battle show. `settings:profile`
+applies `config/deploy.php` once, so a fresh clone boots as `ohniva-show.sk`
+with Ohniva and the `Europe/Bratislava` timezone. Do not run `db:import
+--force` or `settings:profile` on an update: they would overwrite the menu,
+forms and settings an operator changed in `/mark`.
 
 The header menu is Domov, Info, Blog, Akcie, Časté otázky, Galéria and Kontakt.
 The footer repeats Info, Akcie, Blog and Časté otázky. Service pages are linked
@@ -61,7 +62,9 @@ runtime state and are never committed.
 
 The repository carries a content seed and a portable database seed, not the
 live database. `config/seed` is the one-time menu and form bootstrap: a small
-NDJSON snapshot with a manifest, imported by `db:import`. `storage/` on a
+NDJSON snapshot with a manifest, imported by `db:import`. It carries the
+contact form and the order forms `objednavka-ohnova`, `objednavka-saso`,
+`objednavka-party` and `objednavka-bojova`. `storage/` on a
 server is where the site lives: `storage/pages/`, `storage/blog/`,
 `storage/blog-images/`, `storage/uploads/` and one database file per module
 under `storage/data/`. An update replaces the code and never `storage/`.
