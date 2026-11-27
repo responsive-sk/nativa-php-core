@@ -202,6 +202,31 @@ final class ExportProfileContractTest extends TestCase
     }
 
     #[Test]
+    public function aContentSeedCarriesTheThreeContentTrees(): void
+    {
+        foreach (self::profiles() as $slug => $profile) {
+            $seed = $profile['data']['content_seed'] ?? null;
+
+            if (null === $seed) {
+                continue;
+            }
+
+            self::assertIsString($seed, sprintf('%s content_seed must be a string.', $slug));
+            self::assertNotSame('', $seed, sprintf('%s content_seed must not be empty.', $slug));
+
+            foreach (self::CONTENT_PATHS as $contentPath) {
+                $path = $seed . '/' . basename($contentPath);
+
+                self::assertSame(
+                    0,
+                    self::headStatus($path),
+                    sprintf('%s content_seed names %s, but HEAD has no such path.', $slug, $path),
+                );
+            }
+        }
+    }
+
+    #[Test]
     public function noTwoProfilesShareAMarkerOrRepository(): void
     {
         $markers = [];
@@ -320,6 +345,24 @@ final class ExportProfileContractTest extends TestCase
         }
 
         return $strings;
+    }
+
+    private static function headStatus(string $path): int
+    {
+        $output = [];
+        $status = 0;
+
+        exec(
+            sprintf(
+                'git -C %s cat-file -e %s 2>/dev/null',
+                escapeshellarg(self::root()),
+                escapeshellarg('HEAD:' . $path),
+            ),
+            $output,
+            $status,
+        );
+
+        return $status;
     }
 
     private static function root(): string

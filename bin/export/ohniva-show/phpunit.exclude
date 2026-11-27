@@ -1,0 +1,30 @@
+# Tests the nativa-ohniva-show export does NOT CARRY, one path and one reason per line.
+#
+# These are not failing tests. Their SUBJECT is the development of
+# nativa-php-core: an approval record under docs/, the Lekalo model, the
+# OpenSpec tree, or a module the client site does not ship. The material is not
+# carried, so the test would fail on a missing fixture rather than on a defect.
+#
+# The exporter asserts every path here exists in the archive, ends in Test.php
+# and is removed before the tree is published. A test left in the archive would
+# run against a subject that is not there.
+#
+# Format: <repo-relative test path> [# reason]
+tests/Architecture/BundlerDecisionContractTest.php # its ADR ledger is docs/adr/, and docs are pruned
+tests/Architecture/KernelShapeTest.php # its approval record is docs/kernel-shape.md
+tests/Architecture/MagoScopeContractTest.php # its analysis is docs/mago-evaluation.md
+tests/Architecture/NameOwnershipContractTest.php # its ledger is docs/name-ownership.md
+tests/Architecture/PersistedBooleanContractTest.php # its vocabulary is docs/boolean-vocabulary.md
+tests/Architecture/ToolchainRegistryContractTest.php # it asserts this tree's gate floor
+tests/Architecture/StatementHelperContractTest.php # its module set is the source catalogue, Clickhouse included
+tests/Architecture/SlovakProseContractTest.php # its corpus is docs/clanky and docs/prose
+tests/Architecture/ModelCatalogueContractTest.php # it reads lekalo/modules/
+tests/Architecture/ModelPayloadContractTest.php # it reads lekalo/modules/
+tests/Architecture/ModelReferenceContractTest.php # it reads lekalo/modules/
+tests/Architecture/ScenarioTestBindingContractTest.php # it reads openspec/
+tests/Content/EmDashContractTest.php # it ratchets the em dash count of docs/
+tests/Content/ProseRhythmContractTest.php # its wrapped list is docs/ files
+tests/Architecture/ModuleCatalogueShapeTest.php # it asserts the theme groups the site does not carry
+tests/Theme/ThemeClassOwnershipTest.php # its shared-contract ledger needs two themes
+tests/Discovery/DiscoveryCacheTest.php # it installs Scratch, which the client catalogue does not carry
+tests/Modules/ModuleLifecycleTest.php # it installs and removes Scratch from the catalogue

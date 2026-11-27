@@ -203,6 +203,29 @@ for file in profile.json prune.txt phpunit.exclude composer.identity.json Makefi
     [ -f "$STAGE/$file" ] || fail "the profile is missing $file" 1
 done
 
+# A client that is not the source site starts empty: the seed replaces the
+# source content before the source tree is pruned. It is optional, and a
+# profile without it keeps the content the source carries.
+CONTENT_SEED="$(printf '%s' "$PROFILE_JSON" | php -r '
+    $profile = json_decode((string) stream_get_contents(STDIN), true);
+    echo (string) ($profile["content_seed"] ?? "");
+')"
+
+if [ -n "$CONTENT_SEED" ]; then
+    case "$CONTENT_SEED" in
+        /*|..|../*|*/../*|*/..) fail "content_seed must be a repo-relative directory, got: $CONTENT_SEED" 1 ;;
+    esac
+
+    [ -d "$TARGET/$CONTENT_SEED" ] || fail "content_seed names no directory: $CONTENT_SEED" 1
+
+    for path in pages blog blog-images; do
+        [ -d "$TARGET/$CONTENT_SEED/$path" ] || fail "content_seed has no $path directory: $CONTENT_SEED" 1
+    done
+
+    mkdir -p "$STAGE/content"
+    cp -a "$TARGET/$CONTENT_SEED/." "$STAGE/content/"
+fi
+
 step "Pruning what belongs to the source tree"
 pruned=0
 unmatched=()
@@ -226,6 +249,13 @@ if [ "${#unmatched[@]}" -gt 0 ]; then
 fi
 
 echo "    $pruned path(s) pruned"
+
+if [ -n "$CONTENT_SEED" ]; then
+    step "Replacing the source content with the profile's seed"
+    rm -rf "$TARGET/storage/pages" "$TARGET/storage/blog" "$TARGET/storage/blog-images"
+    mkdir -p "$TARGET/storage"
+    cp -a "$STAGE/content/." "$TARGET/storage/"
+fi
 
 if [ "$INSTALL_MODULES" = true ]; then
     step "Pruning the catalogue to the profile's module set"

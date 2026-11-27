@@ -1,0 +1,49 @@
+# Dependencies (dev-only; the runtime itself has none). The lockfile is committed.
+/vendor/
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Runtime data: the SQLite files and what a running site writes. The CONTENTS
+# are ignored, never the directory, so the skeleton survives.
+/storage/data/*.db
+/storage/data/*.db-journal
+/storage/data/*.db-wal
+/storage/data/*.db-shm
+/storage/data/blog-taxonomy.json
+/storage/config/*.json
+/storage/logs/*.log
+/storage/cache/*
+/storage/sessions/*
+/storage/uploads/*
+!/storage/data/.gitkeep
+!/storage/logs/.gitkeep
+!/storage/cache/.gitkeep
+!/storage/sessions/.gitkeep
+!/storage/uploads/.gitkeep
+
+# Installed module slices are TRACKED here. This is a generated client site,
+# not the source catalogue tree: a clone boots the public theme without an install step,
+# and the exporter proves catalogue and slice identical before it publishes.
+
+# Built bundles are artifacts. The admin bundle is the exception: /mark reads
+# its stylesheets from public/dist/moonshine and serves them byte-identical.
+/public/dist/*
+!/public/dist/moonshine/
+
+# pnpm workspace dependencies.
+/Frontend/packages/node_modules/
+/Frontend/packages/*/node_modules/
+
+# Test and tool caches
+.phpunit.result.cache
+.php-cs-fixer.cache
+.rector.cache/
+
+# Editor and OS noise
+.idea/
+.vscode/
+.DS_Store
+*.swp
