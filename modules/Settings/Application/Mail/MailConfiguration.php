@@ -40,7 +40,7 @@ final readonly class MailConfiguration
 
     // The constant names a settings key, not the credential it stores.
     // @mago-expect lint:no-literal-password
-    public const string KEY_API_KEY = 'mail_api_key';
+    public const string KEY_API_KEY = 'mail_api_key'; // audit-ok: settings key name, not a credential
 
     public const string ENV_FROM = 'MAIL_FROM';
 
@@ -48,7 +48,7 @@ final readonly class MailConfiguration
 
     // The constant names an environment variable, not the credential it holds.
     // @mago-expect lint:no-literal-password
-    public const string ENV_API_KEY = 'MAIL_API_KEY';
+    public const string ENV_API_KEY = 'MAIL_API_KEY'; // audit-ok: environment variable name, not a credential
 
     public const string ENV_SENDMAIL_PATH = 'MAIL_SENDMAIL_PATH';
 
