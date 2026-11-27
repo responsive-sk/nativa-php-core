@@ -5,11 +5,11 @@ declare(strict_types = 1);
 namespace Modules\Pages\Tests;
 
 use Modules\ContentLocale\Interfaces\HTTP\ContentLocaleServices;
+use Modules\Core\Domain\SitemapEntry;
 use Modules\Pages\Application\Services\PageCrudService;
 use Modules\Pages\Application\Services\PagesSitemapContributor;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Modules\Core\Domain\SitemapEntry;
 
 final class PagesSitemapContributorTest extends TestCase
 {
@@ -40,8 +40,15 @@ final class PagesSitemapContributorTest extends TestCase
     #[Test]
     public function itListsPublishedPages(): void
     {
+        $slug = 'sitemap-listed-' . bin2hex(random_bytes(4));
+        $this->saved = [[$slug, $this->locale]];
+        $this->pages->save($slug, [
+            'title'     => 'Sitemap listed page',
+            'published' => true,
+        ], 'Published body.', $this->locale);
+
         self::assertContains(
-            ContentLocaleServices::mapper()->urlPrefix($this->locale) . '/about',
+            ContentLocaleServices::mapper()->urlPrefix($this->locale) . '/' . $slug,
             self::paths(),
         );
     }
