@@ -15,6 +15,10 @@ user-facing messages. Database-backed checks (email taken, locale
 available) are NOT rules — they stay manual at the call-site, positioned
 after the field errors (AuthService pattern).
 
+Marko runs every rule and would double-report an empty password; this module
+reports once. Call-sites that previously compared `=== ''` on raw input now also
+reject whitespace-only values, a deviation documented at each such call-site.
+
 ## Requirements
 
 ### Requirement: String DSL
@@ -54,19 +58,10 @@ value.
 
 ### Requirement: Skip semantics
 
-`nullable` combined with an empty value SHALL skip every rule including
-`Required`. A non-required empty value SHALL skip every rule. A FAILED
-`Required` SHALL stop the field's remaining rules, so an empty
-`required|min:8` password reports ONE error.
-
-DELIBERATE DEVIATION: Marko runs every rule and double-reports that
-password; this module reports once.
-
-`Required` SHALL reject null, `''`, whitespace-only strings and `[]`.
-
-DELIBERATE DEVIATION (documented at each call-site that inherits it):
-call-sites that previously compared `=== ''` on raw input now also
-reject whitespace-only values.
+`nullable` with an empty value SHALL skip every rule including `Required`. A
+non-required empty value SHALL skip every rule. A FAILED `Required` SHALL stop
+the field's remaining rules, so an empty `required|min:8` password reports ONE
+error. `Required` SHALL reject null, `''`, whitespace-only strings and `[]`.
 
 #### Scenario: Empty password reports once
 

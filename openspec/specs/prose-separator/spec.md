@@ -21,6 +21,23 @@ middle of a sentence, joins with a space.
 A heading is one line, so the prefix split stays inline: `## Časť I > Title`
 becomes a prefix span, the glyph and a title span.
 
+The wrapped-file list in `ProseRhythmContractTest` only grows: a file joins it
+once its prose is converted, never leaves it. The check cannot judge where a
+sentence may be cut, so the examples are the model: verb and object stay
+together, a noun keeps its attribute, and a longer line is preferred to a broken
+phrase.
+
+```text
+the kernel therefore owns the **port**
+an interface in `src/Modules/Core/`
+and a module owns the implementation.
+```
+
+The phase targets that `nativa-minimal` measured stay advice, because the
+corpus here already contains those defects, and a gate on the whole tempo would
+enforce a rule this repository does not satisfy. `docs/prose-rhythm.md` names
+the numbers and says which half is a gate.
+
 ## Requirements
 
 ### Requirement: A line ends where the reader should see a line end
@@ -98,25 +115,13 @@ is the one the author wrote.
 
 - PINS: modules/Markdown/tests/MarkdownHeadingTest.php::aTitleWithInlineMarkupIsInlinedOnItsOwn
 
-### Requirement: The written form, as far as a machine can check it
+### Requirement: The written form is checked as far as a machine can
 
 Prose in a wrapped file SHALL carry no em dash, and SHALL start each sentence on
 its own line. No line that continues a sentence SHALL end on a function word (a
 preposition, a conjunction, an auxiliary), because that is the mechanical shadow
 of a phrase cut in the wrong place, and no line SHALL run past 100 characters.
 A prefix split inside a heading is the one place the glyph is still written.
-
-The list of wrapped files in `ProseRhythmContractTest` only grows: a file joins
-it once its prose is converted, never leaves it. What the check cannot judge is
-where a sentence may be cut, so the examples under this requirement are the
-model: verb and object stay together, a noun keeps its attribute, and a longer
-line is preferred to a broken phrase.
-
-```text
-the kernel therefore owns the **port**
-an interface in `src/Modules/Core/`
-and a module owns the implementation.
-```
 
 #### Scenario: A new sentence starts its own line
 
@@ -173,19 +178,13 @@ popis musí byť v tabuľke:
 ### Requirement: Tempo is measured, and its counts only fall
 
 The rhythm check SHALL measure the sentence tempo of every wrapped file, and
-SHALL hold the three shapes that a metronome and a wall of text take from the
-outside: the middle sentence of a file SHALL stay between 5 and 25 words, a
-file SHALL contain at least one sentence under 10 words, and the counts below
-SHALL never rise above the value frozen for that file.
+SHALL hold three shapes: the middle sentence of a file SHALL stay between 5 and
+25 words, a file SHALL contain at least one sentence under 10 words, and the
+counts below SHALL never rise above the value frozen for that file.
 
 - a sentence over 40 words,
 - a run of five sentences whose lengths stay within five words of each other,
 - a paragraph of four or more sentences with no sentence under 10 words.
-
-The phase targets that `nativa-minimal` measured stay advice, because the
-corpus here already contains those defects, and a gate on the whole tempo would
-enforce a rule this repository does not satisfy. `docs/prose-rhythm.md` names
-the numbers and says which half is a gate.
 
 #### Scenario: The middle sentence stays inside the envelope
 

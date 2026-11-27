@@ -2,7 +2,14 @@
 
 ## Purpose
 
-TBD - created by archiving change scenario-test-binding. Update Purpose after archive.
+A spec scenario that names no test is a claim nobody checks. This capability
+binds every canonical scenario to the test that holds it, and proves the binding
+by reading files as text, so the verdict is the same on a kernel-only checkout.
+
+The binding stays a bullet the openspec validator ignores rather than a new file
+format: measured 2026-10-27, a scenario carrying a `PINS:` bullet passes
+`openspec validate --strict` with exit 0, so no forked grammar and no sidecar
+file is introduced.
 
 ## Requirements
 
@@ -14,11 +21,6 @@ bullet in its GIVEN/WHEN/THEN list, naming either a test reference of the form
 `<repo-relative test file>::<method>` or `none — <reason>`. Change directories
 under `openspec/changes/archive/` SHALL be excluded: an archived change is
 history and is never edited again.
-
-The convention SHALL remain a bullet the openspec validator ignores rather than
-a new file format: measured 2026-10-27, a scenario carrying a `PINS:` bullet
-passes `openspec validate --strict` with exit 0, so no forked grammar and no
-sidecar file is introduced.
 
 #### Scenario: A scenario with a resolvable pin passes
 

@@ -2,7 +2,10 @@
 
 ## Purpose
 
-TBD - created by archiving change marko-adoption. Update Purpose after archive.
+An inbox is a per-user record of what happened and where to act on it. One
+event writes one row per recipient, so reading it clears one badge and not the
+team's, and a missing or unmigrated database degrades the badge instead of the
+panel.
 
 ## Requirements
 

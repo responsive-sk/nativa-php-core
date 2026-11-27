@@ -2,7 +2,10 @@
 
 ## Purpose
 
-TBD - created by archiving change marko-adoption. Update Purpose after archive.
+The health endpoint answers the question an operator asks during a deploy: can
+this tree serve? It runs the registered probes in a stable order, distinguishes
+a tree that is still bootstrapping from one that is broken, and keeps the
+failure's internals out of an anonymous response.
 
 ## Requirements
 
@@ -12,9 +15,9 @@ The system SHALL expose `GET|HEAD /health` returning `application/json` with a
 body of `{"status": <healthy|degraded|unhealthy>, "checks": [...]}`, where every
 entry carries `name`, `status`, `message` and `duration_ms`. The response SHALL
 carry `Cache-Control: no-store`. Only `unhealthy` SHALL answer 503; `healthy`
-and `degraded` SHALL answer 200 so an unfinished tree is not an outage. The
-payload SHALL NOT serialize the exception behind a failed probe, so no path,
-driver message or DSN reaches an anonymous caller.
+and `degraded` SHALL answer 200. The payload SHALL NOT serialize the failed
+probe's exception, so no path, driver message or DSN reaches an anonymous
+caller.
 
 #### Scenario: A healthy tree answers 200
 

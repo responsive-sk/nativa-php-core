@@ -2,7 +2,10 @@
 
 ## Purpose
 
-TBD - created by archiving change marko-adoption. Update Purpose after archive.
+A locale file is a deployment's starting vocabulary, not a second source of
+truth. The database row wins where it exists, the file fills the gaps an
+operator has not translated yet, and the admin can export the rows it owns
+without turning the file into a shadow copy.
 
 ## Requirements
 
@@ -45,12 +48,10 @@ called once per key per rendered page.
 
 The system SHALL expose `POST /mark/locales/export` behind the admin session and
 the CSRF middleware. It SHALL write the locale's `translations` rows to
-`storage/locales/<locale>.json` as a key → value object and SHALL report how
-many translations were written. A locale without rows SHALL write no file at
-all, because an empty file would become the fallback that replaces a language
-with nothing, and only the requested locale's file SHALL be touched. The export
-SHALL NOT flush the page cache: it writes a file the fallback reads, and no
-stored page changes.
+`storage/locales/<locale>.json` as a key → value object and report the count.
+A locale without rows SHALL write no file: an empty file would replace a
+language with nothing, and only the requested locale's file SHALL be touched. The export SHALL NOT flush the page cache: it
+writes a file the fallback reads, and no stored page changes.
 
 #### Scenario: An export writes exactly that locale's rows
 
@@ -84,13 +85,10 @@ stored page changes.
 
 The admin translation list SHALL show every key the file provides as well as the
 database rows, each file-backed key marked with its `file` source. A file row
-SHALL carry no id, no edit link and no delete button, because editing it in
-place would silently create a database row that then shadows the file. A key
-present in both sources SHALL appear once, as the database row. A file key SHALL
-take its group from its key prefix, and the group and search filters SHALL apply
-to file rows through the same predicates the repository applies to rows, so a
-filter cannot show a file row the database half of the same query would have
-hidden.
+SHALL carry no id, no edit link and no delete button: editing it would create a
+row that shadows the file. A key in both sources SHALL appear once, as the
+database row. A file key SHALL take its group from its key prefix, and the group
+and search filters SHALL apply to it through the same predicates as rows.
 
 #### Scenario: A file-only key is visible and marked
 

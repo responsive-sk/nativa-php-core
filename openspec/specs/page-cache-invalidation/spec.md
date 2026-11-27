@@ -2,7 +2,10 @@
 
 ## Purpose
 
-TBD - created by archiving change marko-adoption. Update Purpose after archive.
+A cache entry is only worth serving while its page still says what it said. A
+content write therefore names the pages it changed and drops those, leaving the
+rest of the cache intact, because a flush turns one edit into a site-wide
+re-render and hides the dependency this capability exists to name.
 
 ## Requirements
 
@@ -93,14 +96,12 @@ article is the bug this cache exists to prevent.
 
 ### Requirement: The blog surface is invalidated as one list
 
-Blog write paths (create, edit, delete, publish toggle, inline save, tag and
-category edits) and the outbox article publish handler SHALL invalidate the
-same list — `/`, `/blog`, `/authors` — and SHALL NOT call
+Blog write paths and the outbox article publish handler SHALL invalidate the
+same list, `/`, `/blog` and `/authors`, and SHALL NOT call
 `CacheInvalidator::flush()`; a flush stays reserved for writes whose effect
-cannot be named as paths. The outbox handler SHALL spell the list locally
-because Blog already imports Outbox (cover jobs), so importing `BlogPageCache`
-back would make the catalogue closure graph cyclic; a test SHALL pin the two
-lists as equal.
+cannot be named as paths. The outbox handler SHALL spell the list locally,
+because Blog already imports Outbox and importing `BlogPageCache` back would
+close the catalogue graph as a cycle. A test SHALL pin the two lists as equal.
 
 #### Scenario: Every blog write path invalidates
 

@@ -83,16 +83,13 @@ air between a count and the first row.
 
 - PINS: modules/Docs/tests/DocsSearchTest.php::theHitsFollowTheCountUnderOneHeading
 
-### Requirement: One field, routed by section
+### Requirement: The header field is routed by section
 
 The header's search field SHALL submit to `/docs` while the reader is inside
-`/docs`, and SHALL keep the theme's own destination everywhere else. The index
-SHALL compose a field of its own only when the theme's shell carries none: on
-`/docs` a shell's field already posts `q` to the same URL, so a second one would
-be the same input twice. The answer is the theme's, read from the shell the
-kernel is about to render, because the catalogue disagrees: Boson ships a header
-field and a second copy behind the menu toggle, while a theme without either
-leaves `/docs` searchable only by typing the URL.
+`/docs`, and SHALL keep the theme's own destination everywhere else. The answer
+SHALL come from the shell the kernel is about to render, because the catalogues
+disagree: Boson ships a header field and a second copy behind the menu toggle,
+while a theme without either leaves `/docs` searchable only by typing the URL.
 
 #### Scenario: The header field is routed by section
 
@@ -102,6 +99,12 @@ leaves `/docs` searchable only by typing the URL.
 - AND the blog page keeps submitting to `/blog`
 
 - PINS: modules/Docs/tests/DocsSearchTest.php::theHeaderFieldFollowsTheSection
+
+### Requirement: The index composes a field only when the shell has none
+
+The index SHALL compose a field of its own only when the theme's shell carries
+none: on `/docs` a shell's field already posts `q` to the same URL, so a second
+one would be the same input twice.
 
 #### Scenario: The index adds no field beside the shell's
 

@@ -2,19 +2,21 @@
 
 ## Purpose
 
-TBD - created by archiving change marko-adoption. Update Purpose after archive.
+Pagination owns the arithmetic of a page and nothing else: how many rows a page
+holds, which rows those are, and whether a next page exists. The caller owns the
+address, because a page number means one thing in the admin and another in an
+API.
 
 ## Requirements
 
 ### Requirement: A paginator owns the arithmetic, the caller owns the address
 
-The system SHALL provide two paginator implementations in `modules/Pagination/`
-behind one `Paginator` contract: `OffsetPaginator` for numbered pages over a
-`LIMIT`/`OFFSET` query and `CursorPaginator` for keyset pages over a `key > ?`
-query. Both SHALL be transport-free: neither SHALL read a request, a router or a
-database. `toArray()` SHALL answer `items`, `meta` and `links`, and SHALL take a
-closure that turns one page value (a page number, or an opaque cursor) into a
-URL, so the caller decides what a page is called in its own surface and the
+The system SHALL provide two implementations of one `Paginator` contract in
+`modules/Pagination/`: `OffsetPaginator` for numbered pages over
+`LIMIT`/`OFFSET`, and `CursorPaginator` for keyset pages over a key comparison.
+Both SHALL be transport-free: neither SHALL read a request, a router or a
+database. `toArray()` SHALL answer `items`, `meta` and `links`, and take a
+closure turning a page value into a URL, so the caller names pages and the
 paginator never spells a query key.
 
 #### Scenario: The same page means the same thing in two surfaces
@@ -97,12 +99,11 @@ was requested with as its previous cursor.
 ### Requirement: The inbox is paged through the shared paginator
 
 `GET /mark/notifications` SHALL page the signed-in user's inbox through the
-shared offset paginator: the total SHALL be counted first, the offset SHALL come
-from the clamped page, and only that page's rows SHALL be fetched. Page one SHALL
-be the bare `/mark/notifications`; every other page SHALL add `?page=N`. The pager
-SHALL report the rows shown ("Showing 21–25 of 25") and SHALL render an
-unavailable previous/next as an inert control rather than dropping it. A list
-that fits on one page SHALL render no pager at all.
+shared offset paginator: it SHALL count the total, then fetch only the clamped
+page's rows. Page one SHALL be the bare `/mark/notifications`; every other page
+SHALL add `?page=N`. The pager SHALL report the shown range ("Showing 21–25 of
+25") and render an unavailable previous/next as an inert control. A list that
+fits on one page SHALL render no pager.
 
 #### Scenario: Page one links forward and cannot go back
 
