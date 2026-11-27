@@ -33,7 +33,7 @@ without it.
 | syntax highlighting ships in the package or the module, or the theme is listed in `WITHOUT_HIGHLIGHT` with a reason | `ThemeAssetCompletenessTest` |
 | no import of a feature module enters the install closure | `KernelCouplingTest`, `ThemeClassOwnershipTest` |
 
-Measured file sets (all six satisfy the contract today):
+Measured file sets (all seven satisfy the contract today):
 
 ```
 Boson     4 files  180 KB   Theme/BosonTheme.php, assets/critical/boson.css (2 906 r.),
@@ -43,6 +43,8 @@ Griffe    4 files   76 KB   Theme/GriffeTheme.php, assets/critical/griffe.css (2
 Jednotka  3 files   88 KB   Theme/JednotkaTheme.php, assets/scripts/theme-init.js, tests
 Mono      5 files  115 KB   Theme/MonoTheme.php, assets/critical/{mono,mo-variants}.css, 2 tests
 Nativa    4 files   68 KB   Theme/NativaTheme.php, assets/critical/nativa.css (862 r.), 2 tests
+Ohniva    7 files   92 KB   Theme/OhnivaTheme.php, assets/critical/{ohniva,cascade-ohniva}.css,
+                            assets/scripts/ohniva.js, assets/vendor/, 1 test
 ```
 
 Two asymmetries the contract does **not** cover, and they are the reason a separate theme

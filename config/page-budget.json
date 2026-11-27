@@ -43,6 +43,12 @@
       "home": { "css": 9768, "js": 1176 },
       "listing": { "css": 9507, "js": 1176 },
       "article": { "css": 11390, "js": 1176 }
+    },
+    "ohniva": {
+      "page": { "css": 36727, "js": 0 },
+      "home": { "css": 36727, "js": 0 },
+      "listing": { "css": 36727, "js": 0 },
+      "article": { "css": 36727, "js": 0 }
     }
   }
 }

@@ -1,0 +1,13 @@
+{
+  "name": "@nativa/theme-ohniva",
+  "version": "0.1.0",
+  "description": "Ohniva client theme: Cascade Framework 1.6 baseline, IE6 CSS2.1 layer, one Vite bundle.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  }
+}

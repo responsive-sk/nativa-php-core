@@ -357,7 +357,11 @@ final class NameOwnershipContractTest extends TestCase
     // owned `'data'` for the whole tree, and every storage-directory literal
     // spelling it counted against a value that constant never held. The parser
     // reads a value, not a prefix; the ceiling fell with the measurement.
-    private const int MAX_LITERAL_PLACES = 495;
+    //
+    // 496, measured 2026-11-27: the Ohniva theme adds one place, its entry in
+    // `ThemeAssetCompletenessTest::WITHOUT_HIGHLIGHT`. The name itself is
+    // `OhnivaTheme::NAME`, so no production spelling moved the ceiling.
+    private const int MAX_LITERAL_PLACES = 496;
 
     /**
      * Rule 3 — measured 2026-10-17 on the tracked scope.
@@ -493,7 +497,12 @@ final class NameOwnershipContractTest extends TestCase
     // names a page can declare, and `FrontendLayout` owns the two tables that map
     // a surface to the kernel sheets it reads. Six declarations, and each one is
     // a value that was previously spelled at its call sites.
-    private const int MAX_DECLARATIONS = 322;
+    //
+    // 324 with the Ohniva theme (2026-11-27): `OhnivaTheme::NAME` owns the theme
+    // name the three registry hooks used to spell, and the module test owns the
+    // installed slice's name. The theme's asset paths became literals in the
+    // markup they build once, so the two constants they had are gone.
+    private const int MAX_DECLARATIONS = 324;
 
     /**
      * 203 → 204 with MAX_DECLARATIONS: `ModuleTreeState::IGNORED` is a name as
@@ -562,7 +571,11 @@ final class NameOwnershipContractTest extends TestCase
     // `LISTING`, `ARTICLE`) and the layout's surface table. `SHARED_CRITICAL_CSS`
     // is the fifth new name; nothing else in the tree names a page surface or the
     // kernel sheets one surface adds.
-    private const int MAX_NAMES = 239;
+    //
+    // 240 with Ohniva: `NAME` is the client theme's name, and the three registry
+    // hooks read it instead of spelling the string. The test's `MODULE` reuses a
+    // name the file already declared.
+    private const int MAX_NAMES = 240;
 
     /**
      * `name => modules/<Name>` or `modules/<Group>/<Name>`, resolved once. A

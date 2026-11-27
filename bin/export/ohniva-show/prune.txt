@@ -60,10 +60,11 @@ public/dist/griffe
 public/dist/mono
 public/dist/nativa
 
-# Theme sources the site does not build. The workspace keeps boson, build and
+# Theme sources the site does not build. The workspace keeps ohniva, build and
 # starter; starter is not a shipped theme, but Forms' block test reads
 # starter/src/form.css as its fixture.
 Frontend/packages/basic
+Frontend/packages/boson
 Frontend/packages/erik
 Frontend/packages/griffe
 Frontend/packages/jednotka

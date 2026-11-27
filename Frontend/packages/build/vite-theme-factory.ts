@@ -46,11 +46,17 @@ const THEME_PORTS: Record<string, { dev: number; preview: number }> = {
   mono: { dev: 5185, preview: 4185 },
   boson: { dev: 5186, preview: 4186 },
   nativa: { dev: 5187, preview: 4187 },
+  ohniva: { dev: 5188, preview: 4188 },
 };
 
 export interface ThemeConfigOptions {
   /** Theme name — also the `public/dist/<theme>/` directory and the base path. */
   theme: string;
+  /**
+   * CSS minification for themes whose stylesheet carries legacy hacks a
+   * minifier may drop. Omitted or true keeps every other package unchanged.
+   */
+  cssMinify?: boolean;
   /** Logical entry key → source path, relative to the package `src/`. */
   inputs: Record<string, string>;
 }
@@ -94,6 +100,7 @@ export function createThemeConfig(options: ThemeConfigOptions) {
     plugins: [stripAtLayerPlugin(resolve(repoRoot, 'public', 'dist', theme))],
     build: {
       target: 'es2015',
+      cssMinify: options.cssMinify ?? true,
       outDir: resolve(repoRoot, 'public', 'dist', theme),
       emptyOutDir: true,
       manifest: 'manifest.json',

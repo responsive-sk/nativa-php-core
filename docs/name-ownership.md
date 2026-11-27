@@ -256,6 +256,10 @@ maintained:
 | `kernel` | `k-` | `kernel` | 17 | 1 |
 | `mono` | `mo-` | `mono` | 196 | 2 |
 
+`ohniva` (`oh-`, bundle `ohniva`, 310 classes across 2 files) joined the
+catalogue on 2026-11-27. It is not in the totals above, which were measured
+before it existed.
+
 617 class definitions (595 distinct names — the syntax-highlight markers are
 counted in every sheet that defines them), and exactly **one** shared family:
 the syntax-highlight markers. Griffe defines 6 `.tok-*` classes, Mono 12 and

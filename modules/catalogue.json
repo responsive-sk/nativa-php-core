@@ -164,6 +164,12 @@
                 "Navigation"
             ]
         },
+        "Ohniva": {
+            "source": "modules/Themes/Ohniva",
+            "requires": [
+                "ContentLocale"
+            ]
+        },
         "Outbox": {
             "source": "modules/Outbox",
             "requires": [
