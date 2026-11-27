@@ -66,6 +66,10 @@ success. The test is audited as `settings.mail.test`, so a delivery check
 leaves a record. An unconfigured transport is also named above the form, before
 the test is pressed.
 
+The sendmail process is stopped after 10 seconds. A local MTA that hangs on
+DNS or on an unreachable relay must not hang the panel request, and the test
+then reports a failure instead of waiting without an answer.
+
 ## Password reset
 
 Reset links need `APP_URL`, because the link must not be built from a Host

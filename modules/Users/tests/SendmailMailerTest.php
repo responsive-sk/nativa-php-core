@@ -149,6 +149,32 @@ final class SendmailMailerTest extends TestCase
     }
 
     #[Test]
+    public function aHungBinaryIsStoppedAndReportedAsNotDelivered(): void
+    {
+        $logFile = $this->logFile();
+        $binary = $this->slowExecutable(5);
+        $before = ini_get('error_log');
+        // @mago-expect lint:no-ini-set
+        ini_set('error_log', $logFile);
+
+        try {
+            $mailer = new SendmailMailer($binary, 'no-reply@example.test', null, 1);
+            $started = microtime(true);
+            self::assertFalse($mailer->send('owner@example.test', 'Hello', 'The body.'));
+            self::assertLessThan(3.0, microtime(true) - $started);
+        } finally {
+            // @mago-expect lint:no-ini-set
+            ini_set('error_log', false === $before ? '' : $before);
+            @unlink($binary);
+        }
+
+        $log = (string) file_get_contents($logFile);
+
+        self::assertStringContainsString('timed out after 1 second', $log);
+        self::assertStringNotContainsString('The body.', $log);
+    }
+
+    #[Test]
     public function aPipeThatThrowsIsReportedAsNotDelivered(): void
     {
         $mailer = new SendmailMailer(
@@ -166,6 +192,15 @@ final class SendmailMailerTest extends TestCase
     {
         $file = sys_get_temp_dir() . '/nativa-sendmail-log-' . bin2hex(random_bytes(6)) . '.log';
         touch($file);
+
+        return $file;
+    }
+
+    private function slowExecutable(int $seconds): string
+    {
+        $file = sys_get_temp_dir() . '/nativa-sendmail-slow-' . bin2hex(random_bytes(6));
+        file_put_contents($file, "#!/bin/sh\nexec sleep " . $seconds . "\n");
+        chmod($file, 0o755);
 
         return $file;
     }

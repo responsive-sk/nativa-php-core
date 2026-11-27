@@ -31,6 +31,7 @@ final readonly class SendmailMailer implements Mailer
         private string $binary,
         private string $from,
         private ?\Closure $pipe = null,
+        private int $timeoutSeconds = 10,
     ) {
     }
 
@@ -62,7 +63,7 @@ final readonly class SendmailMailer implements Mailer
         $subject = trim((string) preg_replace('/\s+/', ' ', str_replace(["\r", "\n"], ' ', $subject)));
 
         $message = $this->message($from, $to, $subject, $text);
-        $pipe = $this->pipe ?? self::processPipe();
+        $pipe = $this->pipe ?? self::processPipe(max(1, $this->timeoutSeconds));
 
         try {
             $result = $pipe([$binary, '-t', '-i', '-f', $from], $message);
@@ -121,9 +122,9 @@ final readonly class SendmailMailer implements Mailer
     /**
      * @return \Closure(list<string>, string): array{exit: int, stderr: string}
      */
-    private static function processPipe(): \Closure
+    private static function processPipe(int $timeoutSeconds): \Closure
     {
-        return static function (array $command, string $message): array {
+        return static function (array $command, string $message) use ($timeoutSeconds): array {
             $descriptors = [
                 0 => ['pipe', 'r'],
                 1 => ['pipe', 'w'],
@@ -136,22 +137,117 @@ final readonly class SendmailMailer implements Mailer
                 return ['exit' => -1, 'stderr' => 'proc_open failed'];
             }
 
-            $written = fwrite($pipes[0], $message);
-            fflush($pipes[0]);
-            fclose($pipes[0]);
-
-            stream_get_contents($pipes[1]);
-            $stderr = stream_get_contents($pipes[2], 4096);
-            fclose($pipes[1]);
-            fclose($pipes[2]);
-
-            $exit = proc_close($process);
-
-            if (false === $written) {
-                return ['exit' => -1, 'stderr' => 'the message could not be written to the process'];
+            foreach ($pipes as $pipe) {
+                stream_set_blocking($pipe, false);
             }
 
-            return ['exit' => $exit, 'stderr' => is_string($stderr) ? $stderr : ''];
+            $input = $message;
+            $stderr = '';
+            $timedOut = false;
+            $exit = -1;
+            $deadline = microtime(true) + $timeoutSeconds;
+
+            while (true) {
+                if (is_resource($pipes[0]) && '' !== $input) {
+                    $written = @fwrite($pipes[0], $input);
+
+                    if (false === $written) {
+                        $stderr .= 'the message could not be written to the process';
+                        $input = '';
+                    } else {
+                        $input = substr($input, $written);
+                    }
+                }
+
+                if (is_resource($pipes[0]) && '' === $input) {
+                    fclose($pipes[0]);
+                    $pipes[0] = null;
+                }
+
+                $read = [];
+
+                if (is_resource($pipes[1])) {
+                    $read[] = $pipes[1];
+                }
+
+                if (is_resource($pipes[2])) {
+                    $read[] = $pipes[2];
+                }
+
+                if ([] !== $read) {
+                    $write = null;
+                    $except = null;
+                    $ready = @stream_select($read, $write, $except, 0, 100_000);
+
+                    if (false !== $ready && $ready > 0) {
+                        foreach ($read as $pipe) {
+                            $chunk = @fread($pipe, 8192);
+
+                            if (!is_string($chunk) || '' === $chunk) {
+                                continue;
+                            }
+
+                            if ($pipe === $pipes[2]) {
+                                $stderr .= $chunk;
+                            }
+                        }
+                    }
+                }
+
+                $status = proc_get_status($process);
+
+                if (!$status['running']) {
+                    $exit = $status['exitcode'];
+                    break;
+                }
+
+                if (microtime(true) >= $deadline) {
+                    $timedOut = true;
+                    proc_terminate($process, 15);
+                    usleep(100_000);
+
+                    if ((bool) proc_get_status($process)['running']) {
+                        proc_terminate($process, 9);
+                    }
+
+                    break;
+                }
+
+                usleep(10_000);
+            }
+
+            foreach ([1, 2] as $index) {
+                if (!is_resource($pipes[$index])) {
+                    continue;
+                }
+
+                $chunk = stream_get_contents($pipes[$index]);
+
+                if (2 === $index && is_string($chunk) && '' !== $chunk) {
+                    $stderr .= $chunk;
+                }
+
+                fclose($pipes[$index]);
+            }
+
+            if (is_resource($pipes[0])) {
+                fclose($pipes[0]);
+            }
+
+            $close = proc_close($process);
+
+            if ($timedOut) {
+                return [
+                    'exit' => 124,
+                    'stderr' => 'timed out after ' . $timeoutSeconds . ' second' . (1 === $timeoutSeconds ? '' : 's'),
+                ];
+            }
+
+            if ($exit < 0) {
+                $exit = $close;
+            }
+
+            return ['exit' => $exit, 'stderr' => $stderr];
         };
     }
 }
