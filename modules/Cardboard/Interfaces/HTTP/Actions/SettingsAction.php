@@ -15,8 +15,11 @@ use Modules\Database\Infrastructure\Persistence\ConnectionSummary;
 use Modules\Database\Infrastructure\Persistence\DatabaseConfigFile;
 use Modules\Database\Infrastructure\Persistence\DatabaseTargetProbe;
 use Modules\Database\Infrastructure\Persistence\Driver;
+use Modules\Core\Infrastructure\Env;
 use Modules\PageCache\Application\Services\CacheInvalidator;
 use Modules\Settings\Application\DTOs\MenuItemDTO;
+use Modules\Settings\Application\Mail\MailConfiguration;
+use Modules\Settings\Application\Mail\MailTransport;
 use Modules\Core\Interfaces\HTTP\ThemeKernel;
 use Modules\Core\Domain\Contracts\ThemeModule;
 use Modules\Core\Domain\ThemePreference;
@@ -48,6 +51,7 @@ use Modules\Core\Application\Services\View\ViewRenderer;
 #[Route(path: '/mark/settings/nav/reorder', method: 'POST', name: 'mark.settings.nav.reorder', handlerMethod: 'reorderNav')]
 #[Route(path: '/mark/settings/flush-cache', method: 'POST', name: 'mark.settings.flush-cache', handlerMethod: 'flushCache')]
 #[Route(path: '/mark/settings/database', method: 'POST', name: 'mark.settings.database', handlerMethod: 'saveDatabase')]
+#[Route(path: '/mark/settings/mail', method: 'POST', name: 'mark.settings.mail', handlerMethod: 'saveMail')]
 #[Route(path: '/mark/settings/panel-nav', method: 'POST', name: 'mark.settings.panel-nav', handlerMethod: 'savePanelNav')]
 #[Route(path: '/mark/settings/panel-nav/{id}/toggle', method: 'POST', name: 'mark.settings.panel-nav.toggle', handlerMethod: 'togglePanelNav')]
 #[Route(path: '/mark/settings/panel-nav/{id}/sort', method: 'POST', name: 'mark.settings.panel-nav.sort', handlerMethod: 'sortPanelNav')]
@@ -69,7 +73,7 @@ final class SettingsAction
      *
      * @param list<string> $errors
      */
-    private function settingsPage(array $errors = []): string
+    private function settingsPage(array $errors = [], string $activeTab = 'general'): string
     {
         $settings = CardboardServices::settings();
         $all = $settings->all();
@@ -102,8 +106,9 @@ final class SettingsAction
             $csrf,
             $this->url('mark.settings.panel-nav'),
         );
+        $mailCard = $this->mailCard($csrf, $all);
 
-        $content = ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/settings-form.phtml', ['url' => $this->urlBuilder(), 'settingsTabs' => CardboardLayout::settingsTabs($this->urlBuilder(), 'general'), 'databaseCard' => $this->databaseCard($csrf), 'adminEmail' => $adminEmail, 'panelNavTable' => $panelNavTable, 'declaredNavTable' => $declaredNavTable, 'csrf' => $csrf, 'errorHtml' => $errorHtml, 'iconOptions' => $iconOptions, 'layoutSelect' => $layoutSelect, 'locale' => $locale, 'navTable' => $navTable, 'parentOptions' => $parentOptions, 'regChecked' => $regChecked, 'siteDescription' => $siteDescription, 'siteName' => $siteName, 'themeSelect' => $themeSelect, 'themeSettingsCard' => $themeSettingsCard, 'timezone' => $timezone, 'tokenTable' => $tokenTable]);
+        $content = ViewRenderer::render('Modules/Cardboard/Interfaces/HTTP/templates/settings-form.phtml', ['url' => $this->urlBuilder(), 'activeTab' => $activeTab, 'settingsTabs' => CardboardLayout::settingsTabs($this->urlBuilder(), $activeTab), 'databaseCard' => $this->databaseCard($csrf), 'mailCard' => $mailCard, 'adminEmail' => $adminEmail, 'panelNavTable' => $panelNavTable, 'declaredNavTable' => $declaredNavTable, 'csrf' => $csrf, 'errorHtml' => $errorHtml, 'iconOptions' => $iconOptions, 'layoutSelect' => $layoutSelect, 'locale' => $locale, 'navTable' => $navTable, 'parentOptions' => $parentOptions, 'regChecked' => $regChecked, 'siteDescription' => $siteDescription, 'siteName' => $siteName, 'themeSelect' => $themeSelect, 'themeSettingsCard' => $themeSettingsCard, 'timezone' => $timezone, 'tokenTable' => $tokenTable]);
 
         return CardboardLayout::render(
             'Settings',
@@ -254,6 +259,230 @@ final class SettingsAction
             $csrf,
             $this->url('mark.settings.database'),
         );
+    }
+
+    /**
+     * The Mail tab: one transport choice, its fields, and the active answer.
+     *
+     * Public and static so the form is testable without auth or a database.
+     * The stored API key is never read into an input value; the card can say
+     * that one is configured and nothing more.
+     *
+     * @param array<string, mixed> $stored
+     */
+    public static function renderMailCard(
+        MailConfiguration $configuration,
+        array $stored,
+        string $csrf = '',
+        string $actionUrl = '',
+    ): string {
+        $from = is_string($stored[MailConfiguration::KEY_FROM] ?? null)
+            ? $stored[MailConfiguration::KEY_FROM]
+            : '';
+        $sendmailPath = is_string($stored[MailConfiguration::KEY_SENDMAIL_PATH] ?? null)
+            ? $stored[MailConfiguration::KEY_SENDMAIL_PATH]
+            : '';
+        $apiUrl = is_string($stored[MailConfiguration::KEY_API_URL] ?? null)
+            ? $stored[MailConfiguration::KEY_API_URL]
+            : '';
+
+        $options = '';
+        foreach (MailTransport::storable() as $transport) {
+            $selected = $transport === $configuration->configured ? ' selected' : '';
+            $options .= '<option value="' . CardboardLayout::e($transport->value) . '"' . $selected . '>'
+                . CardboardLayout::e($transport->label()) . '</option>';
+        }
+
+        $active = CardboardLayout::e($configuration->resolved->label());
+        $transportSource = self::mailValueSource($stored, MailConfiguration::KEY_TRANSPORT, '');
+        $fromSource = self::mailValueSource($stored, MailConfiguration::KEY_FROM, MailConfiguration::ENV_FROM);
+        $keyState = '' !== $configuration->apiKey ? 'Configured' : 'Not set';
+        $problem = null === $configuration->problem
+            ? ''
+            : '<p class="m-hint m-hint--tight">' . CardboardLayout::e($configuration->problem) . '</p>';
+
+        $form = '';
+
+        if ('' !== $csrf && '' !== $actionUrl) {
+            $form = '<form class="m-form" method="POST" action="' . CardboardLayout::e($actionUrl) . '">'
+                . $csrf
+                . '<label for="mail_transport">Transport</label>'
+                . '<select id="mail_transport" name="mail_transport">' . $options . '</select>'
+                . '<p class="m-muted m-hint m-hint--tight">Automatic keeps the current behaviour:'
+                . ' the development log in development, HTTP outside it, and nothing when neither is set.'
+                . ' An explicit choice overrides it.</p>'
+                . '<label for="mail_from">Sender address</label>'
+                . '<input type="email" id="mail_from" name="mail_from" value="'
+                . CardboardLayout::e($from) . '" placeholder="no-reply@example.com">'
+                . '<p class="m-muted m-hint m-hint--tight">Effective sender: '
+                . CardboardLayout::e('' === $configuration->from ? 'not set' : $configuration->from)
+                . ' (' . CardboardLayout::e($fromSource) . '). Required for Sendmail and HTTP.</p>'
+                . '<label for="mail_sendmail_path">Sendmail binary</label>'
+                . '<input type="text" id="mail_sendmail_path" name="mail_sendmail_path" value="'
+                . CardboardLayout::e($sendmailPath) . '" placeholder="'
+                . CardboardLayout::e(MailConfiguration::DEFAULT_SENDMAIL_PATH) . '">'
+                . '<p class="m-muted m-hint m-hint--tight">Absolute path to the local MTA. Empty uses '
+                . '<code>MAIL_SENDMAIL_PATH</code>, then <code>'
+                . CardboardLayout::e(MailConfiguration::DEFAULT_SENDMAIL_PATH) . '</code>.</p>'
+                . '<label for="mail_api_url">HTTP endpoint</label>'
+                . '<input type="url" id="mail_api_url" name="mail_api_url" value="'
+                . CardboardLayout::e($apiUrl) . '" placeholder="https://api.example.com/emails">'
+                . '<label for="mail_api_key">API key</label>'
+                . '<input type="password" id="mail_api_key" name="mail_api_key" value=""'
+                . ' autocomplete="new-password" placeholder="Leave blank to keep the stored key">'
+                . '<p class="m-muted m-hint m-hint--tight">Key: ' . CardboardLayout::e($keyState)
+                . '. The stored value is never shown here.</p>'
+                . '<div class="m-check"><input type="checkbox" id="clear_mail_api_key"'
+                . ' name="clear_mail_api_key" value="on">'
+                . '<label for="clear_mail_api_key">Remove the stored API key</label></div>'
+                . '<div><button class="m-btn m-btn-primary" type="submit">Save mail settings</button></div>'
+                . '</form>';
+        }
+
+        return '<div class="m-card" id="mail">'
+            . '<h2 class="m-heading">Mail delivery</h2>'
+            . '<p class="m-muted m-card-intro">Where this site sends mail. The active transport is '
+            . '<strong>' . $active . '</strong> (' . CardboardLayout::e($transportSource) . ').</p>'
+            . $problem
+            . $form
+            . '</div>';
+    }
+
+    /**
+     * The card as this request sees it.
+     *
+     * @param array<string, mixed> $stored
+     */
+    private function mailCard(string $csrf, array $stored): string
+    {
+        return self::renderMailCard(
+            MailConfiguration::fromStored($stored),
+            $stored,
+            $csrf,
+            $this->url('mark.settings.mail'),
+        );
+    }
+
+    /**
+     * Save the Mail tab.
+     *
+     * Four gates before anything is written: the transport must be one of the
+     * four storable words, the sender must be an address when present, the
+     * endpoint must be HTTP(S), and a sendmail path must be absolute and
+     * executable. A selected transport that still has no effective sender is
+     * refused, counting the environment fallback.
+     */
+    public function saveMail(Request $request): Response
+    {
+        $transport = MailTransport::tryFrom(trim($request->bodyString(MailConfiguration::KEY_TRANSPORT)));
+
+        if (null === $transport || MailTransport::Log === $transport) {
+            return Response::html($this->settingsPage([
+                'Mail transport must be one of: auto, sendmail, http, disabled.',
+            ], 'mail'));
+        }
+
+        $from = trim($request->bodyString(MailConfiguration::KEY_FROM));
+
+        if ('' !== $from && false === filter_var($from, FILTER_VALIDATE_EMAIL)) {
+            return Response::html($this->settingsPage([
+                'The sender address is not a valid email address.',
+            ], 'mail'));
+        }
+
+        $sendmailPath = trim($request->bodyString(MailConfiguration::KEY_SENDMAIL_PATH));
+
+        if ('' !== $sendmailPath && (!str_starts_with($sendmailPath, '/') || !is_executable($sendmailPath))) {
+            return Response::html($this->settingsPage([
+                'The sendmail path must be an absolute path to an executable file.',
+            ], 'mail'));
+        }
+
+        $apiUrl = trim($request->bodyString(MailConfiguration::KEY_API_URL));
+
+        if ('' !== $apiUrl && !self::isHttpUrl($apiUrl)) {
+            return Response::html($this->settingsPage([
+                'The HTTP endpoint must be an absolute http or https URL.',
+            ], 'mail'));
+        }
+
+        $settings = CardboardServices::settings();
+        $stored = $settings->all();
+        $existingKey = is_string($stored[MailConfiguration::KEY_API_KEY] ?? null)
+            ? trim($stored[MailConfiguration::KEY_API_KEY])
+            : '';
+        $postedKey = trim($request->bodyString(MailConfiguration::KEY_API_KEY));
+        $clearKey = 'on' === $request->bodyString('clear_mail_api_key');
+        $apiKey = $clearKey ? '' : ('' !== $postedKey ? $postedKey : $existingKey);
+
+        $candidate = [
+            MailConfiguration::KEY_TRANSPORT     => $transport->value,
+            MailConfiguration::KEY_FROM          => $from,
+            MailConfiguration::KEY_SENDMAIL_PATH => $sendmailPath,
+            MailConfiguration::KEY_API_URL       => $apiUrl,
+            MailConfiguration::KEY_API_KEY       => $apiKey,
+        ];
+        $configuration = MailConfiguration::fromStored($candidate);
+
+        if (MailTransport::Sendmail === $transport && '' === $configuration->from) {
+            return Response::html($this->settingsPage([
+                'Sendmail needs a sender address. Set mail_from or MAIL_FROM.',
+            ], 'mail'));
+        }
+
+        if (MailTransport::Http === $transport && ('' === $configuration->apiUrl || '' === $configuration->from)) {
+            return Response::html($this->settingsPage([
+                'HTTP mail needs an endpoint and a sender address. Set them here or in MAIL_API_URL and MAIL_FROM.',
+            ], 'mail'));
+        }
+
+        $settings->set(MailConfiguration::KEY_TRANSPORT, $transport->value, 'mail', false);
+        $settings->set(MailConfiguration::KEY_FROM, $from, 'mail', false);
+        $settings->set(MailConfiguration::KEY_SENDMAIL_PATH, $sendmailPath, 'mail', false);
+        $settings->set(MailConfiguration::KEY_API_URL, $apiUrl, 'mail', false);
+        $settings->set(MailConfiguration::KEY_API_KEY, $apiKey, 'mail', false);
+
+        \Modules\Audit\Interfaces\HTTP\AuditServices::log(
+            'settings.mail',
+            'settings',
+            'Saved the mail transport (' . $transport->value . ')',
+            $request->getClientIp(),
+        );
+
+        return Response::redirect($this->url('mark.settings') . '?tab=mail');
+    }
+
+    private static function isHttpUrl(string $url): bool
+    {
+        if (false === filter_var($url, FILTER_VALIDATE_URL)) {
+            return false;
+        }
+
+        $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+
+        return in_array($scheme, ['http', 'https'], true);
+    }
+
+    /**
+     * Which layer supplied a value: a stored row, its environment fallback, or
+     * the default. The card says this beside the active transport, so a save
+     * the environment shadows does not look like a save that did nothing.
+     *
+     * @param array<string, mixed> $stored
+     */
+    private static function mailValueSource(array $stored, string $key, string $envKey): string
+    {
+        $value = $stored[$key] ?? null;
+
+        if (is_string($value) && '' !== trim($value)) {
+            return 'settings';
+        }
+
+        if ('' !== $envKey && '' !== trim((string) (Env::get($envKey) ?? ''))) {
+            return 'environment';
+        }
+
+        return 'default';
     }
 
     /**

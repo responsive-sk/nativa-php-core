@@ -8,6 +8,7 @@ use Modules\Core\Infrastructure\Http\Request;
 use Modules\Core\Infrastructure\Http\Response;
 use Modules\Core\Interfaces\HTTP\Attributes\Route;
 use Modules\Users\Application\Services\PasswordResetService;
+use Modules\Users\Infrastructure\Mail\PasswordResetMessage;
 use Modules\Users\Interfaces\HTTP\AuthServices;
 use Modules\Users\Interfaces\HTTP\AuthTemplate;
 
@@ -15,8 +16,8 @@ use Modules\Users\Interfaces\HTTP\AuthTemplate;
  * Password reset — GET renders the reset form (token from query string),
  * POST validates the token and updates the password.
  */
-#[Route(path: '/reset-password', method: 'GET', name: 'auth.reset')]
-#[Route(path: '/reset-password', method: 'POST', name: 'auth.reset.submit', handlerMethod: 'submit')]
+#[Route(path: PasswordResetMessage::PATH, method: 'GET', name: 'auth.reset')]
+#[Route(path: PasswordResetMessage::PATH, method: 'POST', name: 'auth.reset.submit', handlerMethod: 'submit')]
 final class PasswordResetAction
 {
     public function handle(Request $request): Response
@@ -73,7 +74,7 @@ final class PasswordResetAction
     {
         return AuthTemplate::render(
             'Choose a new password',
-            '/reset-password',
+            PasswordResetMessage::PATH,
             'Update password',
             [
                 ['name' => 'token', 'type' => 'hidden', 'value' => $token],

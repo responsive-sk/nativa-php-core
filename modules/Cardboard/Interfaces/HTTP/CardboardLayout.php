@@ -348,6 +348,7 @@ final class CardboardLayout
             'design'    => 'Design',
             'cache'     => 'Cache',
             'database'  => 'Database',
+            'mail'      => 'Mail',
             'nav'       => 'Navigation',
             'panel-nav' => 'Panel Nav',
             'modules'   => 'Modules',

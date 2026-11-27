@@ -11,11 +11,14 @@ if (!isset($viewRendererGuard)) {
     throw new \RuntimeException('Template must be rendered via ViewRenderer.');
 }
 
+$activeTab = isset($activeTab) && is_string($activeTab) && '' !== $activeTab ? $activeTab : 'general';
+$mailCard = $mailCard ?? '';
+
 ?>    <?php echo $errorHtml . "\n"; ?>
     <div class="m-tabs" id="settings-tabs">
         <?php echo $settingsTabs . "\n"; ?>
 
-        <div class="m-tab-panel m-tab-panel--active" id="panel-general" data-tab-panel="general">
+        <div class="m-tab-panel<?php echo 'general' === $activeTab ? ' m-tab-panel--active' : ''; ?>" id="panel-general" data-tab-panel="general">
             <div class="m-card">
                 <h2 class="m-heading">Site settings</h2>
                 <form class="m-form" method="POST" action="<?php echo $url('mark.settings.site'); ?>">
@@ -45,7 +48,7 @@ if (!isset($viewRendererGuard)) {
             </div>
         </div>
 
-        <div class="m-tab-panel" id="panel-design" data-tab-panel="design">
+        <div class="m-tab-panel<?php echo 'design' === $activeTab ? ' m-tab-panel--active' : ''; ?>" id="panel-design" data-tab-panel="design">
             <div class="m-card">
                 <h2 class="m-heading">Design tokens</h2>
                 <?php echo $tokenTable . "\n"; ?>
@@ -61,7 +64,7 @@ if (!isset($viewRendererGuard)) {
             <?php echo $themeSettingsCard . "\n"; ?>
         </div>
 
-        <div class="m-tab-panel" id="panel-cache" data-tab-panel="cache">
+        <div class="m-tab-panel<?php echo 'cache' === $activeTab ? ' m-tab-panel--active' : ''; ?>" id="panel-cache" data-tab-panel="cache">
             <div class="m-card">
                 <h2 class="m-heading">Page Cache</h2>
                 <p class="m-muted m-card-intro">File-based cache in <code>storage/cache/pages/</code> served when the rate limit is exceeded. Cached pages expire after 5 minutes.</p>
@@ -72,11 +75,15 @@ if (!isset($viewRendererGuard)) {
             </div>
         </div>
 
-        <div class="m-tab-panel" id="panel-database" data-tab-panel="database">
+        <div class="m-tab-panel<?php echo 'database' === $activeTab ? ' m-tab-panel--active' : ''; ?>" id="panel-database" data-tab-panel="database">
             <?php echo $databaseCard . "\n"; ?>
         </div>
 
-        <div class="m-tab-panel" id="panel-nav" data-tab-panel="nav">
+        <div class="m-tab-panel<?php echo 'mail' === $activeTab ? ' m-tab-panel--active' : ''; ?>" id="panel-mail" data-tab-panel="mail">
+            <?php echo $mailCard . "\n"; ?>
+        </div>
+
+        <div class="m-tab-panel<?php echo 'nav' === $activeTab ? ' m-tab-panel--active' : ''; ?>" id="panel-nav" data-tab-panel="nav">
             <div class="m-card">
                 <h2 class="m-heading">Navigation (header)</h2>
                 <?php echo $navTable . "\n"; ?>
@@ -92,7 +99,7 @@ if (!isset($viewRendererGuard)) {
             </div>
         </div>
 
-        <div class="m-tab-panel" id="panel-panel-nav" data-tab-panel="panel-nav">
+        <div class="m-tab-panel<?php echo 'panel-nav' === $activeTab ? ' m-tab-panel--active' : ''; ?>" id="panel-panel-nav" data-tab-panel="panel-nav">
             <div class="m-card m-card--scroll-x">
                 <h2 class="m-heading">Mark panel navigation</h2>
                 <p class="m-muted m-card-intro">Manage which pages appear in the Mark sidebar/top bar, their order, and visibility. Changes apply immediately.</p>

@@ -10,12 +10,18 @@ use Modules\Core\Infrastructure\Paths\AppPaths;
 use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
 use Modules\Security\Application\Services\PasswordHasher;
 use Modules\Security\Application\Services\RateLimiter;
+use Modules\Settings\Application\Mail\MailConfiguration;
+use Modules\Settings\Infrastructure\Persistence\Repositories\SettingsRepository;
+use Modules\Settings\Interfaces\HTTP\SettingsServices;
 use Modules\Users\Application\Services\PasswordResetService;
+use Modules\Users\Domain\Contracts\Mailer;
 use Modules\Users\Domain\Contracts\PasswordResetMailer;
 use Modules\Users\Infrastructure\Mail\DevLogPasswordResetMailer;
 use Modules\Users\Infrastructure\Mail\HttpPasswordResetMailer;
+use Modules\Users\Infrastructure\Mail\MailerPasswordResetMailer;
 use Modules\Users\Infrastructure\Mail\NullPasswordResetMailer;
 use Modules\Users\Infrastructure\Mail\PasswordResetMailerFactory;
+use Modules\Users\Infrastructure\Mail\PasswordResetMessage;
 use Modules\Users\Infrastructure\Persistence\Migrations\UsersDatabaseMigrator;
 use Modules\Users\Infrastructure\Persistence\Repositories\UserRepository;
 use Modules\Users\Infrastructure\Persistence\Statement;
@@ -77,7 +83,12 @@ final class PasswordResetMailerTest extends TestCase
     private array $mailEnvBefore = [];
 
     /** The keys the HTTP transport is configured from (`PasswordResetMailerFactory::http()`). */
-    private const array MAIL_ENV_KEYS = ['MAIL_API_URL', 'MAIL_API_KEY', 'MAIL_FROM', 'APP_URL'];
+    private const array MAIL_ENV_KEYS = [
+        MailConfiguration::ENV_API_URL,
+        MailConfiguration::ENV_API_KEY,
+        MailConfiguration::ENV_FROM,
+        'APP_URL',
+    ];
 
     protected function setUp(): void
     {
@@ -397,6 +408,78 @@ final class PasswordResetMailerTest extends TestCase
     }
 
     /**
+     * The sendmail reset path shares the message text with HTTP: one subject,
+     * one link built from APP_URL, one expiry sentence. The transport itself is
+     * covered by SendmailMailerTest; this is the reset port's composition.
+     */
+    #[Test]
+    public function sendmailCarriesTheResetLinkBuiltFromAppUrl(): void
+    {
+        $recorder = new class () implements Mailer {
+            /** @var list<array{to: string, subject: string, text: string}> */
+            public array $sent = [];
+
+            public function send(string $to, string $subject, string $text): bool
+            {
+                $this->sent[] = ['to' => $to, 'subject' => $subject, 'text' => $text];
+
+                return true;
+            }
+        };
+
+        $token = str_repeat('c', 64);
+        $mailer = new MailerPasswordResetMailer($recorder, 'https://app.example.test/');
+
+        $mailer->sendResetLink(self::EMAIL, $token, 1);
+
+        self::assertCount(1, $recorder->sent);
+        self::assertSame(self::EMAIL, $recorder->sent[0]['to']);
+        self::assertSame(PasswordResetMessage::SUBJECT, $recorder->sent[0]['subject']);
+        self::assertStringContainsString(
+            'https://app.example.test/reset-password?token=' . $token,
+            $recorder->sent[0]['text'],
+        );
+        self::assertStringContainsString('expires in 1 hour(s)', $recorder->sent[0]['text']);
+    }
+
+    #[Test]
+    public function aStoredSendmailChoiceBuildsTheSendmailResetMailer(): void
+    {
+        self::appEnv('production');
+        putenv('APP_URL=https://app.example.test');
+        $this->storeSendmail();
+
+        self::assertInstanceOf(
+            MailerPasswordResetMailer::class,
+            PasswordResetMailerFactory::create(),
+        );
+    }
+
+    #[Test]
+    public function aSendmailResetWithoutAppUrlIsRefused(): void
+    {
+        self::appEnv('production');
+        $this->storeSendmail();
+
+        $logFile = $this->tmpDir . '/factory.log';
+        $before = ini_get('error_log');
+        // @mago-expect lint:no-ini-set
+        ini_set('error_log', $logFile);
+
+        try {
+            self::assertInstanceOf(
+                NullPasswordResetMailer::class,
+                PasswordResetMailerFactory::create(),
+            );
+        } finally {
+            // @mago-expect lint:no-ini-set
+            ini_set('error_log', false === $before ? '' : $before);
+        }
+
+        self::assertStringContainsString('APP_URL', (string) file_get_contents($logFile));
+    }
+
+    /**
      * The transport's documented contract, asserted without network egress: the
      * endpoint, the bearer header, the JSON shape, and the link a reader can
      * actually click.
@@ -477,6 +560,16 @@ final class PasswordResetMailerTest extends TestCase
             self::logContents($this->logFile),
             'an undeliverable reset link must never be parked in storage/logs/app.log as a fallback — that fallback IS audit finding #1',
         );
+    }
+
+    private function storeSendmail(): void
+    {
+        $settings = new SettingsRepository(DatabaseConnectionManager::instance()->connect('config'));
+        $settings->set(MailConfiguration::KEY_TRANSPORT, 'sendmail', 'mail', false);
+        $settings->set(MailConfiguration::KEY_FROM, 'no-reply@example.test', 'mail', false);
+        $settings->set(MailConfiguration::KEY_SENDMAIL_PATH, MailConfiguration::DEFAULT_SENDMAIL_PATH, 'mail', false);
+        SettingsServices::reset();
+        AuthServices::reset();
     }
 
     private static function logContents(string $file): ?string

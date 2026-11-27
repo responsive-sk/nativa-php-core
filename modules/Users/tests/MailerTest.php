@@ -5,13 +5,22 @@ declare(strict_types = 1);
 namespace Modules\Users\Tests;
 
 use Modules\Core\Infrastructure\Env;
+use Modules\Core\Interfaces\CLI\CliOutput;
+use Modules\Database\Infrastructure\Persistence\DatabaseConnectionManager;
+use Modules\Settings\Application\Mail\MailConfiguration;
+use Modules\Settings\Infrastructure\Persistence\Migrations\SettingsDatabaseMigrator;
+use Modules\Settings\Infrastructure\Persistence\Repositories\SettingsRepository;
+use Modules\Settings\Interfaces\HTTP\SettingsServices;
 use Modules\Users\Domain\Contracts\Mailer;
 use Modules\Users\Infrastructure\Mail\DevLogMailer;
 use Modules\Users\Infrastructure\Mail\HttpMailer;
 use Modules\Users\Infrastructure\Mail\MailerFactory;
 use Modules\Users\Infrastructure\Mail\NullMailer;
+use Modules\Users\Infrastructure\Mail\SendmailMailer;
+use PDO;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Tests\Support\SqliteDatabase;
 
 /**
  * MailerTest — the kernel's mail port: one message, three transports, one
@@ -36,6 +45,8 @@ use PHPUnit\Framework\TestCase;
  */
 final class MailerTest extends TestCase
 {
+    use SqliteDatabase;
+
     private string $tmpDir = '';
 
     /** @var array<string, string|null> */
@@ -53,8 +64,15 @@ final class MailerTest extends TestCase
             $this->markTestSkipped('Users is not installed.');
         }
 
+        $this->pinSqliteDatabase();
         $this->tmpDir = sys_get_temp_dir() . '/nativa-mailer-' . bin2hex(random_bytes(6));
         mkdir($this->tmpDir, 0o775, true);
+
+        putenv('DB_CONFIG=' . $this->tmpDir . '/config.db');
+        DatabaseConnectionManager::resetInstance();
+        SettingsServices::reset();
+        (new SettingsDatabaseMigrator(new PDO('sqlite:' . $this->tmpDir . '/config.db')))
+            ->run($this->quietOutput());
 
         foreach (self::envKeys() as $key) {
             $value = getenv($key);
@@ -65,16 +83,22 @@ final class MailerTest extends TestCase
 
     protected function tearDown(): void
     {
+        $this->restoreDatabaseEnvironment();
+        SettingsServices::reset();
+        DatabaseConnectionManager::resetInstance();
+
         foreach (self::envKeys() as $key) {
             $before = $this->envBefore[$key] ?? null;
             putenv(null === $before ? $key : $key . '=' . $before);
         }
 
-        foreach (glob($this->tmpDir . '/*') ?: [] as $file) {
-            @unlink($file);
-        }
+        if ('' !== $this->tmpDir && is_dir($this->tmpDir)) {
+            foreach (glob($this->tmpDir . '/*') ?: [] as $file) {
+                @unlink($file);
+            }
 
-        @rmdir($this->tmpDir);
+            @rmdir($this->tmpDir);
+        }
 
         parent::tearDown();
     }
@@ -88,7 +112,14 @@ final class MailerTest extends TestCase
      */
     private static function envKeys(): array
     {
-        return ['APP_ENV', 'MAIL_API_URL', 'MAIL_API_KEY', 'MAIL_FROM', 'LOG_LEVEL'];
+        return [
+            'APP_ENV',
+            MailConfiguration::ENV_API_URL,
+            MailConfiguration::ENV_API_KEY,
+            MailConfiguration::ENV_FROM,
+            MailConfiguration::ENV_SENDMAIL_PATH,
+            'LOG_LEVEL',
+        ];
     }
 
     #[Test]
@@ -136,6 +167,43 @@ final class MailerTest extends TestCase
         self::appEnv('production');
         putenv('MAIL_API_URL=https://mail.example.test/send');
         putenv('MAIL_FROM=no-reply@example.test');
+
+        self::assertInstanceOf(HttpMailer::class, MailerFactory::create());
+    }
+
+    /**
+     * The stored choice, not the environment, is what a deployment with only
+     * sendmail needs. It also proves an explicit choice wins in development,
+     * where `auto` would otherwise write to the log.
+     */
+    #[Test]
+    public function aStoredSendmailChoiceIsTheMailerTheFactoryReturns(): void
+    {
+        self::appEnv('development');
+
+        $settings = new SettingsRepository(DatabaseConnectionManager::instance()->connect('config'));
+        $settings->set(MailConfiguration::KEY_TRANSPORT, 'sendmail', 'mail', false);
+        $settings->set(MailConfiguration::KEY_FROM, 'no-reply@example.test', 'mail', false);
+        $settings->set(MailConfiguration::KEY_SENDMAIL_PATH, MailConfiguration::DEFAULT_SENDMAIL_PATH, 'mail', false);
+        SettingsServices::reset();
+
+        self::assertFalse(MailerFactory::writesToLog());
+        self::assertInstanceOf(SendmailMailer::class, MailerFactory::create());
+    }
+
+    /**
+     * A settings table that is missing or unmigrated must not make every mail
+     * send throw. The environment fallback is the state a fresh checkout has.
+     */
+    #[Test]
+    public function anUnavailableSettingsTableFallsBackToTheEnvironment(): void
+    {
+        self::appEnv('production');
+        putenv('DB_CONFIG=' . $this->tmpDir . '/missing.db');
+        putenv('MAIL_API_URL=https://mail.example.test/send');
+        putenv('MAIL_FROM=no-reply@example.test');
+        DatabaseConnectionManager::resetInstance();
+        SettingsServices::reset();
 
         self::assertInstanceOf(HttpMailer::class, MailerFactory::create());
     }
@@ -300,6 +368,15 @@ final class MailerTest extends TestCase
      * deployment's value, which is how four mailer assertions went red on a
      * machine with a `.env` while CI, which has none, stayed green.
      */
+    private function quietOutput(): CliOutput
+    {
+        return new class () implements CliOutput {
+            public function writeln(string $message): void
+            {
+            }
+        };
+    }
+
     private static function appEnv(?string $value): void
     {
         Env::reset();

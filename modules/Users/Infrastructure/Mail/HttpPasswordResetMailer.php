@@ -55,9 +55,6 @@ use Modules\Users\Domain\Contracts\PasswordResetMailer;
  */
 final readonly class HttpPasswordResetMailer implements PasswordResetMailer
 {
-    /** The path the reset form lives at — the module owns it (`PasswordResetAction`). */
-    private const string RESET_PATH = '/reset-password';
-
     /**
      * @param \Closure(string $endpoint, list<string> $headers, string $body): array{status: int, body: string}|null $sender
      *        the transport call, injectable so the suite can assert the request
@@ -81,7 +78,7 @@ final readonly class HttpPasswordResetMailer implements PasswordResetMailer
      */
     public function resetLink(#[\SensitiveParameter] string $token): string
     {
-        return rtrim($this->baseUrl, '/') . self::RESET_PATH . '?token=' . $token;
+        return PasswordResetMessage::link($this->baseUrl, $token);
     }
 
     public function sendResetLink(string $email, #[\SensitiveParameter] string $token, int $ttlHours): void
@@ -89,12 +86,8 @@ final readonly class HttpPasswordResetMailer implements PasswordResetMailer
         $payload = json_encode([
             'from'    => $this->from,
             'to'      => $email,
-            'subject' => 'Reset your password',
-            'text'    => sprintf(
-                "Somebody asked to reset the password for this address.\n\n%s\n\nThe link works once and expires in %d hour(s). If this was not you, ignore this message — nothing has changed.",
-                $this->resetLink($token),
-                $ttlHours,
-            ),
+            'subject' => PasswordResetMessage::SUBJECT,
+            'text'    => PasswordResetMessage::text($this->resetLink($token), $ttlHours),
         ], JSON_THROW_ON_ERROR);
 
         $sender = $this->sender ?? HttpTransport::streamSender();

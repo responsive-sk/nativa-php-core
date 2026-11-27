@@ -6,7 +6,7 @@ number here is **measured**, and the test fails when a number and the tree
 disagree. A row that is not measured is a wish.
 
 The rule the gate cannot check is worth stating too: a class constant is a
-**good** tool for most of this tree. 284 declarations, and the large majority
+**good** tool for most of this tree. 343 declarations, and the large majority
 are private technical invariants — `CoverGenerator::WIDTH`, `MAX_RETRIES`,
 `IDLE_TIMEOUT` — which are facts about the code, not configuration and not
 identifiers. Those are correct as they are and the gate leaves them alone. The
@@ -31,10 +31,10 @@ identical:
 | | full tree | kernel-only |
 |---|---|---|
 | files (rule 1 scan) | 593 | 593 |
-| declarations (rule 3, excluding the gates) | 284 | 284 |
-| distinct names (rule 3) | 225 | 225 |
+| declarations (rule 3, excluding the gates) | 343 | 343 |
+| distinct names (rule 3) | 256 | 256 |
 | values with 2+ names (rule 1) | **2** | **2** |
-| literal places (rule 2) | 404 | 404 |
+| literal places (rule 2) | 551 | 551 |
 
 ## Rule 1 > one string value, one name · absolute, 2 exemptions
 
@@ -99,16 +99,16 @@ tree already had the idiom in `Cardboard\Domain\Model\Period` and
 rule 1 does not see enum cases, so two cases with one backing value is a review
 question and not a gate failure.
 
-## Rule 2 > a value spelled as a literal outside its owner · ratchet at 404
+## Rule 2 > a value spelled as a literal outside its owner · ratchet at 551
 
 A **ceiling, not a list.** 50 owned string values appear as raw literals on
-**404 places** across the tree (measured 2026-11-07). An absolute rule here
-would need 404 exemptions, and a gate with 404 exemptions is not a gate:
+**551 places** across the tree (measured 2026-11-27). An absolute rule here
+would need 551 exemptions, and a gate with 551 exemptions is not a gate:
 
 | filter | values | places | files |
 |---|---|---|---|
-| none | 50 | 404 | 123 |
-| length ≥ 4 | 50 | 404 | 123 |
+| none | 50 | 551 | 192 |
+| length ≥ 4 | 50 | 551 | 192 |
 | length ≥ 8 | 35 | 171 | 81 |
 | contains `/` or `.` | 11 | 57 | 27 |
 | contains `/` | 4 | 45 | 21 |
@@ -148,12 +148,19 @@ places are that module's route names, reservation status words, mail-kind
 labels and the tests that exercise them. They are new surface rather than a
 rename of an existing value: no earlier module gained a second spelling.
 
-The declaration ceiling is 332 in the same measurement. The eight new
+The declaration ceiling is 343 in the same measurement. The eight Events
 declarations are `EventsBadge::NAV_HREF`, the four `ReservationRefused`
 reasons, `ReservationSubmitAction`'s `RATE_LIMIT` and `RATE_WINDOW`, and
 `ReservationService::WRITE_ATTEMPTS`. Five of those are distinct new names
 (the four refusal reasons and the retry bound); `NAV_HREF`, `RATE_LIMIT` and
 `RATE_WINDOW` already existed for the same kind of fact.
+
+The mail delivery settings added eleven declarations and eleven names in
+`MailConfiguration`: five setting keys, four `MAIL_*` fallbacks, the default
+sendmail path and the development-environment whitelist. The literal ceiling
+stayed at 551 because the tests read those constants rather than spelling the
+same values a second time. The names are new surface, not a rename: no earlier
+owner held them.
 
 Then 526 → 384 with the locale decision (2026-10-27): 142 places spelled a
 `xx_YY` code, 84 of them in `Locales/…/SeedData.php`, and a locale code names a

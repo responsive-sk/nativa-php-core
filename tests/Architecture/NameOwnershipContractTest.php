@@ -366,6 +366,11 @@ final class NameOwnershipContractTest extends TestCase
     // route names, status words, mail-kind labels and their test literals are
     // new surface, not a rename of an existing value. The declarations below
     // name the eight constants behind them.
+    //
+    // 551 with mail delivery (2026-11-27): the test literals that spelled the
+    // five setting keys, the four `MAIL_*` fallbacks and the default sendmail
+    // path now read `MailConfiguration`'s constants, so the new surface did
+    // not raise this ceiling.
     private const int MAX_LITERAL_PLACES = 551;
 
     /**
@@ -512,7 +517,13 @@ final class NameOwnershipContractTest extends TestCase
     // `ReservationRefused` reasons, `ReservationSubmitAction`'s rate limit and
     // window, and `ReservationService`'s write-attempt bound. None is a second
     // spelling of an existing value; the six distinct names are new surface.
-    private const int MAX_DECLARATIONS = 332;
+    //
+    // 343 with mail delivery (2026-11-27): `MailConfiguration` owns the five
+    // settings keys, the four `MAIL_*` fallbacks, the default sendmail path and
+    // the development-environment whitelist as eleven declarations. They are
+    // new names for a new surface, and the tests read them instead of spelling
+    // the values again.
+    private const int MAX_DECLARATIONS = 343;
 
     /**
      * 203 → 204 with MAX_DECLARATIONS: `ModuleTreeState::IGNORED` is a name as
@@ -591,7 +602,11 @@ final class NameOwnershipContractTest extends TestCase
     // transaction retry bound. `NAV_HREF`, `RATE_LIMIT` and `RATE_WINDOW`
     // already existed for the same kind of fact, so they move declarations but
     // not distinct names.
-    private const int MAX_NAMES = 245;
+    //
+    // 256 with mail delivery (2026-11-27): the eleven `MailConfiguration`
+    // declarations above are eleven new names; no constant of another owner was
+    // renamed to carry them.
+    private const int MAX_NAMES = 256;
 
     /**
      * `name => modules/<Name>` or `modules/<Group>/<Name>`, resolved once. A
