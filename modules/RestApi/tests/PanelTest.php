@@ -145,7 +145,7 @@ final class PanelTest extends TestCase
     #[Test]
     public function theServiceListOffersCreateAndRowActions(): void
     {
-        $this->seed('Blog', []);
+        $this->seed('Blog API', []);
 
         $response = (new RestApiIndexAction(PanelTestDoubles::router()))->handle(Request::create('GET', '/mark/rest'));
         $content = $response->getContent();
@@ -175,7 +175,7 @@ final class PanelTest extends TestCase
         self::assertStringContainsString('nonce="__CSP_NONCE_PLACEHOLDER__"', $content);
         self::assertStringNotContainsString('onchange=', $content);
 
-        $this->seed('Blog', []);
+        $this->seed('Blog API', []);
 
         $editRequest = Request::create('GET', '/mark/rest/services/blog/edit');
         $editRequest->setRouteParams(['id' => 'blog']);
@@ -188,7 +188,7 @@ final class PanelTest extends TestCase
     #[Test]
     public function theNewResourceFormOffersExamplesButTheEditFormDoesNot(): void
     {
-        $this->seed('Blog', [[
+        $this->seed('Blog API', [[
             'name'       => 'posts',
             'path'       => '/posts',
             'item_path'  => '/posts/{id}',
@@ -243,7 +243,7 @@ final class PanelTest extends TestCase
     #[Test]
     public function aNewResourceDefaultsToReadOnly(): void
     {
-        $this->seed('Blog', []);
+        $this->seed('Blog API', []);
 
         $request = Request::create('POST', '/mark/rest/services/blog/resources', body: [
                 'name'       => 'posts',
@@ -270,7 +270,7 @@ final class PanelTest extends TestCase
     #[Test]
     public function theCollectionPageRendersTheBlogFixture(): void
     {
-        $this->seed('Blog', [[
+        $this->seed('Blog API', [[
             'name'       => 'posts',
             'path'       => '/posts',
             'item_path'  => '/posts/{id}',
@@ -298,7 +298,7 @@ final class PanelTest extends TestCase
     #[Test]
     public function theResourceEditFormUsesTheAdminCssVocabulary(): void
     {
-        $this->seed('Blog', [[
+        $this->seed('Blog API', [[
             'name'       => 'posts',
             'path'       => '/posts',
             'item_path'  => '/posts/{id}',
@@ -326,7 +326,7 @@ final class PanelTest extends TestCase
     #[Test]
     public function theResourceRowGroupsEditAndDeleteWithoutAnInlineHandler(): void
     {
-        $this->seed('Blog', [[
+        $this->seed('Blog API', [[
             'name'       => 'posts',
             'path'       => '/posts',
             'item_path'  => '/posts/{id}',
@@ -353,7 +353,7 @@ final class PanelTest extends TestCase
     #[Test]
     public function aValidationFailureIsRenderedBesideTheField(): void
     {
-        $this->seed('Blog', [[
+        $this->seed('Blog API', [[
             'name'       => 'posts',
             'path'       => '/posts',
             'item_path'  => '/posts/{id}',
@@ -378,7 +378,7 @@ final class PanelTest extends TestCase
     #[Test]
     public function aReadOnlyResourceRefusesTheWriteBeforeTheTransport(): void
     {
-        $this->seed('Blog', [[
+        $this->seed('Blog API', [[
             'name'       => 'posts',
             'path'       => '/posts',
             'item_path'  => '/posts/{id}',
@@ -402,7 +402,7 @@ final class PanelTest extends TestCase
     #[Test]
     public function deletingAnItemSendsDeleteToTheMemberPath(): void
     {
-        $this->seed('Blog', [[
+        $this->seed('Blog API', [[
             'name'       => 'posts',
             'path'       => '/posts',
             'item_path'  => '/posts/{id}',
@@ -432,7 +432,7 @@ final class PanelTest extends TestCase
     #[Test]
     public function aTamperedResourceFormIsRefusedAsAFieldError(): void
     {
-        $this->seed('Blog', []);
+        $this->seed('Blog API', []);
 
         $pagination = (new ResourceFormAction(PanelTestDoubles::router()))
             ->createSubmit($this->resourceRequest(['pagination' => 'offset']));
