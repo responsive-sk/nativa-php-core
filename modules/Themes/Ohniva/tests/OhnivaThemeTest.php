@@ -330,6 +330,18 @@ final class OhnivaThemeTest extends TestCase
             );
         }
 
+        self::assertSame(
+            2,
+            substr_count($veil[1], 'transparent 24px'),
+            'Both grid directions use a 24px cell, fine enough to read as texture.',
+        );
+
+        self::assertStringContainsString(
+            'feTurbulence',
+            $veil[1],
+            'A grain layer keeps the washed photograph from looking like a flat filter.',
+        );
+
         $this->assertMatchesRegularExpression(
             '/\.oh-ie6 \.oh-backdrop__veil\s*\{[^}]*display\s*:\s*none/s',
             $ie6,
