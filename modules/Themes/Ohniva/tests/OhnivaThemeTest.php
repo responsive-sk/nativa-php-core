@@ -292,6 +292,18 @@ final class OhnivaThemeTest extends TestCase
     }
 
     #[Test]
+    public function theBackdropPhotoFillsTheViewport(): void
+    {
+        $css = (string) file_get_contents(APP_BASE_PATH . '/modules/Themes/Ohniva/assets/critical/ohniva.css');
+
+        $this->assertMatchesRegularExpression(
+            '/\.oh-slide\s*\{[^}]*width\s*:\s*100%[^}]*height\s*:\s*100%[^}]*object-fit\s*:\s*cover/s',
+            $css,
+            'The 600 x 400 photograph covers the fixed backdrop instead of sitting in a corner.',
+        );
+    }
+
+    #[Test]
     public function theBackdropStopsForReducedMotion(): void
     {
         $script = (string) file_get_contents(APP_BASE_PATH . '/modules/Themes/Ohniva/assets/scripts/ohniva.js');
