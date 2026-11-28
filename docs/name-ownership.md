@@ -6,7 +6,7 @@ number here is **measured**, and the test fails when a number and the tree
 disagree. A row that is not measured is a wish.
 
 The rule the gate cannot check is worth stating too: a class constant is a
-**good** tool for most of this tree. 343 declarations, and the large majority
+**good** tool for most of this tree. 347 declarations, and the large majority
 are private technical invariants — `CoverGenerator::WIDTH`, `MAX_RETRIES`,
 `IDLE_TIMEOUT` — which are facts about the code, not configuration and not
 identifiers. Those are correct as they are and the gate leaves them alone. The
@@ -31,8 +31,8 @@ identical:
 | | full tree | kernel-only |
 |---|---|---|
 | files (rule 1 scan) | 593 | 593 |
-| declarations (rule 3, excluding the gates) | 343 | 343 |
-| distinct names (rule 3) | 256 | 256 |
+| declarations (rule 3, excluding the gates) | 347 | 347 |
+| distinct names (rule 3) | 260 | 260 |
 | values with 2+ names (rule 1) | **2** | **2** |
 | literal places (rule 2) | 551 | 551 |
 
@@ -148,7 +148,10 @@ places are that module's route names, reservation status words, mail-kind
 labels and the tests that exercise them. They are new surface rather than a
 rename of an existing value: no earlier module gained a second spelling.
 
-The declaration ceiling is 343 in the same measurement. The eight Events
+The declaration ceiling is 347 and the distinct-name ceiling 260 in the same
+measurement the ohniva template moved on 2026-11-28: `OhnivaTheme::RAIL`,
+`BANNERS`, `SLIDES` and `THUMBS` are four new names for four new lists, read by
+the theme test instead of a second spelling of the slugs. The eight Events
 declarations are `EventsBadge::NAV_HREF`, the four `ReservationRefused`
 reasons, `ReservationSubmitAction`'s `RATE_LIMIT` and `RATE_WINDOW`, and
 `ReservationService::WRITE_ATTEMPTS`. Five of those are distinct new names
@@ -275,7 +278,8 @@ maintained:
 | `kernel` | `k-` | `kernel` | 17 | 1 |
 | `mono` | `mo-` | `mono` | 196 | 2 |
 
-`ohniva` (`oh-`, bundle `ohniva`, 310 classes across 2 files) joined the
+`ohniva` (`oh-`, bundle `ohniva`, 348 class definitions across 3 files, 303
+distinct names, recounted 2026-11-28 when the IE6 sheet arrived) joined the
 catalogue on 2026-11-27. It is not in the totals above, which were measured
 before it existed.
 

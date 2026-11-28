@@ -1,5 +1,5 @@
 {
-  "measured": "2026-11-25",
+  "measured": "2026-11-28",
   "why": "One ceiling per theme and surface, in bytes of inlined CSS and tagged JS. A page at or under its ceiling is the theme as it ships; a page above it is a rule that arrived from another surface. A lower number records an improvement, a higher one is a decision that shows in the diff. Byte counts are read from the built bundle under public/dist, so a tree without a build is not measured here.",
   "ceilings": {
     "kernel": {
@@ -45,10 +45,13 @@
       "article": { "css": 11390, "js": 1176 }
     },
     "ohniva": {
-      "page": { "css": 36928, "js": 0 },
-      "home": { "css": 36928, "js": 0 },
-      "listing": { "css": 36928, "js": 0 },
-      "article": { "css": 36928, "js": 0 }
+      "page": { "css": 47455, "js": 0 },
+      "home": { "css": 47455, "js": 0 },
+      "listing": { "css": 47455, "js": 0 },
+      "article": { "css": 47455, "js": 0 }
     }
+  },
+  "decisions": {
+    "ohniva": "2026-11-28: 36928 -> 47455 bytes. The IE6 sheet is 4245 bytes and is inlined for every reader, because the kernel owns <head> and cannot wrap the file in a conditional comment; every rule is scoped under .oh-ie6, so a modern browser downloads it and matches nothing. The other 6282 bytes are the template's rail, four banners, gallery, the four @font-face blocks and the fixed backdrop."
   }
 }

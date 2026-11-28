@@ -523,7 +523,13 @@ final class NameOwnershipContractTest extends TestCase
     // the development-environment whitelist as eleven declarations. They are
     // new names for a new surface, and the tests read them instead of spelling
     // the values again.
-    private const int MAX_DECLARATIONS = 343;
+    //
+    // 347 with the ohniva template (2026-11-28): `OhnivaTheme::RAIL`,
+    // `BANNERS`, `SLIDES` and `THUMBS` are four new names for four new fixed
+    // lists. They were literals in the markup before, and the theme test reads
+    // them rather than spelling the nine slugs, four forms and eight file
+    // stems a second time in assertions.
+    private const int MAX_DECLARATIONS = 347;
 
     /**
      * 203 → 204 with MAX_DECLARATIONS: `ModuleTreeState::IGNORED` is a name as
@@ -606,7 +612,11 @@ final class NameOwnershipContractTest extends TestCase
     // 256 with mail delivery (2026-11-27): the eleven `MailConfiguration`
     // declarations above are eleven new names; no constant of another owner was
     // renamed to carry them.
-    private const int MAX_NAMES = 256;
+    //
+    // 260 with the ohniva template (2026-11-28): the four new lists are four
+    // new names. `RAIL`, `BANNERS`, `SLIDES` and `THUMBS` do not rename any
+    // existing constant, and no slug, form or file stem is spelled twice.
+    private const int MAX_NAMES = 260;
 
     /**
      * `name => modules/<Name>` or `modules/<Group>/<Name>`, resolved once. A
