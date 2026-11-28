@@ -310,6 +310,26 @@ final class OhnivaThemeTest extends TestCase
             'The modern sheet darkens the photograph and draws the grid and the top gradient.',
         );
 
+        self::assertSame(
+            1,
+            preg_match('/\.oh-backdrop__veil\s*\{([^}]*)\}/', $css, $veil),
+            'The veil rule is one block the colour layers can be read from.',
+        );
+
+        self::assertSame(
+            4,
+            substr_count($veil[1], 'radial-gradient'),
+            'Four irregular colour washes keep the translucent layers from looking even.',
+        );
+
+        foreach (['34, 149, 204', '231, 204, 126', '255, 127, 0', '66, 172, 223'] as $colour) {
+            self::assertStringContainsString(
+                'rgba(' . $colour . ',',
+                $veil[1],
+                'The colour wash ' . $colour . ' comes from the template palette.',
+            );
+        }
+
         $this->assertMatchesRegularExpression(
             '/\.oh-ie6 \.oh-backdrop__veil\s*\{[^}]*display\s*:\s*none/s',
             $ie6,
