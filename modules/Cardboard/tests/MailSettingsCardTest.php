@@ -9,6 +9,7 @@ use Modules\Cardboard\Interfaces\HTTP\CardboardLayout;
 use Modules\Settings\Application\Mail\MailConfiguration;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Tests\Support\AppEnvironment;
 
 /**
  * MailSettingsCardTest — the Mail tab's render half.
@@ -19,14 +20,27 @@ use PHPUnit\Framework\TestCase;
  *    screen into a credential display;
  * 2. a form that offers a transport the save path does not accept, which looks
  *    like a save that silently did nothing.
+ *
+ * The class pins `APP_ENV=production`, because "no transport is configured"
+ * is a deployment answer: under a development `APP_ENV`, `auto` resolves to
+ * the dev log instead, so an inherited environment would change what the
+ * card says from one checkout to the next.
  */
 final class MailSettingsCardTest extends TestCase
 {
+
     protected function setUp(): void
     {
         if (!is_dir(APP_BASE_PATH . '/src/Modules/Cardboard')) {
             $this->markTestSkipped('Cardboard is not installed.');
         }
+
+        AppEnvironment::pin();
+    }
+
+    protected function tearDown(): void
+    {
+        AppEnvironment::restore();
     }
 
     #[Test]

@@ -16,6 +16,7 @@ use Modules\Settings\Infrastructure\Persistence\Repositories\SettingsRepository;
 use Modules\Settings\Interfaces\HTTP\SettingsServices;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Tests\Support\AppEnvironment;
 use Tests\Support\SqliteDatabase;
 
 /**
@@ -28,6 +29,12 @@ use Tests\Support\SqliteDatabase;
  * response, so "the error landed on the Mail tab" is not a comment. The test
  * message is exercised through a real executable, so the argv and the message
  * body are the process's own record rather than a mock's opinion.
+ *
+ * The class pins `APP_ENV=production` for its own run. "No transport is
+ * configured" is a DEPLOYMENT answer: with a development `APP_ENV`, `auto`
+ * quietly falls back to the dev log instead, so a suite that inherits the
+ * environment says something different on a machine with a `.env` than in an
+ * export that carries none. The premise is stated here rather than inherited.
  */
 final class MailSettingsSaveTest extends TestCase
 {
@@ -47,6 +54,8 @@ final class MailSettingsSaveTest extends TestCase
                 $this->markTestSkipped($module . ' is not installed.');
             }
         }
+
+        AppEnvironment::pin();
 
         $this->tmpDir = sys_get_temp_dir() . '/nativa-mail-settings-' . bin2hex(random_bytes(6));
         mkdir($this->tmpDir, 0o775, true);
@@ -69,6 +78,7 @@ final class MailSettingsSaveTest extends TestCase
     protected function tearDown(): void
     {
         $this->restoreDatabaseEnvironment();
+        AppEnvironment::restore();
 
         if ('' === $this->tmpDir) {
             parent::tearDown();
@@ -354,4 +364,5 @@ final class MailSettingsSaveTest extends TestCase
             }
         };
     }
+
 }
