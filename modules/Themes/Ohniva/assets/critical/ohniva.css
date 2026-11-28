@@ -244,6 +244,19 @@ button:hover, .oh-button:hover {
     opacity: 1;
 }
 
+.oh-backdrop__veil {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, .28);
+    background-image:
+        repeating-linear-gradient(0deg, rgba(255, 255, 255, .05) 0, rgba(255, 255, 255, .05) 1px, transparent 1px, transparent 48px),
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, .05) 0, rgba(255, 255, 255, .05) 1px, transparent 1px, transparent 48px),
+        linear-gradient(rgba(0, 0, 0, .55), rgba(0, 0, 0, 0) 240px);
+}
+
 .oh-header {
     position: relative;
     float: none;

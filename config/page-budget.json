@@ -45,13 +45,13 @@
       "article": { "css": 11390, "js": 1176 }
     },
     "ohniva": {
-      "page": { "css": 47455, "js": 0 },
-      "home": { "css": 47455, "js": 0 },
-      "listing": { "css": 47455, "js": 0 },
-      "article": { "css": 47455, "js": 0 }
+      "page": { "css": 48060, "js": 0 },
+      "home": { "css": 48060, "js": 0 },
+      "listing": { "css": 48060, "js": 0 },
+      "article": { "css": 48060, "js": 0 }
     }
   },
   "decisions": {
-    "ohniva": "2026-11-28: 36928 -> 47455 bytes. The IE6 sheet is 4245 bytes and is inlined for every reader, because the kernel owns <head> and cannot wrap the file in a conditional comment; every rule is scoped under .oh-ie6, so a modern browser downloads it and matches nothing. The other 6282 bytes are the template's rail, four banners, gallery, the four @font-face blocks and the fixed backdrop."
+    "ohniva": "2026-11-28: 36928 -> 47455 bytes. The IE6 sheet is 4245 bytes and is inlined for every reader, because the kernel owns <head> and cannot wrap the file in a conditional comment; every rule is scoped under .oh-ie6, so a modern browser downloads it and matches nothing. The other 6282 bytes are the template's rail, four banners, gallery, the four @font-face blocks and the fixed backdrop. The backdrop veil adds 605 bytes (47455 -> 48060): the translucent layer, the two repeating grid gradients and the top gradient."
   }
 }
